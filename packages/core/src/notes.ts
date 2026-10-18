@@ -2,7 +2,7 @@
 // (`notes`, which the Python reader is held to by one table), put on the box or link drawn directly below them
 // (note_comment, note_text), and a note above a line holding more than one thing said, with its fix (note_one_owner).
 // The layout source never reads a note, so it stays byte-identical with the Python library's (note_standard).
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { dataKind } from './blocks.ts';
 import { NOTE, TAG } from './note-lines.ts';
 import type { GraphDrawing, Link, Problem, ThingNote } from './note-reading.ts';

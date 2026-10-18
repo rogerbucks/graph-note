@@ -17,7 +17,7 @@
 //   (small_reader)-[:ANSWERS]->(question)
 //   SET large_reader.price = 4
 //   MATCH (v {id: 'alice'}) DETACH DELETE v
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { items, lineIndex } from './block-items.ts';
 import { groupOf } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';

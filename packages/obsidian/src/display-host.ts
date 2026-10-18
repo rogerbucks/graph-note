@@ -1,8 +1,8 @@
-// Obsidian's side of the display layer (`@graph-note/core/display/host`): the icons, the phone test, the notice and the menu
+// Obsidian's side of the display layer (`@thoughtknot/core/display/host`): the icons, the phone test, the notice and the menu
 // the layer asks its host for, made of Obsidian's own `setIcon`, `Platform`, `Notice` and `Menu`. Installed once, when the
 // plugin loads, before anything is drawn.
 import { getLanguage, Menu, Notice, Platform, setIcon } from 'obsidian';
-import { installHost } from '@graph-note/core/display/host';
+import { installHost } from '@thoughtknot/core/display/host';
 
 /** Installs Obsidian as the host the display layer draws in. */
 export function installObsidianHost(): void {

@@ -4,13 +4,13 @@
 // last had it and sent whole, against that version, so the server refuses one made over a change it has not seen
 // (cc_write_if_unchanged) and the note written is byte for byte the one Obsidian would write for the same edit. A refused
 // write keeps what was typed as the server's draft, and the block is shown as the note now has it, as the pane's is.
-import { declareDeferred, declareDeferredBlock, indentText, lockBlock } from '@graph-note/core';
-import type { PaneSession, Settings } from '@graph-note/core';
-import { NOTE_DELETED } from '@graph-note/core/display/editor/editor-note';
-import type { EditorNote, KeptDraft, Refused, Reread } from '@graph-note/core/display/editor/editor-note';
-import { LOCK_FAILED, lockedNote } from '@graph-note/core/display/editor/lock-text';
-import type { DeclaredDeferred } from '@graph-note/core/display/graph-view/view-options';
-import { notice } from '@graph-note/core/display/host';
+import { declareDeferred, declareDeferredBlock, indentText, lockBlock } from '@thoughtknot/core';
+import type { PaneSession, Settings } from '@thoughtknot/core';
+import { NOTE_DELETED } from '@thoughtknot/core/display/editor/editor-note';
+import type { EditorNote, KeptDraft, Refused, Reread } from '@thoughtknot/core/display/editor/editor-note';
+import { LOCK_FAILED, lockedNote } from '@thoughtknot/core/display/editor/lock-text';
+import type { DeclaredDeferred } from '@thoughtknot/core/display/graph-view/view-options';
+import { notice } from '@thoughtknot/core/display/host';
 import { EditorSession } from '../src/editor-session.ts';
 import type { ToWrite } from '../src/editor-session.ts';
 import type { FollowLine, Written } from './note-calls.ts';

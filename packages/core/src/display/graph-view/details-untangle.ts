@@ -6,7 +6,7 @@ import type { ThingActions } from './untangle';
 /** The offers for `key` in `el`, as buttons, if there is anything to offer them to (`on`). */
 export function untangleOffers(el: HTMLElement, key: string, on: ThingActions | undefined): void {
   if (!on) return;
-  const row = el.createDiv({ cls: 'graph-note-untangle-offers' });
+  const row = el.createDiv({ cls: 'thoughtknot-untangle-offers' });
   row
     .createEl('button', { text: 'Show only this and its neighbours', attr: { type: 'button' } })
     .addEventListener('click', () => on.showOnly(key));

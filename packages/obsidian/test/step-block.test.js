@@ -36,7 +36,7 @@ describe('a step’s card', () => {
   test('names the step, each point with what it takes, and offers the note’s graphs and views to give it', async () => {
     const { env, el } = await stepCard();
     try {
-      const card = el.querySelector('.graph-note-step');
+      const card = el.querySelector('.thoughtknot-step');
       assert.match(card.textContent, /Step colleagues proposes links into team/);
       assert.match(card.textContent, /people takes \(:Person\), \(:Project\) and \[:WORKS_ON\]/);
       const choice = card.querySelector('select');
@@ -114,12 +114,12 @@ describe('a step’s card', () => {
   test('an input that does not fit its point is refused, saying why, and nothing is written', async () => {
     const { env, el } = await stepCard();
     try {
-      const choice = el.querySelector('.graph-note-step select');
+      const choice = el.querySelector('.thoughtknot-step select');
       choice.value = 'view people_only of team';
       choice.dispatch('change');
       labelled(el, 'Run step colleagues').click();
-      await until(() => !!el.querySelector('.graph-note-step [role="alert"]'));
-      const said = el.querySelector('.graph-note-step [role="alert"]').textContent;
+      await until(() => !!el.querySelector('.thoughtknot-step [role="alert"]'));
+      const said = el.querySelector('.thoughtknot-step [role="alert"]').textContent;
       assert.match(said, /people takes \(:Project\) things, and view people_only of team holds none/);
       assert.match(said, /people takes \[:WORKS_ON\] links, and view people_only of team holds none/);
       assert.equal(env.state.writes, undefined);
@@ -152,7 +152,7 @@ describe('a step’s card', () => {
         .createDiv({ cls: 'block-language-gql' });
       const fences = note.split('\n').flatMap((l, i) => (/^```gql/.test(l) ? [i] : []));
       await env.state.processors.get('gql')(STEP, el, fakeContext(note, fences[2]));
-      assert.match(el.querySelector('.graph-note-step').textContent, /Step colleagues/);
+      assert.match(el.querySelector('.thoughtknot-step').textContent, /Step colleagues/);
       assert.equal(labelled(el, 'Run step colleagues'), undefined);
       assert.equal(labelled(el, 'Edit'), undefined, 'nor Edit');
     } finally {

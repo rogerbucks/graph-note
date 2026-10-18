@@ -1,8 +1,8 @@
 // What the quick-info tooltip says of a thing or a link (editor spec §24, quick_info): its name, its kind, its first few
 // properties, how many problems it has, and the first paragraph of its note — all of it found by the core, as the details
 // find it, so the tooltip and the details never disagree.
-import { details, linkDetails, propertiesOf } from '@graph-note/core';
-import type { NoteReading } from '@graph-note/core';
+import { details, linkDetails, propertiesOf } from '@thoughtknot/core';
+import type { NoteReading } from '@thoughtknot/core';
 
 /** How many properties the tooltip lists. */
 export const FIRST_PROPERTIES = 3;

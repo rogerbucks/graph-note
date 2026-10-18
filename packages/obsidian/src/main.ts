@@ -1,4 +1,4 @@
-// Graph Note: draws the graphs written in notes (spec §3), and edits them in a pane beside the note (spec §4).
+// Thoughtknot: draws the graphs written in notes (spec §3), and edits them in a pane beside the note (spec §4).
 import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
@@ -14,7 +14,7 @@ import {
   VIEW_SWITCHES,
   ViewState,
   withStandardSchemas,
-} from '@graph-note/core';
+} from '@thoughtknot/core';
 import type {
   Converted,
   Drawn,
@@ -29,18 +29,18 @@ import type {
   SendRecord,
   Settings,
   StyleGraph,
-} from '@graph-note/core';
+} from '@thoughtknot/core';
 import { AI_COMMAND, CLEAR_SENDS_COMMAND, SENDS_KEPT, askAi, clearAiSends } from './ai/ai';
 import { exportGraph, type ExportAsk, type ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { installObsidianHost } from './display-host';
-import { directed } from '@graph-note/core/display/editor/pane-drawing';
-import { stillFrame } from '@graph-note/core/display/images/still-frame';
+import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
+import { stillFrame } from '@thoughtknot/core/display/images/still-frame';
 import { vaultImages } from './images/vault-images';
-import type { CardImages } from '@graph-note/core/display/graph-view/animated-images';
-import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
-import { GraphNoteSettingTab } from './settings/settings';
-import type { DeclaredList } from '@graph-note/core/display/properties/list-row';
+import type { CardImages } from '@thoughtknot/core/display/graph-view/animated-images';
+import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
+import { ThoughtknotSettingTab } from './settings/settings';
+import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
 import { GraphPane, PANE } from './pane';
@@ -49,7 +49,7 @@ import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
 import { InlineEditors } from './inline-editors';
 import { followRename, recoverDrafts, RECOVER_COMMAND, withIds } from './drafts';
-import type { KeptDraft } from '@graph-note/core/display/editor/editor-note';
+import type { KeptDraft } from '@thoughtknot/core/display/editor/editor-note';
 import { noteToRewrite, stillToRewrite } from './reading-view';
 import { followLinks } from './links/rename-follow';
 import { HOVER_SOURCE } from './links/link-host';
@@ -72,7 +72,7 @@ interface Saved {
 }
 
 /** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
-export default class GraphNotePlugin extends Plugin {
+export default class ThoughtknotPlugin extends Plugin {
   private engine: Promise<Engine> | null = null;
   private saved: Saved = {};
   /** The vault's shared schema blocks, by note: read once, the first time a graph names one, then kept up to date. */
@@ -84,7 +84,7 @@ export default class GraphNotePlugin extends Plugin {
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
-    this.addSettingTab(new GraphNoteSettingTab(this.app, this));
+    this.addSettingTab(new ThoughtknotSettingTab(this.app, this));
     this.addCommand({
       id: 'convert-to-standard',
       name: 'Convert this note to standard GQL',
@@ -94,7 +94,7 @@ export default class GraphNotePlugin extends Plugin {
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followRename(this, f.path, old)));
     // a renamed note or file is followed by every link to it in graph blocks; Page preview previews the cards' links (§18)
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followLinks(this, f, old)));
-    this.registerHoverLinkSource(HOVER_SOURCE, { display: 'Graph Note', defaultMod: true });
+    this.registerHoverLinkSource(HOVER_SOURCE, { display: 'Thoughtknot', defaultMod: true });
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
     // nothing is sent unless the user opens this, chooses, sees exactly what goes and presses Send (§19)
     this.addCommand({ ...AI_COMMAND, callback: () => askAi(this) });
@@ -110,7 +110,7 @@ export default class GraphNotePlugin extends Plugin {
       );
     } catch (e) {
       // Only one plugin may draw a code block language. Say which setting to change, rather than fail quietly.
-      console.error('Graph Note could not take gql blocks', e);
+      console.error('Thoughtknot could not take gql blocks', e);
       new Notice(
         'Another plugin already draws gql blocks, so graphs cannot be drawn. Update or turn off the gql-highlight plugin, then reload Obsidian.',
         0,

@@ -1,5 +1,5 @@
 {
-  "name": "@graph-note/claude-code",
+  "name": "@thoughtknot/claude-code",
   "version": "0.6.0",
   "private": true,
   "description": "The Claude Code host: a mod whose /graph draws a graph note in a pane, on the same core.",
@@ -9,7 +9,7 @@
     "build": "node esbuild.config.mjs"
   },
   "dependencies": {
-    "@graph-note/core": "0.6.0",
+    "@thoughtknot/core": "0.6.0",
     "marked": "18.1.0"
   }
 }

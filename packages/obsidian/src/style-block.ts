@@ -1,9 +1,9 @@
 // A style block in a note (spec §2, style_block_in_note): never drawn as a graph, shown folded away until opened — a line
 // saying whose style it is, what it holds and how many problems it has, and its text, coloured, inside.
-import { readNote, readStyle } from '@graph-note/core';
-import { renderCode } from '@graph-note/core/display/code';
-import { readInHostDirection } from '@graph-note/core/display/host';
-import { plural } from '@graph-note/core/display/graph-view/view-bar';
+import { readNote, readStyle } from '@thoughtknot/core';
+import { renderCode } from '@thoughtknot/core/display/code';
+import { readInHostDirection } from '@thoughtknot/core/display/host';
+import { plural } from '@thoughtknot/core/display/graph-view/view-bar';
 
 /** Shows the style block `source`, of graph `styled`, folded; `texts` are the note's gql blocks, with it among them. */
 export function renderStyleBlock(el: HTMLElement, source: string, styled: string, texts: string[]): void {
@@ -20,7 +20,7 @@ export function renderStyleBlock(el: HTMLElement, source: string, styled: string
     style.arrows.length ? plural(style.arrows.length, 'arrowhead setting') : '',
     style.diagrams.length ? plural(style.diagrams.length, 'diagram type') : '',
   ].filter(Boolean);
-  const fold = readInHostDirection(el.createEl('details', { cls: 'graph-note-style' }));
+  const fold = readInHostDirection(el.createEl('details', { cls: 'thoughtknot-style' }));
   fold.createEl('summary', {
     text: `Style of graph ${styled}: ${held.join(', ') || 'nothing yet'}${own.length ? ` — ⚠ ${plural(own.length, 'problem')}` : ''}`,
   });

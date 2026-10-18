@@ -2,19 +2,19 @@
 // of the note's graph blocks, and on a phone Drawing and Text as two tabs.
 import { ItemView } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
-import type GraphNotePlugin from './main';
+import type ThoughtknotPlugin from './main';
 import type { EditTarget } from './main';
 import { BlockEditor } from './block-editor/block-editor';
-import { word } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
 
 /** The edit pane's view type. */
-export const PANE = 'graph-note-pane';
+export const PANE = 'thoughtknot-pane';
 
 /** The edit pane: a view beside the note, holding the block editor. */
 export class GraphPane extends ItemView {
   private readonly editor: BlockEditor;
 
-  constructor(leaf: WorkspaceLeaf, plugin: GraphNotePlugin) {
+  constructor(leaf: WorkspaceLeaf, plugin: ThoughtknotPlugin) {
     super(leaf);
     this.editor = new BlockEditor(plugin, 'pane');
     // a setting that changes how the text is read or drawn: read again at once (spec §21)

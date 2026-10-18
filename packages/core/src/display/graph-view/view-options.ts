@@ -11,7 +11,7 @@ import type {
   Parked,
   Refusal,
   ViewState,
-} from '@graph-note/core';
+} from '@thoughtknot/core';
 
 /**
  * How the drawing's links move (§7): the links its style graph moves, and the links whose line Graphviz drew from their

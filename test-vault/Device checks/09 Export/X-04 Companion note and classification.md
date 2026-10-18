@@ -17,7 +17,7 @@
 
 **Do this:**
 
-1. In Settings, Graph Note, Export, switch the companion note on. Press Export on the card and export. Open the `.md` beside the image: it shows the image and links this note.
+1. In Settings, Thoughtknot, Export, switch the companion note on. Press Export on the card and export. Open the `.md` beside the image: it shows the image and links this note.
 2. For the classification part, add front matter to the top of this note with a classification line set to a level above the one in the setting (for example Internal when the setting is Public). Do not commit it: the test vault only commits Public notes, and the vault reset removes it.
 3. Press Export. The form should name the classification and write nothing until you press Export anyway.
 

@@ -4,8 +4,8 @@
 // profile reads as one; otherwise, as for an id with a space or a word the profile keeps, under a name of its own, with
 // its id written in full. A view's faded context, when asked for, is marked by a `//@ faded:` line above each of its
 // things and links. A note (§24, note_standard) is kept as the `///` lines directly above its thing or link.
-import gs from '@graph-note/graph-spec';
-import type { GTime, Value } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { GTime, Value } from '@thoughtknot/graph-spec';
 import { saidDate } from './export-frame.ts';
 import { kindOf, numberText, oneLine, timeText } from './export-data-model.ts';
 import type { DataInfo, ExportedData } from './export-data-model.ts';

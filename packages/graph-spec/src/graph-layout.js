@@ -4,7 +4,7 @@ drawing made in the editor and one made by the Python drawing script are laid ou
 
 Usage:
   In a page:  <script src="graph-layout.js"></script>  then  GraphLayout.dotSource(nodes, edges, 'LR', style)
-  In Node:    require('@graph-note/graph-spec/src/graph-layout.js')
+  In Node:    require('@thoughtknot/graph-spec/src/graph-layout.js')
 
 Writes: nothing (library).
 

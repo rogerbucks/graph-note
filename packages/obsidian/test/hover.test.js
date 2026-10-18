@@ -12,7 +12,7 @@ import { load, GRAPH, show, styles } from './host/view-notes.js';
 before(() => build());
 
 // the links, in order: 0 large→q, 1 tablet→q, 2 eyes→large, 3 eyes→tablet
-const HOT = 'graph-note-hot';
+const HOT = 'thoughtknot-hot';
 const thing = (el, key) => el.querySelector(`g.node[data-key="${key}"]`);
 const link = (el, n) => el.querySelector(`g.edge[data-link="${n}"]`);
 const hot = (el) => [...el.querySelectorAll('g.node'), ...el.querySelectorAll('g.edge')].filter((g) => g.hasClass(HOT));
@@ -30,18 +30,18 @@ const hotLinks = (el) =>
 const over = (g, pointerType = 'mouse') => g.dispatch('pointerover', { target: g.children[0] ?? g, pointerType });
 const out = (g, pointerType = 'mouse') => g.dispatch('pointerout', { target: g.children[0] ?? g, pointerType });
 const tap = (el, g, pointerId = 3) => {
-  const vp = el.querySelector('.graph-note-viewport');
+  const vp = el.querySelector('.thoughtknot-viewport');
   vp.dispatch('pointerdown', { target: g, pointerId, pointerType: 'touch', clientX: 20, clientY: 20, button: 0 });
   vp.dispatch('pointerup', { target: g, pointerId, pointerType: 'touch', clientX: 21, clientY: 20, button: 0 });
 };
 /** Everything that places or sizes the drawing: each element's attributes bar its class and pressed state, and the viewport’s own. */
 const everything = (e) => [e, ...e.children.flatMap(everything)];
 const geometry = (el) => {
-  const svg = el.querySelector('svg.graph-note-svg'),
+  const svg = el.querySelector('svg.thoughtknot-svg'),
     all = everything(svg);
   return JSON.stringify([
     all.map((e) => [e.localName, [...e.attributes].filter(([k]) => k !== 'class' && k !== 'aria-pressed').sort()]),
-    el.querySelector('.graph-note-viewport').cssProps,
+    el.querySelector('.thoughtknot-viewport').cssProps,
   ]);
 };
 
@@ -93,7 +93,7 @@ describe('pointing at a thing or a link', () => {
   });
 
   test('pointing at empty space highlights nothing: moving on to it from a thing takes the highlight away', () => {
-    const vp = el.querySelector('.graph-note-viewport');
+    const vp = el.querySelector('.thoughtknot-viewport');
     over(thing(el, 'q'));
     assert.deepEqual(hotThings(el), ['q'], 'highlighted under the pointer');
     vp.dispatch('pointerover', { target: vp, pointerType: 'mouse' });
@@ -112,20 +112,20 @@ describe('on top of any focus', () => {
 
   test('a faded thing pointed at comes forward while the pointer stays, and fades again when it goes', () => {
     const tablet = thing(el, 'tablet');
-    assert.ok(tablet.hasClass('graph-note-dim'), 'faded by the focus on Large reader');
+    assert.ok(tablet.hasClass('thoughtknot-dim'), 'faded by the focus on Large reader');
     over(tablet);
     assert.ok(tablet.hasClass(HOT));
-    assert.ok(!tablet.hasClass('graph-note-dim'), 'at full strength under the pointer');
+    assert.ok(!tablet.hasClass('thoughtknot-dim'), 'at full strength under the pointer');
     out(tablet);
     assert.ok(!tablet.hasClass(HOT));
-    assert.ok(tablet.hasClass('graph-note-dim'), 'the focus is as it was');
+    assert.ok(tablet.hasClass('thoughtknot-dim'), 'the focus is as it was');
   });
 
   test('the focus itself is not moved by it: the same things stay kept', () => {
     const keptNow = () =>
       el
         .querySelectorAll('g.node')
-        .filter((g) => g.hasClass('graph-note-kept'))
+        .filter((g) => g.hasClass('thoughtknot-kept'))
         .map((g) => g.getAttribute('data-key'))
         .sort();
     const before = keptNow();
@@ -137,10 +137,10 @@ describe('on top of any focus', () => {
 
   test('a link pointed at in a faded part comes forward with the two things it joins', () => {
     const l = link(el, 3);
-    assert.ok(l.hasClass('graph-note-dim'));
+    assert.ok(l.hasClass('thoughtknot-dim'));
     over(l);
-    assert.ok(!l.hasClass('graph-note-dim') && l.hasClass(HOT));
-    assert.ok(!thing(el, 'tablet').hasClass('graph-note-dim') && thing(el, 'tablet').hasClass(HOT));
+    assert.ok(!l.hasClass('thoughtknot-dim') && l.hasClass(HOT));
+    assert.ok(!thing(el, 'tablet').hasClass('thoughtknot-dim') && thing(el, 'tablet').hasClass(HOT));
     out(l);
   });
 });
@@ -191,12 +191,12 @@ describe('nothing depends on hover', () => {
   test('on touch, emptying the selection takes the highlight with it', () => {
     tap(el, thing(el, 'eyes'), 5);
     assert.ok(hot(el).length > 0, 'the tap gave the highlight');
-    el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
+    el.querySelector('.thoughtknot-viewport').dispatch('keydown', { key: 'Escape' });
     assert.equal(hot(el).length, 0);
   });
 
   test('a click’s focus is not the keyboard’s, but tabbing away and back is: the highlight is there again', () => {
-    const vp = el.querySelector('.graph-note-viewport'),
+    const vp = el.querySelector('.thoughtknot-viewport'),
       g = thing(el, 'q');
     // a click: the pointer goes down on the thing, which takes the focus, and it is selected
     vp.dispatch('pointerdown', { target: g, pointerId: 6, pointerType: 'mouse', clientX: 20, clientY: 20, button: 0 });
@@ -273,9 +273,9 @@ describe('a highlight never moves, resizes or re-lays the drawing', () => {
     };
     try {
       // a focus, from the keyboard so that no touch holds a highlight, so every thing has a mark to keep
-      el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
+      el.querySelector('.thoughtknot-viewport').dispatch('keydown', { key: 'Escape' });
       thing(el, 'large').dispatch('keydown', { key: 'Enter' });
-      assert.ok(thing(el, 'tablet').hasClass('graph-note-dim'));
+      assert.ok(thing(el, 'tablet').hasClass('thoughtknot-dim'));
       written.clear();
       over(thing(el, 'tablet'));
       out(thing(el, 'tablet'));

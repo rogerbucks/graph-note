@@ -1,8 +1,8 @@
 // The block editor's parts on the page (spec §4, §9): the head with its tools, the draft banner, on a phone the
 // Drawing and Text tabs, the text field over its coloured picture, the fix and suggestion bars, the problems list and the
 // announcer for screen readers — built once for each block shown, in the pane or in place in a drawing's card.
-import { word } from '@graph-note/core';
-import type { PaneSession } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
+import type { PaneSession } from '@thoughtknot/core';
 import { isPhone, notice, readInHostDirection, setIcon } from '../host';
 
 /** Where the editor sits: in the edit pane, with its own drawing, a picker and, on a phone, tabs; or in place, in a drawing's card. */
@@ -26,7 +26,7 @@ export interface EditorParts {
 
 let ids = 0;
 /** An id no other editor on the page uses, for a label its field points at. */
-const nextId = (): string => `graph-note-text-${++ids}`;
+const nextId = (): string => `thoughtknot-text-${++ids}`;
 
 /** A button named for screen readers, with an icon and words when given. */
 export function button(
@@ -55,23 +55,23 @@ export function buildEditor(
 ): EditorParts {
   const inline = layout === 'inline';
   const pane = readInHostDirection(
-    container.createDiv({ cls: inline ? 'graph-note-pane graph-note-inline' : 'graph-note-pane' }),
+    container.createDiv({ cls: inline ? 'thoughtknot-pane thoughtknot-inline' : 'thoughtknot-pane' }),
   );
 
-  const head = pane.createDiv({ cls: 'graph-note-pane-head' });
-  const tools = head.createDiv({ cls: 'graph-note-pane-tools' });
+  const head = pane.createDiv({ cls: 'thoughtknot-pane-head' });
+  const tools = head.createDiv({ cls: 'thoughtknot-pane-tools' });
 
-  const draft = pane.createDiv({ cls: 'graph-note-draft', attr: { role: 'status' } });
+  const draft = pane.createDiv({ cls: 'thoughtknot-draft', attr: { role: 'status' } });
   draft.hidden = true;
 
   let drawingEl: HTMLElement | null, textEl: HTMLElement;
   if (inline) {
     drawingEl = null; // in place, the card's own drawing is the drawing
-    textEl = pane.createDiv({ cls: 'graph-note-pane-text' });
+    textEl = pane.createDiv({ cls: 'thoughtknot-pane-text' });
   } else if (isPhone()) {
-    const tabs = pane.createDiv({ cls: 'graph-note-tabs', attr: { role: 'tablist' } });
-    drawingEl = pane.createDiv({ cls: 'graph-note-pane-drawing', attr: { role: 'tabpanel' } });
-    textEl = pane.createDiv({ cls: 'graph-note-pane-text', attr: { role: 'tabpanel' } });
+    const tabs = pane.createDiv({ cls: 'thoughtknot-tabs', attr: { role: 'tablist' } });
+    drawingEl = pane.createDiv({ cls: 'thoughtknot-pane-drawing', attr: { role: 'tabpanel' } });
+    textEl = pane.createDiv({ cls: 'thoughtknot-pane-text', attr: { role: 'tabpanel' } });
     const tab = (label: string, panel: HTMLElement, other: HTMLElement, selected: boolean) => {
       const b = tabs.createEl('button', {
         text: label,
@@ -88,20 +88,20 @@ export function buildEditor(
     tab(word('editor.text-tab'), textEl, drawingEl, true);
     drawingEl.hidden = true;
   } else {
-    drawingEl = pane.createDiv({ cls: 'graph-note-pane-drawing' });
-    textEl = pane.createDiv({ cls: 'graph-note-pane-text' });
+    drawingEl = pane.createDiv({ cls: 'thoughtknot-pane-drawing' });
+    textEl = pane.createDiv({ cls: 'thoughtknot-pane-text' });
   }
 
-  const editor = textEl.createDiv({ cls: 'graph-note-editor' });
+  const editor = textEl.createDiv({ cls: 'thoughtknot-editor' });
   // a div, not a pre: inside a note, Obsidian's own code-block styles would wrap and pad it out of step with the field
-  const overlay = editor.createDiv({ cls: 'graph-note-overlay', attr: { 'aria-hidden': 'true' } });
+  const overlay = editor.createDiv({ cls: 'thoughtknot-overlay', attr: { 'aria-hidden': 'true' } });
   const name = editor.createSpan({
-    cls: 'graph-note-sr',
+    cls: 'thoughtknot-sr',
     text: word('editor.text-of', { graph: s.graph }),
     attr: { id: nextId() },
   });
   const text = editor.createEl('textarea', {
-    cls: 'graph-note-text',
+    cls: 'thoughtknot-text',
     attr: {
       spellcheck: 'false',
       autocapitalize: 'off',
@@ -116,22 +116,22 @@ export function buildEditor(
   // the suggestions drop down under the caret, inside the field's frame: a list the field's own keys work, as a code
   // editor's does, so the hands never leave the keys (§4, keyboard_any_device)
   const suggest = editor.createDiv({
-    cls: 'graph-note-suggestions',
+    cls: 'thoughtknot-suggestions',
     attr: { role: 'listbox', id: `${name.id}-suggestions`, 'aria-label': word('editor.suggestions') },
   });
   suggest.hidden = true;
   text.setAttribute('aria-autocomplete', 'list');
   text.setAttribute('aria-controls', suggest.id);
-  const fixbar = textEl.createDiv({ cls: 'graph-note-fixbar', attr: { role: 'status', 'aria-live': 'polite' } });
+  const fixbar = textEl.createDiv({ cls: 'thoughtknot-fixbar', attr: { role: 'status', 'aria-live': 'polite' } });
   fixbar.hidden = true;
-  const sheetParent = isPhone() && !inline ? pane.createDiv({ cls: 'graph-note-sheet' }) : textEl;
+  const sheetParent = isPhone() && !inline ? pane.createDiv({ cls: 'thoughtknot-sheet' }) : textEl;
   const list = sheetParent.createDiv({
-    cls: 'graph-note-pane-problems',
+    cls: 'thoughtknot-pane-problems',
     attr: { role: 'region', 'aria-label': word('editor.problems'), 'aria-live': 'polite' },
   });
 
   const announce = pane.createDiv({
-    cls: 'graph-note-announce graph-note-sr',
+    cls: 'thoughtknot-announce thoughtknot-sr',
     attr: { role: 'status', 'aria-live': 'polite' },
   });
   return { root: pane, head, text, overlay, fixbar, suggest, list, draft, drawing: drawingEl, tools, announce };
@@ -158,7 +158,7 @@ export function showTools(
 ): void {
   tools.empty();
   if (o.inline)
-    button(tools, word('editor.done'), 'check', () => o.done(), word('editor.done')).addClass('graph-note-primary');
+    button(tools, word('editor.done'), 'check', () => o.done(), word('editor.done')).addClass('thoughtknot-primary');
   const again = o.again;
   if (again) button(tools, word('editor.open-again'), 'refresh-cw', () => again(), word('editor.open-again'));
   const step = (label: string, icon: string, why: string | null, onClick: () => void) => {

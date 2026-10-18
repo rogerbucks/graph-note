@@ -2,7 +2,7 @@
 // made against it is checked as made "against the graph as it stands"; and whether the graph has moved since.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { NO_BASIS, basisOf, staleness } from '../src/proposals-basis.ts';
 import { BASIS, GRAPH, NOTE, noteOf, noteWithChangeSet } from './proposals-fixtures.js';
 

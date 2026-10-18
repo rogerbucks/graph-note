@@ -27,22 +27,22 @@ const areas = hitAreas(drawn.svg);
 const NAMES = { q: 'Which device?', large: 'Large reader', tablet: 'Tablet', eyes: 'Easy on the eyes' };
 
 const thing = (el, key) => el.querySelector(`g.node[data-key="${key}"]`);
-const details = (el) => el.querySelector('.graph-note-details');
-const groups = (el) => details(el).querySelectorAll('.graph-note-link-group');
+const details = (el) => el.querySelector('.thoughtknot-details');
+const groups = (el) => details(el).querySelectorAll('.thoughtknot-link-group');
 const choice = (el, name) =>
   groups(el)
     .flatMap((g) => g.querySelectorAll('button'))
     .find((b) => b.textContent === name);
 /** The drawing as it is shown now: its place, its size and the viewport's height. */
 const shown = (el) => {
-  const vp = el.querySelector('.graph-note-viewport'),
-    svg = el.querySelector('svg.graph-note-svg');
+  const vp = el.querySelector('.thoughtknot-viewport'),
+    svg = el.querySelector('svg.thoughtknot-svg');
   return {
-    x: parseFloat(vp.cssProps['--graph-note-x']),
-    y: parseFloat(vp.cssProps['--graph-note-y']),
+    x: parseFloat(vp.cssProps['--thoughtknot-x']),
+    y: parseFloat(vp.cssProps['--thoughtknot-y']),
     width: Number(svg.getAttribute('width')),
     height: Number(svg.getAttribute('height')),
-    high: parseFloat(vp.cssProps['--graph-note-height']),
+    high: parseFloat(vp.cssProps['--thoughtknot-height']),
   };
 };
 const scale = (el) => shown(el).width / drawn.width;
@@ -105,7 +105,7 @@ describe('a thing’s links are listed by relationship type and direction, in wo
 
   test('links in come before links out, each under its heading', () => {
     tapKey(el, 'large');
-    const text = details(el).querySelector('.graph-note-ins-outs').textContent;
+    const text = details(el).querySelector('.thoughtknot-ins-outs').textContent;
     assert.deepEqual(groups(el).map(groupRead), ['is favoured by Easy on the eyes', 'answers Which device?']);
     assert.ok(text.indexOf('Links in') < text.indexOf('is favoured by'));
     assert.ok(text.indexOf('is favoured by') < text.indexOf('Links out'));
@@ -148,7 +148,7 @@ describe('a thing’s links are listed by relationship type and direction, in wo
     try {
       const c = await editing(card);
       tapKey(c, 'q');
-      assert.ok(c.querySelector('.graph-note-inspector, .metadata-container'), 'the inspector is open');
+      assert.ok(c.querySelector('.thoughtknot-inspector, .metadata-container'), 'the inspector is open');
       assert.deepEqual(groups(c).map(groupRead), ['is answered by Large reader']);
     } finally {
       card.uninstall();
@@ -191,14 +191,14 @@ describe('choosing a linked thing or a link in the list', () => {
     labelled(el, 'Fit').click();
     labelled(el, 'Filter by kind or link').click();
     const entry = (label) =>
-      el.querySelectorAll('.graph-note-filter button').find((b) => b.textContent.startsWith(label));
+      el.querySelectorAll('.thoughtknot-filter button').find((b) => b.textContent.startsWith(label));
     entry('favours').click();
     entry('favours').click();
     const link = el.querySelector('g.edge[data-link="2"]');
-    assert.ok(link.hasClass('graph-note-hidden'), 'hidden by the legend');
+    assert.ok(link.hasClass('thoughtknot-hidden'), 'hidden by the legend');
     tapKey(el, 'eyes');
     labelled(details(el), 'Link: Easy on the eyes favours Large reader').click();
-    assert.ok(!link.hasClass('graph-note-hidden'), 'shown again');
+    assert.ok(!link.hasClass('thoughtknot-hidden'), 'shown again');
     assert.ok(link.hasClass('is-selected'), 'and selected');
   });
 });
@@ -268,7 +268,7 @@ describe('the move to a chosen thing', () => {
   });
 
   test('a wheel or a zoom key while it moves takes over: the move stops where the zoom left the view', () => {
-    const vp = el.querySelector('.graph-note-viewport');
+    const vp = el.querySelector('.thoughtknot-viewport');
     for (const how of ['wheel', 'key']) {
       zoomIn(el, 8);
       motion(env, true);
@@ -334,11 +334,11 @@ describe('the trail of things chosen', () => {
     tapKey(el, 'q');
     choice(el, 'Tablet').click();
     tapKey(el, 'large');
-    assert.equal(details(el).querySelector('.graph-note-trail'), null, 'no steps to retrace');
+    assert.equal(details(el).querySelector('.thoughtknot-trail'), null, 'no steps to retrace');
     choice(el, 'Which device?').click();
     labelled(details(el), 'Close details').click();
     tapKey(el, 'q');
-    assert.equal(details(el).querySelector('.graph-note-trail'), null);
+    assert.equal(details(el).querySelector('.thoughtknot-trail'), null);
   });
 });
 
@@ -350,7 +350,7 @@ describe('an arrow to a selection out of view', () => {
     el = (await show(env, fence(GRAPH))).el;
   });
   after(() => env.uninstall());
-  const arrow = () => el.querySelector('.graph-note-pointer');
+  const arrow = () => el.querySelector('.thoughtknot-pointer');
 
   test('none while the selection is in view', () => {
     tapKey(el, 'q');
@@ -372,12 +372,12 @@ describe('an arrow to a selection out of view', () => {
     const a = arrow();
     assert.ok(a && !a.hidden, 'the arrow shows');
     assert.equal(a.getAttribute('aria-label'), `Bring ${NAMES[key]} into view`);
-    assert.ok(a.cssProps['--graph-note-pointer-angle'].endsWith('deg'));
-    const x = parseFloat(a.cssProps['--graph-note-pointer-x']),
-      y = parseFloat(a.cssProps['--graph-note-pointer-y']);
+    assert.ok(a.cssProps['--thoughtknot-pointer-angle'].endsWith('deg'));
+    const x = parseFloat(a.cssProps['--thoughtknot-pointer-x']),
+      y = parseFloat(a.cssProps['--thoughtknot-pointer-y']);
     assert.ok(x >= 0 && x <= 700 && y >= 0 && y <= shown(el).high, 'inside the view, at its edge');
     // a tap on the arrow is not a tap on empty space: the selection stays
-    const vp = el.querySelector('.graph-note-viewport');
+    const vp = el.querySelector('.thoughtknot-viewport');
     const at = { target: a, pointerId: 9, pointerType: 'touch', clientX: x, clientY: y, button: 0 };
     vp.dispatch('pointerdown', at);
     vp.dispatch('pointerup', at);
@@ -395,7 +395,7 @@ describe('an arrow to a selection out of view', () => {
       if (!inView(el, k)) break;
     }
     assert.ok(arrow() && !arrow().hidden, 'the arrow shows');
-    el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
+    el.querySelector('.thoughtknot-viewport').dispatch('keydown', { key: 'Escape' });
     assert.ok(arrow().hidden);
   });
 });
@@ -410,13 +410,13 @@ describe('in view mode, details in a tall card show on screen without covering t
   after(() => env.uninstall());
 
   test('the details open on screen, and the drawing pans so the thing chosen is above them', () => {
-    const vp = el.querySelector('.graph-note-viewport'),
+    const vp = el.querySelector('.thoughtknot-viewport'),
       high = shown(el).high;
     // the card runs off the foot of an 800-pixel screen: its drawing is in the screen's last `high` pixels, and the
     // details, pinned to the foot of the screen, are half as tall as the drawing
     const sheet = high / 2;
     vp.getBoundingClientRect = () => ({ top: 800 - high, bottom: 800, left: 0, right: 700, width: 700, height: high });
-    el.querySelector('.graph-note-view').getBoundingClientRect = () => ({
+    el.querySelector('.thoughtknot-view').getBoundingClientRect = () => ({
       top: 760 - high,
       bottom: 900,
       left: 0,
@@ -435,7 +435,7 @@ describe('in view mode, details in a tall card show on screen without covering t
     const lowest = Object.keys(NAMES).sort((a, b) => placed(el, b).bottom - placed(el, a).bottom)[0];
     assert.ok(800 - high + placed(el, lowest).bottom > 800 - sheet, 'the lowest thing is where the details will be');
     tapKey(el, lowest);
-    assert.ok(details(el).hasClass('graph-note-sheet'), 'the details are the sheet, on screen');
+    assert.ok(details(el).hasClass('thoughtknot-sheet'), 'the details are the sheet, on screen');
     assert.ok(!details(el).hidden);
     const p = placed(el, lowest);
     assert.ok(800 - high + p.bottom <= 800 - sheet + 1e-6, `above the details: ${p.bottom} of ${high}`);
@@ -447,7 +447,7 @@ describe('in view mode, details in a tall card show on screen without covering t
     labelled(details(el), 'Close details').click();
     const was = shown(el);
     tapKey(el, highest);
-    assert.ok(details(el).hasClass('graph-note-sheet'), 'the sheet is open');
+    assert.ok(details(el).hasClass('thoughtknot-sheet'), 'the sheet is open');
     assert.deepEqual(shown(el), was);
   });
 
@@ -457,7 +457,7 @@ describe('in view mode, details in a tall card show on screen without covering t
       const c = await editing(card);
       tapKey(c, 'q');
       await until(() => !details(c).hidden);
-      assert.ok(!details(c).hasClass('graph-note-sheet'));
+      assert.ok(!details(c).hasClass('thoughtknot-sheet'));
     } finally {
       card.uninstall();
     }

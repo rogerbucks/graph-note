@@ -29,12 +29,12 @@
 
 1. Press View on the drawing's bar and read the four switches and whether each is on or off.
 2. With VoiceOver on, move through the switches and check each is read as a switch with its state.
-3. Open Settings › Graph Note and, under Drawing, set Groups folded to On.
+3. Open Settings › Thoughtknot and, under Drawing, set Groups folded to On.
 4. Close this note and open it again. Check the groups are drawn folded and the View menu's Groups folded says on.
 5. Set Groups folded back to Off in the settings, to leave them as they were.
 
 **Checklist line:**
 
-> **M-01** Press View on a graph's bar: four switches, Labels by zoom, Busy hubs folded, Groups folded and Parallel links merged, each saying on or off; labels and hubs are on, groups and merging off. In Settings › Graph Note, change a switch's default under Drawing, then open the note again: its graphs start as the settings now say.
+> **M-01** Press View on a graph's bar: four switches, Labels by zoom, Busy hubs folded, Groups folded and Parallel links merged, each saying on or off; labels and hubs are on, groups and merging off. In Settings › Thoughtknot, change a switch's default under Drawing, then open the note again: its graphs start as the settings now say.
 
 **Back to the checklist:** [M-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-01 in its list.

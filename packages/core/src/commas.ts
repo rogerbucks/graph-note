@@ -1,7 +1,7 @@
 // The comma added for you (editor spec §4, comma_added_for_you): once the next pattern starts on a new line and the line
 // before is otherwise valid, the comma that parts them is added at the end of that line. The reader would read the line
 // break as the comma anyway (format spec §3); adding it keeps the text plain GQL for every other reader.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { gqlSpans, graphOfBlock } from './blocks.ts';
 
 /**

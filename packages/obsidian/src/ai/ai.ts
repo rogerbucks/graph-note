@@ -4,8 +4,8 @@
 // offer first (host_ai_first), so only the models set up in the settings are offered. And the command that clears the
 // record of sends (record_every_send), which keeps only the last ones and never the text sent.
 import { Notice } from 'obsidian';
-import { aiReady } from '@graph-note/core';
-import type GraphNotePlugin from '../main';
+import { aiReady } from '@thoughtknot/core';
+import type ThoughtknotPlugin from '../main';
 import { classificationInText, classificationOf, higherClassification } from '../export/classification';
 import { noteToRewrite } from '../reading-view';
 import { SendDialog } from './send-dialog';
@@ -20,7 +20,7 @@ export const CLEAR_SENDS_COMMAND = { id: 'clear-ai-sends', name: 'Clear the reco
 export const SENDS_KEPT = 200;
 
 /** Opens the send dialog on the note in front; or says why not: AI is off, or no note is in front to write a proposal into. */
-export async function askAi(plugin: GraphNotePlugin): Promise<void> {
+export async function askAi(plugin: ThoughtknotPlugin): Promise<void> {
   const ready = aiReady(plugin.settings);
   if ('off' in ready) {
     new Notice(ready.off);
@@ -45,7 +45,7 @@ export async function askAi(plugin: GraphNotePlugin): Promise<void> {
 }
 
 /** Clears the record of sends, saying how many were let go. */
-export async function clearAiSends(plugin: GraphNotePlugin): Promise<void> {
+export async function clearAiSends(plugin: ThoughtknotPlugin): Promise<void> {
   const n = await plugin.clearAiSends();
   new Notice(`Cleared the record of ${n} send${n === 1 ? '' : 's'} to AI models.`);
 }

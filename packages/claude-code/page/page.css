@@ -264,8 +264,8 @@ textarea:focus-visible,
 
 /* the Export button and form (WCAG 2.2 AA: a visible focus on every control, its words beside its icon, never colour alone) */
 .gn-graph .gn-export-bar button,
-.gn-graph .graph-note-export button,
-.gn-graph .graph-note-export select {
+.gn-graph .thoughtknot-export button,
+.gn-graph .thoughtknot-export select {
   min-height: 24px;
   min-width: 24px;
   color: var(--gn-text-normal);
@@ -277,13 +277,13 @@ textarea:focus-visible,
 }
 
 .gn-graph .gn-export-bar button:focus-visible,
-.gn-graph .graph-note-export button:focus-visible,
-.gn-graph .graph-note-export select:focus-visible {
+.gn-graph .thoughtknot-export button:focus-visible,
+.gn-graph .thoughtknot-export select:focus-visible {
   outline: 2px solid var(--gn-text-normal);
   outline-offset: 2px;
 }
 
-.gn-graph .graph-note-export {
+.gn-graph .thoughtknot-export {
   display: flex;
   flex-wrap: wrap;
   gap: var(--gn-space-2);

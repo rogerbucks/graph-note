@@ -1,8 +1,8 @@
 // The help beside the block editor's text (spec §4, §8): what is typed, read; then the coloured picture with each line
 // read back, the problems listed, their fixes offered on the caret's line, suggestions offered where the caret is, and
 // new problems said to screen readers. It keeps what it read, so each of them shows the same reading.
-import { completions, diagnostics, estimateFix, gqlSpans, linkInBlock, readBack, spanOf } from '@graph-note/core';
-import type { CompletionItem, Diagnostic, NoteReading, PaneSession } from '@graph-note/core';
+import { completions, diagnostics, estimateFix, gqlSpans, linkInBlock, readBack, spanOf } from '@thoughtknot/core';
+import type { CompletionItem, Diagnostic, NoteReading, PaneSession } from '@thoughtknot/core';
 import type { EditorParts } from './editor-layout';
 import { paintText } from './text-picture';
 import { announce, caretLine, heardKey, listProblems, showFixes } from './problem-help';

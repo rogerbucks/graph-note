@@ -1,8 +1,8 @@
 // What a note's graph blocks draw (spec §3) — the boxes and links of each graph, chosen as graph-spec-draw.py chooses
 // them, so the core's layout source matches graph_svg.py's (spec §12). A graph with problems is still drawn: a path
 // that cannot be read is left out, the rest of its block is drawn, and what was left out is listed as a problem.
-import gs from '@graph-note/graph-spec';
-import type { Graph, World } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { Graph, World } from '@thoughtknot/graph-spec';
 import { estimate } from './estimates.ts';
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { addNotes } from './notes.ts';

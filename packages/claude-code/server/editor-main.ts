@@ -6,9 +6,9 @@
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { EditorProcessOptions } from './editor-process.ts';
-import { settingsFrom } from '@graph-note/core';
-import { matrixRowsFrom } from '@graph-note/core/hosts/matrix-table';
-import type { GateSettings } from '@graph-note/core';
+import { settingsFrom } from '@thoughtknot/core';
+import { matrixRowsFrom } from '@thoughtknot/core/hosts/matrix-table';
+import type { GateSettings } from '@thoughtknot/core';
 import { storeGate } from './editor-gate.ts';
 import { proposerName } from './editor-proposals.ts';
 import { NoteStore } from './editor-store.ts';
@@ -18,16 +18,16 @@ import { pageSettings, withSettings } from './page-settings.ts';
 
 /** The variables the mod sets; the process reads these and no others. */
 export const EDITOR_ENVIRONMENT = {
-  vault: 'GRAPH_NOTE_EDITOR_VAULT',
-  note: 'GRAPH_NOTE_EDITOR_NOTE',
-  drafts: 'GRAPH_NOTE_EDITOR_DRAFTS',
-  input: 'GRAPH_NOTE_EDITOR_INPUT',
+  vault: 'THOUGHTKNOT_EDITOR_VAULT',
+  note: 'THOUGHTKNOT_EDITOR_NOTE',
+  drafts: 'THOUGHTKNOT_EDITOR_DRAFTS',
+  input: 'THOUGHTKNOT_EDITOR_INPUT',
   /** The gate's settings as JSON: the classifications, the level for unlabelled notes and the AI models (no key). */
-  settings: 'GRAPH_NOTE_EDITOR_SETTINGS',
+  settings: 'THOUGHTKNOT_EDITOR_SETTINGS',
   /** The digest of the text the user said yes to; empty when none was asked. */
-  confirmed: 'GRAPH_NOTE_EDITOR_CONFIRMED',
+  confirmed: 'THOUGHTKNOT_EDITOR_CONFIRMED',
   /** `stdin` when the mod hands the key for Claude's proposals on standard input (never here): good for one route only. */
-  proposer: 'GRAPH_NOTE_EDITOR_PROPOSER',
+  proposer: 'THOUGHTKNOT_EDITOR_PROPOSER',
 } as const;
 
 /** The gate's settings from the environment, as the core reads settings back; none, or unreadable ones, are the defaults. */
@@ -58,7 +58,7 @@ export function gateSettings(raw: string | undefined): GateSettings {
  */
 export async function pageFiles(here = dirname(fileURLToPath(import.meta.url))): Promise<PageAssets> {
   const files = await loadPageAssets(join(here, basename(here) === 'bin' ? '../page' : '../mod/page'));
-  if (!files.has('/')) throw new Error('The editor page is not built: run `npm run build` for the Graph Note mod.');
+  if (!files.has('/')) throw new Error('The editor page is not built: run `npm run build` for the Thoughtknot mod.');
   return files;
 }
 

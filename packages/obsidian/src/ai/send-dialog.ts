@@ -5,7 +5,7 @@
 // set beside the graph, and every send is recorded in the plugin's data, whatever came of it.
 import { Modal, Notice, Setting } from 'obsidian';
 import type { ButtonComponent, TFile } from 'obsidian';
-import { readInHostDirection } from '@graph-note/core/display/host';
+import { readInHostDirection } from '@thoughtknot/core/display/host';
 import {
   confirmSend,
   gqlBlocks,
@@ -16,9 +16,9 @@ import {
   sendPrepared,
   viewsOf,
   word,
-} from '@graph-note/core';
-import type { MatrixRow, PreparedSend, ScopeChoice } from '@graph-note/core';
-import type GraphNotePlugin from '../main';
+} from '@thoughtknot/core';
+import type { MatrixRow, PreparedSend, ScopeChoice } from '@thoughtknot/core';
+import type ThoughtknotPlugin from '../main';
 import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
 import { obsidianTransport } from './send';
@@ -53,7 +53,7 @@ export class SendDialog extends Modal {
   private sendButton: ButtonComponent | null = null;
 
   constructor(
-    private readonly plugin: GraphNotePlugin,
+    private readonly plugin: ThoughtknotPlugin,
     private readonly file: TFile,
     private readonly note: string,
     /** The note's classification, read each time it is asked, against the classifications as they are then. */
@@ -132,7 +132,7 @@ export class SendDialog extends Modal {
           this.changed(false);
         }),
       );
-    this.shownEl = el.createDiv({ cls: 'graph-note-ai-shown' });
+    this.shownEl = el.createDiv({ cls: 'thoughtknot-ai-shown' });
     new Setting(el)
       .addButton((b) => b.setButtonText(word('ai.show')).onClick(() => void this.show()))
       .addButton((b) => {
@@ -278,13 +278,13 @@ export class SendDialog extends Modal {
     this.sendButton?.setDisabled(!p || this.sending);
     if (!el) return;
     el.empty();
-    if (this.refusal) el.createEl('p', { cls: 'graph-note-ai-refused', text: this.refusal });
+    if (this.refusal) el.createEl('p', { cls: 'thoughtknot-ai-refused', text: this.refusal });
     if (!p) return;
     for (const line of p.summary) el.createEl('p', { text: line });
     el.createEl('p', { text: word('ai.exactly') });
     const headers = Object.entries(p.headersShown).map(([k, v]) => `${k}: ${v}`);
-    el.createEl('pre', { cls: 'graph-note-ai-headers', text: headers.join('\n') });
-    el.createEl('pre', { cls: 'graph-note-ai-body', text: p.body });
+    el.createEl('pre', { cls: 'thoughtknot-ai-headers', text: headers.join('\n') });
+    el.createEl('pre', { cls: 'thoughtknot-ai-body', text: p.body });
   }
 
   /** Sends what was shown, once; records the send; writes a proposal into the note, or says why there is none. */

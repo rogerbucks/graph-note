@@ -2,9 +2,9 @@
 // kinds of view; the boxes tapped choose what it shows — picked by hand, the thing it is near, where a route starts and
 // ends, the kinds — and its reading is said in plain English as it is built; Write the view writes its query as a view
 // block of its own after the graph's last block. The strip is built once; only its words change as it goes.
-import { makeView, pathsOf, readingOf, word } from '@graph-note/core';
-import type { WordKey } from '@graph-note/core';
-import type { ViewKind, ViewSpec } from '@graph-note/core';
+import { makeView, pathsOf, readingOf, word } from '@thoughtknot/core';
+import type { WordKey } from '@thoughtknot/core';
+import type { ViewKind, ViewSpec } from '@thoughtknot/core';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
@@ -32,7 +32,7 @@ export class ViewMaker {
     private readonly o: ViewOptions,
   ) {
     this.el = parent.createDiv({
-      cls: 'graph-note-view-maker',
+      cls: 'thoughtknot-view-maker',
       attr: { role: 'group', 'aria-label': word('maker.group') },
     });
     this.show();
@@ -94,7 +94,7 @@ export class ViewMaker {
       this.making = false;
       this.show();
     });
-    this.live = this.el.createSpan({ cls: 'graph-note-walk-said', attr: { 'aria-live': 'polite' } });
+    this.live = this.el.createSpan({ cls: 'thoughtknot-walk-said', attr: { 'aria-live': 'polite' } });
     this.alert = this.el.createDiv({ attr: { role: 'alert' } });
     this.update();
   }

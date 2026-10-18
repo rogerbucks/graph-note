@@ -13,15 +13,15 @@ const FIXED = /(?<![\w.-])\d*\.?\d+(?:px|pt)\b/;
 
 /** The rules with a fixed height that hold no text, each with why. */
 const FIXED_HEIGHT = {
-  '.graph-note-image img': 'an image, shown whole within its height',
-  '.graph-note-sr': 'the screen reader’s text, kept off the screen on purpose',
-  '.graph-note-switch-track':
+  '.thoughtknot-image img': 'an image, shown whole within its height',
+  '.thoughtknot-sr': 'the screen reader’s text, kept off the screen on purpose',
+  '.thoughtknot-switch-track':
     'a switch drawn as a toggle, sized in em so it grows with the text; its words sit beside it',
-  '.graph-note-switch-track::before': 'the toggle’s knob, sized in em',
+  '.thoughtknot-switch-track::before': 'the toggle’s knob, sized in em',
 };
 
 /** A rule of the drawing: its marks are in its own units, laid out with it, and scale with its zoom. */
-const inDrawing = (rule) => rule.selectors.every((s) => s.startsWith('.graph-note-svg'));
+const inDrawing = (rule) => rule.selectors.every((s) => s.startsWith('.thoughtknot-svg'));
 
 describe('text scales to 200 per cent with nothing lost', () => {
   for (const sheet of SHEETS) {

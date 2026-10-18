@@ -182,7 +182,7 @@ export type {
   DataExporter,
   ExtensionPoint,
   ExtensionPoints,
-  GraphNotePlugin,
+  ThoughtknotPlugin,
   PluginRegistry,
   PluginResult,
 } from './plugins.ts';

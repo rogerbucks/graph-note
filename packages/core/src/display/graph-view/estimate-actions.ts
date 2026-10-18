@@ -4,7 +4,7 @@
 // the core's `estimateFix` — written into the text being edited, or else into the note; and Edit the link, which opens
 // the editor with the misspelt word selected, where the fix bar offers the same fix. Both write only through the card's
 // options, which read-only.ts gates; where the card is read-only neither is offered.
-import { estimateFix } from '@graph-note/core';
+import { estimateFix } from '@thoughtknot/core';
 import { withFix } from '../fix-changes';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
@@ -16,7 +16,7 @@ export function estimateActions(el: HTMLElement, index: number, o: ViewOptions):
   const e = o.reading.graphs.get(o.graph)?.estimates[index],
     was = e ? o.reading.texts[e.block] : undefined;
   const found = was === undefined ? null : estimateFix(o.reading, o.graph, index, was, 'block');
-  const row = el.createDiv({ cls: 'graph-note-estimate-actions' });
+  const row = el.createDiv({ cls: 'thoughtknot-estimate-actions' });
   let status: HTMLElement | null = null;
   if (found && was !== undefined) {
     const { title, edit } = found.fix;
@@ -37,7 +37,7 @@ export function estimateActions(el: HTMLElement, index: number, o: ViewOptions):
     () => (o.editing?.()?.session || !o.onEditHere ? o.onSelect?.(at) : o.onEditHere(at)),
     'Edit the link',
   );
-  status = row.createSpan({ cls: 'graph-note-fix', attr: { role: 'status' } });
+  status = row.createSpan({ cls: 'thoughtknot-fix', attr: { role: 'status' } });
 }
 
 /**

@@ -35,7 +35,7 @@ describe('stopped by a copy of its block', () => {
       const first = MORE + ',\n(one:Reason)';
       type(env.el, first);
       await until(() => drafts(env).includes(first));
-      const banner = env.el.querySelector('.graph-note-draft');
+      const banner = env.el.querySelector('.thoughtknot-draft');
       assert.match(banner.textContent, /copy of this block/);
       assert.doesNotMatch(banner.textContent, /reloaded/);
       const said = banner.querySelector('p'),
@@ -79,7 +79,7 @@ describe('stopped by a copy of its block', () => {
       const first = MORE + ',\n(one:Reason)';
       type(env.el, first);
       await until(() => drafts(env).includes(first));
-      const banner = env.el.querySelector('.graph-note-draft'),
+      const banner = env.el.querySelector('.thoughtknot-draft'),
         said = banner.querySelector('p'),
         notices = env.state.notices.length;
       const second = first + ',\n(two:Reason)';

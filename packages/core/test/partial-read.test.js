@@ -5,7 +5,7 @@
 // keeps alike, is the rest of a badly broken block left out at once.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { readNote } from '../src/drawing.ts';
 import { bareNames, items, lineAt, lineIndex, without } from '../src/block-items.ts';
 import { graphOf } from '../src/blocks.ts';

@@ -2,7 +2,7 @@
 import { Plugin } from 'obsidian';
 import { instance } from '@viz-js/viz';
 
-export default class GraphNoteSpike extends Plugin {
+export default class ThoughtknotSpike extends Plugin {
   override onload(): void {
     const t0 = performance.now();
     let startup = 0;

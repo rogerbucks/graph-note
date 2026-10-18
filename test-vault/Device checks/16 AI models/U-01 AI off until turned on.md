@@ -18,7 +18,7 @@
 **Do this:**
 
 0. Open this note in Live Preview (not reading view): the command writes its answer into the note, so it is refused in reading view.
-1. In Settings, Graph Note, AI models, check Use AI models says Off.
+1. In Settings, Thoughtknot, AI models, check Use AI models says Off.
 2. Run "Ask an AI model to propose changes" from the command palette. Check a notice says AI is off, and no dialog opens.
 3. Turn Use AI models on, with no model set up, and run the command again. Check the notice says to set a model up.
 4. Set up one model (U-02 says how) and run the command again. Check the dialog's Model list holds only the models you set up.

@@ -14,8 +14,8 @@ import { path, read, readJSON } from './repository/repo.js';
 const {
   NODE_TEST_CONTEXT: _context,
   NODE_OPTIONS: _options,
-  GRAPH_NOTE_TEST_MEMORY_MB: _memory,
-  GRAPH_NOTE_TEST_MINUTES: _minutes,
+  THOUGHTKNOT_TEST_MEMORY_MB: _memory,
+  THOUGHTKNOT_TEST_MINUTES: _minutes,
   ...CLEAN_ENV
 } = process.env;
 const RUNNER = path('scripts/run-ceiling.mjs');
@@ -92,25 +92,25 @@ setTimeout(() => writeFileSync('woke', ''), 30000);
 describe('a test run under the ceiling', () => {
   test('a run that allocates without bound is stopped at the memory ceiling, with one line and a failed exit', async () => {
     const dir = scratch({ 'runaway.test.js': RUNAWAY });
-    const r = capped(dir, { GRAPH_NOTE_TEST_MEMORY_MB: '300' }, '--test', 'runaway.test.js');
+    const r = capped(dir, { THOUGHTKNOT_TEST_MEMORY_MB: '300' }, '--test', 'runaway.test.js');
     assert.ok(!existsSync(join(dir, 'grown')), 'stopped before the fixture stops itself');
     assert.notEqual(r.status, 0);
     const lines = r.stderr.split('\n').filter((l) => l.startsWith('run-ceiling:'));
     assert.equal(lines.length, 1, r.stderr);
     assert.match(lines[0], /^run-ceiling: stopped the run at \d+ MB of memory, over its 300 MB ceiling\. /);
-    assert.match(lines[0], /GRAPH_NOTE_TEST_MEMORY_MB/);
+    assert.match(lines[0], /THOUGHTKNOT_TEST_MEMORY_MB/);
     assert.ok(await gone(fixturePid(dir)), 'the test file’s own process, a grandchild, was stopped too');
     assert.ok(await gone(Number(readFileSync(join(dir, 'child-pid'), 'utf8'))), 'and its own child');
   });
 
   test('a run that goes on past the time ceiling is stopped, with one line and a failed exit', () => {
     const dir = scratch({ 'sleeper.js': SLEEPER });
-    const r = capped(dir, { GRAPH_NOTE_TEST_MINUTES: '0.03' }, 'sleeper.js');
+    const r = capped(dir, { THOUGHTKNOT_TEST_MINUTES: '0.03' }, 'sleeper.js');
     assert.notEqual(r.status, 0);
     const lines = r.stderr.split('\n').filter((l) => l.startsWith('run-ceiling:'));
     assert.equal(lines.length, 1, r.stderr);
     assert.match(lines[0], /^run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.03-minute time ceiling\. /);
-    assert.match(lines[0], /GRAPH_NOTE_TEST_MINUTES/);
+    assert.match(lines[0], /THOUGHTKNOT_TEST_MINUTES/);
     assert.ok(!existsSync(join(dir, 'woke')), 'stopped before the fixture woke');
   });
 
@@ -137,10 +137,10 @@ describe('a test run under the ceiling', () => {
 
   test('a ceiling that is not a positive number is refused in one line, and nothing is run', () => {
     const dir = scratch({ 'ran.js': "require('node:fs').writeFileSync('ran', '');\n" });
-    for (const env of [{ GRAPH_NOTE_TEST_MEMORY_MB: 'lots' }, { GRAPH_NOTE_TEST_MINUTES: '0' }]) {
+    for (const env of [{ THOUGHTKNOT_TEST_MEMORY_MB: 'lots' }, { THOUGHTKNOT_TEST_MINUTES: '0' }]) {
       const r = capped(dir, env, 'ran.js');
       assert.notEqual(r.status, 0);
-      assert.match(r.stderr, /^run-ceiling: GRAPH_NOTE_TEST_(MEMORY_MB|MINUTES) must be a positive number[^\n]*\n$/);
+      assert.match(r.stderr, /^run-ceiling: THOUGHTKNOT_TEST_(MEMORY_MB|MINUTES) must be a positive number[^\n]*\n$/);
       assert.ok(!existsSync(join(dir, 'ran')), 'the command was not run');
     }
   });
@@ -154,16 +154,16 @@ describe('the quality ratchet’s runs of the suite run under the ceiling', () =
   test('a run it starts that goes on past the time ceiling is stopped, with the ceiling’s line, and does not pass', async () => {
     const suite = await import('../scripts/quality-suite.mjs');
     const dir = scratch({ 'sleeper.test.js': SLEEPER });
-    const was = process.env.GRAPH_NOTE_TEST_MINUTES;
-    process.env.GRAPH_NOTE_TEST_MINUTES = '0.1';
+    const was = process.env.THOUGHTKNOT_TEST_MINUTES;
+    process.env.THOUGHTKNOT_TEST_MINUTES = '0.1';
     try {
       const run = suite.nodeTest(dir, []);
       assert.equal(run.passed, false);
       assert.match(run.stderr, /run-ceiling: stopped the run after \d+(\.\d+)? s, over its 0\.1-minute time ceiling/);
       assert.ok(!existsSync(join(dir, 'woke')), 'stopped before the fixture ends by itself');
     } finally {
-      if (was === undefined) delete process.env.GRAPH_NOTE_TEST_MINUTES;
-      else process.env.GRAPH_NOTE_TEST_MINUTES = was;
+      if (was === undefined) delete process.env.THOUGHTKNOT_TEST_MINUTES;
+      else process.env.THOUGHTKNOT_TEST_MINUTES = was;
     }
   });
 });
@@ -203,7 +203,7 @@ describe('the npm test commands run under the ceiling', () => {
 
   test('the runner says what the defaults are and what they were measured against', () => {
     const head = read('scripts/run-ceiling.mjs').split('\n').slice(0, 30).join('\n');
-    for (const word of ['GRAPH_NOTE_TEST_MEMORY_MB', 'GRAPH_NOTE_TEST_MINUTES', 'measured', 'Usage:'])
+    for (const word of ['THOUGHTKNOT_TEST_MEMORY_MB', 'THOUGHTKNOT_TEST_MINUTES', 'measured', 'Usage:'])
       assert.ok(head.includes(word), word);
   });
 });

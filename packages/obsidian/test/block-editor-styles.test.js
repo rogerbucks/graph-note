@@ -19,7 +19,7 @@ describe('the text in the card fits its text', () => {
       const el = await show(env);
       labelled(el, 'Edit here').click();
       await until(() => !!el.querySelector('textarea'));
-      assert.notEqual(el.querySelector('.graph-note-overlay').tagName, 'PRE');
+      assert.notEqual(el.querySelector('.thoughtknot-overlay').tagName, 'PRE');
       assert.equal(el.querySelector('textarea').getAttribute('rows'), String(READER.split('\n').length + 1));
     } finally {
       env.uninstall();
@@ -28,10 +28,10 @@ describe('the text in the card fits its text', () => {
 
   test('in the card the box keeps no height of its own: as tall as its text, and one line to type on', () => {
     const css = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
-    assert.match(css, /\.graph-note-pane\.graph-note-inline\s*\{[^}]*height:\s*auto;/);
+    assert.match(css, /\.thoughtknot-pane\.thoughtknot-inline\s*\{[^}]*height:\s*auto;/);
     assert.match(
       css,
-      /\.graph-note-inline \.graph-note-editor,\s*\.graph-note-inline \.graph-note-text\s*\{[^}]*min-height:\s*0;/,
+      /\.thoughtknot-inline \.thoughtknot-editor,\s*\.thoughtknot-inline \.thoughtknot-text\s*\{[^}]*min-height:\s*0;/,
     );
   });
 });
@@ -52,14 +52,14 @@ describe('the box in the card, untouched by the theme', () => {
       assert.equal(t.getAttribute('aria-label'), null);
       const label = el.querySelector(`#${t.getAttribute('aria-labelledby')}`);
       assert.equal(label?.textContent, 'Text of graph reader');
-      assert.ok(label.classList.contains('graph-note-sr'));
+      assert.ok(label.classList.contains('thoughtknot-sr'));
     } finally {
       env.uninstall();
     }
   });
 
   // the try-out of 8 Oct 2026: on mouse hover the box went flat grey and hid the coloured text under it. Obsidian's app.css
-  // styles every textarea, and textarea:hover (0,1,1) outweighed .graph-note-text (0,1,0). These are the rules it gives
+  // styles every textarea, and textarea:hover (0,1,1) outweighed .thoughtknot-text (0,1,0). These are the rules it gives
   // every textarea, as shipped in the Mac app on 8 Oct 2026, cut to the properties that would show.
   const OBSIDIAN = `
     textarea { background: var(--background-modifier-form-field); border: var(--input-border-width) solid var(--background-modifier-border);
@@ -72,15 +72,15 @@ describe('the box in the card, untouched by the theme', () => {
     textarea:active, textarea:focus, textarea:focus-visible { box-shadow: 0 0 0 var(--input-border-width-focus) var(--background-modifier-border-focus); }
     textarea { line-height: var(--line-height-tight); border-radius: var(--textarea-radius, var(--input-radius)); padding: var(--textarea-padding, var(--input-padding)); }
   `;
-  const all = [...rules(OBSIDIAN, 'obsidian'), ...rules(styles, 'graph-note')];
+  const all = [...rules(OBSIDIAN, 'obsidian'), ...rules(styles, 'thoughtknot')];
   const field = (states, inline) => ({
     tag: 'textarea',
-    classes: ['graph-note-text'],
+    classes: ['thoughtknot-text'],
     states,
     ancestors: [
-      { tag: 'div', classes: ['graph-note-editor'] },
-      { tag: 'div', classes: ['graph-note-pane-text'] },
-      { tag: 'div', classes: inline ? ['graph-note-pane', 'graph-note-inline'] : ['graph-note-pane'] },
+      { tag: 'div', classes: ['thoughtknot-editor'] },
+      { tag: 'div', classes: ['thoughtknot-pane-text'] },
+      { tag: 'div', classes: inline ? ['thoughtknot-pane', 'thoughtknot-inline'] : ['thoughtknot-pane'] },
       { tag: 'div', classes: ['markdown-rendered'] },
     ],
   });
@@ -104,7 +104,7 @@ describe('the box in the card, untouched by the theme', () => {
         const el = field(states, inline);
         for (const property of LOOK) {
           const won = winner(all, el, property);
-          assert.equal(won?.source, 'graph-note', `${property} comes from ${won?.selector} (${won?.source})`);
+          assert.equal(won?.source, 'thoughtknot', `${property} comes from ${won?.selector} (${won?.source})`);
         }
         assert.equal(winner(all, el, 'background-color').value, 'transparent');
         assert.equal(winner(all, el, 'color').value, 'transparent');

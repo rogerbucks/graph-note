@@ -5,7 +5,7 @@
 // form taking one press at a time, its focus where the person is (accessibility).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { STYLE } from '../../core/src/layout.ts';
 import { PALETTES } from '../../core/src/palette.ts';
 import { hueColour } from '../../core/src/theme.ts';
@@ -25,7 +25,7 @@ const files = (env, ext) => [...env.state.files.keys()].filter((p) => p.endsWith
 async function form(env) {
   const { el } = await show(env, env.state.files.get(PATH), 0);
   labelled(el, 'Export').click();
-  const f = el.querySelector('.graph-note-export');
+  const f = el.querySelector('.thoughtknot-export');
   return { el, f, go: () => labelled(f, 'Export it').click() };
 }
 async function loaded(note = NOTE, options = {}) {
@@ -322,7 +322,7 @@ describe('laid out like a drawing, under the same limits', () => {
       const out = await pending;
       assert.equal(
         out.stopped,
-        'The export was stopped: Graph Note was unloaded before the layout finished. Nothing was saved. Try again once Graph Note is enabled again.',
+        'The export was stopped: Thoughtknot was unloaded before the layout finished. Nothing was saved. Try again once Thoughtknot is enabled again.',
       );
       assert.deepEqual(saved(env), []);
     });
@@ -378,7 +378,7 @@ describe('laid out like a drawing, under the same limits', () => {
       assert.equal(workers.made.length, 0, 'no layout was attempted');
       const { el } = await show(env, noteOf(long), 0);
       assert.match(
-        el.querySelector('.graph-note-banner').textContent,
+        el.querySelector('.thoughtknot-banner').textContent,
         /a word in this graph is 2,000 characters long, and at most 1,000 are drawn\./,
         'the card’s banner keeps its words',
       );

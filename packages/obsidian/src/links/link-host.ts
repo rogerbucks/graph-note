@@ -6,7 +6,7 @@
 // was (back_where_you_were). Nothing here fetches anything: every opening is Obsidian's.
 import { Component, Keymap, MarkdownRenderer, Modal, Notice, TFile } from 'obsidian';
 import type { App } from 'obsidian';
-import { readInHostDirection } from '@graph-note/core/display/host';
+import { readInHostDirection } from '@thoughtknot/core/display/host';
 import {
   embedParts,
   embeddedMarkdown,
@@ -16,13 +16,13 @@ import {
   refusedWords,
   safeMarkdown,
   word,
-} from '@graph-note/core';
-import type { LeftAt, LinkHost } from '@graph-note/core/display/links/link-types';
-import { FOLLOWED, followAnchor } from '@graph-note/core/display/links/links-list';
-import type GraphNotePlugin from '../main';
+} from '@thoughtknot/core';
+import type { LeftAt, LinkHost } from '@thoughtknot/core/display/links/link-types';
+import { FOLLOWED, followAnchor } from '@thoughtknot/core/display/links/links-list';
+import type ThoughtknotPlugin from '../main';
 
 /** The source the plugin's links are hovered from, as Page preview's settings name it. */
-export const HOVER_SOURCE = 'graph-note';
+export const HOVER_SOURCE = 'thoughtknot';
 
 export type { LeftAt, LinkHost };
 
@@ -50,9 +50,9 @@ class LeaveObsidian extends Modal {
       where = '';
     }
     const shown = where || this.address.replace(/^mailto:/i, '').split('?')[0] || this.address;
-    this.contentEl.createEl('p', { cls: 'graph-note-leave-host', text: shown });
+    this.contentEl.createEl('p', { cls: 'thoughtknot-leave-host', text: shown });
     this.contentEl.createEl('p', { text: this.words });
-    const row = this.contentEl.createDiv({ cls: 'graph-note-leave-row' });
+    const row = this.contentEl.createDiv({ cls: 'thoughtknot-leave-row' });
     row
       .createEl('button', { text: word('leave.open'), cls: 'mod-cta', attr: { type: 'button' } })
       .addEventListener('click', () => {
@@ -81,14 +81,14 @@ function followRendered(el: HTMLElement, host: LinkHost, where: () => LeftAt | n
       followAnchor(a, link, host, where);
       continue;
     }
-    const text = createSpan({ cls: 'graph-note-link-refused', text: a.textContent ?? '' });
+    const text = createSpan({ cls: 'thoughtknot-link-refused', text: a.textContent ?? '' });
     a.parentElement?.insertBefore(text, a);
     a.remove();
   }
 }
 
 /** The links of graph `graph` in the note at `path`, followed through Obsidian. */
-export function linkHost(plugin: GraphNotePlugin, path: string, graph: string): Omit<LinkHost, 'broken'> {
+export function linkHost(plugin: ThoughtknotPlugin, path: string, graph: string): Omit<LinkHost, 'broken'> {
   const key = `${path}\u0000${graph}`;
   const left = () => LEFT.get(plugin) ?? LEFT.set(plugin, new Map()).get(plugin)!;
   const hoverParent = { hoverPopover: null };
@@ -141,7 +141,7 @@ export function linkHost(plugin: GraphNotePlugin, path: string, graph: string): 
           await draw(safeMarkdown(part.text), parts.length === 1 ? el : el.createDiv(), path);
           continue;
         }
-        const box = el.createDiv({ cls: 'graph-note-embed' }),
+        const box = el.createDiv({ cls: 'thoughtknot-embed' }),
           file = plugin.app.metadataCache.getFirstLinkpathDest(part.embed.target, path);
         // a heading embedded, `![[Note#Heading]]`, is that section alone
         const hash = part.embed.opens.indexOf('#'),
@@ -175,6 +175,6 @@ export function linkHost(plugin: GraphNotePlugin, path: string, graph: string): 
 }
 
 /** The names a vault holds, as a link names them: a note without `.md`, any other file with its extension. */
-export function vaultNames(plugin: GraphNotePlugin): string[] {
+export function vaultNames(plugin: ThoughtknotPlugin): string[] {
   return plugin.app.vault.getFiles().map((f) => (f.extension === 'md' ? f.name.slice(0, -3) : f.name));
 }

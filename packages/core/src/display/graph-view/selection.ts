@@ -4,7 +4,7 @@
 // drawing by class only, so nothing moves, and it never reaches the note. What is chosen from the details is brought into
 // view, readable, by a brief move (details_choose_moves, details_move_motion); the selection is kept clear of the details
 // sheet (sheet_keeps_thing_clear), and pointed to by an arrow at the edge when it is out of view (selection_pointer).
-import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo } from '@graph-note/core';
+import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo } from '@thoughtknot/core';
 import type {
   Bounds,
   FocusTarget,
@@ -16,7 +16,7 @@ import type {
   TrailStep,
   View,
   Zoom,
-} from '@graph-note/core';
+} from '@thoughtknot/core';
 import type { DetailsPanel } from './details-panel';
 import { Glide, stepName } from './details-nav';
 import type { NavActions } from './details-nav';
@@ -308,7 +308,7 @@ export class Selection {
   /** Something lost the focus; when it left the drawing, what comes back to it is the keyboard's, not a click's. */
   focusOut(e: FocusEvent): void {
     this.hover.focus(null);
-    const viewport = this.host.svg()?.closest('.graph-note-viewport') ?? this.host.viewport();
+    const viewport = this.host.svg()?.closest('.thoughtknot-viewport') ?? this.host.viewport();
     if (!viewport.contains(e.relatedTarget as Node | null)) this.byPointer = false;
   }
 

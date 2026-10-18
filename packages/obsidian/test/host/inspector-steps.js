@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { until } from './load-plugin.js';
 import { labelled } from './notes.js';
 import { show } from './card-notes.js';
-import { word } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
 
 /** Opens the block for editing in place and waits for its text field. */
 export async function editing(env) {

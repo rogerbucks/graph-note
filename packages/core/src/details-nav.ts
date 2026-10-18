@@ -3,7 +3,7 @@
 // forward steps (details_trail); the eased move to a chosen thing and the scale below which a thing is too small to read
 // (details_choose_moves, details_move_motion); the arrow at the edge of the view pointing to a selection out of sight
 // (selection_pointer); and how much of the screen the details sheet may take (sheet_min_max). Pure: the host draws it.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import type { Bounds } from './hits.ts';
 import { STYLE } from './layout.ts';
 import type { NoteReading } from './note-reading.ts';

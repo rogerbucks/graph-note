@@ -9,17 +9,17 @@
 // simplest way that works offline in Electron and in the iOS and Android web views: a Blob worker, and WebAssembly in a
 // worker, run in all three. Keeping the bundle as a string instead would put the 1.2 MB engine in main.js twice, or leave
 // the page able to run it only through eval, which the store's linter refuses.
-import { LayoutRunner, PAGE_LIMITS, inThreadPort, serveLayouts } from '@graph-note/core';
-import type { Drawn, Engine, GraphDrawing, LayoutLimits, LayoutPort, LayoutReply, Refusal } from '@graph-note/core';
-import type { ExportTheme, Told } from '@graph-note/core';
-import { layoutWorker } from 'graph-note:layout-worker';
+import { LayoutRunner, PAGE_LIMITS, inThreadPort, serveLayouts } from '@thoughtknot/core';
+import type { Drawn, Engine, GraphDrawing, LayoutLimits, LayoutPort, LayoutReply, Refusal } from '@thoughtknot/core';
+import type { ExportTheme, Told } from '@thoughtknot/core';
+import { layoutWorker } from 'thoughtknot:layout-worker';
 
 /** What is said once in the console, for each thing the runner tells. */
 const SAID: Record<Told, string> = {
   'on-the-page':
-    'Graph Note: web workers cannot run here, so graphs are laid out on the main thread, with lower size limits. A slow layout cannot be stopped there.',
+    'Thoughtknot: web workers cannot run here, so graphs are laid out on the main thread, with lower size limits. A slow layout cannot be stopped there.',
   stopped:
-    'Graph Note: several layouts in a row took too long or failed, so drawing is paused until the plugin is reloaded.',
+    'Thoughtknot: several layouts in a row took too long or failed, so drawing is paused until the plugin is reloaded.',
 };
 
 /** Whether this host can start a worker from a Blob: every Obsidian can, desktop and phone; a test may not. */

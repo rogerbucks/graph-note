@@ -42,16 +42,16 @@ export class FullScreen {
     const had = activeDocument.activeElement;
     const overlay = readInHostDirection(
       activeDocument.body.createDiv({
-        cls: 'graph-note-fullscreen',
+        cls: 'thoughtknot-fullscreen',
         attr: { role: 'dialog', 'aria-modal': 'true', 'aria-label': `Graph ${this.host.graph}, full screen` },
       }),
     );
     overlay.addEventListener('keydown', (e) => this.key(e, overlay));
-    const view = this.host.draw(overlay.createDiv({ cls: 'graph-note' }), () => this.hide());
+    const view = this.host.draw(overlay.createDiv({ cls: 'thoughtknot' }), () => this.hide());
     this.open = { view, overlay, opener: had as HTMLElement | null };
     this.host.card.addChild(view);
     // the drawing first, where the zoom keys work; else the first control
-    (overlay.querySelector<HTMLElement>('.graph-note-viewport') ?? stopsOf(overlay)[0])?.focus();
+    (overlay.querySelector<HTMLElement>('.thoughtknot-viewport') ?? stopsOf(overlay)[0])?.focus();
   }
 
   /** Escape leaves, unless something in the card took it first; Tab and Shift+Tab go round the overlay's stops. */

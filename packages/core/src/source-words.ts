@@ -299,7 +299,7 @@ export const SOURCE_WORDS = {
   'step.run.said': 'Run step {name}',
   'step.could-not-run': 'Step {name} could not run, and nothing was written.',
   'details.properties': 'Properties',
-  'page.title': 'Graph Note editor',
+  'page.title': 'Thoughtknot editor',
   'settings.convert': 'Convert to standard GQL',
   'settings.convert.sentence': 'Writes the note in front back as standard GQL, once the standard checker passes it.',
   'settings.flagged': 'Flagged now: {classes}.',

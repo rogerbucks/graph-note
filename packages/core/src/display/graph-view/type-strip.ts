@@ -3,7 +3,7 @@
 // suggested said so, and never drawn until chosen (diagram_type_set, type_only_when_fits, suggest_type). A chosen type
 // that has stopped fitting is said, with why, and the nearest type that fits offered (type_stops_fitting); a graph of more
 // than 50 things is offered the table or a view as the way in (large_way_in). The core decides all of it (types.ts).
-import { diagramOffer, tableOf, wayIn } from '@graph-note/core';
+import { diagramOffer, tableOf, wayIn } from '@thoughtknot/core';
 import type {
   DiagramOffer,
   DiagramTable,
@@ -13,7 +13,7 @@ import type {
   GraphDrawing,
   NoteReading,
   StyleGraph,
-} from '@graph-note/core';
+} from '@thoughtknot/core';
 import { tableSize } from './table-view';
 import { button } from './view-bar';
 
@@ -71,9 +71,9 @@ export const tableDrawn = (table: DiagramTable): Drawn => ({ svg: '', rankdir: '
 export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement[] {
   const { choice, suggested } = d,
     writes: HTMLElement[] = [];
-  const strip = root.createDiv({ cls: 'graph-note-type-strip' });
-  strip.createSpan({ cls: 'graph-note-type-drawn', text: `Drawn as ${said(choice.drawn)}` });
-  const list = root.createEl('ul', { cls: 'graph-note-type-list', attr: { 'aria-label': 'Diagram types' } });
+  const strip = root.createDiv({ cls: 'thoughtknot-type-strip' });
+  strip.createSpan({ cls: 'thoughtknot-type-drawn', text: `Drawn as ${said(choice.drawn)}` });
+  const list = root.createEl('ul', { cls: 'thoughtknot-type-list', attr: { 'aria-label': 'Diagram types' } });
   list.hidden = true;
   const open = () => {
     list.hidden = !list.hidden;
@@ -86,9 +86,9 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
   for (const f of d.fits) {
     const li = list.createEl('li', {
       cls: [
-        ...(f.type === choice.drawn ? ['graph-note-type-now'] : []),
-        ...(f.fits && f.type === suggested.type && f.type !== choice.drawn ? ['graph-note-type-suggested'] : []),
-        ...(f.fits ? [] : ['graph-note-type-unfit']),
+        ...(f.type === choice.drawn ? ['thoughtknot-type-now'] : []),
+        ...(f.fits && f.type === suggested.type && f.type !== choice.drawn ? ['thoughtknot-type-suggested'] : []),
+        ...(f.fits ? [] : ['thoughtknot-type-unfit']),
       ],
     });
     const b = li.createEl('button', {
@@ -102,11 +102,11 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
           .filter(Boolean)
           .join('; ')
       : (f.why ?? '');
-    li.createSpan({ cls: 'graph-note-type-why', text: why });
+    li.createSpan({ cls: 'thoughtknot-type-why', text: why });
   }
   const stopped = choice.stopped;
   if (stopped) {
-    const banner = root.createDiv({ cls: ['graph-note-banner', 'graph-note-type-stopped'], attr: { role: 'alert' } });
+    const banner = root.createDiv({ cls: ['thoughtknot-banner', 'thoughtknot-type-stopped'], attr: { role: 'alert' } });
     banner.createSpan({
       text: `This graph no longer fits ${said(stopped.type)}: ${stopped.why}. It is drawn as a network until another type is chosen.`,
     });
@@ -114,7 +114,7 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
     writes.push(button(banner, label, 'check', () => d.choose(stopped.nearest), label));
   }
   if (d.wayIn && choice.drawn !== 'table') {
-    const way = root.createDiv({ cls: 'graph-note-way-in', attr: { role: 'note' } });
+    const way = root.createDiv({ cls: 'thoughtknot-way-in', attr: { role: 'note' } });
     way.createSpan({ text: `${d.wayIn.say} A view is made with Edit here, then Make a view.` });
     writes.push(button(way, 'Show as table', 'table', () => d.choose('table'), 'Show as table'));
   }

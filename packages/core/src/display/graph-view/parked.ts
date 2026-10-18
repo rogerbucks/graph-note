@@ -2,8 +2,8 @@
 // drawn dashed with a later mark — on the drawing Graphviz drew, so its layout stays the Python library's — and said so
 // to screen readers; the parked things listed behind the badge; and, while the card is edited, Park for later in a
 // box's details, which writes a Deferred saying what is needed and why it waits.
-import { DeferredNotDeclared, indentText, parkForLater } from '@graph-note/core';
-import type { Box, Indent, NoteReading, Parked } from '@graph-note/core';
+import { DeferredNotDeclared, indentText, parkForLater } from '@thoughtknot/core';
+import type { Box, Indent, NoteReading, Parked } from '@thoughtknot/core';
 
 /** A graph as the whole note reads it. */
 type Graph = NoteReading['whole'][string];
@@ -30,14 +30,14 @@ export function markParked(svg: SVGSVGElement, boxes: Box[]): void {
     const box = boxes.find((b) => b.key === g.getAttribute('data-key'));
     if (!box?.deferred) continue;
     const overdue = box.deferred.overdue;
-    g.classList.add('graph-note-parked');
+    g.classList.add('thoughtknot-parked');
     g.classList.toggle('is-overdue', overdue);
     const said = overdue ? 'parked for later, overdue' : 'parked for later';
     g.setAttribute('aria-label', `${g.getAttribute('aria-label') ?? box.text}, ${said}: ${box.deferred.what}`);
     const at = cornerOf(g);
     if (!at) continue;
     const mark = g.appendChild(activeDocument.createElementNS(SVG, 'text'));
-    mark.setAttribute('class', 'graph-note-later-mark');
+    mark.setAttribute('class', 'thoughtknot-later-mark');
     mark.setAttribute('x', String(at.right - 4));
     mark.setAttribute('y', String(at.top + 10));
     mark.setAttribute('text-anchor', 'end');
@@ -49,7 +49,7 @@ export function markParked(svg: SVGSVGElement, boxes: Box[]): void {
 export function listParked(el: HTMLElement, parked: Map<string, Parked>, textOf: (key: string) => string): void {
   if (!parked.size) return;
   el.createEl('h4', { text: 'Parked for later' });
-  const ul = el.createEl('ul', { cls: 'graph-note-parked-list' });
+  const ul = el.createEl('ul', { cls: 'thoughtknot-parked-list' });
   for (const [key, p] of parked) {
     const when = p.revisitBy ? `, revisit by ${p.revisitBy}` : '';
     ul.createEl('li', {
@@ -63,7 +63,7 @@ export function listParked(el: HTMLElement, parked: Map<string, Parked>, textOf:
 export function parkedNote(el: HTMLElement, box: Box | undefined): void {
   if (!box?.deferred) return;
   el.createEl('p', {
-    cls: 'graph-note-parked-note',
+    cls: 'thoughtknot-parked-note',
     text: `⏳ ${box.deferred.overdue ? 'Parked for later, and overdue' : 'Parked for later'}: ${box.deferred.what}`,
   });
 }
@@ -88,7 +88,7 @@ export function parkButton(
    */
   now: () => NoteReading,
 ): void {
-  const holder = el.createDiv({ cls: 'graph-note-park' });
+  const holder = el.createDiv({ cls: 'thoughtknot-park' });
   button(holder, 'Park for later', 'clock', () => {
     holder.empty();
     // each field with its words beside it, never a placeholder alone

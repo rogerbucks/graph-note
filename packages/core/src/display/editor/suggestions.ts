@@ -2,7 +2,7 @@
 // caret as a list the field's own keys work — the arrows move the choice, Enter or Tab takes it, Escape closes it — so
 // the hands never leave the keys (keyboard_any_device). The one chosen is written into the field in place of what was
 // being typed. A click takes one too, the focus kept in the field.
-import type { CompletionItem } from '@graph-note/core';
+import type { CompletionItem } from '@thoughtknot/core';
 
 /** Shows `items` as the options of the list, the one at `active` chosen, or hides it when there are none. */
 export function showSuggestions(
@@ -15,11 +15,11 @@ export function showSuggestions(
   list.hidden = !items.length;
   items.forEach((item, i) => {
     const option = list.createDiv({
-      cls: 'graph-note-suggestion',
+      cls: 'thoughtknot-suggestion',
       attr: { role: 'option', id: `${list.id}-${i}`, 'aria-selected': String(i === active) },
     });
-    option.createSpan({ cls: 'graph-note-suggestion-name', text: item.insertText ?? item.label });
-    if (item.detail) option.createSpan({ cls: 'graph-note-suggestion-detail', text: item.detail });
+    option.createSpan({ cls: 'thoughtknot-suggestion-name', text: item.insertText ?? item.label });
+    if (item.detail) option.createSpan({ cls: 'thoughtknot-suggestion-detail', text: item.detail });
     // the field keeps the focus, so typing carries on where it was
     option.addEventListener('mousedown', (e) => e.preventDefault());
     option.addEventListener('click', () => accept(item));
@@ -46,9 +46,9 @@ export function placeSuggestions(list: HTMLElement, t: HTMLTextAreaElement): voi
   const line = before.split('\n').length - 1,
     column = before.length - before.lastIndexOf('\n') - 1;
   list.setCssProps({
-    '--graph-note-caret-line': String(line),
-    '--graph-note-caret-column': String(column),
-    '--graph-note-caret-scroll': `${t.scrollLeft}px`,
+    '--thoughtknot-caret-line': String(line),
+    '--thoughtknot-caret-column': String(column),
+    '--thoughtknot-caret-scroll': `${t.scrollLeft}px`,
   });
 }
 

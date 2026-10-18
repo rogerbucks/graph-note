@@ -41,14 +41,14 @@ describe('a thing parked for later, drawn', () => {
     try {
       const el = await show(env);
       const g = nodeOf(el, 'small');
-      assert.ok(g.classList.contains('graph-note-parked'), 'marked as parked');
+      assert.ok(g.classList.contains('thoughtknot-parked'), 'marked as parked');
       assert.ok(
         g.querySelectorAll('text').some((t) => /⏳ later/.test(t.textContent)),
         'a later mark, in words as well as a sign',
       );
       assert.match(g.getAttribute('aria-label'), /parked for later: its price/i);
-      assert.ok(!nodeOf(el, 'large').classList.contains('graph-note-parked'), 'only the thing parked');
-      assert.match(styles, /\.graph-note-parked\s+(?:path|polygon)[^{]*\{[^}]*stroke-dasharray/);
+      assert.ok(!nodeOf(el, 'large').classList.contains('thoughtknot-parked'), 'only the thing parked');
+      assert.match(styles, /\.thoughtknot-parked\s+(?:path|polygon)[^{]*\{[^}]*stroke-dasharray/);
     } finally {
       env.uninstall();
     }
@@ -72,7 +72,7 @@ describe('the badge', () => {
     const env = await load({ files: { [PATH]: noteOf(PARKED) } });
     try {
       const el = await show(env);
-      const badge = el.querySelector('.graph-note-badge');
+      const badge = el.querySelector('.thoughtknot-badge');
       assert.match(badge.getAttribute('aria-label'), /^No problems, 1 parked$/);
     } finally {
       env.uninstall();
@@ -83,7 +83,7 @@ describe('the badge', () => {
     const env = await load({ files: { [PATH]: noteOf(OVERDUE) } });
     try {
       const el = await show(env);
-      const badge = el.querySelector('.graph-note-badge');
+      const badge = el.querySelector('.thoughtknot-badge');
       assert.match(badge.getAttribute('aria-label'), /^No problems, 1 parked, 1 overdue$/);
       const items = el.querySelectorAll('li').map((li) => li.textContent);
       assert.ok(
@@ -99,7 +99,7 @@ describe('the badge', () => {
     const env = await load({ files: { [PATH]: noteOf(PLAIN) } });
     try {
       const el = await show(env);
-      assert.equal(el.querySelector('.graph-note-badge').getAttribute('aria-label'), 'No problems');
+      assert.equal(el.querySelector('.thoughtknot-badge').getAttribute('aria-label'), 'No problems');
     } finally {
       env.uninstall();
     }
@@ -141,7 +141,7 @@ describe('Park for later, while the card is edited', () => {
       labelled(el, 'Park for later').click();
       const first = el.querySelectorAll('input').find((x) => x.getAttribute('aria-label') === 'What is needed');
       assert.ok(env.doc.activeElement === first);
-      assert.match(styles, /\.graph-note-park :is\(button, input\)\s*\{[^}]*min-height:\s*44px/);
+      assert.match(styles, /\.thoughtknot-park :is\(button, input\)\s*\{[^}]*min-height:\s*44px/);
     } finally {
       env.uninstall();
     }
@@ -189,7 +189,7 @@ describe('Park for later, while the card is edited', () => {
       labelled(el, 'Park it').click();
       await wait(50);
       assert.doesNotMatch(text(el), /Deferred/);
-      assert.match(el.querySelector('.graph-note-park [role="alert"]').textContent, /what is needed/i);
+      assert.match(el.querySelector('.thoughtknot-park [role="alert"]').textContent, /what is needed/i);
     } finally {
       env.uninstall();
     }
@@ -242,9 +242,9 @@ describe('Park for later, in a locked graph whose schema does not declare Deferr
     labelled(el, 'Park it').click();
     await wait(50);
   }
-  const alertOf = (el) => el.querySelector('.graph-note-park [role="alert"]').textContent;
+  const alertOf = (el) => el.querySelector('.thoughtknot-park [role="alert"]').textContent;
   /** The card of the note's first block drawn again, as Obsidian does once the note has changed: its badge. */
-  const badgeOf = async (env) => (await show(env)).querySelector('.graph-note-badge').getAttribute('aria-label');
+  const badgeOf = async (env) => (await show(env)).querySelector('.thoughtknot-badge').getAttribute('aria-label');
 
   test('with the schema in the block being edited, it declares them there and parks, keeping what was typed', async () => {
     const env = await load({ files: { [PATH]: noteOf(LOCKED) } });

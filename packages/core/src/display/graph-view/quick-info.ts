@@ -6,8 +6,8 @@
 // so no card clips it and a full-screen card does not hide it. One tooltip to a card, taken away with the card.
 import { readInHostDirection } from '../host';
 import { Lifecycle } from '../lifecycle';
-import { word } from '@graph-note/core';
-import type { View } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
+import type { View } from '@thoughtknot/core';
 import { infoOf } from './quick-info-content';
 import { placeTip } from './quick-info-place';
 import type { Box } from './quick-info-place';
@@ -189,23 +189,23 @@ export class QuickInfo {
     owner.load();
     this.owner = owner;
     const el = (this.el ??= readInHostDirection(
-      activeDocument.body.createDiv({ cls: 'graph-note-quick-info', attr: { role: 'tooltip' } }),
+      activeDocument.body.createDiv({ cls: 'thoughtknot-quick-info', attr: { role: 'tooltip' } }),
     ));
     el.hidden = true;
     el.empty();
-    const head = el.createDiv({ cls: 'graph-note-quick-head' });
-    head.createEl('strong', { cls: 'graph-note-quick-name', text: info.name });
-    head.createSpan({ cls: 'graph-note-quick-kind', text: info.kind });
+    const head = el.createDiv({ cls: 'thoughtknot-quick-head' });
+    head.createEl('strong', { cls: 'thoughtknot-quick-name', text: info.name });
+    head.createSpan({ cls: 'thoughtknot-quick-kind', text: info.kind });
     if (info.properties.length) {
-      const ul = el.createEl('ul', { cls: 'graph-note-quick-properties' });
+      const ul = el.createEl('ul', { cls: 'thoughtknot-quick-properties' });
       for (const p of info.properties) ul.createEl('li', { text: p });
     }
     el.createDiv({
-      cls: 'graph-note-quick-problems',
+      cls: 'thoughtknot-quick-problems',
       text: info.problems ? word('bar.problems', { count: info.problems }) : word('bar.no-problems'),
     });
     if (info.note) {
-      const box = el.createDiv({ cls: 'graph-note-quick-note' });
+      const box = el.createDiv({ cls: 'thoughtknot-quick-note' });
       if (o.links) await o.links.render(info.note, box, owner);
       else box.setText(info.note);
     }
@@ -227,7 +227,7 @@ export class QuickInfo {
         { width: size.width, height: size.height },
         { width: win.innerWidth || Infinity, height: win.innerHeight || Infinity },
       );
-    el.setCssProps({ '--graph-note-qi-x': `${p.x}px`, '--graph-note-qi-y': `${p.y}px` });
+    el.setCssProps({ '--thoughtknot-qi-x': `${p.x}px`, '--thoughtknot-qi-y': `${p.y}px` });
   }
 
   /** Where the thing or link is on the page: its box in the drawing, as the view shows it, or a table row's. */

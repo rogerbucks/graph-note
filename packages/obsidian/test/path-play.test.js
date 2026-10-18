@@ -25,7 +25,7 @@ const WALKED = `${TRIP},
 (tour)-[:STEP {seq: 3}]->(cafe)`;
 const noteOf = (block) => ['# Trip', '', fence(block), ''].join('\n');
 const nodeOf = (el, key) => el.querySelectorAll('g.node').find((n) => n.getAttribute('data-key') === key);
-const said = (el) => el.querySelector('.graph-note-walk [aria-live]').textContent;
+const said = (el) => el.querySelector('.thoughtknot-walk [aria-live]').textContent;
 const select = (el, label) => el.querySelectorAll('select').find((s) => s.getAttribute('aria-label') === label);
 const written = (env, ext) => [...env.state.files.keys()].filter((p) => p.endsWith(ext));
 
@@ -75,8 +75,8 @@ describe('Play steps through a path on its own', () => {
       assert.deepEqual(timer.pending, [2000], 'two seconds a step until the pace is set');
       timer.tick();
       assert.equal(said(el), 'Step 2 of 3: The park');
-      assert.ok(nodeOf(el, 'park').classList.contains('graph-note-step-current'));
-      assert.ok(!nodeOf(el, 'home').classList.contains('graph-note-step-current'));
+      assert.ok(nodeOf(el, 'park').classList.contains('thoughtknot-step-current'));
+      assert.ok(!nodeOf(el, 'home').classList.contains('thoughtknot-step-current'));
       timer.tick();
       assert.equal(said(el), 'Step 3 of 3: Cafe');
       assert.deepEqual(timer.pending, [], 'it stops at the last step');
@@ -120,7 +120,7 @@ describe('Play steps through a path on its own', () => {
       assert.deepEqual(timer.pending, [2000]);
       labelled(el, 'Stop playing').click();
       assert.deepEqual(timer.pending, []);
-      assert.ok(!el.querySelectorAll('g.node').some((n) => n.classList.contains('graph-note-step-current')));
+      assert.ok(!el.querySelectorAll('g.node').some((n) => n.classList.contains('thoughtknot-step-current')));
       assert.ok(labelled(el, 'Play Sunday walk'), 'Play is offered again');
     } finally {
       env.uninstall();
@@ -151,14 +151,14 @@ describe('the moving highlight', () => {
     const { env, timer, el } = await playing();
     try {
       labelled(el, 'Play Sunday walk').click();
-      assert.deepEqual(el.querySelectorAll('.graph-note-path-runner'), [], 'no step before the first');
+      assert.deepEqual(el.querySelectorAll('.thoughtknot-path-runner'), [], 'no step before the first');
       timer.tick();
       const link = el.querySelectorAll('g.edge').find((g) => g.getAttribute('data-link') === '0');
-      const runners = el.querySelectorAll('.graph-note-path-runner');
+      const runners = el.querySelectorAll('.thoughtknot-path-runner');
       assert.equal(runners.length, 1);
       assert.ok(link.querySelectorAll('path').includes(runners[0]), 'on the link from home to the park');
       timer.tick();
-      assert.deepEqual(el.querySelectorAll('.graph-note-path-runner'), [], 'no link joins the park and the cafe');
+      assert.deepEqual(el.querySelectorAll('.thoughtknot-path-runner'), [], 'no link joins the park and the cafe');
     } finally {
       env.uninstall();
     }
@@ -184,7 +184,7 @@ describe('the moving highlight', () => {
       timer.tick();
       const link = el.querySelectorAll('g.edge').find((g) => g.getAttribute('id') === 'edge3');
       assert.ok(link.getAttribute('data-estimate') !== null, 'the misspelt link is drawn as a guess');
-      const runners = el.querySelectorAll('.graph-note-path-runner');
+      const runners = el.querySelectorAll('.thoughtknot-path-runner');
       assert.equal(runners.length, 1);
       assert.ok(link.querySelectorAll('path').includes(runners[0]), 'on the guessed link from the park to the cafe');
     } finally {
@@ -202,8 +202,8 @@ describe('still or instant whenever the system asks for reduced motion', () => {
       labelled(el, 'Play Sunday walk').click();
       timer.tick();
       assert.equal(said(el), 'Step 2 of 3: The park');
-      assert.ok(nodeOf(el, 'park').classList.contains('graph-note-step-current'));
-      assert.deepEqual(el.querySelectorAll('.graph-note-path-runner'), []);
+      assert.ok(nodeOf(el, 'park').classList.contains('thoughtknot-step-current'));
+      assert.deepEqual(el.querySelectorAll('.thoughtknot-path-runner'), []);
     } finally {
       env.uninstall();
     }
@@ -233,15 +233,15 @@ describe('a played path exported as an animated SVG', () => {
     try {
       labelled(el, 'Play Sunday walk').click();
       labelled(el, 'Export as an animated SVG').click();
-      const form = el.querySelector('.graph-note-export');
+      const form = el.querySelector('.thoughtknot-export');
       assert.equal(select(form, 'What to export').value, 'path:tour');
       assert.equal(select(form, 'Format').value, 'svg');
       assert.equal(select(form, 'Pace').value, '2000', 'the pace it was playing at');
       labelled(form, 'Export it').click();
       await until(() => written(env, '.svg').length === 1);
       const svg = env.state.files.get(written(env, '.svg')[0]);
-      assert.match(svg, /@keyframes graph-note-step-/);
-      assert.match(svg, /animation: graph-note-step-\d+ 6s step-end infinite/);
+      assert.match(svg, /@keyframes thoughtknot-step-/);
+      assert.match(svg, /animation: thoughtknot-step-\d+ 6s step-end infinite/);
       assert.match(svg, /@media \(prefers-reduced-motion: reduce\)/);
       assert.match(svg, /path Sunday walk/);
     } finally {
@@ -253,16 +253,16 @@ describe('a played path exported as an animated SVG', () => {
   test('Export as an animated SVG always opens the form on the path: pressed again, or with the form already open', async () => {
     const { env, el } = await playing();
     try {
-      const forms = () => el.querySelectorAll('.graph-note-export');
+      const forms = () => el.querySelectorAll('.thoughtknot-export');
       labelled(el, 'Play Sunday walk').click();
       labelled(el, 'Export as an animated SVG').click();
       labelled(el, 'Export as an animated SVG').click();
       assert.equal(forms().length, 1, 'still open, once');
       assert.equal(select(forms()[0], 'What to export').value, 'path:tour');
       // the bar's Export closes the form, and opens it again on the whole diagram; the path's button puts the path back
-      labelled(el.querySelector('.graph-note-bar'), 'Export').click();
+      labelled(el.querySelector('.thoughtknot-bar'), 'Export').click();
       assert.equal(forms().length, 0);
-      labelled(el.querySelector('.graph-note-bar'), 'Export').click();
+      labelled(el.querySelector('.thoughtknot-bar'), 'Export').click();
       assert.equal(select(forms()[0], 'What to export').value, 'whole');
       labelled(el, 'Export as an animated SVG').click();
       assert.equal(forms().length, 1);
@@ -300,11 +300,11 @@ describe('a played path exported as an animated SVG', () => {
       env.plugin.layoutForExport = (...a) => (laid++, layout(...a));
       labelled(el, 'Play Sunday walk').click();
       labelled(el, 'Export as an animated SVG').click();
-      labelled(el.querySelector('.graph-note-export'), 'Export it').click();
+      labelled(el.querySelector('.thoughtknot-export'), 'Export it').click();
       await until(() =>
-        /animated SVG was not made/.test(el.querySelector('.graph-note-export-said')?.textContent ?? ''),
+        /animated SVG was not made/.test(el.querySelector('.thoughtknot-export-said')?.textContent ?? ''),
       );
-      const words = el.querySelector('.graph-note-export-said').textContent;
+      const words = el.querySelector('.thoughtknot-export-said').textContent;
       assert.match(words, /the path has 201 steps, more than the 200 an animated SVG can play smoothly on this phone/);
       assert.match(words, /Nothing was saved\. To make it fit, export a path of 200 steps or fewer/);
       assert.equal(laid, 0, 'no layout was asked for');

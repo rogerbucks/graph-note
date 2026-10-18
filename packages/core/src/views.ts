@@ -4,7 +4,7 @@
 //
 // The reader already reads `· QUERY` as a query block, and the core draws no query as data (blocks.ts `dataKind`), so a
 // view is never drawn as a graph of its own.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import type { ViewSpec } from './view-profile.ts';
 import { N, S, trim } from './whitespace.ts';
 

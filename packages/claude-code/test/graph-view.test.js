@@ -3,7 +3,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { gqlBlocks, readNote, loadEngine, PALETTES, LAYOUT_LIMITS, READ_LIMITS } from '@graph-note/core';
+import { gqlBlocks, readNote, loadEngine, PALETTES, LAYOUT_LIMITS, READ_LIMITS } from '@thoughtknot/core';
 import { viewOf, PANE_PALETTE, notePath, SVG_MAX, NO_GRAPH, EMPTY_GRAPH } from '../src/graph-view.ts';
 import { NODE_MISSING } from '../src/graphviz-process.ts';
 

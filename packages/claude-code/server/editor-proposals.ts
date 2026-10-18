@@ -16,8 +16,8 @@ import {
   makeProposal,
   noteWithProposal,
   sha256,
-} from '@graph-note/core';
-import type { GateSettings } from '@graph-note/core';
+} from '@thoughtknot/core';
+import type { GateSettings } from '@thoughtknot/core';
 
 /** A proposal made into the note's new text, or why it cannot be, with the status the server answers with. */
 export type Proposed =

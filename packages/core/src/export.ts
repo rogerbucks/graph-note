@@ -3,8 +3,8 @@
 // dark theme as chosen, inside a frame that gives its title, its legend, and the note and day it came from
 // (export_self_explaining, export_fixed_theme). The host draws the SVG onto a canvas for a PNG, at the size `pngSize`
 // gives (export_png_sharp), and writes the file; what to export is in export-scope.ts, whether to is in export-plan.ts.
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
-import type { Graph } from '@graph-note/graph-spec';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { marked } from './export-marks.ts';
 import type { Marks } from './export-marks.ts';
 import { withFlow, withRunners } from './export-motion.ts';

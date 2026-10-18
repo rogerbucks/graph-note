@@ -3,7 +3,7 @@
 // empty space clears the selection; the highlight under the pointer and with the keyboard focus; and the details sheet
 // placed again as the window and the note move. The card (graph-view.ts) binds these once it has built its parts.
 import type { Lifecycle } from '../lifecycle';
-import type { Zoom, ZoomEvent } from '@graph-note/core';
+import type { Zoom, ZoomEvent } from '@thoughtknot/core';
 import type { DetailsPanel } from './details-panel';
 import type { Selection } from './selection';
 import { onPointer } from './selection-pointer';

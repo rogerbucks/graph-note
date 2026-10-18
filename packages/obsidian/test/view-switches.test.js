@@ -54,22 +54,22 @@ const edge = (el, id) => el.querySelectorAll('g.edge').find((g) => g.getAttribut
 const thing = (el, key) => el.querySelector(`g.node[data-key="${key}"]`);
 const switches = (el) =>
   el
-    .querySelectorAll('.graph-note-view-menu button')
+    .querySelectorAll('.thoughtknot-view-menu button')
     .map((b) => [
-      b.querySelector('.graph-note-switch-name')?.textContent ?? b.textContent.replace(/ — (on|off)$/, ''),
+      b.querySelector('.thoughtknot-switch-name')?.textContent ?? b.textContent.replace(/ — (on|off)$/, ''),
       b.getAttribute('role'),
       b.getAttribute('aria-checked'),
     ]);
 const turn = (el, name) =>
-  el.querySelectorAll('.graph-note-view-menu button').find((b) => b.textContent.startsWith(name));
+  el.querySelectorAll('.thoughtknot-view-menu button').find((b) => b.textContent.startsWith(name));
 const tap = (el, g) => {
-  const vp = el.querySelector('.graph-note-viewport');
+  const vp = el.querySelector('.thoughtknot-viewport');
   const init = { target: g, pointerId: 3, pointerType: 'touch', clientX: 20, clientY: 20, button: 0 };
   vp.dispatch('pointerdown', init);
   vp.dispatch('pointerup', { ...init, clientX: 21 });
 };
 const offers = (el, text) =>
-  el.querySelectorAll('.graph-note-details button').find((b) => b.textContent.includes(text));
+  el.querySelectorAll('.thoughtknot-details button').find((b) => b.textContent.includes(text));
 
 async function card(note = NOTE, options = {}) {
   const env = await load({ files: { [PATH]: note }, ...options });
@@ -81,7 +81,7 @@ describe('the View menu', () => {
   test('a View button in the bar opens the four switches, each on or off as the settings hold them', async () => {
     const { env, el } = await card();
     try {
-      const menu = el.querySelector('.graph-note-view-menu');
+      const menu = el.querySelector('.thoughtknot-view-menu');
       assert.ok(menu.hidden, 'closed until asked');
       labelled(el, 'View').click();
       assert.ok(!menu.hidden);
@@ -102,13 +102,13 @@ describe('the View menu', () => {
     try {
       labelled(el, 'View').click();
       const b = turn(el, 'Labels by zoom');
-      assert.equal(b.querySelector('.graph-note-switch-name')?.textContent, 'Labels by zoom');
+      assert.equal(b.querySelector('.thoughtknot-switch-name')?.textContent, 'Labels by zoom');
       assert.equal(
-        b.querySelector('.graph-note-switch-track')?.getAttribute('aria-hidden'),
+        b.querySelector('.thoughtknot-switch-track')?.getAttribute('aria-hidden'),
         'true',
         'the toggle is drawn',
       );
-      const says = b.querySelector('.graph-note-switch-state');
+      const says = b.querySelector('.thoughtknot-switch-state');
       assert.equal(says.getAttribute('aria-hidden'), 'true', 'aria-checked says it to a screen reader');
       assert.equal(says.textContent, 'on');
     } finally {
@@ -119,7 +119,7 @@ describe('the View menu', () => {
   test('the edit pane’s drawing has it too, its busy hub folded as the settings start it', async () => {
     const env = await open({ note: NOTE, line: 2 });
     try {
-      await until(() => !!env.el.querySelector('.graph-note-viewport svg'));
+      await until(() => !!env.el.querySelector('.thoughtknot-viewport svg'));
       assert.ok(labelled(env.el, 'View'));
       assert.ok(node(env.el, 'fold_hub_1'), 'the stub');
       turn(env.el, 'Busy hubs folded').click();
@@ -224,17 +224,17 @@ describe('groups folded and links merged', () => {
     try {
       turn(el, 'Groups folded').click();
       await until(() => !!node(el, 'fold_group_2'));
-      const vp = el.querySelector('.graph-note-viewport');
+      const vp = el.querySelector('.thoughtknot-viewport');
       vp.dispatch('keydown', { key: 'Enter', target: node(el, 'fold_group_1') });
       await until(() => !!thing(el, 'ann'));
       labelled(el, 'Find a thing').click();
-      const input = el.querySelector('.graph-note-find input');
+      const input = el.querySelector('.thoughtknot-find input');
       input.value = 'Dee';
       input.dispatch('input');
-      el.querySelectorAll('.graph-note-find-results button')[0].click();
+      el.querySelectorAll('.thoughtknot-find-results button')[0].click();
       await until(() => !!thing(el, 'dee') && thing(el, 'dee').getAttribute('aria-pressed') === 'true');
       assert.ok(!node(el, 'fold_group_2'), 'the Helpers opened');
-      assert.match(el.querySelector('.graph-note-details').textContent, /Dee/);
+      assert.match(el.querySelector('.thoughtknot-details').textContent, /Dee/);
     } finally {
       env.uninstall();
     }
@@ -250,7 +250,7 @@ describe('groups folded and links merged', () => {
       assert.ok(node(el, 'fold_group_1').hasClass('is-selected'));
       assert.equal(node(el, 'fold_group_1').getAttribute('aria-pressed'), 'true');
       assert.ok(!node(el, 'fold_group_2').hasClass('is-selected'));
-      assert.match(el.querySelector('.graph-note-details').textContent, /Ann/, 'Ann’s details still open');
+      assert.match(el.querySelector('.thoughtknot-details').textContent, /Ann/, 'Ann’s details still open');
     } finally {
       env.uninstall();
     }
@@ -261,7 +261,7 @@ describe('groups folded and links merged', () => {
     try {
       const stub = node(el, 'fold_hub_1');
       stub.focus();
-      el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Enter', target: stub });
+      el.querySelector('.thoughtknot-viewport').dispatch('keydown', { key: 'Enter', target: stub });
       await until(() => !!thing(el, 't2') && env.doc.activeElement === thing(el, 'box'));
     } finally {
       env.uninstall();
@@ -294,7 +294,7 @@ describe('groups folded and links merged', () => {
       assert.equal(tail.getAttribute('aria-label'), edge(el, 'edge14').getAttribute('aria-label'));
       assert.equal(edge(el, 'edge14').getAttribute('aria-label'), 'Link: Ann asks Cy');
       tap(el, tail);
-      assert.match(el.querySelector('.graph-note-details').textContent, /Ann asks Cy/);
+      assert.match(el.querySelector('.thoughtknot-details').textContent, /Ann asks Cy/);
     } finally {
       env.uninstall();
     }
@@ -306,13 +306,13 @@ describe('labels by zoom', () => {
     const { env, el } = await card(NOTE, { width: 150 });
     try {
       const svg = el.querySelector('svg');
-      assert.ok(svg.hasClass('graph-note-labels-hidden'), 'too small to read');
-      for (let i = 0; i < 12 && svg.hasClass('graph-note-labels-hidden'); i++) labelled(el, 'Zoom in').click();
-      assert.ok(!svg.hasClass('graph-note-labels-hidden'), 'zoomed in, the labels read');
+      assert.ok(svg.hasClass('thoughtknot-labels-hidden'), 'too small to read');
+      for (let i = 0; i < 12 && svg.hasClass('thoughtknot-labels-hidden'); i++) labelled(el, 'Zoom in').click();
+      assert.ok(!svg.hasClass('thoughtknot-labels-hidden'), 'zoomed in, the labels read');
       labelled(el, 'Fit').click();
-      assert.ok(svg.hasClass('graph-note-labels-hidden'));
+      assert.ok(svg.hasClass('thoughtknot-labels-hidden'));
       turn(el, 'Labels by zoom').click();
-      assert.ok(!svg.hasClass('graph-note-labels-hidden'), 'at once, with no new layout');
+      assert.ok(!svg.hasClass('thoughtknot-labels-hidden'), 'at once, with no new layout');
       assert.equal(turn(el, 'Labels by zoom').getAttribute('aria-checked'), 'false');
     } finally {
       env.uninstall();
@@ -335,22 +335,22 @@ describe('labels by zoom', () => {
       });
       const painted = (g) => winner(all, labelOf(g), 'fill-opacity')?.value ?? '1';
       tap(el, thing(el, 'cy'));
-      assert.ok(svg.hasClass('graph-note-labels-hidden'));
+      assert.ok(svg.hasClass('thoughtknot-labels-hidden'));
       const check = () => {
         const withLabels = el.querySelectorAll('g.edge').filter((g) => g.querySelector('text'));
         assert.ok(withLabels.length >= 2);
         for (const g of withLabels) {
-          const shown = ['graph-note-kept', 'graph-note-hot', 'is-selected'].some((c) => g.hasClass(c));
+          const shown = ['thoughtknot-kept', 'thoughtknot-hot', 'is-selected'].some((c) => g.hasClass(c));
           assert.equal(painted(g) !== '0', shown, `${g.getAttribute('id')}: ${g.className}`);
         }
       };
       check();
       assert.notEqual(painted(edge(el, 'edge14')), '0', 'Ann asks Cy: in focus');
       assert.equal(painted(edge(el, 'edge15')), '0', 'Bob asks Dee: neither in focus nor highlighted');
-      edge(el, 'edge15').classList.add('graph-note-hot'); // under the pointer, as hover.ts marks it
+      edge(el, 'edge15').classList.add('thoughtknot-hot'); // under the pointer, as hover.ts marks it
       check();
       assert.notEqual(painted(edge(el, 'edge15')), '0', 'Bob asks Dee: highlighted');
-      edge(el, 'edge15').classList.remove('graph-note-hot');
+      edge(el, 'edge15').classList.remove('thoughtknot-hot');
       turn(el, 'Labels by zoom').click();
       assert.notEqual(painted(edge(el, 'edge15')), '0', 'switched off, every label is painted');
     } finally {
@@ -367,7 +367,7 @@ describe('a switch turned', () => {
       const kept = () =>
         el
           .querySelectorAll('g.node')
-          .filter((g) => g.hasClass('graph-note-kept'))
+          .filter((g) => g.hasClass('thoughtknot-kept'))
           .map((g) => g.getAttribute('data-key'))
           .sort();
       // the box is at the other end of a link of Ann's, folded into its stub
@@ -382,9 +382,11 @@ describe('a switch turned', () => {
       assert.equal(thing(el, 'ann').getAttribute('aria-pressed'), 'true', 'still selected');
       assert.ok(thing(el, 'ann').hasClass('is-selected'));
       assert.deepEqual(kept(), ['ann', 'box', 'cy'], 'the focus kept');
-      assert.ok(edge(el, 'edge14').hasClass('graph-note-kept') && edge(el, 'edge14_tail').hasClass('graph-note-kept'));
-      assert.ok(thing(el, 'bob').hasClass('graph-note-dim'));
-      assert.match(el.querySelector('.graph-note-details').textContent, /Ann/, 'its details still open');
+      assert.ok(
+        edge(el, 'edge14').hasClass('thoughtknot-kept') && edge(el, 'edge14_tail').hasClass('thoughtknot-kept'),
+      );
+      assert.ok(thing(el, 'bob').hasClass('thoughtknot-dim'));
+      assert.match(el.querySelector('.thoughtknot-details').textContent, /Ann/, 'its details still open');
       // the drawing is new, and the keyboard is on the same box in it
       const now = el.querySelector('#node1');
       assert.notEqual(now, first, 'drawn afresh');

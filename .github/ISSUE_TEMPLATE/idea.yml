@@ -1,5 +1,5 @@
 name: An idea
-description: Something Graph Note should do. Ideas are talked through in Discussions first.
+description: Something Thoughtknot should do. Ideas are talked through in Discussions first.
 labels: [idea]
 body:
   - type: textarea

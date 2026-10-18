@@ -40,7 +40,7 @@ const choose = (r, value) => {
 /** The problems behind a drawing's badge, each as its sign and severity. */
 async function problemsShown(env) {
   const { el } = await show(env, NOTE);
-  el.querySelector('.graph-note-badge').click();
+  el.querySelector('.thoughtknot-badge').click();
   return el
     .querySelectorAll('li')
     .map((li) => li.className)
@@ -146,7 +146,7 @@ describe('strictness', () => {
       t.value = typed;
       t.dispatch('input');
       await wait(400);
-      const mark = () => env.el.querySelector('.graph-note-problems li, .graph-note-problem')?.className ?? '';
+      const mark = () => env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem')?.className ?? '';
       assert.match(mark(), /is-warning/);
       choose(row(page(env), 'Strictness'), 'standard');
       await until(() => /is-error/.test(mark()));
@@ -163,7 +163,7 @@ describe('strictness', () => {
       t.value = typed;
       t.dispatch('input');
       await wait(400);
-      const mark = env.el.querySelector('.graph-note-problems li, .graph-note-problem');
+      const mark = env.el.querySelector('.thoughtknot-problems li, .thoughtknot-problem');
       assert.ok(mark, 'the pane lists the slip');
       assert.match(mark.className, /is-error/);
     } finally {
@@ -313,10 +313,10 @@ describe('the AI models of §19', () => {
     const env = await load({ data: { settings: { aiModels: [{ name: 'Drafts' }] } } });
     try {
       const el = page(env);
-      row(el, 'Model 1').querySelector('.fake-secret').secretComponent.enter('graph-note-drafts', 'sk-not-in-vault');
+      row(el, 'Model 1').querySelector('.fake-secret').secretComponent.enter('thoughtknot-drafts', 'sk-not-in-vault');
       await wait(10);
-      assert.equal(env.state.data.settings.aiModels[0].keyName, 'graph-note-drafts');
-      assert.equal(env.app.secretStorage.getSecret('graph-note-drafts'), 'sk-not-in-vault');
+      assert.equal(env.state.data.settings.aiModels[0].keyName, 'thoughtknot-drafts');
+      assert.equal(env.app.secretStorage.getSecret('thoughtknot-drafts'), 'sk-not-in-vault');
       assert.doesNotMatch(JSON.stringify(env.state.data), /sk-not-in-vault/);
     } finally {
       env.uninstall();

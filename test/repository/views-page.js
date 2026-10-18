@@ -4,7 +4,7 @@
 import { until } from '../../packages/obsidian/test/host/load-plugin.js';
 import { browserHost } from '../../packages/claude-code/page/browser-host.ts';
 import { PAGE_NOTE } from './wcag-page.js';
-import { word } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
 
 /**
  * Each state of the page by its name, reached through `open(hash, note, draft)`, which opens the page as the pane opens it
@@ -13,7 +13,7 @@ import { word } from '@graph-note/core';
 export function pageStates(open) {
   const withNote = '#token=t&note=Reader.md';
   const drawn = (page) =>
-    until(() => !!page.window.document.querySelector('.graph-note-pane-drawing svg.graph-note-svg'), 8000);
+    until(() => !!page.window.document.querySelector('.thoughtknot-pane-drawing svg.thoughtknot-svg'), 8000);
   // a link naming a thing that is not there: a problem, listed with its fix, and an estimated link in the drawing
   const SLIPPED = PAGE_NOTE.replace(
     '(large)-[:ANSWERS]->(q)',
@@ -32,7 +32,7 @@ export function pageStates(open) {
     'the edit pane with a problem listed and marked': async () => {
       const page = open(withNote, SLIPPED);
       await drawn(page);
-      await until(() => page.window.document.querySelectorAll('.graph-note-pane-problems li').length > 0);
+      await until(() => page.window.document.querySelectorAll('.thoughtknot-pane-problems li').length > 0);
       return page;
     },
     'the edit pane with the picker of two graph blocks': async () => {
@@ -44,7 +44,7 @@ export function pageStates(open) {
     'the edit pane with a kept draft offered back': async () => {
       const page = open(withNote, PAGE_NOTE, { text: 'x', against: null });
       await drawn(page);
-      await until(() => !page.window.document.querySelector('.graph-note-draft').hidden);
+      await until(() => !page.window.document.querySelector('.thoughtknot-draft').hidden);
       return page;
     },
     'the details of a thing, opened beside the text': async () => {
@@ -52,7 +52,7 @@ export function pageStates(open) {
       await drawn(page);
       const box = page.window.document.querySelector('g.node[data-key]');
       box.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      await until(() => !!page.window.document.querySelector('.graph-note-details'));
+      await until(() => !!page.window.document.querySelector('.thoughtknot-details'));
       return page;
     },
     'the details of an estimated link, with its quick fix': async () => {
@@ -62,17 +62,17 @@ export function pageStates(open) {
       page.window.document
         .querySelector('g.edge[data-estimate]')
         .dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      await until(() => !!page.window.document.querySelector('.graph-note-details'));
+      await until(() => !!page.window.document.querySelector('.thoughtknot-details'));
       return page;
     },
     'the export form open': async () => {
       const page = open(withNote);
       await drawn(page);
       const exporter = () =>
-        page.window.document.querySelector(`.graph-note-bar button[aria-label="${word('bar.export')}"]`);
+        page.window.document.querySelector(`.thoughtknot-bar button[aria-label="${word('bar.export')}"]`);
       await until(() => !!exporter());
       exporter().click();
-      await until(() => !!page.window.document.querySelector('.graph-note-export'));
+      await until(() => !!page.window.document.querySelector('.thoughtknot-export'));
       return page;
     },
     'a notice shown': async () => {

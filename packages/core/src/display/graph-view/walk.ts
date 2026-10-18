@@ -4,8 +4,8 @@
 // story; and, while the card is edited, Record, which takes the boxes tapped in order — each numbered on the drawing as
 // it is tapped — and writes the path. The strip's controls are built once for each thing it is doing, and only their
 // words change as it goes, so the focus stays where it is; one live region says each step.
-import { PathPlayer, PathRecorder, indentText, pathBlock, pathsOf, word } from '@graph-note/core';
-import type { WalkedPath } from '@graph-note/core';
+import { PathPlayer, PathRecorder, indentText, pathBlock, pathsOf, word } from '@thoughtknot/core';
+import type { WalkedPath } from '@thoughtknot/core';
 import { cornerOf } from './parked';
 import { PathPlay } from './path-play';
 import { button } from './view-bar';
@@ -37,9 +37,9 @@ export class Walk {
     /** Where the strip sits in the card, its row of tools; the card itself when not given. */
     at: HTMLElement = parent,
   ) {
-    this.el = at.createDiv({ cls: 'graph-note-walk', attr: { role: 'group', 'aria-label': word('walk.group') } });
-    this.controls = this.el.createDiv({ cls: 'graph-note-walk-controls' });
-    this.said = this.el.createSpan({ cls: 'graph-note-walk-said', attr: { 'aria-live': 'polite' } });
+    this.el = at.createDiv({ cls: 'thoughtknot-walk', attr: { role: 'group', 'aria-label': word('walk.group') } });
+    this.controls = this.el.createDiv({ cls: 'thoughtknot-walk-controls' });
+    this.said = this.el.createSpan({ cls: 'thoughtknot-walk-said', attr: { 'aria-live': 'polite' } });
     this.show();
   }
 
@@ -91,7 +91,7 @@ export class Walk {
     } else {
       for (const p of pathsOf(this.o.reading, this.o.graph)) {
         const why = PathPlayer.refusal(p);
-        if (why) el.createSpan({ cls: 'graph-note-walk-note', text: `⚠ ${why}` });
+        if (why) el.createSpan({ cls: 'thoughtknot-walk-note', text: `⚠ ${why}` });
         else
           button(
             el,
@@ -173,7 +173,7 @@ export class Walk {
 
   /** Each recorded step's number on its box, at its top left, as it is tapped (steps_numbered); a box visited twice has both. */
   private numberSteps(): void {
-    for (const t of Array.from(this.drawing()?.querySelectorAll('.graph-note-step-number') ?? [])) t.remove();
+    for (const t of Array.from(this.drawing()?.querySelectorAll('.thoughtknot-step-number') ?? [])) t.remove();
     const steps = this.recorder?.steps ?? [];
     for (const g of this.nodes()) {
       const key = g.getAttribute('data-key');
@@ -183,7 +183,7 @@ export class Walk {
       const at = numbers.length ? cornerOf(g) : null;
       if (!at) continue;
       const mark = g.appendChild(activeDocument.createElementNS(SVG, 'text'));
-      mark.setAttribute('class', 'graph-note-step-number');
+      mark.setAttribute('class', 'thoughtknot-step-number');
       mark.setAttribute('x', String(at.left + 4));
       mark.setAttribute('y', String(at.top + 12));
       mark.textContent = numbers.join(', ');

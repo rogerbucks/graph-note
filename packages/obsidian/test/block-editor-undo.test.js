@@ -24,7 +24,7 @@ const NOTHING = {
 async function written() {
   const env = await load({ files: { [PATH]: NOTE } });
   await env.plugin.openEditor({ path: PATH, line: 2, graph: 'reader' });
-  const el = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+  const el = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl;
   const t = el.querySelector('textarea');
   t.value = MINE;
   t.setSelectionRange(MINE.length, MINE.length);
@@ -34,7 +34,7 @@ async function written() {
 }
 const note = (env) => env.state.files.get(PATH);
 /** The editor's Undo or Redo button, whatever it says. */
-const tool = (el, which) => el.querySelectorAll('.graph-note-pane-tools button')[which === 'undo' ? 0 : 1];
+const tool = (el, which) => el.querySelectorAll('.thoughtknot-pane-tools button')[which === 'undo' ? 0 : 1];
 /** Resolves once the pane has drawn its tools again, as it does on hearing the note changed or on an Undo or Redo. */
 async function toolsRedrawn(el, act) {
   const before = tool(el, 'undo');
@@ -44,7 +44,7 @@ async function toolsRedrawn(el, act) {
 
 /** What the editor says to screen readers from now on, each text it is set to in turn. */
 function heard(el) {
-  const announce = el.querySelector('.graph-note-announce'),
+  const announce = el.querySelector('.thoughtknot-announce'),
     said = [],
     set = announce.setText.bind(announce);
   announce.setText = (text) => {

@@ -1,7 +1,7 @@
 // What the block editor adds for you as you type (spec §4): the comma that parts one pattern from the next, and the colon
 // of a link type written without one — the note's own editor adds them the same way (editor.ts) — and a closer typed
 // where it is already there, stepped over.
-import { colonFor, commaFor, gqlSpans, stepOver } from '@graph-note/core';
+import { colonFor, commaFor, gqlSpans, stepOver } from '@thoughtknot/core';
 
 /**
  * Steps over a closer just typed where the same one already follows and closes what is open: the one that follows is taken

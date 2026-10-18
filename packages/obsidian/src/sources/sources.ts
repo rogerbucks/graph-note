@@ -13,14 +13,14 @@ import {
   sourceOf,
   styledDrawing,
   underStrictness,
-} from '@graph-note/core';
-import type { Drawn, Refusal, SourceRead } from '@graph-note/core';
-import type GraphNotePlugin from '../main';
-import { renderCode } from '@graph-note/core/display/code';
+} from '@thoughtknot/core';
+import type { Drawn, Refusal, SourceRead } from '@thoughtknot/core';
+import type ThoughtknotPlugin from '../main';
+import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from '../graph-card';
-import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
-import { renderProblems } from '@graph-note/core/display/graph-view/problems-list';
-import { refusalBanner } from '@graph-note/core/display/refusal-banner';
+import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
+import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-list';
+import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { editInPane } from '../edit-in-pane';
 import { readFromVault, watchSource } from './source-read';
 import { sourceAlert, sourceStrip } from './source-strip';
@@ -31,7 +31,7 @@ import { sourceAlert, sourceStrip } from './source-strip';
  * note draws `graph` from its own blocks.
  */
 export async function sourcedView(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtknotPlugin,
   texts: string[],
   graph: string,
   el: HTMLElement,
@@ -48,19 +48,19 @@ export async function sourcedView(
 
 /** Draws a FROM block where the note shows it: the whole graph from its source, read-only, or why it cannot be drawn. */
 export async function renderSourceBlock(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtknotPlugin,
   text: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
   owner?: object,
   redraw?: () => void,
 ): Promise<void> {
-  const root = el.createDiv({ cls: 'graph-note' });
+  const root = el.createDiv({ cls: 'thoughtknot' });
   const s = sourceOf(text);
   // the block itself, its place after FROM among it, is edited in the pane, whatever its source holds (§4)
   const info = ctx.getSectionInfo(el);
   const target = info ? { path: ctx.sourcePath, line: info.lineStart, graph: s?.graph ?? '' } : null;
-  editInPane(root.createDiv({ cls: 'graph-note-card-actions' }), plugin, target);
+  editInPane(root.createDiv({ cls: 'thoughtknot-card-actions' }), plugin, target);
   if (!s || 'fault' in s) {
     sourceAlert(root, `This block cannot be drawn: ${s?.fault ?? 'it names no source'}.`);
     renderCode(root, text);
@@ -90,7 +90,8 @@ export async function renderSourceBlock(
   const plain = reading.graphs.get(graph);
   if (!plain || !plain.boxes.length) {
     if (problems.length) renderProblems(root, problems, false);
-    else root.createDiv({ cls: 'graph-note-empty', text: `Graph ${graph} has nothing in it yet where it is written.` });
+    else
+      root.createDiv({ cls: 'thoughtknot-empty', text: `Graph ${graph} has nothing in it yet where it is written.` });
     renderCode(root, text);
     return;
   }
@@ -98,7 +99,7 @@ export async function renderSourceBlock(
   try {
     drawn = await plugin.layout(styledDrawing(plain, styling.style, reading.world[graph]), owner);
   } catch (e) {
-    console.error('Graph Note could not draw', graph, e);
+    console.error('Thoughtknot could not draw', graph, e);
     sourceAlert(root, 'The drawing engine could not start, so this graph is shown as text.');
     renderCode(root, text);
     return;

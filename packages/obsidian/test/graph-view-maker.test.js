@@ -17,7 +17,7 @@ const TRIP = `// graph: trip
 (ann:Person {name: 'Ann'}),
 (home)-[:NEAR]->(park), (park)-[:NEAR]->(cafe), (ann)-[:LIVES_AT]->(home)`;
 const NOTE = ['# Trip', '', fence(TRIP), '', 'After.', ''].join('\n');
-const strip = (el) => el.querySelector('.graph-note-view-maker');
+const strip = (el) => el.querySelector('.thoughtknot-view-maker');
 const said = (el) => strip(el).querySelector('[aria-live]').textContent;
 const choose = (el, label, value) => {
   const sel = strip(el)
@@ -134,7 +134,7 @@ describe('making a view by tapping', () => {
     const { env, el } = await making();
     try {
       tapKey(el, 'home');
-      assert.ok(el.querySelector('.graph-note-details').hidden);
+      assert.ok(el.querySelector('.thoughtknot-details').hidden);
     } finally {
       env.uninstall();
     }

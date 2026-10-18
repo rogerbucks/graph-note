@@ -33,8 +33,8 @@ const LISTED = NOTE3.replace("{name: 'Large reader', tags: 'light, cheap'})", "{
   '(large)-[:ANSWERS]->(q),\n(light:Tag),\n(large)-[:HAS_TAG]->(light),\n(cheap:Tag),\n(large)-[:HAS_TAG]->(cheap)',
 );
 const BLOCK_OF = (note) => note.split('```gql\n')[1].split('\n```')[0];
-const alert = (el) => el.querySelector('.graph-note-details [role="alert"]');
-const status = (el) => el.querySelector('.graph-note-details [role="status"]');
+const alert = (el) => el.querySelector('.thoughtknot-details [role="alert"]');
+const status = (el) => el.querySelector('.thoughtknot-details [role="status"]');
 
 describe('choosing List in the inspector', () => {
   test('List asks for the kind and the relationship, and writes nothing until they are given', async () => {
@@ -42,7 +42,7 @@ describe('choosing List in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       pick(env, panel, 'tags', 'List');
       assert.ok(field(panel, 'Kind of the linked things'));
       assert.ok(field(panel, 'Relationship from this thing'));
@@ -64,7 +64,7 @@ describe('choosing List in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       pick(env, panel, 'tags', 'List');
       const options = (label) =>
         panel
@@ -83,7 +83,7 @@ describe('choosing List in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       makeList(env, panel, 'tags', 'Tag', 'HAS_TAG');
       assert.equal(text(el), BLOCK_OF(LISTED));
       assert.ok(row(panel, 'tags') === null, 'the property row is gone');
@@ -100,7 +100,7 @@ describe('choosing List in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       makeList(env, panel, 'tags', 'Tag', 'HAS TAG');
       assert.match(alert(el).textContent, /the relationship must be one word/);
       assert.equal(text(el), BLOCK_OF(NOTE3));
@@ -115,7 +115,7 @@ describe('choosing List in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      makeList(env, el.querySelector('.graph-note-details'), 'tags', 'Tag', 'HAS_TAG');
+      makeList(env, el.querySelector('.thoughtknot-details'), 'tags', 'Tag', 'HAS_TAG');
       const t = el.querySelector('textarea');
       assert.ok(t.dispatch('keydown', { key: 'z', metaKey: true }).defaultPrevented);
       assert.equal(t.value, BLOCK_OF(NOTE3));
@@ -129,7 +129,7 @@ describe('choosing List in the inspector', () => {
     try {
       const el = await editing(env);
       el.querySelectorAll('g.edge')[0].dispatch('keydown', { key: 'Enter' });
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       panel.querySelector('.metadata-add-button').click();
       enter(field(panel, 'New property name'), 'weight');
       row(panel, '').querySelector('.metadata-property-icon').click();
@@ -149,7 +149,7 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       assert.deepEqual(chips(panel, 'HAS_TAG'), ['light', 'cheap']);
       assert.ok(row(panel, 'HAS_TAG').querySelector('.multi-select-container'), 'Obsidian’s own chip classes');
       assert.deepEqual(
@@ -167,7 +167,7 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       removeChip(panel, 'HAS_TAG', 'light');
       assert.equal(text(el), BLOCK_OF(LISTED).replace('(light:Tag),\n(large)-[:HAS_TAG]->(light),\n', ''));
       assert.deepEqual(chips(panel, 'HAS_TAG'), ['cheap']);
@@ -183,7 +183,7 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       const xs = () => row(panel, 'HAS_TAG').querySelectorAll('.multi-select-pill-remove-button');
       removeChip(panel, 'HAS_TAG', 'light');
       assert.ok(env.doc.activeElement === xs()[0], 'the x of cheap, which took its place');
@@ -203,7 +203,7 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       removeChip(panel, 'HAS_TAG', 'light');
       assert.doesNotMatch(text(el), /\(large\)-\[:HAS_TAG\]->\(light\)/);
       assert.match(text(el), /\(light:Tag\)/);
@@ -218,7 +218,7 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       addChip(panel, 'HAS_TAG', 'Open late');
       assert.equal(
         text(el),
@@ -241,7 +241,7 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       addChip(panel, 'HAS_TAG', 'open late');
       assert.match(text(el), /\(large\)-\[:HAS_TAG\]->\(late\)$/);
       assert.equal((text(el).match(/:Tag/g) ?? []).length, 3, 'no second Open late');
@@ -256,7 +256,7 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       addChip(panel, 'HAS_TAG', 'Light');
       assert.match(alert(el).textContent, /Light is already in the list/);
       addChip(panel, 'HAS_TAG', '   ');
@@ -272,7 +272,7 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       addChip(panel, 'HAS_TAG', 'Open late');
       addChip(panel, 'HAS_TAG', 'Open late');
       assert.match(alert(el).textContent, /already in the list/);
@@ -290,14 +290,14 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       makeList(env, panel, 'tags', 'Tag', 'HAS_TAG');
       assert.deepEqual(chips(panel, 'HAS_TAG'), []);
       addChip(panel, 'HAS_TAG', 'light');
       assert.deepEqual(chips(panel, 'HAS_TAG'), ['light']);
       await until(() => env.state.files.get(PATH).includes('(large)-[:HAS_TAG]->(light)'), 2000);
       const again = await show(env);
-      assert.deepEqual(chips(again.querySelector('.graph-note-details'), 'HAS_TAG'), ['light']);
+      assert.deepEqual(chips(again.querySelector('.thoughtknot-details'), 'HAS_TAG'), ['light']);
     } finally {
       env.uninstall();
     }
@@ -308,7 +308,7 @@ describe('a list as chips in the inspector', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       panel.querySelector('.metadata-add-button').click();
       enter(field(panel, 'New property name'), 'topics');
       pick(env, panel, '', 'List');
@@ -325,7 +325,7 @@ describe('a list as chips in the inspector', () => {
 });
 
 describe('the name typed for a list stays visible', () => {
-  const keyOf = (panel, rel) => row(panel, rel).querySelector('.graph-note-list-key').textContent;
+  const keyOf = (panel, rel) => row(panel, rel).querySelector('.thoughtknot-list-key').textContent;
   /** Adds a property named `name` to the open details and chooses List for it, leaving the form open. */
   const choosing = (env, panel, name) => {
     panel.querySelector('.metadata-add-button').click();
@@ -338,11 +338,11 @@ describe('the name typed for a list stays visible', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       choosing(env, panel, 'rivals');
       assert.equal(field(panel, 'Kind of the linked things').value, 'Rival');
       assert.equal(field(panel, 'Relationship from this thing').value, 'HAS_RIVAL');
-      const said = panel.querySelector('.graph-note-list-form .graph-note-list-note');
+      const said = panel.querySelector('.thoughtknot-list-form .thoughtknot-list-note');
       assert.equal(
         said.textContent,
         'Each value of rivals becomes a thing linked by the relationship, and the row is named after it.',
@@ -357,7 +357,7 @@ describe('the name typed for a list stays visible', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       choosing(env, panel, 'rivals');
       labelled(panel, 'Make list').click();
       assert.equal(keyOf(panel, 'HAS_RIVAL'), 'rivals · HAS_RIVAL');
@@ -369,7 +369,7 @@ describe('the name typed for a list stays visible', () => {
       // the details drawn again, on another thing and back, keep the label
       tapKey(el, 'q');
       tapKey(el, 'large');
-      assert.equal(keyOf(el.querySelector('.graph-note-details'), 'HAS_RIVAL'), 'rivals · HAS_RIVAL');
+      assert.equal(keyOf(el.querySelector('.thoughtknot-details'), 'HAS_RIVAL'), 'rivals · HAS_RIVAL');
     } finally {
       env.uninstall();
     }
@@ -380,7 +380,7 @@ describe('the name typed for a list stays visible', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       choosing(env, panel, 'rivals');
       labelled(panel, 'Make list').click();
       addChip(panel, 'HAS_RIVAL', 'Reading tablet');
@@ -401,7 +401,7 @@ describe('the name typed for a list stays visible', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       makeList(env, panel, 'tags', 'Tag', 'HAS_TAG');
       assert.equal(keyOf(panel, 'HAS_TAG'), 'tags · HAS_TAG');
     } finally {
@@ -414,7 +414,7 @@ describe('the name typed for a list stays visible', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const panel = el.querySelector('.graph-note-details');
+      const panel = el.querySelector('.thoughtknot-details');
       choosing(env, panel, 'rivals');
       labelled(panel, 'Make list').click();
       addChip(panel, 'HAS_RIVAL', 'Reading tablet');
@@ -429,7 +429,7 @@ describe('the name typed for a list stays visible', () => {
       try {
         const again = await editing(reloaded);
         tapKey(again, 'large');
-        assert.equal(keyOf(again.querySelector('.graph-note-details'), 'HAS_RIVAL'), 'HAS_RIVAL');
+        assert.equal(keyOf(again.querySelector('.thoughtknot-details'), 'HAS_RIVAL'), 'HAS_RIVAL');
       } finally {
         reloaded.uninstall();
       }

@@ -20,7 +20,7 @@ import {
   editorInfoField,
   editorLivePreviewField,
 } from '../../packages/obsidian/test/host/fake-obsidian.js';
-import { ProposalReview, basisOf, makeProposal, word } from '@graph-note/core';
+import { ProposalReview, basisOf, makeProposal, word } from '@thoughtknot/core';
 import * as cardNotes from '../../packages/obsidian/test/host/card-notes.js';
 import * as paneNotes from '../../packages/obsidian/test/host/pane-notes.js';
 
@@ -132,22 +132,22 @@ export const OBSIDIAN = {
   'a card with its problems listed': async () => {
     const env = await load();
     const { el } = await show(env, `# N\n\n${fence(SLIP)}\n`);
-    el.querySelector('.graph-note-badge').click();
+    el.querySelector('.thoughtknot-badge').click();
     return { env, el };
   },
   'the details of a thing, as a sheet': async () => {
     const env = await load();
     const { el } = await show(env, `# N\n\n${fence(GRAPH)}\n`);
     tapKey(el, 'q');
-    assert.ok(el.querySelector('.graph-note-details'), 'the details open');
+    assert.ok(el.querySelector('.thoughtknot-details'), 'the details open');
     return { env, el };
   },
   'the details after a choice, with the trail': async () => {
     const env = await load();
     const { el } = await show(env, `# N\n\n${fence(GRAPH)}\n`);
     tapKey(el, 'q');
-    el.querySelector('button.graph-note-link-thing').click();
-    assert.ok(labelled(el, 'Back to Which device?') ?? el.querySelector('.graph-note-trail button'), 'a trail');
+    el.querySelector('button.thoughtknot-link-thing').click();
+    assert.ok(labelled(el, 'Back to Which device?') ?? el.querySelector('.thoughtknot-trail button'), 'a trail');
     return { env, el };
   },
   'a card being edited in place': async () => {
@@ -172,20 +172,20 @@ export const OBSIDIAN = {
     await until(
       () =>
         env.el.querySelectorAll('g.node').length === 3 ||
-        (!!env.el.querySelector('.graph-note-tabs') && !!env.el.querySelector('textarea')),
+        (!!env.el.querySelector('.thoughtknot-tabs') && !!env.el.querySelector('textarea')),
     );
     return { env, el: env.el };
   },
   'the export form open on a card': async () => {
     const { env, el } = await shownBlock(noteOf(TRIP), 0);
     labelled(el, word('bar.export')).click();
-    assert.ok(el.querySelector('.graph-note-export'), 'the Export form');
+    assert.ok(el.querySelector('.thoughtknot-export'), 'the Export form');
     return { env, el };
   },
   'the export form asking first, for a note above its classification': async () => {
     const { env, el } = await shownBlock(`---\nclassification: Internal\n---\n${noteOf(TRIP)}`, 0);
     labelled(el, word('bar.export')).click();
-    const form = el.querySelector('.graph-note-export');
+    const form = el.querySelector('.thoughtknot-export');
     labelled(form, word('export.it')).click();
     await until(() => !!labelled(form, word('export.anyway')));
     return { env, el };
@@ -194,12 +194,12 @@ export const OBSIDIAN = {
     const { env, el } = await sendDialog();
     const shower = el.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === word('ai.show'));
     shower.click();
-    await until(() => !!el.querySelector('.graph-note-ai-body'));
+    await until(() => !!el.querySelector('.thoughtknot-ai-body'));
     return { env, el };
   },
   'a proposal drawn over its graph, its changes listed': async () => {
     const { env, el } = await shownBlock(proposalNote(), 1);
-    await until(() => el.querySelectorAll('li.graph-note-proposal-row').length > 0);
+    await until(() => el.querySelectorAll('li.thoughtknot-proposal-row').length > 0);
     return { env, el };
   },
   'the quick-info tooltip of a thing': async () => {
@@ -213,24 +213,24 @@ export const OBSIDIAN = {
   },
   'a style block, opened': async () => {
     const { env, el } = await shownBlock(noteOf(TRIP, STYLE), 1);
-    const fold = el.querySelector('details.graph-note-style');
+    const fold = el.querySelector('details.thoughtknot-style');
     assert.ok(fold, 'the folded style');
     fold.setAttribute('open', '');
     return { env, el };
   },
   'a step’s card': async () => {
     const { env, el } = await shownBlock(noteOf(TEAM, STEP), 1);
-    assert.ok(el.querySelector('.graph-note-step'), 'the step’s card');
+    assert.ok(el.querySelector('.thoughtknot-step'), 'the step’s card');
     return { env, el };
   },
   'a view, read in plain English with what is outside it faded': async () => {
     const { env, el } = await shownBlock(noteOf(TRIP, ROUND_PARK), 1);
-    await until(() => !!el.querySelector('.graph-note-view-reading'));
+    await until(() => !!el.querySelector('.thoughtknot-view-reading'));
     return { env, el };
   },
   'a graph drawn as a table': async () => {
     const { env, el } = await shownBlock(noteOf(TRIP, TABLE), 0);
-    assert.ok(el.querySelector('.graph-note-table table'), 'the table');
+    assert.ok(el.querySelector('.thoughtknot-table table'), 'the table');
     return { env, el };
   },
   'a drawing untangled to a thing and its neighbours, behind its banner': async () => {
@@ -239,21 +239,21 @@ export const OBSIDIAN = {
     el.querySelectorAll('button')
       .find((b) => b.textContent.includes('Show only this and its neighbours'))
       .click();
-    assert.ok(el.querySelector('.graph-note-untangle'), 'the banner');
+    assert.ok(el.querySelector('.thoughtknot-untangle'), 'the banner');
     return { env, el };
   },
   'a card in full screen': async () => {
     const env = await load();
     const { el } = await show(env, `# N\n\n${fence(GRAPH)}\n`);
     labelled(el, word('bar.full-screen')).click();
-    const overlay = env.doc.body.querySelector('.graph-note-fullscreen');
+    const overlay = env.doc.body.querySelector('.thoughtknot-fullscreen');
     assert.ok(overlay?.querySelector('g.node'), 'the drawing in full screen');
     return { env, el: overlay };
   },
   'the mini-map, once zoomed in past the fit': async () => {
     const { env, el } = await shownBlock(noteOf(GRAPH), 0, { width: 300 });
     labelled(el, word('bar.zoom-in')).click();
-    assert.equal(el.querySelector('.graph-note-mini-map')?.hidden, false, 'the mini-map');
+    assert.equal(el.querySelector('.thoughtknot-mini-map')?.hidden, false, 'the mini-map');
     return { env, el };
   },
   'a path playing, its step said': async () => {
@@ -261,7 +261,7 @@ export const OBSIDIAN = {
     const { env, el } = await shownBlock(noteOf(walk), 0);
     clock(env);
     labelled(el, word('walk.play', { title: 'Sunday walk' })).click();
-    assert.match(el.querySelector('.graph-note-walk [aria-live]').textContent, /Step 1 of 2/);
+    assert.match(el.querySelector('.thoughtknot-walk [aria-live]').textContent, /Step 1 of 2/);
     return { env, el };
   },
   'adding a thing, while editing in place': async () => {
@@ -269,13 +269,13 @@ export const OBSIDIAN = {
     const el = await editing(env);
     await until(() => !!labelled(el, 'Add a thing'));
     labelled(el, 'Add a thing').click();
-    assert.equal(el.querySelector('.graph-note-add-thing')?.hidden, false, 'the strip');
+    assert.equal(el.querySelector('.thoughtknot-add-thing')?.hidden, false, 'the strip');
     return { env, el };
   },
   'the diagram types listed': async () => {
     const { env, el } = await shownBlock(noteOf(TEAM), 0);
     labelled(el, 'Diagram type').click();
-    assert.equal(el.querySelector('.graph-note-type-list').hidden, false, 'the list');
+    assert.equal(el.querySelector('.thoughtknot-type-list').hidden, false, 'the list');
     return { env, el };
   },
   'the Live Preview card': async () => livePreviewCard(noteOf(GRAPH)),

@@ -36,7 +36,7 @@ describe('the wiki', () => {
     assert.doesNotMatch(pages['Home.md'], /<!-- wiki:/);
     assert.match(pages['Guide.md'], /!\[[^\]]+\]\(images\/card\.png\)/);
     assert.match(pages['Guide.md'], /\| \*\*Indent\*\* \| How lines are indented\. \|/);
-    for (const name of [...GENERATED, 'How-to-use-Graph-Note'])
+    for (const name of [...GENERATED, 'How-to-use-Thoughtknot'])
       assert.match(pages['_Sidebar.md'], new RegExp(`\\(${name.replace('.md', '')}\\)`));
   });
 

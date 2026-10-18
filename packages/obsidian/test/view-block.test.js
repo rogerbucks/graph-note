@@ -25,7 +25,7 @@ const keys = (el) => el.querySelectorAll('g.node').map((g) => g.getAttribute('da
 const faded = (el) =>
   el
     .querySelectorAll('g.node')
-    .filter((g) => g.classList.contains('graph-note-faded'))
+    .filter((g) => g.classList.contains('thoughtknot-faded'))
     .map((g) => g.getAttribute('data-key'));
 
 async function viewCard(note, n) {
@@ -39,7 +39,7 @@ describe('a view', () => {
     const { env, el } = await viewCard(noteOf(DATA, NEAR), 1);
     try {
       assert.match(
-        el.querySelector('.graph-note-view-reading').textContent,
+        el.querySelector('.thoughtknot-view-reading').textContent,
         /round_park: everything within 1 step of The park/,
       );
       assert.deepEqual(keys(el).sort(), ['cafe', 'home', 'lake', 'park']);
@@ -56,7 +56,7 @@ describe('a view', () => {
     Object.assign(env.plugin.layoutLimits, { things: 2 });
     try {
       const { el } = await show(env, note, 1);
-      const banner = el.querySelector('.graph-note-banner');
+      const banner = el.querySelector('.thoughtknot-banner');
       assert.ok(banner, 'a banner');
       assert.match(banner.textContent, /too large/i);
       assert.match(banner.textContent, /at most 2/);
@@ -80,7 +80,7 @@ describe('a view', () => {
     test(`in a note over the text limit of ${limit}, is its query under the “too large to read” banner, never “matches nothing”`, async () => {
       const { env, el } = await viewCard(noteOf(`${DATA}\n${pad}`, NEAR), 1);
       try {
-        const banner = el.querySelector('.graph-note-banner');
+        const banner = el.querySelector('.thoughtknot-banner');
         assert.ok(banner, 'a banner');
         assert.match(banner.textContent, /too large to read/i);
         assert.match(banner.textContent, said);
@@ -126,11 +126,11 @@ describe('a view', () => {
     const { env, el } = await viewCard(noteOf(DATA, NEAR, style), 1);
     try {
       const park = el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === 'park');
-      assert.ok(park.classList.contains('graph-note-look'), 'styled');
-      assert.ok(park.classList.contains('graph-note-line-bold'));
-      const legend = el.querySelector('.graph-note-legend');
+      assert.ok(park.classList.contains('thoughtknot-look'), 'styled');
+      assert.ok(park.classList.contains('thoughtknot-line-bold'));
+      const legend = el.querySelector('.thoughtknot-legend');
       assert.match(legend.textContent, /where we meet/);
-      assert.ok(legend.querySelector('.graph-note-swatch'), 'a swatch beside the words, never colour alone');
+      assert.ok(legend.querySelector('.thoughtknot-swatch'), 'a swatch beside the words, never colour alone');
     } finally {
       env.uninstall();
     }
@@ -152,7 +152,7 @@ describe('what a view card says and shows', () => {
       for (const g of el.querySelectorAll('g.edge[data-link]')) {
         g.dispatch('keydown', { key: 'Enter' });
         const label = g.getAttribute('aria-label');
-        const details = propertiesShown(el.querySelector('.graph-note-details')).join('\n');
+        const details = propertiesShown(el.querySelector('.thoughtknot-details')).join('\n');
         if (/STEP|step/i.test(label) && /Home/.test(label)) assert.match(details, /seq: 1/, label);
         if (/STEP|step/i.test(label) && /park/.test(label)) assert.match(details, /seq: 2/, label);
         assert.doesNotMatch(details, /since/, `${label}: no other link's properties`);
@@ -171,10 +171,10 @@ describe('what a view card says and shows', () => {
     const { env, el } = await viewCard(noteOf(DATA, NEAR, style), 1);
     try {
       const park = el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === 'park');
-      assert.ok(park.classList.contains('graph-note-look'));
+      assert.ok(park.classList.contains('thoughtknot-look'));
       assert.match(park.getAttribute('aria-label'), /places/, 'its meaning said, never colour alone');
-      assert.match(el.querySelector('.graph-note-legend').textContent, /places/);
-      assert.doesNotMatch(el.querySelector('.graph-note-legend').textContent, /elsewhere/);
+      assert.match(el.querySelector('.thoughtknot-legend').textContent, /places/);
+      assert.doesNotMatch(el.querySelector('.thoughtknot-legend').textContent, /elsewhere/);
     } finally {
       env.uninstall();
     }
@@ -252,7 +252,7 @@ describe('a view that cannot be drawn', () => {
     const { env, el } = await viewCard(noteOf(DATA, none), 1);
     try {
       assert.equal(el.querySelector('svg'), null);
-      assert.match(el.querySelector('.graph-note-empty').textContent, /zed/);
+      assert.match(el.querySelector('.thoughtknot-empty').textContent, /zed/);
       assert.ok(labelled(el, 'Change the view'));
     } finally {
       env.uninstall();
@@ -268,11 +268,11 @@ describe('a view saved as shown', () => {
       labelled(el, 'Zoom in').click();
       // how it is shown: the drawing's size, and its place in the viewport
       const shownAs = (card) => {
-        const vp = card.querySelector('.graph-note-viewport');
+        const vp = card.querySelector('.thoughtknot-viewport');
         return [
           card.querySelector('svg').getAttribute('width'),
-          vp.cssProps['--graph-note-x'],
-          vp.cssProps['--graph-note-y'],
+          vp.cssProps['--thoughtknot-x'],
+          vp.cssProps['--thoughtknot-y'],
         ];
       };
       const before = shownAs(el);
@@ -320,9 +320,9 @@ describe('a view saved as shown', () => {
     const note = noteOf(DATA, NEAR);
     const { env, el } = await viewCard(note, 1);
     try {
-      const nearLine = (card) => card.querySelector('.graph-note-filter button.graph-note-filter-type');
+      const nearLine = (card) => card.querySelector('.thoughtknot-filter button.thoughtknot-filter-type');
       const hiddenLinks = (card) =>
-        card.querySelectorAll('g.edge').filter((g) => g.classList.contains('graph-note-hidden')).length;
+        card.querySelectorAll('g.edge').filter((g) => g.classList.contains('thoughtknot-hidden')).length;
       labelled(el, 'Filter by kind or link').click();
       nearLine(el).click();
       nearLine(el).click();

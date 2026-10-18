@@ -3,7 +3,7 @@
 // after the block's last item, and nothing else in the block changes. A name of the user's own is held to the same rules.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { addThing, suggestName } from '../src/add-thing.ts';
 import { readNote } from '../src/drawing.ts';
 import { nameFromText } from '../src/name-suggestions.ts';

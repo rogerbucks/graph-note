@@ -70,10 +70,10 @@ describe('/graph edit opens the editor (cc_editor_opens)', () => {
       request.argv.slice(1).filter((a) => !a.endsWith('editor-server.ts')),
       [],
     );
-    assert.equal(request.env.GRAPH_NOTE_EDITOR_VAULT, where.vault);
-    assert.equal(request.env.GRAPH_NOTE_EDITOR_NOTE, where.plan);
-    assert.equal(request.env.GRAPH_NOTE_EDITOR_DRAFTS, where.data);
-    assert.equal(request.env.GRAPH_NOTE_EDITOR_INPUT, 'ignore');
+    assert.equal(request.env.THOUGHTKNOT_EDITOR_VAULT, where.vault);
+    assert.equal(request.env.THOUGHTKNOT_EDITOR_NOTE, where.plan);
+    assert.equal(request.env.THOUGHTKNOT_EDITOR_DRAFTS, where.data);
+    assert.equal(request.env.THOUGHTKNOT_EDITOR_INPUT, 'ignore');
   });
 
   test('a server whose input the host closed at once keeps serving', async () => {

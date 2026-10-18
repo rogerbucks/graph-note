@@ -73,8 +73,8 @@ describe('a change set in the editing view', () => {
       assert.deepEqual(widgets(editorState(env, note, false)), []);
       const dom = ws[1].widget.toDOM();
       env.doc.body.appendChild(dom);
-      await until(() => !!dom.querySelector('.graph-note-proposal'));
-      assert.equal(dom.querySelectorAll('li.graph-note-proposal-row').length, 1);
+      await until(() => !!dom.querySelector('.thoughtknot-proposal'));
+      assert.equal(dom.querySelectorAll('li.thoughtknot-proposal-row').length, 1);
     } finally {
       env.uninstall();
     }
@@ -110,14 +110,14 @@ describe('the editing view draws graph blocks with its own widget', () => {
       const [first] = widgets(state);
       const dom = first.widget.toDOM();
       env.doc.body.appendChild(dom);
-      await until(() => !!dom.querySelector('.graph-note-view'));
+      await until(() => !!dom.querySelector('.thoughtknot-view'));
       const at = NOTE.indexOf('(large)-[:ANSWERS]->(q)') + '(large)-[:ANSWERS]->(q)'.length;
       const next = state.update({ changes: { from: at, insert: ",\n(small:Option {name: 'Small'})" } }).state;
       const [second] = widgets(next);
       assert.ok(!second.widget.eq(first.widget), 'the text changed');
       assert.equal(second.widget.updateDOM(dom), true, 'so it is redrawn in the same element');
       await until(() => dom.querySelectorAll('g.node').length === 3, 3000);
-      assert.equal(dom.querySelectorAll('.graph-note-view').length, 1, 'one card, the old one gone');
+      assert.equal(dom.querySelectorAll('.thoughtknot-view').length, 1, 'one card, the old one gone');
       second.widget.destroy(dom);
     } finally {
       env.uninstall();
@@ -131,7 +131,7 @@ describe('the editing view draws graph blocks with its own widget', () => {
       const [first] = widgets(state);
       const dom = first.widget.toDOM();
       env.doc.body.appendChild(dom);
-      await until(() => !!dom.querySelector('.graph-note-view'));
+      await until(() => !!dom.querySelector('.thoughtknot-view'));
       first.widget.measured(dom, 412);
       const at = NOTE.indexOf('(large)-[:ANSWERS]->(q)');
       const [second] = widgets(state.update({ changes: { from: at, insert: ' ' } }).state);
@@ -149,14 +149,14 @@ describe('the editing view draws graph blocks with its own widget', () => {
       const [first] = widgets(state);
       const dom = first.widget.toDOM();
       env.doc.body.appendChild(dom);
-      await until(() => !!dom.querySelector('.graph-note-view'));
-      const old = dom.querySelector('.graph-note-view');
+      await until(() => !!dom.querySelector('.thoughtknot-view'));
+      const old = dom.querySelector('.thoughtknot-view');
       const at = NOTE.indexOf('(large)-[:ANSWERS]->(q)');
       const [second] = widgets(state.update({ changes: { from: at, insert: ' ' } }).state);
       second.widget.updateDOM(dom);
       assert.ok(old.isConnected, 'still there while the new one is drawn');
       await until(() => !old.isConnected, 3000);
-      assert.equal(dom.querySelectorAll('.graph-note-view').length, 1);
+      assert.equal(dom.querySelectorAll('.thoughtknot-view').length, 1);
       second.widget.destroy(dom);
     } finally {
       env.uninstall();
@@ -177,9 +177,9 @@ describe('the editing view draws graph blocks with its own widget', () => {
       const [next] = widgets(editorState(env, NOTE));
       const shown = next.widget.toDOM();
       env.doc.body.appendChild(shown);
-      await until(() => !!shown.querySelector('.graph-note-view'), 3000);
+      await until(() => !!shown.querySelector('.thoughtknot-view'), 3000);
       await wait(300);
-      assert.ok(!dom.querySelector('.graph-note-view'), 'the card taken away is not filled');
+      assert.ok(!dom.querySelector('.thoughtknot-view'), 'the card taken away is not filled');
       next.widget.destroy(shown);
       assert.equal(watchers(), before, 'and nothing of it is left watching the settings');
     } finally {
@@ -199,7 +199,7 @@ describe('the editor in place, in the editing view’s own card', () => {
       const [first] = widgets(state);
       const dom = first.widget.toDOM();
       host.appendChild(dom);
-      await until(() => !!dom.querySelector('.graph-note-view'));
+      await until(() => !!dom.querySelector('.thoughtknot-view'));
       dom
         .querySelectorAll('button')
         .find((b) => b.getAttribute('aria-label') === 'Edit here')
@@ -306,7 +306,7 @@ describe('what is typed in place is written through the editor', () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
       await env.plugin.openEditor({ path: PATH, line: 2, graph: 'reader' });
-      const pane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
+      const pane = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl;
       const t = pane.querySelector('textarea');
       t.value = READER + ',';
       t.dispatch('input');

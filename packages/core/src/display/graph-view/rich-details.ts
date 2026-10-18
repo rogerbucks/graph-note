@@ -5,8 +5,8 @@
 // (links-list.ts). What is rendered is owned by a component
 // of its own, unloaded when the details are drawn again or close, so nothing rendered outlives what it was rendered for.
 import { Lifecycle } from '../lifecycle';
-import { attachmentsOf, linksHeld, noteOf, withMeant, word } from '@graph-note/core';
-import type { Target, View } from '@graph-note/core';
+import { attachmentsOf, linksHeld, noteOf, withMeant, word } from '@thoughtknot/core';
+import type { Target, View } from '@thoughtknot/core';
 import { noteControls } from './note-controls';
 import { linkAnchor, renderLinks } from '../links/links-list';
 import type { LeftAt } from '../links/link-types';
@@ -67,11 +67,11 @@ export class RichDetails {
     const host = this.o.links,
       note = host && noteOf(this.o.reading, this.o.graph, key);
     if (host && note) {
-      const box = el.createDiv({ cls: 'graph-note-note' });
+      const box = el.createDiv({ cls: 'thoughtknot-note' });
       linkAnchor(box.createDiv(), note, host, this.where, `Open ${note.label}`);
-      this.render(box, `![[${note.opens}]]`, 'graph-note-note-body');
+      this.render(box, `![[${note.opens}]]`, 'thoughtknot-note-body');
     }
-    if (host && MARKED.test(text)) this.render(el, text, 'graph-note-rich-text');
+    if (host && MARKED.test(text)) this.render(el, text, 'thoughtknot-rich-text');
     this.note(el, { thing: key }); // its note (§24, note_shown)
   }
 
@@ -88,7 +88,7 @@ export class RichDetails {
           : drawing?.links[target.link]?.note;
     if (!note) return;
     el.createEl('h4', { text: 'Note' });
-    this.render(el, note.text, 'graph-note-thing-note');
+    this.render(el, note.text, 'thoughtknot-thing-note');
   }
 
   /** The note controls of a thing or link while its block is edited (note_add); `replace` writes the block. */
@@ -103,12 +103,12 @@ export class RichDetails {
 
   /** Properties to read, as a table of each name and its value rendered by Obsidian (spec §3, §14, details_properties_table). */
   properties(el: HTMLElement, properties: [string, string][]): void {
-    el.createEl('h4', { cls: 'graph-note-section-label', text: word('details.properties') });
-    const dl = el.createEl('dl', { cls: 'graph-note-rich-properties' });
+    el.createEl('h4', { cls: 'thoughtknot-section-label', text: word('details.properties') });
+    const dl = el.createEl('dl', { cls: 'thoughtknot-rich-properties' });
     for (const [k, v] of properties) {
-      dl.createEl('dt', { cls: 'graph-note-property-name', text: k });
+      dl.createEl('dt', { cls: 'thoughtknot-property-name', text: k });
       const dd = dl.createEl('dd');
-      if (this.o.links) this.render(dd, v, 'graph-note-rich-value');
+      if (this.o.links) this.render(dd, v, 'thoughtknot-rich-value');
       else dd.appendText(v);
     }
   }

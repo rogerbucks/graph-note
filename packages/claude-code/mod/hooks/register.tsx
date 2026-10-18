@@ -1,4 +1,4 @@
-// /graph: draws a graph note's first graph in a pane, with the Graph Note core (spec §10, a Claude Code host). Reading,
+// /graph: draws a graph note's first graph in a pane, with the Thoughtknot core (spec §10, a Claude Code host). Reading,
 // the layout source and theming run here, in the mod's own environment (graph.js); Graphviz runs as a process through
 // node (bin/render.mjs), since a mod has no WebAssembly. Where no drawing can be, the pane shows the graph as text with
 // the reason: when node is missing, on the terminal (which draws no Svg), and for a graph too large to draw.
@@ -35,9 +35,9 @@ const EDITOR_PANE = 'graph-editor';
 const USAGE = 'Name a note to draw: /graph <path to a note>, quoted if it has spaces.';
 const EDITOR_USAGE = 'No editor is running. /graph edit <path to a note> starts one.';
 const NO_PICTURES = 'This surface cannot draw pictures, so the graph is shown as text. The desktop app draws it.';
-const PROPOSE = 'mcp__graph-note__propose';
+const PROPOSE = 'mcp__thoughtknot__propose';
 const PROPOSE_TOOL =
-  'Propose changes to the graph of the note open in the Graph Note editor. Nothing is applied: the changes wait on a card ' +
+  'Propose changes to the graph of the note open in the Thoughtknot editor. Nothing is applied: the changes wait on a card ' +
   'in the editor for the user to accept or reject. Each change is one of: {op: "add-thing", name, kind, properties?}, ' +
   '{op: "add-link", from, type, to}, {op: "set", thing, key, value}, {op: "remove-thing", thing}, ' +
   '{op: "remove-link", from, type, to}, each with an optional "reason". Names are one word. You cannot add a Person, ' +
@@ -50,9 +50,9 @@ const PROPOSE_SCHEMA = {
   },
   required: ['changes'],
 };
-const view = atom({ plugin: 'graph-note', key: 'view' } as const, null as GraphView | null);
+const view = atom({ plugin: 'thoughtknot', key: 'view' } as const, null as GraphView | null);
 // counts changes to the editor pane so it is drawn again; it holds no address, token or note
-const editorChanges = atom({ plugin: 'graph-note', key: 'editor' } as const, 0);
+const editorChanges = atom({ plugin: 'thoughtknot', key: 'editor' } as const, 0);
 
 /** The session's editor: made when first asked for, and kept for the module's life (its server dies with it). */
 let launcher: EditorLauncher | null = null;
@@ -61,7 +61,7 @@ let launcher: EditorLauncher | null = null;
 async function dataFolderOf($: EngineInterface): Promise<{ data: string; home?: string }> {
   const home = await $.env.get('HOME');
   // an empty CLAUDE_PLUGIN_DATA is unset
-  const data = (await $.env.get('CLAUDE_PLUGIN_DATA')) || `${home ?? ''}/.claude/plugins/data/graph-note`;
+  const data = (await $.env.get('CLAUDE_PLUGIN_DATA')) || `${home ?? ''}/.claude/plugins/data/thoughtknot`;
   return home ? { data, home } : { data };
 }
 

@@ -4,14 +4,14 @@
 // never drawn and never exported, and a guess (an estimated link) is the drawing's, never the note's. No layout is
 // asked for, so a graph too large to draw is still exported whole. The `///` notes on its things and links are kept
 // where the format has comments, a GQL block and GraphML, and left out of CSV, which has none (§24, note_standard).
-import type { Graph } from '@graph-note/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { csvText } from './export-data-csv.ts';
 import { gqlBlock } from './export-data-gql.ts';
 import { graphmlText } from './export-data-graphml.ts';
 import type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-model.ts';
 import type { ExportScope } from './export-scope.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
-import { PLUGIN_API, pluginRegistry, type GraphNotePlugin } from './plugins.ts';
+import { PLUGIN_API, pluginRegistry, type ThoughtknotPlugin } from './plugins.ts';
 
 /** The formats the data is offered in (export_data_formats): a GQL block, CSV and GraphML. */
 export const DATA_FORMATS = ['gql', 'csv', 'graphml'] as const;
@@ -82,8 +82,8 @@ function notesOf(things: DataThing[], whole: GraphDrawing, numbers: number[]): P
  * The built-in data exports, added through the plug-in interface as any plug-in's are (plugin_interface): a GQL block,
  * CSV and GraphML.
  */
-export const CORE_EXPORTS: GraphNotePlugin = {
-  id: 'graph-note.data-exports',
+export const CORE_EXPORTS: ThoughtknotPlugin = {
+  id: 'thoughtknot.data-exports',
   version: '1.0.0',
   api: PLUGIN_API,
   uses: ['exports'],

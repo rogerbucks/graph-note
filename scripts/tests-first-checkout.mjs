@@ -17,14 +17,14 @@ export function checkout(repo, commit) {
     // the installed packages, but this checkout's own workspace packages, so its code is what runs
     mkdirSync(join(dir, 'node_modules'));
     for (const name of readdirSync(modules))
-      if (name !== '@graph-note') symlinkSync(join(modules, name), join(dir, 'node_modules', name));
-    mkdirSync(join(dir, 'node_modules', '@graph-note'));
+      if (name !== '@thoughtknot') symlinkSync(join(modules, name), join(dir, 'node_modules', name));
+    mkdirSync(join(dir, 'node_modules', '@thoughtknot'));
     const packages = join(dir, 'packages');
     for (const p of existsSync(packages) ? readdirSync(packages) : []) {
       const manifest = join(packages, p, 'package.json');
       if (!existsSync(manifest)) continue;
       const name = JSON.parse(readFileSync(manifest, 'utf8')).name ?? '';
-      if (name.startsWith('@graph-note/')) symlinkSync(join(packages, p), join(dir, 'node_modules', name));
+      if (name.startsWith('@thoughtknot/')) symlinkSync(join(packages, p), join(dir, 'node_modules', name));
       const own = join(repo, 'packages', p, 'node_modules');
       if (existsSync(own)) symlinkSync(own, join(packages, p, 'node_modules'));
     }

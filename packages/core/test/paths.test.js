@@ -2,7 +2,7 @@
 // ordered STEP edges, plays step by step, and is reported when it steps through something removed or has no steps.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { readNote } from '../src/drawing.ts';
 import { PathPlayer, PathRecorder, pathBlock, pathProblems, pathsOf } from '../src/paths.ts';
 

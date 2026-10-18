@@ -2,7 +2,7 @@
 // written links, and the groups the style graph's nudges draw them in; and what types.ts reads from it — the first loop
 // the links make, and the thing with the most links. Host-free. The Python library reads the same shape
 // (`graphspec/style/diagram_types.py`, `shape_of`).
-import type { Graph } from '@graph-note/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { linkTypes } from './arrows.ts';
 import { valueText } from './inline-properties.ts';
 import type { GraphDrawing } from './note-reading.ts';

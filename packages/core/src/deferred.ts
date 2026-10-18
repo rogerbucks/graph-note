@@ -3,8 +3,8 @@
 // from problems (parked_not_broken); and a parked thing's box is told apart so the host can draw it dashed with a later
 // mark (deferred_drawn). The Deferred is the graph spec's (§25): `(d:Deferred {what, why, revisit_by, rule})` with
 // `(d)-[:DEFERS]->(thing)`, and it is counted as completeness.js counts it.
-import gs from '@graph-note/graph-spec';
-import type { Graph } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { blankText, items } from './block-items.ts';
 import { gqlSpans, graphOf, graphOfBlock, namesSharedSchema } from './blocks.ts';
 import { kindLines, quoted as q, typeLines } from './lock.ts';

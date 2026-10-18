@@ -14,25 +14,25 @@ import {
   namesSharedSchema,
   nudgedDrawing,
   readStyle,
-} from '@graph-note/core';
-import type { Which } from '@graph-note/core';
-import type GraphNotePlugin from '../main';
-import { renderCode } from '@graph-note/core/display/code';
+} from '@thoughtknot/core';
+import type { Which } from '@thoughtknot/core';
+import type ThoughtknotPlugin from '../main';
+import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from '../graph-card';
-import { readOnlyHere, whenPlaced } from '@graph-note/core/display/graph-view/placement';
-import { refusalBanner } from '@graph-note/core/display/refusal-banner';
-import { renderProposalStrip } from '@graph-note/core/display/proposals/proposal-strip';
-import type { ProposalCard } from '@graph-note/core/display/proposals/proposal-strip';
+import { readOnlyHere, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
+import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
+import { renderProposalStrip } from '@thoughtknot/core/display/proposals/proposal-strip';
+import type { ProposalCard } from '@thoughtknot/core/display/proposals/proposal-strip';
 
 /**
  * Who decides here. Obsidian says nothing of who is at the keyboard, so it is the name set in the settings, exactly as
  * typed, or "you" when none is set (decider_named); the judgement graph records it with the time, beside what was
  * decided. The core compares a person's name with the proposer's as they are written, in any case.
  */
-const personOf = (plugin: GraphNotePlugin) => ({ name: deciderName(plugin.settings.decider) });
+const personOf = (plugin: ThoughtknotPlugin) => ({ name: deciderName(plugin.settings.decider) });
 
 /** Opens the note at the change set's line, for its text to be read or changed there. */
-function openAt(plugin: GraphNotePlugin, path: string, line: number): void {
+function openAt(plugin: ThoughtknotPlugin, path: string, line: number): void {
   const file = plugin.app.vault.getAbstractFileByPath(path);
   const leaf = plugin.app.workspace.getLeaf(false);
   if (file instanceof TFile && typeof leaf.openFile === 'function')
@@ -42,14 +42,14 @@ function openAt(plugin: GraphNotePlugin, path: string, line: number): void {
 
 /** Draws the change set `source` where the note shows it: the proposal over its graph, or why it cannot be shown. */
 export async function renderProposalBlock(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtknotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
   owner?: object,
   held?: string,
 ): Promise<void> {
-  const root = el.createDiv({ cls: 'graph-note' });
+  const root = el.createDiv({ cls: 'thoughtknot' });
   const info = ctx.getSectionInfo(el);
   const path = ctx.sourcePath;
   // with no section info, as when another plugin renders the block, the card cannot know which note it would write: it
@@ -60,7 +60,7 @@ export async function renderProposalBlock(
   const read = ProposalReview.fromChangeSet(source, note);
   if ('refused' in read) {
     root.createDiv({
-      cls: 'graph-note-banner',
+      cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
       text: `This change set cannot be shown: ${read.refused}`,
     });
@@ -155,7 +155,7 @@ export async function renderProposalBlock(
       if (readOnly()) writes.forEach((b) => b.remove());
     });
     root.createDiv({
-      cls: 'graph-note-empty',
+      cls: 'thoughtknot-empty',
       text: `Graph ${graph} has nothing to draw in this note, so the proposal is listed without a drawing.`,
     });
     return;
@@ -167,9 +167,9 @@ export async function renderProposalBlock(
   try {
     drawn = await plugin.layout(drawing, owner);
   } catch (e) {
-    console.error('Graph Note could not draw proposal', review.proposal.id, e);
+    console.error('Thoughtknot could not draw proposal', review.proposal.id, e);
     root.createDiv({
-      cls: 'graph-note-banner',
+      cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
       text: `Proposal ${review.proposal.id} could not be drawn, so its change set is shown.`,
     });

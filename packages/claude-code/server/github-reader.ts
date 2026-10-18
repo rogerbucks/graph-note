@@ -5,7 +5,7 @@
 // (Roger, 17 Oct 2026). Every path, number and commit put in an address is checked first, so nothing the repository or
 // the page writes becomes another request.
 import { execFile } from 'node:child_process';
-import type { ChangedFile, ReviewItem } from '@graph-note/core';
+import type { ChangedFile, ReviewItem } from '@thoughtknot/core';
 import { originOf } from './note-history.ts';
 import { BODY_LIMIT } from './request-body.ts';
 

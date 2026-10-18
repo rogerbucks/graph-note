@@ -113,13 +113,13 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function pageStaysStill(card = 1, at = 120) {
   await pause(800);
   const sc = document.querySelector('.cm-editor .cm-scroller');
-  const cards = [...document.querySelectorAll('.cm-editor .graph-note-view')];
+  const cards = [...document.querySelectorAll('.cm-editor .thoughtknot-view')];
   [...cards[card].querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Edit here').click();
   await pause(600);
-  const t = document.querySelector('.cm-editor textarea.graph-note-text');
+  const t = document.querySelector('.cm-editor textarea.thoughtknot-text');
   t.focus();
   t.setSelectionRange(t.value.length, t.value.length);
-  const holder = t.closest('.cm-embed-block, .graph-note-block');
+  const holder = t.closest('.cm-embed-block, .thoughtknot-block');
   if (at === 'end') sc.scrollTop = sc.scrollHeight;
   else sc.scrollTop += holder.getBoundingClientRect().top - sc.getBoundingClientRect().top + at;
   await pause(300);
@@ -132,7 +132,7 @@ export async function pageStaysStill(card = 1, at = 120) {
   t.setSelectionRange(t.value.length, t.value.length);
   t.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ',' }));
   await pause(2500);
-  const box = document.querySelector('.cm-editor textarea.graph-note-text');
+  const box = document.querySelector('.cm-editor textarea.thoughtknot-text');
   const after = {
     scrollTop: Math.round(sc.scrollTop),
     boxTop: box?.isConnected ? Math.round(box.getBoundingClientRect().top) : null,

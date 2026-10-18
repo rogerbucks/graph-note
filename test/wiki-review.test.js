@@ -101,7 +101,7 @@ describe('the issue text', () => {
 
   test('knows every page and picture the workflow writes', () => {
     const made = madePaths();
-    for (const p of ['Status.md', '_Sidebar.md', 'How-to-use-Graph-Note.md', 'Home.md', 'images/card.png'])
+    for (const p of ['Status.md', '_Sidebar.md', 'How-to-use-Thoughtknot.md', 'Home.md', 'images/card.png'])
       assert.ok(made.has(p), p);
   });
 });

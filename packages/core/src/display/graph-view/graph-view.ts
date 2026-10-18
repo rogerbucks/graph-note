@@ -4,8 +4,8 @@
 // parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
 import { Lifecycle } from '../lifecycle';
 import { inHost, isPhone, readInHostDirection, setIcon } from '../host';
-import { AcrossZoom, Zoom, scrollsOneWay, word } from '@graph-note/core';
-import type { Drawn, View } from '@graph-note/core';
+import { AcrossZoom, Zoom, scrollsOneWay, word } from '@thoughtknot/core';
+import type { Drawn, View } from '@thoughtknot/core';
 import { SourceToggle } from './source-toggle';
 import { readOnlyHere, whenPlaced } from './placement';
 import { gateWrites } from './read-only';
@@ -105,7 +105,7 @@ export class GraphView extends Lifecycle {
   override onload(): void {
     const { problems, mode } = this.o,
       root = this.containerEl;
-    readInHostDirection(root).addClass('graph-note-view', `is-${mode}`);
+    readInHostDirection(root).addClass('thoughtknot-view', `is-${mode}`);
 
     let list: HTMLElement | null = null;
     const placed = renderBar(root, this.o, {
@@ -160,7 +160,7 @@ export class GraphView extends Lifecycle {
       );
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
-    const tools = root.createDiv({ cls: 'graph-note-card-tools' }); // the card's tools, in one row under the bar
+    const tools = root.createDiv({ cls: 'thoughtknot-card-tools' }); // the card's tools, in one row under the bar
     this.walk = new Walk(root, this.o, () => this.svg ?? undefined, tools); // walked paths: Play, and Record while edited (§7)
     if (this.o.writeView) this.maker = new ViewMaker(tools, this.o); // a view made by tapping, while edited (§7)
     if (this.o.editing) this.adder = new AddThing(tools, this.o); // a thing added from its text, while edited (§5)
@@ -174,10 +174,10 @@ export class GraphView extends Lifecycle {
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram));
     // what its moving links mean, in words beside their icons (§7, motion_not_alone): only those drawn, never a link folded
     // into a stub or a box (§25), so its slot is filled again whenever the View menu lays the graph out again
-    this.legendSlot = root.createDiv({ cls: 'graph-note-flow-legend-slot' });
+    this.legendSlot = root.createDiv({ cls: 'thoughtknot-flow-legend-slot' });
     this.flowLegend();
     this.viewport = root.createDiv({
-      cls: 'graph-note-viewport',
+      cls: 'thoughtknot-viewport',
       attr: {
         tabindex: '0',
         role: 'group',
@@ -207,7 +207,7 @@ export class GraphView extends Lifecycle {
     // the drawing as sentences, for screen readers (spec §11)
     const d = this.drawing();
     if (d) describeDrawing(root, this.viewport, d);
-    this.detailsEl = root.createDiv({ cls: 'graph-note-details', attr: { role: 'region', 'aria-live': 'polite' } });
+    this.detailsEl = root.createDiv({ cls: 'thoughtknot-details', attr: { role: 'region', 'aria-live': 'polite' } });
     this.detailsEl.hidden = true;
     const sw = this.switching;
     this.details = new DetailsPanel(this.detailsEl, this.svg ?? this.table ?? this.viewport, this.viewport, this.o, {
@@ -220,7 +220,7 @@ export class GraphView extends Lifecycle {
     // closing the details, by button, Escape or a tap on empty space, clears the selection and the focus with them (§25)
     this.details.onClosed = () => this.sel.closed();
     this.details.view = () => this.zoom.view(); // where a link that takes the card's tab leaves it (§18)
-    const slot = mode === 'note' ? root.createDiv({ cls: 'graph-note-edit-slot' }) : null;
+    const slot = mode === 'note' ? root.createDiv({ cls: 'thoughtknot-edit-slot' }) : null;
 
     // on a phone, a wide tree, flow or timeline is fitted to its height and scrolled across only (wide_types_phone)
     const room = Math.min(this.viewport.clientWidth || Infinity, activeWindow.innerWidth || Infinity);
@@ -354,13 +354,13 @@ export class GraphView extends Lifecycle {
     this.svg?.setAttribute('width', String(v.width));
     this.svg?.setAttribute('height', String(v.height));
     // labels by zoom: link labels hidden while too small to read, but on a link in focus or highlighted (§25)
-    this.svg?.toggleClass('graph-note-labels-hidden', !!this.switching?.labelsHidden(v.scale));
-    this.table?.setCssProps({ '--graph-note-scale': String(v.scale) });
+    this.svg?.toggleClass('thoughtknot-labels-hidden', !!this.switching?.labelsHidden(v.scale));
+    this.table?.setCssProps({ '--thoughtknot-scale': String(v.scale) });
     this.viewport.setCssProps({
-      '--graph-note-x': `${v.x}px`,
-      '--graph-note-y': `${v.y}px`,
-      '--graph-note-height': `${this.viewportSize().height}px`,
-      '--graph-note-touch': this.zoom.touchAction(),
+      '--thoughtknot-x': `${v.x}px`,
+      '--thoughtknot-y': `${v.y}px`,
+      '--thoughtknot-height': `${this.viewportSize().height}px`,
+      '--thoughtknot-touch': this.zoom.touchAction(),
     });
     this.viewport.toggleClass('is-zoomed', this.zoom.zoomedIn());
     this.aids.viewChanged(v);

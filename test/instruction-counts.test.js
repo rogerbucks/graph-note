@@ -245,8 +245,8 @@ describe('counting on one’s own machine, in a container', () => {
 
   test('npm run bench:local builds it when needed and counts in it, the repository mounted and node_modules its own', () => {
     assert.equal(readJSON('package.json').scripts['bench:local'], 'node scripts/bench-local.mjs');
-    assert.match(imageTag(), /^graph-note-benchmarks:[0-9a-f]{12}$/);
-    const args = runArgs('graph-note-benchmarks:x', ['--only', 'naming'], '/here');
+    assert.match(imageTag(), /^thoughtknot-benchmarks:[0-9a-f]{12}$/);
+    const args = runArgs('thoughtknot-benchmarks:x', ['--only', 'naming'], '/here');
     assert.ok(args.includes('type=bind,source=/here,target=/repo'));
     const volume = `type=volume,source=${modulesVolume('/here')},target=/repo/node_modules`;
     assert.ok(args.includes(volume), 'not the host’s');
@@ -255,11 +255,15 @@ describe('counting on one’s own machine, in a container', () => {
   });
 
   test('each checkout keeps its node_modules in a volume of its own, so worktrees never install over each other', () => {
-    assert.match(modulesVolume('/a/graph-note'), /^graph-note-benchmarks-node-modules-[0-9a-f]{12}$/);
-    assert.equal(modulesVolume('/a/graph-note'), modulesVolume('/a/graph-note'), 'the same checkout, the same volume');
-    assert.notEqual(modulesVolume('/a/graph-note'), modulesVolume('/a/graph-note/.claude/worktrees/b'));
+    assert.match(modulesVolume('/a/thoughtknot'), /^thoughtknot-benchmarks-node-modules-[0-9a-f]{12}$/);
+    assert.equal(
+      modulesVolume('/a/thoughtknot'),
+      modulesVolume('/a/thoughtknot'),
+      'the same checkout, the same volume',
+    );
+    assert.notEqual(modulesVolume('/a/thoughtknot'), modulesVolume('/a/thoughtknot/.claude/worktrees/b'));
     const mounted = (root) => runArgs('t', [], root).find((a) => a.startsWith('type=volume'));
-    assert.notEqual(mounted('/a/graph-note'), mounted('/a/other'));
+    assert.notEqual(mounted('/a/thoughtknot'), mounted('/a/other'));
   });
 
   test('without Docker, it says so in one line, and counts nothing', () => {
