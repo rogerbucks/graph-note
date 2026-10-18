@@ -2,7 +2,7 @@
 // estimated one — and what is near enough to a tap to be what was meant: within a fingertip, the nearest first, and the
 // next of them when the same place is tapped again.
 import { TapCycle, boundsOf, centres, hitAreas, nearby } from '@thoughtknot/core';
-import type { Bounds, HitAreas, View } from '@thoughtknot/core';
+import type { Bounds, HitAreas, PlacedBox, View } from '@thoughtknot/core';
 
 /** What a tap or a key can land on: a box, by its id, or an estimated link, by its place in the drawing's estimates. */
 export type Target = { key: string } | { estimate: number } | { link: number };
@@ -81,6 +81,31 @@ export class Taps {
     for (const [id, at] of centres(this.areas)) {
       const key = keyOf(id);
       if (key !== null) out.set(key, at);
+    }
+    return out;
+  }
+
+  /** A point in the viewport, with the drawing shown at `v`, in the drawing's own units; null before it has a size. */
+  toDrawing(p: { x: number; y: number }, v: View): { x: number; y: number } | null {
+    this.areas ??= hitAreas(this.svgText);
+    const vb = this.areas.viewBox;
+    if (!v.width || !v.height || !vb.width || !vb.height) return null;
+    return { x: vb.x + ((p.x - v.x) * vb.width) / v.width, y: vb.y + ((p.y - v.y) * vb.height) / v.height };
+  }
+
+  /** Each box, by the key `keyOf` gives its id in the drawing, with its edges in the drawing's own units: where a dragged box can land (§6). */
+  boxes(keyOf: (id: string) => string | null): PlacedBox[] {
+    this.areas ??= hitAreas(this.svgText);
+    const vb = this.areas.viewBox,
+      out: PlacedBox[] = [];
+    for (const s of this.areas.shapes) {
+      const key = s.kind === 'node' ? keyOf(s.id) : null,
+        b = key === null ? null : boundsOf(this.areas, s.id);
+      if (key !== null && b) {
+        const left = vb.x + b.x * vb.width,
+          top = vb.y + b.y * vb.height;
+        out.push({ key, left, top, right: left + b.width * vb.width, bottom: top + b.height * vb.height });
+      }
     }
     return out;
   }

@@ -225,16 +225,17 @@ round — are ported here exactly, each proved against Python by the layout test
 
   /**
    * The layout source `dot` laid out as a diagram type, by its plan (the core's types.ts): a radial drawing around its
-   * centre, by Graphviz's twopi; a tree, a flow, lanes and a timeline with every link laid out forward and no kind put in
-   * a column of its own, a tree's other links and every link of a timeline never moving a thing (constraint=false);
-   * lanes a box for each kind, labelled as a group is; a timeline each day's things on one rank, the days in order,
-   * joined by links never drawn, after every link drawn, so Graphviz numbers the drawn links as before. No plan: `dot`.
+   * centre, by Graphviz's twopi, its links curved around the things they do not join (splines=true), never through
+   * them; a tree, a flow, lanes and a timeline with every link laid out forward and no kind put in a column of its own,
+   * a tree's other links and every link of a timeline never moving a thing (constraint=false); lanes a box for each
+   * kind, labelled as a group is; a timeline each day's things on one rank, the days in order, joined by links never
+   * drawn, after every link drawn, so Graphviz numbers the drawn links as before. No plan: `dot`.
    */
   function typedSource(dot, plan, style) {
     if (!plan) return dot;
     const lines = dot.split('\n');
     if (plan.type === 'radial') {
-      lines.splice(2, 0, `  graph [layout=twopi, root="${plan.centre}", overlap=false];`);
+      lines.splice(2, 0, `  graph [layout=twopi, root="${plan.centre}", overlap=false, splines=true];`);
       return lines.join('\n');
     }
     const tree = new Set(plan.tree || []),

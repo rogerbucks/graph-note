@@ -239,7 +239,7 @@ export class GraphView extends Lifecycle {
     const open = (t: Target, x?: boolean) => this.open(t, x),
       unfold = (fold: string, byKey?: boolean) =>
         this.switching?.unfold(fold, byKey ? (key) => boxIn(this.svg, key)?.focus({ preventScroll: true }) : undefined);
-    bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, info, svg, open, unfold });
+    bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, info, svg, open, unfold, o: this.o });
     const observer = new ResizeObserver(() => {
       this.zoom.resize(this.zoomSize());
       this.aids.placeDetails();

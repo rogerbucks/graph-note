@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/graph-view-zoom.test.js",
+  "test": "a touch the drawing uses goes no further > a swipe on a fitted drawing goes on to the page, to scroll the note or open a panel",
+  "seen_failing_first": false,
+  "evidence": "A guard: a fitted drawing already let a swipe through; it fails if the new stopPropagation ever takes a swipe the drawing does not use."
+}

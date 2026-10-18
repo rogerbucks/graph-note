@@ -26,6 +26,7 @@ import type { ShownProblem } from './problems-list';
 import type { ViewShown } from './view-strip';
 import type { ProposalCard } from '../proposals/proposal-strip';
 import type { DiagramShown } from './type-strip';
+import type { BoxMoving } from './box-drag-view';
 import type { Exporting } from '../export/export-form';
 import type { LinkHost } from '../links/link-types';
 import type { CardImages } from './animated-images';
@@ -99,6 +100,8 @@ export interface ViewOptions {
   proposal?: ProposalCard;
   /** The diagram types (spec §15): which fit and why not, the one suggested, the one drawn, and how to choose one. */
   diagram?: DiagramShown;
+  /** Moving a box by dragging it (spec §6): the nudges written, and how to write one; none, no box moves. */
+  moving?: BoxMoving;
   /** The View menu's switches (§25); without it, as for a graph drawn as a table, no View menu is offered. */
   switches?: SwitchesShown;
   /** What the drawing can export, and how (§16); without it, no Export is offered. */

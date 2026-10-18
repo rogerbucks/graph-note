@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/box-drag-view.test.js",
+  "test": "dragging a box with a mouse > a finger on a box moves nothing: it scrolls the note or pans",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that held before the drag was built and must still hold with it: a guard that dragging boxes does not take over taps, panning or a finger's scroll"
+}

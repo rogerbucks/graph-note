@@ -316,6 +316,7 @@ export { noteWithProposal } from './ai-answer.ts';
 export { changesIn } from './ai-request.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';
+export { landingFor, landingSaid } from './box-drag.ts';
 export { FADE, KEPT, FocusState, depthOf, edgesOf, estimateEdge, focusOf, highlightOf } from './focus.ts';
 export type { FocusDepth, FocusEdge, FocusTarget, Kept } from './focus.ts';
 export {
@@ -372,4 +373,5 @@ export type { Attachment, BrokenLink, EmbedPart, FoundLink, LinkKind, LinkVault,
 export { TextHistory } from './history.ts';
 export type { Change, TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';
+export type { Landing, PlacedBox, Side, WrittenNudge } from './box-drag.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';

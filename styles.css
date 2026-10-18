@@ -1043,6 +1043,34 @@ details.thoughtknot-style > summary {
 .thoughtknot-svg g.node:focus {
   outline: none;
 }
+/* A box a finger has held is lifted by a shadow (§6, hold_to_drag_touch); a box being dragged follows the pointer,
+   faded so the drawing under it still shows; the box it would land by is outlined in the accent, and a line at the top
+   of the drawing says where it would go (drag_moves_box). */
+.thoughtknot-svg g.node.is-held {
+  filter: drop-shadow(0 2px 4px var(--gn-border-focus));
+}
+.thoughtknot-svg g.node.is-dragged {
+  opacity: 0.6;
+  cursor: grabbing;
+}
+.thoughtknot-svg g.node.is-landing > :is(path, polygon, ellipse) {
+  stroke: var(--gn-accent);
+  stroke-width: 3;
+}
+.thoughtknot-move-hint {
+  position: absolute;
+  top: var(--gn-space-2);
+  inset-inline: 0;
+  width: fit-content;
+  margin-inline: auto;
+  padding: var(--gn-space-1) var(--gn-space-2);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+  color: var(--gn-text-normal);
+  box-shadow: var(--gn-shadow-s);
+  pointer-events: none;
+}
 .thoughtknot-svg g.node:focus-visible > :is(path, polygon) {
   stroke-width: 3;
 }

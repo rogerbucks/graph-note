@@ -142,6 +142,35 @@ describe('the editing view draws graph blocks with its own widget', () => {
     }
   });
 
+  // proves: card_keeps_focus_from_editor
+  // on a phone a tapped button takes no focus, so it fell to the editor around the card, which scrolled to its cursor at
+  // the note's top: the first tap on Zoom in jumped the page (Roger, 18 Oct 2026)
+  test('a press on the card’s bar keeps the focus off the editor and the page still; one in a text box is the box’s', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const [first] = widgets(editorState(env, NOTE));
+      const dom = first.widget.toDOM();
+      env.doc.body.appendChild(dom);
+      await until(() => !!dom.querySelector('.thoughtknot-view'));
+      const by = (label) => dom.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === label);
+      const zoomIn = by('Zoom in'),
+        scrolled = env.doc.scrolledToFocus ?? 0;
+      assert.equal(zoomIn.dispatch('mousedown', { button: 0 }).defaultPrevented, true, 'the editor does not take it');
+      assert.equal(env.doc.activeElement, zoomIn, 'the button has the focus, for the keys that follow');
+      assert.equal(env.doc.scrolledToFocus ?? 0, scrolled, 'and the page did not move');
+      by('Find a thing').click();
+      const box = dom.querySelector('input');
+      assert.equal(
+        box.dispatch('mousedown', { button: 0 }).defaultPrevented,
+        false,
+        'a text box still places its cursor',
+      );
+      first.widget.destroy(dom);
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('the old card stays on the page until the new drawing is ready, so the card never shrinks between', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
