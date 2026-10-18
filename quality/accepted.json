@@ -49,6 +49,27 @@
       "to": 1310364,
       "reason": "Slice 3 completed and slice 4 to 57 of 60 (about 3,800 net lines of the editor's own code, no third-party growth); accepted by Roger, 16 Oct 2026, for the 0.5.0 release",
       "date": "2026-10-16"
+    },
+    {
+      "metric": "bundle_bytes",
+      "from": 1958060,
+      "to": 3013896,
+      "reason": "39 PRs since 0.6.0 (the ThoughtKnot rename, keyboard box moving, test languages, speed budgets), all the editor's own code; the viz library is unchanged. Accepted by Roger, 18 Oct 2026, for the 0.7.0 release",
+      "date": "2026-10-18"
+    },
+    {
+      "metric": "bundle_bytes_without_viz",
+      "from": 357577,
+      "to": 1407315,
+      "reason": "39 PRs since 0.6.0 (the ThoughtKnot rename, keyboard box moving, test languages, speed budgets), all the editor's own code; the viz library is unchanged. Accepted by Roger, 18 Oct 2026, for the 0.7.0 release",
+      "date": "2026-10-18"
+    },
+    {
+      "metric": "instructions_mesh_query",
+      "from": 233877341,
+      "to": 246274394,
+      "reason": "5.3% over the baseline, just past the 5% allowance, with no change to the mesh search since 0.6.0; the count is noisy. Accepted by Roger, 18 Oct 2026, for the 0.7.0 release",
+      "date": "2026-10-18"
     }
   ]
 }

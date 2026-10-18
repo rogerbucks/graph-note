@@ -191,6 +191,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - It gives null away from every box, or where that nudge is written already.
   - `landingSaid` says it, "Put Ann beside Bob".
   - The card draws the drag (`display/graph-view/box-drag-view.ts`) and the host writes the nudge (`styleEdit`).
+  - `placesFor` lists every place a box can go, for the keyboard (move_box_keyboard). The card's keys are in
+    `display/graph-view/box-move-keys.ts`.
+  - In a radial drawing, a box goes before or after a thing around the centre (radial_spoke_order).
 
 #### Zoom
 
