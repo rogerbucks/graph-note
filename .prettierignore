@@ -22,3 +22,5 @@ packages/claude-code/mod/bin/
 packages/claude-code/mod/page/
 packages/claude-code/mod/tests/fixtures.js
 packages/claude-code/mod/.claude-plugin/types/
+# graph files are GQL, which Prettier would take for GraphQL
+*.gql
