@@ -26,7 +26,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gqlBlocks } from '../packages/core/src/blocks.ts';
+import { gqlBlocks } from '../packages/core/src/fences.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');

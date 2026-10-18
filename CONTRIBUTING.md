@@ -112,7 +112,8 @@ Signed-off-by: Your Name <you@example.com>
 
 `git commit -s` adds it. It is how a fork or a pull request stays clear about who wrote what. It also keeps the project
 free to stay under the [Mozilla Public License 2.0](LICENSE). People who take part follow the
-[code of conduct](CODE_OF_CONDUCT.md), and a fork goes by its own name ([TRADEMARKS.md](TRADEMARKS.md)).
+[code of conduct](CODE_OF_CONDUCT.md), and a fork goes by its own name ([TRADEMARKS.md](TRADEMARKS.md)). A security problem
+is reported in private, as [SECURITY.md](SECURITY.md) says, never in a public issue.
 
 ## Obsidian’s guidelines
 
@@ -471,7 +472,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/conventions.test.js` — the conventions on this page.
 - `test/community-files.test.js` — the code of conduct says how to report a problem in private. `TRADEMARKS.md` keeps
   the name for the original. CONTRIBUTING.md and the pull request template ask for every commit to be signed off
-  (editor spec §13, community_files).
+  (editor spec §13, community_files). `SECURITY.md` names the supported versions, a private way to report and a
+  reply time (security_policy).
 - `test/device-check-notes.test.js` — the device checklist numbers every item (editor spec §3, tried first in a test
   vault).
   - The test vault holds one note for each item after Before in `Device checks/`. The note's checklist line is the
