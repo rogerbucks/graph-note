@@ -113,13 +113,17 @@ export function buildEditor(
     },
   });
   text.value = s.text;
-  const fixbar = textEl.createDiv({ cls: 'graph-note-fixbar', attr: { role: 'status', 'aria-live': 'polite' } });
-  fixbar.hidden = true;
-  const suggest = textEl.createDiv({
+  // the suggestions drop down under the caret, inside the field's frame: a list the field's own keys work, as a code
+  // editor's does, so the hands never leave the keys (§4, keyboard_any_device)
+  const suggest = editor.createDiv({
     cls: 'graph-note-suggestions',
-    attr: { role: 'toolbar', 'aria-label': word('editor.suggestions') },
+    attr: { role: 'listbox', id: `${name.id}-suggestions`, 'aria-label': word('editor.suggestions') },
   });
   suggest.hidden = true;
+  text.setAttribute('aria-autocomplete', 'list');
+  text.setAttribute('aria-controls', suggest.id);
+  const fixbar = textEl.createDiv({ cls: 'graph-note-fixbar', attr: { role: 'status', 'aria-live': 'polite' } });
+  fixbar.hidden = true;
   const sheetParent = isPhone() && !inline ? pane.createDiv({ cls: 'graph-note-sheet' }) : textEl;
   const list = sheetParent.createDiv({
     cls: 'graph-note-pane-problems',
@@ -153,7 +157,8 @@ export function showTools(
   },
 ): void {
   tools.empty();
-  if (o.inline) button(tools, word('editor.done'), 'check', () => o.done(), word('editor.done'));
+  if (o.inline)
+    button(tools, word('editor.done'), 'check', () => o.done(), word('editor.done')).addClass('graph-note-primary');
   const again = o.again;
   if (again) button(tools, word('editor.open-again'), 'refresh-cw', () => again(), word('editor.open-again'));
   const step = (label: string, icon: string, why: string | null, onClick: () => void) => {

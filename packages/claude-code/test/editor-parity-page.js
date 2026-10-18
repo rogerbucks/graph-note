@@ -61,7 +61,7 @@ const CASES = [
     NOTE,
     (h) => {
       h.type(READER + ',\n(eyes)-[:F');
-      h.click('FAVOURS — favours');
+      h.take('FAVOURS');
     },
     swap(READER, READER + ',\n(eyes)-[:FAVOURS'),
   ],
@@ -123,6 +123,12 @@ const CASES = [
   ],
 ];
 
+/** The suggestion offered under the caret whose name is `name`. */
+const optionNamed = (el, name) =>
+  Array.from(el.querySelectorAll('[role="option"]')).find(
+    (o) => o.querySelector('.graph-note-suggestion-name')?.textContent === name,
+  );
+
 /** Obsidian's pane, driven as its own tests drive it. */
 async function inObsidian(note0) {
   const env = await open({ note: note0 });
@@ -132,6 +138,7 @@ async function inObsidian(note0) {
     field: () => textarea(env.el).value,
     type: (t) => type(env.el, t),
     click: (label) => labelled(env.el, label).click(),
+    take: (name) => optionNamed(env.el, name).click(),
     async press(label) {
       labelled(env.el, label).click();
     },
@@ -189,6 +196,7 @@ async function onPage(note0, pages) {
       page.type(t);
     },
     click: (label) => page.button(label).click(),
+    take: (name) => optionNamed(page.doc, name).click(),
     async press(label) {
       await page.press(label); // which waits for the editor itself
       marked = null;

@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-keyboard-devices.test.js",
+  "test": "the Obsidian host on a tablet with a keyboard: every view, from the keyboard alone > a card (reading view): every action reached and operated, and every focus left",
+  "seen_failing_first": false,
+  "evidence": "A new check over views that already worked by keyboard in the phone and tablet layouts: it guards keyboard_any_device from here on; the one view that failed first (the edit pane) failed for a test-side wait, fixed in the same commit."
+}

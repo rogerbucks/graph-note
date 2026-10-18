@@ -180,6 +180,7 @@ export class BlockEditor extends Lifecycle {
     const typing = fieldTyping(el, s, this.help, this.undoes, {
       typed: (change) => this.typed(change),
       caretMoved: () => this.caretMoved(),
+      openList: (open) => this.help.openList(el, this.session, open),
       accept: (item) => this.accept(item),
       changed: () => this.changed(),
     });
@@ -222,6 +223,8 @@ export class BlockEditor extends Lifecycle {
     const el = this.el,
       s = this.session;
     if (!el || !s) return;
+    // a word typed opens the suggestions; one taken, a fix or a draft put back closes them
+    this.help.openList(el, null, change === 'typing');
     const stepped = stepOverInField(el.text, s.text); // before the record: undo goes back to text that was on screen
     this.undoes.record(el.text, change);
     // what is added for you is a step of its own, so the very next undo takes back only it (spec §4)

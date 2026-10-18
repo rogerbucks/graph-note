@@ -728,14 +728,31 @@ details.graph-note-style > summary {
   color: var(--gn-text-muted);
   cursor: pointer;
 }
-/* Walked paths (spec §7): the strip below the bar; the step playing outlined heavier; each recorded step numbered. */
+/* The card's tools (spec §5, §7): Play or Record a path, Make a view and Add a thing in one row under the bar, each a
+   button until it is opened, when its form takes the whole row; the row is gone when none of them is shown. */
+.graph-note-card-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-2);
+  border-bottom: 1px solid var(--gn-border);
+  padding: var(--gn-space-1) var(--gn-space-2);
+}
+.graph-note-card-tools:not(:has(> :not([hidden]))) {
+  display: none;
+}
+.graph-note-card-tools > [hidden] {
+  display: none;
+}
+.graph-note-card-tools > :has(input, select, ol, ul) {
+  flex-basis: 100%;
+}
+/* Walked paths (spec §7): the step playing outlined heavier; each recorded step numbered. */
 .graph-note-walk {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
-  padding: var(--gn-space-1) var(--gn-space-2);
-  border-bottom: 1px solid var(--gn-border);
 }
 .graph-note-walk button {
   min-width: 44px;
@@ -747,7 +764,6 @@ details.graph-note-style > summary {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
-  padding: var(--gn-space-1) var(--gn-space-2);
 }
 .graph-note-view-maker :is(button, select, input) {
   min-width: 44px;
@@ -760,7 +776,6 @@ details.graph-note-style > summary {
   flex-wrap: wrap;
   align-items: end;
   gap: var(--gn-space-2);
-  padding: var(--gn-space-1) var(--gn-space-2);
 }
 .graph-note-add-thing label {
   display: flex;
@@ -1362,6 +1377,26 @@ details.graph-note-style > summary {
 .graph-note-pane-tools button[aria-disabled='true'] {
   cursor: not-allowed;
 }
+/* Done, the way out of editing in place: last in the row, framed in the accent and in bold. Not filled with the accent,
+   whose white words fall short of 4.5:1 in Obsidian's default theme. */
+.graph-note-pane-tools button.graph-note-primary {
+  order: 1;
+  border: 1px solid var(--gn-accent);
+  font-weight: var(--gn-font-weight-semibold);
+}
+/* In place, the tools are the header of the text: one frame, the tools on its tinted top strip. */
+.graph-note-inline > .graph-note-pane-head {
+  margin-bottom: calc(-1 * var(--gn-space-2));
+  border: 1px solid var(--gn-border);
+  border-bottom: 0;
+  border-radius: var(--gn-radius-s) var(--gn-radius-s) 0 0;
+  background: var(--gn-bg-alt);
+  padding: var(--gn-space-1) var(--gn-space-2);
+}
+.graph-note-inline .graph-note-editor {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
 .graph-note-tabs {
   display: flex;
   gap: var(--gn-space-1);
@@ -1495,13 +1530,67 @@ details.graph-note-style > summary {
 .graph-note-fixbar .is-error {
   border-color: var(--gn-text-error);
 }
+/* The suggestions (spec §4): a list dropped down under the caret, as a code editor's is, in the field's fixed-width font,
+   so the caret's line and column place it; the chosen option is marked by its background and a bar at its start, never
+   colour alone, and what each is says beside its name. */
 .graph-note-suggestions {
+  position: absolute;
+  top: calc(var(--gn-space-2) + (var(--graph-note-caret-line, 0) + 1) * 1.5em);
+  inset-inline-start: max(
+    0px,
+    min(
+      calc(var(--gn-space-3) + var(--graph-note-caret-column, 0) * 1ch - var(--graph-note-caret-scroll, 0px)),
+      calc(100% - 18em)
+    )
+  );
+  z-index: var(--gn-layer-popover);
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--gn-space-1);
-}
-.graph-note-suggestions button {
+  flex-direction: column;
+  margin: 0;
+  box-shadow: var(--gn-shadow-s);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg);
+  padding: var(--gn-space-1);
+  min-width: min(18em, 100%);
+  max-width: min(32em, 100%);
+  max-height: 16em;
+  overflow-y: auto;
   font-family: var(--gn-font-mono);
+  font-size: var(--gn-code-size, 0.9em);
+  line-height: 1.5;
+}
+.graph-note-suggestions[hidden] {
+  display: none;
+}
+.graph-note-suggestion {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gn-space-3);
+  cursor: var(--gn-cursor-link);
+  border-inline-start: 3px solid transparent;
+  border-radius: var(--gn-radius-s);
+  padding: var(--gn-space-1) var(--gn-space-2);
+  min-height: 44px;
+  box-sizing: border-box;
+}
+.graph-note-suggestion:hover {
+  background: var(--gn-bg-hover);
+}
+.graph-note-suggestion[aria-selected='true'] {
+  border-inline-start-color: var(--gn-accent);
+  background: var(--gn-bg-hover);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.graph-note-suggestion-name {
+  color: var(--gn-text-normal);
+}
+.graph-note-suggestion-detail {
+  margin-inline-start: auto;
+  color: var(--gn-text-muted);
+  font-family: var(--gn-font-ui);
+  font-size: var(--gn-font-size-s);
+  font-weight: normal;
 }
 .graph-note-pane-problems ul {
   margin: 0;

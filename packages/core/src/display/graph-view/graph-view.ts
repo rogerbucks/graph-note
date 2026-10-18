@@ -158,12 +158,12 @@ export class GraphView extends Lifecycle {
         { drawing: () => this.drawing(), relaid: (d) => this.relaid(d), shown: () => this.apply(this.zoom.view()) },
         this,
       );
-
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
-    this.walk = new Walk(root, this.o, () => this.svg ?? undefined); // walked paths: Play, and Record while edited (§7)
-    if (this.o.writeView) this.maker = new ViewMaker(root, this.o); // a view made by tapping, while edited (§7)
-    if (this.o.editing) this.adder = new AddThing(root, this.o); // a thing added from its text, while edited (§5)
+    const tools = root.createDiv({ cls: 'graph-note-card-tools' }); // the card's tools, in one row under the bar
+    this.walk = new Walk(root, this.o, () => this.svg ?? undefined, tools); // walked paths: Play, and Record while edited (§7)
+    if (this.o.writeView) this.maker = new ViewMaker(tools, this.o); // a view made by tapping, while edited (§7)
+    if (this.o.editing) this.adder = new AddThing(tools, this.o); // a thing added from its text, while edited (§5)
     const view = this.o.view;
     const writes: HTMLElement[] = view
       ? renderViewStrip(root, view, () => this.sel.shownNow(this.zoom.view(), this.details.selectedKey()))
