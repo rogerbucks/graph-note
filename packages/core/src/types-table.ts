@@ -7,6 +7,7 @@ import { valueText } from './inline-properties.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { DiagramType } from './style-graph.ts';
 import { LARGE_GRAPH } from './types.ts';
+import { word } from './words.ts';
 
 /** A graph as a table: its things' columns and rows, and its links' rows, each row known by its thing or link. */
 export interface DiagramTable {
@@ -33,7 +34,7 @@ export function tableOf(drawing: Pick<GraphDrawing, 'boxes' | 'links'>, g?: Grap
   // a link that says which written link it is (a view's) has that link's properties; otherwise, by its place
   const edges = g?.edges.filter(([s, , t]) => drawn.has(s) && drawn.has(t)) ?? [];
   return {
-    columns: ['Thing', 'Kind', ...columns],
+    columns: [word('table.thing'), word('table.kind'), ...columns],
     rows: drawing.boxes.map((b, i) => ({
       key: b.key,
       cells: [b.text, b.kind, ...columns.map((c) => (own[i]?.has(c) ? valueText(own[i]?.get(c)) : ''))],

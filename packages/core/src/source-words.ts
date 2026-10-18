@@ -3,6 +3,7 @@
 // `{name}`; a word that changes with a count gives `one` and `other`. Words move here from the code as each place is
 // brought to the catalogue; the plain-English check (ux_copy_auto) reads them here.
 
+import { AI_SOURCE_WORDS } from './ai-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
@@ -170,6 +171,8 @@ export const SOURCE_WORDS = {
   'table.links': 'Links',
   'table.from': 'From',
   'table.link': 'Link',
+  'table.thing': 'Thing',
+  'table.kind': 'Kind',
   'table.to': 'To',
   'table.properties': 'Properties',
   'table.link-row': 'Link: {cells}',
@@ -179,44 +182,8 @@ export const SOURCE_WORDS = {
   'settings.section.formatting': 'Formatting',
   'settings.section.drawing': 'Drawing',
   'settings.section.export': 'Export',
-  'ai.view': 'View',
   'view.on': 'on',
   'view.off': 'off',
-  'ai.graph': 'Graph',
-  'ai.title': 'Ask an AI model to propose changes',
-  'ai.question': 'Propose the changes that would make this graph more complete and correct.',
-  'ai.nothing': 'This note has no graph with things in it, so there is nothing to send.',
-  'ai.what': 'What to send',
-  'ai.what.sentence': 'Only this is sent, with your question: nothing else of the note or the vault.',
-  'ai.what.graph': 'The whole graph',
-  'ai.what.view': 'A view of it',
-  'ai.what.things': 'Only the things ticked',
-  'ai.your-question': 'Your question',
-  'ai.your-question.sentence': 'What you ask the model; it is sent with what you chose.',
-  'ai.show': 'Show what will be sent',
-  'ai.send': 'Send',
-  'ai.cancel': 'Cancel',
-  'ai.no-view': 'Graph {graph} has no view in this note: choose the whole graph or tick things.',
-  'ai.model': 'Model',
-  'ai.model.no-purpose': 'No purpose given',
-  'ai.model.matrix': '{purpose}; held to the matrix row {row}.',
-  'ai.model.ceiling': '{purpose}; sent notes up to {ceiling}.',
-  'ai.model.for-proposing': '{name}, for proposing changes',
-  'ai.matrix-unread':
-    'The matrix note could not be read, so nothing is sent: check the note named in the settings, then press Show what will be sent again.',
-  'ai.exactly': 'Exactly this is sent, with these headers, and only once you choose to send it:',
-  'ai.level-changed':
-    'The note’s classification has changed since what will be sent was shown (it was {was}, it is now {is}). Nothing was sent: press Show what will be sent again.',
-  'ai.not-written-error': '{model} answered, but its proposal could not be written into {path} ({error}).',
-  'ai.not-written': '{model} answered, but its proposal was not written into the note: {why}',
-  'ai.proposed': {
-    one: '{model} proposed {count} change: it is in the note as a change set beside the graph, waiting for you to accept or reject it.',
-    other:
-      '{model} proposed {count} changes: they are in the note as a change set beside the graph, each waiting for you to accept or reject it.',
-  },
-  'leave.title': 'Leave Obsidian?',
-  'leave.open': 'Open',
-  'leave.cancel': 'Cancel',
   'drawing.of': {
     one: 'Drawing of graph {graph}: {count} thing. Plus, minus and zero zoom; Escape leaves full screen.',
     other: 'Drawing of graph {graph}: {count} things. Plus, minus and zero zoom; Escape leaves full screen.',
@@ -305,6 +272,19 @@ export const SOURCE_WORDS = {
   'step.run.said': 'Run step {name}',
   'step.could-not-run': 'Step {name} could not run, and nothing was written.',
   'details.properties': 'Properties',
+  'style.nudges': { one: '{count} nudge', other: '{count} nudges' },
+  'style.looks': { one: '{count} look', other: '{count} looks' },
+  'style.shown': { one: '{count} shown property', other: '{count} shown properties' },
+  'style.view-settings': { one: '{count} view setting', other: '{count} view settings' },
+  'style.saved-views': { one: '{count} saved view', other: '{count} saved views' },
+  'style.arrowheads': { one: '{count} arrowhead setting', other: '{count} arrowhead settings' },
+  'style.types': { one: '{count} diagram type', other: '{count} diagram types' },
+  'style.nothing': 'nothing yet',
+  'style.summary': 'Style of graph {graph}: {held}',
+  'style.summary-problems': {
+    one: 'Style of graph {graph}: {held} — ⚠ {count} problem',
+    other: 'Style of graph {graph}: {held} — ⚠ {count} problems',
+  },
   'page.title': 'Graph Note editor',
   'settings.convert': 'Convert to standard GQL',
   'settings.convert.sentence': 'Writes the note in front back as standard GQL, once the standard checker passes it.',
@@ -368,6 +348,8 @@ export const SOURCE_WORDS = {
   'parked.why-waits': 'Why it waits',
   'parked.revisit-by': 'Revisit by',
   'parked.park-it': 'Park it',
+  // the AI send dialog, the AI models' settings and leaving the app (ai-source-words.ts)
+  ...AI_SOURCE_WORDS,
   // the words of editing (edit-source-words.ts)
   ...EDIT_SOURCE_WORDS,
   // the browser page's own words (page-source-words.ts)
