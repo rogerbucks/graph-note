@@ -32,8 +32,8 @@ export function renderFind(root: HTMLElement, on: FindActions): FindRow {
   const input = el.createEl('input', {
     attr: {
       type: 'search',
-      placeholder: 'Find a thing by name or property',
-      'aria-label': 'Find a thing by name or property',
+      placeholder: word('untangle.find'),
+      'aria-label': word('untangle.find'),
     },
   });
   const status = el.createEl('p', { cls: 'graph-note-quiet', attr: { role: 'status' } });

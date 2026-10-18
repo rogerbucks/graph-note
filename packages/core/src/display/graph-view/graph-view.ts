@@ -19,7 +19,7 @@ import { toggleExportForm } from '../export/export-form';
 import { markView, renderViewStrip } from './view-strip';
 import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
-import { plural, renderBar } from './view-bar';
+import { renderBar } from './view-bar';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
 import { markFlow, renderFlowLegend } from './flow-marks';
@@ -181,7 +181,7 @@ export class GraphView extends Lifecycle {
       attr: {
         tabindex: '0',
         role: 'group',
-        'aria-label': `Drawing of graph ${this.o.graph}: ${plural(this.o.drawn.width ? this.boxes().length : 0, 'thing')}. Plus, minus and zero zoom; Escape leaves full screen.`,
+        'aria-label': word('drawing.of', { graph: this.o.graph, count: this.o.drawn.width ? this.boxes().length : 0 }),
       },
     });
     // a graph drawn as a table is the plugin's own table; any other, the SVG Graphviz drew (§15)
