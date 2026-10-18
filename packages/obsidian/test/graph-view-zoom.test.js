@@ -72,6 +72,45 @@ describe('zoom in the note', () => {
   });
 });
 
+describe('a touch the drawing uses goes no further', () => {
+  // device check Z-12 (Roger, 18 Oct 2026): "Dragging the graph around on mobile causes the left/right Obsidian panels
+  // to slide in with the window moving": Obsidian opens its side panels on a swipe that reaches the page
+  let env;
+  before(async () => {
+    env = await load({ width: 300 });
+  });
+  after(() => env.uninstall());
+  /** A touch event on the drawing, saying whether it was stopped from going on to the page. */
+  const touchOn = (vp, type, fingers = 1) => {
+    const e = vp.dispatch(type, {
+      touches: Array.from({ length: fingers }, () => ({})),
+      stopPropagation() {
+        this.stopped = true;
+      },
+    });
+    return !!e.stopped;
+  };
+
+  // proves: gestures_stay_in_drawing
+  test('a swipe on a fitted drawing goes on to the page, to scroll the note or open a panel', async () => {
+    const { el } = await show(env, fence(GRAPH));
+    const vp = el.querySelector('.graph-note-viewport');
+    assert.equal(touchOn(vp, 'touchstart'), false);
+    assert.equal(touchOn(vp, 'touchmove'), false);
+  });
+
+  // proves: gestures_stay_in_drawing
+  test('one finger panning a drawing zoomed in, and any pinch, go no further than the drawing', async () => {
+    const { el } = await show(env, fence(GRAPH));
+    const vp = el.querySelector('.graph-note-viewport');
+    assert.equal(touchOn(vp, 'touchstart', 2), true, 'a pinch, even on a fitted drawing');
+    assert.equal(touchOn(vp, 'touchmove', 2), true);
+    labelled(el, 'Zoom in').click();
+    assert.equal(touchOn(vp, 'touchstart'), true, 'zoomed in, one finger pans the drawing');
+    assert.equal(touchOn(vp, 'touchmove'), true);
+  });
+});
+
 describe('a card hidden and shown again', () => {
   const widthOf = (el) => Number(svgOf(el).getAttribute('width'));
   /** The drawing's natural width: its width in a note wide enough to draw it at natural size. */

@@ -25,7 +25,7 @@ import {
   underStrictness,
   word,
 } from '@graph-note/core';
-import type { Block, Drawn, Problem, Refusal } from '@graph-note/core';
+import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@graph-note/core';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from '@graph-note/core/display/code';
@@ -295,6 +295,15 @@ export async function renderBlock(
       mode: 'note',
       ...(diagram ? { diagram } : {}),
       ...(state ? { switches: { state, relayout: (by: object) => laidOut(by) } } : {}),
+      // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
+      ...(diagram?.table
+        ? {}
+        : {
+            moving: {
+              written: styling.style.nudges,
+              move: (nudge: NudgeWrite, done: string) => void writeStyle(plugin, target.path, graph, { nudge }, done),
+            },
+          }),
       // the links its style graph moves, and the lines laid out backwards (§7)
       motion: { flow: drawing.flow ?? [], reversed: reversedLinks(drawing, drawn.rankdir) },
       links,

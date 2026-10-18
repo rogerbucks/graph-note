@@ -16,6 +16,7 @@ The Python library must give the same, from graph_svg.render_args and graph_svg.
 
 import json
 import os
+import re
 import subprocess
 import sys
 import unittest
@@ -29,6 +30,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "src"))
 import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_svg  # noqa: E402
+from graphspec.style.fold_source import routed_source  # noqa: E402
 from graphspec.style.folding import BUSY_HUB  # noqa: E402
 from graphspec.style.picture import PICTURE_MARK  # noqa: E402
 
@@ -166,6 +168,22 @@ class Folds(unittest.TestCase):
         problems = [p for a in self.core for ps in a["styles"].values() for p in ps]
         self.assertTrue(any("is not a routing" in p[3] for p in problems))
         self.assertTrue(any("merging links" in p[3] for p in problems))
+
+    def test_a_radial_drawing_curves_its_links_unless_they_are_routed(self):
+        # radial_links_round: as the core's routedSource, the way chosen replaces the curves
+        radial = "\n".join(
+            [
+                "digraph G {",
+                "  rankdir=LR;",
+                '  graph [layout=twopi, root="a", overlap=false, splines=true];',
+                "}",
+            ]
+        )
+        self.assertEqual(routed_source(radial, None), radial)
+        for routing, splines in (("straight", "line"), ("right-angled", "ortho")):
+            routed = routed_source(radial, routing)
+            self.assertEqual(re.findall(r"splines=(\w+)", routed), [splines], routing)
+            self.assertIn('  graph [layout=twopi, root="a", overlap=false];', routed, routing)
 
     def test_a_busy_hub_has_more_links_than_the_cores_number(self):
         self.assertEqual(BUSY_HUB, 12)
