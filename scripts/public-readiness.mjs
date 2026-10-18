@@ -1,28 +1,20 @@
 #!/usr/bin/env node
 // Fit to be public, and kept so (spec §13, Delivery). Three checks, the same before the repository goes public and
 // after:
-// - --history: nothing confidential or personal and no secret in any commit of the checked-out branch's own history.
-//   Every commit is from a no-reply address.
-// - --setup: a stranger's fresh clone sets up and builds from the README's own steps. They name nothing on the
-//   maintainer's machine.
-// - --settings: the repository's settings on GitHub let no one but a collaborator change the code or open an issue.
-//   Anyone may read the plan and discuss it.
+// - --history: no secret, nothing confidential or personal, in this branch's history. Authors use no-reply addresses.
+// - --setup: a stranger's fresh clone sets up and builds from the README's steps, which name no one's machine.
+// - --settings: only a collaborator may change the code or open an issue. Anyone may read the plan and discuss it.
 //
-// CI and the release run the first two. The third is read, and set, through the GitHub CLI by whoever administers the
-// repository. That is because CI's own token cannot read a repository's settings.
+// CI and the release run the first two. An admin runs the third with the GitHub CLI: CI's token cannot read settings.
 //
 // Usage:
 //   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history.
-//   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; the docs name
-//                                                          no machine.
-//   node scripts/public-readiness.mjs --setup-since BASE   the same, but the fresh clone only if a setup input changed
-//                                                          since BASE. A pull request's run uses it; main and the
-//                                                          release run all.
-//   node scripts/public-readiness.mjs --settings           compare the GitHub settings with the wanted ones
-//                                                          (admin, gh).
+//   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; no doc names a PC.
+//   node scripts/public-readiness.mjs --setup-since BASE   the same, cloning only if a setup input changed since BASE.
+//   node scripts/public-readiness.mjs --settings           compare GitHub's settings with the wanted ones (admin, gh).
 //   node scripts/public-readiness.mjs --settings --apply   set each one that differs.
-//   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag first, then make the
-//                                                          repository public.
+//   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag, then make it public.
+// A pull request's run uses --setup-since. Main and the release run everything.
 //
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
 import { execFileSync } from 'node:child_process';
@@ -350,8 +342,7 @@ function main(argv) {
   // Making the repository public publishes every branch and tag, so that gate reads them all.
   if (flag('--history') || flag('--make-public'))
     problems.push(...historyProblems(ROOT, { refs: flag('--make-public') ? ['--all'] : ['HEAD'] }));
-  // --setup-since <base>, for a pull request: the fresh clone only when a setup input changed; main and the release run
-  // it every time
+  // --setup-since <base>, for a pull request: the fresh clone only when a setup input changed
   const since = argv.includes('--setup-since') ? argv[argv.indexOf('--setup-since') + 1] : undefined;
   if (argv.includes('--setup-since') && !since) {
     console.error('--setup-since needs the commit to compare with');
