@@ -1,5 +1,5 @@
 // The text's own undo history (editor spec §4, typing_keeps_focus): Obsidian redraws a block each time its text is
-// written, and Chromium empties a field's undo history whenever the field leaves the page, so the editor keeps its own.
+// written. Chromium empties a field's undo history whenever the field leaves the page. So the editor keeps its own.
 // Each run of typing is one step, as a platform's undo groups it; anything else is a step of its own.
 
 /** A text and its selection. */

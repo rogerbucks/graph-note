@@ -1,6 +1,6 @@
-// Writing to the style graph (editor spec §2, §6, §7): a nudge, a look, a view's fade or hide and how a view was shown are
-// written as text into the graph's style block — made after the graph's last block when there is none — and never into a
-// data block, so the data reads exactly as before.
+// Writing to the style graph (editor spec §2, §6, §7). A nudge, a look, a view's fade or hide and how a view was shown
+// are written as text into the graph's style block. That block is made after the graph's last block when there is none.
+// They are never written into a data block, so the data reads exactly as before.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks, gqlSpans, styleOf } from '../src/blocks.ts';

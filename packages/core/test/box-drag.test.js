@@ -1,7 +1,7 @@
-// Moving a box by dragging it (editor spec §6, nudge_preview, drag_moves_box): where a box let go would land, read from
-// the boxes as drawn, and the nudge that place writes — beside the box it is dropped by, across the drawing's ranks, or
-// before or after it, along them — said in words before it is let go. Away from every box, or where the same nudge is
-// already written, it lands nowhere and writes nothing.
+// Moving a box by dragging it (editor spec §6, nudge_preview, drag_moves_box). It says where a box let go would land,
+// read from the boxes as drawn, and the nudge that place writes. It goes beside the box it is dropped by, across the
+// drawing's ranks, or before or after it, along them. That is said in words before it is let go. Away from every box,
+// or where the same nudge is already written, it lands nowhere and writes nothing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { landingFor, landingSaid } from '../src/box-drag.ts';

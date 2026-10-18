@@ -1,6 +1,6 @@
-// Drawing a graph (spec §3): laid out by the Graphviz engine in each direction the style lists, the one that fits the
-// note best chosen, and themed — as graph_svg.render does. And what tapping a box shows: its text, its kind, its links
-// in and out, and any problem on it.
+// Drawing a graph (spec §3). It is laid out by the Graphviz engine in each direction the style lists. The one that fits
+// the note best is chosen and themed, as graph_svg.render does. And what tapping a box shows: its text, its kind, its
+// links in and out, and any problem on it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -157,7 +157,7 @@ describe('what tapping a box shows', () => {
   });
 });
 
-// How fast a graph of 50 things is read and drawn (spec §11, fifty_in_half_second) is not asserted here: a test asserts
+// How fast a graph of 50 things is read and drawn (spec §11, fifty_in_half_second) is not asserted here. A test asserts
 // the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026). Its instructions are counted by the
 // draw_fifty benchmark (scripts/benchmarks/draw-fifty.mjs), on every release, and the phone is checked on the device.
 

@@ -1,8 +1,9 @@
 // The check an edit made for the person passes as it is written (editor spec §4: unnamed_drawn_suggested,
-// suggested_name_unique). An edit from the drawing — a path, a Deferred, a list, a name added, a thing added — is checked
-// first against the note as the editor last saw it, for a quick answer; but the note can change before the edit is
-// written, so the check that counts is made here, against the note actually written into, for the names the edit newly
-// writes: none may be a name the note draws only under a suggested name, and none it gives a thing may be another's.
+// suggested_name_unique). An edit from the drawing is checked first against the note as the editor last saw it, for a
+// quick answer. Such an edit is a path, a Deferred, a list, a name added or a thing added. But the note can change
+// before the edit is written. So the check that counts is made here, against the note actually written into, for the
+// names the edit newly writes. None may be a name the note draws only under a suggested name, and none it gives a thing
+// may be another's.
 import { dataKind, graphOf } from './blocks.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
 import { writtenIn } from './written-things.ts';
@@ -46,11 +47,12 @@ function given(text: string): string[] {
 }
 
 /**
- * Why an edit cannot be written into a note, or null when it can: `texts` are the note's blocks with the edit in place as
- * block `index` of `graph`, and `names` those the edit newly writes (`newNames`), of which only those still in its text
- * count. Refused, in the words of the check made before, when one is a name the note draws only under a suggested name
- * (accept its name first), or is a name the edit gives a thing that another block of the graph gives too, or that the
- * block gives twice (already a name).
+ * Why an edit cannot be written into a note, or null when it can. `texts` are the note's blocks with the edit in place
+ * as block `index` of `graph`. `names` are those the edit newly writes (`newNames`), of which only those still in its
+ * text count. Refused, in the words of the check made before, when one of them is:
+ * - a name the note draws only under a suggested name (accept its name first);
+ * - a name the edit gives a thing that another block of the graph gives too, or that the block gives twice (already a
+ *   name).
  */
 export function editRefusal(
   texts: readonly string[],

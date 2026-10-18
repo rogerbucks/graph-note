@@ -1,6 +1,6 @@
 // The text pane and the drawn code blocks colour GQL with the same tokenizer as the gql-highlight plugin (spec §4,
-// "colour"). The answers in tokens.expected.json were recorded from gql-highlight's own tokenize, so the core's must
-// give the same token classes over the same text — and, as gql-highlight's do, join back into the text exactly.
+// "colour"). The answers in tokens.expected.json were recorded from gql-highlight's own tokenize. So the core's must
+// give the same token classes over the same text. As gql-highlight's do, they must join back into the text exactly.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

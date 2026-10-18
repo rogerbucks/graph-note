@@ -1,9 +1,9 @@
-// The test languages (editor spec §42, pseudo_locales_checked): two made-up translations of the source words, so every view
-// can be tried in them before any real translation exists. `en-XA` is each word accented, bracketed and 40 per cent
-// longer, which shows a word the code says itself (it stays plain) and a box too small for a longer language; `ar-XB` is
-// the same read right to left, which shows a part that does not mirror. Each keeps the source's placeholders and plural
-// forms, so it passes the check every translation passes. Their regions are ones ISO 3166 leaves for users (XA, XB),
-// so no real language is taken.
+// The test languages (editor spec §42, pseudo_locales_checked). They are two made-up translations of the source words.
+// So every view can be tried in them before any real translation exists. `en-XA` is each word accented, bracketed and
+// 40 per cent longer. It shows a word the code says itself (it stays plain), and a box too small for a longer language.
+// `ar-XB` is the same read right to left, which shows a part that does not mirror. Each keeps the source's placeholders
+// and plural forms, so it passes the check every translation passes. Their regions are ones ISO 3166 leaves for users
+// (XA, XB), so no real language is taken.
 import type { Catalogue, Words } from './words.ts';
 
 /** The test languages, each with the direction it is read in. */

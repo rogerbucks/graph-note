@@ -1,7 +1,7 @@
-// Things parked for later (spec §5, park_for_later, deferred_drawn; §8, parked_not_broken): each thing a Deferred defers
-// drawn dashed with a later mark — on the drawing Graphviz drew, so its layout stays the Python library's — and said so
-// to screen readers; the parked things listed behind the badge; and, while the card is edited, Park for later in a
-// box's details, which writes a Deferred saying what is needed and why it waits.
+// Things parked for later (spec §5, park_for_later, deferred_drawn; §8, parked_not_broken). Each thing a Deferred
+// defers is drawn dashed with a later mark, and said so to screen readers. That is on the drawing Graphviz drew, so its
+// layout stays the Python library's. The parked things are listed behind the badge. While the card is edited, Park for
+// later is in a box's details, which writes a Deferred saying what is needed and why it waits.
 import { DeferredNotDeclared, indentText, parkForLater, word } from '@thoughtknot/core';
 import type { Box, Indent, NoteReading, Parked } from '@thoughtknot/core';
 
@@ -74,10 +74,10 @@ export function parkedNote(el: HTMLElement, box: Box | undefined): void {
 }
 
 /**
- * Park for later, in a box's details while its block is edited: a button that opens a small form — what is needed, why
- * it waits, and when to look again — which writes the Deferred into the text being edited, or says what is missing. In
- * a locked graph whose schema lacks Deferred and DEFERS, the refusal comes with a button that `declare`s them in the
- * schema and then parks, with what was typed in the form kept.
+ * Park for later, in a box's details while its block is edited. It is a button that opens a small form: what is needed,
+ * why it waits, and when to look again. The form writes the Deferred into the text being edited, or says what is
+ * missing. In a locked graph whose schema lacks Deferred and DEFERS, the refusal comes with a button. It `declare`s
+ * them in the schema and then parks, with what was typed in the form kept.
  */
 export function parkButton(
   el: HTMLElement,
@@ -88,8 +88,8 @@ export function parkButton(
   graph: string,
   declare: (() => Promise<DeclaredDeferred>) | undefined,
   /**
-   * The note as it is now, with what is typed: the thing is found in it, and one only suggested in it is not parked until
-   * its name is written (§4). Never the card's drawing, which can be older than the note.
+   * The note as it is now, with what is typed. The thing is found in it, and one only suggested in it is not parked
+   * until its name is written (§4). Never the card's drawing, which can be older than the note.
    */
   now: () => NoteReading,
 ): void {

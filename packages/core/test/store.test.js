@@ -1,6 +1,6 @@
-// Writing a block back to its note (spec §9): the text is the store (§2), so a write replaces only the block's own lines and
-// leaves every other byte alone; a block that changed since the pane read it is never overwritten blind; and every write
-// can be undone, back to the note's original bytes.
+// Writing a block back to its note (spec §9). The text is the store (§2). So a write replaces only the block's own
+// lines and leaves every other byte alone. A block that changed since the pane read it is never overwritten blind.
+// Every write can be undone, back to the note's original bytes.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { replaceBlock, History } from '../src/store.ts';

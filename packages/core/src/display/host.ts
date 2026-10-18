@@ -1,8 +1,8 @@
 // What the shared display layer asks of the host it is shown in (spec §10, Hosts; editor spec §26, cc_core_only). The layer
-// draws a graph's card, its details and its forms with the DOM alone; the few things a host decides for itself, an icon
-// set, whether the screen is a phone's, a notice, a menu, come through this one interface, installed once by the host
-// before anything is drawn. Obsidian installs one made of its own `setIcon`, `Platform`, `Notice` and `Menu`; the browser
-// editor's page installs one of its own. The layer imports no host, so nothing else tells it which it is in.
+// draws a graph's card, its details and its forms with the DOM alone. A host decides a few things for itself: an icon
+// set, whether the screen is a phone's, a notice, a menu. They come through this one interface. The host installs it
+// once before anything is drawn. Obsidian installs one made of its own `setIcon`, `Platform`, `Notice` and `Menu`; the
+// browser editor's page installs one of its own. The layer imports no host, so nothing else tells it which it is in.
 
 import { currentDirection, directionOf, setDirection, setLanguage, SOURCE_LANGUAGE } from '@thoughtknot/core';
 
@@ -33,9 +33,9 @@ export interface DisplayHost {
   menu: (entries: MenuEntry[], at: { x: number; y: number }, doc: Document) => void;
   /**
    * Whether the host's content security policy forbids inline styles (`style-src` without `'unsafe-inline'`), as the
-   * browser editor's page does (editor spec §26, cc_csp). The core writes the colours of a drawing as style attributes;
-   * where they are forbidden the layer sets the same declarations through the CSSOM, which the policy allows, and no
-   * style attribute is ever parsed from markup. Not set: styles stay attributes, as Obsidian has them.
+   * browser editor's page does (editor spec §26, cc_csp). The core writes the colours of a drawing as style attributes.
+   * Where they are forbidden the layer sets the same declarations through the CSSOM, which the policy allows. No style
+   * attribute is ever parsed from markup. Not set: styles stay attributes, as Obsidian has them.
    */
   noInlineStyle?: boolean;
   /**
@@ -65,8 +65,8 @@ export function installHost(host: DisplayHost): void {
 }
 
 /**
- * `el` set to read in the host's direction, as the root of a view is: everything in it mirrors through the style sheets'
- * logical sides, and the drawing keeps the screen's (styles.css, .thoughtknot-svg).
+ * `el` set to read in the host's direction, as the root of a view is. Everything in it mirrors through the style
+ * sheets' logical sides. The drawing keeps the screen's (styles.css, .thoughtknot-svg).
  */
 export function readInHostDirection<T extends HTMLElement>(el: T): T {
   el.dir = currentDirection();

@@ -1,6 +1,6 @@
 // The core's entry (spec §10): src/index.ts is what the plugin imports, so its names hold while the modules behind it
-// change. It exports exactly the names index-names.js lists, values and types alike, each added there deliberately with
-// its day, so a change to the entry is a decision, not an accident.
+// change. It exports exactly the names index-names.js lists, values and types alike. Each is added there deliberately
+// with its day, so a change to the entry is a decision, not an accident.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

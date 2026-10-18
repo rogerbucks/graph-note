@@ -1,10 +1,10 @@
-// Writing one change of a proposal as text (editor spec §17, accepting_is_an_edit): the text of the graph's blocks is the
-// only store of the graph (§2), so an addition is an item written after the last, a change of a property is made in the
-// pattern that writes it (or in the SET that gives it), and a removal takes out the item that wrote the thing or the link.
-// Each works on the blocks' texts, so the same code shows a proposal laid over a graph without writing anything and
-// writes an accepted change; what is written is checked by `proposals-review.ts`, which reads it back and has the pane's
-// own session check it. A change that would need more than whole items taken out — a thing written inside a longer path —
-// is not guessed at: it is refused, saying to edit it in the text.
+// Writing one change of a proposal as text (editor spec §17, accepting_is_an_edit). The text of the graph's blocks is
+// the only store of the graph (§2). So an addition is an item written after the last. A change of a property is made in
+// the pattern that writes it (or in the SET that gives it). A removal takes out the item that wrote the thing or the
+// link. Each works on the blocks' texts. So the same code shows a proposal laid over a graph without writing anything,
+// and writes an accepted change. What is written is checked by `proposals-review.ts`, which reads it back and has the
+// pane's own session check it. A change that would need more than whole items taken out is not guessed at. One example
+// is a thing written inside a longer path. It is refused, saying to edit it in the text.
 import { blankText, items } from './block-items.ts';
 import type { Item } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
@@ -52,8 +52,8 @@ const isSet = (text: string) => /^SET\b/i.test(text.trim());
 const blankOf = (block: string, it: Item) => blankText(block).slice(it.from, it.to).trim();
 
 /**
- * The block without an item that is a SET, or an assignment of a SET, keeping the one SET a block may end with: when the
- * item that carries the word SET goes and others follow, the first of them takes the word.
+ * The block without an item that is a SET, or an assignment of a SET, keeping the one SET a block may end with. When
+ * the item that carries the word SET goes and others follow, the first of them takes the word.
  */
 function withoutAssignment(block: string, all: Item[], it: Item): string {
   const text = withoutItem(block, all, it);
@@ -98,8 +98,9 @@ const link = (from: string, type: string, to: string) =>
   );
 
 /**
- * The change of a property written where the thing is: in the SET that already gives the property, else in the map of
- * the pattern that writes the thing (the last such block first, as a later block's word is the last).
+ * The change of a property written where the thing is. It goes in the SET that already gives the property. Else it goes
+ * in the map of the pattern that writes the thing. The last such block comes first, as a later block's word is the
+ * last.
  */
 function setIn(texts: readonly string[], blocks: number[], c: ProposedChange & { op: 'set' }): Edited {
   const given = new RegExp(`^(SET\\s+)?${literally(c.thing)}\\s*\\.\\s*${literally(c.key)}\\s*=\\s*`);
@@ -135,9 +136,9 @@ function linkOut(texts: readonly string[], blocks: number[], c: ProposedChange &
 }
 
 /**
- * Whether the text names the id as a word of its own: not as part of a longer word, nor after a dot as a property of
- * another name. The character before it is looked at by hand, as a regular expression would with a lookbehind, which iOS
- * before 16.4 cannot load.
+ * Whether the text names the id as a word of its own. It must not be part of a longer word, nor follow a dot as a
+ * property of another name. The character before it is looked at by hand, as a regular expression would with a
+ * lookbehind. iOS before 16.4 cannot load a lookbehind.
  */
 function namesThing(text: string, id: string): boolean {
   for (let at = text.indexOf(id); at !== -1; at = text.indexOf(id, at + 1)) {
@@ -178,9 +179,9 @@ function thingOut(texts: readonly string[], blocks: number[], c: ProposedChange 
 }
 
 /**
- * Why a statement's target is not the one it names, or null: a kind its MATCH names that the target lacks, and a plain
- * DELETE of a thing that still has links (the graph spec refuses it: only DETACH DELETE takes a thing with its links).
- * Only a statement that names a kind or is plain is looked into.
+ * Why a statement's target is not the one it names, or null. One case is a kind its MATCH names that the target lacks.
+ * Another is a plain DELETE of a thing that still has links. The graph spec refuses it: only DETACH DELETE takes a
+ * thing with its links. Only a statement that names a kind or is plain is looked into.
  */
 function targetFault(texts: readonly string[], graph: string, c: ProposedChange): string | null {
   const wants: [string, readonly string[] | undefined][] =

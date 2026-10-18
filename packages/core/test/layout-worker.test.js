@@ -1,6 +1,7 @@
-// The layout engine kept apart from the interface (spec §9, layout_contained): Graphviz runs in a worker the core talks to
-// through a port it is given, with a time limit and a size limit, so a huge or hostile graph never freezes the page. Here
-// the port is a fake, an in-thread one, or a real thread (worker_threads), each standing in for the browser's Worker.
+// The layout engine kept apart from the interface (spec §9, layout_contained). Graphviz runs in a worker the core talks
+// to through a port it is given. It has a time limit and a size limit, so a huge or hostile graph never freezes the
+// page. Here the port is a fake, an in-thread one, or a real thread (worker_threads), each standing in for the
+// browser's Worker.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { Worker } from 'node:worker_threads';
@@ -129,11 +130,12 @@ describe('the limits, checked before any layout', () => {
       ...d,
       boxes: d.boxes.map((b, i) => (i ? b : watchedBox({ ...b, text: 'é '.repeat(600_000) }, reads))),
     };
-    // at once, by the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026): the source was never
-    // written, as a drawing instruction names its box by its key, and the text was only measured, at most two passes; no
-    // worker and no engine on the page was started; and the answer came before the event loop turned, so it waited on
-    // nothing. Against a plain pass timed in the test, coverage, which slows the core and not the test, broke it (0.4.2,
-    // 12 Oct 2026); by the clock, a busy machine running the whole suite broke it at 314 ms against 200 (10 Oct 2026)
+    // at once, by the work done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026). The source was never
+    // written, as a drawing instruction names its box by its key. The text was only measured, at most two passes. No
+    // worker and no engine on the page was started. The answer came before the event loop turned, so it waited on
+    // nothing. Against a plain pass timed in the test, coverage broke it (0.4.2, 12 Oct 2026). Coverage slows the core
+    // and not the test. By the clock, a busy machine running the whole suite broke it at 314 ms against 200 (10 Oct
+    // 2026)
     const { r: runs, page } = runner([]);
     const r = await Promise.race([runs.draw(long), new Promise((done) => setImmediate(() => done('waited')))]);
     assert.notEqual(r, 'waited', 'answered before the event loop turned');
@@ -280,7 +282,7 @@ describe('the page’s own thread, only when the first worker cannot start', () 
     assert.equal(page.made.length, 0, 'the page never saw either');
   });
 
-  // a layout is checked against the limits when it is asked for, before it is known whether a worker can start: one
+  // a layout is checked against the limits when it is asked for, before it is known whether a worker can start. One
   // queued before the first worker fails is laid out on the page, so it is held to the page's limits and time then
   test('a layout queued before the first worker fails is held to the page’s limits and time, as one asked for after is', async () => {
     const queued = runner([silent({ fail: 'blocked' })]);
@@ -359,7 +361,7 @@ describe('a normal graph', () => {
     assert.equal(workers.made.length, 1);
   });
 
-  // how fast a graph of 50 things is drawn through the runner (spec §11) is not asserted here: a test asserts the work
+  // how fast a graph of 50 things is drawn through the runner (spec §11) is not asserted here. A test asserts the work
   // done, never the time taken (spec §12, quality_ratchet, 12 Oct 2026). Its instructions are counted by the draw_fifty
   // benchmark (scripts/benchmarks/draw-fifty.mjs), through this runner, on every release
 });
@@ -421,7 +423,7 @@ describe('a layout no longer wanted', () => {
   });
 
   test('a draw through the runner, its port served in this process, resolves on a clock that never runs, and leaves no timer set', async () => {
-    // the mock clock keeps each timer and never runs one: the draw_fifty benchmark counts this route, which must answer
+    // the mock clock keeps each timer and never runs one. The draw_fifty benchmark counts this route, which must answer
     // with no timer firing and leave none to hold the process
     const set = new Set();
     const clock = {

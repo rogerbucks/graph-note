@@ -1,5 +1,5 @@
-// The contract suite of the data exports (editor spec §43, plugin_contract_suites): every built-in export passes it, and
-// an export that breaks a promise fails the check that holds it, saying what was wanted.
+// The contract suite of the data exports (editor spec §43, plugin_contract_suites). Every built-in export passes it. An
+// export that breaks a promise fails the check that holds it, saying what was wanted.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { exporterContract, sampleExports } from '../src/plugins-contract.ts';

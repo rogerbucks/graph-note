@@ -1,9 +1,12 @@
-// What a drawn card is owned by (spec §4; editor spec §26, cc_core_only): a lifecycle with no host in it, so the same card
-// loads and unloads in Obsidian and in the browser editor's page. It does what a component of Obsidian does and no more:
-// `load` runs `onload` and loads the children; `unload` unloads the children, runs what was registered, then `onunload`;
-// a listener registered through `registerDomEvent` is taken off the element when the card unloads, so nothing a card
-// listened to outlives it. A host that needs its own kind of component wraps one of these (the Obsidian plugin's
-// `adopt`), so the card never imports the host's.
+// What a drawn card is owned by (spec §4; editor spec §26, cc_core_only). It is a lifecycle with no host in it, so the
+// same card loads and unloads in Obsidian and in the browser editor's page. It does what a component of Obsidian does
+// and no more:
+// - `load` runs `onload` and loads the children;
+// - `unload` unloads the children, runs what was registered, then `onunload`;
+// - a listener registered through `registerDomEvent` is taken off the element when the card unloads. So nothing a card
+//   listened to outlives it.
+// A host that needs its own kind of component wraps one of these (the Obsidian plugin's `adopt`), so the card never
+// imports the host's.
 
 /** A child that can be given to a lifecycle: anything with a load and an unload. */
 export interface Child {

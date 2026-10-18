@@ -1,10 +1,11 @@
-// Properties shown inline (editor spec §14): which properties of each box and link a drawing shows, as its style graph
-// switches them on or off for a kind, a thing or a relationship type, in the whole graph or a view (properties_switch,
-// properties_remembered); and those rows written into the layout source below the text of their box or the reading of
-// their link, at the kind caption's size — the smallest the locked style draws — in the box's text colour or the link's
-// label colour, so they keep the locked contrast (properties_readable). A box or link that would be crowded shows whole
-// properties up to `INLINE_ROWS` rows and says how many are hidden, never more (crowded_properties). The Python library
-// shows them the same way (`graphspec/style/inline.py`), held to this byte for byte.
+// Properties shown inline (editor spec §14): which properties of each box and link a drawing shows. Its style graph
+// switches them on or off (properties_switch, properties_remembered) for a kind, a thing or a relationship type. It
+// does so in the whole graph or in a view. Those rows are written into the layout source below the text of their box or
+// the reading of their link. They are at the kind caption's size, the smallest the locked style draws. They take the
+// box's text colour or the link's label colour, so they keep the locked contrast (properties_readable). A box or link
+// that would be crowded shows whole properties up to `INLINE_ROWS` rows and says how many are hidden, never more
+// (crowded_properties). The Python library shows them the same way (`graphspec/style/inline.py`), held to this byte for
+// byte.
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { LINK_LINE, linkTypes } from './arrows.ts';
@@ -25,8 +26,8 @@ export interface InlineProperties {
 }
 
 /**
- * A value as it is said inline: text as written, a number as JavaScript writes it, true or false, and a date or an
- * instant as the reader keeps it (its ISO day, or its UTC time).
+ * A value as it is said inline: text as written, a number as JavaScript writes it, or true or false. A date or an
+ * instant is said as the reader keeps it (its ISO day, or its UTC time).
  */
 export function valueText(v: unknown): string {
   if (v && typeof v === 'object' && 's' in v) return String(v.s);
@@ -44,9 +45,10 @@ const fits = (s: Show, t: Target): boolean =>
       : s.kind !== undefined && t.kinds.includes(s.kind);
 
 /**
- * The rows a box or link shows in `view`: for each property a Show in scope names, in the order first named, the most
- * particular such Show decides — one for the view over one for the whole graph, then one for the thing over one for its
- * kind, the first written when two are as particular — and it is shown when that Show is on and the value is there.
+ * The rows a box or link shows in `view`. For each property a Show in scope names, in the order first named, the most
+ * particular such Show decides. One for the view wins over one for the whole graph, then one for the thing over one
+ * for its kind. The first written wins when two are as particular. The property is shown when that Show is on and the
+ * value is there.
  */
 function rowsFor(shows: readonly Show[], view: string | undefined, target: Target, props: Record<string, unknown>) {
   const chosen = new Map<string, { on: boolean; rank: number }>();
@@ -70,8 +72,8 @@ function linkProps(drawing: Pick<GraphDrawing, 'boxes' | 'links'>, g: Graph, ind
 }
 
 /**
- * The properties `drawing` shows inline in `view` (none: the whole graph), with their values from `g`, the graph as read;
- * empty when its style graph switches none on.
+ * The properties `drawing` shows inline in `view` (none: the whole graph), with their values from `g`, the graph as
+ * read. Empty when its style graph switches none on.
  */
 export function inlineRows(
   drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,
@@ -94,9 +96,9 @@ export function inlineRows(
 }
 
 /**
- * One property's lines, never more than fit with the row saying how many are hidden (`INLINE_ROWS` less one): a value too
- * long for them is cut short at the last, which ends with an ellipsis, so it is shown in part rather than hidden. Its
- * length is counted in code points, as the wrapping counts it.
+ * One property's lines, never more than fit with the row saying how many are hidden (`INLINE_ROWS` less one). A value
+ * too long for them is cut short at the last, which ends with an ellipsis. So it is shown in part rather than hidden.
+ * Its length is counted in code points, as the wrapping counts it.
  */
 function cutShort(lines: string[]): string[] {
   if (lines.length < INLINE_ROWS) return lines;
@@ -106,9 +108,9 @@ function cutShort(lines: string[]): string[] {
 }
 
 /**
- * The table rows for a box's or link's properties: a gap as the kind caption has, then each property as `name: value`
- * wrapped as a box's text is, a long one cut short; when they would take more than `INLINE_ROWS` rows, the whole properties that fit in one
- * fewer, then how many are hidden.
+ * The table rows for a box's or link's properties. First comes a gap as the kind caption has, then each property as
+ * `name: value`, wrapped as a box's text is, a long one cut short. When they would take more than `INLINE_ROWS` rows,
+ * the whole properties that fit in one fewer come, then how many are hidden.
  */
 function tableRows(rows: PropertyRow[]): string {
   const wrapped = rows.map(([name, value]) => {
@@ -136,9 +138,10 @@ function tableRows(rows: PropertyRow[]): string {
 const BOX_LABEL = '[label=<<table ';
 
 /**
- * The Graphviz source `dot` with the properties of `inline` shown: a box's rows at the foot of its label's table, below
- * its text; a link's label made a table of its reading and, below it, its rows (its link line by index, in order). With
- * nothing to show, `dot` unchanged.
+ * The Graphviz source `dot` with the properties of `inline` shown:
+ * - a box's rows at the foot of its label's table, below its text;
+ * - a link's label made a table of its reading and, below it, its rows (its link line by index, in order).
+ * With nothing to show, `dot` unchanged.
  */
 export function inlineSource(dot: string, inline: InlineProperties | undefined): string {
   if (!inline || (!inline.boxes.length && !inline.links.length)) return dot;

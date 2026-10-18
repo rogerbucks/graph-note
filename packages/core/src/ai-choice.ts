@@ -1,6 +1,7 @@
-// Which AI may be asked (editor spec §19, ai_off_until_chosen, host_ai_first, user_models, models_by_purpose): none until
-// the user turns AI on and sets up where requests go; the host's own AI first, where it has one, so the choices and
-// consents made there apply; then the user's own models, each by its address, the one set up for the purpose first.
+// Which AI may be asked (editor spec §19, ai_off_until_chosen, host_ai_first, user_models, models_by_purpose):
+// - none until the user turns AI on and sets up where requests go;
+// - the host's own AI first, where it has one, so the choices and consents made there apply;
+// - then the user's own models, each by its address, the one set up for the purpose first.
 import type { AiModel, Settings } from './settings.ts';
 
 /** The purposes a model may be set up for, as the spec names them; a model may be given any other. */
@@ -20,20 +21,20 @@ export interface ModelChoice {
   forPurpose: boolean;
 }
 
-// The WHATWG URL every host this core runs in has (Obsidian on desktop and phone, Node), declared here because the core
-// is built without any host's library: only what is read of it.
+// The WHATWG URL every host this core runs in has (Obsidian on desktop and phone, Node). It is declared here because
+// the core is built without any host's library: only what is read of it.
 declare const URL: new (input: string) => { protocol: string; hostname: string };
 
 // this device, named exactly: never a name that only ends like one, such as evil.localhost
 const LOCAL_HOSTS = /^(localhost|127(?:\.\d{1,3}){3}|\[::1\])$/;
-// the characters a host and port are written in; anything else (a backslash, a space, %, a letter outside ASCII) could
+// the characters a host and port are written in. Anything else (a backslash, a space, %, a letter outside ASCII) could
 // make the request go somewhere other than the address seems to say
 const AUTHORITY = /^[A-Za-z0-9.:[\]-]+$/;
 
 /**
- * Why requests cannot go to `endpoint`, or null when they can: an address whose host is written plainly, holding no user
- * name, password, query string or fragment; a model on this device (localhost, 127.x.x.x or [::1], exactly) by http or
- * https, any other by https only, so what is sent cannot be read on the way.
+ * Why requests cannot go to `endpoint`, or null when they can. They can go to an address whose host is written plainly,
+ * holding no user name, password, query string or fragment. A model on this device (localhost, 127.x.x.x or [::1],
+ * exactly) may use http or https. Any other uses https only, so what is sent cannot be read on the way.
  */
 export function endpointProblem(endpoint: string): string | null {
   const given = endpoint.trim();
@@ -82,8 +83,8 @@ export function aiReady(s: Settings): { ready: AiModel[] } | { off: string } {
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /**
- * The AIs that may be asked for `purpose`, in the order they are offered: the host's own first, where it has one; then
- * the models set up for that purpose; then the rest. None while AI is off, the host's own among them.
+ * The AIs that may be asked for `purpose`, in the order they are offered. The host's own comes first, where it has one;
+ * then the models set up for that purpose; then the rest. None while AI is off, the host's own among them.
  */
 export function modelChoices(s: Settings, purpose: string, hostAi: HostAi | null = null): ModelChoice[] {
   const ready = aiReady(s);

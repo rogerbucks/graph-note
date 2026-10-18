@@ -1,8 +1,9 @@
-// Moving a box by dragging it (editor spec §6, nudge_preview, drag_moves_box): where a box let go at a point would land,
-// read from the boxes as drawn, and the nudge that place writes. Graphviz lays things out in ranks, across the drawing
-// (LR) or down it (TB): dropped above or below a box, across the ranks, the box goes beside it, on its rank; dropped to
-// one side, along the ranks, it goes before or after it. Away from every box, or where the same nudge is already written,
-// it lands nowhere. Host-free: the host reads the boxes from the drawing, in its own units, and draws the preview.
+// Moving a box by dragging it (editor spec §6, nudge_preview, drag_moves_box). It says where a box let go at a point
+// would land, read from the boxes as drawn, and the nudge that place writes. Graphviz lays things out in ranks, across
+// the drawing (LR) or down it (TB). Dropped above or below a box, across the ranks, the box goes beside it, on its
+// rank. Dropped to one side, along the ranks, it goes before or after it. Away from every box, or where the same nudge
+// is already written, it lands nowhere. Host-free: the host reads the boxes from the drawing, in its own units, and
+// draws the preview.
 import type { NudgeWrite } from './style-edit.ts';
 import { word } from './words.ts';
 
@@ -49,10 +50,10 @@ const writtenAlready = (n: NudgeWrite, written: readonly WrittenNudge[]): boolea
   );
 
 /**
- * Where box `dragged`, let go at `at`, would land among the `boxes` drawn in direction `rankdir` (LR or TB): by the
- * nearest other box within its reach — beside it when dropped across the ranks, before or after it along them, whichever
- * way the point lies further from its middle for the box's size. Null away from every box, or where the nudge it would
- * write is `written` already.
+ * Where box `dragged`, let go at `at`, would land among the `boxes` drawn in direction `rankdir` (LR or TB). It goes by
+ * the nearest other box within its reach. It lands beside it when dropped across the ranks, or before or after it along
+ * them. Which applies is whichever way the point lies further from its middle for the box's size. Null away from every
+ * box, or where the nudge it would write is `written` already.
  */
 export function landingFor(
   dragged: string,

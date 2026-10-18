@@ -1,6 +1,7 @@
-// The data a data export holds, and the kinds of value in it (editor spec §16, export_data_formats, export_lossless): the
-// things and links as the reader read them, each value one of the five kinds the document profile reads — a text, a
-// number, a truth value, a day or an instant — so each format writes a value in a way that reads back as itself.
+// The data a data export holds, and the kinds of value in it (editor spec §16, export_data_formats, export_lossless).
+// It holds the things and links as the reader read them. Each value is one of the five kinds the document profile
+// reads: a text, a number, a truth value, a day or an instant. So each format writes a value in a way that reads back
+// as itself.
 import gs from '@thoughtknot/graph-spec';
 import type { Value } from '@thoughtknot/graph-spec';
 
@@ -17,13 +18,14 @@ export interface ExportedData {
   things: DataThing[];
   links: DataLink[];
   /**
-   * Only for a view exported with its faded context (view_export_stays_view): what is outside the view, things by id
-   * and links by their place in `links`. Each format marks them so, and reads back the same things and links.
+   * Only for a view exported with its faded context (view_export_stays_view). It holds what is outside the view, things
+   * by id and links by their place in `links`. Each format marks them so, and reads back the same things and links.
    */
   faded?: { things: string[]; links: number[] };
   /**
-   * Only when a thing or link it holds has a note (editor spec §24, note_standard): each note's text as the reader read
-   * it, things' by id and links' by their place in `links`. A format with comments keeps them; CSV leaves them out.
+   * Only when a thing or link it holds has a note (editor spec §24, note_standard). It holds each note's text as the
+   * reader read it, things' by id and links' by their place in `links`. A format with comments keeps them; CSV leaves
+   * them out.
    */
   notes?: { things: [id: string, text: string][]; links: [at: number, text: string][] };
 }

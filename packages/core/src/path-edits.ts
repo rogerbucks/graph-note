@@ -1,6 +1,6 @@
-// Editing a walked path's steps as text (editor spec §7, path_missing_step; graph spec §22, rule 2: a path's steps are
-// numbered 1 to n): the edit that takes a step out of its block, with its comma, or the comma before it when it is the
-// block's last item; and the later steps of the same path, in the same block, each numbered one lower, so the path still
+// Editing a walked path's steps as text (editor spec §7, path_missing_step). Graph spec §22, rule 2: a path's steps are
+// numbered 1 to n. One edit takes a step out of its block, with its comma. For the block's last item it takes the
+// comma before it. The later steps of the same path, in the same block, are each numbered one lower. So the path still
 // reads 1 to n. Host-free. A step written over several lines, or with seq after another property, is not renumbered.
 import { blankText, items, lineIndex } from './block-items.ts';
 import type { Problem } from './note-reading.ts';
@@ -11,9 +11,9 @@ type Edit = { span: { line: number; character: number; end: number }; text: stri
 const STEP = /\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)\s*-\s*\[\s*:\s*STEP\s*\{\s*seq\s*:\s*(\d+)/g;
 
 /**
- * The edits that number again the steps of a path after one taken out: for the step written `removed` (a STEP pattern,
- * such as `(tour)-[:STEP {seq: 2}]->(gone)`), each later step of the same path in `block` gets its seq one lower, as
- * an edit at a 0-based line and characters of the block. None when `removed` is not a STEP pattern.
+ * The edits that number again the steps of a path after one taken out. The step is written `removed` (a STEP pattern,
+ * such as `(tour)-[:STEP {seq: 2}]->(gone)`). Each later step of the same path in `block` gets its seq one lower. Each
+ * is an edit at a 0-based line and characters of the block. None when `removed` is not a STEP pattern.
  */
 export function stepsAfter(block: string, removed: string): Edit[] {
   STEP.lastIndex = 0;
@@ -35,9 +35,10 @@ export function stepsAfter(block: string, removed: string): Edit[] {
 }
 
 /**
- * The fix that takes the step written `dropped`, on 1-based `line` of the block `text`, out of it, when the step sits on
- * one line of it: the step and its own comma; for the block's last item, which has none, the comma before it instead, so
- * none is left with nothing after it; and the later steps numbered again. Nothing when the step cannot be found so.
+ * The fix that takes the step written `dropped`, on 1-based `line` of the block `text`, out of it. It acts when the
+ * step sits on one line of it. It takes the step and its own comma. The block's last item has none, so it takes the
+ * comma before it instead. So none is left with nothing after it. The later steps are numbered again. Nothing when the
+ * step cannot be found so.
  */
 export function removal(
   text: string,

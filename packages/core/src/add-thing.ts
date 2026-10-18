@@ -1,5 +1,5 @@
-// Adding a thing (editor spec §5, add_thing; §4, name_from_text, suggested_name_unique): the thing's text is asked for first
-// and its name is suggested from it — in the style of the graph's names, and never one of them — and the thing is written
+// Adding a thing (editor spec §5, add_thing; §4, name_from_text, suggested_name_unique). The thing's text is asked for
+// first. Its name is suggested from it, in the style of the graph's names and never one of them. The thing is written
 // as text after the block's last item, with its text under the key its kind's other things use. A name the user gives
 // instead is held to the same rules. Nothing is written until the host is handed the new text and writes it.
 import gs from '@thoughtknot/graph-spec';
@@ -46,9 +46,10 @@ function namesOf(reading: NoteReading, graph: string, block?: string): NameBook 
 }
 
 /**
- * The name suggested for a thing with this text: in the style the graph's names show, unlike every name the graph has
- * (compared without regard to case) — `block`, when given, being the text as typed now, whose names count too — and not
- * a word the language keeps. A graph that is not there has no names, so its first name follows the default style.
+ * The name suggested for a thing with this text. It is in the style the graph's names show, and unlike every name the
+ * graph has (compared without regard to case). `block`, when given, is the text as typed now, whose names count too. It
+ * is not a word the language keeps. A graph that is not there has no names, so its first name follows the default
+ * style.
  */
 export function suggestName(reading: NoteReading, graph: string, text: string, kind?: string, block?: string): string {
   return namesOf(reading, graph, block).name(oneLine(text), kind);
@@ -78,10 +79,14 @@ function undeclared(reading: NoteReading, graph: string, kind: string): string |
 /**
  * The block with a thing written after its last item: `(name:Kind {name: 'text'})`, comma-joined as the block writes its
  * own, nothing else changed, before any SET. The text comes first and is required; the name is the one given, else the one
- * suggested from the text. Refused, with the reason and nothing written, when the text is empty, the name is not one word,
- * is a word the language keeps or is taken, the kind is not one word, is a schema label or is Path (a path is recorded
- * with its steps, and a thing of it with none reads as broken), the block is not of the graph, a locked graph's
- * schema does not declare the kind, or the block holds nothing but a SET or MATCH.
+ * suggested from the text. Refused, with the reason and nothing written, when:
+ * - the text is empty;
+ * - the name is not one word, is a word the language keeps or is taken;
+ * - the kind is not one word, is a schema label or is Path. (A path is recorded with its steps, and a thing of it with
+ *   none reads as broken.)
+ * - the block is not of the graph;
+ * - a locked graph's schema does not declare the kind;
+ * - or the block holds nothing but a SET or MATCH.
  */
 export function addThing(reading: NoteReading, graph: string, block: string, thing: NewThing): ThingAdded {
   const text = oneLine(thing.text),

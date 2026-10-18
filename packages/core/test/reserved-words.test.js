@@ -1,7 +1,7 @@
-// The words a view may not use as a name, and those it may not ask for as a kind (editor spec §7: view_profile,
-// views_agree_with_grafeo; engines_get_standard): GQL's reserved and pre-reserved words, the words it reads as values,
-// and the further words Grafeo 0.5.43 refuses as a name; and the words Grafeo refuses as a label. Python's
-// tests/test_view_parity.py holds both Grafeo lists to Grafeo itself.
+// The words a view may not use as a name, and those it may not ask for as a kind. See editor spec §7 (view_profile,
+// views_agree_with_grafeo; engines_get_standard). For names: GQL's reserved and pre-reserved words, the words it reads
+// as values, and the further words Grafeo 0.5.43 refuses as a name. For kinds: the words Grafeo refuses as a label.
+// Python's tests/test_view_parity.py holds both Grafeo lists to Grafeo itself.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {

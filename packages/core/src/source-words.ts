@@ -1,5 +1,5 @@
-// The source words, in UK English (editor spec §42, words_catalogue): every word the person reads, kept by key, which
-// each translation gives again for its language. A key is the place it is said, dotted: `code.copied`. A placeholder is
+// The source words, in UK English (editor spec §42, words_catalogue): every word the person reads, kept by key. Each
+// translation gives them again for its language. A key is the place it is said, dotted: `code.copied`. A placeholder is
 // `{name}`; a word that changes with a count gives `one` and `other`. Words move here from the code as each place is
 // brought to the catalogue; the plain-English check (ux_copy_auto) reads them here.
 

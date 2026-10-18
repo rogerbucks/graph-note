@@ -1,7 +1,7 @@
-// Reading a note's data blocks for drawing, as far as they can be read (spec §3): a path that cannot be read is left out
-// and listed as a problem, and the rest of its block is read; a comment after code, a comma with nothing after it, a
-// missing comma, a link type without its colon and a thing with text but no name are each read as meant, with a warning
-// whose fix writes it so.
+// Reading a note's data blocks for drawing, as far as they can be read (spec §3). A path that cannot be read is left
+// out and listed as a problem, and the rest of its block is read. Some slips are each read as meant, with a warning
+// whose fix writes it so. They are a comment after code, a comma with nothing after it and a missing comma. So are a
+// link type without its colon and a thing with text but no name.
 import gs from '@thoughtknot/graph-spec';
 import { bareNames, items, lineIndex, without } from './block-items.ts';
 import type { Item } from './block-items.ts';
@@ -13,8 +13,9 @@ import { trim, trimEnd } from './whitespace.ts';
 import { THRESHOLDS } from './thresholds.ts';
 
 /**
- * Each comment after code on its line (§3: comments are whole lines, as // also occurs inside identifiers): the block
- * with them blanked, and for each a warning that names the rule, whose fix puts the comment on its own line.
+ * Each comment after code on its line. §3 says comments are whole lines, as // also occurs inside identifiers. The
+ * block comes back with them blanked, with a warning for each. The warning names the rule, and its fix puts the
+ * comment on its own line.
  */
 function lineEndComments(text: string): { text: string; problems: Omit<Problem, 'block' | 'graph'>[] } {
   const problems: Omit<Problem, 'block' | 'graph'>[] = [];
@@ -47,9 +48,9 @@ function lineEndComments(text: string): { text: string; problems: Omit<Problem, 
 }
 
 /**
- * A comma with nothing after it at a block's end, but blank lines and comments: the commonest state while the next
- * pattern is being typed, so never a failure of the block (8 Oct 2026). The block as read without it, and one warning
- * whose fix removes it; null when there is none.
+ * A comma with nothing after it at a block's end, but blank lines and comments. It is the commonest state while the
+ * next pattern is being typed, so never a failure of the block (8 Oct 2026). Returns the block as read without it,
+ * and one warning whose fix removes it; null when there is none.
  */
 function danglingComma(text: string): { text: string; problem: Omit<Problem, 'block' | 'graph'> } | null {
   const last = items(text).pop();
@@ -82,11 +83,13 @@ export interface Prepared {
 }
 
 /**
- * A block as read, every line where it was written: `named`, with what `prepare` read as meant and the suggested names
- * put in; `applied`, the same with whatever could not be read left out, as the store took it, or null for a block left
- * out whole; and `dropped`, the 1-based line each item left out begins on, every item of a block left out whole. Notes
- * are read from these (notes.ts), so a thing drawn under a suggested name keeps its note, and a note on what was left out
- * is said.
+ * A block as read, every line where it was written. It has three parts:
+ * - `named`: with what `prepare` read as meant and the suggested names put in.
+ * - `applied`: the same with whatever could not be read left out, as the store took it. It is null for a block left
+ *   out whole.
+ * - `dropped`: the 1-based line each item left out begins on, every item of a block left out whole.
+ * Notes are read from these (notes.ts). So a thing drawn under a suggested name keeps its note, and a note on what was
+ * left out is said.
  */
 export interface ReadText {
   named: string;
@@ -98,9 +101,10 @@ export interface ReadText {
 export type KindOf = (text: string) => ReturnType<typeof dataKind>;
 
 /**
- * The blocks made ready to read: a block that is not data left out; a comment after code blanked and a comma with nothing
- * after it taken out, each with its warning; and the names suggested for things written without one. `kindOf` says which
- * blocks are read: the data blocks, unless another reader, such as the style graph's, asks for its own.
+ * The blocks made ready to read. A block that is not data is left out. A comment after code is blanked and a comma
+ * with nothing after it is taken out, each with its warning. Names are suggested for things written without one.
+ * `kindOf` says which blocks are read: the data blocks, unless another reader, such as the style graph's, asks for its
+ * own.
  */
 export function prepare(texts: string[], kindOf: KindOf = dataKind): Prepared {
   const clean = texts.slice(),
@@ -123,19 +127,19 @@ export function prepare(texts: string[], kindOf: KindOf = dataKind): Prepared {
       }
     }
   });
-  // a thing given text but no name, or a name but no text: a warning whose fix adds what is suggested; the suggested name
-  // is only read in, in a copy, so that the thing is drawn — the note itself is never rewritten unasked
+  // a thing given text but no name, or a name but no text: a warning whose fix adds what is suggested. The suggested
+  // name is only read in, in a copy, so that the thing is drawn — the note itself is never rewritten unasked
   const gaps = nameGaps(clean.map((text, i) => ({ text: skip.has(i) ? '' : text, graph: graphOf(texts[i] ?? '') })));
   gaps.forEach((g, i) => problems.push(...g.problems.map((p) => ({ ...p, block: i, graph: graphOf(texts[i] ?? '') }))));
   return { clean, problems, skip, gaps };
 }
 
 /**
- * How much may be read again, in UTF-16 units, while a block's parts that cannot be read are left out one by one: each
- * is the block read again whole, and each trial to tell which of several parts on a line is at fault is too. Past it,
- * the rest of the block from the failing line is left out at once (§9: never freeze). A million is under half a second
- * of re-reading on a desktop; a note of ordinary size, with a few dozen problems, never comes near it. The Python
- * reader (graphspec/reader/drawing.py) counts and cuts exactly so, so both draw the same (§12, drawn_in_part).
+ * How much may be read again, in UTF-16 units, while a block's parts that cannot be read are left out one by one.
+ * Each is the block read again whole, and so is each trial to tell which of several parts on a line is at fault. Past
+ * it, the rest of the block from the failing line is left out at once (§9: never freeze). A million is under half a
+ * second of re-reading on a desktop. A note of ordinary size, with a few dozen problems, never comes near it. The
+ * Python reader (graphspec/reader/drawing.py) counts and cuts exactly so, so both draw the same (§12, drawn_in_part).
  */
 export const REREAD_BUDGET = THRESHOLDS.reread_budget.value;
 
@@ -160,8 +164,8 @@ function readAsMeant(store: gs.Store, i: number, text: string, commasFrom: numbe
       departure: 'missing-comma',
     });
   }
-  // a type written without its colon, read as the graph's one type of that name (§3): a warning, whose fix writes the
-  // colon and the type as the graph spells it
+  // a type written without its colon, read as the graph's one type of that name (§3). It gets a warning, whose fix
+  // writes the colon and the type as the graph spells it
   const bares = store.bares.slice(baresFrom);
   const names = bares.length ? bareNames(text) : [];
   for (const [k, b] of bares.entries()) {
@@ -214,12 +218,13 @@ function failure(block: number, text: string, error: unknown, all: Item[], lineA
 
 /**
  * Reads a note's data blocks, leaving out what cannot be read. Returns the blocks as read and the problems.
- * Each block is applied in order; when one fails, the store is as it was before it (a block is applied whole or not at
- * all), the item at the failing line is blanked, and that block is read again — what a fresh read of every block would
- * give, as the Python reader does it, without reading the blocks before it again. `budget` caps the re-reading (above).
- * `kindOf` says which blocks are read (`prepare`): the data blocks by default. Only the blocks up to `upTo` are read and
- * have their problems listed, as for a card drawn from the blocks up to its own; but names are suggested against every
- * block, so a card, the whole note and every edit agree on a thing's suggested name (suggested_name_unique).
+ * Each block is applied in order. When one fails, the store is as it was before it: a block is applied whole or not
+ * at all. Then the item at the failing line is blanked, and that block is read again. This matches a fresh read of
+ * every block, as the Python reader does it, without reading the blocks before it again. `budget` caps the re-reading
+ * (above). `kindOf` says which blocks are read (`prepare`): the data blocks by default. Only the blocks up to `upTo`
+ * are read and have their problems listed, as for a card drawn from the blocks up to its own. But names are suggested
+ * against every block. So a card, the whole note and every edit agree on a thing's suggested name
+ * (suggested_name_unique).
  */
 export function readBlocks(
   texts: string[],

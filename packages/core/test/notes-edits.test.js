@@ -1,8 +1,8 @@
-// Notes and the editor's edits (editor spec §24, note_kept_by_edits, note_add): every edit the editor makes keeps a
-// thing's `///` note with it and takes the note away with the thing, and undo restores both; and `setNote` adds, changes
-// and removes a note by writing the comment lines above its thing or link, nothing else in the block changing.
-// Every edit the core's index exports is swept: it has a case below, or an exclusion with its reason, and a new one fails
-// the last tests until it is added to one or the other.
+// Notes and the editor's edits (editor spec §24, note_kept_by_edits, note_add). Every edit the editor makes keeps a
+// thing's `///` note with it and takes the note away with the thing, and undo restores both. `setNote` adds, changes
+// and removes a note by writing the comment lines above its thing or link, nothing else in the block changing. Every
+// edit the core's index exports is swept: it has a case below, or an exclusion with its reason. A new one fails the
+// last tests until it is added to one or the other.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -148,8 +148,8 @@ const THEN = { ...NOTES, things: { ...NOTES.things, end: 'Journey’s end.' } };
 const withoutComma = (after) => TRIP.replace(after, after.replace(/,$/, ''));
 
 /**
- * The edits that change a block without taking a thing or link out, each run on TRIP and read back: [the functions swept
- * (one name, or several), what it does, the run giving the block, and the notes expected after it, NOTES unless it adds one].
+ * Edits that change a block without taking a thing or link out, run on TRIP and read back. Each: [functions swept (one
+ * name or several), what it does, the run giving the block, notes expected after it (NOTES unless it adds one)].
  */
 const KEPT = [
   ['setProperty', 'sets a property', () => done(setProperty(TRIP, GRAPH, { thing: 'mid' }, 'name', "'Halfway house'"))],

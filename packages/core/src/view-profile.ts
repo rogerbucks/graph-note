@@ -1,12 +1,12 @@
-// The view profile (editor spec §7: view_profile, five_view_kinds): the five shapes of query a view may be, read into a
-// plain description of the view. A view is a query block in the note; a query outside these five shapes is refused with a
-// message saying what is allowed and showing the nearest shape. Writing a view from its description is in view-write.ts.
+// The view profile (editor spec §7: view_profile, five_view_kinds). It reads the five shapes of query a view may be
+// into a plain description of the view. A view is a query block in the note. A query outside these shapes is refused,
+// saying what is allowed and showing the nearest shape. Writing a view from its description is in view-write.ts.
 //
-// The queries are ISO GQL that Grafeo runs as written (quantified edge patterns, a choice of kinds after IS), so the same
-// query can be put to Grafeo as to the editor (views_agree_with_grafeo). A thing is named by its `id` property: the reader
-// writes `id: '<name>'` into every node it hands the engine (to_gql.py `_with_ids`; the engine reads nodes back by
-// `properties(n).id`, queries.py `read`), and the world the core holds keys every node by that same property
-// (`Store` `n.props.id`, `Graph.nodes`), so `n.id` is the name on both sides.
+// The queries are ISO GQL that Grafeo runs as written (quantified edge patterns, a choice of kinds after IS). So the
+// same query can be put to Grafeo as to the editor (views_agree_with_grafeo). A thing is named by its `id` property.
+// The reader writes `id: '<name>'` into every node it hands the engine (to_gql.py `_with_ids`). The engine reads nodes
+// back by `properties(n).id` (queries.py `read`). The world the core holds keys every node by that same property
+// (`Store` `n.props.id`, `Graph.nodes`). So `n.id` is the name on both sides.
 import { isRefusedKind, isReservedName, kindRefusal, nameRefusal } from './reserved-words.ts';
 import { isSpace, trimStart } from './whitespace.ts';
 
@@ -362,11 +362,11 @@ function refusal(reason: string, shape: ViewKind): ViewRefusal {
 }
 
 /**
- * A view query read into the view it describes: one of the five shapes (spec §7), written as GQL with whitespace and line
- * breaks free, keywords in any case, the names of the things in the pattern as the author likes (but never a word GQL
- * keeps, or Grafeo refuses, as a name, nor a kind Grafeo refuses as a label: reserved-words.ts), whole-line // comments
- * ignored, text in single quotes. Anything else is refused (view_profile) with a message that says what was wrong, names
- * the five shapes in words and shows the form of the nearest.
+ * A view query read into the view it describes: one of the five shapes (spec §7). It is written as GQL with whitespace
+ * and line breaks free and keywords in any case. Text is in single quotes, and whole-line // comments are ignored. The
+ * names of the things in the pattern are as the author likes, with limits (reserved-words.ts). A name is never a word
+ * GQL keeps or Grafeo refuses, nor a kind Grafeo refuses as a label. Anything else is refused (view_profile) with a
+ * message that says what was wrong. It names the five shapes in words and shows the form of the nearest.
  */
 export function parseView(query: string): ViewSpec | ViewRefusal {
   let toks: Tok[] = [];

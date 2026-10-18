@@ -1,10 +1,12 @@
-// Links that show flow by moving (editor spec §7, links_show_flow): dashes running along a link's arrow, or a dot
-// travelling along it, chosen in the style graph for every link or one relationship type, in the whole graph or a view,
-// and still unless a Flow moves it (flow_in_style_graph). Movement is never the only signal (motion_not_alone): a Flow
-// that moves links must say what the movement means, each moving link carries an icon on its label, and its legend and
-// screen-reader name say the movement and its meaning in words. The source carries only classes and the still dashes;
-// the movement itself is a host's style sheet, or an export's (export-motion.ts), each still under reduced motion
-// (motion_reduced_respected). The Python library writes the same source (`graphspec/style/flow.py`).
+// Links that show flow by moving (editor spec §7, links_show_flow). Dashes run along a link's arrow, or a dot travels
+// along it. It is chosen in the style graph for every link or one relationship type, in the whole graph or a view. A
+// link is still unless a Flow moves it (flow_in_style_graph). Movement is never the only signal (motion_not_alone):
+// - a Flow that moves links must say what the movement means;
+// - each moving link carries an icon on its label;
+// - its legend and screen-reader name say the movement and its meaning in words.
+// The source carries only classes and the still dashes. The movement itself is a host's style sheet, or an export's
+// (export-motion.ts), each still under reduced motion (motion_reduced_respected). The Python library writes the same
+// source (`graphspec/style/flow.py`).
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { LINK_LINE, linkTypes } from './arrows.ts';
 import { drawingSource, STYLE } from './layout.ts';
@@ -42,9 +44,9 @@ export interface FlowLegendEntry {
 }
 
 /**
- * A Flow, checked (§7): how its links move — dashes, a dot, or still — for every link or the links of a relationship type
- * the graph has, in the whole graph or a view, whose name is the user's own; one that moves links says what the movement
- * means, or it is a problem and its links stay still.
+ * A Flow, checked (§7). It says how its links move: dashes, a dot, or still. It covers every link or the links of a
+ * relationship type the graph has. It holds in the whole graph or a view, whose name is the user's own. One that
+ * moves links says what the movement means, or it is a problem and its links stay still.
  */
 export function flowOf(raw: RawThing, names: StyledNames, out: Problem[]): Flow | null {
   const r = reader(raw, names, out),
@@ -70,9 +72,9 @@ export function flowOf(raw: RawThing, names: StyledNames, out: Problem[]): Flow 
 }
 
 /**
- * How links of `type` move in `view` (none: the whole graph): as the most particular Flow for them says — one for the view
- * over one for the whole graph, then one for the type over one for every link, the first written when two are as
- * particular — and null when they are still, as they are when no Flow says otherwise.
+ * How links of `type` move in `view` (none: the whole graph), as the most particular Flow for them says. One for the
+ * view wins over one for the whole graph, then one for the type over one for every link. The first written wins when
+ * two are as particular. Null when they are still, as they are when no Flow says otherwise.
  */
 export function flowFor(
   style: Pick<StyleGraph, 'flows'>,
@@ -90,9 +92,9 @@ export function flowFor(
 }
 
 /**
- * The links of a drawing that move in `view`, by their index among the links written (a link guessed from a near miss of
- * its type goes by the type it is taken for, as its arrowhead does); a link guessed from a near miss of a name, drawn as
- * a guess, never moves. Empty when the style graph moves none.
+ * The links of a drawing that move in `view`, by their index among the links written. A link guessed from a near miss
+ * of its type goes by the type it is taken for, as its arrowhead does. A link guessed from a near miss of a name, drawn
+ * as a guess, never moves. Empty when the style graph moves none.
  */
 export function flowLinks(
   drawing: Pick<GraphDrawing, 'links' | 'estimates'>,
@@ -113,10 +115,12 @@ const BACK = ', dir=back];';
 const LABEL = /^( {2}"[^"]*" -> "[^"]*" \[label=")([^"]*)"/;
 
 /**
- * The Graphviz source `dot` with each link of `flow` (indexes of its link lines, in order) marked as moving: its label
- * opened by the icon of its movement, the classes a style sheet moves it by (`thoughtknot-flow`, `-dashes` or `-dot`, and
- * `-back` when its line runs against it), and dashes drawn dashed, so they show when still. The arrowhead and everything
- * else of the line is as it was. With nothing to move, `dot` unchanged.
+ * The Graphviz source `dot` with each link of `flow` (indexes of its link lines, in order) marked as moving:
+ * - its label opened by the icon of its movement;
+ * - the classes a style sheet moves it by (`thoughtknot-flow`, `-dashes` or `-dot`, and `-back` when its line runs
+ *   against it);
+ * - dashes drawn dashed, so they show when still.
+ * The arrowhead and everything else of the line is as it was. With nothing to move, `dot` unchanged.
  */
 export function flowSource(dot: string, flow: readonly FlowLink[]): string {
   if (!flow.length) return dot;
@@ -139,8 +143,9 @@ export function flowSource(dot: string, flow: readonly FlowLink[]): string {
 }
 
 /**
- * The links whose line Graphviz draws from their far end in `rankdir` (indexes in the order drawn), as the drawing is
- * laid out, its diagram type among the rest: something moving along such a line runs backwards, so it reads forwards.
+ * The links whose line Graphviz draws from their far end in `rankdir` (indexes in the order drawn). This is as the
+ * drawing is laid out, its diagram type among the rest. Something moving along such a line runs backwards, so it reads
+ * forwards.
  */
 export function reversedLinks(drawing: GraphDrawing, rankdir: string): number[] {
   const typed = GraphLayout.typedSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.diagram, STYLE);

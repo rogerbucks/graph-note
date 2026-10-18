@@ -1,9 +1,9 @@
-// How a styled view or path is shown (editor spec §7): styling written in the style graph changes the colour, line and
-// format of chosen things and links, within its view or path only, and keeps the locked rules — every colour that carries
-// meaning is in a legend, and every colour is one of the locked style's hues, drawn through the same blends that give the
-// locked contrast. Spans style.ts (reading), style-graph.ts (the hues) and theme.ts (the blends). And how properties are
-// shown inline (editor spec §14): each property of things and of links switched on or off in the style graph, drawn below
-// the text of its box or link at the locked style's size and contrast, and a box that would be crowded saying how many
+// How a styled view or path is shown (editor spec §7). Styling written in the style graph changes the colour, line and
+// format of chosen things and links, within its view or path only. It keeps the locked rules: every colour that carries
+// meaning is in a legend, and every colour is a locked hue. Each is drawn through the blends that give the locked
+// contrast. Spans style.ts (reading), style-graph.ts (the hues) and theme.ts (the blends). And how properties are shown
+// inline (editor spec §14). Each property of things and links can be switched on or off in the style graph. It is drawn
+// below the text of its box or link, at the locked style's size and contrast. A box that would be crowded says how many
 // are hidden. Spans inline-properties.ts (the rows and the source), style-source.ts and render.ts (the source drawn).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -474,7 +474,7 @@ describe('a box crowded with properties', () => {
 });
 
 // type_one_look (editor spec §15): every diagram type keeps the locked style. A graph of three kinds, with a date on each
-// thing, so every type Graphviz draws fits it; each is drawn, themed, beside the network it is a type of.
+// thing, so every type Graphviz draws fits it. Each is drawn, themed, beside the network it is a type of.
 const TYPED = `// graph: team · SOURCE
 (ada:Person {name: 'Ada', on: DATE '2026-01-01'}),
 (bea:Person {name: 'Bea', on: DATE '2026-02-01'}),

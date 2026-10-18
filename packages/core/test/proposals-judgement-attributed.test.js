@@ -1,6 +1,6 @@
 // Who proposed and who decided, kept as W3C PROV attributions in the note's judgement graph (the graph spec's
-// req:24.prov-attributed): each Decision is WAS_ATTRIBUTED_TO the proposer (the change set's `by`) and the person who
-// decided, each an agent typed Person or Model (a Model counts as a SoftwareAgent). The plain `proposed_by` and
+// req:24.prov-attributed). Each Decision is WAS_ATTRIBUTED_TO the proposer (the change set's `by`) and the person who
+// decided. Each is an agent typed Person or Model (a Model counts as a SoftwareAgent). The plain `proposed_by` and
 // `decided_by` texts stay, as typed; the decider is still never a link to a Person of the data graph.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

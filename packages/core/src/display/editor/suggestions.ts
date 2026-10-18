@@ -1,7 +1,7 @@
-// The block editor's suggestions (spec §4): names, kinds and relationships already in the graph, dropped down under the
-// caret as a list the field's own keys work — the arrows move the choice, Enter or Tab takes it, Escape closes it — so
-// the hands never leave the keys (keyboard_any_device). The one chosen is written into the field in place of what was
-// being typed. A click takes one too, the focus kept in the field.
+// The block editor's suggestions (spec §4): names, kinds and relationships already in the graph. They drop down under
+// the caret as a list the field's own keys work. The arrows move the choice, Enter or Tab takes it, and Escape closes
+// it. So the hands never leave the keys (keyboard_any_device). The one chosen is written into the field in place of
+// what was being typed. A click takes one too, the focus kept in the field.
 import type { CompletionItem } from '@thoughtknot/core';
 
 /** Shows `items` as the options of the list, the one at `active` chosen, or hides it when there are none. */
@@ -67,8 +67,9 @@ function caretIn(overlay: HTMLElement, at: number): Range | null {
 }
 
 /**
- * Puts the list under the caret, on the row it is on: measured in the coloured picture, which wraps as the field does
- * (long_lines_wrap); where nothing can be measured, under its line at its column, the field being in a fixed-width font.
+ * Puts the list under the caret, on the row it is on. It is measured in the coloured picture, which wraps as the field
+ * does (long_lines_wrap). Where nothing can be measured, it goes under its line at its column, the field being in a
+ * fixed-width font.
  */
 export function placeSuggestions(list: HTMLElement, t: HTMLTextAreaElement, overlay?: HTMLElement): void {
   const at = t.selectionStart ?? t.value.length,

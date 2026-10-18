@@ -1,6 +1,7 @@
-// A list in the inspector (spec §14, list_as_linked_things): one row for a relationship and a kind, its values the things
-// linked to this one, shown as chips as Obsidian's Properties panel shows a list — each removed in place with its x, and
-// a field to add a value in place. Each change is an edit of the block's text, and what it did to the thing is said.
+// A list in the inspector (spec §14, list_as_linked_things). It is one row for a relationship and a kind. Its values
+// are the things linked to this one, shown as chips as Obsidian's Properties panel shows a list. Each is removed in
+// place with its x, and a field adds a value in place. Each change is an edit of the block's text, and what it did is
+// said.
 import { setIcon } from '../host';
 import { addToList, removeFromList } from '@thoughtknot/core';
 import type { ListShape, ListValue, NoteReading } from '@thoughtknot/core';
@@ -39,8 +40,8 @@ export interface ListRow {
 }
 
 /**
- * Adds a list row to the inspector's rows: the name of the relationship — with the name typed for the property before it,
- * when there is one — the chips of the things linked, and an add field.
+ * Adds a list row to the inspector's rows: the name of the relationship, the chips of the things linked, and an add
+ * field. The name typed for the property comes before it, when there is one.
  */
 export function listRow(
   parent: HTMLElement,

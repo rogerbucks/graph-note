@@ -1,8 +1,8 @@
-// Walked paths in a drawing (spec §7, record_and_play, path_no_steps, steps_numbered): a strip below the bar with Play
-// for each path written in the note, which steps through it on its own, one thing at a time, marked on the drawing and
-// said to screen readers (path-play.ts, path_autoplay); a path with no steps said to have none, never played as an empty
-// story; and, while the card is edited, Record, which takes the boxes tapped in order — each numbered on the drawing as
-// it is tapped — and writes the path. The strip's controls are built once for each thing it is doing, and only their
+// Walked paths in a drawing (spec §7, record_and_play, path_no_steps, steps_numbered). A strip below the bar has Play
+// for each path written in the note. Play steps through it on its own, one thing at a time, marked on the drawing. Each
+// step is said to screen readers (path-play.ts, path_autoplay). A path with no steps is said to have none, never played
+// as an empty story. While the card is edited, Record takes the boxes tapped in order and writes the path. Each box is
+// numbered on the drawing as it is tapped. The strip's controls are built once for each thing it is doing. Only their
 // words change as it goes, so the focus stays where it is; one live region says each step.
 import { PathPlayer, PathRecorder, indentText, pathBlock, pathsOf, word } from '@thoughtknot/core';
 import type { WalkedPath } from '@thoughtknot/core';

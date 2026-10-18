@@ -1,5 +1,5 @@
-// The settings page's words, in the person's language (editor spec §42, words_catalogue): each option of settings.ts
-// keeps its words in UK English, and the catalogue holds them again by the option's key (`settings.<key>.name`,
+// The settings page's words, in the person's language (editor spec §42, words_catalogue). Each option of settings.ts
+// keeps its words in UK English. The catalogue holds them again by the option's key (`settings.<key>.name`,
 // `.sentence`, and each choice by its value), so a translation reaches them. The page asks for them here.
 import type { Choice, Option } from './settings.ts';
 import { SOURCE_WORDS } from './source-words.ts';

@@ -1,8 +1,7 @@
-// What typing in the block editor's field does (spec §4): each change is read, the caret moving moves the help with it,
-// typing a word opens the suggestions under the caret, whose arrows move the choice and whose Enter or Tab takes it;
-// else Tab and Enter take the inline match, Escape puts away the list or the match, and undo
-// and redo — by key, by the Edit menu or by a phone's gesture — step through the editor's own history in place of the
-// field's.
+// What typing in the block editor's field does (spec §4). Each change is read, and the caret moving moves the help with
+// it. Typing a word opens the suggestions under the caret, whose arrows move the choice and whose Enter or Tab takes
+// it. Else Tab and Enter take the inline match, and Escape puts away the list or the match. Undo and redo — by key, by
+// the Edit menu or by a phone's gesture — step through the editor's own history in place of the field's.
 import type { Lifecycle } from '../lifecycle';
 import type { Change, CompletionItem, PaneSession } from '@thoughtknot/core';
 import type { FieldHistory, Step } from './editor-history';
@@ -102,8 +101,9 @@ export function watchTyping(owner: Lifecycle, text: HTMLTextAreaElement, on: Typ
 const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown']);
 
 /**
- * What a key does to the suggestion list: Control+Space opens it; while it is open, the arrows move the choice, Enter or
- * Tab takes the one chosen, Escape closes it with the inline match, and a key that moves the caret closes it too. Says whether it took the key.
+ * What a key does to the suggestion list. Control+Space opens it. While it is open, the arrows move the choice, Enter
+ * or Tab takes the one chosen, and Escape closes it with the inline match. A key that moves the caret closes it too.
+ * Says whether it took the key.
  */
 function listKey(e: KeyboardEvent, on: Typing): boolean {
   const plain = !(e.shiftKey || e.ctrlKey || e.metaKey || e.altKey);
@@ -139,7 +139,7 @@ function listKey(e: KeyboardEvent, on: Typing): boolean {
 
 /** Watches the keys and input events that work the suggestions, take the inline match, or ask for undo or redo. */
 export function watchKeys(owner: Lifecycle, text: HTMLTextAreaElement, on: Typing): void {
-  // WebKit ends a composition, then sends the Enter that committed it with isComposing false: so a composition just
+  // WebKit ends a composition, then sends the Enter that committed it with isComposing false. So a composition just
   // ended counts as composing for the next key, and until the next tick
   let composedJustNow = false;
   owner.registerDomEvent(text, 'compositionend', () => {

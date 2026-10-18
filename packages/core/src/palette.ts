@@ -1,8 +1,9 @@
-// The one colour mapping (spec §10, one_colour_map): how each host writes the style's colours. Obsidian's entry names its
-// theme variables, so a drawing follows the theme. A host that draws the SVG as an isolated image, such as a Claude Code
-// pane, can resolve none of the host's variables and may not support color-mix: its entries are fixed colours, the
-// blends worked out here as CSS would work them, and the page painted into the drawing so the contrast holds on any
-// background (§11); or both fixed palettes at once, defined in the drawing's own style sheet and chosen by the scheme.
+// The one colour mapping (spec §10, one_colour_map): how each host writes the style's colours. Obsidian's entry names
+// its theme variables, so a drawing follows the theme. Some hosts draw the SVG as an isolated image, such as a Claude
+// Code pane. Such a host can resolve none of the host's variables and may not support color-mix. Its entries are fixed
+// colours, the blends worked out here as CSS would work them. The page is painted into the drawing so the contrast
+// holds on any background (§11). Or it has both fixed palettes at once, defined in the drawing's own style sheet and
+// chosen by the scheme.
 import { STYLE } from './layout.ts';
 
 /** How one host writes the drawing's colours. */
@@ -102,11 +103,11 @@ const FORCED: Palette = {
 };
 
 /**
- * A palette that follows the system's light or dark setting with no help from its host: the drawing carries its own
- * style sheet, naming each colour of the light palette and, under prefers-color-scheme: dark, of the dark one, and its
- * shapes name those. An isolated SVG image honours the scheme (proved in Chromium, 11 Oct 2026), so a host that cannot
- * tell the drawing its theme, a Claude Code pane, gets the scheme the app hands its pages: the system's, unless the app
- * sets its own.
+ * A palette that follows the system's light or dark setting with no help from its host. The drawing carries its own
+ * style sheet, naming each colour of the light palette and, under prefers-color-scheme: dark, of the dark one. Its
+ * shapes name those. An isolated SVG image honours the scheme (proved in Chromium, 11 Oct 2026). So a host that cannot
+ * tell the drawing its theme, a Claude Code pane, gets the scheme the app hands its pages. That is the system's, unless
+ * the app sets its own.
  */
 export function systemPalette(light: Palette, dark: Palette): Palette {
   const hues = Object.keys(THEME_COLOURS.light).filter((k) => !['page', 'text', 'muted'].includes(k));

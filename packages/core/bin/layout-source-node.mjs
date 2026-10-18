@@ -1,6 +1,6 @@
 /*
-Writes the layout source of every graph in a set of notes, as the graph note editor lays it out — so the vault's conformance
-suite can require it to be byte-identical to graph_svg.py's (spec §12, "same layout as Python").
+Writes the layout source of every graph in a set of notes, as the graph note editor lays it out. The vault's conformance
+suite can then require it to be byte-identical to graph_svg.py's (spec §12, "same layout as Python").
 
 Usage:
   node packages/core/bin/layout-source-node.mjs < request.json

@@ -1,11 +1,13 @@
 // The work a step gives the reader and the drawing, counted for the core's speed tests (spec §9, layout_contained and
-// reading_contained), where what is held is really work: a text never read, a block read again only within the budget,
+// reading_contained). There, what is held is really work: a text never read, a block read again only within the budget,
 // drawing instructions never written. A count is the same on every machine and under any load, as no time is.
 import gs from '@thoughtknot/graph-spec';
 
 /**
- * Runs a step with the reader watched: what the step gave, how many times a block was handed to the reader to apply
- * (every read and every read again, each trial among them), the UTF-16 units handed to it in all, and the most at once.
+ * Runs a step with the reader watched. It gives:
+ * - what the step gave;
+ * - how many times a block was handed to the reader to apply (every read and every read again, each trial among them);
+ * - the UTF-16 units handed to it in all, and the most at once.
  */
 export function readerWork(step) {
   const apply = gs.Store.prototype.apply;
@@ -24,7 +26,7 @@ export function readerWork(step) {
 }
 
 /**
- * A box of a drawing whose every property read is counted in `reads`, by name: a drawing instruction names its box by
+ * A box of a drawing whose every property read is counted in `reads`, by name. A drawing instruction names its box by
  * its key, so a box whose key was never read was never written.
  */
 export function watchedBox(box, reads) {

@@ -1,9 +1,10 @@
-// The inspector's properties (spec §14, inspector and inspector_native): every property of the selected thing or link,
-// shown and edited as Obsidian's own Properties panel shows a note's — one row each, with its name, an icon for its type
-// that opens a menu to change the type or remove it, and a field suited to the type: a number field, a date picker, a
-// switch for true or false. It is built on Obsidian's own markup and classes, so it takes the theme for free. Each change is
-// checked against its type and written as text into the block being edited (§2, edits are text). A property chosen as a
-// List is held as things linked to this one, and shown as chips (list-row.ts), asked for in list-form.ts.
+// The inspector's properties (spec §14, inspector and inspector_native). Every property of the selected thing or link
+// is shown and edited as Obsidian's own Properties panel shows a note's. Each has one row, with its name and a field
+// suited to the type. The field is a number field, a date picker, or a switch for true or false. An icon for its type
+// opens a menu to change the type or remove it. It is built on Obsidian's own markup and classes, so it takes the theme
+// for free. Each change is checked against its type and written as text into the block being edited (§2, edits are
+// text). A property chosen as a List is held as things linked to this one, and shown as chips (list-row.ts), asked for
+// in list-form.ts.
 import { displayHost, isPhone, setIcon } from '../host';
 import type { MenuEntry } from '../host';
 import {
@@ -39,7 +40,10 @@ export interface PropertiesOptions {
   /** The target as counted in the block being edited. */
   inBlock: () => Target;
   replace: (text: string) => void;
-  /** The lists made in this editing session, kept by the editor: a list with no value yet is no text, so the graph cannot show it. */
+  /**
+   * The lists made in this editing session, kept by the editor. A list with no value yet is no text, so the graph
+   * cannot show it.
+   */
   lists: DeclaredList[];
 }
 
@@ -330,8 +334,8 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
           el.remove();
         },
       });
-      // placed where every row stays on screen (the separator takes a row's room), measured in the window the icon is in
-      // and shown in that window's document
+      // placed where every row stays on screen (the separator takes a row's room). It is measured in the window the
+      // icon is in and shown in that window's document
       displayHost().menu(
         entries,
         menuPosition(icon.getBoundingClientRect(), entries.length, icon.win.innerHeight, isPhone()),

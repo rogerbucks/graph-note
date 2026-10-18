@@ -1,8 +1,9 @@
-// The links and attachments in a box's or a link's details (editor spec §18), on the card and in the inspector alike:
-// each link a link (links_shown), opened by Obsidian (host_opens_links), from the keyboard too (links_by_keyboard), with
-// Obsidian's preview on hover or, on a touch screen, a long press (link_preview); one that may not be opened shown as text
-// (safe_to_click); one that names nothing marked broken, with its fixes, Create the note and Change it to what it most
-// likely meant (broken_links_problems); and a thing's attachments by name and type (attachments_at_a_glance).
+// The links and attachments in a box's or a link's details (editor spec §18), on the card and in the inspector alike.
+// Each link is a link (links_shown), opened by Obsidian (host_opens_links), from the keyboard too (links_by_keyboard).
+// It has Obsidian's preview on hover or, on a touch screen, a long press (link_preview). One that may not be opened is
+// shown as text (safe_to_click). One that names nothing is marked broken, with its fixes (broken_links_problems). They
+// are Create the note and Change it to what it most likely meant. A thing's attachments show by name and type
+// (attachments_at_a_glance).
 import { linkTo, refusedWords } from '@thoughtknot/core';
 import type { Attachment, BrokenLink, FoundLink, PlacedLink } from '@thoughtknot/core';
 import type { LeftAt, LinkHost } from './link-types';
@@ -11,8 +12,8 @@ import type { LeftAt, LinkHost } from './link-types';
 const LONG_PRESS_MS = 500;
 
 /**
- * A link put in `parent`: an anchor the Tab key reaches, opened by Obsidian on a click or Enter, previewed on hover and
- * on a long press. `where` says where the card is, for the back step, when the link takes its tab.
+ * A link put in `parent`. It is an anchor the Tab key reaches, opened by Obsidian on a click or Enter. It is previewed
+ * on hover and on a long press. `where` says where the card is, for the back step, when the link takes its tab.
  */
 export function linkAnchor(
   parent: HTMLElement,
@@ -35,10 +36,11 @@ export function linkAnchor(
 export const FOLLOWED = 'data-thoughtknot-followed';
 
 /**
- * An anchor on the page made to follow `link` as the card's own links do: opened by Obsidian on a click, a middle-click
- * or Enter, never by the browser; previewed on hover, and on a touch screen by a long press, whose press then opens
- * nothing. An address outside the vault is kept in `data-href`, the anchor's own `href` going nowhere (`#`), and its
- * context menu kept closed, so no middle-click, menu or drag hands it to the browser past the dialog (safe_to_click).
+ * An anchor on the page made to follow `link` as the card's own links do. It is opened by Obsidian on a click, a
+ * middle-click or Enter, never by the browser. It is previewed on hover, and on a touch screen by a long press. That
+ * press then opens nothing. An address outside the vault is kept in `data-href`, the anchor's own `href` going nowhere
+ * (`#`). Its context menu is kept closed. So no middle-click, menu or drag hands it to the browser past the dialog
+ * (safe_to_click).
  */
 export function followAnchor(a: HTMLElement, link: FoundLink, host: LinkHost, where: () => LeftAt | null): void {
   a.setAttribute(FOLLOWED, '');
@@ -118,8 +120,9 @@ function fixes(li: HTMLElement, a: HTMLElement, broken: BrokenLink, s: LinksShow
 }
 
 /**
- * What the details are given to list links: the host, the blocks as drawn, how to write one of them, where the card is,
- * a block with a broken link changed to what it meant, and whether the card is read-only, where no fix is offered.
+ * What the details are given to list links. They get the host, the blocks as drawn, how to write one of them, and where
+ * the card is. They get a block with a broken link changed to what it meant. They get whether the card is read-only,
+ * where no fix is offered.
  */
 export interface LinksShown {
   host: LinkHost;

@@ -1,5 +1,5 @@
-// The words the person reads, from one catalogue by key (editor spec §42, words_catalogue): UK English is the source, a
-// word is said with its placeholders filled and its plural form for a count, and the places brought to the catalogue say
+// The words the person reads, from one catalogue by key (editor spec §42, words_catalogue). UK English is the source. A
+// word is said with its placeholders filled and its plural form for a count. The places brought to the catalogue say
 // the same words as before.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';

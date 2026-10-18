@@ -1,8 +1,9 @@
-// Deferred things (spec §5 and §8): marking a thing for later writes a Deferred saying what is needed and why it waits
-// (park_for_later); reading says which things are parked, and which of those are past their revisit date, counted apart
-// from problems (parked_not_broken); and a parked thing's box is told apart so the host can draw it dashed with a later
-// mark (deferred_drawn). The Deferred is the graph spec's (§25): `(d:Deferred {what, why, revisit_by, rule})` with
-// `(d)-[:DEFERS]->(thing)`, and it is counted as completeness.js counts it.
+// Deferred things (spec §5 and §8). Marking a thing for later writes a Deferred saying what is needed and why it waits
+// (park_for_later). Reading says which things are parked, and which of those are past their revisit date. They are
+// counted apart from problems (parked_not_broken). A parked thing's box is told apart, so the host can draw it dashed
+// with a later mark (deferred_drawn). The Deferred is the graph spec's (§25):
+// `(d:Deferred {what, why, revisit_by, rule})` with `(d)-[:DEFERS]->(thing)`, and it is counted as completeness.js
+// counts it.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { blankText, items } from './block-items.ts';
@@ -15,7 +16,10 @@ import { acceptNameFirst } from './suggested-names.ts';
 import type { SuggestedReading } from './suggested-names.ts';
 import { S, isSpace, trim, trimEnd } from './whitespace.ts';
 
-/** What marking a thing for later says: what is needed and why it waits, and optionally the day to look again and the completeness rule parked. */
+/**
+ * What marking a thing for later says: what is needed and why it waits. It may also give the day to look again and
+ * the completeness rule parked.
+ */
 export interface Park {
   what: string;
   why: string;
@@ -123,9 +127,9 @@ function undeclared(graphs: Graph[]): string[] {
 }
 
 /**
- * The refusal to park a thing in a locked graph whose schema does not declare Deferred and DEFERS (the graph library's
- * §5 checks them like any type). It is told apart from the other refusals so a host can offer the fix, `declareDeferred`;
- * its words are the same as ever.
+ * The refusal to park a thing in a locked graph whose schema does not declare Deferred and DEFERS. The graph library's
+ * §5 checks them like any type. It is told apart from the other refusals so a host can offer the fix,
+ * `declareDeferred`. Its words are the same as ever.
  */
 export class DeferredNotDeclared extends Error {
   /** What a host tests for, rather than the words. */
@@ -151,7 +155,10 @@ function endsWithSet(block: string): boolean {
   return !!last && /^(SET|MATCH|INSERT)\b/i.test(blankText(block.slice(last.from, last.to)));
 }
 
-/** The block with a comma after its last item unless it ends in one (never two), a comment after the item kept and trailing blank lines dropped. */
+/**
+ * The block with a comma after its last item unless it ends in one (never two). A comment after the item is kept and
+ * trailing blank lines are dropped.
+ */
 function commaAfterLast(block: string): string {
   const text = trimEnd(block),
     at = lastCode(text);
@@ -168,19 +175,22 @@ function isDay(s: string): boolean {
 }
 
 /**
- * The block's text with a Deferred for `thing` written as its last items (park_for_later): `(later_<thing>:Deferred {…})`
- * and `(later_<thing>)-[:DEFERS]->(thing)`. The id is the first of `later_<thing>`, `later_<thing>_2`… not taken in the
- * block's graph. A comma is added after the block's last item unless it already ends in one (never two), and any comment
- * after it is kept. The words are quoted as locking quotes them, with each run of whitespace made one space so a string
- * never spans lines; a long Deferred is split over lines, indented by `indent` (the settings' choice). Throws an Error
- * saying why when `what` or `why` is empty, `revisitBy` is not a `YYYY-MM-DD` day, the block names no graph, `thing` is
- * not in the graph, the block ends with a SET or MATCH, or the graph is locked and its schema does not declare Deferred
- * and DEFERS (the graph library's §5 checks them like any type). `whole` is the graph as the whole note reads it: given,
- * a thing written in another block of the graph is found, and an id taken there is not used again. A thing drawn
- * under a suggested name is not parked, which would write that name without its fix (§4): it throws "accept its name
- * first". It is found in `reading`, which is required: the reader suggests names across every block of a graph, so the
- * block alone cannot say which they are, and no caller can leave the check out. A host gives the reading of the note as
- * it is now, with `block` as typed in its place, never an older drawing.
+ * The block's text with a Deferred for `thing` written as its last items (park_for_later):
+ * `(later_<thing>:Deferred {…})` and `(later_<thing>)-[:DEFERS]->(thing)`. The id is the first of `later_<thing>`,
+ * `later_<thing>_2`… not taken in the block's graph. A comma is added after the block's last item unless it already
+ * ends in one (never two). Any comment after it is kept. The words are quoted as locking quotes them. Each run of
+ * whitespace is made one space, so a string never spans lines. A long Deferred is split over lines, indented by
+ * `indent` (the settings' choice). Throws an Error saying why when:
+ * - `what` or `why` is empty, or `revisitBy` is not a `YYYY-MM-DD` day;
+ * - the block names no graph, `thing` is not in the graph, or the block ends with a SET or MATCH;
+ * - the graph is locked and its schema does not declare Deferred and DEFERS (the graph library's §5 checks them like
+ *   any type).
+ * `whole` is the graph as the whole note reads it. Given, a thing written in another block of the graph is found, and
+ * an id taken there is not used again. A thing drawn under a suggested name is not parked, which would write that name
+ * without its fix (§4). It throws "accept its name first". It is found in `reading`, which is required. The reader
+ * suggests names across every block of a graph, so the block alone cannot say which they are. And no caller can leave
+ * the check out. A host gives the reading of the note as it is now, with `block` as typed in its place, never an
+ * older drawing.
  */
 export function parkForLater(
   block: string,
@@ -232,14 +242,14 @@ export interface DeferredDeclared {
 const PLAIN_ID = /^[A-Za-z_]\w*$/;
 
 /**
- * The fix for `DeferredNotDeclared`, on the texts of a note's blocks: the block that holds the graph's GraphMeta with
- * Deferred and DEFERS declared at its end, as Lock writes a declaration (a `Meta:ElementType`, and for DEFERS the
- * readings `defers` and `is deferred by`, written here because the library's guess misspells the second, and
- * `(<GraphMeta>)-[:DECLARES]->(…)`), only for what the schema lacks, with ids fresh across the graph's blocks and a
- * comma where GQL needs one. The text is unchanged when nothing is lacking.
- * `indent` is the settings' choice. Throws an Error saying why when the graph is not in the note, is a draft (no
- * schema block), is typed by a shared schema (declare them there), has no GraphMeta to declare from, or the block ends
- * with a SET or MATCH.
+ * The fix for `DeferredNotDeclared`, on the texts of a note's blocks. It returns the block that holds the graph's
+ * GraphMeta, with Deferred and DEFERS declared at its end as Lock writes a declaration. That is a `Meta:ElementType`
+ * and `(<GraphMeta>)-[:DECLARES]->(…)`. For DEFERS it also writes the readings `defers` and `is deferred by`, here
+ * because the library's guess misspells the second. It declares only what the schema lacks, with ids fresh across the
+ * graph's blocks and a comma where GQL needs one. The text is unchanged when nothing is lacking.
+ * `indent` is the settings' choice. Throws an Error saying why when the graph is not in the note, or is a draft (no
+ * schema block). It also throws when the graph is typed by a shared schema (declare them there) or has no GraphMeta
+ * to declare from. It throws too when the block ends with a SET or MATCH.
  */
 export function declareDeferredBlock(blocks: string[], graph: string, indent = '    '): DeferredDeclared {
   const own = blocks.flatMap((b, i) => (graphOfBlock(b) === graph ? [i] : []));
@@ -259,7 +269,8 @@ export function declareDeferredBlock(blocks: string[], graph: string, indent = '
   if (!lacking.length) return { block: at, text: block };
   const meta = worlds[metaIn]?.labelled('GraphMeta').find((m) => PLAIN_ID.test(m));
   if (!meta) {
-    // a GraphMeta whose id is not a plain name (set by an `id` property) cannot be named in a link: say so, and what to use
+    // a GraphMeta whose id is not a plain name (set by an `id` property) cannot be named in a link. Say so, and what
+    // to use
     const odd = graphs.flatMap((g) => g.labelled('GraphMeta'))[0];
     if (odd === undefined)
       throw new Error(`graph ${graph} has no GraphMeta to declare them from: add one to its schema first`);
@@ -289,9 +300,9 @@ export function declareDeferredBlock(blocks: string[], graph: string, indent = '
 }
 
 /**
- * The note with Deferred and DEFERS declared in the schema of a locked graph (the fix for `DeferredNotDeclared`):
- * `declareDeferredBlock` written into the block that holds the graph's GraphMeta, every other byte of the note kept,
- * line endings included. The note itself when nothing is lacking. Throws what `declareDeferredBlock` throws.
+ * The note with Deferred and DEFERS declared in the schema of a locked graph (the fix for `DeferredNotDeclared`). It
+ * is `declareDeferredBlock` written into the block that holds the graph's GraphMeta, with every other byte of the note
+ * kept, line endings included. The note itself when nothing is lacking. Throws what `declareDeferredBlock` throws.
  */
 export function declareDeferred(note: string, graph: string, indent = '    '): string {
   const spans = gqlSpans(note);

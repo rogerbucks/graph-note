@@ -1,7 +1,7 @@
 // The inspector (editor spec §14): every property of a thing or a link, each edited, added or removed. An edit is text
-// (spec §2): the property is rewritten in the map of the pattern where the thing or link is written, and nothing else in
-// the block changes. A value is checked against its type before it is written, and written as the document profile writes
-// it; the names already used on things of the same kind are offered first.
+// (spec §2). The property is rewritten in the map of the pattern where the thing or link is written, and nothing else
+// in the block changes. A value is checked against its type before it is written, and written as the document profile
+// writes it. The names already used on things of the same kind are offered first.
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { NoteReading } from './note-reading.ts';
 import { blockItems } from './block-items.ts';
@@ -133,10 +133,10 @@ const thingPatterns = (b: string, id: string) => [
 const linkBrackets = (b: string) => [...b.matchAll(/-\[\s*:\s*\w+\s*(\{[^{}]*\})?\s*\]/g)];
 
 /**
- * Where an item is written in a block, as the editor shows it when the item is selected in the drawing: the pattern that
- * writes a thing (or, failing that, its first mention), or a link's brackets with its arrow. A thing drawn under a
- * suggested name (spec §4) is not written by its name: `unnamed`, the box's place just after its (, finds the pattern
- * there, if it is still one written without a name. Null when it is not here.
+ * Where an item is written in a block, as the editor shows it when the item is selected in the drawing. For a thing it
+ * is the pattern that writes it, or failing that its first mention. For a link it is its brackets with its arrow. A
+ * thing drawn under a suggested name (spec §4) is not written by its name. Then `unnamed`, the box's place just after
+ * its (, finds the pattern there, if it is still one written without a name. Null when it is not here.
  */
 export function spanOf(
   block: string,
@@ -234,9 +234,9 @@ const ONE_WORD = /^[A-Za-z_]\w*$/;
 const notHere = (key: string) => `${key} is not written in its pattern here: change it where it is written`;
 
 /**
- * Sets a property — `gql` is its value as written, or null to remove it — in the pattern of this block that writes the
- * thing, or in the brackets of the block's `link`-th relationship (counted in this block). Only that map changes. A
- * property set elsewhere (by SET, or in another block) cannot be removed here, and says so.
+ * Sets a property in the pattern of this block that writes the thing. Or it sets it in the brackets of the block's
+ * `link`-th relationship (counted in this block). `gql` is its value as written, or null to remove it. Only that map
+ * changes. A property set elsewhere (by SET, or in another block) cannot be removed here, and says so.
  */
 export function setProperty(block: string, graph: string, t: Target, key: string, gql: string | null): Edit {
   if ('thing' in t && key === 'id')

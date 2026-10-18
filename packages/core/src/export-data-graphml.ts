@@ -1,15 +1,17 @@
-// The data as GraphML (editor spec §16, export_data_formats, export_lossless): one directed graph, named as the graph is,
-// a node for each thing and an edge for each link, in the order written. GraphML names a node by an NMTOKEN, so a node
-// is named by its place (`n1`…) and the thing's id is data, under the key `:id`; its kinds are `:labels`, joined by `;`,
-// and a link's type `:type`. Each property has a key for each kind its values come in: a text is a string, a number a
-// double, a truth value a boolean, and a day or an instant a string whose key's own description says which, `gn:date`
-// or `gn:datetime`, so the file keeps to GraphML's schema with no attribute of its own. A view's faded context, when
-// asked for, is marked by the key `:faded`, for nodes and edges alike, false unless a node or edge says true. A text is
-// escaped so XML reads it back as written: its marks, a carriage return, and anything in an attribute that XML would
-// make a space. A character XML 1.0 cannot hold at all, as a control character, is refused, naming where it is, for
-// the GQL block or CSV, which hold it: never written as something else. A note (§24, note_standard) is kept as an XML
-// comment on the line directly before its node or edge, escaped by xml-comment.ts so it reads back as written and can
-// never end its comment; a comment, not a key, so a tool reading the file takes it for a comment, as GQL's engines do.
+// The data as GraphML (editor spec §16, export_data_formats, export_lossless). It is one directed graph, named as the
+// graph is. It has a node for each thing and an edge for each link, in the order written. GraphML names a node by an
+// NMTOKEN. So a node is named by its place (`n1`…) and the thing's id is data, under the key `:id`. Its kinds are
+// `:labels`, joined by `;`, and a link's type `:type`. Each property has a key for each kind its values come in:
+// - a text is a string, a number a double and a truth value a boolean;
+// - a day or an instant is a string whose key's own description says which, `gn:date` or `gn:datetime`.
+// So the file keeps to GraphML's schema with no attribute of its own. A view's faded context, when asked for, is marked
+// by the key `:faded`, for nodes and edges alike. It is false unless a node or edge says true. A text is escaped so XML
+// reads it back as written. That covers its marks, a carriage return, and anything in an attribute that XML would make
+// a space. A character XML 1.0 cannot hold at all, as a control character, is refused, naming where it is. That leaves
+// it to the GQL block or CSV, which hold it. It is never written as something else. A note (§24, note_standard) is kept
+// as an XML comment on the line directly before its node or edge. It is escaped by xml-comment.ts, so it reads back as
+// written and can never end its comment. It is a comment, not a key, so a tool reading the file takes it for a comment,
+// as GQL's engines do.
 import type { Value } from '@thoughtknot/graph-spec';
 import { saidDate } from './export-frame.ts';
 import { kindOf, numberText, oneLine, timeText } from './export-data-model.ts';

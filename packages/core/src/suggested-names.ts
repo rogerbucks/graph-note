@@ -1,7 +1,8 @@
-// Things drawn under a suggested name (editor spec §4, unnamed_drawn_suggested): a thing written without a name is drawn
-// under the name suggested for it, and "nothing is written until its fix is accepted". Any edit that would write that name
-// into the text — a path through the thing, a link to it, a Deferred for it, a nudge or a look naming it — would write it
-// without its fix, so each asks here first, and is refused with the same words: accept its name first.
+// Things drawn under a suggested name (editor spec §4, unnamed_drawn_suggested). A thing written without a name is
+// drawn under the name suggested for it, and "nothing is written until its fix is accepted". Any edit that would write
+// that name into the text would write it without its fix. Such edits are a path through the thing, a link to it, a
+// Deferred for it, and a nudge or a look naming it. So each asks here first, and is refused with the same words:
+// accept its name first.
 import type { Box, NoteReading, Problem } from './note-reading.ts';
 import { prepare } from './partial-read.ts';
 import { textKeyOf, writtenIn } from './written-things.ts';
@@ -13,9 +14,9 @@ export type SuggestedReading = Pick<NoteReading, 'graphs'>;
 type Place = NonNullable<Box['suggested']>;
 
 /**
- * Each thing of `graph` written without a name, by the name suggested for it, and where it is: from the problems the
- * reader found, each a warning whose fix inserts the name. The reader's own rule, by which it marks a box suggested
- * (drawing.ts), so this and the drawing never differ.
+ * Each thing of `graph` written without a name, by the name suggested for it, and where it is. It comes from the
+ * problems the reader found, each a warning whose fix inserts the name. The reader's own rule, by which it marks a box
+ * suggested (drawing.ts), so this and the drawing never differ.
  */
 export function suggestedPlaces(problems: readonly Problem[], graph: string): Map<string, Place> {
   return new Map(
@@ -28,11 +29,11 @@ export function suggestedPlaces(problems: readonly Problem[], graph: string): Ma
 }
 
 /**
- * The things of one graph that a note's blocks write without a name, as boxes drawn under their suggested names: what an
- * edit written into the note is checked against, read from the note as it is when written, never from a drawing, which
- * can be older (§4). Found as the reader finds them, with its own `prepare` and rule, so they are the ones the reader
- * draws under a suggested name from these blocks: give every block of the note, since the reader suggests each name
- * against all of them, a schema block among them.
+ * The things of one graph that a note's blocks write without a name, as boxes drawn under their suggested names. An
+ * edit written into the note is checked against them. They are read from the note as it is when written, never from
+ * a drawing, which can be older (§4). Found as the reader finds them, with its own `prepare` and rule. So they are
+ * the ones the reader draws under a suggested name from these blocks. Give every block of the note, since the reader
+ * suggests each name against all of them, a schema block among them.
  */
 export function unnamedIn(texts: readonly string[], graph: string): SuggestedReading {
   const { clean, problems } = prepare([...texts]);

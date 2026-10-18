@@ -1,6 +1,7 @@
-// Walked paths (editor spec §7; graph spec §22): a walk recorded from boxes tapped in order, written as a Path node with
-// ordered STEP edges; the paths of a graph as data; playing one step by step; and the problems a path can have — a step
-// through something removed, and a path with no steps. A path with no steps is never drawn or played as an empty story.
+// Walked paths (editor spec §7; graph spec §22). A walk is recorded from boxes tapped in order, written as a Path node
+// with ordered STEP edges. This covers the paths of a graph as data, and playing one step by step. It also covers the
+// problems a path can have: a step through something removed, and a path with no steps. A path with no steps is never
+// drawn or played as an empty story.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { blankText, items, lineAt } from './block-items.ts';
@@ -101,12 +102,13 @@ function refusal(reading: PathReading, graph: string, g: Graph, title: string, s
 }
 
 /**
- * The block with a walked path written at its end: a Path node with the title, and a STEP edge to each step, numbered 1 to
- * n in the order given (a walk may revisit, so a thing may be stepped to twice), comma-joined as the other patterns are,
- * the block's own text kept as it was. The id is fresh, in the style of the graph's names. A long title goes over two
- * lines, the second indented by `indent` (spec §21). Refused, with the reason, when there is no title, no step, a step
- * that is not a fact in the graph, one drawn only under a suggested name (accept its name first), or a locked graph that
- * does not declare Path and STEP; nothing is then written.
+ * The block with a walked path written at its end, the block's own text kept as it was. The path is a Path node with
+ * the title, and a STEP edge to each step. The edges are numbered 1 to n in the order given, comma-joined as the other
+ * patterns are. A walk may revisit, so a thing may be stepped to twice. The id is fresh, in the style of the graph's
+ * names. A long title goes over two lines, the second indented by `indent` (spec §21). Refused, with the reason, when
+ * there is no title or no step. Also refused for a step that is not a fact in the graph, or one drawn only under a
+ * suggested name (accept its name first). So too for a locked graph that does not declare Path and STEP. Nothing is
+ * then written.
  */
 export function pathBlock(
   reading: PathReading,
@@ -205,9 +207,9 @@ function pathsIn(reading: PathReading, graph: string, gone: Gone[]): WalkedPath[
 }
 
 /**
- * The paths of a graph, as data: each with its title and its steps in seq order. A step through something that is not in
- * the graph is kept, marked `missing`, so a host shows and announces it; a path with no step at all is marked `empty`.
- * None for a graph that is not there.
+ * The paths of a graph, as data: each with its title and its steps in seq order. A step through something that is not
+ * in the graph is kept, marked `missing`, so a host shows and announces it. A path with no step at all is marked
+ * `empty`. None for a graph that is not there.
  */
 export function pathsOf(reading: PathReading, graph: string): WalkedPath[] {
   return pathsIn(reading, graph, stepsGone(reading).get(graph) ?? []);
@@ -312,10 +314,11 @@ function missingStep(reading: PathReading, graph: string, path: WalkedPath, x: G
 }
 
 /**
- * The problems of the paths of a note, for one graph or, with none named, every graph. path_missing_step: a STEP through
- * something not in the graph, on the STEP's own line, with the fix — remove the step, or restore the thing — and, where the
- * step sits on one line, the edit that removes it. path_no_steps: a Path with no STEP, on the line that writes it, with
- * its fix. Asking of a reading that already holds these gives the same again.
+ * The problems of the paths of a note, for one graph or, with none named, every graph.
+ * - path_missing_step: a STEP through something not in the graph, on the STEP's own line. Its fix is to remove the
+ *   step, or restore the thing. Where the step sits on one line, it has the edit that removes it.
+ * - path_no_steps: a Path with no STEP, on the line that writes it, with its fix.
+ * Asking of a reading that already holds these gives the same again.
  */
 export function pathProblems(reading: PathReading, graph?: string): Problem[] {
   const out: Problem[] = [],
@@ -357,9 +360,9 @@ export function pathProblems(reading: PathReading, graph?: string): Problem[] {
 }
 
 /**
- * The note's problems with the path problems in them: each report of the reader's own that a path problem says better — a
- * STEP through something not in the graph — is replaced by it, and the problems of paths with no steps are added. It is
- * what `readNote` gives, so the badge counts a path's problems once.
+ * The note's problems with the path problems in them. A path problem says some reports of the reader's own better: a
+ * STEP through something not in the graph. Each such report is replaced by it. The problems of paths with no steps are
+ * added. It is what `readNote` gives, so the badge counts a path's problems once.
  */
 export function mergePathProblems(reading: PathReading): Problem[] {
   const found = pathProblems(reading);

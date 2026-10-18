@@ -1,6 +1,7 @@
-// Where an estimate's fix acts (spec §3; review of #85, 11 Oct 2026): at the path's own reference to the misspelt name,
-// each item of a line taken once, never a word in a text, and every reference the sentence names; a type in its own
-// brackets, never one in a text. Each case is read as a note is, and its fix made as the fix bar makes it.
+// Where an estimate's fix acts (spec §3; review of #85, 11 Oct 2026). It acts at the path's own reference to the
+// misspelt name, each item of a line taken once, never a word in a text. It acts at every reference the sentence names.
+// For a type, it acts in its own brackets, never one in a text. Each case is read as a note is, and its fix made as the
+// fix bar makes it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

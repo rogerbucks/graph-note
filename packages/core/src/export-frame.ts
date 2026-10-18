@@ -1,9 +1,9 @@
-// The frame round an exported image (editor spec §16, export_self_explaining, export_fixed_theme): a background of its
-// own, a title and what the image shows in plain English, the legend, and a footer saying which note it came from and
-// when — so the image explains itself outside Obsidian. The text is in the locked style's font and sizes (the title at the
-// font size, the reading and legend at the edge-label size, the footer at the caption size), in the palette's fixed colours.
-// The drawing is nested inside, untouched, at its natural size. Widths of text are estimated, as an SVG cannot measure its
-// own, so long lines are wrapped a little early rather than run out of the frame.
+// The frame round an exported image (editor spec §16, export_self_explaining, export_fixed_theme). It has a background
+// of its own, a title and what the image shows in plain English, and the legend. A footer says which note it came from
+// and when, so the image explains itself outside Obsidian. The text is in the locked style's font and sizes, in the
+// palette's fixed colours. The title is at the font size, the reading and legend at the edge-label size, and the footer
+// at the caption size. The drawing is nested inside, untouched, at its natural size. Widths of text are estimated, as
+// an SVG cannot measure its own. So long lines are wrapped a little early rather than run out of the frame.
 import { STYLE } from './layout.ts';
 import type { Palette } from './palette.ts';
 import { fixed } from './theme.ts';
@@ -73,8 +73,8 @@ function isWide(c: string): boolean {
 }
 
 /**
- * The width of `text` at `size`, estimated: Helvetica's average letter is about 0.56 em, bold about 0.6, and a wide
- * character (East Asian, full-width, emoji) about 1 em, as it is drawn in the font that has it.
+ * The width of `text` at `size`, estimated. Helvetica's average letter is about 0.56 em, bold about 0.6. A wide
+ * character (East Asian, full-width, emoji) is about 1 em, as it is drawn in the font that has it.
  */
 const widthOf = (text: string, size: number, bold = false) =>
   [...text].reduce((sum, c) => sum + size * (isWide(c) ? 1 : bold ? 0.6 : 0.56), 0);
@@ -141,8 +141,9 @@ function legendRows(items: LegendItem[], x: number, y: number, wide: number, p: 
 }
 
 /**
- * The drawing in its frame, as one self-contained SVG with its width and height in CSS pixels. The palette must be a fixed
- * one that paints its own page (palettes.ts `light` or `dark`), so the image reads the same wherever it is opened.
+ * The drawing in its frame, as one self-contained SVG with its width and height in CSS pixels. The palette must be a
+ * fixed one that paints its own page (palettes.ts `light` or `dark`). So the image reads the same wherever it is
+ * opened.
  */
 export function framed(
   inner: Inner,

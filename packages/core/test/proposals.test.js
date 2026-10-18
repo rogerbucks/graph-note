@@ -1,8 +1,8 @@
-// Proposals (editor spec §17, AI proposals — accepted or rejected in the editor): a change set proposed by an AI, or by any
-// other source, is shown over the graph with nothing written, and each change in it is accepted or rejected by a person,
-// on its own, in a group or all at once. An accepted change is written as text through the ordinary edit path, checked
-// first and undone like any other edit; a rejected one leaves the graph as it was and is recorded in the change set.
-// Each describe below is one requirement, named by its id.
+// Proposals (editor spec §17, AI proposals — accepted or rejected in the editor). A change set proposed by an AI, or by
+// any other source, is shown over the graph with nothing written. A person accepts or rejects each change in it, on its
+// own, in a group or all at once. An accepted change is written as text through the ordinary edit path, checked first
+// and undone like any other edit. A rejected one leaves the graph as it was and is recorded in the change set. Each
+// describe below is one requirement, named by its id.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';

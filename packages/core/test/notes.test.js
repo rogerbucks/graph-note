@@ -1,7 +1,7 @@
-// Notes on things and links in what the core reads (editor spec §24): each box and link drawn carries its note, read by
-// the graph library's own reader (note_comment, note_text), so the editor can show it; a note above a line holding more
-// than one thing belongs to none of them, and is a problem whose fix says to put the thing on its own line
-// (note_one_owner); and a note changes nothing drawn (note_standard).
+// Notes on things and links in what the core reads (editor spec §24). Each box and link drawn carries its note, read by
+// the graph library's own reader (note_comment, note_text), so the editor can show it. A note above a line holding more
+// than one thing belongs to none of them. It is a problem whose fix says to put the thing on its own line
+// (note_one_owner). A note changes nothing drawn (note_standard).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

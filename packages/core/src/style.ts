@@ -1,8 +1,9 @@
-// The style graph of a note (editor spec §2, §6, §7): every style block of a graph read with the reader the data is read
-// with, so it is checked like any graph — what cannot be read is a problem on its line, and the rest is used — then each
-// thing checked against the graph it styles, and the things against each other. Reading it never throws and never stops
-// the drawing (broken_style_block): at worst the graph is drawn in the locked style, with the problems listed. And what a
-// host draws with it: the look of a thing or link in a view or path, and the legend for every colour used there.
+// The style graph of a note (editor spec §2, §6, §7). Every style block of a graph is read with the reader the data is
+// read with, so it is checked like any graph. What cannot be read is a problem on its line, and the rest is used. Then
+// each thing is checked against the graph it styles, and the things against each other. Reading it never throws and
+// never stops the drawing (broken_style_block). At worst the graph is drawn in the locked style, with the problems
+// listed. It also gives what a host draws with it. That is the look of a thing or link in a view or path, and the
+// legend for every colour used there.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { blankText } from './block-items.ts';
@@ -101,10 +102,11 @@ function links(texts: string[], blocks: number[], graph: string): Problem[] {
 export type StyleReading = Pick<NoteReading, 'world' | 'whole' | 'tooLarge'>;
 
 /**
- * The style of `graph`: every style block of the note for it (`// graph: <name> · STYLE <graph>`), read with the reader
- * the data is read with, merged, and checked against the graph as the note reads it (`reading`, from `readNote(texts)`).
- * Problems carry the style block's index in `texts` and the line in it, as the reader's own do, and the styled graph's
- * name, so they are listed with its drawing. Only what is sound is in the style; nothing is ever written to the data.
+ * The style of `graph`: every style block of the note for it (`// graph: <name> · STYLE <graph>`). They are read with
+ * the reader the data is read with, merged, and checked against the graph as the note reads it (`reading`, from
+ * `readNote(texts)`). Problems carry the style block's index in `texts` and the line in it, as the reader's own do.
+ * They carry the styled graph's name too, so they are listed with its drawing. Only what is sound is in the style;
+ * nothing is ever written to the data.
  */
 export function readStyle(
   texts: string[],
@@ -160,9 +162,9 @@ export function readStyle(
   raws.sort((a, b) => a.at.block - b.at.block || a.at.line - b.at.line);
   const checked = checkThings(raws, namesOf(reading, graph, g));
   const { style, problems: conflicts } = settle(checked, graph);
-  // a style block named as a data graph: a reader that does not know STYLE merges it into the data, as the graph
-  // libraries' own Store does in both languages; only the drawing readers (blocks.ts, and the Python library's
-  // reader/drawing.py) leave a style block out
+  // a style block named as a data graph: a reader that does not know STYLE merges it into the data. The graph
+  // libraries' own Store does so too, in both languages. Only the drawing readers (blocks.ts, and the Python
+  // library's reader/drawing.py) leave a style block out
   const named = blocks.flatMap((block): Problem[] => {
     const own = graphOf(texts[block] ?? '');
     return own && own in reading.whole
@@ -188,9 +190,9 @@ export function outsideOf(style: StyleGraph, view: string): Outside {
 }
 
 /**
- * How the links of the whole graph, or of `view`, are drawn (§25): their routing (untangle_routing) and whether links
- * running between the same groups are merged into trunks (untangle_merge), each a view's own over the whole graph's;
- * curved and unmerged when the style graph says nothing.
+ * How the links of the whole graph, or of `view`, are drawn (§25). That is their routing (untangle_routing), and
+ * whether links running between the same groups are merged into trunks (untangle_merge). Each is a view's own over
+ * the whole graph's; curved and unmerged when the style graph says nothing.
  */
 export function linksOf(style: Pick<StyleGraph, 'links'>, view?: string): { routing: Routing; merge: boolean } {
   const chosen = <K extends 'routing' | 'merge'>(key: K) =>
@@ -205,9 +207,10 @@ const inScope = (style: StyleGraph, scope: StyleScope) =>
   );
 
 /**
- * The look of a thing or a link in a view or path, for the host to draw: a named hue (drawn with theme.ts `hueColour`, the
- * locked blends), a line and a format. A look for the thing or link itself wins over one for its kind; a later look over
- * an earlier. Outside every view and path — or where nothing is styled — it is empty: the locked style.
+ * The look of a thing or a link in a view or path, for the host to draw. It is a named hue (drawn with theme.ts
+ * `hueColour`, the locked blends), a line and a format. A look for the thing or link itself wins over one for its
+ * kind; a later look over an earlier. Outside every view and path — or where nothing is styled — it is empty: the
+ * locked style.
  */
 export function lookOf(style: StyleGraph, scope: StyleScope, target: StyleTarget): ThingLook {
   const looks = inScope(style, scope);

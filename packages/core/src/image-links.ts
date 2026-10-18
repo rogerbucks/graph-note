@@ -1,8 +1,8 @@
-// Where a thing's image comes from (editor spec §18, animated_image_shown): a property whose value names an image file
-// attached in the vault — a link, `[[cat.gif]]`, an embed, `![[cat.gif]]`, or a path from the vault's root — of a type
-// an image is (GIF, PNG or APNG, WebP, SVG, and the photographs' JPEG and AVIF). Only the vault's own files are loaded
-// (§13, remote_images_asked, a later slice): an address outside it is never loaded and says so, and a place that could
-// leave the vault or reach what it hides is refused, as a graph source's is (sources.ts).
+// Where a thing's image comes from (editor spec §18, animated_image_shown). It is a property whose value names an image
+// file attached in the vault. The value is a link, `[[cat.gif]]`, an embed, `![[cat.gif]]`, or a path from the vault's
+// root. The file is of a type an image is: GIF, PNG or APNG, WebP, SVG, and the photographs' JPEG and AVIF. Only the
+// vault's own files are loaded (§13, remote_images_asked, a later slice). An address outside it is never loaded and
+// says so. A place that could leave the vault or reach what it hides is refused, as a graph source's is (sources.ts).
 import { outsideVault } from './sources.ts';
 
 /** The file types an image is known by, by extension, in any case. */
@@ -19,7 +19,7 @@ export const IMAGE_EXTENSIONS: ReadonlySet<string> = new Set([
 
 /**
  * Whether a file's type, by its name, never moves: a JPEG. Used only for an image not read, being over the size limit,
- * whose bytes cannot say; every other image type may move (a PNG may be an APNG, an AVIF a sequence).
+ * whose bytes cannot say. Every other image type may move (a PNG may be an APNG, an AVIF a sequence).
  */
 export const neverMoves = (name: string): boolean => /\.jpe?g$/i.test(name);
 
@@ -39,10 +39,11 @@ const SCHEME = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 const isImage = (place: string): boolean => IMAGE_EXTENSIONS.has(/\.([^./\\]+)$/.exec(place)?.[1]?.toLowerCase() ?? '');
 
 /**
- * The image a property's value names, or null when it names none: a value that is not text, or names a note or any file
- * that is not an image. An address with a scheme (`https:`, `data:`) or starting `//` is outside the vault and is never
- * loaded; a place with a leading slash, a drive, a `..` part or a part starting with a dot is refused. A link's target is
- * held to the same as a path is (review of #443): `[[../x.gif]]` leaves the vault as `../x.gif` does.
+ * The image a property's value names, or null when it names none. It names none when the value is not text, or names a
+ * note or any file that is not an image. An address with a scheme (`https:`, `data:`) or starting `//` is outside the
+ * vault. It is never loaded. A place with a leading slash, a drive, a `..` part or a part starting with a dot is
+ * refused. A link's target is held to the same as a path is (review of #443): `[[../x.gif]]` leaves the vault as
+ * `../x.gif` does.
  */
 export function imageLink(value: unknown): ImageLink | null {
   if (typeof value !== 'string') return null;

@@ -1,11 +1,12 @@
-// The words a view may not use as a name, and the kinds it may not ask for (editor spec §7: view_profile,
-// views_agree_with_grafeo; engines_get_standard): a view is standard GQL that Grafeo runs as written, so a name in its
-// pattern is never a word GQL keeps for itself, nor one Grafeo 0.5.43 refuses as a name, and a kind it asks for is never
-// one Grafeo refuses as a label. GQL's reserved, pre-reserved and non-reserved words are ISO/IEC 39075:2024 §21.3 and its
-// truth values §21.2, as the openGQL grammar (GQL.g4) gives them. Grafeo's two lists were found by running GQL's words,
-// Cypher's keywords and the numbers NaN and Inf in every place a view names something and every way it asks for a kind
-// (11 Oct 2026); python/graph_spec/tests/test_view_parity.py holds both to Grafeo, from a word list of its own. What a
-// person reads says only that GQL keeps the word: the refusal is the same whichever list holds it.
+// The words a view may not use as a name, and the kinds it may not ask for. See editor spec §7 (view_profile,
+// views_agree_with_grafeo; engines_get_standard). A view is standard GQL that Grafeo runs as written. So a name in its
+// pattern is never a word GQL keeps for itself, nor one Grafeo 0.5.43 refuses as a name. A kind it asks for is never
+// one Grafeo refuses as a label. GQL's reserved, pre-reserved and non-reserved words are ISO/IEC 39075:2024 §21.3. Its
+// truth values are §21.2, as the openGQL grammar (GQL.g4) gives them. Grafeo's two lists were found by running words in
+// every place a view names something (11 Oct 2026). Each word was also run in every way a view asks for a kind. The
+// words were GQL's words, Cypher's keywords and the numbers NaN and Inf. python/graph_spec/tests/test_view_parity.py
+// holds both to Grafeo, from a word list of its own. What a person reads says only that GQL keeps the word: the refusal
+// is the same whichever list holds it.
 
 /** GQL's reserved words (ISO/IEC 39075:2024 §21.3), in the standard's order. */
 export const GQL_RESERVED: readonly string[] = `ABS ACOS ALL ALL_DIFFERENT AND ANY ARRAY AS ASC ASCENDING ASIN AT ATAN
@@ -64,8 +65,8 @@ export const GRAFEO_REFUSED: readonly string[] = [
 ];
 
 /**
- * The words Grafeo 0.5.43 refuses as a label, so a view may not ask for them as a kind, written after a colon or in a
- * choice after IS, in order. Fewer than it refuses as a name: Path, Match and Nothing, which GQL keeps, are labels to it.
+ * The words Grafeo 0.5.43 refuses as a label, in order. So a view may not ask for them as a kind, written after a colon
+ * or in a choice after IS. Fewer than it refuses as a name: Path, Match and Nothing, which GQL keeps, are labels to it.
  */
 export const GRAFEO_REFUSED_KINDS: readonly string[] = [
   'ACYCLIC',
@@ -90,7 +91,10 @@ export const GRAFEO_REFUSED_KINDS: readonly string[] = [
 const KEPT = new Set([...GQL_RESERVED, ...GQL_PRE_RESERVED, ...GQL_VALUES, ...GRAFEO_REFUSED]);
 const NO_KIND = new Set(GRAFEO_REFUSED_KINDS);
 
-/** Whether a word may not name a thing or a route in a view: one GQL keeps, or Grafeo refuses, in any case, as GQL's keywords are read. */
+/**
+ * Whether a word may not name a thing or a route in a view: one GQL keeps, or Grafeo refuses. Case is ignored, as GQL's
+ * keywords are read.
+ */
 export function isReservedName(word: string): boolean {
   return KEPT.has(word.toUpperCase());
 }

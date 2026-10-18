@@ -1,10 +1,12 @@
-// Readers of what a data export writes (editor spec §16, export_lossless), for the tests alone: each reads a file back
+// Readers of what a data export writes (editor spec §16, export_lossless), for the tests alone. Each reads a file back
 // into the things and links it holds, so a round trip proves the export lost nothing. A GQL block is read by the
-// repository's own graph-spec reader. CSV and GraphML are read here, strictly, as their standards say: RFC 4180's
-// quoting and its CRLF record ends; XML's references, its line ends made LF and the whitespace in an attribute made
-// spaces, and its comments, refused where XML refuses one. So an escape the writer leaves out shows as a difference,
-// never as a reader being kind. Each also gives the notes it keeps (editor spec §24, note_standard): a GQL block's
-// `///` lines, read by the library's notes; a GraphML comment directly before a node or edge, its escapes read here.
+// repository's own graph-spec reader. CSV and GraphML are read here, strictly, as their standards say:
+// - RFC 4180's quoting and its CRLF record ends;
+// - XML's references, its line ends made LF and the whitespace in an attribute made spaces, and its comments, refused
+//   where XML refuses one.
+// So an escape the writer leaves out shows as a difference, never as a reader being kind. Each also gives the notes it
+// keeps (editor spec §24, note_standard). For a GQL block that is its `///` lines, read by the library's notes. For
+// GraphML it is a comment directly before a node or edge, its escapes read here.
 import gs from '@thoughtknot/graph-spec';
 
 /** A graph as a data export holds it: things as [id, kinds, properties], links as [from, type, to, properties]. */
@@ -14,10 +16,10 @@ export const dataOf = (g) => ({
 });
 
 /**
- * The one graph a GQL block writes, read by the graph-spec reader, as a data export holds it; what it marks as a
- * view's faded context, by a `//@ faded:` line owned by a thing or link (§27, read by the library's ownedComments); and
- * each thing's and link's note, its `///` lines read by the library's notes (§26, editor spec §24) — the export writing
- * one thing or link to a line, things first.
+ * The one graph a GQL block writes, read by the graph-spec reader, as a data export holds it. It also gives what the
+ * block marks as a view's faded context. That is a `//@ faded:` line owned by a thing or link (§27, read by the
+ * library's ownedComments). It gives each thing's and link's note too: its `///` lines, read by the library's notes
+ * (§26, editor spec §24). The export writes one thing or link to a line, things first.
  */
 export function readGql(text) {
   const world = gs.worldFromStore(gs.read([text]));
@@ -159,8 +161,8 @@ export function readCsv(text) {
 }
 
 const REFS = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
-// a character XML 1.0 cannot hold, even as a reference; with the u flag a whole surrogate pair is one character, so only
-// half of one alone is in the range
+// a character XML 1.0 cannot hold, even as a reference. With the u flag a whole surrogate pair is one character, so
+// only half of one alone is in the range
 const NOT_XML = /[\0-\x08\x0B\x0C\x0E-\x1F\u{FFFE}\u{FFFF}\u{D800}-\u{DFFF}]/u;
 
 /** Text as XML reads it: its references replaced, after its line ends were made LF. A literal `]]>` is refused: XML
@@ -181,8 +183,8 @@ function decoded(raw) {
   });
 }
 
-/** A comment's text as XML reads it, its line ends made LF; refused where XML refuses it: `--` inside it, a `-` at
- * its end, or a character XML 1.0 cannot hold. */
+/** A comment's text as XML reads it, its line ends made LF. It is refused where XML refuses it: `--` inside it, a `-`
+ * at its end, or a character XML 1.0 cannot hold. */
 function commentText(raw) {
   const text = raw.replace(/\r\n?/g, '\n');
   if (text.includes('--')) throw new Error('-- inside a comment, which XML forbids');
@@ -192,10 +194,12 @@ function commentText(raw) {
 }
 
 /**
- * A note from the text of the XML comment that holds it, read strictly, on its own, as the writer is meant to write
- * it (editor spec §24, note_standard): one space at each end, `\\` a backslash, `\-` a hyphen, `\r` a carriage return
- * and `\u{…}` a character by its code point in hexadecimal; any other backslash is refused, so a writer that leaves an
- * escape out shows.
+ * A note from the text of the XML comment that holds it, read strictly and on its own. It is read as the writer is
+ * meant to write it (editor spec §24, note_standard). The escapes:
+ * - one space at each end;
+ * - `\\` a backslash, `\-` a hyphen, `\r` a carriage return;
+ * - `\u{…}` a character by its code point in hexadecimal.
+ * Any other backslash is refused, so a writer that leaves an escape out shows.
  */
 export function commentNote(text) {
   if (text.length < 2 || text[0] !== ' ' || text.at(-1) !== ' ')
@@ -224,7 +228,7 @@ export function commentNote(text) {
 
 /** An XML text's root element: `{ name, attrs, children }`, each child an element, a text or a comment (`{ comment }`,
  * its text), whitespace kept inside the root. The declaration is dropped; an attribute's line ends and tabs become
- * spaces, as XML says. A comment is read from its `<!--` to the first `-->`, as XML reads one, and refused where XML
+ * spaces, as XML says. A comment is read from its `<!--` to the first `-->`, as XML reads one. It is refused where XML
  * refuses it; one outside the root is refused, as no export writes one there. */
 export function xmlTree(text) {
   const body = text.replace(/^<\?xml[^?]*\?>/, '');
@@ -320,8 +324,8 @@ export function readGraphml(text) {
     if (own[':faded'] === 'true') faded.links.push(i);
     return [byNode.get(e.attrs.source), own[':type'], byNode.get(e.attrs.target), props];
   });
-  // each note is the comment directly before its node or edge, with only whitespace between; a comment before
-  // anything else, or two before one element, is refused, as the export writes neither
+  // each note is the comment directly before its node or edge, with only whitespace between. A comment before anything
+  // else, or two before one element, is refused, as the export writes neither
   const notes = { things: [], links: [] };
   let pending = null,
     node = 0,

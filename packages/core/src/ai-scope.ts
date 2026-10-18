@@ -1,6 +1,6 @@
-// What is sent to an AI (editor spec §19, user_chooses_what): the user chooses the whole graph, a view, or the things
-// selected, and nothing else from the vault is sent — not the note's prose, not another graph, not a comment. What is
-// chosen is written out again as GQL from the graph as read: each thing with its kinds and properties, and each link
+// What is sent to an AI (editor spec §19, user_chooses_what). The user chooses the whole graph, a view, or the things
+// selected. Nothing else from the vault is sent: not the note's prose, not another graph, not a comment. What is chosen
+// is written out again as GQL from the graph as read. That is each thing with its kinds and properties, and each link
 // between the things chosen.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph, Value } from '@thoughtknot/graph-spec';
@@ -88,8 +88,8 @@ function viewPart(
 }
 
 /**
- * What would be sent of `note` for the user's choice, read as the editor reads the note (`shared` are the vault's shared
- * schemas); or why it cannot be sent: a graph, view or thing the note does not hold, or nothing chosen.
+ * What would be sent of `note` for the user's choice, read as the editor reads the note (`shared` are the vault's
+ * shared schemas). Or why it cannot be sent: a graph, view or thing the note does not hold, or nothing chosen.
  */
 export function aiScope(note: string, choice: ScopeChoice, shared: string[] = []): AiScope | { refused: string } {
   const reading = readNote(

@@ -1,6 +1,6 @@
-// What a thing's details offer to untangle the drawing (spec §25): its neighbourhood alone, the shortest path to another
-// thing, and, for a busy hub, folding or opening its links. A graph drawn as a table (§15) has nothing to hide or bring
-// forward, so there none of it is offered.
+// What a thing's details offer to untangle the drawing (spec §25). They offer its neighbourhood alone, and the shortest
+// path to another thing. For a busy hub, they offer folding or opening its links. A graph drawn as a table (§15) has
+// nothing to hide or bring forward, so there none of it is offered.
 import { word } from '@thoughtknot/core';
 import type { ThingActions } from './untangle';
 

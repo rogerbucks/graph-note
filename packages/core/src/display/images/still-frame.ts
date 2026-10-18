@@ -1,14 +1,14 @@
-// An animated image's first frame (editor spec §18, §11): drawn by the platform's own image decoding, with no library
-// (no new dependency), onto a canvas, as a PNG. An image drawn onto a canvas gives its default image, the first frame of
-// an animation, as the HTML standard says; it is drawn from the file's own bytes, in a blob address of this page, so
-// the canvas may be read. Never rejects: where it cannot be drawn, as in a host with no canvas, it gives null, and the
-// image is then held still with nothing drawn, saying why.
+// An animated image's first frame (editor spec §18, §11). It is drawn as a PNG onto a canvas by the platform's own
+// image decoding, with no library (no new dependency). An image drawn onto a canvas gives its default image, as the
+// HTML standard says. That is the first frame of an animation. It is drawn from the file's own bytes, in a blob address
+// of this page, so the canvas may be read. Never rejects: where it cannot be drawn, as in a host with no canvas, it
+// gives null. The image is then held still with nothing drawn, saying why.
 
 /** The most pixels a first frame is drawn at; a larger one is drawn smaller, keeping its shape. */
 const MOST_PIXELS = 4_000_000;
 
 /**
- * The most pixels an image's frame may have for its first frame to be drawn at all (review of #443): a larger one would
+ * The most pixels an image's frame may have for its first frame to be drawn at all (review of #443). A larger one would
  * hold the page and the device's memory while it is drawn, so it is never put on a canvas.
  */
 export const STILL_PIXELS = 50_000_000;

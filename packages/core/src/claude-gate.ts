@@ -1,13 +1,16 @@
-// What the browser editor may show Claude (editor spec §26, cc_classified_asks, cc_credential_never): Claude can read
-// the pane the editor opens in, so a note is held to a ceiling before it opens, and again before every send. A note above
-// the level set for Claude is asked about first, and the yes is for the digest of the text it was given about; one at the
-// highest classification never opens, whatever the settings; a note with no classification counts as the level set for
-// unlabelled notes (the highest until chosen); one whose classification cannot be read for certain is unknown, and
-// refused; and a credential never reaches Claude, at any classification. The level for Claude is the ceiling of the model
-// named Claude among the models set up (§19); with none, the lowest classification, so everything above it asks. When a
-// row of the destination matrix is picked for that model (model_ceiling), the row decides instead, by the same rules as
-// for any model (a no, an unknown mark, a duplicate or a missing row never clears; a conditional class only once
-// switched on), so a note it does not clear asks. What is said names kinds and the levels set, never the note's own label or its text.
+// What the browser editor may show Claude (editor spec §26, cc_classified_asks, cc_credential_never). Claude can read
+// the pane the editor opens in, so a note is held to a ceiling before it opens, and again before every send:
+// - a note above the level set for Claude is asked about first. The yes is for the digest of the text it was
+//   given about;
+// - one at the highest classification never opens, whatever the settings;
+// - a note with no classification counts as the level set for unlabelled notes (the highest until chosen);
+// - one whose classification cannot be read for certain is unknown, and refused;
+// - a credential never reaches Claude, at any classification.
+// The level for Claude is the ceiling of the model named Claude among the models set up (§19). With none, it is the
+// lowest classification, so everything above it asks. When a row of the destination matrix is picked for that model
+// (model_ceiling), the row decides instead. It uses the same rules as for any model. A no, an unknown mark, a duplicate
+// or a missing row never clears; a conditional class clears only once switched on. So a note the row does not clear
+// asks. What is said names kinds and the levels set, never the note's own label or its text.
 import { sha256 } from './ai-digest.ts';
 import { credentialsIn } from './ai-ceiling.ts';
 import { matrixRefusal } from './ai-matrix.ts';
@@ -71,9 +74,12 @@ function labelOf(raw: string): string | null {
 
 /**
  * The note's classification, from an unindented, top-level `classification:` key of its front matter. A nested key, one
- * inside a block scalar and one indented do not count. Several of them, a value that is a list, a mapping, a block, an
- * anchor, a tag or a quote left open, an empty value followed by list or child lines, and a front matter in which an
- * earlier value may run over the key, are unknown: the gate refuses them. An empty value alone is none.
+ * inside a block scalar and one indented do not count. These are unknown, and the gate refuses them:
+ * - several such keys;
+ * - a value that is a list, a mapping, a block, an anchor, a tag or a quote left open;
+ * - an empty value followed by list or child lines;
+ * - a front matter in which an earlier value may run over the key.
+ * An empty value alone is none.
  */
 export function classificationOf(text: string): NoteClassification {
   const lines = frontMatter(text);
@@ -120,10 +126,10 @@ function ceilingOf(settings: GateSettings): number {
 }
 
 /**
- * Whether a note may open in a pane Claude can read. A credential in it, whatever its classification, a classification
- * at the highest set, not among those set or unknown, are refused with no question; one above Claude's ceiling is asked
- * about, unless `confirmed` is the digest (SHA-256, in hexadecimal) of this very text, which is the user's yes to it. The
- * words name kinds and the levels set, never the note's label or its text.
+ * Whether a note may open in a pane Claude can read. A credential in it is refused with no question, whatever its
+ * classification. So is a classification at the highest set, not among those set, or unknown. One above Claude's
+ * ceiling is asked about, unless `confirmed` is the digest (SHA-256, in hexadecimal) of this very text. That digest is
+ * the user's yes to it. The words name kinds and the levels set, never the note's label or its text.
  */
 export function claudeGate(text: string, settings: GateSettings, confirmed: string | null = null): Gate {
   const levels = settings.classifications;

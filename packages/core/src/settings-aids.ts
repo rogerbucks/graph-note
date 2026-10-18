@@ -1,13 +1,15 @@
-// The options for the viewer's aids (editor spec §24), with the rest of the Drawing section of the settings page: when the
-// mini-map shows (mini_map_setting), whether the details panel is kept open (details_always_visible), and how tall a
-// drawing in a note may be (drawing_height_setting).
+// The options for the viewer's aids (editor spec §24), with the rest of the Drawing section of the settings page. They
+// say when the mini-map shows (mini_map_setting) and whether the details panel is kept open (details_always_visible).
+// They also say how tall a drawing in a note may be (drawing_height_setting).
 import type { Option } from './settings.ts';
 
 /** When the mini-map shows (§24, mini_map_setting): never, when the drawing does not fit its view (the default), or always. */
 export type MiniMapSetting = 'off' | 'auto' | 'always';
 
-/** How tall a drawing in a note may be (§24, drawing_height_setting): half the window, three quarters (the default), or as
-    tall as the drawing fitted to its width. */
+/**
+ * How tall a drawing in a note may be (§24, drawing_height_setting). It is half the window, three quarters (the
+ * default), or as tall as the drawing fitted to its width.
+ */
 export type DrawingHeightSetting = 'half' | 'most' | 'none';
 
 /** The share of the window a drawing in a note may take, as the setting says; null for no limit. */

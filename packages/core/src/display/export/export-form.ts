@@ -1,9 +1,10 @@
-// The Export form on a drawing (spec §16): what to export — the whole diagram, or on a view the view or the view with its
-// faded context (export_two_scopes) — as SVG or PNG (export_formats), light or dark (export_fixed_theme), or its data as
-// a GQL block, CSV or GraphML (export_data_formats), which takes no theme; and, when the note's classification is above
-// the configured level, the question asked before anything is written (classified_export). A path that can be played is
-// offered too, as an animated SVG at a pace chosen (path_animation_export). A graph or view too large to draw, shown as
-// text, gets a bar of its own with an Export button for its data alone (`dataExportBar`).
+// The Export form on a drawing (spec §16). It asks what to export: the whole diagram, or on a view the view or the view
+// with its faded context (export_two_scopes). It offers SVG or PNG (export_formats), light or dark
+// (export_fixed_theme). It offers the data as a GQL block, CSV or GraphML (export_data_formats), which takes no theme.
+// When the note's classification is above the configured level, it asks its question before anything is written
+// (classified_export). A path that can be played is offered too, as an animated SVG at a pace chosen
+// (path_animation_export). A graph or view too large to draw, shown as text, gets a bar of its own. Its Export button
+// is for its data alone (`dataExportBar`).
 import { DEFAULT_PACE, PATH_PACES, isDataFormat, word } from '@thoughtknot/core';
 import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@thoughtknot/core';
 import { button } from '../graph-view/view-bar';
@@ -59,8 +60,8 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
 }
 
 /**
- * Shows the Export form in `parent` as `x` asks, in place of one already shown, never taking it away: as a played path's
- * Export as an animated SVG opens it on that path. The focus goes to its first choice.
+ * Shows the Export form in `parent` as `x` asks, in place of one already shown, never taking it away. A played path's
+ * Export as an animated SVG opens it like this, on that path. The focus goes to its first choice.
  */
 export function openExportForm(parent: HTMLElement, x: Exporting): void {
   shownForm(parent)?.remove();
@@ -173,8 +174,8 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
 }
 
 /**
- * A bar for a graph or view shown as text because it is too large to draw: an Export button whose form offers its data
- * alone (export_data_formats), as the data needs no layout.
+ * A bar for a graph or view shown as text because it is too large to draw. It holds an Export button whose form offers
+ * its data alone (export_data_formats), as the data needs no layout.
  */
 export function dataExportBar(parent: HTMLElement, x: Exporting): void {
   const bar = parent.createDiv({

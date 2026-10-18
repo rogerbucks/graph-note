@@ -1,7 +1,7 @@
-// What goes in at a graph step's named points (editor spec §20, graph_step_io, step_inputs_checked): a whole graph of the
-// note, or part of one, a view such as a queried path, put to the graph as the note reads it and never to a copy; each
-// input checked against what its point says it takes before the step runs; and the inputs read together as one graph,
-// a thing by its id, for the rule to match.
+// What goes in at a graph step's named points (editor spec §20, graph_step_io, step_inputs_checked). It is a whole
+// graph of the note, or part of one, a view such as a queried path. It is put to the graph as the note reads it and
+// never to a copy. Each input is checked against what its point says it takes before the step runs. The inputs are read
+// together as one graph, a thing by its id, for the rule to match.
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { NoteReading } from './note-reading.ts';
 import type { StepGraph } from './steps-match.ts';
@@ -78,9 +78,11 @@ function inputOf(point: string, given: StepGiven, reading: NoteReading, texts: r
 }
 
 /**
- * The inputs given at a step's points, from a note's blocks as read (`reading`, of `texts`): each a graph of the note,
- * whole, or a view of one; and why any cannot be: a point given nothing, a point the step does not declare, a graph
- * the note does not hold, or a view that cannot be used or matches nothing.
+ * The inputs given at a step's points, from a note's blocks as read (`reading`, of `texts`). Each is a graph of the
+ * note, whole, or a view of one. It also says why any cannot be:
+ * - a point given nothing, or a point the step does not declare;
+ * - a graph the note does not hold;
+ * - a view that cannot be used or matches nothing.
  */
 export function inputsFrom(
   points: readonly StepPoint[],
@@ -107,9 +109,9 @@ export function inputsFrom(
 }
 
 /**
- * Each input checked against what its point says it takes (step_inputs_checked), before the step runs: every kind of
- * thing and every type of link it names must be held by what is given there, and something must be. The reasons, in
- * the order the points and their words are written; none when every input is as its point says.
+ * Each input checked against what its point says it takes (step_inputs_checked), before the step runs. Every kind of
+ * thing and every type of link it names must be held by what is given there. And something must be given. Returns the
+ * reasons, in the order the points and their words are written; none when every input is as its point says.
  */
 export function inputFaults(points: readonly StepPoint[], inputs: readonly StepInput[]): string[] {
   return inputs.flatMap((input) => {

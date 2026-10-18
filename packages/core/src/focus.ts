@@ -1,6 +1,7 @@
-// Focus on a selection, and the highlight under the pointer (editor spec §25, slice 3): which things and links stay at full
-// strength when a thing or a link is selected, and how far that reaches. Host-free and pure: it says only what is kept;
-// the host fades the rest, so nothing here moves, hides or changes a thing, and nothing is written to the note.
+// Focus on a selection, and the highlight under the pointer (editor spec §25, slice 3). It says which things and links
+// stay at full strength when a thing or a link is selected, and how far that reaches. Host-free and pure: it says only
+// what is kept. The host fades the rest, so nothing here moves, hides or changes a thing, and nothing is written to the
+// note.
 import type { GraphDrawing } from './note-reading.ts';
 
 /** One link as focus sees it: the two things it joins and, where the drawing has it, its relationship type. */
@@ -23,10 +24,11 @@ export interface Kept {
 export type FocusDepth = 1 | 2;
 
 /**
- * How a faded thing is drawn (focus_readable): lighter, never gone. Its outline no heavier than the drawing's ordinary
- * line (1), its fill none, its words and labels at `text` of their strength — the most that still leaves the worst of them
- * (a yellow label on the light page) 4.5:1, which `focus.test.js` works out in both themes. Lines and outlines keep their
- * colour and their full strength, so they keep their 3:1; a line is never drawn thinner than that ordinary width.
+ * How a faded thing is drawn (focus_readable): lighter, never gone. Its outline is no heavier than the drawing's
+ * ordinary line (1), and its fill is none. Its words and labels are at `text` of their strength. That is the most that
+ * still leaves the worst of them at 4.5:1, a yellow label on the light page. `focus.test.js` works it out in both
+ * themes. Lines and outlines keep their colour and their full strength, so they keep their 3:1. A line is never drawn
+ * thinner than that ordinary width.
  */
 export const FADE = { fill: 0, width: 1, text: 0.95 } as const;
 
@@ -39,8 +41,8 @@ export function depthOf(setting: string): FocusDepth {
 }
 
 /**
- * The links of a drawing as its SVG draws them, in order: each written link, then each estimate of a name (an estimate
- * of a type is the written link it stands for). The position in this list is the number of the SVG's edge, less one.
+ * The links of a drawing as its SVG draws them, in order: each written link, then each estimate of a name. An estimate
+ * of a type is the written link it stands for. The position in this list is the number of the SVG's edge, less one.
  */
 export function edgesOf(d: GraphDrawing): FocusEdge[] {
   return [
@@ -117,8 +119,8 @@ export function focusOf(edges: readonly FocusEdge[], target: FocusTarget, depth:
 }
 
 /**
- * What the highlight under the pointer, the keyboard focus or a touch's tap marks (hover_highlight): a thing alone, or a
- * link and the two things it joins. A link that is not there highlights nothing.
+ * What the highlight under the pointer, the keyboard focus or a touch's tap marks (hover_highlight). It is a thing
+ * alone, or a link and the two things it joins. A link that is not there highlights nothing.
  */
 export function highlightOf(edges: readonly FocusEdge[], target: FocusTarget): Kept | null {
   if ('thing' in target) return { things: new Set([target.thing]), edges: new Set() };

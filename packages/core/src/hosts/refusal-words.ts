@@ -1,6 +1,7 @@
-// Why a graph is not laid out, in words (spec §9, layout_contained, and §16, failed_export): the limit it is over and the
-// numbers, how long its layout was given, or that drawing is paused. One telling of each reason, in two voices: the banner
-// over a graph shown as text instead, and the notice of an export that was stopped and wrote nothing.
+// Why a graph is not laid out, in words (spec §9, layout_contained, and §16, failed_export). It gives the limit it is
+// over and the numbers, how long its layout was given, or that drawing is paused. One telling of each reason, in two
+// voices. One is the banner over a graph shown as text instead. One is the notice of an export that was stopped and
+// wrote nothing.
 import type { Refusal } from '../layout-limits.ts';
 
 const count = (n: number) => n.toLocaleString('en-GB');
@@ -53,8 +54,8 @@ export function refusalWords(r: Refusal): string {
 }
 
 /**
- * The notice of an export that was stopped for a limit, in the words of every export that cannot be made: what happened,
- * why, that nothing was saved, and what to do.
+ * The notice of an export that was stopped for a limit, in the words of every export that cannot be made. It says what
+ * happened, why, that nothing was saved, and what to do.
  */
 export function exportRefusalWords(r: Refusal): string {
   const made = 'The export could not be made:';
@@ -74,8 +75,8 @@ export function exportRefusalWords(r: Refusal): string {
 
 /**
  * The notice of an export whose layout failed: the layout worker or its engine raised `error`. Its reason is put in
- * brackets, as the runner words it ("the layout worker failed: boom" becomes "the layout worker failed (boom)"), then
- * that nothing was saved and what to do.
+ * brackets, as the runner words it. So "the layout worker failed: boom" becomes "the layout worker failed (boom)". Then
+ * it says that nothing was saved and what to do.
  */
 export function exportFailureWords(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);

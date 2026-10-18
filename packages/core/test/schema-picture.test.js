@@ -1,5 +1,6 @@
-// A block that holds only a schema, drawn as the schema itself (editor spec §3, schema_drawn): each kind of thing a box,
-// each relationship type an arrow from the kinds it joins in the data, and a type the data does not use a box of its own.
+// A block that holds only a schema, drawn as the schema itself (editor spec §3, schema_drawn). Each kind of thing is a
+// box, and each relationship type an arrow from the kinds it joins in the data. A type the data does not use is a box
+// of its own.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { schemaPicture } from '../src/schema-picture.ts';

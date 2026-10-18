@@ -1,6 +1,7 @@
-// A graph that names a shared schema there is none of (spec §27, schema_named_found): `· schema places@2` with no block
-// that says SCHEMA places@2 in the vault, nor a standard schema of that name. Its types then go unchecked, so it is a
-// warning on the graph line of the first block that names it, saying which versions of that schema there are.
+// A graph that names a shared schema there is none of (spec §27, schema_named_found). An example is `· schema places@2`
+// with no block that says SCHEMA places@2 in the vault, nor a standard schema of that name. Its types then go
+// unchecked. So it is a warning on the graph line of the first block that names it, saying which versions of that
+// schema there are.
 import type { World } from '@thoughtknot/graph-spec';
 import { firstLine, graphOfBlock } from './blocks.ts';
 import type { Problem } from './note-reading.ts';

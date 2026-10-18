@@ -1,12 +1,12 @@
-// Reviewing a proposal (editor spec §17): shown over the graph with nothing written (proposal_shown_not_applied) and run
-// through the graph spec's own change-set check, whose answer is shown (proposals_checked); each change accepted or
-// rejected on its own, in a group or all at once (proposal_one_by_one, big_proposal); an accepted change written as text
-// through the pane's own edit session, so it is checked first and undone like any other edit (accepting_is_an_edit); a
-// rejected one leaving the graph as it was; both kept as decisions in the note's judgement graph, by the name set in the
-// settings (rejecting_recorded, decider_named); the proposer, the time and what it read shown, and a graph that has moved
-// since said so before anything is accepted (proposal_provenance); and nothing decided but by a person who says who they
-// are (person_decides). The review works on the note's text, which the host hands in and writes back when told it may:
-// it never writes a note itself.
+// Reviewing a proposal (editor spec §17). It is shown over the graph with nothing written (proposal_shown_not_applied).
+// It runs through the graph spec's own change-set check, whose answer is shown (proposals_checked). Each change is
+// accepted or rejected on its own, in a group or all at once (proposal_one_by_one, big_proposal). An accepted change is
+// written as text through the pane's own edit session. So it is checked first and undone like any other edit
+// (accepting_is_an_edit). A rejected one leaves the graph as it was. Both are kept as decisions in the note's judgement
+// graph, by the name set in the settings (rejecting_recorded, decider_named). The proposer, the time and what it read
+// are shown. A graph that has moved since says so before anything is accepted (proposal_provenance). Nothing is decided
+// but by a person who says who they are (person_decides). The review works on the note's text, which the host hands in
+// and writes back when told it may: it never writes a note itself.
 import { gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { PaneSession } from './pane.ts';
@@ -54,8 +54,8 @@ export class ProposalReview {
   }
 
   /**
-   * A review of the proposal a change set block holds. Given the note, it also takes up what the note's judgement graph
-   * says was decided of it, and what the note's graphs say the proposer is; or why the block cannot be read.
+   * A review of the proposal a change set block holds, or why the block cannot be read. Given the note, it also takes
+   * up what the note's judgement graph says was decided of it. It takes up what the note's graphs say the proposer is.
    */
   static fromChangeSet(block: string, note?: string): ProposalReview | { refused: string } {
     const r = readChangeSet(block);
@@ -178,9 +178,9 @@ export class ProposalReview {
   }
 
   /**
-   * The proposal over the note, and nothing written: each change marked, listed and read back, the changes waiting laid
-   * over the graph for the host to draw, whether the graph has moved since it was proposed, and the graph spec's check of
-   * the change set as the note holds it.
+   * The proposal over the note, and nothing written. Each change is marked, listed and read back. The changes waiting
+   * are laid over the graph for the host to draw. It says whether the graph has moved since it was proposed. It holds
+   * the graph spec's check of the change set as the note holds it.
    */
   show(note: string): ProposalShown {
     this.sync(note);
@@ -243,8 +243,8 @@ export class ProposalReview {
   }
 
   /**
-   * Records these changes as decided in the note: the change set written again with what still waits, and a Decision for
-   * each in the judgement graph. `proposal` is the proposal as it will stand.
+   * Records these changes as decided in the note. The change set is written again with what still waits. A Decision is
+   * written for each in the judgement graph. `proposal` is the proposal as it will stand.
    */
   private record(
     note: string,
@@ -260,10 +260,10 @@ export class ProposalReview {
   }
 
   /**
-   * A person accepts changes: each is written as text through the pane's own edit session, in the order proposed,
-   * checked there first, then read back to see it took effect, and the whole refused (nothing written) if any is not
-   * allowed or leaves the graph with a problem it did not have. A proposal whose graph has moved is refused until the
-   * person has seen that (`staleSeen`). The decision is kept in the note's judgement graph, and the change set is written
+   * A person accepts changes. Each is written as text through the pane's own edit session, in the order proposed. Each
+   * is checked there first, then read back to see it took effect. The whole is refused (nothing written) if any is not
+   * allowed, or leaves the graph with a problem it did not have. A proposal whose graph has moved is refused until the
+   * person has seen that (`staleSeen`). The decision is kept in the note's judgement graph. The change set is written
    * again with what still waits, held to the graph as the accepts left it.
    */
   accept(note: string, which: Which, by: Person, options: DecideOptions = {}): Reviewed {
@@ -311,8 +311,8 @@ export class ProposalReview {
     }
     const fresh = newProblems(beforeReading, after, graph)[0];
     if (fresh) return refuse(`it would leave the graph with a problem: ${fresh.message}`);
-    // the change set as the note holds it must pass the graph spec's own check: nothing is written on one that fails (after
-    // the edit's own checks, which say more); a proposal held only in memory is checked as the editor would write it
+    // the change set as the note holds it must pass the graph spec's own check. None that fails is written (after the
+    // edit's own checks, which say more). A proposal held only in memory is checked as the editor would write it
     const unchecked = checkRefusal(checkProposal(note, this.heldText(note), this.shared), 'seen');
     if (unchecked) return refuse(unchecked);
     const at = options.at ?? new Date().toISOString();
@@ -326,8 +326,8 @@ export class ProposalReview {
   }
 
   /**
-   * A person rejects changes: the graph is left exactly as it was, the changes leave the change set so no tool that
-   * applies it applies them, and the rejection — who, and when — is kept as a Decision in the judgement graph.
+   * A person rejects changes. The graph is left exactly as it was. The changes leave the change set, so no tool that
+   * applies it applies them. The rejection (who, and when) is kept as a Decision in the judgement graph.
    */
   reject(note: string, which: Which, by: Person, options: DecideOptions = {}): Reviewed {
     const nobody = notAPerson(this.proposal, by);
@@ -363,7 +363,7 @@ export class ProposalReview {
     return { ok: true, note: recorded.note, ids: chosen.map((c) => c.id) };
   }
 
-  /** Takes back the last accept or reject: the text written is undone by the sessions that wrote it, and the note's records are as they were. */
+  /** Takes back the last accept or reject. The sessions that wrote the text undo it, and the note's records are as they were. */
   undo(note: string): Reviewed {
     // the step stays until it has been taken back: an undo that cannot be made leaves it there to be made again
     const step = this.steps.at(-1);

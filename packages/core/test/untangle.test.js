@@ -1,8 +1,8 @@
-// Untangling a large graph (editor spec §25, slice 3): a thing and its neighbours alone, the legend bringing a kind or a
-// relationship type forward or hiding it, the shortest path between two things, finding a thing, walking the links by
-// arrow key, labels by zoom, busy hubs and groups folded, links merged into trunks and routed — and, in every one, only
-// the drawing changes, never the data. Host-free: plain data in, sets of what to show out, or the drawing laid out; the
-// Obsidian package's tests put them on a card.
+// Untangling a large graph (editor spec §25, slice 3): a thing and its neighbours alone. The legend brings a kind or a
+// relationship type forward or hides it. Also the shortest path between two things, finding a thing, walking the links
+// by arrow key and labels by zoom. Busy hubs and groups are folded, and links merged into trunks and routed. In every
+// one, only the drawing changes, never the data. Host-free: plain data in, sets of what to show out, or the drawing
+// laid out; the Obsidian package's tests put them on a card.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -462,8 +462,8 @@ describe('only the drawing changes, never the data', () => {
   test('every step above leaves the reading, the drawing and the note’s text as they were', () => {
     const fresh = readNote([NOTE]);
     const d = freeze(fresh.graphs.get('reader'));
-    // the note's own texts, frozen where they are: a write to one would throw; and the graph the reading holds, whose maps
-    // and sets cannot be frozen, written out whole before and after
+    // the note's own texts, frozen where they are, so a write to one would throw. And the graph the reading holds,
+    // whose maps and sets cannot be frozen, written out whole before and after
     const text = freeze(fresh.texts);
     const whole = () =>
       JSON.stringify(fresh.world.reader, (_k, v) => (v instanceof Map ? [...v] : v instanceof Set ? [...v] : v));

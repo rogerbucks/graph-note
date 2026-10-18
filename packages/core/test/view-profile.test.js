@@ -1,5 +1,5 @@
-// The view profile (editor spec §7): the five shapes of query a view may be are read into a description of the view, and
-// anything else is refused with a message that says what is allowed. Each shape's query is also one Grafeo runs: the
+// The view profile (editor spec §7): the five shapes of query a view may be are read into a description of the view.
+// Anything else is refused with a message that says what is allowed. Each shape's query is also one Grafeo runs. The
 // forms were run in Grafeo on 11 Oct 2026 (a choice of kinds is written after IS, as Grafeo reads it).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

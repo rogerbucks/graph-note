@@ -1,6 +1,7 @@
-// A block that holds only a schema, drawn as the schema itself (spec §3, schema_drawn): each kind of thing a box, each
-// relationship type an arrow from the kinds it joins in the data to the kinds it reaches, and a type the data does not
-// use yet a box of its own. The picture is a graph of its own, written as GQL and read as any block is, never the note.
+// A block that holds only a schema, drawn as the schema itself (spec §3, schema_drawn). Each kind of thing is a box.
+// Each relationship type is an arrow from the kinds it joins in the data to the kinds it reaches. A type the data does
+// not use yet is a box of its own. The picture is a graph of its own, written as GQL and read as any block is, never
+// the note.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { graphOf, isSharedSchema } from './blocks.ts';
@@ -29,9 +30,9 @@ function onlySchema(g: Graph | undefined): g is Graph {
 }
 
 /**
- * The picture of block `index` of a note's blocks `texts`, when it holds only a schema — a graph's own, or a shared one
- * — and is read whole; null for any other block, which is drawn as its graph. The relationship types are joined by the
- * kinds the graph's data, across the note, links with them; `shared` is the vault's shared schema blocks.
+ * The picture of block `index` of a note's blocks `texts`, when it holds only a schema and is read whole. The schema is
+ * a graph's own, or a shared one. Null for any other block, which is drawn as its graph. The relationship types are
+ * joined by the kinds the graph's data, across the note, links with them. `shared` is the vault's shared schema blocks.
  */
 export function schemaPicture(texts: string[], index: number, shared: string[] = []): SchemaPicture | null {
   const block = texts[index];

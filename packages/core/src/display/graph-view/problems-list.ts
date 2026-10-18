@@ -1,5 +1,6 @@
-// The problems behind a drawing's badge (spec §8): one by one, each with a sign as well as its words, or grouped by kind
-// with the worst first when there are too many to fit a screen; and the completeness report.
+// The problems behind a drawing's badge (spec §8). They are listed one by one, each with a sign as well as its words.
+// When there are too many to fit a screen, they are grouped by kind with the worst first. It also shows the
+// completeness report.
 import type { CompletenessReport, Problem } from '@thoughtknot/core';
 
 /** A problem, with the note line it is on. */

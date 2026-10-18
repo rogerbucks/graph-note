@@ -1,7 +1,7 @@
-// Names, labels and values as the person wrote them keep their own direction (editor spec §42, bidi_labels): each element
-// of the interface that shows one is read from its first strong letter and set apart from the words around it, so an
-// Arabic name in an English panel, or an English one in a Hebrew panel, is never reordered. The drawing and the exports
-// are still to come (the requirement's test is partial).
+// Names, labels and values as the person wrote them keep their own direction (editor spec §42, bidi_labels). Each
+// element of the interface that shows one is read from its first strong letter. It is set apart from the words around
+// it. So an Arabic name in an English panel, or an English one in a Hebrew panel, is never reordered. The drawing and
+// the exports are still to come (the requirement's test is partial).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';

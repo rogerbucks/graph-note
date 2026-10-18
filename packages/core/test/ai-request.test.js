@@ -1,5 +1,5 @@
-// A model's answer read back as changes (editor spec §19, answers_are_proposals): only the JSON asked for, each change
-// one of the five kinds with one-word names, and the whole answer refused when one change cannot be read.
+// A model's answer read back as changes (editor spec §19, answers_are_proposals). Only the JSON asked for is read. Each
+// change is one of the five kinds with one-word names. The whole answer is refused when one change cannot be read.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { changesIn, readReply } from '../src/ai-request.ts';

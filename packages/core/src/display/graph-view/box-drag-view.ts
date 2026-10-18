@@ -1,9 +1,9 @@
-// Moving a box by dragging it (spec §6, nudge_preview, drag_moves_box, hold_to_drag_touch): a mouse or pen picks a box
-// up as it is pressed, a finger only once held there for a moment (as a long press opens its tooltip, §24), so a swipe
-// still scrolls or pans. Once the pointer has moved past a tap's slop the box follows it, the box it would land by is
-// marked, and a line says the nudge it would write; letting go writes that nudge to the style graph, through the card's
-// host. Escape, or letting go where no place is shown, puts the box back and writes nothing. The core decides where it
-// lands (box-drag.ts); this draws it.
+// Moving a box by dragging it (spec §6, nudge_preview, drag_moves_box, hold_to_drag_touch). A mouse or pen picks a box
+// up as it is pressed. A finger picks it up only once held there for a moment (as a long press opens its tooltip, §24).
+// So a swipe still scrolls or pans. Once the pointer has moved past a tap's slop the box follows it. The box it would
+// land by is marked, and a line says the nudge it would write. Letting go writes that nudge to the style graph, through
+// the card's host. Escape, or letting go where no place is shown, puts the box back and writes nothing. The core
+// decides where it lands (box-drag.ts); this draws it.
 import { landingFor, landingSaid, word } from '@thoughtknot/core';
 import type { Landing, NudgeWrite, View, WrittenNudge } from '@thoughtknot/core';
 import type { Taps } from './taps';

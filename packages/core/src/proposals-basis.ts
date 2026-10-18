@@ -1,6 +1,6 @@
-// The state of a graph a proposal is made against (editor spec §17, proposal_provenance): graph-spec's own name for it — the
-// first sixteen digits of the graph's canonical hash, which a change set's header holds as `against` — so a proposal can
-// say, before anything is accepted, that the graph has moved since it was made.
+// The state of a graph a proposal is made against (editor spec §17, proposal_provenance). It uses graph-spec's own name
+// for it: the first sixteen digits of the graph's canonical hash. A change set's header holds it as `against`. So a
+// proposal can say, before anything is accepted, that the graph has moved since it was made.
 import gs from '@thoughtknot/graph-spec';
 import { gqlBlocks } from './blocks.ts';
 import { readNote } from './drawing.ts';

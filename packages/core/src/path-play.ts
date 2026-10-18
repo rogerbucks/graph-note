@@ -1,8 +1,8 @@
-// Play stepping through a walked path on its own (editor spec §7, path_autoplay): from the step it is on, one step at the
-// pace the user sets, until the last step, where it stops; paused or stopped at any step, and played on from where it
-// was paused. A step taken by hand pauses it. The host hands in its timer (`Scheduler`), so the core never waits on a
-// clock and a host clears the timer when its card goes; how the moving highlight is drawn, and that it moves at once
-// under reduced motion, is the host's (motion_reduced_respected).
+// Play stepping through a walked path on its own (editor spec §7, path_autoplay). From the step it is on, it moves one
+// step at the pace the user sets, until the last step, where it stops. It can be paused or stopped at any step, and
+// played on from where it was paused. A step taken by hand pauses it. The host hands in its timer (`Scheduler`), so the
+// core never waits on a clock. A host clears the timer when its card goes. How the moving highlight is drawn, and that
+// it moves at once under reduced motion, is the host's (motion_reduced_respected).
 import type { PathPlayer } from './paths.ts';
 import { THRESHOLDS, thresholdValue } from './thresholds.ts';
 

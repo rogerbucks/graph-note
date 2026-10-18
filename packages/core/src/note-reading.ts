@@ -1,5 +1,6 @@
-// What reading a note's graph blocks gives (spec §3): each graph ready to draw — its boxes, its links, and the estimates
-// drawn where what was written was a near miss — and the problems, each with its block, its line and its fix.
+// What reading a note's graph blocks gives (spec §3). It gives each graph ready to draw: its boxes, its links, and the
+// estimates drawn where what was written was a near miss. It gives the problems too, each with its block, its line and
+// its fix.
 import type { World } from '@thoughtknot/graph-spec';
 import type { Estimate } from './estimates.ts';
 import type { InlineProperties } from './inline-properties.ts';
@@ -17,7 +18,7 @@ export interface Block {
 
 /**
  * A note on a thing or a link (editor spec §24, note_comment, note_text): the /// lines written directly above it. Its
- * text is CommonMark for the host to render, its summary the text's first paragraph; the block (index in the note) and
+ * text is CommonMark for the host to render, its summary the text's first paragraph. The block (index in the note) and
  * the /// lines in that block (1 = its graph line) say where it is written.
  */
 export interface ThingNote {
@@ -35,14 +36,16 @@ export interface Box {
   /** Only for a thing with a note written directly above it (editor spec §24). */
   note?: ThingNote;
   /**
-   * Only for a thing written without a name, drawn under the name suggested for it (spec §4, unnamed_drawn_suggested):
-   * the block it is written in, and the 0-based line and character there, just after its (, where the name would go.
+   * Only for a thing written without a name, drawn under the name suggested for it (spec §4, unnamed_drawn_suggested).
+   * It holds the block it is written in, and the 0-based line and character there. That is just after its (, where the
+   * name would go.
    */
   suggested?: { block: number; line: number; character: number };
   /**
-   * Only for a thing some Deferred defers (spec §5, deferred_drawn): what is needed before it is done, and whether every
-   * Deferred on it is past its revisit date. The core only says which boxes these are; the host draws the dashing and the
-   * later mark on the finished drawing, so the layout source stays byte-identical with the Python library's.
+   * Only for a thing some Deferred defers (spec §5, deferred_drawn). It holds what is needed before it is done, and
+   * whether every Deferred on it is past its revisit date. The core only says which boxes these are. The host draws the
+   * dashing and the later mark on the finished drawing, so the layout source stays byte-identical with the Python
+   * library's.
    */
   deferred?: { overdue: boolean; what: string };
 }
@@ -72,8 +75,8 @@ export interface GraphDrawing {
   /** The nudges of its style graph (spec §6), written into the layout; none, the layout the Python library gives. */
   nudges?: Nudge[];
   /**
-   * The links its style graph draws without their arrowheads (spec §15), by their order in the layout source: its links,
-   * then the links guessed from a near miss of a name. None: every arrowhead is drawn.
+   * The links its style graph draws without their arrowheads (spec §15). Each is given by its order in the layout
+   * source: its links, then the links guessed from a near miss of a name. None: every arrowhead is drawn.
    */
   arrowless?: number[];
   /** The properties its style graph shows below the text of its boxes and links (spec §14); none, no property shown. */
@@ -91,10 +94,13 @@ export interface GraphDrawing {
 }
 
 /**
- * How Graphviz lays a diagram type out (spec §15; graph-layout.js, `typedSource`): a tree by its links (indexes in the
- * order the layout source draws links), a radial drawing around its centre, lanes by kind (each lane's label and its
- * things, and the groups drawn inside them), a timeline by its things grouped by day, earliest first; a flow needs nothing more. A network and a table
- * have none: a network is the layout source as it is, and a table is drawn by the host.
+ * How Graphviz lays a diagram type out (spec §15; graph-layout.js, `typedSource`):
+ * - a tree by its links (indexes in the order the layout source draws links);
+ * - a radial drawing around its centre;
+ * - lanes by kind (each lane's label and its things, and the groups drawn inside them);
+ * - a timeline by its things grouped by day, earliest first.
+ * A flow needs nothing more. A network and a table have none: a network is the layout source as it is, and a table is
+ * drawn by the host.
  */
 export type DiagramPlan =
   | { type: 'tree'; tree: number[] }
@@ -103,7 +109,10 @@ export type DiagramPlan =
   | { type: 'lanes'; lanes: [string, string[]][]; groups?: [string, string[]][] }
   | { type: 'timeline'; dates: string[][] };
 
-/** Something that could not be read: its graph, the block (index in the note), the line in that block (1 = its graph line), what is wrong, and the fix. */
+/**
+ * Something that could not be read: its graph, the block (index in the note) and the line in that block (1 = its
+ * graph line). Also what is wrong, and the fix.
+ */
 export interface Problem {
   graph: string | null;
   block: number;
@@ -128,7 +137,7 @@ export interface Problem {
   also?: { span: { line: number; character: number; end: number }; text: string }[];
   /** Set when what was written departs from standard GQL and was read as meant (spec §21): which departure it is. */
   departure?: Departure;
-  /** The problem's stable code, such as GN207, when the graph spec's reader raised it: the same from the Python
+  /** The problem's stable code, such as GN207, when the graph spec's reader raised it. It is the same from the Python
    * library, and given as the diagnostic's code (editor spec §42, problem_codes). */
   code?: string;
 }

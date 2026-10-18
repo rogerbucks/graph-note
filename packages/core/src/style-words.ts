@@ -1,6 +1,7 @@
-// The words a style graph is written in, checked (editor spec §2, style_words_checked): a key the style graph does not
-// know, with the nearest known key as its fix; and a frame that is not a well-formed list of numbers, with the list
-// rewritten with its stray parts removed. A view's name is the user's own and is never checked here or anywhere.
+// The words a style graph is written in, checked (editor spec §2, style_words_checked). A key the style graph does not
+// know is a problem, with the nearest known key as its fix. So is a frame that is not a well-formed list of numbers,
+// with the list rewritten with its stray parts removed. A view's name is the user's own and is never checked here or
+// anywhere.
 import { nearest } from './estimates.ts';
 import type { Problem } from './note-reading.ts';
 import { STYLE_KEYS, article, orList, styleProblem } from './style-graph.ts';
@@ -8,9 +9,10 @@ import type { Frame, StyleAt, StyleKind } from './style-graph.ts';
 import { trim } from './whitespace.ts';
 
 /**
- * A problem for each key written on a thing of `kind` that the style graph does not know, on the key itself (`keySpan`).
- * The fix is the nearest known key the thing does not already write (`estimates.ts`'s `nearest`, as a name's estimate is
- * found), or, of several equally near, each of them; with none near, the keys to choose from, and nothing to apply.
+ * A problem for each key written on a thing of `kind` that the style graph does not know, on the key itself
+ * (`keySpan`). The fix is the nearest known key the thing does not already write (`estimates.ts`'s `nearest`, as a
+ * name's estimate is found). Of several equally near, it is each of them. With none near, it is the keys to choose
+ * from, and nothing to apply.
  */
 export function unknownKeys(
   kind: StyleKind,
@@ -52,17 +54,17 @@ export interface FrameFault {
 const FOUR = "frame must be four numbers, 'x,y,width,height'";
 const EXAMPLE = "write it as frame: '0,0,300,200'";
 /**
- * A number as a frame is written, by `styleEdit` or by hand: an optional sign, digits with an optional dot (`5.`) or a
- * dot and digits (`.5`), and an optional exponent. Never hexadecimal (`0x10`), which `Number` would read.
+ * A number as a frame is written, by `styleEdit` or by hand. It is an optional sign, digits with an optional dot (`5.`)
+ * or a dot and digits (`.5`), and an optional exponent. Never hexadecimal (`0x10`), which `Number` would read.
  */
 const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
 
 /**
- * A frame, `x,y,width,height`, read from its text: four numbers (integers or decimals, signed, with an exponent as
- * `styleEdit` writes a very small or large one), joined by single commas, with no space and no comma at either end. A
- * frame that is not text, or has a part that is not a number, is a fault with no repair. Where the only fault is stray
- * commas and spaces (an empty part, a space around a number), the fault carries the list without them; if that is still
- * not four numbers the fault says so, and the fix is still to remove the strays.
+ * A frame, `x,y,width,height`, read from its text. It is four numbers, joined by single commas, with no space and no
+ * comma at either end. The numbers are integers or decimals, signed, with an exponent as `styleEdit` writes a very
+ * small or large one. A frame that is not text, or has a part that is not a number, is a fault with no repair. The only
+ * fault may be stray commas and spaces (an empty part, a space around a number). Then the fault carries the list
+ * without them. If that is still not four numbers the fault says so, and the fix is still to remove the strays.
  */
 export function readFrame(written: unknown): { frame: Frame } | FrameFault {
   if (typeof written !== 'string') return { message: FOUR, fix: EXAMPLE };

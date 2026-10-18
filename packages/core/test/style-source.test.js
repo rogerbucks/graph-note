@@ -1,6 +1,6 @@
-// Nudges applied to the layout (editor spec §6): beside, before and group written into the Graphviz source after it is
-// made, and direction set on the drawing, so the source the Python library writes is never changed and a drawing with no
-// nudges is laid out from exactly that source.
+// Nudges applied to the layout (editor spec §6). Beside, before and group are written into the Graphviz source after it
+// is made, and direction is set on the drawing. So the source the Python library writes is never changed. A drawing
+// with no nudges is laid out from exactly that source.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

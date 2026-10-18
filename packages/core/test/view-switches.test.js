@@ -1,6 +1,6 @@
-// The View menu's four switches (editor spec §25): labels by zoom, busy hubs folded, groups folded and parallel links
-// merged, each on or off (view_switches); starting from the plugin's settings, a style graph's merging, and a view's
-// switches saved as shown (view_switch_defaults); and what a card's state of them folds, opens and saves, changing only
+// The View menu's four switches (editor spec §25), each on or off (view_switches). They are labels by zoom, busy hubs
+// folded, groups folded and parallel links merged. They start from the plugin's settings, a style graph's merging, and
+// a view's switches saved as shown (view_switch_defaults). A card's state of them folds, opens and saves, changing only
 // the drawing (view_switch_view_only, untangle_data_untouched).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

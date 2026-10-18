@@ -1,7 +1,7 @@
-// Adding, changing and removing a note (editor spec §24, note_add): `setNote` writes the `///` lines directly above a thing
-// or link written on a line of its own, or takes them away, and nothing else in the block changes. The result is read back
-// by the graph library's own reader, so a note that would belong to none (the line holds more than one thing) is refused
-// and never written. Host-free: the details panel and any other host call it and write the block it gives.
+// Adding, changing and removing a note (editor spec §24, note_add). `setNote` writes the `///` lines directly above a
+// thing or link written on a line of its own, or takes them away. Nothing else in the block changes. The result is read
+// back by the graph library's own reader. So a note that would belong to none (the line holds more than one thing) is
+// refused and never written. Host-free: the details panel and any other host call it and write the block it gives.
 import gs from '@thoughtknot/graph-spec';
 import { blankText, items, lineIndex } from './block-items.ts';
 import type { Item } from './block-items.ts';
@@ -54,12 +54,12 @@ function readAt(block: string, line: number): string | null {
 }
 
 /**
- * The block with the note of a thing or link set to `text` — its `///` lines written directly above the thing or link,
- * with the indent of its line, a blank line of the text as a bare `///` — or taken away when `text` is null or only
- * whitespace. A note already there is replaced where it was, and the `//@` lines among it stay. `t` is a thing, or a link
- * counted among the links written in this block, as `setProperty` counts them. Refused, nothing written, with the reason,
- * when the target is not written in this block or shares its line with another thing or link (its note would belong to
- * none), or when the reader would not read back the note written.
+ * The block with the note of a thing or link set to `text`, or taken away when `text` is null or only whitespace. Its
+ * `///` lines are written directly above the thing or link, with the indent of its line. A blank line of the text is a
+ * bare `///`. A note already there is replaced where it was, and the `//@` lines among it stay. `t` is a thing, or a
+ * link counted among the links written in this block, as `setProperty` counts them. Refused, nothing written, with the
+ * reason, in three cases. The target is not written in this block. Or it shares its line with another thing or link, so
+ * its note would belong to none. Or the reader would not read back the note written.
  */
 export function setNote(block: string, t: Target, text: string | null): Edit {
   const found = itemOf(block, t);

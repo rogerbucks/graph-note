@@ -21,9 +21,9 @@ export function linkedValues(reading: NoteReading, graph: string, thing: string,
 }
 
 /**
- * The lists a thing holds, found in the graph: a relationship out of the thing to bare things of one kind — things with
- * no links out and no properties but a name, as `linked-list.ts` writes them — at least two of them, or one by a
- * relationship named HAS_ and the kind. A thing with a life of its own is no list item.
+ * The lists a thing holds, found in the graph. A list is a relationship out of the thing to bare things of one kind.
+ * Bare things have no links out and no properties but a name, as `linked-list.ts` writes them. A list has at least two
+ * of them, or one by a relationship named HAS_ and the kind. A thing with a life of its own is no list item.
  */
 export function listsOf(reading: NoteReading, graph: string, thing: string): ListShape[] {
   const drawing = reading.graphs.get(graph),

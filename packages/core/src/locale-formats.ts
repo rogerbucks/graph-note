@@ -1,7 +1,7 @@
 // Numbers, sizes, dates, lists and sorting as the reader's locale writes them (editor spec §42, locale_formats and
-// locale_sorting), through the platform's own Intl formatters. Only what is shown is formatted here: nothing the editor
-// writes into a note, an export's data or the layout source may pass through it, as no locale may change a byte written
-// there (locale_never_changes_bytes). The host says the locale once, as it says the language (`setLocale`); until it
+// locale_sorting). It uses the platform's own Intl formatters. Only what is shown is formatted here. Nothing the editor
+// writes into a note, an export's data or the layout source may pass through it. No locale may change a byte written
+// there (locale_never_changes_bytes). The host says the locale once, as it says the language (`setLocale`). Until it
 // does, and for a tag the platform does not know, it is UK English, as every message was before.
 
 /** The locale everything is shown in until a host says another. */

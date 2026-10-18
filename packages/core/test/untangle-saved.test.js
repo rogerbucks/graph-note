@@ -1,7 +1,7 @@
-// The legend's choices saved with a view (editor spec §25, untangle_legend; §7, view_saved_as_shown): what the legend
-// brings forward and hides is written to the style graph, beside the view's zoom and place, when the user saves the view
-// as shown, and never otherwise; read back, the view's legend stands as it was saved. A legend written by hand is
-// checked as every style is: each fault a problem on its line with its fix, the rest kept.
+// The legend's choices saved with a view (editor spec §25, untangle_legend; §7, view_saved_as_shown). What the legend
+// brings forward and hides is written to the style graph, beside the view's zoom and place. That happens when the user
+// saves the view as shown, and never otherwise. Read back, the view's legend stands as it was saved. A legend written
+// by hand is checked as every style is: each fault a problem on its line with its fix, the rest kept.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks } from '../src/blocks.ts';

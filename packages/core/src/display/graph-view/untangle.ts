@@ -1,8 +1,9 @@
-// Untangling a large graph in a card (editor spec §25, slice 3): a thing and its neighbours alone, the legend, the shortest
-// path between two things and the search box, tied to the core's `Untangle`. It holds only what the drawing shows and says
-// it in a banner; the card marks the drawing from `layers`. Nothing here reaches the note (untangle_data_untouched), so none
-// of it is gated for reading view: it changes the picture, never the data. Only the legend's choices are ever written, by
-// a view's Save as shown (view-strip.ts), which is gated; a view saved so starts with them (untangle_legend).
+// Untangling a large graph in a card (editor spec §25, slice 3), tied to the core's `Untangle`. It covers a thing and
+// its neighbours alone, the legend, the shortest path between two things and the search box. It holds only what the
+// drawing shows and says it in a banner. The card marks the drawing from `layers`. Nothing here reaches the note
+// (untangle_data_untouched). So none of it is gated for reading view: it changes the picture, never the data. Only the
+// legend's choices are ever written, by a view's Save as shown (view-strip.ts), which is gated. A view saved so starts
+// with them (untangle_legend).
 import { Untangle, find, kindLegend, neighbourhoodWords, pathWords, word } from '@thoughtknot/core';
 import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, LegendChoice, NoteReading } from '@thoughtknot/core';
 import { Banner } from './untangle-banner';

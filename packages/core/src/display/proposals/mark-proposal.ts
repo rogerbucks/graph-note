@@ -1,6 +1,6 @@
-// A proposal laid over the drawing (spec §17, proposal_shown_not_applied): each box and link the proposal adds, changes or
-// removes is marked on the SVG Graphviz drew — so the layout stays the Python library's — by a line style and a word, and
-// said so to screen readers, never by colour alone.
+// A proposal laid over the drawing (spec §17, proposal_shown_not_applied). Each box and link the proposal adds, changes
+// or removes is marked on the SVG Graphviz drew, so the layout stays the Python library's. It is marked by a line style
+// and a word, and said so to screen readers, never by colour alone.
 import { MARK_WORDS } from '@thoughtknot/core';
 import type { MarkKind, Marks } from '@thoughtknot/core';
 import { cornerOf } from '../graph-view/parked';

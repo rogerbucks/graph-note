@@ -1,6 +1,6 @@
 // The text's own undo history (editor spec §4, typing_keeps_focus, 8 Oct 2026): Obsidian redraws a block each time its
 // text is written, and Chromium empties a field's undo history whenever the field leaves the page. So the editor keeps
-// its own: each run of typing is one step, as a platform's undo groups it, and anything else is a step of its own.
+// its own. Each run of typing is one step, as a platform's undo groups it, and anything else is a step of its own.
 // Host-free: a state is the text and its selection.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

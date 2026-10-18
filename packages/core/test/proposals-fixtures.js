@@ -1,5 +1,6 @@
-// What the proposals tests share (editor spec §17): a small draft graph in a note, a proposal of every kind of change
-// made against it, and the change set written into the note after it. Test support only — nothing here ships.
+// What the proposals tests share (editor spec §17). It holds a small draft graph in a note, and a proposal of every
+// kind of change made against it. It also holds the change set written into the note after it. Test support only —
+// nothing here ships.
 import { readNote } from '../src/drawing.ts';
 import { basisOf } from '../src/proposals-basis.ts';
 import { makeProposal } from '../src/proposals.ts';

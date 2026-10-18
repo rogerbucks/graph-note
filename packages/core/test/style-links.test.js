@@ -1,8 +1,8 @@
-// How the style graph draws links (editor spec §25): their routing, straight, curved or right-angled, so a dense graph
-// can trade curves for fewer crossings (untangle_routing), and whether links running between the same two groups are
-// merged into shared trunks (untangle_merge), each for the whole graph or a view; and the View menu's switches a view
-// saved as shown keeps (view_switch_view_only). Checked as every style thing is: a word not allowed is a problem with the
-// nearest as its fix, and two choices for one place are a problem on the later, which is left out.
+// How the style graph draws links (editor spec §25). Their routing is straight, curved or right-angled, so a dense
+// graph can trade curves for fewer crossings (untangle_routing). Links running between the same two groups may be
+// merged into shared trunks (untangle_merge). Each is set for the whole graph or a view. A view saved as shown keeps
+// the View menu's switches (view_switch_view_only). Checked as every style thing is: a word not allowed is a problem
+// with the nearest as its fix. Two choices for one place are a problem on the later, which is left out.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

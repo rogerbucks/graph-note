@@ -1,8 +1,8 @@
-// Pull requests, merges and commits as items to review (editor spec §41, github_review_items): the repository a note lives
-// in lists its changes as items, each opening in the changes view, so the user and Claude can review a change together.
-// A review goes down in levels: first a summary by section, workstream and requirement, then each graph's things and
-// links added, removed or changed, then every line. The core reaches no network: the host hands in a `ReviewSource`
-// that reads GitHub with its own sign-in, read only, and nothing is asked of it until the user asks.
+// Pull requests, merges and commits as items to review (editor spec §41, github_review_items). The repository a note
+// lives in lists its changes as items, each opening in the changes view. So the user and Claude can review a change
+// together. A review goes down in levels: first a summary by section, workstream and requirement. Then come each
+// graph's things and links added, removed or changed, then every line. The core reaches no network. The host hands in a
+// `ReviewSource` that reads GitHub with its own sign-in, read only, and nothing is asked of it until the user asks.
 import type { Value } from '@thoughtknot/graph-spec';
 import { gqlBlocks } from './blocks.ts';
 import { changesView } from './changes-view.ts';
@@ -129,9 +129,9 @@ function sectionTitles(notes: string[]): Map<string, string> {
 }
 
 /**
- * An item's changed files reviewed at every level. A thing's section is its `section` property, named by the Section
- * of that number where one is written; a thing's workstreams are those `workstreams` lists it in; a requirement is a
- * thing of kind Requirement. Files that hold no graph are counted in the summary and shown at the level of lines.
+ * An item's changed files reviewed at every level. A thing's section is its `section` property, named by the Section of
+ * that number where one is written. A thing's workstreams are those `workstreams` lists it in. A requirement is a thing
+ * of kind Requirement. Files that hold no graph are counted in the summary and shown at the level of lines.
  */
 export function reviewLevels(files: readonly ChangedFile[], workstreams: Workstreams = new Map()): ReviewLevels {
   const sections = new Map<string, SummaryGroup>(),
@@ -190,9 +190,9 @@ export function groupSaid(g: SummaryGroup): string {
 }
 
 /**
- * The repository's changes as items to review, read through `source` only when asked: `list` the first time it is
- * called, `review` for one item when it is opened. Each is read once and kept, so going up and down the levels reads
- * nothing again.
+ * The repository's changes as items to review, read through `source` only when asked. It calls `list` the first time it
+ * is called, and `review` for one item when it is opened. Each is read once and kept, so going up and down the levels
+ * reads nothing again.
  */
 export class ReviewItems {
   private readonly source: ReviewSource;

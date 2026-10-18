@@ -1,5 +1,6 @@
-// What a drawn graph is given (spec §3, §4, §14): the reading and the graph, its drawn SVG and its problems, where it is
-// shown, what its buttons do, and the editor open in place on its card, if any, which its inspector writes through.
+// What a drawn graph is given (spec §3, §4, §14). It is given the reading and the graph, its drawn SVG and its
+// problems, where it is shown, and what its buttons do. It is also given the editor open in place on its card, if any,
+// which its inspector writes through.
 import type {
   CompletenessReport,
   Drawn,
@@ -15,7 +16,7 @@ import type {
 
 /**
  * How the drawing's links move (§7): the links its style graph moves, and the links whose line Graphviz drew from their
- * far end, so something moving along them runs backwards to read forwards.
+ * far end. Something moving along those runs backwards to read forwards.
  */
 export interface LinkMotion {
   flow: FlowLink[];
@@ -42,8 +43,9 @@ export interface DeclaredDeferred {
 /** The editor open in place on this card, as the inspector needs it: the block's text as typed, and a way to replace it. */
 export interface Editing {
   /**
-   * The block as typed, and `current()`: the note as last seen, with what is typed in the block's place, which an edit
-   * written into the block is checked against (§4), never the card's drawing, which can be older than the note.
+   * The block as typed, and `current()`: the note as last seen, with what is typed in the block's place. An edit
+   * written into the block is checked against it (§4), never against the card's drawing, which can be older than the
+   * note.
    */
   session: { text: string; current(): NoteReading } | null;
   replace(text: string): void;
@@ -59,9 +61,9 @@ export interface Editing {
 export type Chosen = { thing: string } | { link: number } | { estimate: number };
 
 /**
- * A graph's View menu (§25): the card's switches and the folds opened, and how to lay the graph out again as they now
- * fold it, for the card asking (`owner`, so a newer layout for it replaces one not yet started). It changes the drawing,
- * never the note, so it is open in reading view too.
+ * A graph's View menu (§25): the card's switches and the folds opened. It also says how to lay the graph out again as
+ * they now fold it, for the card asking. That is `owner`, so a newer layout for it replaces one not yet started. It
+ * changes the drawing, never the note, so it is open in reading view too.
  */
 export interface SwitchesShown {
   state: ViewState;
@@ -125,8 +127,8 @@ export interface ViewOptions {
   /** A box or a link chosen in the drawing: the editor of its block, if one is open, selects where it is written (§4). */
   onSelect?: (target: Chosen) => void;
   /**
-   * Writes block `block` of the note (its index) as `now`, only while it is still `was`, as drawn: an estimated link's
-   * quick fix (§3) when no editor holds the block. Resolves to why nothing was written, or null.
+   * Writes block `block` of the note (its index) as `now`, only while it is still `was`, as drawn. It is for an
+   * estimated link's quick fix (§3) when no editor holds the block. Resolves to why nothing was written, or null.
    */
   writeBlock?: (block: number, was: string, now: string) => Promise<string | null>;
   /** The editor open in place on this card, if any: then the details are the inspector (spec §14). */

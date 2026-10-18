@@ -1,5 +1,5 @@
-// An AI model as the settings keep it (editor spec §19): kept apart from settings.ts, which re-exports it, so that file
-// stays within the size limit.
+// An AI model as the settings keep it (editor spec §19). It is kept apart from settings.ts, which re-exports it. So
+// that file stays within the size limit.
 import type { MatrixSwitch } from './ai-matrix.ts';
 
 /** An AI model set up for §19: what it is for, and its ceiling — the highest classification of note it may be sent. */

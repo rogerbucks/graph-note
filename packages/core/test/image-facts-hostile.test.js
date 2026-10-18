@@ -1,7 +1,7 @@
 // An image's bytes written to do harm (editor spec §18, animated_image_limited; spec §9, nothing a file holds freezes
-// the page): a header reader that never reads past the bytes there, never loops on a length that does not move it on,
-// and reads an SVG's start and root in work that grows with its length and no faster — counted, never timed. A file of
-// 200 bytes once took seconds to read, through a pattern that went back over itself (review of #443).
+// the page). The header reader never reads past the bytes there, and never loops on a length that does not move it on.
+// It reads an SVG's start and root in work that grows with its length and no faster. That is counted, never timed. A
+// file of 200 bytes once took seconds to read, through a pattern that went back over itself (review of #443).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { imageFacts, svgScan } from '../src/image-facts.ts';

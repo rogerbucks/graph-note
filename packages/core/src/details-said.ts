@@ -1,7 +1,7 @@
-// What is going on with a thing, in a sentence or two at the top of its details (editor spec §25, details_said): what it
-// is and how it is linked, each group of links read as the details list it, naming up to two things and counting more;
-// then how many properties and problems it has. A link in that has no reading back, as the graph library could guess
-// none, is said in a sentence of its own: "A part of plan this."
+// What is going on with a thing, in a sentence or two at the top of its details (editor spec §25, details_said). It
+// says what it is and how it is linked. Each group of links is read as the details list it, naming up to two things and
+// counting more. Then it says how many properties and problems it has. A link in that has no reading back, as the graph
+// library could guess none, is said in a sentence of its own: "A part of plan this."
 import { details } from './render.ts';
 import { linkGroups, listed } from './details-nav.ts';
 import type { LinkGroup } from './details-nav.ts';
@@ -12,7 +12,10 @@ import { word } from './words.ts';
 /** The most things a group names; more are counted. */
 const MOST_NAMED = 2;
 
-/** A group in words, without its count: its things named, in quotes so a name's own stop never ends the sentence, or counted when there are more than two. */
+/**
+ * A group in words, without its count. Its things are named, in quotes so a name's own stop never ends the sentence. Or
+ * counted when there are more than two.
+ */
 function groupSaid(g: LinkGroup): string {
   const things =
     g.things.length > MOST_NAMED
@@ -28,7 +31,10 @@ const opening = (s: string) => s.charAt(0).toLocaleUpperCase() + s.slice(1);
 const kindSaid = (kind: string) =>
   /^\p{Lu}\p{Ll}/u.test(kind) ? kind.charAt(0).toLocaleLowerCase() + kind.slice(1) : kind;
 
-/** How thing `key` is linked, in a sentence or more, as its details and its tooltip open with; nothing when graph `graph` does not hold it. */
+/**
+ * How thing `key` is linked, in a sentence or more, as its details and its tooltip open with. Nothing when graph
+ * `graph` does not hold it.
+ */
 export function linksSaid(reading: NoteReading, graph: string, key: string): string {
   const d = details(reading, graph, key);
   if (!d) return '';

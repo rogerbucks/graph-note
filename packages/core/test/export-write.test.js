@@ -1,6 +1,6 @@
-// Writing an export safely (editor spec §16, failed_export): the bytes go to a temporary file first and are renamed into
-// place, so the target is never half written; on any failure the temporary file is removed and the reason is said in a
-// sentence. The host gives the file operations; here they are fakes that fail at each step.
+// Writing an export safely (editor spec §16, failed_export). The bytes go to a temporary file first and are renamed
+// into place, so the target is never half written. On any failure the temporary file is removed and the reason is said
+// in a sentence. The host gives the file operations; here they are fakes that fail at each step.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { writeSafely } from '../src/export-write.ts';

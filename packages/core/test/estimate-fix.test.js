@@ -1,7 +1,8 @@
 // An estimated link's fix (spec §3, estimate_never_written; device check V-06, Roger, 11 Oct 2026: "I can't click on
-// the estimated link to review it / edit it / fix it. Make that simple"): accepting an estimate is its problem's own
-// fix, the one the editor's fix bar offers, found where the misspelt word is written so the editor can select it there.
-// The module is imported in each test, so a test fails on its own when it is missing, rather than the whole file.
+// the estimated link to review it / edit it / fix it. Make that simple"). Accepting an estimate is its problem's own
+// fix, the one the editor's fix bar offers. It is found where the misspelt word is written, so the editor can select it
+// there. The module is imported in each test, so a test fails on its own when it is missing, rather than the whole
+// file.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

@@ -1,12 +1,16 @@
-// Reading view is read-only, strictly (spec §3, "Read-only in Reading view"; decided 9 Oct 2026, and held so after Roger's
-// device check Z-09, 11 Oct 2026): the one check every write from a drawn card passes. Each control that writes reaches
-// the note through the card's options — the editor open in place, which the inspector's rows, type menus and list chips,
-// Park for later, a suggested name's fix, Record and Make a view all write through; Edit here, Done and Edit in pane; a
-// view written by tapping; a view's Fade or Hide others and Save as shown — so the options are gated here, once. While
-// the card is read-only each of them does nothing and gives nothing, so a control built on them offers nothing and
-// writes nothing, and a direct call changes nothing. Every function in the options is gated, however deep it is held in
-// objects and lists, but for the few named in READS as only reading: a new option that writes is closed by default. An
-// option that holds functions this cannot reach, in an object of a class, is refused when the card is made, loudly.
+// Reading view is read-only, strictly (spec §3, "Read-only in Reading view"). This was decided 9 Oct 2026, and held so
+// after Roger's device check Z-09, 11 Oct 2026. It is the one check every write from a drawn card passes. Each control
+// that writes reaches the note through the card's options, so the options are gated here, once. Those controls are:
+// - the editor open in place. The inspector's rows, type menus and list chips write through it. So do Park for later,
+//   a suggested name's fix, Record and Make a view;
+// - Edit here, Done and Edit in pane;
+// - a view written by tapping;
+// - a view's Fade or Hide others and Save as shown.
+// While the card is read-only each of them does nothing and gives nothing. So a control built on them offers nothing
+// and writes nothing, and a direct call changes nothing. Every function in the options is gated, however deep it is
+// held in objects and lists. The few named in READS as only reading are not. A new option that writes is closed by
+// default. An option that holds functions this cannot reach, in an object of a class, is refused when the card is
+// made, loudly.
 import type { ViewOptions } from './view-options';
 
 /** What a card shows, never a function or anything that writes: passed as it is. */
@@ -25,12 +29,13 @@ const DATA = [
 ] as const satisfies readonly (keyof ViewOptions)[];
 
 /**
- * The functions that only read, show or leave, never change a note: open wherever the card is, each by its path in the
- * options. Of the export, only `run` is open: it writes a new file at a name no file has, never the note (spec §16,
- * vault-write.ts), and anything else an export is given later is gated like the rest. The View menu's switches change
- * the drawing alone, and lay it out again, never writing (§25, view_switch_view_only): open, the state held by its class.
- * The images only find and read the vault's files and draw a first frame (§18), so are open whole. Following a link
- * opens, previews or renders, never writing the note (§18): open, but `links.create`, which makes one.
+ * The functions that only read, show or leave, never change a note. They are open wherever the card is, each by its
+ * path in the options. Of the export, only `run` is open. It writes a new file at a name no file has, never the note
+ * (spec §16, vault-write.ts). Anything else an export is given later is gated like the rest. The View menu's switches
+ * change the drawing alone, and lay it out again, never writing (§25, view_switch_view_only). So they are open, with
+ * the state held by its class. The images only find and read the vault's files and draw a first frame (§18), so are
+ * open whole. Following a link opens, previews or renders, never writing the note (§18). So it is open, but for
+ * `links.create`, which makes one.
  */
 export const READS = [
   'lineOf',
@@ -63,8 +68,8 @@ const builtIn = (v: object): boolean =>
   v instanceof Map || v instanceof Set || v instanceof Date || v instanceof RegExp || ArrayBuffer.isView(v);
 
 /**
- * Whether a Map or a Set holds something that writes among its keys and values, however deep in objects and lists they
- * hold it: a function, or an object of a class with methods.
+ * Whether a Map or a Set holds something that writes among its keys and values. That is a function, or an object of
+ * a class with methods, however deep in objects and lists they hold it.
  */
 function holdsFunction(v: unknown, seen = new WeakSet<object>()): boolean {
   if (typeof v === 'function') return true;
@@ -88,12 +93,12 @@ function hasMethods(v: object): boolean {
 }
 
 /**
- * The card's options with every write gated by `readOnly`, asked at each call, so it holds wherever the card is put and
- * however late. While it says so, a gated function does nothing: it returns undefined, or a promise of undefined when it
- * was written `async`; one that returns a promise without being written so gives undefined, which `await` and `void`
- * take as they would the promise. Otherwise it is called as it was, with its own `this`. Functions are found in objects
- * written as `{ … }` (with or without a prototype) and in lists, at any depth; an option outside DATA and READS that holds
- * an object of a class with methods throws here, since its writes could not be gated.
+ * The card's options with every write gated by `readOnly`, asked at each call. So it holds wherever the card is put
+ * and however late. While it says so, a gated function does nothing. It returns undefined, or a promise of undefined
+ * when it was written `async`. One that returns a promise without being written so gives undefined. `await` and
+ * `void` take that as they would the promise. Otherwise it is called as it was, with its own `this`. Functions are
+ * found in objects written as `{ … }` (with or without a prototype) and in lists, at any depth. An option outside
+ * DATA and READS that holds an object of a class with methods throws here. Its writes could not be gated.
  */
 export function gateWrites(o: ViewOptions, readOnly: () => boolean): ViewOptions {
   const closed = (f: Fn): Fn => {

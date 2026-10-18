@@ -1,10 +1,11 @@
-// The details of a card in view mode as a sheet (editor spec §25, slice 3): pinned to the foot of the part of the screen
-// the note is seen in, over the card and as wide as it, so it stays in place while the note scrolls (sheet_pinned),
-// hidden while the card is off the screen; a toggle in its header minimises it to a bar with the thing's name and kind,
-// or restores the full details, scrolling within itself and never filling the screen (sheet_min_max), in the state last
-// chosen for the rest of the session (sheet_state_remembered); Escape in it closes it (sheet_closed). It says how much
-// of the drawing it covers, so the card can keep the chosen thing clear above it (sheet_keeps_thing_clear). Its keys are
-// its own: nothing typed in the note is taken. While the block is edited, the details are the inspector, in the card.
+// The details of a card in view mode as a sheet (editor spec §25, slice 3). It is pinned to the foot of the part of the
+// screen the note is seen in, over the card and as wide as it. So it stays in place while the note scrolls
+// (sheet_pinned), and hides while the card is off the screen. A toggle in its header minimises it to a bar with the
+// thing's name and kind. The toggle also restores the full details, scrolling within itself and never filling the
+// screen (sheet_min_max). The state last chosen holds for the rest of the session (sheet_state_remembered). Escape in
+// it closes it (sheet_closed). It says how much of the drawing it covers, so the card can keep the chosen thing clear
+// above it (sheet_keeps_thing_clear). Its keys are its own: nothing typed in the note is taken. While the block is
+// edited, the details are the inspector, in the card.
 import { setIcon } from '../host';
 import { sheetLimit, word } from '@thoughtknot/core';
 import { screenOf } from './placement';
@@ -26,9 +27,9 @@ export interface SheetHost {
 }
 
 /**
- * Whether a key was pressed in a field being typed in, which is never taken from it: a form field, or text the nearest
- * contenteditable says is editable. In Live Preview the card is a widget CodeMirror marks not editable inside its
- * editable content, so a key in the card is the card's.
+ * Whether a key was pressed in a field being typed in, which is never taken from it. That is a form field, or text the
+ * nearest contenteditable says is editable. In Live Preview the card is a widget CodeMirror marks not editable inside
+ * its editable content. So a key in the card is the card's.
  */
 function typing(t: EventTarget | null): boolean {
   const el = t as Element | null;
@@ -78,8 +79,8 @@ export class DetailsSheet {
   }
 
   /**
-   * A new set of details is open, `body` below its header: as the sheet, pinned, sized and in the state last chosen; or,
-   * where it cannot be pinned, in the card.
+   * A new set of details is open, `body` below its header. It shows as the sheet, pinned, sized and in the state last
+   * chosen. Where it cannot be pinned, it shows in the card.
    */
   opened(body: HTMLElement): void {
     this.body = body;
@@ -91,7 +92,7 @@ export class DetailsSheet {
   }
 
   /**
-   * The window changed size (`resized`), or the note scrolled: the open sheet is placed again over its card, and, when its
+   * The window changed size (`resized`), or the note scrolled. The open sheet is placed again over its card. When its
    * size may have changed, the card keeps the chosen thing clear above it.
    */
   moved(resized: boolean): void {
@@ -119,8 +120,8 @@ export class DetailsSheet {
   }
 
   /**
-   * Where the sheet's top is on the screen, or null when there is no sheet to keep clear of: closed, not a sheet, away with
-   * its card, or not yet laid out (a sheet never reaches the top of the screen it is pinned in).
+   * Where the sheet's top is on the screen, or null when there is no sheet to keep clear of. That is when it is closed,
+   * not a sheet, away with its card, or not yet laid out. A sheet never reaches the top of the screen it is pinned in.
    */
   top(): number | null {
     if (this.el.hidden || !this.el.hasClass('thoughtknot-sheet') || this.el.hasClass('is-away')) return null;
@@ -149,10 +150,10 @@ export class DetailsSheet {
   }
 
   /**
-   * Pins the sheet over its card, as wide as it, at the foot of the part of the screen the note is seen in, or of the card
-   * when the card ends above that, so the note below the card, and its caret, are never covered; and sizes it. Then checks
-   * the browser laid it out there: inside a container that moves fixed things, as a transform does, it is not, and false
-   * says so.
+   * Pins the sheet over its card, as wide as it, and sizes it. It sits at the foot of the part of the screen the note
+   * is seen in. When the card ends above that, it sits at the foot of the card. So the note below the card, and its
+   * caret, are never covered. Then checks the browser laid it out there. Inside a container that moves fixed things, as
+   * a transform does, it is not, and false says so.
    */
   private place(): boolean {
     const card = (this.el.parentElement ?? this.el).getBoundingClientRect(),
@@ -174,8 +175,8 @@ export class DetailsSheet {
   }
 
   /**
-   * Hides the sheet while its card is off the screen, and shows it again when the card comes back; and places it again,
-   * keeping the chosen thing clear, when the card changes size.
+   * Hides the sheet while its card is off the screen, and shows it again when the card comes back. When the card
+   * changes size, it places the sheet again, keeping the chosen thing clear.
    */
   private watch(): void {
     const card = this.el.parentElement;
