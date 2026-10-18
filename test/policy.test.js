@@ -239,7 +239,7 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only eight jobs may write: the release, the nightly, the lock, the build status comment, the mirror’s issues, the review, the wiki and its review issue', () => {
+  test('only seven jobs may write: the release, the nightly, the lock, the build status comment, the mirror’s issues, the wiki and its review issue', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
@@ -263,16 +263,11 @@ describe('GitHub Actions', () => {
           f.endsWith('/project-mirror.yml') &&
           name === 'mirror' &&
           [...given].sort().join() === 'contents: read,issues: write';
-        // and one leaves Claude's review on a pull request (test/claude-review-workflow.test.js)
-        const review =
-          f.endsWith('/claude-review.yml') &&
-          name === 'review' &&
-          [...given].sort().join() === 'contents: read,pull-requests: write';
         // and the wiki's pages, its review issue and the nightly pre-release, none running code of the repository
         const wiki = f.endsWith('/wiki.yml') && name === 'publish' && given.join() === 'contents: write';
         const wikiReport = f.endsWith('/wiki.yml') && name === 'report' && given.join() === 'issues: write';
         const nightly = f.endsWith('/nightly.yml') && name === 'publish' && given.join() === 'contents: write';
-        assert.ok(release || lock || comment || mirror || review || wiki || wikiReport || nightly, `${f} ${name}`);
+        assert.ok(release || lock || comment || mirror || wiki || wikiReport || nightly, `${f} ${name}`);
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }
