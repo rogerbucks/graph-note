@@ -24,11 +24,11 @@ import {
   viewsOf,
   underStrictness,
   word,
-} from '@graph-note/core';
-import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@graph-note/core';
-import type GraphNotePlugin from './main';
+} from '@thoughtknot/core';
+import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@thoughtknot/core';
+import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
-import { renderCode } from '@graph-note/core/display/code';
+import { renderCode } from '@thoughtknot/core/display/code';
 import { renderStyleBlock } from './style-block';
 import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
@@ -36,13 +36,13 @@ import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
 import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
-import { aidsOf } from '@graph-note/core/display/graph-view/viewer-aids';
-import { diagramShown, tableDrawn } from '@graph-note/core/display/graph-view/type-strip';
-import { readOnlyHere, settlePlacements, whenPlaced } from '@graph-note/core/display/graph-view/placement';
-import { renderProblems } from '@graph-note/core/display/graph-view/problems-list';
-import { refusalBanner } from '@graph-note/core/display/refusal-banner';
-import { dataExportBar } from '@graph-note/core/display/export/export-form';
-import type { ShownProblem } from '@graph-note/core/display/graph-view/problems-list';
+import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
+import { diagramShown, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
+import { readOnlyHere, settlePlacements, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
+import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-list';
+import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
+import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
+import type { ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
 
 /**
@@ -50,7 +50,7 @@ import { linkHost, vaultNames } from './links/link-host';
  * editor open in place keeps its place in the card, so the text can still be made small enough to draw.
  */
 function asText(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   root: HTMLElement,
   source: string,
   why: Refusal,
@@ -65,7 +65,7 @@ function asText(
     renderCode(root, source);
     return;
   }
-  const at = root.createDiv({ cls: 'graph-note-edit-slot' });
+  const at = root.createDiv({ cls: 'thoughtknot-edit-slot' });
   whenPlaced(root, () => {
     if (readOnly(root)) {
       at.remove();
@@ -80,7 +80,7 @@ function asText(
  * (§3). Resolves to why nothing was written, or null.
  */
 async function writeBlock(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   path: string,
   fence: number,
   was: string,
@@ -104,7 +104,7 @@ async function writeBlock(
  * unloaded first, so nothing of it is left behind.
  */
 export async function renderShown(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -134,7 +134,7 @@ export async function renderShown(
  * `redraw` draws the card again, for one drawn from another note or a file when that source changes (§20).
  */
 export async function renderBlock(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -184,7 +184,7 @@ export async function renderBlock(
   const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
   if (reading.tooLarge) {
     // too large to read (spec §9): nothing was read, so the text is shown, and why
-    asText(plugin, el.createDiv({ cls: 'graph-note' }), source, reading.tooLarge, [], target, readOnly);
+    asText(plugin, el.createDiv({ cls: 'thoughtknot' }), source, reading.tooLarge, [], target, readOnly);
     return;
   }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
@@ -213,7 +213,7 @@ export async function renderBlock(
     diagramShown(plain, styling.style, reading.world[graph], undefined, (change, done) => {
       void writeStyle(plugin, target.path, graph, { diagram: change }, done);
     });
-  const root = el.createDiv({ cls: 'graph-note' });
+  const root = el.createDiv({ cls: 'thoughtknot' });
 
   if (!drawing || !drawing.boxes.length) {
     // while the block is edited in place, the editor keeps its place in the card through every redraw, even when
@@ -221,7 +221,7 @@ export async function renderBlock(
     const editing = plugin.inlineFor(target.path, target.line);
     if (editing) {
       if (problems.length) renderProblems(root, problems, false);
-      const slot = root.createDiv({ cls: 'graph-note-edit-slot' });
+      const slot = root.createDiv({ cls: 'thoughtknot-edit-slot' });
       // reading view is read-only: there, the text and why, as when nothing is edited (spec §3)
       whenPlaced(root, () => {
         if (readOnly(root)) {
@@ -237,7 +237,7 @@ export async function renderBlock(
       renderCode(root, source);
       return;
     }
-    const empty = root.createDiv({ cls: 'graph-note-empty' });
+    const empty = root.createDiv({ cls: 'thoughtknot-empty' });
     empty.createEl('p', {
       text: word('editor.empty-graph', { graph }),
     });
@@ -263,9 +263,9 @@ export async function renderBlock(
     // a graph drawn as a table is the plugin's own table, never laid out (§15)
     drawn = diagram?.table ? tableDrawn(diagram.table) : await laidOut(owner);
   } catch (e) {
-    console.error('Graph Note could not draw', graph, e);
+    console.error('ThoughtKnot could not draw', graph, e);
     root.createDiv({
-      cls: 'graph-note-banner',
+      cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
       text: 'The drawing engine could not start, so this graph is shown as text. Any drawing generated earlier in this note may be stale.',
     });

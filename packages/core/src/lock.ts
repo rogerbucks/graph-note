@@ -1,7 +1,7 @@
 // Lock the graph (spec §8): a draft's kinds and relationship types, worked out from its data, written as its schema — a
 // block written last, as the graph spec's §5 asks — with each relationship read both ways. The reverse readings are
 // guesses, and the block says so, for the writer to check.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { dataKind, graphOf } from './blocks.ts';
 import type { NoteReading } from './note-reading.ts';
 import { trim } from './whitespace.ts';

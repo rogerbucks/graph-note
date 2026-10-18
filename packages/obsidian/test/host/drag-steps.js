@@ -26,16 +26,16 @@ export async function card(note, options = {}) {
   const { el } = await show(env, note);
   const { hitAreas } = await import('../../../core/src/hits.ts');
   const areas = hitAreas(drawn.svg);
-  const vp = el.querySelector('.graph-note-viewport'),
-    svg = el.querySelector('svg.graph-note-svg');
+  const vp = el.querySelector('.thoughtknot-viewport'),
+    svg = el.querySelector('svg.thoughtknot-svg');
   /** A point in the drawing's own units, as the viewport's pixels. */
   const at = (x, y) => {
     const vb = areas.viewBox,
       w = Number(svg.getAttribute('width')),
       h = Number(svg.getAttribute('height'));
     return {
-      clientX: parseFloat(vp.cssProps['--graph-note-x']) + ((x - vb.x) * w) / vb.width,
-      clientY: parseFloat(vp.cssProps['--graph-note-y']) + ((y - vb.y) * h) / vb.height,
+      clientX: parseFloat(vp.cssProps['--thoughtknot-x']) + ((x - vb.x) * w) / vb.width,
+      clientY: parseFloat(vp.cssProps['--thoughtknot-y']) + ((y - vb.y) * h) / vb.height,
     };
   };
   const boxOf = (key) => el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === key);

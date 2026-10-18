@@ -26,7 +26,7 @@ describe('dragging a box with a mouse', () => {
       vp.dispatch('pointermove', mouse(1, vp, drop));
       assert.ok(ann.getAttribute('transform')?.startsWith('translate('), 'the box follows the pointer');
       assert.ok(boxOf('cy').classList.contains('is-landing'), 'the box it would land by is marked');
-      const hint = el.querySelector('.graph-note-move-hint');
+      const hint = el.querySelector('.thoughtknot-move-hint');
       assert.equal(hint.hidden, false);
       assert.equal(hint.getAttribute('role'), 'status', 'said to a screen reader too');
       assert.equal(hint.textContent, 'Put Ann beside Cy');
@@ -37,7 +37,7 @@ describe('dragging a box with a mouse', () => {
       assert.match(now, /STYLE team[\s\S]*\(nudge_1:Nudge \{word: 'beside', thing: 'ann', other: 'cy'\}\)/);
       assert.equal(env.state.notices.at(-1), 'Moved: Put Ann beside Cy');
       assert.equal(ann.getAttribute('transform'), null, 'the box is put back until the drawing is laid out again');
-      assert.equal(el.querySelector('.graph-note-details').hidden, true, 'a drag is not a tap: nothing opens');
+      assert.equal(el.querySelector('.thoughtknot-details').hidden, true, 'a drag is not a tap: nothing opens');
     } finally {
       env.uninstall();
     }
@@ -53,7 +53,7 @@ describe('dragging a box with a mouse', () => {
       vp.dispatch('pointermove', mouse(2, vp, besideOf('cy')));
       assert.ok(vp.dispatch('keydown', { key: 'Escape' }).defaultPrevented);
       assert.equal(ann.getAttribute('transform'), null);
-      assert.equal(el.querySelector('.graph-note-move-hint').hidden, true);
+      assert.equal(el.querySelector('.thoughtknot-move-hint').hidden, true);
       vp.dispatch('pointerup', mouse(2, vp, besideOf('cy')));
       assert.deepEqual(writes, [], 'nothing written');
     } finally {
@@ -70,7 +70,7 @@ describe('dragging a box with a mouse', () => {
         far = at(p.x - p.w * 6, p.y - p.h * 6);
       vp.dispatch('pointerdown', mouse(3, boxOf('ann'), at(p.x, p.y)));
       vp.dispatch('pointermove', mouse(3, vp, far));
-      assert.equal(el.querySelector('.graph-note-move-hint').textContent, 'Let go next to a box to place Ann by it');
+      assert.equal(el.querySelector('.thoughtknot-move-hint').textContent, 'Let go next to a box to place Ann by it');
       assert.equal(el.querySelectorAll('g.node.is-landing').length, 0);
       vp.dispatch('pointerup', mouse(3, vp, far));
       assert.deepEqual(writes, [], 'nothing written');
@@ -89,7 +89,7 @@ describe('dragging a box with a mouse', () => {
       vp.dispatch('pointermove', mouse(4, vp, { clientX: p.clientX + 3, clientY: p.clientY }));
       vp.dispatch('pointerup', mouse(4, boxOf('bob'), { clientX: p.clientX + 3, clientY: p.clientY }));
       assert.equal(boxOf('bob').getAttribute('transform'), null);
-      assert.equal(el.querySelector('.graph-note-details').hidden, false, 'the tap opened its details');
+      assert.equal(el.querySelector('.thoughtknot-details').hidden, false, 'the tap opened its details');
       assert.deepEqual(writes, [], 'nothing written');
     } finally {
       env.uninstall();
@@ -102,13 +102,13 @@ describe('dragging a box with a mouse', () => {
     try {
       const zoomIn = el.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === 'Zoom in');
       for (let i = 0; i < 4; i++) zoomIn.click();
-      const x0 = vp.cssProps['--graph-note-x'],
+      const x0 = vp.cssProps['--thoughtknot-x'],
         corner = { clientX: 698, clientY: 2 };
       vp.dispatch('pointerdown', mouse(5, vp, corner));
       const moved = vp.dispatch('pointermove', mouse(5, vp, { clientX: 600, clientY: 2 }));
       vp.dispatch('pointerup', mouse(5, vp, { clientX: 600, clientY: 2 }));
       assert.ok(moved.defaultPrevented, 'the drag was taken as a pan');
-      assert.notEqual(vp.cssProps['--graph-note-x'], x0, 'panned');
+      assert.notEqual(vp.cssProps['--thoughtknot-x'], x0, 'panned');
       assert.equal(el.querySelectorAll('g.node[transform]').length, 0, 'no box moved');
     } finally {
       env.uninstall();
@@ -144,13 +144,13 @@ describe('moving a box with a finger', () => {
       assert.ok(ann.classList.contains('is-held'), 'picked up');
       vp.dispatch('pointermove', touch(1, vp, besideOf('cy')));
       assert.ok(ann.getAttribute('transform')?.startsWith('translate('), 'the box follows the finger');
-      assert.equal(el.querySelector('.graph-note-move-hint').textContent, 'Put Ann beside Cy');
+      assert.equal(el.querySelector('.thoughtknot-move-hint').textContent, 'Put Ann beside Cy');
       vp.dispatch('pointerup', touch(1, vp, besideOf('cy')));
       assert.deepEqual(writes, [PATH]);
       await until(() => /:Nudge /.test(env.state.files.get(PATH)));
       assert.match(env.state.files.get(PATH), /\(nudge_1:Nudge \{word: 'beside', thing: 'ann', other: 'cy'\}\)/);
       assert.ok(!ann.classList.contains('is-held'), 'put down');
-      assert.equal(el.querySelector('.graph-note-details').hidden, true, 'nothing opens');
+      assert.equal(el.querySelector('.thoughtknot-details').hidden, true, 'nothing opens');
     } finally {
       env.uninstall();
     }
@@ -186,7 +186,7 @@ describe('moving a box with a finger', () => {
       time.fire();
       vp.dispatch('pointerup', touch(3, ann, p));
       assert.ok(!ann.classList.contains('is-held'), 'put down');
-      assert.equal(el.querySelector('.graph-note-details').hidden, true);
+      assert.equal(el.querySelector('.thoughtknot-details').hidden, true);
       assert.deepEqual(writes, []);
     } finally {
       env.uninstall();

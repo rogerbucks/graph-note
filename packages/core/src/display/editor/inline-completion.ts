@@ -1,8 +1,8 @@
 // The inline match of the block editor (spec §4, autocomplete): the one best completion for the caret, from the core, kept
 // while the field is focused with its caret alone; shown as ghost text in the coloured picture, and written into the field
 // only when taken — never unasked. Escape dismisses it until the text or the caret changes.
-import { inlineCompletion } from '@graph-note/core';
-import type { Inline, NoteReading } from '@graph-note/core';
+import { inlineCompletion } from '@thoughtknot/core';
+import type { Inline, NoteReading } from '@thoughtknot/core';
 
 /** Ghost text for the picture: where in the text it goes, and what it says. */
 export interface Ghost {

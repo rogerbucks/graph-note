@@ -1,6 +1,6 @@
 // The problems behind a drawing's badge (spec §8): one by one, each with a sign as well as its words, or grouped by kind
 // with the worst first when there are too many to fit a screen; and the completeness report.
-import type { CompletenessReport, Problem } from '@graph-note/core';
+import type { CompletenessReport, Problem } from '@thoughtknot/core';
 
 /** A problem, with the note line it is on. */
 export interface ShownProblem extends Problem {
@@ -36,7 +36,7 @@ export function renderProblems(
   hidden: boolean,
   completeness?: CompletenessReport,
 ): HTMLElement {
-  const box = parent.createDiv({ cls: 'graph-note-problems' });
+  const box = parent.createDiv({ cls: 'thoughtknot-problems' });
   box.hidden = hidden;
   const item = (ul: HTMLElement, p: ShownProblem) =>
     ul.createEl('li', {

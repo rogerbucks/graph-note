@@ -57,7 +57,8 @@ const linkLines = (dot) => dot.split('\n').filter((l) => /^ {2}"[^"]*" -> "[^"]*
 /** The source of each direction the drawing is laid out in. */
 const sources = (drawing) => directions(drawing).map((d) => d.dot);
 /** For each link of a source, how it moves: its flow class, or null when it is still. */
-const moving = (dot) => linkLines(dot).map((l) => /class="graph-note-flow graph-note-flow-(\w+)/.exec(l)?.[1] ?? null);
+const moving = (dot) =>
+  linkLines(dot).map((l) => /class="thoughtknot-flow thoughtknot-flow-(\w+)/.exec(l)?.[1] ?? null);
 
 const MEANS = "means: 'the visit goes this way'";
 
@@ -262,8 +263,8 @@ describe('how a link moves', () => {
     for (const l of lines) assert.ok(l.includes('style=dashed'), l);
     const back = lines.filter((l) => l.includes('dir=back'));
     assert.equal(back.length, 1, 'one link is laid out from its far end');
-    assert.ok(back[0].includes('graph-note-flow-back'), back[0]);
-    assert.equal(lines.filter((l) => l.includes('graph-note-flow-back')).length, 1);
+    assert.ok(back[0].includes('thoughtknot-flow-back'), back[0]);
+    assert.equal(lines.filter((l) => l.includes('thoughtknot-flow-back')).length, 1);
     assert.deepEqual(reversedLinks(drawing, 'LR'), [linkLines(sources(drawing)[0]).indexOf(back[0])]);
   });
 
@@ -275,7 +276,7 @@ describe('how a link moves', () => {
     const { drawing } = drawn(undefined, `(f1:Flow {motion: 'dashes', ${MEANS}}),`, "(a1:Arrows {arrowheads: 'hide'})");
     for (const l of linkLines(sources(drawing)[0])) {
       assert.ok(l.includes('dir=none'), l);
-      assert.ok(l.includes('graph-note-flow-dashes'), l);
+      assert.ok(l.includes('thoughtknot-flow-dashes'), l);
     }
   });
 
@@ -284,7 +285,7 @@ describe('how a link moves', () => {
     const { drawing } = drawn(undefined, `(f1:Flow {motion: 'dot', type: 'NEAR', ${MEANS}})`);
     // Graphviz writes a hyphen in a class as &#45;, which reads as a hyphen wherever the SVG is parsed
     const svg = draw(drawing, engine).svg.replaceAll('&#45;', '-');
-    assert.match(svg, /<g id="edge1" class="edge graph-note-flow graph-note-flow-dot">/);
+    assert.match(svg, /<g id="edge1" class="edge thoughtknot-flow thoughtknot-flow-dot">/);
     assert.match(svg, /<g id="edge2" class="edge">/);
   });
 
@@ -314,22 +315,22 @@ describe('an exported SVG moves its links, and is still under reduced motion', (
   test('its style sheet runs the dashes and the dots, and stops every one of them under reduced motion', () => {
     const svg = exported(true, ...LINES);
     const sheet = /<style>([\s\S]*?)<\/style>/.exec(svg)?.[1] ?? '';
-    assert.match(sheet, /@keyframes graph-note-flow-dashes/);
-    assert.match(sheet, /@keyframes graph-note-flow-dot/);
+    assert.match(sheet, /@keyframes thoughtknot-flow-dashes/);
+    assert.match(sheet, /@keyframes thoughtknot-flow-dot/);
     const [moving, still] = sheet.split('@media (prefers-reduced-motion: reduce)');
     const animated = [...moving.matchAll(/([^{}]+)\{[^}]*animation:[^}]*\}/g)].map((m) => m[1].trim());
     assert.ok(animated.length >= 2, sheet);
     for (const selector of animated) assert.ok(still.includes(selector), `${selector} is still under reduced motion`);
     assert.match(still, /animation: none/);
     // a dot runs along a copy of each moving link's line, so the line itself is still drawn
-    const runners = svg.match(/class="graph-note-flow-runner"/g) ?? [];
+    const runners = svg.match(/class="thoughtknot-flow-runner"/g) ?? [];
     assert.equal(runners.length, 4, 'one for each link a dot moves along');
   });
 
   // proves: links_show_flow
   test('its style sheet reaches only into the image: every rule under the class the image carries', () => {
     const svg = exported(true, ...LINES);
-    assert.match(svg, /^<svg [^>]*class="graph-note-image"/);
+    assert.match(svg, /^<svg [^>]*class="thoughtknot-image"/);
     assert.deepEqual(unscoped(/<style>([\s\S]*?)<\/style>/.exec(svg)?.[1] ?? ''), []);
   });
 
@@ -344,7 +345,7 @@ describe('an exported SVG moves its links, and is still under reduced motion', (
   test('a still image, as a PNG is drawn from, has no movement in it at all; nor has an export with no Flow', () => {
     const still = exported(false, ...LINES);
     assert.doesNotMatch(still, /@keyframes|animation/);
-    assert.doesNotMatch(still, /graph-note-flow-runner/);
+    assert.doesNotMatch(still, /thoughtknot-flow-runner/);
     assert.ok(still.includes(`${FLOW_ICONS.dashes} moving dashes: walking`), 'the legend is still there');
     assert.doesNotMatch(exported(true), /@keyframes|animation/);
   });

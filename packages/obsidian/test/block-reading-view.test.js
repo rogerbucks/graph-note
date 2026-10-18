@@ -36,7 +36,7 @@ describe('reading view is read-only', () => {
       const el = await showIn(env, 'reading');
       await until(() => !labelled(el, 'Edit in pane'), 500);
       labelled(el, 'Show source').click();
-      const code = el.querySelector('.graph-note-view pre.graph-note-code');
+      const code = el.querySelector('.thoughtknot-view pre.thoughtknot-code');
       assert.ok(code && !code.hidden, 'the text is shown');
       assert.equal(code.textContent.replace(/Copy$/, ''), READER);
       assert.ok(
@@ -44,11 +44,11 @@ describe('reading view is read-only', () => {
         'coloured',
       );
       assert.ok(el.querySelector('textarea') === null, 'and read-only');
-      assert.ok(el.querySelector('.graph-note-viewport').hidden, 'in place of the drawing');
+      assert.ok(el.querySelector('.thoughtknot-viewport').hidden, 'in place of the drawing');
       assert.ok(labelled(el, 'Show source') === undefined, 'Source becomes Show drawing');
       labelled(el, 'Show drawing').click();
-      assert.ok(!el.querySelector('.graph-note-viewport').hidden, 'the drawing is back');
-      assert.ok(el.querySelector('pre.graph-note-code').hidden, 'and the text hidden');
+      assert.ok(!el.querySelector('.thoughtknot-viewport').hidden, 'the drawing is back');
+      assert.ok(el.querySelector('pre.thoughtknot-code').hidden, 'and the text hidden');
       assert.ok(labelled(el, 'Show source'));
     } finally {
       env.uninstall();
@@ -77,7 +77,7 @@ describe('reading view is read-only', () => {
     try {
       const el = await showIn(env, 'reading');
       await wait(50);
-      assert.ok(el.querySelector('.graph-note-empty'), 'the prompt is shown');
+      assert.ok(el.querySelector('.thoughtknot-empty'), 'the prompt is shown');
       assert.ok(labelled(el, 'Edit') === undefined, 'no Edit');
     } finally {
       env.uninstall();

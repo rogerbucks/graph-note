@@ -2,7 +2,7 @@
 // with Obsidian's own request function, never an AI vendor's library. It is reached only from the send dialog, when the
 // user presses Send on exactly what they were shown (test/policy.test.js holds both).
 import { requestUrl } from 'obsidian';
-import type { Transport } from '@graph-note/core';
+import type { Transport } from '@thoughtknot/core';
 
 /** Sends one request, as given, and gives back its status and text; a status of 400 or more is given back, not thrown. */
 export const obsidianTransport: Transport = async (request) => {

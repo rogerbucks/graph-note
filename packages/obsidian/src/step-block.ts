@@ -16,12 +16,12 @@ import {
   stepOf,
   viewsOf,
   word,
-} from '@graph-note/core';
-import { readInHostDirection } from '@graph-note/core/display/host';
-import type { GraphStep, StepFault, StepGiven, StepRun } from '@graph-note/core';
-import type GraphNotePlugin from './main';
-import { renderCode } from '@graph-note/core/display/code';
-import { readOnlyHere, whenPlaced } from '@graph-note/core/display/graph-view/placement';
+} from '@thoughtknot/core';
+import { readInHostDirection } from '@thoughtknot/core/display/host';
+import type { GraphStep, StepFault, StepGiven, StepRun } from '@thoughtknot/core';
+import type ThoughtKnotPlugin from './main';
+import { renderCode } from '@thoughtknot/core/display/code';
+import { readOnlyHere, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import { editInPane } from './edit-in-pane';
 
 const and = (xs: readonly string[]) =>
@@ -38,11 +38,11 @@ function choicesIn(texts: readonly string[]): StepGiven[] {
 function sayRun(said: HTMLElement, step: GraphStep, run: StepRun | null): void {
   said.empty();
   if (!run) {
-    said.createDiv({ cls: 'graph-note-banner', attr: { role: 'alert' }, text: word('step.gone') });
+    said.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'alert' }, text: word('step.gone') });
     return;
   }
   if ('refused' in run) {
-    const box = said.createDiv({ cls: 'graph-note-banner', attr: { role: 'alert' } });
+    const box = said.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'alert' } });
     box.createEl('p', { text: word('step.did-not-run', { name: step.name }) });
     const list = box.createEl('ul');
     for (const why of run.refused) list.createEl('li', { text: why });
@@ -63,7 +63,7 @@ function sayRun(said: HTMLElement, step: GraphStep, run: StepRun | null): void {
 
 /** Runs the step named `step` in the note at `path`, as the note is when written, and writes its proposal beside its graph. */
 async function run(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   path: string,
   step: GraphStep,
   given: Record<string, StepGiven>,
@@ -95,20 +95,20 @@ async function run(
 
 /** Draws a step block where the note shows it: what it does and takes, the choices for each point, and Run. */
 export function renderStepBlock(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
   step: GraphStep | StepFault,
 ): void {
-  const root = readInHostDirection(el.createDiv({ cls: 'graph-note graph-note-step' }));
+  const root = readInHostDirection(el.createDiv({ cls: 'thoughtknot thoughtknot-step' }));
   const info = ctx.getSectionInfo(el);
   // the step's text is edited in the pane, as an empty graph's is (§4)
   const target = info ? { path: ctx.sourcePath, line: info.lineStart, graph: step.graph } : null;
-  editInPane(root.createDiv({ cls: 'graph-note-card-actions' }), plugin, target);
+  editInPane(root.createDiv({ cls: 'thoughtknot-card-actions' }), plugin, target);
   if ('fault' in step) {
     root.createDiv({
-      cls: 'graph-note-banner',
+      cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
       text: word('step.cannot-run', { why: step.fault }),
     });
@@ -121,9 +121,9 @@ export function renderStepBlock(
   });
   const choices = choicesIn(texts),
     picks = new Map<string, HTMLSelectElement>();
-  const controls = root.createDiv({ cls: 'graph-note-step-points' });
+  const controls = root.createDiv({ cls: 'thoughtknot-step-points' });
   for (const p of step.points) {
-    const row = controls.createDiv({ cls: 'graph-note-step-point' });
+    const row = controls.createDiv({ cls: 'thoughtknot-step-point' });
     const words = [...p.kinds.map((k) => `(:${k})`), ...p.types.map((t) => `[:${t}]`)];
     row.createSpan({
       text: word('step.takes', { name: p.name, what: words.length ? and(words) : word('step.any-graph') }),
@@ -133,7 +133,7 @@ export function renderStepBlock(
     pick.value = givenLabel({ graph: step.graph });
     picks.set(p.name, pick);
   }
-  const said = root.createDiv({ cls: 'graph-note-step-said' });
+  const said = root.createDiv({ cls: 'thoughtknot-step-said' });
   const press = controls.createEl('button', {
     text: word('step.run'),
     attr: { 'aria-label': word('step.run.said', { name: step.name }), type: 'button' },
@@ -156,7 +156,7 @@ export function renderStepBlock(
     void run(plugin, ctx.sourcePath, step, given)
       .then((r) => sayRun(said, step, r))
       .catch((e: unknown) => {
-        console.error('Graph Note could not run step', step.name, e);
+        console.error('ThoughtKnot could not run step', step.name, e);
         new Notice(word('step.could-not-run', { name: step.name }));
       })
       .finally(() => {

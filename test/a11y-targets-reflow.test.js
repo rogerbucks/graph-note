@@ -7,7 +7,7 @@
 // means it looked. The Obsidian host is its harness (packages/obsidian/harness), its views the user guide's own states
 // (scripts/wiki-screens.mjs); the Claude Code host is its page served by the real server over a vault on disk.
 //
-// Chrome is the one GRAPH_NOTE_CHROME names, or the first of the usual names on the PATH. Where none is found the
+// Chrome is the one THOUGHTKNOT_CHROME names, or the first of the usual names on the PATH. Where none is found the
 // browser cases skip with one line, except in CI, where a missing Chrome fails.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -103,9 +103,9 @@ describe('judging a view the narrow layout splits, or keeps off-screen on purpos
 describe('in a real browser, every view of every host', () => {
   let chrome, why;
   try {
-    chrome = findChrome(process.env.GRAPH_NOTE_CHROME);
+    chrome = findChrome(process.env.THOUGHTKNOT_CHROME);
   } catch {
-    why = 'no Chrome found here (set GRAPH_NOTE_CHROME): pointer targets and reflow are checked in CI';
+    why = 'no Chrome found here (set THOUGHTKNOT_CHROME): pointer targets and reflow are checked in CI';
     if (process.env.GITHUB_ACTIONS) throw new Error('CI must check pointer targets and reflow, and found no Chrome');
     console.warn(why);
   }

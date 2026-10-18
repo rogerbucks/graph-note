@@ -5,7 +5,7 @@
 // proved by reading the export back with the strict readers of export-data-readers.js.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { readNote } from '../src/drawing.ts';
 import { dataText, exportedData } from '../src/export-data.ts';
 import { exportScope } from '../src/export-scope.ts';

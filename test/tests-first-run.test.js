@@ -284,13 +284,13 @@ describe('a Python failure outside any test', () => {
 describe('a replay under the run ceiling', () => {
   // spec §13, capped_test_run: the replay ran bare `node --test`, so a runaway test in a replayed commit had no ceiling
   const withCeiling = (mb, fn) => {
-    const before = process.env.GRAPH_NOTE_TEST_MEMORY_MB;
-    process.env.GRAPH_NOTE_TEST_MEMORY_MB = mb;
+    const before = process.env.THOUGHTKNOT_TEST_MEMORY_MB;
+    process.env.THOUGHTKNOT_TEST_MEMORY_MB = mb;
     try {
       return fn();
     } finally {
-      if (before === undefined) delete process.env.GRAPH_NOTE_TEST_MEMORY_MB;
-      else process.env.GRAPH_NOTE_TEST_MEMORY_MB = before;
+      if (before === undefined) delete process.env.THOUGHTKNOT_TEST_MEMORY_MB;
+      else process.env.THOUGHTKNOT_TEST_MEMORY_MB = before;
     }
   };
 
@@ -313,7 +313,7 @@ describe('a replay under the run ceiling', () => {
     assert.equal(r.ran, false);
     assert.deepEqual(r.failed, []);
     assert.match(r.why ?? '', /^run-ceiling: stopped the run at \d+ MB of memory, over its 300 MB ceiling\./);
-    assert.match(r.why ?? '', /GRAPH_NOTE_TEST_MEMORY_MB/);
+    assert.match(r.why ?? '', /THOUGHTKNOT_TEST_MEMORY_MB/);
     assert.doesNotMatch(r.why ?? '', /\n/);
   });
 
@@ -330,13 +330,13 @@ describe('a replay under the run ceiling', () => {
 describe('a Python replay under the run ceiling', () => {
   // spec §13, capped_test_run: runPy had only a time limit, so a runaway Python test in a replayed commit grew unchecked
   const withCeiling = (mb, fn) => {
-    const before = process.env.GRAPH_NOTE_TEST_MEMORY_MB;
-    process.env.GRAPH_NOTE_TEST_MEMORY_MB = mb;
+    const before = process.env.THOUGHTKNOT_TEST_MEMORY_MB;
+    process.env.THOUGHTKNOT_TEST_MEMORY_MB = mb;
     try {
       return fn();
     } finally {
-      if (before === undefined) delete process.env.GRAPH_NOTE_TEST_MEMORY_MB;
-      else process.env.GRAPH_NOTE_TEST_MEMORY_MB = before;
+      if (before === undefined) delete process.env.THOUGHTKNOT_TEST_MEMORY_MB;
+      else process.env.THOUGHTKNOT_TEST_MEMORY_MB = before;
     }
   };
   const python = spawnSync('python3', ['--version']).status === 0 ? false : 'no python3 is available';
@@ -357,7 +357,7 @@ describe('a Python replay under the run ceiling', () => {
     assert.equal(r.ran, false);
     assert.deepEqual([r.passed, r.failed], [[], []]);
     assert.match(r.why ?? '', /^run-ceiling: stopped the run at \d+ MB of memory, over its 300 MB ceiling\./);
-    assert.match(r.why ?? '', /GRAPH_NOTE_TEST_MEMORY_MB/);
+    assert.match(r.why ?? '', /THOUGHTKNOT_TEST_MEMORY_MB/);
     assert.doesNotMatch(r.why ?? '', /\n/);
   });
 

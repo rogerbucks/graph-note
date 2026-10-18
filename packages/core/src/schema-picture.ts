@@ -1,8 +1,8 @@
 // A block that holds only a schema, drawn as the schema itself (spec §3, schema_drawn): each kind of thing a box, each
 // relationship type an arrow from the kinds it joins in the data to the kinds it reaches, and a type the data does not
 // use yet a box of its own. The picture is a graph of its own, written as GQL and read as any block is, never the note.
-import gs from '@graph-note/graph-spec';
-import type { Graph } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { graphOf, isSharedSchema } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import type { NoteReading } from './note-reading.ts';

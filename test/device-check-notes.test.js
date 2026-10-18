@@ -40,7 +40,7 @@ import { TEST_FILES, makeTestFiles, pathOf } from '../scripts/make-test-files.mj
 import { repository } from './repository/scratch-repository.js';
 import { ROOT, path, read, walk } from './repository/repo.js';
 
-const gs = createRequire(import.meta.url)('@graph-note/graph-spec');
+const gs = createRequire(import.meta.url)('@thoughtknot/graph-spec');
 const sections = checklistSections();
 const items = sections.flatMap((s) => s.items);
 const wanted = noted(sections).flatMap((s) => s.items.map((item) => ({ item, folder: folderName(sections, s) })));

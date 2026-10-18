@@ -15,7 +15,7 @@
 
 **Do this:**
 
-1. In Settings, Graph Note, set Strictness to Standard. Look at the badge: errors, with a cross, and the graph still drawn.
+1. In Settings, ThoughtKnot, set Strictness to Standard. Look at the badge: errors, with a cross, and the graph still drawn.
 2. Set it to Forgiving. The badge shows warnings.
 3. Set it to Simplified and switch "A missing comma" on. The badge shows no problem.
 

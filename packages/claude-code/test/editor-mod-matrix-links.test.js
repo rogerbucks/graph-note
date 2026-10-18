@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { claudeGate } from '@graph-note/core';
+import { claudeGate } from '@thoughtknot/core';
 import { hostSpawn, launcherFor, modVault, writeNote } from './editor-mod-support.js';
 import { realPathVia } from '../src/editor-realpath.ts';
 import { settingsForServer } from '../src/editor-launch.ts';

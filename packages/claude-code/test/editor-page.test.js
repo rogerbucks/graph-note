@@ -79,7 +79,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
       assert.ok(!existsSync(at(`packages/obsidian/src/${f}`)), f);
     const block = readFileSync(at('packages/obsidian/src/graph-card.ts'), 'utf8');
     assert.ok(
-      importsOf(block).includes('@graph-note/core/display/graph-view/graph-view'),
+      importsOf(block).includes('@thoughtknot/core/display/graph-view/graph-view'),
       'the plugin draws with the layer',
     );
   });
@@ -89,7 +89,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
     assert.ok(own.length >= 40, `${own.length} modules in the layer`);
     for (const f of own) {
       for (const m of importsOf(readFileSync(at(f), 'utf8'))) {
-        const fine = /^\.\.?\//.test(m) || /^@graph-note\/(core|graph-spec)(\/|$)/.test(m);
+        const fine = /^\.\.?\//.test(m) || /^@thoughtknot\/(core|graph-spec)(\/|$)/.test(m);
         assert.ok(fine, `${f} imports ${m}`);
       }
     }
@@ -226,7 +226,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
   });
 
   test('the layer draws through the host it is given, in a process with no Obsidian in it', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'graph-note-page-'));
+    const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-page-'));
     const doc = fakeDocument(700),
       uninstall = installGlobals(doc);
     try {
@@ -266,7 +266,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
 });
 
 test('a page that has installed no host fails drawing a card with the layer’s NO_HOST words, not a TypeError', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'graph-note-page-'));
+  const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-page-'));
   const doc = fakeDocument(700),
     uninstall = installGlobals(doc);
   try {
@@ -311,7 +311,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
 
   test('cc_one_renderer: one pinned Markdown renderer is the only dependency added, and no icon library ships', async () => {
     const pkg = JSON.parse(readFileSync(join(PACKAGE, 'package.json'), 'utf8'));
-    assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@graph-note/core', 'marked']);
+    assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@thoughtknot/core', 'marked']);
     assert.match(pkg.dependencies.marked, /^\d+\.\d+\.\d+$/, 'an exact version');
     const { page, worker } = await built();
     // the packages whose code is in a bundle's output (tree-shaken ones are not), by name
@@ -396,7 +396,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
         POLICY,
         `${path} under the policy unchanged`,
       );
-    const { readNote } = await import('@graph-note/core');
+    const { readNote } = await import('@thoughtknot/core');
     const [drawing] = readNote([NOTE]).graphs.values();
     const thread = runWorker(join((await built()).dir, 'layout-worker.js'));
     assert.deepEqual(await thread.ready(), { ready: true });
@@ -527,7 +527,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
   });
 
   test('cc_settings_shared: the page is told the mod’s settings, read only', async () => {
-    const { settingsFrom } = await import('@graph-note/core');
+    const { settingsFrom } = await import('@thoughtknot/core');
     const { settingsEnvironment } = await import(at('packages/claude-code/src/editor-settings-env.ts'));
     const saved = {
       classifications: ['Public', 'Secret'],
@@ -569,7 +569,7 @@ describe('C5: the page’s host shell, built and served as the mod ships it', ()
 
   test('a start with no built page fails in plain words, and never serves the page’s source folder', async () => {
     const { pageFiles } = await import(at('packages/claude-code/server/editor-main.ts'));
-    const here = mkdtempSync(join(tmpdir(), 'graph-note-nopage-'));
+    const here = mkdtempSync(join(tmpdir(), 'thoughtknot-nopage-'));
     try {
       await assert.rejects(() => pageFiles(join(here, 'bin')), /not built/);
       await assert.rejects(() => pageFiles(join(here, 'server')), /not built/);

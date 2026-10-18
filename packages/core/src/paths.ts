@@ -1,8 +1,8 @@
 // Walked paths (editor spec §7; graph spec §22): a walk recorded from boxes tapped in order, written as a Path node with
 // ordered STEP edges; the paths of a graph as data; playing one step by step; and the problems a path can have — a step
 // through something removed, and a path with no steps. A path with no steps is never drawn or played as an empty story.
-import gs from '@graph-note/graph-spec';
-import type { Graph } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { blankText, items, lineAt } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
 import { quoted } from './lock.ts';

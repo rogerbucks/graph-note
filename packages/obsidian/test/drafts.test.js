@@ -40,7 +40,7 @@ describe('drafts follow their note', () => {
       });
       labelled(again, 'Edit here').click();
       await until(() => !!again.querySelector('textarea'));
-      const banner = again.querySelector('.graph-note-draft');
+      const banner = again.querySelector('.thoughtknot-draft');
       assert.ok(!banner.hidden, 'the draft is offered');
       labelled(banner, 'Restore draft').click();
       assert.equal(again.querySelector('textarea').value, READER + ',\n(mine:Option)');
@@ -129,8 +129,8 @@ describe('each draft keeps its id', () => {
       // offered and discarded as any draft is: by that id, the other left kept
       const el = await show(env);
       labelled(el, 'Edit here').click();
-      await until(() => !!el.querySelector('textarea') && !el.querySelector('.graph-note-draft').hidden);
-      labelled(el.querySelector('.graph-note-draft'), 'Discard draft').click();
+      await until(() => !!el.querySelector('textarea') && !el.querySelector('.thoughtknot-draft').hidden);
+      labelled(el.querySelector('.thoughtknot-draft'), 'Discard draft').click();
       await until(() => !drafts(env)[`${PATH}#reader`], 2000);
       assert.deepEqual(Object.keys(drafts(env)), ['Other.md#reader']);
       assert.equal(drafts(env)['Other.md#reader'].id, ids[1]);

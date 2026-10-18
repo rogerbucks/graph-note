@@ -2,7 +2,7 @@
 // button and what it says — and on a box, the image in the room Graphviz kept for it (the core's `PICTURE_MARK` square),
 // with its control drawn in the corner, an SVG button reached by Tab and pressed by Enter, Space, a click or a tap. Both
 // are worked by animated-images.ts through the one `ImageView`; neither decides anything.
-import { PICTURE_MARK } from '@graph-note/core';
+import { PICTURE_MARK } from '@thoughtknot/core';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -26,9 +26,9 @@ export interface ImageView {
 
 /** The class of each way an image is shown, so a style sheet and a screen reader's tests see which. */
 const CLASSES: Record<Shown, string> = {
-  moving: 'graph-note-image-moving',
-  still: 'graph-note-image-still',
-  plain: 'graph-note-image-plain',
+  moving: 'thoughtknot-image-moving',
+  still: 'thoughtknot-image-still',
+  plain: 'thoughtknot-image-plain',
 };
 
 const showAs = (el: Element, how: Shown) => {
@@ -37,12 +37,12 @@ const showAs = (el: Element, how: Shown) => {
 
 /** A figure in a thing's details for the image a property names: its caption is `property: value`. */
 export function figureView(parent: HTMLElement, caption: string, name: string): ImageView {
-  const fig = parent.createEl('figure', { cls: 'graph-note-image' });
+  const fig = parent.createEl('figure', { cls: 'thoughtknot-image' });
   const img = fig.createEl('img', { attr: { alt: caption } });
   img.hidden = true;
   fig.createEl('figcaption', { text: caption });
   let button: HTMLButtonElement | null = null;
-  const said = fig.createEl('p', { cls: 'graph-note-image-said', attr: { role: 'status' } });
+  const said = fig.createEl('p', { cls: 'thoughtknot-image-said', attr: { role: 'status' } });
   return {
     show(url, how) {
       img.hidden = !url;
@@ -53,7 +53,7 @@ export function figureView(parent: HTMLElement, caption: string, name: string): 
     },
     control(playing, refused, press) {
       if (!button) {
-        button = fig.createEl('button', { cls: 'graph-note-image-control', attr: { type: 'button' } });
+        button = fig.createEl('button', { cls: 'thoughtknot-image-control', attr: { type: 'button' } });
         button.addEventListener('click', press);
         fig.insertBefore(button, said);
       }
@@ -75,9 +75,9 @@ export function figureView(parent: HTMLElement, caption: string, name: string): 
 
 /** A figure for a property whose value names an image that is not shown, saying why. */
 export function refusedFigure(parent: HTMLElement, caption: string, why: string): void {
-  const fig = parent.createEl('figure', { cls: 'graph-note-image', attr: { 'data-ready': 'true' } });
+  const fig = parent.createEl('figure', { cls: 'thoughtknot-image', attr: { 'data-ready': 'true' } });
   fig.createEl('figcaption', { text: caption });
-  fig.createEl('p', { cls: 'graph-note-image-said', attr: { role: 'status' }, text: `Not shown: ${why}.` });
+  fig.createEl('p', { cls: 'thoughtknot-image-said', attr: { role: 'status' }, text: `Not shown: ${why}.` });
 }
 
 /** The marked square Graphviz drew for a picture in a box's group, if there is one. */
@@ -107,7 +107,7 @@ const svgEl = (parent: Element, tag: string, attrs: Record<string, string | numb
 export function refusedPicture(square: Element, why: string): void {
   const g = square.parentElement;
   if (!g) return;
-  const frame = svgEl(g, 'rect', { class: 'graph-note-picture-missing', ...placeOf(square) });
+  const frame = svgEl(g, 'rect', { class: 'thoughtknot-picture-missing', ...placeOf(square) });
   svgEl(frame, 'title', {}).textContent = `Not shown: ${why}.`;
   g.insertBefore(frame, square);
   square.remove();
@@ -117,7 +117,7 @@ export function refusedPicture(square: Element, why: string): void {
 export function pictureView(square: Element, name: string): ImageView {
   const g = square.parentElement as Element;
   const at = placeOf(square);
-  const image = svgEl(g, 'image', { class: 'graph-note-picture', ...at, preserveAspectRatio: 'xMidYMid meet' });
+  const image = svgEl(g, 'image', { class: 'thoughtknot-picture', ...at, preserveAspectRatio: 'xMidYMid meet' });
   g.insertBefore(image, square);
   square.remove();
   let control: Element | null = null,
@@ -132,11 +132,11 @@ export function pictureView(square: Element, name: string): ImageView {
     },
     control(playing, refused, press) {
       if (!control) {
-        const c = svgEl(g, 'g', { class: 'graph-note-image-control', role: 'button', tabindex: 0 });
+        const c = svgEl(g, 'g', { class: 'thoughtknot-image-control', role: 'button', tabindex: 0 });
         title = svgEl(c, 'title', {});
         // the area a finger or pointer hits: at least 24 pixels square, centred on the button drawn smaller
         svgEl(c, 'rect', {
-          class: 'graph-note-image-hit',
+          class: 'thoughtknot-image-hit',
           x: at.x + at.width - size / 2 - HIT / 2,
           y: at.y + at.height - size / 2 - HIT / 2,
           width: HIT,

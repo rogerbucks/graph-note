@@ -43,8 +43,8 @@ describe('in Obsidian', () => {
       m.contentEl.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === label);
     button('Show what will be sent').click();
     return {
-      body: m.contentEl.querySelector('.graph-note-ai-body')?.textContent ?? null,
-      said: m.contentEl.querySelector('.graph-note-ai-shown')?.textContent ?? '',
+      body: m.contentEl.querySelector('.thoughtknot-ai-body')?.textContent ?? null,
+      said: m.contentEl.querySelector('.thoughtknot-ai-shown')?.textContent ?? '',
       sendOff: button('Send').disabled,
     };
   }
@@ -107,12 +107,12 @@ describe('in Obsidian', () => {
       .querySelectorAll('button')
       .find((b) => b.getAttribute('aria-label') === 'Send')
       .click();
-    await until(() => /changed since/.test(m.contentEl.querySelector('.graph-note-ai-shown')?.textContent ?? ''));
-    const said = m.contentEl.querySelector('.graph-note-ai-shown').textContent;
+    await until(() => /changed since/.test(m.contentEl.querySelector('.thoughtknot-ai-shown')?.textContent ?? ''));
+    const said = m.contentEl.querySelector('.thoughtknot-ai-shown').textContent;
     assert.match(said, /Nothing was sent/);
     assert.match(said, /Show what will be sent again/);
     assert.deepEqual(e.state.requests, []);
-    assert.equal(m.contentEl.querySelector('.graph-note-ai-body'), null, 'what was shown is taken away');
+    assert.equal(m.contentEl.querySelector('.thoughtknot-ai-body'), null, 'what was shown is taken away');
     assert.equal((e.state.data?.aiSends ?? []).length, 0, 'no send recorded');
   });
 

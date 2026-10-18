@@ -3,7 +3,7 @@
 // that reads GQL reads them and graph-spec's own check dry-runs them. A change's id is derived from its statement by the
 // graph library, never written by anyone, so the same change has the same id wherever it is read. This module writes a
 // statement from a change and reads one back, with the library's own reading of it.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { blankText } from './block-items.ts';
 import type { ChangeOp } from './proposals.ts';
 import { trim } from './whitespace.ts';

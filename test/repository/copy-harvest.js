@@ -10,9 +10,9 @@ const THEIRS = [
   'pre',
   'code',
   'input',
-  '.graph-note-sr',
-  '.graph-note-overlay',
-  '.graph-note-tip-body',
+  '.thoughtknot-sr',
+  '.thoughtknot-overlay',
+  '.thoughtknot-tip-body',
   '.gn-prose',
   '[contenteditable="true"]',
 ];

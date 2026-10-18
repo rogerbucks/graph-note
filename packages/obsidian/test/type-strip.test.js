@@ -38,9 +38,9 @@ async function card(note, n = 0, options = {}) {
 }
 /** Each type the list offers: its words, whether it can be chosen, and what is said beside it. */
 const offered = (el) =>
-  el.querySelectorAll('.graph-note-type-list li').map((li) => {
+  el.querySelectorAll('.thoughtknot-type-list li').map((li) => {
     const b = li.querySelector('button');
-    return [b.textContent, !b.disabled, li.querySelector('.graph-note-type-why')?.textContent ?? ''];
+    return [b.textContent, !b.disabled, li.querySelector('.thoughtknot-type-why')?.textContent ?? ''];
   });
 
 describe('Diagram type on a card', () => {
@@ -50,7 +50,7 @@ describe('Diagram type on a card', () => {
     try {
       const toggle = labelled(el, 'Diagram type');
       assert.ok(toggle, 'offered on the card');
-      const list = el.querySelector('.graph-note-type-list');
+      const list = el.querySelector('.thoughtknot-type-list');
       assert.equal(list.hidden, true, 'folded away until asked');
       toggle.click();
       assert.equal(list.hidden, false);
@@ -63,7 +63,7 @@ describe('Diagram type on a card', () => {
         ['Timeline', false, 'a timeline needs every thing to carry a date, and Ada carries none'],
         ['Table', true, ''],
       ]);
-      assert.match(el.querySelector('.graph-note-type-drawn').textContent, /Drawn as a network/);
+      assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a network/);
     } finally {
       env.uninstall();
     }
@@ -74,8 +74,8 @@ describe('Diagram type on a card', () => {
     const { env, el, asked } = await card(noteOf(ORG));
     try {
       assert.equal(asked.at(-1).diagram, undefined);
-      assert.match(el.querySelector('.graph-note-type-drawn').textContent, /Drawn as a network/);
-      assert.equal(el.querySelector('.graph-note-type-stopped'), null, 'nothing to say has stopped fitting');
+      assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a network/);
+      assert.equal(el.querySelector('.thoughtknot-type-stopped'), null, 'nothing to say has stopped fitting');
     } finally {
       env.uninstall();
     }
@@ -87,7 +87,7 @@ describe('Diagram type on a card', () => {
     const { env, el } = await card(note);
     try {
       labelled(el, 'Diagram type').click();
-      el.querySelectorAll('.graph-note-type-list button')
+      el.querySelectorAll('.thoughtknot-type-list button')
         .find((b) => b.textContent === 'Tree')
         .click();
       await until(() => /:Diagram /.test(env.state.files.get(PATH)));
@@ -105,9 +105,9 @@ describe('Diagram type on a card', () => {
     const { env, el, asked } = await card(noteOf(ORG, styled("(d1:Diagram {type: 'tree', relationship: 'MANAGES'})")));
     try {
       assert.deepEqual(asked.at(-1).diagram, { type: 'tree', tree: [0, 1, 2] });
-      assert.match(el.querySelector('.graph-note-type-drawn').textContent, /Drawn as a tree/);
+      assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a tree/);
       labelled(el, 'Diagram type').click();
-      const tree = el.querySelectorAll('.graph-note-type-list button').find((b) => b.textContent === 'Tree');
+      const tree = el.querySelectorAll('.thoughtknot-type-list button').find((b) => b.textContent === 'Tree');
       assert.equal(tree.getAttribute('aria-pressed'), 'true');
     } finally {
       env.uninstall();
@@ -121,25 +121,25 @@ describe('the Diagram type list looks native', () => {
     try {
       const toggle = labelled(el, 'Diagram type');
       assert.equal(
-        toggle.querySelector('.graph-note-badge-text')?.textContent,
+        toggle.querySelector('.thoughtknot-badge-text')?.textContent,
         'Diagram type',
         'words, not an icon alone',
       );
       toggle.click();
       const marks = el
-        .querySelectorAll('.graph-note-type-list li')
+        .querySelectorAll('.thoughtknot-type-list li')
         .map((li) =>
-          ['graph-note-type-now', 'graph-note-type-suggested', 'graph-note-type-unfit']
+          ['thoughtknot-type-now', 'thoughtknot-type-suggested', 'thoughtknot-type-unfit']
             .filter((c) => li.classList.contains(c))
             .join(' '),
         );
       assert.deepEqual(marks, [
-        'graph-note-type-now',
-        'graph-note-type-suggested',
+        'thoughtknot-type-now',
+        'thoughtknot-type-suggested',
         '',
         '',
-        'graph-note-type-unfit',
-        'graph-note-type-unfit',
+        'thoughtknot-type-unfit',
+        'thoughtknot-type-unfit',
         '',
       ]);
     } finally {
@@ -158,18 +158,22 @@ describe('a wide flow', () => {
   test('on a phone scrolls across only, fitted to its height; on a desktop it is fitted as ever', async () => {
     const phone = await card(note, 0, { mobile: true, width: 300 });
     try {
-      const vp = phone.el.querySelector('.graph-note-viewport');
-      assert.equal(vp.cssProps['--graph-note-touch'], 'pan-y', 'up and down scroll the note; across moves the drawing');
+      const vp = phone.el.querySelector('.thoughtknot-viewport');
+      assert.equal(
+        vp.cssProps['--thoughtknot-touch'],
+        'pan-y',
+        'up and down scroll the note; across moves the drawing',
+      );
       const svg = phone.el.querySelector('svg');
       assert.ok(Number(svg.getAttribute('width')) > 300, 'not shrunk to the card’s width');
-      assert.equal(vp.cssProps['--graph-note-x'], '0px', 'from its start');
+      assert.equal(vp.cssProps['--thoughtknot-x'], '0px', 'from its start');
     } finally {
       phone.env.uninstall();
     }
     const desk = await card(note, 0, { width: 300 });
     try {
-      const vp = desk.el.querySelector('.graph-note-viewport');
-      assert.equal(vp.cssProps['--graph-note-touch'], 'pan-x pan-y');
+      const vp = desk.el.querySelector('.thoughtknot-viewport');
+      assert.equal(vp.cssProps['--thoughtknot-touch'], 'pan-x pan-y');
       assert.ok(Number(desk.el.querySelector('svg').getAttribute('width')) <= 300, 'fitted to the card');
     } finally {
       desk.env.uninstall();
@@ -185,7 +189,7 @@ describe('a chosen type that has stopped fitting', () => {
   test('is said, with why, the graph drawn as a network, and the nearest type that fits offered', async () => {
     const { env, el, asked } = await card(note);
     try {
-      const banner = el.querySelector('.graph-note-type-stopped');
+      const banner = el.querySelector('.thoughtknot-type-stopped');
       assert.ok(banner, 'said');
       assert.equal(banner.getAttribute('role'), 'alert');
       assert.match(
@@ -210,7 +214,7 @@ describe('a graph of more than 50 things', () => {
     const note = noteOf(big);
     const { env, el } = await card(note);
     try {
-      const way = el.querySelector('.graph-note-way-in');
+      const way = el.querySelector('.thoughtknot-way-in');
       assert.match(way.textContent, /51 things, too many to read in one drawing: open it as a table, or make a view/);
       labelled(el, 'Show as table').click();
       await until(() => /type: 'table'/.test(env.state.files.get(PATH)));
@@ -223,8 +227,8 @@ describe('a graph of more than 50 things', () => {
   test('drawn as a table, offers no way in again', async () => {
     const { env, el } = await card(noteOf(big, "// graph: big_style · STYLE big\n(d1:Diagram {type: 'table'})"));
     try {
-      assert.equal(el.querySelectorAll('.graph-note-table tr[data-key]').length, 51, 'its way in is the table');
-      assert.equal(el.querySelector('.graph-note-way-in'), null);
+      assert.equal(el.querySelectorAll('.thoughtknot-table tr[data-key]').length, 51, 'its way in is the table');
+      assert.equal(el.querySelector('.thoughtknot-way-in'), null);
     } finally {
       env.uninstall();
     }
@@ -240,7 +244,7 @@ describe('a view’s card', () => {
     const { env, el } = await card(note, 1);
     try {
       labelled(el, 'Diagram type').click();
-      el.querySelectorAll('.graph-note-type-list button')
+      el.querySelectorAll('.thoughtknot-type-list button')
         .find((b) => b.textContent === 'Radial')
         .click();
       await until(() => /:Diagram /.test(env.state.files.get(PATH)));
@@ -270,8 +274,8 @@ describe('in reading view', () => {
         .join('\n');
       await env.state.processors.get('gql')(source, el, fakeContext(note, fences[0]));
       await until(() => !!el.querySelector('svg'));
-      assert.match(el.querySelector('.graph-note-type-drawn').textContent, /Drawn as a network/);
-      assert.match(el.querySelector('.graph-note-type-stopped').textContent, /no longer fits a tree/);
+      assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a network/);
+      assert.match(el.querySelector('.thoughtknot-type-stopped').textContent, /no longer fits a tree/);
       assert.equal(labelled(el, 'Diagram type'), undefined);
       assert.equal(labelled(el, 'Use flow'), undefined);
     } finally {

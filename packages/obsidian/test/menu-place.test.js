@@ -15,7 +15,7 @@ async function opened({ top, bottom, height = 800, mobile = false }) {
   try {
     const el = await editing(env);
     tapKey(el, 'large');
-    const icon = row(el.querySelector('.graph-note-details'), 'name').querySelector('.metadata-property-icon');
+    const icon = row(el.querySelector('.thoughtknot-details'), 'name').querySelector('.metadata-property-icon');
     icon.getBoundingClientRect = () => ({ left: 24, right: 44, top, bottom, width: 20, height: bottom - top });
     env.doc.defaultView.innerHeight = height;
     icon.click();
@@ -51,7 +51,7 @@ describe('where the property type menu is shown', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      const icon = row(el.querySelector('.graph-note-details'), 'name').querySelector('.metadata-property-icon');
+      const icon = row(el.querySelector('.thoughtknot-details'), 'name').querySelector('.metadata-property-icon');
       const popout = { win: { innerHeight: 300 } };
       Object.defineProperty(icon, 'doc', { value: popout });
       Object.defineProperty(icon, 'win', { value: popout.win });

@@ -53,7 +53,7 @@ test('the shipped editor server holds nothing of the tests: no test note route a
 test('the repository is a marketplace listing the mod by its folder, so an install reads the working copy', () => {
   const market = JSON.parse(readFileSync(`${pkg}../../.claude-plugin/marketplace.json`, 'utf8'));
   const manifest = JSON.parse(readFileSync(`${pkg}mod/.claude-plugin/plugin.json`, 'utf8'));
-  assert.equal(market.name, 'graph-note', 'installed as graph-note@graph-note');
+  assert.equal(market.name, 'thoughtknot', 'installed as thoughtknot@thoughtknot');
   assert.deepEqual(market.plugins, [
     { name: manifest.name, source: './packages/claude-code/mod', description: manifest.description },
   ]);

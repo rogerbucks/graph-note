@@ -293,7 +293,7 @@ export const SOURCE_WORDS = {
     one: 'Style of graph {graph}: {held} — ⚠ {count} problem',
     other: 'Style of graph {graph}: {held} — ⚠ {count} problems',
   },
-  'page.title': 'Graph Note editor',
+  'page.title': 'ThoughtKnot editor',
   'settings.convert': 'Convert to standard GQL',
   'settings.convert.sentence': 'Writes the note in front back as standard GQL, once the standard checker passes it.',
   'settings.flagged': 'Flagged now: {classes}.',

@@ -5,8 +5,8 @@
 // no dot runs (motion_reduced_respected); `styles.css` stops the highlight's movement there too. Export as an animated
 // SVG opens the Export form on this path at this pace (path_animation_export). The timer is the window's, cancelled
 // when the playing stops or its card goes.
-import { DEFAULT_PACE, PATH_PACES, PathAutoplay, PathPlayer, pathsOf, word } from '@graph-note/core';
-import type { NoteReading, PathStep, WalkedPath } from '@graph-note/core';
+import { DEFAULT_PACE, PATH_PACES, PathAutoplay, PathPlayer, pathsOf, word } from '@thoughtknot/core';
+import type { NoteReading, PathStep, WalkedPath } from '@thoughtknot/core';
 import { openExportForm, paceOffered } from '../export/export-form';
 import { reducedMotion } from './details-nav';
 import { linkGroups, runnerOn } from './flow-marks';
@@ -60,7 +60,7 @@ export class PathPlay {
     });
     button(controls, word('path.stop'), 'square', stop);
     const pace = controls
-      .createEl('label', { cls: 'graph-note-walk-pace', text: word('export.pace') })
+      .createEl('label', { cls: 'thoughtknot-walk-pace', text: word('export.pace') })
       .createEl('select', { attr: { 'aria-label': word('export.pace') } });
     for (const ms of PATH_PACES) pace.createEl('option', { text: paceOffered(ms), attr: { value: String(ms) } });
     pace.value = String(DEFAULT_PACE);
@@ -86,7 +86,7 @@ export class PathPlay {
     const playing = this.auto.playing;
     this.toggle.setAttribute('aria-label', word(playing ? 'path.pause' : 'path.play-on'));
     this.toggle.empty();
-    this.toggle.createSpan({ cls: 'graph-note-badge-text', text: word(playing ? 'path.pause' : 'path.play-on') });
+    this.toggle.createSpan({ cls: 'thoughtknot-badge-text', text: word(playing ? 'path.pause' : 'path.play-on') });
     this.said.setText(player.sentence);
     this.mark();
   }
@@ -111,8 +111,8 @@ export class PathPlay {
   private marks(key: string | null): void {
     const svg = this.svg();
     for (const g of Array.from(svg?.querySelectorAll('g.node') ?? []))
-      g.classList.toggle('graph-note-step-current', key !== null && g.getAttribute('data-key') === key);
-    for (const r of Array.from(svg?.querySelectorAll('.graph-note-path-runner') ?? [])) r.remove();
+      g.classList.toggle('thoughtknot-step-current', key !== null && g.getAttribute('data-key') === key);
+    for (const r of Array.from(svg?.querySelectorAll('.thoughtknot-path-runner') ?? [])) r.remove();
   }
 
   /** A dot running the link that joins two steps, forwards along the walk, whichever way the link and its line go. */
@@ -127,7 +127,7 @@ export class PathPlay {
     if (!gs.length) return;
     const along = links[n]?.from === from.key,
       back = along === (this.o.motion?.reversed ?? []).includes(n);
-    this.card.setCssProps({ '--graph-note-run': `${Math.min(this.auto.pace, RUN_MOST_MS)}ms` });
-    for (const g of gs) runnerOn(g, 'graph-note-path-runner', back ? 'graph-note-path-runner-back' : '');
+    this.card.setCssProps({ '--thoughtknot-run': `${Math.min(this.auto.pace, RUN_MOST_MS)}ms` });
+    for (const g of gs) runnerOn(g, 'thoughtknot-path-runner', back ? 'thoughtknot-path-runner-back' : '');
   }
 }

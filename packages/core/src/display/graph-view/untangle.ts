@@ -3,8 +3,8 @@
 // it in a banner; the card marks the drawing from `layers`. Nothing here reaches the note (untangle_data_untouched), so none
 // of it is gated for reading view: it changes the picture, never the data. Only the legend's choices are ever written, by
 // a view's Save as shown (view-strip.ts), which is gated; a view saved so starts with them (untangle_legend).
-import { Untangle, find, kindLegend, neighbourhoodWords, pathWords, word } from '@graph-note/core';
-import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, LegendChoice, NoteReading } from '@graph-note/core';
+import { Untangle, find, kindLegend, neighbourhoodWords, pathWords, word } from '@thoughtknot/core';
+import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, LegendChoice, NoteReading } from '@thoughtknot/core';
 import { Banner } from './untangle-banner';
 import type { BannerRow } from './untangle-banner';
 import { renderFind } from './untangle-find';

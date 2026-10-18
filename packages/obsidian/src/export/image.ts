@@ -13,7 +13,7 @@ import {
   pageSvg,
   pngPages,
   pngSize,
-} from '@graph-note/core';
+} from '@thoughtknot/core';
 import type {
   ExportGo,
   ExportInfo,
@@ -25,11 +25,11 @@ import type {
   PictureLoad,
   StyleGraph,
   TooLargeToAnimate,
-} from '@graph-note/core';
-import { exportFailureWords, exportRefusalWords } from '@graph-note/core/hosts/refusal-words';
-import type GraphNotePlugin from '../main';
+} from '@thoughtknot/core';
+import { exportFailureWords, exportRefusalWords } from '@thoughtknot/core/hosts/refusal-words';
+import type ThoughtKnotPlugin from '../main';
 import { vaultImages } from '../images/vault-images';
-import { STILL_PIXELS } from '@graph-note/core/display/images/still-frame';
+import { STILL_PIXELS } from '@thoughtknot/core/display/images/still-frame';
 
 /** One file an export writes: its name, its path in the vault, and its bytes or text. */
 export interface ExportFile {
@@ -68,7 +68,7 @@ type GraphRead = NonNullable<NoteReading['world'][string]>;
 
 /** The image's files, one or a page each; or why there are none, in words. Rejects only on a failure not the layout's. */
 export async function imageFiles(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   x: ImageAsk,
 ): Promise<{ files: ExportFile[]; animation?: string } | { stopped: string }> {
   let layoutFailed = false;
@@ -100,7 +100,7 @@ export async function imageFiles(
   if (!image)
     return {
       stopped:
-        'The export was stopped: Graph Note was unloaded before the layout finished. Nothing was saved. Try again once Graph Note is enabled again.',
+        'The export was stopped: ThoughtKnot was unloaded before the layout finished. Nothing was saved. Try again once ThoughtKnot is enabled again.',
     };
   if ('reason' in image) return { stopped: exportRefusalWords(image) };
   if ('why' in image) return { stopped: tooLargeWords(image) };
@@ -144,7 +144,7 @@ export async function imageFiles(
  * The loader of the images on an export's boxes (§18, export-pictures.ts): each found from the note at `note`, read
  * through the vault, what its bytes say, and, for one that moves, its first frame drawn; or why it cannot be had.
  */
-function picturesFrom(plugin: GraphNotePlugin, note: string): PictureLoad {
+function picturesFrom(plugin: ThoughtKnotPlugin, note: string): PictureLoad {
   const source = vaultImages(plugin.app, note);
   return async (value) => {
     const found = source.find(value);

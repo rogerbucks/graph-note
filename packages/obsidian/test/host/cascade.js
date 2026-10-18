@@ -78,7 +78,7 @@ export function specificity(selector) {
 
 const compound = /^(\*|[a-z][\w-]*)?((?:\.[\w-]+|\[[^\]]+\]|:[\w-]+)*)$/i;
 
-/** Whether one compound selector, such as textarea.graph-note-text:hover, matches one element. */
+/** Whether one compound selector, such as textarea.thoughtknot-text:hover, matches one element. */
 function matchesOne(part, el) {
   const m = compound.exec(part);
   if (!m) return false;

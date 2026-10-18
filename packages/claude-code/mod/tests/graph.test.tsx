@@ -11,7 +11,7 @@ const ran = (stdout: string, exitCode = 0) => ({
 const SURFACES = ['desktop', 'vscode', 'mobile'] as const;
 const mount = ($: any, surface: string) =>
   $.ui.mount({
-    plugin: 'graph-note',
+    plugin: 'thoughtknot',
     surface,
     component: 'Pane',
     requestId: 'graph',

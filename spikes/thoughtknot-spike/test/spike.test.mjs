@@ -17,7 +17,7 @@ test('the spike builds into a plugin folder the install script accepts', () => {
   assert.equal(r.status, 0, r.stderr);
   for (const f of ['main.js', 'manifest.json', 'styles.css']) assert.ok(existsSync(`${dir}${f}`), f);
   const manifest = JSON.parse(readFileSync(`${dir}manifest.json`, 'utf8'));
-  assert.equal(manifest.id, 'graph-note-spike');
+  assert.equal(manifest.id, 'thoughtknot-spike');
   assert.equal(manifest.isDesktopOnly, false, 'it must run on the phone');
   assert.ok(statSync(`${dir}main.js`).size > 1_000_000, 'the engine is bundled in, so the phone needs no network');
 });

@@ -290,7 +290,7 @@ ${workingView(board, slice)}
 ${fullView(board, slice)}
 </div>
 `;
-  const title = `<title>graph-note slice ${esc(slice)}</title>`;
+  const title = `<title>thoughtknot slice ${esc(slice)}</title>`;
   const style = `<style>\n${BOARD_CSS}\n</style>`;
   if (!standalone) return `${title}\n${style}\n${content}`;
   return `<!doctype html>

@@ -1,8 +1,8 @@
 // A box drawn under a suggested name (spec §4, unnamed_drawn_suggested; Roger, 10 Oct 2026): a thing written without a
 // name, drawn under the name suggested for it until that is written — where it is written in the block being edited,
 // what its details say of it, and the one-click fix that writes the name, as an edit one undo takes back.
-import { spanOf } from '@graph-note/core';
-import type { Details, NoteReading } from '@graph-note/core';
+import { spanOf } from '@thoughtknot/core';
+import type { Details, NoteReading } from '@thoughtknot/core';
 import { button } from './view-bar';
 import type { Editing } from './view-options';
 
@@ -55,14 +55,14 @@ export function showSuggested(
   // the name as the note suggests it now, never as the card drew it: another block can have taken that name since (§4)
   const name =
     ed?.session && place && text !== undefined ? nameNow(ed.session.current(), graph, place, text) : undefined;
-  const row = el.createDiv({ cls: 'graph-note-suggested' });
+  const row = el.createDiv({ cls: 'thoughtknot-suggested' });
   row.createSpan({ text: `✎ Suggested name: ${name ?? drawn} — not written yet. ` });
   if (!ed || text === undefined || !place || !name || !spanOf(text, { thing: name }, place)) {
-    row.createSpan({ cls: 'graph-note-fix', text: 'Edit the block to add it, or write a name of your own.' });
+    row.createSpan({ cls: 'thoughtknot-fix', text: 'Edit the block to add it, or write a name of your own.' });
     return;
   }
   const title = `Add the name ${name}`;
-  const status = row.createSpan({ cls: 'graph-note-fix', attr: { role: 'status' } });
+  const status = row.createSpan({ cls: 'thoughtknot-fix', attr: { role: 'status' } });
   // the text as it is when pressed: the details are redrawn only once typing stops, so what was typed since is kept
   button(row, title, 'pencil', () => status.setText(writeName(ed, graph, name, place)), title);
 }

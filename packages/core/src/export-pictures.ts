@@ -59,9 +59,9 @@ const mb = (bytes: number): string => `${Math.round((bytes / (1024 * 1024)) * 10
 
 /** The style sheet that shows an image's first frame in place of its movement under reduced motion. */
 const STILL_CSS = [
-  `${inImage('.graph-note-picture-still')} { display: none; }`,
-  `@media (prefers-reduced-motion: reduce) { ${inImage('.graph-note-picture-moving')} { display: none; } ` +
-    `${inImage('.graph-note-picture-still')} { display: inline; } }`,
+  `${inImage('.thoughtknot-picture-still')} { display: none; }`,
+  `@media (prefers-reduced-motion: reduce) { ${inImage('.thoughtknot-picture-moving')} { display: none; } ` +
+    `${inImage('.thoughtknot-picture-still')} { display: inline; } }`,
 ].join('\n');
 
 /** The square Graphviz drew for a picture inside a box's group, and the box it is in, by Graphviz's numbering. */
@@ -109,7 +109,7 @@ export function withPictures(
       thing = drawing.boxes[p.index]?.text ?? p.key,
       image = loaded[i];
     const frame =
-      `<rect class="graph-note-picture-missing" x="${at.x}" y="${at.y}" width="${at.width}" height="${at.height}" ` +
+      `<rect class="thoughtknot-picture-missing" x="${at.x}" y="${at.y}" width="${at.width}" height="${at.height}" ` +
       `fill="none" stroke="${palette.muted}" stroke-dasharray="3 3"/>`;
     let drawn: string;
     if (!image || 'why' in image) {
@@ -122,7 +122,7 @@ export function withPictures(
       drawn = frame;
       said.push(`${thing}: not drawn, as ${image.name} is not of an image type an export embeds`);
     } else if (image.facts && image.facts.format !== null && !image.facts.animated) {
-      drawn = imageAt('graph-note-picture', at, image.mime, image.base64);
+      drawn = imageAt('thoughtknot-picture', at, image.mime, image.base64);
     } else {
       const first = image.still !== undefined && BASE64.test(image.still) ? image.still : undefined;
       const past = pastLimit(image),
@@ -133,18 +133,18 @@ export function withPictures(
             : moved >= IMAGE_LIMITS.moving
               ? `${IMAGE_LIMITS.moving} animated images already move in it`
               : null;
-      const still = first ? imageAt('graph-note-picture-still', at, 'image/png', first) : '';
+      const still = first ? imageAt('thoughtknot-picture-still', at, 'image/png', first) : '';
       if (why === null) {
         moved++;
-        drawn = imageAt('graph-note-picture-moving', at, image.mime, image.base64) + still;
+        drawn = imageAt('thoughtknot-picture-moving', at, image.mime, image.base64) + still;
         said.push(
           `${thing}: ${image.name} kept moving${still ? ', and still under reduced motion' : ', and moving under reduced motion too, as its first frame could not be made'}`,
         );
       } else if (first || !moving) {
         // a PNG is drawn from the file as an image, which shows an animated one's first frame
         drawn = first
-          ? imageAt('graph-note-picture', at, 'image/png', first)
-          : imageAt('graph-note-picture', at, image.mime, image.base64);
+          ? imageAt('thoughtknot-picture', at, 'image/png', first)
+          : imageAt('thoughtknot-picture', at, image.mime, image.base64);
         said.push(`${thing}: ${image.name} reduced to its first frame, as ${why}`);
       } else {
         drawn = frame;
@@ -158,7 +158,7 @@ export function withPictures(
 
 /** The framed image with its pictures' first frames shown in place of their movement under reduced motion, when any moves. */
 export const withStillPictures = (svg: string): string =>
-  svg.includes('graph-note-picture-moving') ? withStyleSheet(svg, STILL_CSS) : svg;
+  svg.includes('thoughtknot-picture-moving') ? withStyleSheet(svg, STILL_CSS) : svg;
 
 /** What an export did with its animated images, as one line for the image's frame and the host's notice. */
 export const animationSaid = (said: readonly string[]): string => `Animated images: ${said.join('; ')}.`;

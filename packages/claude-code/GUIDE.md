@@ -46,7 +46,7 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   is drawn in its place. Only the person typing can say yes: `edit` and `confirm` take the host's `origin`, and
   `fromPerson` accepts exactly `origin.kind === 'composer'`; any other, or none, is refused (`bridge`, Remote Control, is
   an open question for the owner and is not accepted). The yes is the digest of the text it was given about, handed to
-  the server (`GRAPH_NOTE_EDITOR_CONFIRMED`, with `_SETTINGS`), which runs the same gate (`server/editor-gate.ts`,
+  the server (`THOUGHTKNOT_EDITOR_CONFIRMED`, with `_SETTINGS`), which runs the same gate (`server/editor-gate.ts`,
   `storeGate`) before every send in `editor-store.ts`: a read, a draft, the change stream, a stale write's answer. A
   refusal sends `gone` and no text, and a changed note needs a new question. A note already open and now held back is closed. `gate` asks the same for `/graph <note>`'s own
   drawing. The mod reads the settings from `settings.json` in its data folder; none is the defaults, the strictest.
@@ -59,7 +59,7 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   nearest parent that exists, so a link elsewhere, or a linked parent, is found, and so is a link that leads nowhere yet (a dangling link, or
   one as a parent, asked of the same process with `--link` and followed from the link's own folder, up to 8 in a
   row). Names are compared without regard to case, and the real path is the disk's own (`realpathSync.native`), so
-  `GRAPH-NOTE` on a macOS disk is the folder. **Fail closed:** a path that is not there is an answer (exit 2), but node
+  `THOUGHTKNOT` on a macOS disk is the folder. **Fail closed:** a path that is not there is an answer (exit 2), but node
   missing, a process that fails or one that does not answer in time refuses the call (`CHECK_FAILED_REFUSAL`). An empty
   `CLAUDE_PLUGIN_DATA` is unset. **Scope:** the editor server's own writes of drafts are the mod's and are not
   hooked; the hook judges Claude's tool calls, which a subagent's are among when the host raises `tool.call` for them
@@ -78,13 +78,13 @@ unless the app sets its own. Whether the desktop app does, and keeps the drawing
   (`bin/propose.mjs`) are the mod's own processes, not Claude's Write, Edit or Bash calls, so the guard does not meet them.
 - `editor-propose.ts` — Claude's proposals (workstream C7, cc_claude_only, cc_claude_proposes): the launcher's `propose`
   sends Claude's input, as JSON, with a key made for each start (`key` port, passed to the server as
-  `GRAPH_NOTE_EDITOR_PROPOSER`), through the shipped sender `bin/propose-process.ts` (built to `mod/bin/propose.mjs`, run
+  `THOUGHTKNOT_EDITOR_PROPOSER`), through the shipped sender `bin/propose-process.ts` (built to `mod/bin/propose.mjs`, run
   by node with the request on standard input). The key opens `PUT /api/notes/<id>/proposal` and nothing else, and the
   session's token opens everything but that: Claude has no write. The server (`server/editor-proposals.ts`) reads the body as
   changes alone (`changesIn`: no Person, Model or Step), declares the proposer (the Model named Claude in the settings) as the
   first addition, holds the note and the text to be written to the gate, and the store writes the change set beside the graph
   under the note's lock, by the atomic write; the graph is never touched. The mod registers one tool, `propose`
-  (`mcp__graph-note__propose`), which Claude calls, and `sayProposed` is all it is told. The page shows no other AI.
+  (`mcp__thoughtknot__propose`), which Claude calls, and `sayProposed` is all it is told. The page shows no other AI.
 - `mod-entry.ts` — what the hooks module takes from the three above; bundled into `mod/hooks/graph.js`.
 - `editor-session.ts` — `EditorSession`, the browser editor page's side of a note (spec §26; for C5): the core's
   `PaneSession` and `TextHistory` over one block, the note and version the page last had from the server, what to send
@@ -107,7 +107,7 @@ runtime dependency beyond the core's `READ_LIMITS`. Built into `mod/bin/editor-s
 
 - `server/editor-server.ts` — the shipped process: `runEditorProcess` with its arguments and the options
   `editor-main.ts` makes from the environment; a vault or note it is refused says why on stderr and exits 2.
-- `server/editor-main.ts` — `optionsFromEnvironment`: the mod hands the process `GRAPH_NOTE_EDITOR_VAULT`, `_NOTE`
+- `server/editor-main.ts` — `optionsFromEnvironment`: the mod hands the process `THOUGHTKNOT_EDITOR_VAULT`, `_NOTE`
   (the one note opened for the session, by its path) and `_DRAFTS`, never an argument; it makes the note store, opens
   the note, and gives the process the store's `api` and `stop`, the note's id (the address becomes
   `/#token=<token>&note=<id>`, both in the fragment a browser never sends) and, for `_INPUT=ignore`, no watch on its
@@ -223,7 +223,7 @@ The folder Claude Code loads (`--plugin-dir`). It is checked by Claude Code, not
 that touches it. CI has no Claude Code, so it runs neither: what the pane shows is decided in `src/`, which CI tests,
 and `register.tsx` stays thin.
 
-- `.claude-plugin/plugin.json` — the manifest, named `graph-note`.
+- `.claude-plugin/plugin.json` — the manifest, named `thoughtknot`.
 - `hooks/register.tsx` — the hooks module: registers `/graph`, reads the note with `$.fs.read`, runs Graphviz with
   `$.process.run`, keeps the view in `$.state`, and draws the pane: `Svg` on the desktop, VS Code and mobile; the
   reason and the text on the terminal (which draws no `Svg`) or wherever no drawing could be made. Also
@@ -249,13 +249,13 @@ type-checks the mod once it has been loaded.
 
 The repository is a marketplace (`.claude-plugin/marketplace.json` at its root) listing the mod by its folder, so an
 install reads the working copy itself, never a copy. Once, from a terminal in the checkout, after `npm run build`:
-`claude plugin marketplace add <checkout>` and `claude plugin install graph-note@graph-note --scope user`. It then loads
+`claude plugin marketplace add <checkout>` and `claude plugin install thoughtknot@thoughtknot --scope user`. It then loads
 in every new session, the desktop app's included. After a change: `npm run build`, then `/reload-plugins`.
 
 ## Build and tests
 
 The page of the browser editor draws with the display layer shared with the Obsidian plugin,
-`packages/core/src/display/` (`@graph-note/core/display/<module>`), and imports no Obsidian code. `editor-page.test.js`
+`packages/core/src/display/` (`@thoughtknot/core/display/<module>`), and imports no Obsidian code. `editor-page.test.js`
 holds that (cc_core_only), and, from C5, the page's host shell: cc_one_renderer, cc_text_not_html, cc_worker_same_origin,
 cc_theme_follows, cc_icons, cc_offline and cc_settings_shared, with its support, `editor-page-support.js` (the page built
 once into a temporary folder and served by the real server, and the worker run as a thread), and, from C8, the keyboard,

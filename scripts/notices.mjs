@@ -18,7 +18,7 @@ export function renderNotices(record, readText) {
     '',
     '# Third-party notices',
     '',
-    'Graph Note is released under the Mozilla Public License 2.0 (see LICENSE). It bundles the libraries below. Each is listed with what is compiled inside it, its licence, and where its source can be obtained.',
+    'ThoughtKnot is released under the Mozilla Public License 2.0 (see LICENSE). It bundles the libraries below. Each is listed with what is compiled inside it, its licence, and where its source can be obtained.',
     '',
   ];
   for (const [key, pkg] of Object.entries(record.packages)) {

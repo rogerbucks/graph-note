@@ -1,5 +1,5 @@
-// The architecture of Graph Note as a graph note (spec §41, developer_wiki): requirements/architecture.gql read into its
-// layers, parts and interfaces, checked against the repository and the requirements, and drawn as Graph Note draws a
+// The architecture of ThoughtKnot as a graph note (spec §41, developer_wiki): requirements/architecture.gql read into its
+// layers, parts and interfaces, checked against the repository and the requirements, and drawn as ThoughtKnot draws a
 // graph. scripts/wiki-developers.mjs puts it on the developer pages.
 import { createRequire } from 'node:module';
 
@@ -99,7 +99,7 @@ export function architectureProblems(arch, requirements, exists) {
 export const label = (text) => String(text).replace(/"/g, "'").replace(/[<>]/g, '');
 
 /**
- * The architecture drawn as Graph Note draws a graph: each layer a group, each part a box with its kind under its name,
+ * The architecture drawn as ThoughtKnot draws a graph: each layer a group, each part a box with its kind under its name,
  * a part not built yet dashed, as a suggested thing is, and the interfaces between, each with the parts that offer and
  * implement it.
  */

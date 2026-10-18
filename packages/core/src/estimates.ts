@@ -2,8 +2,8 @@
 // drawn to that thing as a guess; so is a relationship type one or two letters from a type of the graph. A guess is never
 // written to the note, never made between equals, and always explained. Only near misses are guessed — never a link
 // from the pattern of the graph.
-import gs from '@graph-note/graph-spec';
-import type { Graph } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { graphOf } from './blocks.ts';
 import type { GraphDrawing, Problem } from './note-reading.ts';
 import { S } from './whitespace.ts';

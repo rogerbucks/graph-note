@@ -127,7 +127,7 @@ describe('the seed of an item with no value', () => {
 
   test('is not held by a pull request from a fork, nor by a closed one', () => {
     const side = scene();
-    side.hub.pulls[7].head.repo.full_name = 'someone/graph-note';
+    side.hub.pulls[7].head.repo.full_name = 'someone/thoughtknot';
     side.hub.pulls[8].state = 'closed';
     const { seed } = seeded(side);
     assert.equal(seed.has('focus_link'), false);

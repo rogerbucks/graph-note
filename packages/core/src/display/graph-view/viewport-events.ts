@@ -4,7 +4,7 @@
 // the highlight under the pointer and with the keyboard focus; and the details sheet placed again as the window and the
 // note move. The card (graph-view.ts) binds these once it has built its parts.
 import type { Lifecycle } from '../lifecycle';
-import type { Zoom, ZoomEvent } from '@graph-note/core';
+import type { Zoom, ZoomEvent } from '@thoughtknot/core';
 import { BoxDrag } from './box-drag-view';
 import type { DragHost } from './box-drag-view';
 import { BoxMoveKeys } from './box-move-keys';

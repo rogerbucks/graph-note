@@ -2,8 +2,8 @@
 // its relationship types as arrows between them, with the text one press of Source away. The card is read-only: the
 // picture is not the note's text, so it never writes; the schema is changed in its text, as any block is.
 import type { MarkdownPostProcessorContext } from 'obsidian';
-import { gqlBlocks, namesSharedSchema, schemaPicture } from '@graph-note/core';
-import type GraphNotePlugin from './main';
+import { gqlBlocks, namesSharedSchema, schemaPicture } from '@thoughtknot/core';
+import type ThoughtKnotPlugin from './main';
 import { graphCard } from './graph-card';
 
 /**
@@ -11,7 +11,7 @@ import { graphCard } from './graph-card';
  * did, so any other block, or one the picture cannot be laid out for, is drawn as a graph block always is.
  */
 export async function renderSchemaBlock(
-  plugin: GraphNotePlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -30,14 +30,14 @@ export async function renderSchemaBlock(
   try {
     drawn = await plugin.layout(drawing, owner);
   } catch (e) {
-    console.error('Graph Note could not draw the schema of', picture.graph, e);
+    console.error('ThoughtKnot could not draw the schema of', picture.graph, e);
     return false;
   }
   if (drawn && 'reason' in drawn) return false; // too large to lay out: shown as its text, as any graph is
   if (!drawn) return true; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph: picture.graph };
   ctx.addChild(
-    graphCard(el.createDiv({ cls: 'graph-note' }), {
+    graphCard(el.createDiv({ cls: 'thoughtknot' }), {
       source,
       reading: picture.reading,
       graph: picture.graph,

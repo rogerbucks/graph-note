@@ -20,7 +20,7 @@ const NAMED = BLOCK.replace('(:Option', '(small_reader:Option');
 
 const boxOf = (el, key) => el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === key);
 const choose = (el, key) => boxOf(el, key).dispatch('keydown', { key: 'Enter' });
-const details = (el) => el.querySelector('.graph-note-details');
+const details = (el) => el.querySelector('.thoughtknot-details');
 
 async function editing(env) {
   const el = await show(env);

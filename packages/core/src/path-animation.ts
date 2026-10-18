@@ -144,7 +144,7 @@ export function pathBody(svg: string, path: WalkedPath, plan: PathPlan, palette:
         if (!slots || !at) return all;
         const numbers = slots.map((s) => String(path.steps[s]?.seq ?? s + 1)).join(', ');
         const mark =
-          `<text class="graph-note-step-number" x="${at.x + 4}" y="${at.y + 12}" font-family="${STYLE.font},sans-Serif" ` +
+          `<text class="thoughtknot-step-number" x="${at.x + 4}" y="${at.y + 12}" font-family="${STYLE.font},sans-Serif" ` +
           `font-size="${STYLE.kind_font_size}" font-weight="bold" fill="${palette.text}">${numbers}</text>`;
         return `${open}${body}${mark}${close}`;
       }
@@ -152,7 +152,7 @@ export function pathBody(svg: string, path: WalkedPath, plan: PathPlan, palette:
       const line = mine.length ? /<path\b[^>]*\/>/.exec(body)?.[0] : undefined;
       if (!line) return all;
       const copies = mine.map((k) =>
-        runnerOf(line, 'graph-note-path-runner').replace('<path ', `<path id="graph-note-run-${k}" `),
+        runnerOf(line, 'thoughtknot-path-runner').replace('<path ', `<path id="thoughtknot-run-${k}" `),
       );
       return `${open}${body.replace(line, () => `${line}${copies.join('')}`)}${close}`;
     },
@@ -176,11 +176,11 @@ export function pathCss(plan: PathPlan, pace: number): string {
     for (let s = 1; s < n; s++)
       if (width(s) !== width(s - 1)) frames.push(`${pct(s, n)} { stroke-width: ${width(s)}; }`);
     frames.push(`100% { stroke-width: ${width(n - 1)}; }`);
-    out.push(`@keyframes graph-note-step-${node} { ${frames.join(' ')} }`);
-    out.push(`${shapes(node)} { stroke-width: 3; animation: graph-note-step-${node} ${round} step-end infinite; }`);
+    out.push(`@keyframes thoughtknot-step-${node} { ${frames.join(' ')} }`);
+    out.push(`${shapes(node)} { stroke-width: 3; animation: thoughtknot-step-${node} ${round} step-end infinite; }`);
     animated.push(shapes(node));
   }
-  const runner = inImage('.graph-note-path-runner');
+  const runner = inImage('.thoughtknot-path-runner');
   out.push(`${runner} { fill: none; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 0 200; opacity: 0; }`);
   plan.runners.forEach((r, i) => {
     const k = i + 1,
@@ -195,9 +195,9 @@ export function pathCss(plan: PathPlan, pace: number): string {
       frame(pct(r.slot + 1, n), 1, to),
       ...(r.slot + 1 < n ? [frame(justAfter(r.slot + 1, n), 0, to), frame('100%', 0, to)] : []),
     ];
-    out.push(`@keyframes graph-note-run-${k} { ${frames.join(' ')} }`);
-    const one = inImage(`#graph-note-run-${k}`);
-    out.push(`${one} { stroke-dasharray: 0 200; animation: graph-note-run-${k} ${round} linear infinite; }`);
+    out.push(`@keyframes thoughtknot-run-${k} { ${frames.join(' ')} }`);
+    const one = inImage(`#thoughtknot-run-${k}`);
+    out.push(`${one} { stroke-dasharray: 0 200; animation: thoughtknot-run-${k} ${round} linear infinite; }`);
     animated.push(one);
   });
   out.push(

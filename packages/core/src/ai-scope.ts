@@ -2,8 +2,8 @@
 // selected, and nothing else from the vault is sent — not the note's prose, not another graph, not a comment. What is
 // chosen is written out again as GQL from the graph as read: each thing with its kinds and properties, and each link
 // between the things chosen.
-import gs from '@graph-note/graph-spec';
-import type { Graph, Value } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { Graph, Value } from '@thoughtknot/graph-spec';
 import { gqlBlocks } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import type { Link, NoteReading } from './note-reading.ts';

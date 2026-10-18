@@ -90,7 +90,7 @@ describe('what the check lets through', () => {
   });
 
   test('paths that are not in a home folder', () => {
-    assert.deepEqual(rules('/usr/local/bin/node and ~/dev/graph-note and src/Users/list.ts'), []);
+    assert.deepEqual(rules('/usr/local/bin/node and ~/dev/thoughtknot and src/Users/list.ts'), []);
   });
 
   test('example, no-reply and package addresses', () => {
@@ -172,7 +172,7 @@ describe('the hook and the whole-repository check', () => {
     });
 
   function scratchRepo() {
-    const dir = mkdtempSync(join(tmpdir(), 'graph-note-hook-'));
+    const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-hook-'));
     git(dir, 'init', '-q');
     mkdirSync(join(dir, 'scripts'));
     mkdirSync(join(dir, '.githooks'));

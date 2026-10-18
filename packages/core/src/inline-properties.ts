@@ -5,8 +5,8 @@
 // label colour, so they keep the locked contrast (properties_readable). A box or link that would be crowded shows whole
 // properties up to `INLINE_ROWS` rows and says how many are hidden, never more (crowded_properties). The Python library
 // shows them the same way (`graphspec/style/inline.py`), held to this byte for byte.
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
-import type { Graph } from '@graph-note/graph-spec';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { LINK_LINE, linkTypes } from './arrows.ts';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
