@@ -198,13 +198,21 @@ describe('moving a box with a finger', () => {
     try {
       const time = clock(env),
         ann = boxOf('ann');
-      assert.equal(vp.dispatch('touchmove', { target: ann }).defaultPrevented, false, 'nothing held: the page scrolls');
+      assert.equal(
+        vp.dispatch('touchmove', { target: ann, touches: [{}] }).defaultPrevented,
+        false,
+        'nothing held: the page scrolls',
+      );
       vp.dispatch('pointerdown', touch(4, ann, at(placeOf('ann').x, placeOf('ann').y)));
       time.fire();
-      assert.equal(vp.dispatch('touchmove', { target: ann }).defaultPrevented, true, 'held: the page stays');
+      assert.equal(
+        vp.dispatch('touchmove', { target: ann, touches: [{}] }).defaultPrevented,
+        true,
+        'held: the page stays',
+      );
       vp.dispatch('pointercancel', touch(4, ann, {}));
       assert.ok(!ann.classList.contains('is-held'), 'a lost finger puts it down');
-      assert.equal(vp.dispatch('touchmove', { target: ann }).defaultPrevented, false);
+      assert.equal(vp.dispatch('touchmove', { target: ann, touches: [{}] }).defaultPrevented, false);
     } finally {
       env.uninstall();
     }

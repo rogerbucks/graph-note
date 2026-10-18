@@ -67,6 +67,25 @@ interface Drawn {
 }
 const drawn = new WeakMap<HTMLElement, Drawn>();
 
+/** What takes the focus itself when pressed: a text box, a list, or an editor in place in the card. */
+const TYPED_IN = 'input, textarea, select, [contenteditable="true"]';
+/** What can hold the focus in a card: a button, a link, or the drawing. */
+const FOCUSABLE = 'button, a[href], [tabindex]';
+
+/**
+ * A press in the card keeps the focus off the editor around it (card_keeps_focus_from_editor). On a phone a tapped
+ * button takes no focus, so it fell to the editor, which scrolled to its cursor, often at the note's top: the first tap
+ * on Zoom in jumped the page. So the press's own move of the focus is stopped, and the button, link or drawing pressed is
+ * given the focus without scrolling. A text box keeps its own: the press places its cursor.
+ */
+function keepFocusFromEditor(e: MouseEvent): void {
+  const t = e.target as HTMLElement | null;
+  const held = t?.closest && !t.closest(TYPED_IN) ? t.closest<HTMLElement>(FOCUSABLE) : null;
+  if (!held) return; // text elsewhere in the card can still be selected
+  e.preventDefault();
+  held.focus({ preventScroll: true });
+}
+
 /** One graph block, drawn in the editing view. */
 class GraphBlock extends WidgetType {
   constructor(
@@ -114,6 +133,7 @@ class GraphBlock extends WidgetType {
       });
       state.observer.observe(dom);
     }
+    dom.addEventListener('mousedown', keepFocusFromEditor);
     this.draw(dom);
     return dom;
   }

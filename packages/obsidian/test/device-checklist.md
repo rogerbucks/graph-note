@@ -75,6 +75,10 @@ holds the two together).
       edited in Live Preview, and in full screen opened from reading view too. A Graph Note pane already open on the block
       keeps saving while another pane shows the note in reading view.
 - [ ] **Z-10** Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
+- [ ] **Z-11** Phone: zoomed in, one finger pans the drawing and a pinch zooms it, and neither slides Obsidian's side panels
+      in nor moves the window; a box held and dragged does not either. On a fitted drawing a sideways swipe still opens them.
+- [ ] **Z-12** Phone, Live Preview, the note just opened and scrolled down: the first tap on Zoom in zooms, and the page
+      does not jump to the top. Nor does the first tap on Find, which opens its box.
 
 ## The edit pane — spec §4, §5, §9
 

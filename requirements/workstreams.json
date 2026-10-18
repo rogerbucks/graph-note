@@ -533,7 +533,9 @@
       "drag_moves_box",
       "hold_to_drag_touch",
       "move_box_keyboard",
-      "radial_spoke_order"
+      "radial_spoke_order",
+      "gestures_stay_in_drawing",
+      "card_keeps_focus_from_editor"
     ]
   },
   "A1": {

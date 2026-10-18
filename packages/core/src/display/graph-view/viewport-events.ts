@@ -131,11 +131,23 @@ export function bindViewportEvents(host: ViewportHost): void {
     // on touch there is no hover: the tap that selects gives the highlight (§25)
     sel.touched(down.touch);
   });
-  // while a finger has a box picked up, the page under it does not scroll (§6, hold_to_drag_touch)
+  // a touch the drawing uses — one finger panning it zoomed in, a pinch, a finger moving a box — goes no further, so
+  // the host never takes it for its own swipe, as Obsidian's side panels do (§25, gestures_stay_in_drawing); a swipe on
+  // a fitted drawing goes on, to scroll the note. While a box is picked up the page under it does not scroll (§6)
+  const owned = (e: TouchEvent) => e.touches.length > 1 || zoom.touchAction() === 'none' || !!drag?.holding;
+  card.registerDomEvent(
+    vp,
+    'touchstart',
+    (e: TouchEvent) => {
+      if (owned(e)) e.stopPropagation();
+    },
+    { passive: true },
+  );
   card.registerDomEvent(
     vp,
     'touchmove',
     (e: TouchEvent) => {
+      if (owned(e)) e.stopPropagation();
       if (drag?.holding) e.preventDefault();
     },
     { passive: false },
