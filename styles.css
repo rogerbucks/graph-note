@@ -337,25 +337,80 @@
 .graph-note-filter button.is-hidden {
   text-decoration: line-through;
 }
-/* The View menu (spec §25): four switches, each a 44-point target saying on or off in words. Labels by zoom paints a
-   link's label clear while the drawing is too small to read it, but never on a link in focus, highlighted or selected:
-   paint only, as focus and the highlight are, so nothing moves and nothing is laid out again. A busy hub's stub and a
-   folded group's box are buttons that open. */
+/* The View menu (spec §25): four switches, each a 44-point row with its name, a toggle drawn as Obsidian draws one, and
+   on or off in words, so the state is never said by colour alone; the knob sits at the line's end when on, which a
+   right-to-left line mirrors. Labels by zoom paints a link's label clear while the drawing is too small to read it, but
+   never on a link in focus, highlighted or selected: paint only, as focus and the highlight are, so nothing moves and
+   nothing is laid out again. A busy hub's stub and a folded group's box are buttons that open. */
 .graph-note-view > .graph-note-view-menu {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--gn-space-2);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16em), 1fr));
+  gap: var(--gn-space-1) var(--gn-space-4);
   margin: 0;
   border-top: 1px solid var(--gn-border);
+  background: var(--gn-bg-alt);
   padding: var(--gn-space-2) var(--gn-space-3);
 }
-.graph-note-view-menu button {
+.graph-note-view-menu > .graph-note-quiet {
+  grid-column: 1 / -1;
+}
+.graph-note-view-menu > .graph-note-quiet:empty {
+  display: none;
+}
+.graph-note-view-menu button.graph-note-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-2);
+  box-shadow: none;
+  border: none;
+  border-radius: var(--gn-radius-s);
+  background: transparent;
+  padding: 0 var(--gn-space-2);
   min-width: 44px;
   min-height: 44px;
+  color: var(--gn-text-normal);
+  font-weight: normal;
+  text-align: start;
 }
-.graph-note-view-menu button[aria-checked='true'] {
-  font-weight: var(--gn-font-weight-semibold);
+.graph-note-view-menu button.graph-note-switch:hover {
+  background: var(--gn-bg-hover);
+}
+.graph-note-switch-name {
+  flex: 1;
+}
+.graph-note-switch-track {
+  display: flex;
+  flex: none;
+  justify-content: flex-start;
+  align-items: center;
+  box-sizing: border-box;
+  border: 1px solid var(--gn-border-hover);
+  border-radius: 1em;
+  background: var(--gn-bg);
+  padding: 2px;
+  width: 2.5em;
+  height: 1.4em;
+}
+.graph-note-switch-track::before {
+  border-radius: 50%;
+  background: var(--gn-text-muted);
+  width: calc(1.4em - 6px);
+  height: calc(1.4em - 6px);
+  content: '';
+}
+.graph-note-switch[aria-checked='true'] .graph-note-switch-track {
+  justify-content: flex-end;
+  border-color: var(--gn-accent);
+  background: var(--gn-accent);
+}
+.graph-note-switch[aria-checked='true'] .graph-note-switch-track::before {
+  background: var(--gn-text-on-accent);
+}
+.graph-note-switch-state {
+  flex: none;
+  min-width: 2em;
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
 }
 .graph-note-svg.graph-note-labels-hidden g.edge text {
   fill-opacity: 0;
@@ -482,8 +537,10 @@
   display: flex;
   gap: var(--gn-space-2);
 }
-/* The diagram type (spec §15): how the graph is drawn, and the types to choose from, each that does not fit with why;
-   every control a 44-point target, and words beside each, never colour alone. */
+/* The diagram type (spec §15): how the graph is drawn, and Diagram type, which opens the seven types as a panel of
+   tiles. A tile is its button and what is said of it: the whole tile takes the click, the one drawn has the accent edge
+   and a heavier name, the suggested one a dashed accent edge, and one that does not fit is faint, each said in words
+   beside it too, never by colour alone; every control a 44-point target. */
 .graph-note-type-strip,
 .graph-note-way-in {
   display: flex;
@@ -494,10 +551,16 @@
 }
 .graph-note-type-strip button,
 .graph-note-way-in button,
-.graph-note-type-stopped button,
-.graph-note-type-list button {
+.graph-note-type-stopped button {
   min-width: 44px;
   min-height: 44px;
+}
+.graph-note-type-strip button {
+  gap: var(--gn-space-1);
+  width: auto;
+}
+.graph-note-type-strip button[aria-expanded='true'] {
+  background: var(--gn-bg-hover);
 }
 .graph-note-type-drawn,
 .graph-note-type-why {
@@ -505,22 +568,96 @@
   font-size: var(--gn-font-size-s);
 }
 .graph-note-type-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gn-space-1);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
+  gap: var(--gn-space-2);
   margin: 0;
-  padding: var(--gn-space-1) var(--gn-space-2);
+  border-top: 1px solid var(--gn-border);
+  border-bottom: 1px solid var(--gn-border);
+  background: var(--gn-bg-alt);
+  padding: var(--gn-space-3);
   list-style: none;
+}
+.graph-note-type-list[hidden] {
+  display: none;
 }
 .graph-note-type-list li {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--gn-space-2);
+  position: relative;
+  flex-direction: column;
+  gap: var(--gn-space-half-2);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg);
+  padding: var(--gn-space-2) var(--gn-space-3);
+  min-height: 44px;
 }
-.graph-note-type-list button[aria-pressed='true'] {
+.graph-note-type-list li:not(.graph-note-type-unfit):hover {
+  border-color: var(--gn-border-hover);
+  background: var(--gn-bg-hover);
+}
+.graph-note-type-list button {
+  display: block;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  height: auto;
+  min-height: 1.6em;
+  color: var(--gn-text-normal);
+  font-weight: var(--gn-font-weight-semibold);
+  text-align: start;
+}
+/* the whole tile takes the click of its button, and shows its focus */
+.graph-note-type-list button::after {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--gn-radius-m);
+  content: '';
+}
+.graph-note-type-list button:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.graph-note-type-list button:focus-visible::after {
+  outline: 2px solid var(--gn-border-focus);
+  outline-offset: 1px;
+}
+.graph-note-type-list button:not(:disabled) {
+  cursor: var(--gn-cursor-link);
+}
+.graph-note-type-list .graph-note-type-why:empty {
+  display: none;
+}
+.graph-note-type-list li.graph-note-type-now {
+  border: 2px solid var(--gn-accent);
+  padding: calc(var(--gn-space-2) - 1px) calc(var(--gn-space-3) - 1px);
+}
+.graph-note-type-list li.graph-note-type-now button {
   font-weight: var(--gn-font-weight-bold);
-  outline: 2px solid var(--gn-accent);
+}
+.graph-note-type-list li.graph-note-type-suggested {
+  border-style: dashed;
+  border-color: var(--gn-accent);
+}
+/* a type that does not fit cannot be chosen, so it is never focused: it is shown after those that fit, a slim row across
+   the panel with why beside its name */
+.graph-note-type-list li.graph-note-type-unfit {
+  flex-direction: row;
+  flex-wrap: wrap;
+  order: 1;
+  align-items: baseline;
+  column-gap: var(--gn-space-3);
+  grid-column: 1 / -1;
+  border-style: dashed;
+  background: transparent;
+  padding-block: var(--gn-space-1);
+}
+.graph-note-type-list li.graph-note-type-unfit button {
+  width: auto;
+  color: var(--gn-text-faint);
+  font-weight: normal;
 }
 .graph-note-type-stopped {
   display: flex;

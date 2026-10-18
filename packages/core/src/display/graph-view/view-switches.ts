@@ -46,8 +46,10 @@ export function renderViewMenu(
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
   for (const s of VIEW_SWITCHES) {
     const b = el.createEl('button', { cls: 'graph-note-switch', attr: { type: 'button', role: 'switch' } });
-    b.createSpan({ text: nameOf(s) });
-    const says = b.createSpan({ cls: 'graph-note-switch-state' });
+    // the name is the switch's name; the toggle and its words show its state, which aria-checked says to a screen reader
+    b.createSpan({ cls: 'graph-note-switch-name', text: nameOf(s) });
+    b.createSpan({ cls: 'graph-note-switch-track', attr: { 'aria-hidden': 'true' } });
+    const says = b.createSpan({ cls: 'graph-note-switch-state', attr: { 'aria-hidden': 'true' } });
     b.addEventListener('click', () => turned(s, !state.switches[s]));
     switches.push({ s, b, says });
   }
@@ -55,7 +57,7 @@ export function renderViewMenu(
   const refresh = () => {
     for (const { s, b, says } of switches) {
       b.setAttribute('aria-checked', String(state.switches[s]));
-      says.setText(` — ${word(state.switches[s] ? 'view.on' : 'view.off')}`);
+      says.setText(word(state.switches[s] ? 'view.on' : 'view.off'));
     }
   };
   refresh();

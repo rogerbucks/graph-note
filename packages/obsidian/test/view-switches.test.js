@@ -55,7 +55,11 @@ const thing = (el, key) => el.querySelector(`g.node[data-key="${key}"]`);
 const switches = (el) =>
   el
     .querySelectorAll('.graph-note-view-menu button')
-    .map((b) => [b.textContent.replace(/ — (on|off)$/, ''), b.getAttribute('role'), b.getAttribute('aria-checked')]);
+    .map((b) => [
+      b.querySelector('.graph-note-switch-name')?.textContent ?? b.textContent.replace(/ — (on|off)$/, ''),
+      b.getAttribute('role'),
+      b.getAttribute('aria-checked'),
+    ]);
 const turn = (el, name) =>
   el.querySelectorAll('.graph-note-view-menu button').find((b) => b.textContent.startsWith(name));
 const tap = (el, g) => {
@@ -88,6 +92,25 @@ describe('the View menu', () => {
         ['Groups folded', 'switch', 'false'],
         ['Parallel links merged', 'switch', 'false'],
       ]);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('each switch is drawn as a toggle, its name its accessible name and on or off said in words beside it', async () => {
+    const { env, el } = await card();
+    try {
+      labelled(el, 'View').click();
+      const b = turn(el, 'Labels by zoom');
+      assert.equal(b.querySelector('.graph-note-switch-name')?.textContent, 'Labels by zoom');
+      assert.equal(
+        b.querySelector('.graph-note-switch-track')?.getAttribute('aria-hidden'),
+        'true',
+        'the toggle is drawn',
+      );
+      const says = b.querySelector('.graph-note-switch-state');
+      assert.equal(says.getAttribute('aria-hidden'), 'true', 'aria-checked says it to a screen reader');
+      assert.equal(says.textContent, 'on');
     } finally {
       env.uninstall();
     }

@@ -222,6 +222,8 @@ const HOLDS_NO_WORDS = {
   '.graph-note-swatch': 'a line in a colour of the drawing',
   '.graph-note-sr': 'the screen reader’s text, kept off the screen on purpose',
   '.gn-icon': 'an icon',
+  '.graph-note-switch-track': 'a switch drawn as a toggle; its words sit beside it',
+  '.graph-note-switch-track::before': 'the toggle’s knob',
 };
 
 /** A length that does not grow with the words: pixels, points, em or characters. */

@@ -75,14 +75,22 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
   strip.createSpan({ cls: 'graph-note-type-drawn', text: `Drawn as ${said(choice.drawn)}` });
   const list = root.createEl('ul', { cls: 'graph-note-type-list', attr: { 'aria-label': 'Diagram types' } });
   list.hidden = true;
-  const toggle = button(strip, 'Diagram type', 'layout-dashboard', () => {
+  const open = () => {
     list.hidden = !list.hidden;
     toggle.setAttribute('aria-expanded', String(!list.hidden));
-  });
+  };
+  const toggle = button(strip, 'Diagram type', 'layout-dashboard', open, 'Diagram type');
   toggle.setAttribute('aria-expanded', 'false');
   writes.push(toggle, list);
+  // each type a tile, its state marked by class for the look and said in words beside it, never by colour alone
   for (const f of d.fits) {
-    const li = list.createEl('li');
+    const li = list.createEl('li', {
+      cls: [
+        ...(f.type === choice.drawn ? ['graph-note-type-now'] : []),
+        ...(f.fits && f.type === suggested.type && f.type !== choice.drawn ? ['graph-note-type-suggested'] : []),
+        ...(f.fits ? [] : ['graph-note-type-unfit']),
+      ],
+    });
     const b = li.createEl('button', {
       text: named(f.type),
       attr: { type: 'button', 'aria-pressed': String(f.type === choice.drawn) },
