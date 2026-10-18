@@ -87,8 +87,8 @@ describe('search engines and AI assistants can find and read it', () => {
   test('has a robots file, a sitemap and an llms.txt, each at the canonical address', () => {
     const files = made();
     assert.match(files['robots.txt'], /^User-agent: \*\nAllow: \/\n/m);
-    assert.match(files['robots.txt'], new RegExp(`^Sitemap: ${SITE_URL}sitemap.xml$`, 'm'));
-    assert.match(files['sitemap.xml'], new RegExp(`<loc>${SITE_URL}</loc>\\s*<lastmod>2026-10-18</lastmod>`));
+    assert.ok(files['robots.txt'].split('\n').includes(`Sitemap: ${SITE_URL}sitemap.xml`));
+    assert.ok(files['sitemap.xml'].includes(`<loc>${SITE_URL}</loc>\n    <lastmod>2026-10-18</lastmod>`));
     const llms = files['llms.txt'];
     assert.match(llms, /^# Graph Note\n\n> Free, open-source Obsidian plugin/);
     assert.match(
