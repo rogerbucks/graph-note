@@ -182,6 +182,7 @@ describe('counting the benchmarks', () => {
       '--predictable-gc-schedule',
       '--random-seed=1',
       '--disable-wasm-trap-handler',
+      '--no-wasm-dynamic-tiering',
     ];
     for (const flag of pinned) assert.ok(NODE_FLAGS.includes(flag), flag);
     const random = () =>
