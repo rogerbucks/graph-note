@@ -26,4 +26,4 @@
 
 > **C-01** Settings › ThoughtKnot, desktop and phone: one page, with Strictness, AI models, Formatting and Drawing, each option with a sentence saying what it does. Searching the settings for "strictness" finds it.
 
-**Back to the checklist:** [C-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-01 in its list.
+**Back to the checklist:** [C-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-01 in its list.

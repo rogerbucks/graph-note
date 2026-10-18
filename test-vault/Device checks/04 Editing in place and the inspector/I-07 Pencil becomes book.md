@@ -24,4 +24,4 @@
 
 > **I-07** While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and closes the box, as Done does, and the pencil comes back.
 
-**Back to the checklist:** [I-07 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-07 in its list.
+**Back to the checklist:** [I-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-07 in its list.

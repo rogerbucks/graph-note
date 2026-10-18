@@ -39,4 +39,4 @@
 
 > **F-03** Mac, pointer: point at a box and it gets a glow round its outline and its words are underlined; point at a link and the link and its two boxes do; point at a faded box while one thing is selected and it comes forward until the pointer leaves. Nothing in the drawing shifts or changes size.
 
-**Back to the checklist:** [F-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-03 in its list.
+**Back to the checklist:** [F-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-03 in its list.

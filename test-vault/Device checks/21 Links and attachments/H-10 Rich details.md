@@ -22,4 +22,4 @@
 > **H-10** A thing's details show its words as Obsidian shows them in a note: emphasis, maths and a link rendered,
 > not as marks. An image from outside the vault is shown as a link only, and HTML written in a property as text.
 
-**Back to the checklist:** [H-10 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-10 in its list.
+**Back to the checklist:** [H-10 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-10 in its list.

@@ -46,4 +46,4 @@ CALL algo.pageRank()
 
 > **Q-05** A step, in Live Preview: its card says what it proposes into and what its point takes, offers the note's graph and its view, and nothing in the note changes until Run is pressed. Press Run with the graph chosen: a change set appears under the graph, each link waiting to be accepted or rejected, and the graph block is the same. Choose the view of people only and press Run: the card says which kind and which type it lacks, and nothing is written. The step written as CALL says it never calls a named action, and has no Run. In reading view no Run is offered.
 
-**Back to the checklist:** [Q-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Q-05 in its list.
+**Back to the checklist:** [Q-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Q-05 in its list.

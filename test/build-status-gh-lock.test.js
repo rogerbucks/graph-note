@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { leaveComment } from '../scripts/build-status-gh.mjs';
 import { fakeRepoSide, pull } from './repository/build-status-fake.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const MARKER = '<!-- build-status -->';
 const lockPath = `repos/${REPO}/issues/5/lock`;
 const commentsPath = `repos/${REPO}/issues/5/comments`;

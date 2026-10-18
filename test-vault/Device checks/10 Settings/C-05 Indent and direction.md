@@ -27,4 +27,4 @@
 
 > **C-05** Indent "Two spaces", then Lock the graph on a draft: the schema's later lines start with two spaces. Direction "Top to bottom": every drawing runs top to bottom; "Best fit" restores the old choice.
 
-**Back to the checklist:** [C-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-05 in its list.
+**Back to the checklist:** [C-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-05 in its list.

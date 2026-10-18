@@ -50,4 +50,4 @@
 
 > **M-06** In the style block, routing: 'straight' draws every link as a straight line, and routing: 'right-angled' as lines with right angles, each reading set beside its line; 'curved' is the drawing as before. A word that is not one of the three is a problem with its fix.
 
-**Back to the checklist:** [M-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-06 in its list.
+**Back to the checklist:** [M-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-06 in its list.

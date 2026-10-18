@@ -5,8 +5,8 @@ import { handleEvent } from '../../scripts/build-status-run.mjs';
 import { FIXTURE } from './github-project-fixture.js';
 import { fakeRepoSide, mirroredProject, pull } from './build-status-fake.js';
 
-export const REPO = 'rogerbucks/graph-note';
-export const RUN = 'https://github.com/rogerbucks/graph-note/actions/runs/99';
+export const REPO = 'rogerbucks/thoughtknot';
+export const RUN = 'https://github.com/rogerbucks/thoughtknot/actions/runs/99';
 export const HEAD = 'a'.repeat(40);
 export const MERGE = 'c'.repeat(40);
 export const PARENT = 'd'.repeat(40);

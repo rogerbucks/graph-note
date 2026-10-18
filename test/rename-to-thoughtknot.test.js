@@ -1,5 +1,5 @@
-// The rename from Graph Note to ThoughtKnot. The product's names change. The repository's address, the GitHub
-// Project's title and the kind of note keep theirs. Running it again changes nothing.
+// The rename from Graph Note to ThoughtKnot. The product's names, the repository's address and the GitHub Project's
+// title change. The kind of note keeps its name. Running it again changes nothing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { renameText, renamePath } from '../scripts/rename-to-thoughtknot.mjs';
@@ -14,16 +14,14 @@ describe('the rename to ThoughtKnot', () => {
     );
   });
 
-  test('keeps the repository, its site, the Project title and the kind of note', () => {
-    const kept = [
-      'https://github.com/rogerbucks/graph-note/wiki/Roadmap',
-      'https://rogerbucks.github.io/graph-note/',
-      "'graph-note requirements'",
-      'a graph note holds graph notes',
-      'RogerBucks/Graph-Note',
-      String.raw`/github\.com[:/][^/]+\/graph-note(\.git)?$/`,
-    ];
-    for (const text of kept) assert.equal(renameText(text), text);
+  test('renames the repository, its site and the Project title, and keeps the kind of note', () => {
+    assert.equal(
+      renameText('https://github.com/rogerbucks/graph-note/wiki · https://rogerbucks.github.io/graph-note/'),
+      'https://github.com/rogerbucks/thoughtknot/wiki · https://rogerbucks.github.io/thoughtknot/',
+    );
+    assert.equal(renameText(String.raw`rogerbucks\/graph-note`), String.raw`rogerbucks\/thoughtknot`);
+    assert.equal(renameText("'graph-note requirements'"), "'ThoughtKnot requirements'");
+    assert.equal(renameText('a graph note holds graph notes'), 'a graph note holds graph notes');
   });
 
   test('spells the name with a capital K, and keeps ids lower case', () => {

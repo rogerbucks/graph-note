@@ -36,4 +36,4 @@
 > one and it becomes the selection, its details open and the drawing glides to it at the same zoom. Zoomed far out,
 > it is brought up to a size that can be read.
 
-**Back to the checklist:** [G-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-01 in its list.
+**Back to the checklist:** [G-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-01 in its list.

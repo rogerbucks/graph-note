@@ -47,4 +47,4 @@ A third, with a misspelt link, so a dashed estimate is checked in both themes.
 
 > **V-12** The drawing reads well in the light theme and in the dark theme. Dark, several drawings in a note, each card standing out.
 
-**Back to the checklist:** [V-12 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-12 in its list.
+**Back to the checklist:** [V-12 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-12 in its list.

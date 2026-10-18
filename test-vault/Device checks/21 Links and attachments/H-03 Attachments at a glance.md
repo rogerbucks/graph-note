@@ -26,4 +26,4 @@
 > left, and VoiceOver reads "2 attachments" with its name. Its details list them under Attachments (2), as "photo.png —
 > image" and "report.pdf — PDF"; tap one and Obsidian opens it.
 
-**Back to the checklist:** [H-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-03 in its list.
+**Back to the checklist:** [H-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-03 in its list.

@@ -10,7 +10,7 @@ are done, and slice 4 is in progress.
 
 | You want to | Go to |
 |---|---|
-| Use it | [How to use ThoughtKnot](https://github.com/rogerbucks/graph-note/wiki/How-to-use-ThoughtKnot) |
+| Use it | [How to use ThoughtKnot](https://github.com/rogerbucks/thoughtknot/wiki/How-to-use-ThoughtKnot) |
 | Know what it sends, and when | [Privacy and network use](#privacy-and-network-use) |
 | Build it or change it | [Developing](#developing) and [CONTRIBUTING.md](CONTRIBUTING.md) |
 | See how it fits together | [How the packages fit](#how-the-packages-fit) |

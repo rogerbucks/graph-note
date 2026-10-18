@@ -37,4 +37,4 @@ The style block: Tom's picture on his box.
 > Enter, then Play. Phone: tap the control on a box, then the button in the details: each pauses and plays, and the
 > tap never selects the box.
 
-**Back to the checklist:** [K-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-03 in its list.
+**Back to the checklist:** [K-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-03 in its list.

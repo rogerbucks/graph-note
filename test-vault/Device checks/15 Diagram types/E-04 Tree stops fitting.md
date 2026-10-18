@@ -37,4 +37,4 @@ The graph's type, a tree along MANAGES, in its own block.
 
 > **E-04** On the tree, give a thing a second parent: the card says the graph no longer fits a tree and why, draws it as a network, and offers Use flow; press it, and the style block now says flow.
 
-**Back to the checklist:** [E-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-04 in its list.
+**Back to the checklist:** [E-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-04 in its list.
