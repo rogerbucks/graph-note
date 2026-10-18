@@ -1,6 +1,6 @@
 {
   "name": "@thoughtknot/core",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "The host-free core of the graph note editor: what to draw, problems and fixes, zoom, edits and undo. No Obsidian, no VS Code.",
   "license": "MPL-2.0",
@@ -11,7 +11,7 @@
     "./hosts/*": "./src/hosts/*.ts"
   },
   "dependencies": {
-    "@thoughtknot/graph-spec": "0.7.0",
+    "@thoughtknot/graph-spec": "0.7.1",
     "@viz-js/viz": "3.31.0"
   }
 }
