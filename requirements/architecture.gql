@@ -1,0 +1,48 @@
+// graph: project_architecture · SOURCE
+// How Graph Note is built: its layers, the parts in each, and the interfaces between them. Each layer uses only the
+// layers below it. A part with a path is built; one without names the requirement that plans it. scripts/wiki-developers.mjs
+// reads it and checks every path and requirement; the wiki's developer pages draw it.
+// ── Layers, top to bottom ──
+(plugins:Layer {order: 1, name: 'Plug-ins', does: 'Add exports, theme colours and, later, diagram types, steps, storage and AI providers, through one checked interface.'}),
+(apps:Layer {order: 2, name: 'Apps', does: 'Put the editor where people work, each through a small adapter of its own.'}),
+(display:Layer {order: 3, name: 'Display layer', does: 'Draws the card, the details and the forms with the web page alone, the same in every app.'}),
+(core:Layer {order: 4, name: 'Core', does: 'Works out what to draw, the problems and their fixes, and every edit, with no app inside.'}),
+(library:Layer {order: 5, name: 'Graph format library', does: 'Reads a graph written in a note and checks it against the rules, in JavaScript and Python.'}),
+// ── Parts ──
+(graph_spec_js:Part {name: 'Graph format library (JavaScript)', path: 'packages/graph-spec', guide: 'packages/graph-spec/GUIDE.md'}),
+(graph_spec_py:Part {name: 'Graph format library (Python)', path: 'python/graph_spec', guide: 'python/graph_spec/GUIDE.md'}),
+(core_part:Part {name: 'Core', path: 'packages/core', guide: 'packages/core/GUIDE.md'}),
+(display_part:Part {name: 'Display layer', path: 'packages/core/src/display', guide: 'packages/core/GUIDE.md'}),
+(obsidian:Part {name: 'Obsidian plugin', path: 'packages/obsidian', guide: 'packages/obsidian/GUIDE.md'}),
+(claude_code:Part {name: 'Browser editor, from Claude Code', path: 'packages/claude-code', guide: 'packages/claude-code/GUIDE.md'}),
+(standalone:Part {name: 'Standalone app (Tauri)', requirement: 'standalone_app'}),
+(vscode:Part {name: 'VS Code plugin', requirement: 'vscode_plugin'}),
+(built_in_exports:Part {name: 'Built-in data exports', path: 'packages/core/src/export-data.ts', guide: 'packages/core/GUIDE.md'}),
+// ── Interfaces ──
+(host_interface:Interface {name: 'Host interface (DisplayHost)', file: 'packages/core/src/display/host.ts', contract: 'packages/core/src/display/host-contract.ts', page: 'Adding-a-host', requirements: 'host_contract_published hosts_pass_contract'}),
+(plugin_interface:Interface {name: 'Plug-in interface', file: 'packages/core/src/plugins.ts', contract: 'packages/core/src/plugins-contract.ts', page: 'Writing-a-plug-in', requirements: 'plugin_interface plugin_manifest_limits plugin_contract_suites plugin_theme_tokens'}),
+(storage_interface:Interface {name: 'Storage interface', requirements: 'storage_contract'}),
+(problem_shapes:Interface {name: 'Problems and fixes (Language Server Protocol shapes)', file: 'packages/graph-spec/src/reader/problem-codes.json', page: 'Developer-reference', requirements: 'lsp_shapes problem_codes'}),
+// ── Links ──
+(plugins)-[:USES]->(display),
+(apps)-[:USES]->(display),
+(display)-[:USES]->(core),
+(core)-[:USES]->(library),
+(graph_spec_js)-[:IN_LAYER]->(library),
+(graph_spec_py)-[:IN_LAYER]->(library),
+(core_part)-[:IN_LAYER]->(core),
+(display_part)-[:IN_LAYER]->(display),
+(obsidian)-[:IN_LAYER]->(apps),
+(claude_code)-[:IN_LAYER]->(apps),
+(standalone)-[:IN_LAYER]->(apps),
+(vscode)-[:IN_LAYER]->(apps),
+(built_in_exports)-[:IN_LAYER]->(plugins),
+(display_part)-[:OFFERS]->(host_interface),
+(core_part)-[:OFFERS]->(plugin_interface),
+(core_part)-[:OFFERS]->(storage_interface),
+(graph_spec_js)-[:OFFERS]->(problem_shapes),
+(obsidian)-[:IMPLEMENTS]->(host_interface),
+(claude_code)-[:IMPLEMENTS]->(host_interface),
+(standalone)-[:IMPLEMENTS]->(host_interface),
+(vscode)-[:IMPLEMENTS]->(host_interface),
+(built_in_exports)-[:IMPLEMENTS]->(plugin_interface)

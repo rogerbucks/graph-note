@@ -588,7 +588,8 @@
     "requirements": [
       "wiki_generated",
       "user_guide_wiki",
-      "wiki_reviewed"
+      "wiki_reviewed",
+      "developer_wiki"
     ]
   },
   "G1": {

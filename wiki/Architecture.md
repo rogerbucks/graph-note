@@ -3,42 +3,60 @@
 Graph Note is built in layers. Each layer only uses the ones below it, so a new app can be added on top without
 changing what is underneath.
 
+<!-- wiki:edition -->
+
+## The layers
+
+The drawing is made from
+[`requirements/architecture.gql`](https://github.com/rogerbucks/graph-note/blob/main/requirements/architecture.gql), a
+graph note kept in the repository. Each box is a part, and each six-sided box is an interface between layers. A dashed
+box is planned.
+
+<!-- wiki:architecture -->
+
+<!-- wiki:layers -->
+
+## The interfaces
+
+Every interface between layers has a contract: a set of checks that any app or plug-in runs against itself. If it
+passes, it fits.
+
+<!-- wiki:interfaces -->
+
+## How a note becomes a drawing
+
 ```mermaid
-flowchart TB
-  subgraph Apps["Apps people use"]
-    O["Obsidian plugin<br/>(now)"]
-    B["Browser editor<br/>(from Claude Code, now)"]
-    S["Standalone app<br/>(Wave 7)"]
-    V["VS Code plugin<br/>(Wave 8)"]
-  end
-  D["Shared display layer<br/>the drawing, the details and the forms"]
-  C["Core<br/>reading, drawing and editing a graph, with no app inside"]
-  L["Graph format library<br/>JavaScript and Python"]
-  O --> D
-  B --> D
-  S --> D
-  V --> D
-  D --> C --> L
+flowchart LR
+  N["A note<br/><i>:Note</i>"] -->|read by| L["Graph format library<br/><i>:Layer</i>"]
+  L -->|graph and problems| C["Core<br/><i>:Layer</i>"]
+  C -->|layout source| G["Graphviz, in a worker<br/><i>:Engine</i>"]
+  G -->|picture| D["Display layer<br/><i>:Layer</i>"]
+  D -->|card, details, forms| A["The app<br/><i>:Host</i>"]
+  A -->|an edit| C
+  C -->|new text| N
 ```
 
-| Layer | What it does | Where it is described |
-|---|---|---|
-| Graph format library | Reads a graph written in a note and checks it against the rules | [graph-spec guide](https://github.com/rogerbucks/graph-note/blob/main/packages/graph-spec/GUIDE.md), [Python guide](https://github.com/rogerbucks/graph-note/blob/main/python/graph_spec/GUIDE.md) |
-| Core | Works out the drawing and the edits, the same in every app | [core guide](https://github.com/rogerbucks/graph-note/blob/main/packages/core/GUIDE.md) |
-| Obsidian plugin | Puts the drawing and the editor into Obsidian's notes | [Obsidian guide](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/GUIDE.md) |
-| Browser editor | Opens the same editor in a browser, from Claude Code | [Claude Code guide](https://github.com/rogerbucks/graph-note/blob/main/packages/claude-code/GUIDE.md) |
+1. The **graph format library** reads each `gql` block of the note and checks it against the rules.
+2. The **core** works out what to draw, the problems and their fixes. It writes a layout source that is the same, byte
+   for byte, in JavaScript and Python.
+3. **Graphviz** lays the drawing out in a worker, so the page never freezes.
+4. The **display layer** shows the card, the details and the forms, using only the web page.
+5. The **app** gives the few things only it knows: icons, notices, menus, its language.
+6. An edit goes back through the core, which writes the new text into the note. The note is always the one store.
 
-The requirements every layer is built to are in
-[`requirements/editor-requirements.gql`](https://github.com/rogerbucks/graph-note/blob/main/requirements/editor-requirements.gql).
+## The rules between layers
 
-How ready these layers are for other languages, right-to-left scripts, plug-ins, themes and contract tests, and the
-plan to add them, is in the [design review](Design-review).
+<!-- wiki:section 10 -->
 
-The whiteboard, a board view for brainstorming with several people that decomposes into graph items, is designed in
-the [whiteboard design](Whiteboard-design).
+## The plug-ins, layers and contracts
 
-A Copilot Cowork skill, which brings graph notes kept in OneDrive or SharePoint into Microsoft 365 Copilot Cowork, is
-designed in the [Copilot Cowork skill design](Copilot-Cowork-skill-design).
+<!-- wiki:section 43 -->
 
-Text to graph, where an AI breaks a piece of prose into a graph shown as a proposal, from the editor or as a skill,
-is designed in the [text to graph design](Text-to-graph-design).
+## Designs
+
+- How ready the layers are for other languages, right-to-left scripts, plug-ins, themes and contract tests:
+  [design review](Design-review).
+- The whiteboard, a board for brainstorming with several people that decomposes into graph items:
+  [whiteboard design](Whiteboard-design).
+- Graph notes in Microsoft 365 Copilot Cowork: [Copilot Cowork skill design](Copilot-Cowork-skill-design).
+- An AI breaking prose into a graph shown as a proposal: [text to graph design](Text-to-graph-design).

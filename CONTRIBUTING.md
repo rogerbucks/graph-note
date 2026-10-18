@@ -275,6 +275,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/wiki.test.js` — the project wiki: every page made from its file in the repository, ending with the file and commit it came from, the proved counts as the slice board gives them, every answered question a decision and every other open, the roadmap's chart free of the characters it reads as syntax, and the releases from GitHub or `versions.json`.
+- `test/wiki-developers.test.js` — the wiki's developer pages: the architecture graph naming only paths and requirements that exist and every package, drawn with each thing's kind and a planned part dashed; every extension point, contract check, design token, host member and problem code listed from the code; each requirement marked released, nightly only, being built or planned against the latest release; and the plug-in example installing and passing its contract.
 - `test/wiki-guide.test.js` — the wiki's user guide: every screenshot taken shown once and no other asked for, every setting listed from the editor's own options, plain words, and a new button of the drawing reported when the guide does not explain it.
 - `test/wiki-review.test.js` — the review of the wiki pages people write or edit: each checked and never changed, a suggestion for each broken link or picture, old version and long sentence, a person's edit to a made page reported, and an issue text that pings no one.
 - `test/wiki-workflow.test.js` — the workflow that makes the wiki: woken by a push to main or a stable release, the pages made with read access only, and the one job that writes running no code of the repository.
@@ -474,7 +475,11 @@ shot is a state of `packages/obsidian/harness`, listed in `SHOTS`), and its sett
 button of the drawing the guide does not name is a warning on the wiki's run. People may edit the wiki too: their pages
 are never changed by the workflow. `scripts/wiki-review.mjs` checks each page a person changed last, on every run and on
 every wiki edit, and the workflow keeps the suggestions in one open issue labelled `wiki-review`, closed when none is
-left. A person's edit to a page the wiki makes is listed there before the next run replaces it. To look at the wiki before a merge:
+left. A person's edit to a page the wiki makes is listed there before the next run replaces it. The developer pages
+(`wiki/For-developers.md`, `Architecture.md`, `Writing-a-plug-in.md`, `Adding-a-host.md`) are filled from the code by
+`scripts/wiki-developers.mjs`: the architecture is the graph note `requirements/architecture.gql` (add a new package or
+interface there), and a new extension point needs its words in `POINT_ABOUT`, or the wiki's make fails. They describe
+main, the nightly build, and mark each requirement against the latest stable release. To look at the wiki before a merge:
 `node scripts/wiki-screens.mjs --out out/images && node scripts/wiki.mjs --out out --labels out/images/labels.json`.
 
 ## The quality ratchet

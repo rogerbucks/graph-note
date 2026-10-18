@@ -7,9 +7,10 @@
 // .github/workflows/wiki.yml runs it on every push to main and every release, and pushes the pages to the wiki.
 //
 // Usage:
-//   node scripts/wiki.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--labels FILE]
+//   node scripts/wiki.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--released FILE] [--labels FILE]
 // --releases is `gh release list --json tagName,name,publishedAt` saved to a file; without it the versions come
-// from versions.json alone. --labels is the labels.json scripts/wiki-screens.mjs writes: each label of the card's
+// from versions.json alone. --released is requirements/editor-requirements.gql as it stood at the latest stable
+// release, so the developer pages tell what is released from what is only in the nightly build. --labels is the labels.json scripts/wiki-screens.mjs writes: each label of the card's
 // buttons the guide does not name is printed as a GitHub warning.
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -18,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { requirementsGraph } from './check-requirements.mjs';
 import { ethosPage, readEthos } from './ethos.mjs';
 import { readBoard } from './slice-board.mjs';
+import { developerFacts, developerFills, referencePage, requirementStates } from './wiki-developers.mjs';
 import { roadmapPage } from './wiki-roadmap.mjs';
 import { SHOTS } from './wiki-screens.mjs';
 
@@ -34,6 +36,7 @@ export const MADE_PAGES = [
   'Quality.md',
   'Releases.md',
   'Ethos.md',
+  'Developer-reference.md',
   '_Sidebar.md',
 ];
 
@@ -124,14 +127,14 @@ export function settingsTables(options) {
 
 /** A hand-written page with its markers filled: settings, a picture by name, the current wave and the slices. */
 export function fillMarkers(text, fills) {
-  return text.replace(/<!-- wiki:([a-z-]+)(?: ([a-z-]+))? -->/g, (marker, name, arg) => {
+  return text.replace(/<!-- wiki:([a-z-]+)(?: ([a-z0-9-]+))? -->/g, (marker, name, arg) => {
     if (name === 'shot') {
       const shot = SHOTS.find((s) => s.name === arg);
       if (!shot) throw new Error(`${marker}: no such screenshot in scripts/wiki-screens.mjs`);
       return `![${shot.alt}](images/${shot.name}.png)`;
     }
     if (!(name in fills)) throw new Error(`${marker}: nothing fills this marker`);
-    return fills[name];
+    return typeof fills[name] === 'function' ? fills[name](arg) : fills[name];
   });
 }
 
@@ -147,11 +150,15 @@ export function unexplained(labels, guide) {
 /**
  * Every page of the wiki, as {file name: Markdown}. `pages` are the hand-written pages of wiki/ ({name: text}),
  * `options` the editor's settings, `releases` GitHub's list (or empty), `today` an ISO date. `ethosText`, the
- * project's ethos graph, adds the Ethos page when given.
+ * project's ethos graph, adds the Ethos page when given. `developer`, the architecture graph and the facts read from the
+ * code (wiki-developers.mjs), fills the developer pages' markers and adds the Developer reference; `releasedText`, the
+ * requirements as they stood at the latest stable release, tells what is released from what is only on main.
  */
 export function renderWiki({
   requirementsText,
   ethosText,
+  developer,
+  releasedText,
   waves,
   workstreams,
   baseline,
@@ -162,11 +169,14 @@ export function renderWiki({
   sha,
   today,
 }) {
-  const { requirements } = readBoard(requirementsText);
+  const board = readBoard(requirementsText);
+  const { requirements } = board;
+  const latest = releases.find((r) => !/-/.test(r.tagName))?.tagName;
+  const states = requirementStates(requirements, releasedText ? readBoard(releasedText).requirements : null);
   const questions = readQuestions(requirementsText);
-  const states = waveStates(waves, workstreams, requirements, today);
+  const waveList = waveStates(waves, workstreams, requirements, today);
   const current =
-    states.find((w) => w.state === 'now' || w.state === 'late') ?? states.find((w) => w.state === 'later');
+    waveList.find((w) => w.state === 'now' || w.state === 'late') ?? waveList.find((w) => w.state === 'later');
   const version = Object.keys(versions).at(-1);
   const proved = requirements.filter((r) => r.status === 'proved').length;
   const open = questions.filter((q) => !q.answer);
@@ -179,12 +189,13 @@ export function renderWiki({
       `- **Requirements proved:** ${proved} of ${requirements.length} ${bar(proved, requirements.length)}`,
       `- **Questions waiting for an answer:** ${open.length} ([Open questions](Open-questions))`,
     ].join('\n'),
+    ...(developer && developerFills(developer, board, states, latest)),
   };
   const out = {};
   for (const [name, text] of Object.entries(pages)) out[name] = fillMarkers(text, fills);
 
   out['Roadmap.md'] = roadmapPage(
-    { states, workstreams, requirements, releases, sha, today },
+    { states: waveList, workstreams, requirements, releases, sha, today },
     { counted, day, footer, STATE_MARK },
   );
 
@@ -251,6 +262,11 @@ export function renderWiki({
   if (ethosText !== undefined)
     out['Ethos.md'] = ethosPage(readEthos(ethosText), requirements) + footer('`requirements/ethos.gql`', sha, today);
 
+  if (developer)
+    out['Developer-reference.md'] =
+      referencePage(developer, latest) +
+      footer('`packages/graph-spec/src/reader/problem-codes.json`, the core and its contracts', sha, today);
+
   out['_Sidebar.md'] = [
     '**[Home](Home)**',
     '',
@@ -265,7 +281,19 @@ export function renderWiki({
     '- [Open questions](Open-questions)',
     '- [Quality](Quality)',
     '- [Releases](Releases)',
+    '',
+    '**Building it**',
+    '- [For developers](For-developers)',
     '- [Architecture](Architecture)',
+    '- [Writing a plug-in](Writing-a-plug-in)',
+    '- [Adding a host](Adding-a-host)',
+    ...(developer ? ['- [Developer reference](Developer-reference)'] : []),
+    '',
+    '**Designs**',
+    ...Object.keys(pages)
+      .filter((f) => f.endsWith('-design.md') || f === 'Design-review.md')
+      .sort()
+      .map((f) => `- [${f.slice(0, -3).replace(/-/g, ' ')}](${f.slice(0, -3)})`),
     '',
   ].join('\n');
   return out;
@@ -290,7 +318,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       .map((f) => [f, readFileSync(join(wikiDir, f), 'utf8')]),
   );
   const releasesFile = flag(args, '--releases');
+  const releasedFile = flag(args, '--released');
   const made = renderWiki({
+    developer: await developerFacts(),
+    releasedText: releasedFile && existsSync(releasedFile) ? readFileSync(releasedFile, 'utf8') : undefined,
     requirementsText: readFileSync(join(ROOT, 'requirements/editor-requirements.gql'), 'utf8'),
     ethosText: readFileSync(join(ROOT, 'requirements/ethos.gql'), 'utf8'),
     waves: json('requirements/waves.json').waves,
