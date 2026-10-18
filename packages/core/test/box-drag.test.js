@@ -60,8 +60,8 @@ describe('where a dragged box lands', () => {
 });
 
 describe('where a dragged box lands in a radial drawing', () => {
-  // the centre, sun, with a to its right, b above it and c to its left: the things around it in the order written,
-  // anticlockwise as drawn (the drawing's y runs down the page)
+  // The centre is sun, with a to its right, b above it and c to its left. The things go around it in the order
+  // written, anticlockwise as drawn. The drawing's y runs down the page.
   const ROUND = [
     { key: 'sun', left: 80, top: 90, right: 120, bottom: 110 },
     { key: 'a', left: 180, top: 90, right: 220, bottom: 110 },

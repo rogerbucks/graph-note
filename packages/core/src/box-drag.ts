@@ -59,10 +59,13 @@ const turn = (c: { x: number; y: number }, from: { x: number; y: number }, to: {
 /**
  * Where box `dragged`, let go at `at`, would land among the `boxes` drawn in direction `rankdir` (LR or TB): by the
  * nearest other box within its reach — beside it when dropped across the ranks, before or after it along them, whichever
- * way the point lies further from its middle for the box's size. In a radial drawing about the box of `centre`
- * (radial_spoke_order), the things go round it in the order written, anticlockwise as drawn: dropped by one of them, it
- * goes just before it when let go on its clockwise side and just after it on the other, never beside, and never by the
- * centre. Null away from every box, or where the nudge it would write is `written` already.
+ * way the point lies further from its middle for the box's size.
+ *
+ * A radial drawing has the box of `centre` in the middle (radial_spoke_order). The things go round it in the order
+ * written, anticlockwise as drawn. Dropped on the clockwise side of one, the box goes just before it. Dropped on the
+ * other side, it goes just after it. It never goes beside a thing, and never by the centre.
+ *
+ * Null away from every box, or where the nudge it would write is `written` already.
  */
 export function landingFor(
   dragged: string,
@@ -93,9 +96,9 @@ export function landingFor(
 }
 
 /**
- * Every place box `dragged` can be moved to among the `boxes` drawn, one after another, as the keyboard steps through them
- * (move_box_keyboard): beside, before and after each other box, the nearest first; in a radial drawing about the box of
- * `centre`, before and after each thing around it. A place whose nudge is `written` already is left out.
+ * Every place box `dragged` can be moved to among the `boxes` drawn, in the order the keyboard steps through them
+ * (move_box_keyboard). These are beside, before and after each other box, the nearest first. In a radial drawing about
+ * the box of `centre`, they are before and after each thing around it. A place whose nudge is `written` is left out.
  */
 export function placesFor(
   dragged: string,

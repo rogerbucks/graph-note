@@ -1,7 +1,7 @@
-// Moving a box from the keyboard (spec §6, move_box_keyboard), for whoever does not drag: M on a box, or Move in its
-// details, picks it up and says the first place it could go and the nudge that writes it; the arrow keys step through
-// every place there is (box-drag.ts, placesFor), the box it would go by marked; Enter writes the nudge shown, through the
-// card's host, and Escape puts the box down and writes nothing. Nothing moves while the card is only read.
+// Moving a box from the keyboard (spec §6, move_box_keyboard), for whoever does not drag. M on a box, or Move in its
+// details, picks it up. It says the first place the box could go and the nudge that writes it. The arrow keys step
+// through every place there is (box-drag.ts, placesFor), and the box it would go by is marked. Enter writes the nudge
+// shown, through the card's host. Escape puts the box down and writes nothing. Nothing moves while the card is only read.
 import { landingSaid, placesFor, word } from '@thoughtknot/core';
 import type { Landing } from '@thoughtknot/core';
 import type { BoxMoving } from './box-drag-view';

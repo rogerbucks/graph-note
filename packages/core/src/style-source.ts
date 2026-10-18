@@ -17,8 +17,8 @@ import { diagramFor } from './types.ts';
 const id = (key: string) => `"${key}"`;
 
 /**
- * The source's `lines` with the box of `thing` written just before the box of `other`: twopi lays the things around a
- * centre in the order their boxes are written (radial_spoke_order), and a link never drawn would move one off its ring.
+ * The source's `lines` with the box of `thing` written just before the box of `other`. Twopi lays the things around a
+ * centre in the order their boxes are written (radial_spoke_order). A link never drawn would move one off its ring.
  */
 function writtenBefore(lines: string[], thing?: string, other?: string): string[] {
   const box = (k?: string) => lines.findIndex((l) => k !== undefined && l.startsWith(`  ${id(k)} [`));
@@ -31,13 +31,12 @@ function writtenBefore(lines: string[], thing?: string, other?: string): string[
 
 /**
  * The Graphviz source `dot` (from `layoutSource` or `drawingSource`) with the nudges written in before its last line:
- * each beside a `{rank=same; …}` line and each before an invisible link (in a radial drawing, the thing's box written
- * just before the other's instead), in the order written, after every link drawn —
+ * each beside a `{rank=same; …}` line and each before an invisible link, in the order written, after every link drawn —
  * so Graphviz numbers the drawn links as before — then one box (a cluster) for each group label, in the order first
  * written, its label in the kind caption's size and colour. A nudge naming a thing not among `keys` (the boxes drawn
  * here, as in a view that leaves it out) is left out; so is a group when the drawing is laid out as lanes (`diagram`, §15),
  * which draw each group inside its lane already (graph-layout.js, typedSource). With nothing to add, `dot` is returned
- * unchanged.
+ * unchanged. In a radial drawing, a before nudge writes the thing's box just before the other's, not a link.
  */
 export function nudgedSource(
   dot: string,

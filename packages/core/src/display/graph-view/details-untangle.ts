@@ -1,12 +1,12 @@
 // What a thing's details offer to untangle the drawing (spec §25): its neighbourhood alone, the shortest path to another
-// thing, and, for a busy hub, folding or opening its links; and moving its box (§6). A graph drawn as a table (§15) has
-// nothing to hide or bring forward, so there none of it is offered.
+// thing, and, for a busy hub, folding or opening its links. Its box can be moved too (§6). A graph drawn as a table
+// (§15) has nothing to hide or bring forward, so there none of it is offered.
 import { word } from '@thoughtknot/core';
 import type { ThingActions } from './untangle';
 
 /**
- * The offers for `key` in `el`, as buttons, if there is anything to offer them to (`on`); and Move, which picks its box
- * up to move it from the keyboard (§6, move_box_keyboard), when the card is given a way to (`move`).
+ * The offers for `key` in `el`, as buttons, if there is anything to offer them to (`on`). Move is offered too when the
+ * card is given a way to (`move`). It picks the box up, to move it from the keyboard (§6, move_box_keyboard).
  */
 export function untangleOffers(
   el: HTMLElement,

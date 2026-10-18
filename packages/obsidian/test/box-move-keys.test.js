@@ -1,6 +1,6 @@
-// Moving a box from the keyboard (editor spec §6, move_box_keyboard): M on a box picks it up and says the first place it
-// could go and the nudge that writes it; the arrow keys step through the places, Enter writes the nudge shown and says
-// so, and Escape puts the box down and writes nothing. A Move choice in a box's details does the same, for a person with
+// Moving a box from the keyboard (editor spec §6, move_box_keyboard). M on a box picks it up. It says the first place
+// it could go and the nudge that writes it. The arrow keys step through the places. Enter writes the nudge shown and
+// says so, and Escape puts the box down and writes nothing. A Move choice in a box's details does the same, for a person with
 // no keyboard to hand or who does not know M.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
