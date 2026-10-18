@@ -15,11 +15,9 @@ export const BENCHMARK_NAMES = [
 
 /**
  * How much an instruction count may grow with no reason recorded: 5%. Cachegrind counts the same code alike from run to
- * run; what varies is the little a JIT and a collector do differently. Counted three times under Cachegrind on ARM Linux
- * (npm run bench:local, 12 Oct 2026), a metric (each case less its setup) moved by at most 1.9% (draw_fifty, where the
- * engine's WebAssembly is), the others by 0.001% or less. That is not the release's x86-64 runner: once the "Quality
- * baseline" workflow has counted
- * three runs there, this may come down to a few times the spread it finds.
+ * run; what varies is the little a JIT and a collector do differently, and the processor's model, which the release
+ * runner's varies in and the baseline's machine does not hold. Counted three times on the release runner (18 Oct 2026,
+ * the "Quality baseline" job, WebAssembly compiled once: instruction-counts.mjs), no metric moved by 0.03%.
  */
 export const INSTRUCTION_TOLERANCE = 0.05;
 

@@ -168,7 +168,12 @@ export const OBSIDIAN = {
   },
   'the edit pane': async () => {
     const env = await paneNotes.open();
-    await until(() => env.el.querySelectorAll('g.node').length === 3);
+    // on a phone the pane opens on its text tab, the drawing kept until its tab is chosen
+    await until(
+      () =>
+        env.el.querySelectorAll('g.node').length === 3 ||
+        (!!env.el.querySelector('.graph-note-tabs') && !!env.el.querySelector('textarea')),
+    );
     return { env, el: env.el };
   },
   'the export form open on a card': async () => {
@@ -181,13 +186,13 @@ export const OBSIDIAN = {
     const { env, el } = await shownBlock(`---\nclassification: Internal\n---\n${noteOf(TRIP)}`, 0);
     labelled(el, word('bar.export')).click();
     const form = el.querySelector('.graph-note-export');
-    labelled(form, 'Export it').click();
-    await until(() => !!labelled(form, 'Export anyway'));
+    labelled(form, word('export.it')).click();
+    await until(() => !!labelled(form, word('export.anyway')));
     return { env, el };
   },
   'the AI send dialog, showing what will be sent': async () => {
     const { env, el } = await sendDialog();
-    const shower = el.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === 'Show what will be sent');
+    const shower = el.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === word('ai.show'));
     shower.click();
     await until(() => !!el.querySelector('.graph-note-ai-body'));
     return { env, el };
@@ -232,7 +237,7 @@ export const OBSIDIAN = {
     const { env, el } = await shownBlock(noteOf(GRAPH), 0);
     tapKey(el, 'large');
     el.querySelectorAll('button')
-      .find((b) => b.textContent.includes('Show only this and its neighbours'))
+      .find((b) => b.textContent.includes(word('details.show-only')))
       .click();
     assert.ok(el.querySelector('.graph-note-untangle'), 'the banner');
     return { env, el };
@@ -255,21 +260,21 @@ export const OBSIDIAN = {
     const walk = `${TRIP},\n(tour:Path {title: 'Sunday walk'}),\n(tour)-[:STEP {seq: 1}]->(home),\n(tour)-[:STEP {seq: 2}]->(park)`;
     const { env, el } = await shownBlock(noteOf(walk), 0);
     clock(env);
-    labelled(el, 'Play Sunday walk').click();
+    labelled(el, word('walk.play', { title: 'Sunday walk' })).click();
     assert.match(el.querySelector('.graph-note-walk [aria-live]').textContent, /Step 1 of 2/);
     return { env, el };
   },
   'adding a thing, while editing in place': async () => {
     const env = await load({ files: { [cardNotes.PATH]: cardNotes.NOTE } });
     const el = await editing(env);
-    await until(() => !!labelled(el, 'Add a thing'));
-    labelled(el, 'Add a thing').click();
+    await until(() => !!labelled(el, word('add.thing')));
+    labelled(el, word('add.thing')).click();
     assert.equal(el.querySelector('.graph-note-add-thing')?.hidden, false, 'the strip');
     return { env, el };
   },
   'the diagram types listed': async () => {
     const { env, el } = await shownBlock(noteOf(TEAM), 0);
-    labelled(el, 'Diagram type').click();
+    labelled(el, word('type.choose')).click();
     assert.equal(el.querySelector('.graph-note-type-list').hidden, false, 'the list');
     return { env, el };
   },

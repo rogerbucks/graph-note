@@ -39,3 +39,6 @@ the [whiteboard design](Whiteboard-design).
 
 A Copilot Cowork skill, which brings graph notes kept in OneDrive or SharePoint into Microsoft 365 Copilot Cowork, is
 designed in the [Copilot Cowork skill design](Copilot-Cowork-skill-design).
+
+Text to graph, where an AI breaks a piece of prose into a graph shown as a proposal, from the editor or as a skill,
+is designed in the [text to graph design](Text-to-graph-design).

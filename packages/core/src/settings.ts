@@ -9,9 +9,9 @@ import type { AiModel } from './ai-model.ts';
 import { vaultFolder } from './vault-folder.ts';
 import { AID_OPTIONS } from './settings-aids.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
-import type { MiniMapSetting } from './settings-aids.ts';
+import type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
 
-export type { MiniMapSetting } from './settings-aids.ts';
+export type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
 
 export type { AiModel } from './ai-model.ts';
 
@@ -62,6 +62,8 @@ export interface Settings extends StrictnessSettings {
   miniMap: MiniMapSetting;
   /** Whether the details panel stays open beside or below the drawing, showing the graph's summary (§24, details_always_visible). */
   detailsOpen: SwitchSetting;
+  /** How much of the window a drawing in a note may take (§24, drawing_height_setting). */
+  drawingHeight: DrawingHeightSetting;
   /** The colours exported images are drawn in. */
   exportTheme: ExportTheme;
   /** Whether an export saved in the vault gets a companion note. */
@@ -100,6 +102,7 @@ export const DEFAULT_SETTINGS: Settings = {
   noteCallouts: 'off',
   miniMap: 'auto',
   detailsOpen: 'off',
+  drawingHeight: 'most',
   exportTheme: 'light',
   companionNote: 'off',
   exportFolder: '',
@@ -364,6 +367,7 @@ export function settingsFrom(saved: unknown): Settings {
     noteCallouts: oneOf<SwitchSetting>('noteCallouts', s.noteCallouts, d.noteCallouts),
     miniMap: oneOf<MiniMapSetting>('miniMap', s.miniMap, d.miniMap),
     detailsOpen: oneOf<SwitchSetting>('detailsOpen', s.detailsOpen, d.detailsOpen),
+    drawingHeight: oneOf<DrawingHeightSetting>('drawingHeight', s.drawingHeight, d.drawingHeight),
     exportTheme: oneOf<ExportTheme>('exportTheme', s.exportTheme, d.exportTheme),
     companionNote: oneOf<CompanionSetting>('companionNote', s.companionNote, d.companionNote),
     exportFolder: vaultFolder(s.exportFolder) ?? d.exportFolder,

@@ -1,5 +1,5 @@
 // Finding your way from a card's details (editor spec §25, slice 3): a thing's links listed by relationship type and
-// direction in the core's words, each linked thing and each link a button that chooses it (details_links_listed,
+// direction in the core's words, in and out each in a part of its own (details_ins_outs), each linked thing and each link a button that chooses it (details_links_listed,
 // details_choose_moves); the back and forward steps of the trail of things chosen (details_trail); and the move to what
 // is chosen, brief and eased, at once when the system asks for reduced motion (details_move_motion). The words, the walk
 // and the easing are the core's; this puts them on the page and runs the move frame by frame.
@@ -28,12 +28,48 @@ export function linkWords(reading: NoteReading, graph: string, link: number): st
 /** A step of the trail, or the selection, by name: a thing's text, or "the link Tablet answers Which device?". */
 export function stepName(reading: NoteReading, graph: string, step: TrailStep): string {
   if ('key' in step) return reading.graphs.get(graph)?.boxes.find((b) => b.key === step.key)?.text ?? step.key;
-  return `the link ${linkWords(reading, graph, step.link).replace(/^Link: /, '')}`;
+  const d = reading.graphs.get(graph),
+    l = d?.links[step.link],
+    text = (k: string) => d?.boxes.find((b) => b.key === k)?.text ?? k;
+  return l
+    ? word('details.step-link', { from: text(l.from), reading: l.reading, to: text(l.to) })
+    : word('details.step-link-unknown');
 }
 
 /**
- * A thing's groups of links, one item each, read as the core words them: the words before the names, each name a button
- * that chooses the thing with a button beside it for each link that reaches it, and the words after, such as the count.
+ * A thing's links in two labelled parts, in before out (details_ins_outs): each part headed with its name and how many
+ * links it holds, its groups listed as `renderLinkGroups` lists them, or a line saying it has none. Side by side where
+ * the panel is wide, one above the other where it is narrow, as the style sheet lays them out.
+ */
+export function renderInsOuts(
+  el: HTMLElement,
+  groups: LinkGroup[],
+  linkName: (link: number) => string,
+  choose: (step: TrailStep) => void,
+): void {
+  const both = el.createDiv({ cls: 'graph-note-ins-outs' });
+  for (const [way, title, none] of [
+    ['in', word('details.links-in'), word('details.none-in')],
+    ['out', word('details.links-out'), word('details.none-out')],
+  ] as const) {
+    const these = groups.filter((g) => g.direction === way);
+    const part = both.createEl('section', { cls: `graph-note-links-part is-${way}` });
+    const id = `graph-note-links-${way}-${++parts}`;
+    const head = part.createEl('h4', { cls: 'graph-note-section-label', text: title, attr: { id } });
+    part.setAttribute('aria-labelledby', id);
+    head.createSpan({ cls: 'graph-note-count', text: String(these.reduce((n, g) => n + g.count, 0)) });
+    if (these.length) renderLinkGroups(part, these, linkName, choose);
+    else part.createEl('p', { cls: 'graph-note-none', text: none });
+  }
+}
+
+/** How many parts have been drawn, so each heading's id is the page's only one. */
+let parts = 0;
+
+/**
+ * A thing's groups of links, one item each: the group's reading as its heading, with its count when it holds more than
+ * one link, then its things one to a row, each a button that chooses the thing with a button beside it for each link
+ * that reaches it.
  */
 export function renderLinkGroups(
   el: HTMLElement,
@@ -44,15 +80,20 @@ export function renderLinkGroups(
   const ul = el.createEl('ul', { cls: 'graph-note-link-groups' });
   for (const g of groups) {
     const li = ul.createEl('li', { cls: 'graph-note-link-group' });
-    if (g.before) li.appendText(g.before);
-    g.things.forEach((t, i) => {
-      if (i > 0) li.appendText(i === g.things.length - 1 ? ' and ' : ', ');
-      thingButton(li, t.text, () => choose({ key: t.key }));
+    // the reading, or, where none could be guessed, the words after the names: "part of plan this"
+    const reading = li.createDiv({
+      cls: 'graph-note-link-reading',
+      text: (g.before || g.after.replace(/ \(\d+\)$/, '')).trim(),
+    });
+    if (g.count > 1) reading.createSpan({ cls: 'graph-note-count', text: String(g.count) });
+    const rows = li.createEl('ul', { cls: 'graph-note-link-rows' });
+    for (const t of g.things) {
+      const row = rows.createEl('li', { cls: 'graph-note-link-row' });
+      thingButton(row, t.text, () => choose({ key: t.key }));
       // a thing linked twice in the same way is named once, with a button for each of its links
       for (const n of t.links)
-        button(li, linkName(n), 'link', () => choose({ link: n })).addClass('graph-note-link-choice');
-    });
-    if (g.after) li.appendText(g.after);
+        button(row, linkName(n), 'link', () => choose({ link: n })).addClass('graph-note-link-choice');
+    }
   }
 }
 

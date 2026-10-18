@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
+import { propertiesShown } from './host/details-read.js';
 
 before(() => build());
 
@@ -151,7 +152,7 @@ describe('what a view card says and shows', () => {
       for (const g of el.querySelectorAll('g.edge[data-link]')) {
         g.dispatch('keydown', { key: 'Enter' });
         const label = g.getAttribute('aria-label');
-        const details = el.querySelector('.graph-note-details').textContent;
+        const details = propertiesShown(el.querySelector('.graph-note-details')).join('\n');
         if (/STEP|step/i.test(label) && /Home/.test(label)) assert.match(details, /seq: 1/, label);
         if (/STEP|step/i.test(label) && /park/.test(label)) assert.match(details, /seq: 2/, label);
         assert.doesNotMatch(details, /since/, `${label}: no other link's properties`);

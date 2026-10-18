@@ -254,8 +254,8 @@ describe('an empty graph block', () => {
       for (const typed of [EMPTY + '\n(', EMPTY + '\n(a', EMPTY + '\n(a:']) {
         type(el, typed);
         textarea(el).dispatch('keydown', { key: 'Tab' });
-        const chip = el.querySelector('.graph-note-suggestions button');
-        if (chip) chip.click();
+        const option = el.querySelector('.graph-note-suggestions [role="option"]');
+        if (option) option.click();
         assert.match(textarea(el).value, /^\/\/ graph: empty_trial · SOURCE\n\(/, typed);
       }
       await wait(400);

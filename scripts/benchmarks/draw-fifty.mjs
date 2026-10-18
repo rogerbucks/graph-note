@@ -62,6 +62,8 @@ export function drawingBenchmark({ name, spec, count, links, budget, says }) {
       'through-runner': async ({ runner, block }) => drawn(await runner.draw(readNote([block]).graphs.get('g')), count),
     },
     counted: ['draw', 'through-runner'],
+    // the engine's WebAssembly compiled by the optimising compiler alone, in the warm draw (instruction-counts.mjs)
+    nodeFlags: ['--no-liftoff'],
     claims: [
       withinBudget(budget, 'draw', `read and drawn ${says}`),
       withinBudget(budget, 'through-runner', `read and drawn through the layout runner ${says}`),

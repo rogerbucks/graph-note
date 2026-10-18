@@ -19,7 +19,7 @@ import { toggleExportForm } from '../export/export-form';
 import { markView, renderViewStrip } from './view-strip';
 import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
-import { plural, renderBar } from './view-bar';
+import { renderBar } from './view-bar';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
 import { markFlow, renderFlowLegend } from './flow-marks';
@@ -158,12 +158,12 @@ export class GraphView extends Lifecycle {
         { drawing: () => this.drawing(), relaid: (d) => this.relaid(d), shown: () => this.apply(this.zoom.view()) },
         this,
       );
-
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
-    this.walk = new Walk(root, this.o, () => this.svg ?? undefined); // walked paths: Play, and Record while edited (§7)
-    if (this.o.writeView) this.maker = new ViewMaker(root, this.o); // a view made by tapping, while edited (§7)
-    if (this.o.editing) this.adder = new AddThing(root, this.o); // a thing added from its text, while edited (§5)
+    const tools = root.createDiv({ cls: 'graph-note-card-tools' }); // the card's tools, in one row under the bar
+    this.walk = new Walk(root, this.o, () => this.svg ?? undefined, tools); // walked paths: Play, and Record while edited (§7)
+    if (this.o.writeView) this.maker = new ViewMaker(tools, this.o); // a view made by tapping, while edited (§7)
+    if (this.o.editing) this.adder = new AddThing(tools, this.o); // a thing added from its text, while edited (§5)
     const view = this.o.view;
     const writes: HTMLElement[] = view
       ? renderViewStrip(root, view, () => this.sel.shownNow(this.zoom.view(), this.details.selectedKey()))
@@ -181,7 +181,7 @@ export class GraphView extends Lifecycle {
       attr: {
         tabindex: '0',
         role: 'group',
-        'aria-label': `Drawing of graph ${this.o.graph}: ${plural(this.o.drawn.width ? this.boxes().length : 0, 'thing')}. Plus, minus and zero zoom; Escape leaves full screen.`,
+        'aria-label': word('drawing.of', { graph: this.o.graph, count: this.o.drawn.width ? this.boxes().length : 0 }),
       },
     });
     // a graph drawn as a table is the plugin's own table; any other, the SVG Graphviz drew (§15)
@@ -309,12 +309,12 @@ export class GraphView extends Lifecycle {
 
   /** The viewport's size to draw it at (viewport-size.ts). */
   private viewportSize() {
-    return viewportSize(this.viewport, this.drawn, this.o.mode, this.across);
+    return viewportSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest);
   }
 
   /** The viewport's size to tell the zoom: none while hidden or not yet laid out, so the zoom keeps its view (§25). */
   private zoomSize() {
-    return zoomSize(this.viewport, this.drawn, this.o.mode, this.across);
+    return zoomSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest);
   }
 
   /**

@@ -3,8 +3,16 @@
 // so each is found by the settings search. Each change is saved at once, read back as the core reads settings.
 import { PluginSettingTab } from 'obsidian';
 import type { App, SettingDefinition, SettingDefinitionItem } from 'obsidian';
-import { OPTIONS, classMapFrom, classMapProblems, classMapText, unmatchedClasses, word } from '@graph-note/core';
-import type { MatrixRow, Option, Settings, WordKey } from '@graph-note/core';
+import {
+  OPTIONS,
+  classMapFrom,
+  classMapProblems,
+  classMapText,
+  optionSaid,
+  unmatchedClasses,
+  word,
+} from '@graph-note/core';
+import type { MatrixRow, Option, Settings } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { knownClass } from '../ai/matrix-known';
 import { readMatrix } from '../ai/matrix-note';
@@ -21,18 +29,6 @@ const SECTION_WORDS = {
   Drawing: 'settings.section.drawing',
   Export: 'settings.section.export',
 } as const;
-
-/** The options whose names are in the catalogue so far; the others follow as the settings page is brought to it. */
-const OPTION_WORDS: Partial<Record<string, WordKey>> = {
-  strictness: 'settings.option.strictness',
-  aiModels: 'settings.option.ai-models',
-};
-
-/** An option's name, in the person's language where the catalogue has it. */
-const nameOf = (o: Option): string => {
-  const key = OPTION_WORDS[o.key];
-  return key ? word(key) : o.name;
-};
 
 /** The plugin's settings page. */
 export class GraphNoteSettingTab extends PluginSettingTab {
@@ -67,36 +63,41 @@ export class GraphNoteSettingTab extends PluginSettingTab {
   }
 
   /** The rows an option is shown in: one for most; for the departures, one each and the action that converts. */
-  private definitions(o: Option): SettingDefinition[] {
+  private definitions(option: Option): SettingDefinition[] {
     const s = this.owner.settings;
+    const o = optionSaid(option);
     if (o.key === 'allowed')
       return [
-        { name: nameOf(o), desc: o.sentence },
+        { name: o.name, desc: o.sentence },
         ...(o.choices ?? []).map((c): SettingDefinition => ({
           name: c.name,
           desc: c.sentence ?? '',
           control: { type: 'toggle', key: `allowed.${c.value}` },
         })),
         {
-          name: 'Convert to standard GQL',
-          desc: 'Writes the note in front back as standard GQL, once the standard checker passes it.',
+          name: word('settings.convert'),
+          desc: word('settings.convert.sentence'),
           action: () => void this.owner.convertToStandard(),
         },
       ];
     if (o.key === 'classifications')
-      return [{ name: nameOf(o), desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
-    if (o.key === 'aiModels') return [{ name: nameOf(o), desc: o.sentence }];
+      return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
+    if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
     if (o.key === 'exportFolder' || o.key === 'aiMatrixNote' || o.key === 'decider')
-      return [{ name: nameOf(o), desc: o.sentence, control: { type: 'text', key: o.key } }];
+      return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: o.key } }];
     if (o.key === 'aiClassMap')
       return [
         {
-          name: nameOf(o),
+          name: o.name,
           // a class of the matrix matched by neither name nor the table here is said, never guessed
           desc: [
             o.sentence,
             ...(unmatchedClasses(this.matrix, s.classifications, s.aiClassMap).length
-              ? [`Flagged now: ${unmatchedClasses(this.matrix, s.classifications, s.aiClassMap).join(', ')}.`]
+              ? [
+                  word('settings.flagged', {
+                    classes: unmatchedClasses(this.matrix, s.classifications, s.aiClassMap).join(', '),
+                  }),
+                ]
               : []),
             ...classMapProblems(s.classifications, s.aiClassMap),
           ].join(' '),
@@ -108,7 +109,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     if (o.key === 'exportAsksAbove' || o.key === 'aiUnlabelled')
       return [
         {
-          name: nameOf(o),
+          name: o.name,
           desc: o.sentence,
           control: {
             type: 'dropdown',
@@ -120,7 +121,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     const chosen = o.choices?.find((c) => c.value === s[o.key]);
     return [
       {
-        name: nameOf(o),
+        name: o.name,
         desc: chosen?.sentence ? `${o.sentence} ${chosen.sentence}` : o.sentence,
         control: {
           type: 'dropdown',

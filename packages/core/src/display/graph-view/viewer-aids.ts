@@ -1,8 +1,10 @@
 // The viewer's aids as the settings say (editor spec §24), and the card's use of them: when the mini-map shows
 // (mini_map_setting), whether the details panel stays open (details_always_visible) and where it goes (details_narrow),
+// how tall a drawing in a note may be (drawing_height_setting),
 // and the quick-info tooltip. A card is given the settings with its other options, the same in a note, the pane and full
 // screen; `Aids` holds the parts a card builds from them.
 import type { Lifecycle } from '../lifecycle';
+import { tallestOf } from '@graph-note/core';
 import type { Drawn, MiniMapSetting, Settings, View, Zoom } from '@graph-note/core';
 import type { DetailsPanel } from './details-panel';
 import { MiniMap } from './mini-map';
@@ -15,10 +17,16 @@ export interface ViewerAids {
   miniMap: MiniMapSetting;
   /** Whether the details panel stays open, showing the graph's summary while nothing is chosen. */
   detailsOpen: boolean;
+  /** The share of the window a drawing in a note may take (§24, drawing_height_setting); null for no limit. */
+  tallest?: number | null;
 }
 
 /** The aids the settings give. */
-export const aidsOf = (s: Settings): ViewerAids => ({ miniMap: s.miniMap, detailsOpen: s.detailsOpen === 'on' });
+export const aidsOf = (s: Settings): ViewerAids => ({
+  miniMap: s.miniMap,
+  detailsOpen: s.detailsOpen === 'on',
+  tallest: tallestOf(s.drawingHeight),
+});
 
 /** How wide a card must be, in pixels, for the details to sit beside the drawing; narrower, they go below it (§24). */
 const BESIDE_MIN = 560;

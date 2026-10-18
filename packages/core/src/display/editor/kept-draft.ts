@@ -16,12 +16,12 @@ import type { KeptDraft } from './editor-note';
  */
 export const keptMessage = (reason: string, deleted: string, edit = false, stopped = false): string =>
   edit
-    ? `The edit was not written: ${reason}. The block is as the note has it, and the edit is kept as a draft.`
+    ? word('editor.edit-kept', { reason })
     : stopped
-      ? `${reason} What you typed is kept as a draft.`
+      ? word('editor.stopped-kept', { reason })
       : reason === NOTE_DELETED
         ? deleted
-        : `The block changed in the note while you were typing (${reason}), so it was reloaded. What you typed is kept as a draft.`;
+        : word('editor.changed-kept', { reason });
 
 /** The drafts an editor's banner offers and acts on: the one to show, and each by its id. */
 export interface DraftsOf {
@@ -47,7 +47,7 @@ export function offerDraft(
   banner.hidden = !kept;
   if (!kept) return;
   banner.createEl('p', {
-    text: message ?? `A draft of this block, kept on ${kept.kept.slice(0, 16).replace('T', ' ')}, can be restored.`,
+    text: message ?? word('editor.draft-kept', { when: kept.kept.slice(0, 16).replace('T', ' ') }),
   });
   const forget = () => {
     banner.hidden = true;
@@ -55,7 +55,7 @@ export function offerDraft(
   };
   button(
     banner,
-    'Restore draft',
+    word('editor.restore'),
     'rotate-ccw',
     () => {
       const now = drafts.draftById(kept.id);
@@ -68,7 +68,7 @@ export function offerDraft(
       forget();
       restored();
     },
-    'Restore draft',
+    word('editor.restore'),
   );
-  button(banner, 'Discard draft', 'trash', forget, 'Discard draft');
+  button(banner, word('editor.discard'), 'trash', forget, word('editor.discard'));
 }

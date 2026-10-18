@@ -4,7 +4,23 @@
 // by laying the graph out again, which the card puts in place keeping the selection and the focus; a busy hub's stub, a
 // folded group's box and a hub's details open and fold them the same way. Nothing here reaches the note, so the menu is
 // offered and works in reading view too (view_switch_view_only); it says in words when the graph could not be redrawn.
-import { SWITCH_NAMES, VIEW_SWITCHES, edgesOf, foldsHiding, labelsHidden, word } from '@graph-note/core';
+import {
+  OPTIONS,
+  SWITCH_NAMES,
+  SWITCH_SETTINGS,
+  VIEW_SWITCHES,
+  edgesOf,
+  foldsHiding,
+  labelsHidden,
+  optionSaid,
+  word,
+} from '@graph-note/core';
+
+/** A switch's name in the person's language: its setting's, which the settings page says too. */
+const nameOf = (s: ViewSwitch): string => {
+  const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
+  return o ? optionSaid(o).name : SWITCH_NAMES[s];
+};
 import type { Drawn, GraphDrawing, ViewState, ViewSwitch } from '@graph-note/core';
 import type { SwitchesShown } from './view-options';
 
@@ -30,8 +46,10 @@ export function renderViewMenu(
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
   for (const s of VIEW_SWITCHES) {
     const b = el.createEl('button', { cls: 'graph-note-switch', attr: { type: 'button', role: 'switch' } });
-    b.createSpan({ text: SWITCH_NAMES[s] });
-    const says = b.createSpan({ cls: 'graph-note-switch-state' });
+    // the name is the switch's name; the toggle and its words show its state, which aria-checked says to a screen reader
+    b.createSpan({ cls: 'graph-note-switch-name', text: nameOf(s) });
+    b.createSpan({ cls: 'graph-note-switch-track', attr: { 'aria-hidden': 'true' } });
+    const says = b.createSpan({ cls: 'graph-note-switch-state', attr: { 'aria-hidden': 'true' } });
     b.addEventListener('click', () => turned(s, !state.switches[s]));
     switches.push({ s, b, says });
   }
@@ -39,7 +57,7 @@ export function renderViewMenu(
   const refresh = () => {
     for (const { s, b, says } of switches) {
       b.setAttribute('aria-checked', String(state.switches[s]));
-      says.setText(state.switches[s] ? ' — on' : ' — off');
+      says.setText(word(state.switches[s] ? 'view.on' : 'view.off'));
     }
   };
   refresh();

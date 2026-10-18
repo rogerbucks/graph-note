@@ -9,6 +9,8 @@
 //   node scripts/quality-metrics.mjs                       measure everything, print the JSON
 //   node scripts/quality-metrics.mjs --out quality/metrics.json   write it to a file instead
 //   node scripts/quality-metrics.mjs --fast                only the quick metrics, from the files (no audit, build or suite)
+//   node scripts/quality-metrics.mjs --reuse <file>        keep an earlier run's instruction count for each benchmark
+//                                                          whose fingerprint is unchanged (scripts/instruction-counts.mjs)
 //
 // The audit reaches the npm registry, and the suite runs twice (a minute or so): this is the release's job, not CI's.
 import { spawnSync } from 'node:child_process';
@@ -126,9 +128,9 @@ export async function measureBundle() {
  * The benchmarks' work, counted in instructions by Cachegrind (scripts/instruction-counts.mjs), never timed; where
  * Valgrind is not installed, nothing is counted, said in one line.
  */
-async function measureWork() {
+async function measureWork(reuse) {
   const { measureInstructions } = await import('./instruction-counts.mjs');
-  const counted = await measureInstructions();
+  const counted = await measureInstructions({ reuse });
   if (!counted.details.instructions.measured) console.error(`instruction counts: ${counted.details.instructions.why}`);
   return counted;
 }
@@ -137,8 +139,8 @@ async function measureWork() {
  * Everything: the quick metrics, the audit, the bundle, the benchmarks' instructions, the machine's speed (by the wall
  * clock, as the suite's duration is), and the suite (twice).
  */
-export async function measureAll() {
-  const parts = [measureFast(), measureAudit(), await measureBundle(), await measureWork(), measureSuite(ROOT)];
+export async function measureAll({ reuse } = {}) {
+  const parts = [measureFast(), measureAudit(), await measureBundle(), await measureWork(reuse), measureSuite(ROOT)];
   const metrics = Object.assign({}, ...parts.map((p) => p.metrics), { speed_index: speedIndex() });
   const details = Object.assign({}, ...parts.map((p) => p.details));
   return { metrics, details };
@@ -147,7 +149,9 @@ export async function measureAll() {
 async function main(argv) {
   const fast = argv.includes('--fast');
   const out = argv.includes('--out') ? argv[argv.indexOf('--out') + 1] : null;
-  const { metrics, details } = fast ? measureFast() : await measureAll();
+  const earlier = argv.includes('--reuse') ? argv[argv.indexOf('--reuse') + 1] : null;
+  const reuse = earlier ? JSON.parse(readFileSync(resolve(ROOT, earlier), 'utf8')).details?.instructions : undefined;
+  const { metrics, details } = fast ? measureFast() : await measureAll({ reuse });
   if (details.failing?.length) {
     console.error(`the suite fails, so its metrics mean nothing:\n${details.failing.join('\n')}`);
     return 1;

@@ -41,6 +41,7 @@ const KEEPS_OWN = {
 const FOCUS_SHOWN = {
   '.graph-note-svg g.node:focus': '.graph-note-svg g.node:focus-visible > :is(path, polygon)',
   '.graph-note-editor textarea.graph-note-text': '.graph-note-editor:focus-within',
+  '.graph-note-type-list button:focus-visible': '.graph-note-type-list button:focus-visible::after',
 };
 
 const ruleWith = (rules, selector, media = '') =>

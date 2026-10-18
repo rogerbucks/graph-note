@@ -4,7 +4,7 @@
 // the configured level, the question asked before anything is written (classified_export). A path that can be played is
 // offered too, as an animated SVG at a pace chosen (path_animation_export). A graph or view too large to draw, shown as
 // text, gets a bar of its own with an Export button for its data alone (`dataExportBar`).
-import { DEFAULT_PACE, PATH_PACES, isDataFormat, paceSaid, word } from '@graph-note/core';
+import { DEFAULT_PACE, PATH_PACES, isDataFormat, word } from '@graph-note/core';
 import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
 import { button } from '../graph-view/view-bar';
 import type { ExportAsk, ExportOutcome } from './export-types';
@@ -29,11 +29,16 @@ const IMAGE_FORMATS: [string, string][] = [
   ['svg', 'SVG'],
   ['png', 'PNG'],
 ];
-const DATA_FORMATS: [string, string][] = [
-  ['gql', 'Data as a GQL block'],
-  ['csv', 'Data as CSV'],
-  ['graphml', 'Data as GraphML'],
+/** The data formats, said in the person's language when the form is drawn. */
+const dataFormats = (): [string, string][] => [
+  ['gql', word('export.data-gql')],
+  ['csv', word('export.data-csv')],
+  ['graphml', word('export.data-graphml')],
 ];
+
+/** A pace, as the form offers it; what an exported file says of it stays in UK English (`paceSaid`). */
+export const paceOffered = (ms: number): string =>
+  ms === 500 ? word('export.pace-half') : word('export.pace-seconds', { count: ms / 1000 });
 
 const select = (el: HTMLElement, label: string, options: [string, string][], value: string) => {
   const s = el.createEl('label', { text: label }).createEl('select', { attr: { 'aria-label': label } });
@@ -62,20 +67,20 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
   const el = parent.createDiv({ cls: 'graph-note-export', attr: { role: 'group', 'aria-label': word('export.form') } });
   const scopes: [string, string][] = x.view
     ? [
-        ['view', `View ${x.view.name}`],
-        ['context', `View ${x.view.name}, with the rest faded`],
-        ['whole', 'The whole diagram'],
+        ['view', word('export.view', { name: x.view.name })],
+        ['context', word('export.view-in-context', { name: x.view.name })],
+        ['whole', word('export.whole')],
       ]
-    : [['whole', 'The whole diagram']];
+    : [['whole', word('export.whole')]];
   // a path played, as an animated SVG of the whole diagram (§7): only where there is a drawing
   const paths = x.dataOnly ? [] : (x.paths ?? []);
-  for (const p of paths) scopes.push([`path:${p.id}`, `Path ${p.title}, played as an animated SVG`]);
-  const what = select(el, 'What to export', scopes, x.walk ? `path:${x.walk.id}` : (scopes[0]?.[0] ?? 'whole'));
+  for (const p of paths) scopes.push([`path:${p.id}`, word('export.path', { title: p.title })]);
+  const what = select(el, word('export.what'), scopes, x.walk ? `path:${x.walk.id}` : (scopes[0]?.[0] ?? 'whole'));
   // an image, or the data the image shows (export_data_formats); only the data where there is no drawing
-  const formats = x.dataOnly ? DATA_FORMATS : [...IMAGE_FORMATS, ...DATA_FORMATS];
-  const format = select(el, 'Format', formats, formats[0]?.[0] ?? 'gql');
-  const paces = PATH_PACES.map((ms): [string, string] => [String(ms), paceSaid(ms)]);
-  const pace = paths.length ? select(el, 'Pace', paces, String(x.walk?.pace ?? DEFAULT_PACE)) : null;
+  const formats = x.dataOnly ? dataFormats() : [...IMAGE_FORMATS, ...dataFormats()];
+  const format = select(el, word('export.format'), formats, formats[0]?.[0] ?? 'gql');
+  const paces = PATH_PACES.map((ms): [string, string] => [String(ms), paceOffered(ms)]);
+  const pace = paths.length ? select(el, word('export.pace'), paces, String(x.walk?.pace ?? DEFAULT_PACE)) : null;
   const played = () => what.value.startsWith('path:');
   // a played path is an animated SVG, and only it has a pace
   const scoped = () => {
@@ -87,10 +92,10 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
   what.addEventListener('change', scoped);
   const theme = select(
     el,
-    'Theme',
+    word('export.theme'),
     [
-      ['light', 'Light'],
-      ['dark', 'Dark'],
+      ['light', word('settings.export-theme.light')],
+      ['dark', word('settings.export-theme.dark')],
     ],
     x.theme,
   );
@@ -105,20 +110,28 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
   // closed: the focus goes back to the bar's Export button, never lost to the page
   const close = () => {
     el.remove();
-    parent.querySelector<HTMLElement>('.graph-note-bar [aria-label="Export"]')?.focus();
+    Array.from(parent.querySelectorAll<HTMLElement>('.graph-note-bar button'))
+      .find((b) => b.getAttribute('aria-label') === word('bar.export'))
+      ?.focus();
   };
   let busy = false;
   const show = (outcome: ExportOutcome) => {
     said.empty();
     if ('ask' in outcome) {
       said.createSpan({ text: outcome.ask });
-      const anyway = button(said, 'Export anyway', 'check', () => void go(true), 'Export anyway');
-      button(said, 'Do not export', 'x', close, 'Do not export');
+      const anyway = button(said, word('export.anyway'), 'check', () => void go(true), word('export.anyway'));
+      button(said, word('export.do-not'), 'x', close, word('export.do-not'));
       anyway.focus();
     } else if ('share' in outcome) {
-      said.createSpan({ text: `${outcome.share.name} is ready.` });
+      said.createSpan({ text: word('export.ready', { name: outcome.share.name }) });
       // a phone opens its share sheet only from a tap of the person's own
-      const share = button(said, 'Share', 'share', () => void outcome.share.run().then(show), 'Share');
+      const share = button(
+        said,
+        word('export.share'),
+        'share',
+        () => void outcome.share.run().then(show),
+        word('export.share'),
+      );
       share.focus();
     } else if ('done' in outcome) close();
     else said.setText(outcome.stopped);
@@ -152,7 +165,7 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
       el.removeAttribute('aria-busy');
     }
   };
-  const it = button(el, 'Export it', 'download', () => void go(false), 'Export it');
+  const it = button(el, word('export.it'), 'download', () => void go(false), word('export.it'));
   what.focus();
 }
 

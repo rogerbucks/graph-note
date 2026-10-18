@@ -11,6 +11,7 @@ import { PATH, showIn } from './host/card-notes.js';
 import { tapKey } from './host/inspector-steps.js';
 import { fakeContext } from './host/fake-obsidian.js';
 import { pressTheRest } from './host/details-controls.js';
+import { groupsRead, propertiesShown } from './host/details-read.js';
 
 before(() => build());
 
@@ -86,7 +87,7 @@ describe('a card in reading view shows its details and offers nothing that write
       tapKey(shown.reading, 'large');
       const d = details(shown.reading);
       assert.ok(d && !d.hidden, 'the details are shown');
-      const items = d.querySelectorAll('li').map((li) => li.textContent);
+      const items = propertiesShown(d);
       assert.ok(items.includes('name: Large reader') && items.includes('weight: 180'), `its properties: ${items}`);
       assert.ok(!d.querySelector('.metadata-add-button'), 'no Add property');
       assert.ok(!d.textContent.includes('Add property'));
@@ -128,10 +129,7 @@ describe('a card in reading view shows its details and offers nothing that write
       const shown = await readingWhileEdited(env);
       tapKey(shown.reading, 'q');
       assert.equal(details(shown.reading).querySelectorAll('input').length, 0, 'a thing: no field');
-      const items = () =>
-        details(shown.reading)
-          .querySelectorAll('li')
-          .map((li) => li.textContent);
+      const items = () => propertiesShown(details(shown.reading));
       assert.ok(items().includes('title: Which device?'), `its property is shown: ${items()}`);
       shown.reading
         .querySelectorAll('g.edge')
@@ -164,7 +162,7 @@ describe('a card in reading view shows its details and offers nothing that write
       const d = details(shown.reading);
       assert.ok(!d.querySelector('.multi-select-pill-remove-button'), 'no x');
       assert.ok(!d.querySelector('input.multi-select-input'), 'no field to add');
-      const items = d.querySelectorAll('li').map((li) => li.textContent);
+      const items = groupsRead(d);
       // listed as the details list a thing's links, grouped and in words (§25, details_links_listed)
       assert.ok(items.includes('has tag light and cheap (2)'), `its things: ${items}`);
       await unchanged(env, shown);
@@ -336,7 +334,7 @@ describe('a card in reading view shows its details and offers nothing that write
         pressed(full, () => tapKey(full, 'large'), ['Close details', ...LARGE_LINKS, ...UNTANGLING]),
         KEPT,
       );
-      assert.ok(details(full).textContent.includes('name: Large reader'), 'its properties are shown');
+      assert.ok(propertiesShown(details(full)).includes('name: Large reader'), 'its properties are shown');
       await unchanged(env, shown);
     } finally {
       env.uninstall();

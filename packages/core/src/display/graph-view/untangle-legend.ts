@@ -2,9 +2,14 @@
 // as a button; choosing one brings it forward and fades the rest, choosing it again hides it, and once more puts it back.
 // Each says where it stands in words as well as by its look. Nothing here writes to the note: a view's Save as shown
 // writes the choices (§25, untangle_legend), and a view saved so opens with them.
+import { word } from '@graph-note/core';
 import type { LegendFilter, LegendItem, LegendState } from '@graph-note/core';
 
-const SAYS: Record<LegendState, string> = { normal: '', forward: ' — in front', hidden: ' — hidden' };
+const SAYS: Record<LegendState, () => string> = {
+  normal: () => '',
+  forward: () => word('untangle.in-front'),
+  hidden: () => word('untangle.hidden'),
+};
 // only a line brought forward is pressed in: a hidden one says so in words, and is struck through
 const PRESSED: Record<LegendState, string> = { normal: 'false', forward: 'true', hidden: 'false' };
 
@@ -24,19 +29,19 @@ export function renderLegend(
 ): LegendPanel {
   const el = root.createDiv({
     cls: 'graph-note-filter',
-    attr: { role: 'group', 'aria-label': 'Kinds and relationship types' },
+    attr: { role: 'group', 'aria-label': word('untangle.legend') },
   });
   el.hidden = true;
   const buttons: { item: LegendItem; b: HTMLButtonElement; says: HTMLElement }[] = [];
   const refresh = () => {
     for (const { item, b, says } of buttons) {
       const state = filter.state(item.id);
-      says.setText(SAYS[state]);
+      says.setText(SAYS[state]());
       b.setAttribute('aria-pressed', PRESSED[state]);
       b.toggleClass('is-hidden', state === 'hidden');
     }
   };
-  if (!items.length) el.createEl('p', { cls: 'graph-note-quiet', text: 'Nothing to filter.' });
+  if (!items.length) el.createEl('p', { cls: 'graph-note-quiet', text: word('untangle.nothing-to-filter') });
   const ul = el.createEl('ul');
   for (const item of items) {
     const b = ul.createEl('li').createEl('button', { cls: `graph-note-filter-${item.what}`, attr: { type: 'button' } });
