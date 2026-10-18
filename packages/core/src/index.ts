@@ -104,7 +104,7 @@ export { Zoom, MAX_SCALE, STEP } from './zoom.ts';
 export { AcrossZoom } from './zoom-across.ts';
 export type { Mode, Place, Size, View, ZoomEvent } from './zoom.ts';
 export { MOVE_MS, READABLE_SCALE, Trail, coverOf, glideAt, linkGroups, pointerTo, sheetLimit } from './details-nav.ts';
-export { thingSaid } from './details-said.ts';
+export { linksSaid, thingSaid } from './details-said.ts';
 export type { LinkGroup, Pointing, TrailStep } from './details-nav.ts';
 export { tokenize, TOKEN_CLASSES } from './tokens.ts';
 export type { Token, TokenClass } from './tokens.ts';

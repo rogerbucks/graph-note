@@ -623,7 +623,8 @@
     "requirements": [
       "hosts_pass_contract",
       "layers_checked",
-      "affected_tests_by_imports"
+      "affected_tests_by_imports",
+      "drawing_counts_regained"
     ]
   },
   "P1": {
