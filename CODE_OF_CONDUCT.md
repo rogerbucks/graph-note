@@ -28,8 +28,8 @@ report is read in confidence, and the person who made it is never named without 
 
 ## What happens next
 
-The maintainer may edit or remove a comment, lock a conversation, or ask, warn or block a person, depending on what
-happened and whether it has happened before. The person is told why.
+The maintainer may edit or remove a comment, lock a conversation, or ask, warn or block a person. What they do depends
+on what happened and whether it has happened before. The person is told why.
 
 This code applies everywhere the project meets people: its repository, its wiki, its discussions, and anywhere someone
 speaks for it.

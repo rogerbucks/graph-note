@@ -3,8 +3,12 @@
 Graph Note draws the graphs written in your notes, and lets you change them by typing or by tapping and dragging the
 drawing. It works on desktop and phone, and offline.
 
-It is being built as one product with four ways in: an **Obsidian plugin** (available now, in testing), a **standalone
-app**, a **VS Code plugin** and a **JavaScript library**.
+It is being built as one product with four ways in:
+
+- an **Obsidian plugin** (available now, in testing);
+- a **standalone app**;
+- a **VS Code plugin**;
+- a **JavaScript library**.
 
 ## Where things stand
 

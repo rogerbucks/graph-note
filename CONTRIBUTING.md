@@ -64,6 +64,11 @@ CI. A change that breaks one fails before it is merged.
   touches many files, changes a library both languages share, or changes the build, CI or dependencies. The biggest are
   reviewed before merging. A small, contained change may be committed straight to `main` once the gate passes.
 - **UK spelling** in code, comments, messages and the interface.
+- **Plain English for every reader, ADHD readers included** (Roger, 18 Oct 2026). This covers every document and code
+  comment. Keep sentences to 25 words and paragraphs to 80. Put a heading at least every 400 words. Lead with the point,
+  and use lists and tables where they help. Leave out filler words; `scripts/plain-docs.mjs` lists them, each with what
+  to write instead. `node scripts/plain-docs.mjs <path>` lists what to fix. A file may never get worse, and a new file
+  starts clean.
 
 ## Signing off your work
 
@@ -315,6 +320,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/a11y-keyboard-devices-page-2.test.js` — half 2 of the keyboard-only run of the browser editor's page in a phone's width, its phone layout: the states `test/repository/keyboard-page.js` gives half 2 (editor spec §11, keyboard_any_device).
 - `test/speed-budgets.test.js` — each host held, in CPU instructions, to a budget for drawing 50 things and 500, a query over a 10 000-thing mesh (100 notes of 100 things, until slice 6 builds the mesh) and a cold start of each host: every budget set in `scripts/benchmarks/budgets.mjs` with where its number comes from, each a benchmark's claim in the quality ratchet, each case doing its work, and a count over its budget breaking the claim (editor spec §41, speed_budgets).
 - `test/ux-copy.test.js` — every message the user reads in every view of every host (the views `test/wcag.test.js` checks, with the notices and menu items the host shows; the person's own words left out) reads at grade 9 or lower, keeps its sentences to 25 words and uses none of the listed jargon (scored by `scripts/plain-english.mjs`); a message that misses for a reason is recorded in `quality/copy.json` and may never score worse without the record raised; the check is tried first (editor spec §41, ux_copy_auto).
+- `test/plain-docs.test.js` — every document and code comment is plain English for a reader with ADHD (editor spec §41, plain_docs_auto). Sentences keep to 25 words and paragraphs to 80. A heading comes at least every 400 words, and no filler words are used. The reader pages read at grade 9 or lower. `quality/plain-docs.json` counts the misses each file had when the check came in, and a count may only fall.
 - `test/a11y-targets-reflow.test.js` — pointer targets and reflow in a real Chrome (spec §41, a11y_targets_reflow_auto; SC 2.5.8, 1.4.10): every view of every host (the Obsidian harness in the user guide's states, the browser page served over a vault, each of its phone tabs) as wide as a desktop and at 320 CSS pixels, every control 24 by 24 at least (the drawing's boxes and a link in a sentence aside), no sideways scroll at 320, and every control seen wide still there and in reach; the judging tried first on made-up measures and planted faults. Chrome is `GRAPH_NOTE_CHROME` or the first on the PATH (`scripts/chrome.mjs`); with none it skips in one line, except in CI.
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 

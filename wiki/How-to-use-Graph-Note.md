@@ -53,8 +53,8 @@ Tap any thing to see its details and the things linked to it.
 
 ## 3. Change the layout
 
-Press **Diagram type** (just above the drawing) to choose how it is laid out: a network, a tree, a flow, a circle around
-one thing, lanes, a timeline, or a table. Graph Note suggests the type that suits your graph best, and explains why a
+Press **Diagram type** (just above the drawing) to choose how it is laid out. It can be a network, a tree, a flow, a
+circle around one thing, lanes, a timeline, or a table. Graph Note suggests the type that suits your graph best, and explains why a
 type cannot be used when it does not fit.
 
 <!-- wiki:shot diagram-types -->
@@ -73,8 +73,8 @@ You can also add things with **Add a thing**, and every change can be undone.
 
 ## 5. Fix problems
 
-When something in a graph is not right, such as a link to a thing that does not exist, the button at the top left of the
-drawing shows how many problems there are instead of "No problems". Press it to see each one, with the line it is on
+Sometimes something in a graph is not right, such as a link to a thing that does not exist. Then the button at the top
+left of the drawing shows how many problems there are, instead of "No problems". Press it to see each one, with the line it is on
 and the fix. The drawing still shows your best guess, marked with a warning sign and a dashed line, so you never lose
 your work.
 
@@ -89,8 +89,8 @@ light or dark theme, then press **Export it**.
 
 ## 7. Ask questions of a graph
 
-A block that starts with `MATCH` asks a question of a graph instead of drawing one, such as "which option has the most
-reasons in its favour". It is shown as text. Press **Copy** to copy it, or **Edit** to change it.
+A block that starts with `MATCH` asks a question of a graph instead of drawing one. For example: "which option has the
+most reasons in its favour". It is shown as text. Press **Copy** to copy it, or **Edit** to change it.
 
 ## 8. Use AI, safely
 
