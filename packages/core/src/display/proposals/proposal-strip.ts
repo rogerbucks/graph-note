@@ -1,5 +1,5 @@
 // A proposal's card (spec §17). Above the drawing it shows who proposed it, when and what it read. Before anything is
-// accepted, a notice says when the graph has moved since. The changes are listed one to a row, each in plain English
+// accepted, a notice says when the graph has moved since. The changes are listed one to a row, each in plain language
 // with Accept and Reject. When there are many, they can be accepted and rejected all at once or a group at a time.
 // Nothing is written until a person presses Accept. On a phone the list is a sheet at the bottom of the screen
 // (proposals_phone), as the inspector is. Each control is a 44-point target and says in words what it does.

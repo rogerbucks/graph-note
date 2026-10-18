@@ -1,6 +1,6 @@
 // Proposals (editor spec §17, AI proposals — accepted or rejected in the editor). A proposal is a set of changes to a
 // graph that somebody other than the person reading proposes. That may be an AI's answer (§19), a graph step's output
-// (§20), or anyone. It is plain data the editor can show over the graph and read back in plain English. A person
+// (§20), or anyone. It is plain data the editor can show over the graph and read back in plain language. A person
 // decides on it one change at a time. A proposal never writes anything: `proposals-review.ts` shows it and, when a
 // person accepts, writes the change as an ordinary edit. This module is the data. It holds who proposed it, when, what
 // it read and the state of the graph it was made against (`provenance`). It also holds its changes in groups, each an

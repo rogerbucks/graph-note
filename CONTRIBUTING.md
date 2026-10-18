@@ -95,7 +95,7 @@ CI. A change that breaks one fails before it is merged.
   touches many files, changes a library both languages share, or changes the build, CI or dependencies. The biggest are
   reviewed before merging. A small, contained change may be committed straight to `main` once the gate passes.
 - **UK spelling** in code, comments, messages and the interface.
-- **Plain English for every reader, ADHD readers included** (Roger, 18 Oct 2026). This covers every document and code
+- **Plain language for every reader, ADHD readers included** (Roger, 18 Oct 2026). This covers every document and code
   comment. Keep sentences to 25 words and paragraphs to 80. Put a heading at least every 400 words. Lead with the point,
   and use lists and tables where they help. Leave out filler words; `scripts/plain-docs.mjs` lists them, each with what
   to write instead. `node scripts/plain-docs.mjs <path>` lists what to fix. A file may never get worse, and a new file
@@ -773,7 +773,7 @@ These test behaviour across modules, or the repository itself, so they are named
   - A message that misses for a reason is recorded in `quality/copy.json`. It may never score worse without the record
     raised.
   - The check is tried first.
-- `test/plain-docs.test.js` — every document and code comment is plain English for a reader with ADHD (editor spec §41, plain_docs_auto). Sentences keep to 25 words and paragraphs to 80. A heading comes at least every 400 words, and no filler words are used. The reader pages read at grade 9 or lower. `quality/plain-docs.json` counts the misses each file had when the check came in, and a count may only fall.
+- `test/plain-docs.test.js` — every document and code comment is plain language for a reader with ADHD (editor spec §41, plain_docs_auto). Sentences keep to 25 words and paragraphs to 80. A heading comes at least every 400 words, and no filler words are used. The reader pages read at grade 9 or lower. `quality/plain-docs.json` counts the misses each file had when the check came in, and a count may only fall.
 
 ### Pointer targets, reflow and whitespace
 

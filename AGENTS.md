@@ -11,7 +11,7 @@ Short on purpose. How to check your work cheaply, where things live, and what no
   or through other modules. The whole suite runs, saying why, for `package.json`, a workflow or a file no test reaches;
   `-- --list` shows the plan. A folder named in pieces is missed, so run the full suite before a merge.
 - `npm run test:ai:py` — the Python library's tests, quietly (needs `uv`). Add test file names to run only those.
-- Write docs and comments in plain English for ADHD readers: `node scripts/plain-docs.mjs <path>` lists what to fix.
+- Write docs and comments in plain language for ADHD readers: `node scripts/plain-docs.mjs <path>` lists what to fix.
 - Never run bare `node --test`: only these npm scripts and `npm test` are capped, by `scripts/run-ceiling.mjs`. Its
   line `run-ceiling: stopped the run …` means a test runs away: fix the test; raise `THOUGHTKNOT_TEST_*` only if need be.
 

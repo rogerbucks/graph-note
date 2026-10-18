@@ -310,7 +310,7 @@ export function completions(
 
 const article = (k: string) => (/^[aeiou]/i.test(k) ? 'an' : 'a');
 
-/** Each pattern of the block read back in plain English, by the 0-based line it ends on: what it writes, in the graph's words. */
+/** Each pattern of the block read back in plain language, by the 0-based line it ends on: what it writes, in the graph's words. */
 export function readBack(reading: NoteReading, graph: string, text: string): Map<number, string> {
   const d = reading.graphs.get(graph),
     out = new Map<number, string>();

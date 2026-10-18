@@ -23,7 +23,7 @@ export interface ExportScope {
   graph: string;
   /** The view's name, for a view. */
   view?: string;
-  /** The view in plain English, for a view. */
+  /** The view in plain language, for a view. */
   reading?: string;
   /** Whether the faded context is drawn: only ever for a view. */
   context: boolean;

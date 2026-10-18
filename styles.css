@@ -1609,7 +1609,7 @@ pre.thoughtknot-code {
 .thoughtknot-overlay::after {
   content: ' ';
 }
-/* The sign and the plain-English note after a line are out of the flow. So they never add a row the field has not got.
+/* The sign and the plain-language note after a line are out of the flow. So they never add a row the field has not got.
    A note longer than the row left is cut at the box's edge, the text itself never. */
 .thoughtknot-line-end {
   position: absolute;

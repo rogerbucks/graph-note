@@ -1,4 +1,4 @@
-// The plain-English check of every document and code comment (spec §41, plain_docs_auto). Written for readers with
+// The plain-language check of every document and code comment (spec §41, plain_docs_auto). Written for readers with
 // ADHD: short sentences, short paragraphs, headings to scan by, and no filler words. Misses that were there when the
 // check came in are counted in quality/plain-docs.json, a file at a time. A count may fall, never rise. A file the
 // record does not list must have none. Scoring: scripts/plain-docs.mjs.

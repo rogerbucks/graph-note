@@ -478,7 +478,7 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   keyboard and the text version.
   - `skipLink` is the first thing tabbed to, and moves focus to the note.
   - `keepFocus`: a redraw gives the focus back to the control that had it, by kind, name and place.
-  - The graph's plain-English sentences are a labelled, never hidden section: the core's `textVersion`. It is drawn
+  - The graph's plain-language sentences are a labelled, never hidden section: the core's `textVersion`. It is drawn
     again with every drawing, and stands alone when it cannot be drawn.
   - Menus (in `browser-host.ts`) are walked by the arrow keys, Home and End. Escape or Tab return the focus.
   - `page.css` has the focus ring on every control. It has a reduced-motion rule that stills every animation,
