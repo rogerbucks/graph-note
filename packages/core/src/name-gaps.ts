@@ -2,7 +2,7 @@
 // A thing with text and no name cannot be read as written, so it is read as if the suggested name were there, in a copy,
 // with a warning that shows the name and a fix that writes it. A thing with no text is drawn by its name, with a hint that
 // offers the text. Nothing is written to the note unasked.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { lineIndex } from './block-items.ts';
 import { textFromName } from './name-suggestions.ts';
 import { NameBook } from './name-book.ts';

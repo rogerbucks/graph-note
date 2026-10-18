@@ -56,6 +56,6 @@ export async function place(env, widget, until) {
   const host = env.doc.body.createDiv({ cls: 'markdown-source-view' });
   const dom = widget.toDOM();
   host.appendChild(dom);
-  await until(() => !!dom.querySelector('.graph-note-view'));
+  await until(() => !!dom.querySelector('.thoughtknot-view'));
   return dom;
 }

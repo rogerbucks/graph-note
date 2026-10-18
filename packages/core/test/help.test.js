@@ -26,7 +26,7 @@ describe('problems, in plain English, with their place and a fix', () => {
     const [d] = diagnostics(readNote([text]), 'reader', 0, text, URI);
     assert.deepEqual(d.range, { start: at(10, 20), end: at(10, 32) });
     assert.equal(d.severity, SEVERITY.Warning);
-    assert.equal(d.source, 'graph-note');
+    assert.equal(d.source, 'thoughtknot');
     assert.equal(d.message, 'small_reeder is not in graph reader; it is drawn as an estimate of small_reader.');
     assert.deepEqual(d.data.fixes, [
       {

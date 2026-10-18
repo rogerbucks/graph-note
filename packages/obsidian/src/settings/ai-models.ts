@@ -3,10 +3,10 @@
 // reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
 import type { App, SettingDefinitionList, SettingTab } from 'obsidian';
-import { AI_PURPOSES, aiModel, endpointProblem, word } from '@graph-note/core';
-import type { AiModel, MatrixRow, Settings } from '@graph-note/core';
+import { AI_PURPOSES, aiModel, endpointProblem, word } from '@thoughtknot/core';
+import type { AiModel, MatrixRow, Settings } from '@thoughtknot/core';
 import { matrixControls, switchIsOn, switchedClass, withSwitch } from './ai-matrix-controls';
-import type GraphNotePlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 
 /** Each text field of a model's page, with its name and sentence, said in the person's language when the page is drawn. */
 const texts = (): [keyof AiModel, string, string][] => [
@@ -19,7 +19,7 @@ const texts = (): [keyof AiModel, string, string][] => [
 /** The models, each a page of its own, with an affordance to add one and to remove each. */
 export function aiModelList(
   app: App,
-  owner: GraphNotePlugin,
+  owner: ThoughtKnotPlugin,
   tab: SettingTab,
   matrix: MatrixRow[],
 ): SettingDefinitionList {

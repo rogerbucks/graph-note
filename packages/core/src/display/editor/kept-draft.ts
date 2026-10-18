@@ -2,7 +2,7 @@
 // changed in the note meanwhile, the note was deleted, or the note refused an edit made from the drawing (§4), what was
 // typed is kept as a draft, offered to be restored or discarded. The banner holds the id of the very draft it shows:
 // Restore and Discard act on that draft only, and on no other when it is gone (Roger's choice A, 11 Oct 2026).
-import { word } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
 import { notice } from '../host';
 import { button } from './editor-layout';
 import { NOTE_DELETED } from './editor-note';

@@ -52,7 +52,7 @@ test('links moved by a Flow are drawn the same by both, byte for byte', () => {
   });
   const sources = python.flatMap((p) => Object.values(p.drawn).flatMap((d) => Object.values(d)));
   assert.ok(
-    sources.some((s) => s.includes('graph-note-flow-dot') && s.includes('style=dashed')),
+    sources.some((s) => s.includes('thoughtknot-flow-dot') && s.includes('style=dashed')),
     'dots and dashes move',
   );
 });

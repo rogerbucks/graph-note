@@ -2,8 +2,8 @@
 // style graph moves marked by class for `styles.css` to run its dashes, or a dot along a copy of its line, so the line
 // itself stays; named for a screen reader with its movement and what it means; and the card's legend saying each in
 // words beside its icon. The movement is the style sheet's alone, stopped under reduced motion, where the dot is hidden.
-import { flowLegend, flowSaid } from '@graph-note/core';
-import type { FlowLink } from '@graph-note/core';
+import { flowLegend, flowSaid } from '@thoughtknot/core';
+import type { FlowLink } from '@thoughtknot/core';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -47,9 +47,9 @@ export const linkGroups = (svg: Element | undefined, index: number): Element[] =
 export function markFlow(svg: SVGSVGElement, flow: readonly FlowLink[]): void {
   for (const f of flow)
     for (const g of linkGroups(svg, f.index)) {
-      g.classList.add('graph-note-flow', `graph-note-flow-${f.motion}`);
+      g.classList.add('thoughtknot-flow', `thoughtknot-flow-${f.motion}`);
       g.setAttribute('aria-label', `${g.getAttribute('aria-label') ?? ''}, ${flowSaid(f)}`);
-      if (f.motion === 'dot') runnerOn(g, 'graph-note-flow-runner');
+      if (f.motion === 'dot') runnerOn(g, 'thoughtknot-flow-runner');
     }
 }
 
@@ -61,12 +61,12 @@ export function renderFlowLegend(root: HTMLElement, flow: readonly FlowLink[], f
   const entries = flowLegend(flow.filter((f) => !folded.includes(f.index)));
   if (!entries.length) return;
   const ul = root.createEl('ul', {
-    cls: 'graph-note-flow-legend',
+    cls: 'thoughtknot-flow-legend',
     attr: { 'aria-label': 'What the moving links mean' },
   });
   for (const e of entries) {
     const li = ul.createEl('li');
-    li.createSpan({ cls: 'graph-note-flow-icon', text: e.icon, attr: { 'aria-hidden': 'true' } });
+    li.createSpan({ cls: 'thoughtknot-flow-icon', text: e.icon, attr: { 'aria-hidden': 'true' } });
     li.appendText(` ${flowSaid(e)}`);
   }
 }

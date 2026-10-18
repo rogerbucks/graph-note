@@ -2,7 +2,7 @@
 // Full screen, and where the note is edited, Edit here and Edit in pane; in reading view, Source. Each control says what
 // it is in words as well as by its icon.
 import { setIcon } from '../host';
-import { parkedCount, word } from '@graph-note/core';
+import { parkedCount, word } from '@thoughtknot/core';
 import type { ViewOptions } from './view-options';
 
 /** A number of things, in words: "1 problem", "2 problems". */
@@ -27,7 +27,7 @@ export function button(
 ): HTMLButtonElement {
   const b = parent.createEl('button', { cls: 'clickable-icon', attr: { 'aria-label': label, type: 'button' } });
   setIcon(b, icon);
-  if (text) b.createSpan({ cls: 'graph-note-badge-text', text });
+  if (text) b.createSpan({ cls: 'thoughtknot-badge-text', text });
   b.addEventListener('click', onClick);
   return b;
 }
@@ -66,7 +66,7 @@ export interface BarPlaced {
 export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): BarPlaced {
   const { problems, mode } = o;
   const bar = root.createDiv({
-    cls: 'graph-note-bar',
+    cls: 'thoughtknot-bar',
     attr: { role: 'toolbar', 'aria-label': word('bar.name', { graph: o.graph }) },
   });
   const gaps = o.completeness?.gaps ?? 0;
@@ -88,7 +88,7 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
     () => on.toggleProblems(badge),
     label,
   );
-  badge.addClass('graph-note-badge');
+  badge.addClass('thoughtknot-badge');
   badge.setAttribute('aria-expanded', 'false');
   button(bar, word('bar.fit'), 'maximize', () => on.fit());
   button(bar, word('bar.zoom-out'), 'zoom-out', () => on.zoomOut());

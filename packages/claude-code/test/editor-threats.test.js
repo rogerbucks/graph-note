@@ -11,7 +11,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { networkInterfaces } from 'node:os';
 import { join } from 'node:path';
 import esbuild from 'esbuild';
-import { READ_LIMITS } from '@graph-note/core';
+import { READ_LIMITS } from '@thoughtknot/core';
 import { startEditorServer, IDLE_MS } from '../server/start-server.ts';
 import { ENTRY, POLICY, SERVER, ask, pause, reachable, sendRaw } from './editor-threats-support.js';
 import { TEST_NOTE as NOTE, TestNotes } from './fixtures/editor-server-test.ts';

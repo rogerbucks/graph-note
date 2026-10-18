@@ -1,6 +1,6 @@
 // The layout source of a drawing — the Graphviz text it is laid out from — byte-identical to graph_svg.py's (spec §12),
 // written by the graph library's own port of dot_source, with the locked style (spec §3, "one style").
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 // The locked style lives in the library beside graph_svg.py, its first reader: one file, read by both renderers.
 import STYLE from '../../../python/graph_spec/src/graph_svg.style.json' with { type: 'json' };
 import type { GraphDrawing } from './note-reading.ts';

@@ -20,7 +20,7 @@ async function drawn(env) {
   await until(() => !!el.querySelector('g.node'));
   return { el, time: clock(env) };
 }
-const links = (env) => tipOf(env).querySelector('.graph-note-quick-links')?.textContent;
+const links = (env) => tipOf(env).querySelector('.thoughtknot-quick-links')?.textContent;
 
 describe('quick_info_links: the tooltip says how a thing is linked', () => {
   test('a thing’s tooltip leads with how it is linked, under its name, as its details say it', async () => {
@@ -33,7 +33,7 @@ describe('quick_info_links: the tooltip says how a thing is linked', () => {
       assert.equal(links(env), 'This question is answered by ‘Large reader’ and ‘Tablet’.');
       const parts = tipOf(env).children.map((c) => c.className);
       assert.ok(
-        parts.indexOf('graph-note-quick-links') === parts.indexOf('graph-note-quick-head') + 1,
+        parts.indexOf('thoughtknot-quick-links') === parts.indexOf('thoughtknot-quick-head') + 1,
         'under its name',
       );
     } finally {

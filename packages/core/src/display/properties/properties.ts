@@ -17,8 +17,8 @@ import {
   renameProperty,
   setProperty,
   word,
-} from '@graph-note/core';
-import type { ListShape, NoteReading, Property, PropType, Target } from '@graph-note/core';
+} from '@thoughtknot/core';
+import type { ListShape, NoteReading, Property, PropType, Target } from '@thoughtknot/core';
 import { listForm, suggestShape } from './list-form';
 import { menuPosition } from './menu-place';
 import { listRow } from './list-row';
@@ -96,16 +96,16 @@ function wordsIn(input: HTMLInputElement, type: PropType, was: string): string {
 
 /** Shows the properties of a thing or link, editable, as Obsidian's Properties panel. */
 export function renderProperties(parent: HTMLElement, o: PropertiesOptions): void {
-  const box = parent.createDiv({ cls: 'graph-note-inspector metadata-container' });
+  const box = parent.createDiv({ cls: 'thoughtknot-inspector metadata-container' });
   box
     .createDiv({ cls: 'metadata-properties-heading' })
     .createDiv({ cls: 'metadata-properties-title', text: word('details.properties') });
   const content = box.createDiv({ cls: 'metadata-content' });
   const rows = content.createDiv({ cls: 'metadata-properties' });
-  const alert = box.createDiv({ cls: 'graph-note-alert', attr: { role: 'alert' } });
+  const alert = box.createDiv({ cls: 'thoughtknot-alert', attr: { role: 'alert' } });
   alert.hidden = true;
-  const status = box.createDiv({ cls: 'graph-note-status', attr: { role: 'status' } });
-  const listId = `graph-note-names-${++lists}`;
+  const status = box.createDiv({ cls: 'thoughtknot-status', attr: { role: 'status' } });
+  const listId = `thoughtknot-names-${++lists}`;
   const names = box.createEl('datalist', { attr: { id: listId } });
   for (const n of propertyNames(o.reading, o.graph, o.kind)) names.createEl('option', { attr: { value: n } });
 

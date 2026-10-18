@@ -33,7 +33,7 @@ describe('the plug-in interface', () => {
   test('the built-in data exports are added through it, as any plug-in’s are', () => {
     const registry = pluginRegistry();
     registry.register(CORE_EXPORTS);
-    assert.deepEqual(registry.plugins(), ['graph-note.data-exports']);
+    assert.deepEqual(registry.plugins(), ['thoughtknot.data-exports']);
     assert.deepEqual(
       registry.exporters().map((e) => e.format),
       [...DATA_FORMATS],
@@ -46,7 +46,7 @@ describe('the plug-in interface', () => {
     const registry = pluginRegistry();
     registry.register(CORE_EXPORTS);
     registry.register(NAMES);
-    assert.deepEqual(registry.plugins(), ['graph-note.data-exports', 'acme.names']);
+    assert.deepEqual(registry.plugins(), ['thoughtknot.data-exports', 'acme.names']);
     assert.equal(registry.exporter('names').title, 'Names');
     assert.deepEqual(registry.writeData('names', DATA, INFO), { ok: true, value: 'A' });
   });

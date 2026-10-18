@@ -2,8 +2,8 @@
 // as a button; choosing one brings it forward and fades the rest, choosing it again hides it, and once more puts it back.
 // Each says where it stands in words as well as by its look. Nothing here writes to the note: a view's Save as shown
 // writes the choices (§25, untangle_legend), and a view saved so opens with them.
-import { word } from '@graph-note/core';
-import type { LegendFilter, LegendItem, LegendState } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
+import type { LegendFilter, LegendItem, LegendState } from '@thoughtknot/core';
 
 const SAYS: Record<LegendState, () => string> = {
   normal: () => '',
@@ -28,7 +28,7 @@ export function renderLegend(
   changed: () => void,
 ): LegendPanel {
   const el = root.createDiv({
-    cls: 'graph-note-filter',
+    cls: 'thoughtknot-filter',
     attr: { role: 'group', 'aria-label': word('untangle.legend') },
   });
   el.hidden = true;
@@ -41,10 +41,12 @@ export function renderLegend(
       b.toggleClass('is-hidden', state === 'hidden');
     }
   };
-  if (!items.length) el.createEl('p', { cls: 'graph-note-quiet', text: word('untangle.nothing-to-filter') });
+  if (!items.length) el.createEl('p', { cls: 'thoughtknot-quiet', text: word('untangle.nothing-to-filter') });
   const ul = el.createEl('ul');
   for (const item of items) {
-    const b = ul.createEl('li').createEl('button', { cls: `graph-note-filter-${item.what}`, attr: { type: 'button' } });
+    const b = ul
+      .createEl('li')
+      .createEl('button', { cls: `thoughtknot-filter-${item.what}`, attr: { type: 'button' } });
     b.createSpan({ text: item.label });
     b.createSpan({ text: ` · ${item.count}` });
     const says = b.createSpan();

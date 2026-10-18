@@ -38,8 +38,8 @@ const row = (m, name) =>
     .querySelectorAll('.setting-item')
     .find((r) => r.querySelector('.setting-item-name')?.textContent === name);
 const button = (m, label) => m.contentEl.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === label);
-const shownBody = (m) => m.contentEl.querySelector('.graph-note-ai-body')?.textContent ?? null;
-const refused = (m) => m.contentEl.querySelector('.graph-note-ai-refused')?.textContent ?? null;
+const shownBody = (m) => m.contentEl.querySelector('.thoughtknot-ai-body')?.textContent ?? null;
+const refused = (m) => m.contentEl.querySelector('.thoughtknot-ai-refused')?.textContent ?? null;
 
 function choose(m, name, value) {
   const sel = row(m, name).querySelector('select');

@@ -6,7 +6,7 @@
 // are given one when first read; and one command writes every draft, once each, into a new note, so a draft whose note
 // was deleted is never out of reach.
 import { Notice } from 'obsidian';
-import type GraphNotePlugin from './main';
+import type ThoughtKnotPlugin from './main';
 import type { Drafts } from './main';
 import { freePath } from './export/vault-write';
 
@@ -55,7 +55,7 @@ export function keyBeside(data: Drafts, key: string): string {
  * The drafts kept for the note at `old`, or for a note in the folder at `old`, moved to where it now is, under `now`,
  * each with its id: beside, never over, a draft already kept there, as a deleted note's at the name the note now takes.
  */
-export async function followRename(plugin: GraphNotePlugin, now: string, old: string): Promise<void> {
+export async function followRename(plugin: ThoughtKnotPlugin, now: string, old: string): Promise<void> {
   const data = plugin.drafts();
   let moved = false;
   for (const [key, draft] of Object.entries(data)) {
@@ -72,7 +72,7 @@ export async function followRename(plugin: GraphNotePlugin, now: string, old: st
  * Writes every kept draft into a new note, once each, by its id, under its note and graph and when it was kept, as plain
  * text so none is drawn or read as part of a graph; and says where. The drafts stay kept, still offered in their editors.
  */
-export async function recoverDrafts(plugin: GraphNotePlugin): Promise<void> {
+export async function recoverDrafts(plugin: ThoughtKnotPlugin): Promise<void> {
   const byId = new Map(Object.entries(plugin.drafts()).map(([key, d]) => [d.id, [key, d] as const]));
   const kept = [...byId.values()];
   if (!kept.length) {
@@ -86,7 +86,7 @@ export async function recoverDrafts(plugin: GraphNotePlugin): Promise<void> {
       fence = '`'.repeat(Math.max(3, ...(d.text.match(/`+/g) ?? []).map((m) => m.length + 1)));
     return `\n## ${path}, graph ${graph}\n\nKept ${when}, as draft ${d.id}.\n\n${fence}\n${d.text}\n${fence}`;
   });
-  const intro = 'What was typed in a graph and could not be written, as Graph Note kept it.';
+  const intro = 'What was typed in a graph and could not be written, as ThoughtKnot kept it.';
   const path = freePath(plugin, 'Kept drafts.md');
   try {
     await plugin.app.vault.create(path, `# Kept drafts\n\n${intro}\n${parts.join('\n')}\n`);

@@ -3,7 +3,7 @@
 // A review goes down in levels: first a summary by section, workstream and requirement, then each graph's things and
 // links added, removed or changed, then every line. The core reaches no network: the host hands in a `ReviewSource`
 // that reads GitHub with its own sign-in, read only, and nothing is asked of it until the user asks.
-import type { Value } from '@graph-note/graph-spec';
+import type { Value } from '@thoughtknot/graph-spec';
 import { gqlBlocks } from './blocks.ts';
 import { changesView } from './changes-view.ts';
 import type { ChangesShown } from './changes-view.ts';

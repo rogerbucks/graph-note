@@ -2,8 +2,8 @@
 // for a link the two things it joins, for as long as the pointer stays; the same mark follows keyboard focus, and on touch
 // the tap that selects gives it, so nothing depends on hover (§5). It only says what is highlighted — the drawing is marked
 // by classes, so nothing moves, resizes or is laid out again.
-import { highlightOf } from '@graph-note/core';
-import type { FocusEdge, FocusTarget, Kept } from '@graph-note/core';
+import { highlightOf } from '@thoughtknot/core';
+import type { FocusEdge, FocusTarget, Kept } from '@thoughtknot/core';
 
 /** The highlight of one drawing: what the pointer is over, what has the keyboard focus, and what a touch selected. */
 export class Highlight {

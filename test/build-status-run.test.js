@@ -191,7 +191,7 @@ describe('the pull requests it leaves alone', () => {
 
   test('one from a fork moves nothing and gets no comment', async () => {
     const w = world();
-    const skipped = await left(w, (p) => (p.head.repo.full_name = 'someone/graph-note'));
+    const skipped = await left(w, (p) => (p.head.repo.full_name = 'someone/thoughtknot'));
     assert.deepEqual([skipped.number, skipped.skipped], [7, 'fork']);
   });
 
@@ -203,7 +203,7 @@ describe('the pull requests it leaves alone', () => {
 
   test('one whose base is another repository is left alone', async () => {
     const w = world();
-    const skipped = await left(w, (p) => (p.base.repo.full_name = 'someone/graph-note'));
+    const skipped = await left(w, (p) => (p.base.repo.full_name = 'someone/thoughtknot'));
     assert.equal(skipped.skipped, 'fork');
   });
 

@@ -4,7 +4,7 @@
 // before anything is drawn. Obsidian installs one made of its own `setIcon`, `Platform`, `Notice` and `Menu`; the browser
 // editor's page installs one of its own. The layer imports no host, so nothing else tells it which it is in.
 
-import { currentDirection, directionOf, setDirection, setLanguage, SOURCE_LANGUAGE } from '@graph-note/core';
+import { currentDirection, directionOf, setDirection, setLanguage, SOURCE_LANGUAGE } from '@thoughtknot/core';
 
 /** A row of a menu the layer asks the host to show. */
 export interface MenuRow {
@@ -66,7 +66,7 @@ export function installHost(host: DisplayHost): void {
 
 /**
  * `el` set to read in the host's direction, as the root of a view is: everything in it mirrors through the style sheets'
- * logical sides, and the drawing keeps the screen's (styles.css, .graph-note-svg).
+ * logical sides, and the drawing keeps the screen's (styles.css, .thoughtknot-svg).
  */
 export function readInHostDirection<T extends HTMLElement>(el: T): T {
   el.dir = currentDirection();

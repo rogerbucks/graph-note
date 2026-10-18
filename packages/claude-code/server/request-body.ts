@@ -2,7 +2,7 @@
 // declared larger is refused before any of it is read, and one sent in parts with no length is refused as soon as it
 // passes the limit, so no request can make the server hold more than one note's worth.
 import type { IncomingMessage } from 'node:http';
-import { READ_LIMITS } from '@graph-note/core';
+import { READ_LIMITS } from '@thoughtknot/core';
 
 /** The most bytes a request's body may hold: the core's read limit for a note. */
 export const BODY_LIMIT = READ_LIMITS.bytes;

@@ -21,7 +21,7 @@ const isHostile = (m) => m.drawing.boxes.some((b) => b.text === 'Hostile');
 
 /** The banner in `el`, its words, and whether it carries an icon beside them. */
 function bannerOf(el) {
-  const b = el.querySelector('.graph-note-banner');
+  const b = el.querySelector('.thoughtknot-banner');
   return (
     b && {
       text: b.textContent,
@@ -217,9 +217,9 @@ describe('in the pane', () => {
     try {
       await until(() => env.el.querySelectorAll('g.node').length === 3);
       type(env.el, `${READER},\n${'(a:Thing),\n'.repeat(10_000)}(b:Thing)`);
-      await until(() => /too large to read/i.test(env.el.querySelector('.graph-note-banner')?.textContent ?? ''));
+      await until(() => /too large to read/i.test(env.el.querySelector('.thoughtknot-banner')?.textContent ?? ''));
       assert.equal(env.el.querySelectorAll('g.node').length, 0, 'the old drawing is gone');
-      assert.match(env.el.querySelector('.graph-note-banner').textContent, /at most 10,000/);
+      assert.match(env.el.querySelector('.thoughtknot-banner').textContent, /at most 10,000/);
     } finally {
       env.plugin.onunload();
       env.uninstall();

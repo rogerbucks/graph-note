@@ -4,7 +4,7 @@
 // card like any change and never in the data until a change is accepted. Nothing a model writes can declare an author.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { noteWithProposal } from '../src/ai-answer.ts';
 import { changesIn } from '../src/ai-request.ts';
 import { readNote } from '../src/drawing.ts';

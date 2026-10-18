@@ -5,11 +5,11 @@
 // rewritten is left, and its card reports it broken.
 import { TFile } from 'obsidian';
 import type { TAbstractFile } from 'obsidian';
-import { applyChanges, renamedLinks } from '@graph-note/core';
-import type GraphNotePlugin from '../main';
+import { applyChanges, renamedLinks } from '@thoughtknot/core';
+import type ThoughtKnotPlugin from '../main';
 
 /** Follows the file renamed from `old` to where `file` now is, in every graph block of every note of the vault. */
-export async function followLinks(plugin: GraphNotePlugin, file: TAbstractFile, old: string): Promise<void> {
+export async function followLinks(plugin: ThoughtKnotPlugin, file: TAbstractFile, old: string): Promise<void> {
   if (!(file instanceof TFile)) return;
   const { vault, metadataCache } = plugin.app;
   for (const note of vault.getMarkdownFiles()) {
@@ -26,7 +26,7 @@ export async function followLinks(plugin: GraphNotePlugin, file: TAbstractFile, 
       if (now.length)
         editor.dispatch({
           changes: now.map((c) => ({ from: c.from, to: c.to, insert: c.text })),
-          userEvent: 'input.graph-note',
+          userEvent: 'input.thoughtknot',
         });
       continue;
     }

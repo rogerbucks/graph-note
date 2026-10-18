@@ -6,7 +6,7 @@
 // typed, or "you".
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { noteWithProposal } from '../src/ai-answer.ts';
 import { readNote } from '../src/drawing.ts';
 import { statementOf } from '../src/proposals-statements.ts';

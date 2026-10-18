@@ -2,7 +2,7 @@
 // and listed as a problem, and the rest of its block is read; a comment after code, a comma with nothing after it, a
 // missing comma, a link type without its colon and a thing with text but no name are each read as meant, with a warning
 // whose fix writes it so.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { bareNames, items, lineIndex, without } from './block-items.ts';
 import type { Item } from './block-items.ts';
 import { dataKind, graphOf } from './blocks.ts';

@@ -16,7 +16,7 @@ import { root } from './host/load-plugin.js';
 const harness = `${root}packages/obsidian/harness`;
 
 test('the harness builds against the shim, with no export the plugin imports missing', (t) => {
-  const out = mkdtempSync(join(tmpdir(), 'graph-note-harness-'));
+  const out = mkdtempSync(join(tmpdir(), 'thoughtknot-harness-'));
   t.after(() => rmSync(out, { recursive: true, force: true }));
   const r = spawnSync(process.execPath, [`${harness}/build.mjs`, out], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
@@ -24,7 +24,7 @@ test('the harness builds against the shim, with no export the plugin imports mis
 });
 
 test('the plugin loads on the shim, and reads the vault as it does in Obsidian', async (t) => {
-  const out = mkdtempSync(join(tmpdir(), 'graph-note-shim-'));
+  const out = mkdtempSync(join(tmpdir(), 'thoughtknot-shim-'));
   const doc = fakeDocument(700);
   // CodeMirror, bundled here as in the harness, reads the page's root style once as it loads to tell browsers apart
   doc.documentElement.style ??= {};

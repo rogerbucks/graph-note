@@ -51,12 +51,12 @@ describe('the editor in place keeps its card when the block moves', () => {
       const host = env.doc.body.createDiv({ cls: 'markdown-source-view' });
       const dom = cardOf(view).toDOM();
       host.appendChild(dom);
-      await until(() => !!dom.querySelector('.graph-note-view'));
+      await until(() => !!dom.querySelector('.thoughtknot-view'));
       labelled(dom, 'Edit here').click();
       await until(() => !!dom.querySelector('textarea'));
       const t = dom.querySelector('textarea');
       // the card redrawn: one drawing in it, the old one gone, with a field in it
-      const redrawn = () => dom.querySelectorAll('.graph-note-view').length === 1 && !!dom.querySelector('textarea');
+      const redrawn = () => dom.querySelectorAll('.thoughtknot-view').length === 1 && !!dom.querySelector('textarea');
       t.setSelectionRange(3, 9);
       for (const [why, change] of [
         ['a line added above', { from: 0, insert: 'A new first line\n' }],
@@ -93,7 +93,7 @@ describe('the editor in place keeps its card when the block moves', () => {
       const host = env.doc.body.createDiv({ cls: 'markdown-source-view' });
       const dom = cardOf(view).toDOM();
       host.appendChild(dom);
-      await until(() => !!dom.querySelector('.graph-note-view'));
+      await until(() => !!dom.querySelector('.thoughtknot-view'));
       labelled(dom, 'Edit here').click();
       await until(() => !!dom.querySelector('textarea'));
       const other = "```gql\n// graph: other\n(x:Thing {name: 'X'})\n```\n";

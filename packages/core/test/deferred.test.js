@@ -4,7 +4,7 @@
 // overdue (parked_not_broken).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { layoutSource } from '../src/layout.ts';

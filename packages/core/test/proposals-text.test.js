@@ -4,7 +4,7 @@
 // statement and never written; the reason is an optional `//@ reason:` line. What a person decided is not in it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { makeProposal } from '../src/proposals.ts';
 import { ProposalReview } from '../src/proposals-review.ts';
 import { changeSetId, changeSetText, readChangeSet } from '../src/proposals-text.ts';

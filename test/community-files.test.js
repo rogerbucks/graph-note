@@ -9,7 +9,7 @@ test('the community files are present: a code of conduct, a trademark note and t
   assert.match(conduct, /^# Code of conduct/m);
   assert.match(conduct, /## How to report/);
   const marks = read('TRADEMARKS.md');
-  assert.match(marks, /Graph Note/);
+  assert.match(marks, /ThoughtKnot/);
   assert.match(marks, /fork/i);
   assert.match(marks, /Mozilla Public License/);
   const contributing = read('CONTRIBUTING.md');

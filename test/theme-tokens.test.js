@@ -12,15 +12,15 @@ import { themeCss } from '../packages/claude-code/page/theme-css.ts';
 
 /** Each sheet, with the selector of its one mapping block. */
 const SHEETS = {
-  'styles.css': ".graph-note, [class^='graph-note-'], [class*=' graph-note-'], [class^='gql-'], [class*=' gql-']",
+  'styles.css': ".thoughtknot, [class^='thoughtknot-'], [class*=' thoughtknot-'], [class^='gql-'], [class*=' gql-']",
   'packages/claude-code/page/page.css': ':root',
 };
 
 /**
  * The properties a sheet reads that are not the theme's: an element's own measures, which the code sets on it as it is
- * drawn (`--graph-note-*`), and the icon file a page's icon rule names (`--gn-icon-image`, esbuild.page.mjs).
+ * drawn (`--thoughtknot-*`), and the icon file a page's icon rule names (`--gn-icon-image`, esbuild.page.mjs).
  */
-const OWN = /^--graph-note-[a-z0-9-]+$|^--gn-icon-image$/;
+const OWN = /^--thoughtknot-[a-z0-9-]+$|^--gn-icon-image$/;
 
 const read = (sheet) => readFileSync(new URL(`../${sheet}`, import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 

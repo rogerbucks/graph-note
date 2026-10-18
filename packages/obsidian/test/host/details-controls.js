@@ -4,11 +4,11 @@
 import assert from 'node:assert/strict';
 
 const SELECTOR = [
-  '.graph-note-details button',
-  '.graph-note-details input',
-  '.graph-note-details select',
-  '.graph-note-details textarea',
-  '.graph-note-details [role="button"]',
+  '.thoughtknot-details button',
+  '.thoughtknot-details input',
+  '.thoughtknot-details select',
+  '.thoughtknot-details textarea',
+  '.thoughtknot-details [role="button"]',
 ].join(', ');
 
 /** A control's name: its label, its words, its class or its tag. */
@@ -44,7 +44,7 @@ export function pressTheRest(el, kept, reopen, all) {
     press(name);
   }
   // after a choice in the body: the trail's Back, then its Forward, and each other control the choice brings
-  const choice = rest.find((c) => !c.closest('.graph-note-details-head'));
+  const choice = rest.find((c) => !c.closest('.thoughtknot-details-head'));
   if (choice) {
     reopen();
     press(nameOf(choice));

@@ -1,9 +1,9 @@
-// A drawn card as Obsidian owns it. The card itself is the display layer's (`@graph-note/core/display`), with a lifecycle of
+// A drawn card as Obsidian owns it. The card itself is the display layer's (`@thoughtknot/core/display`), with a lifecycle of
 // its own and no Obsidian in it; Obsidian wants a component, to unload with the note's block, the pane or the page, so the
 // card is wrapped in a `MarkdownRenderChild` over the same element that loads and unloads it with itself.
 import { MarkdownRenderChild } from 'obsidian';
-import { GraphView } from '@graph-note/core/display/graph-view/graph-view';
-import type { ViewOptions } from '@graph-note/core/display/graph-view/view-options';
+import { GraphView } from '@thoughtknot/core/display/graph-view/graph-view';
+import type { ViewOptions } from '@thoughtknot/core/display/graph-view/view-options';
 
 /** Obsidian's component for one card: loaded and unloaded as it is, the card with it. */
 class GraphCard extends MarkdownRenderChild {

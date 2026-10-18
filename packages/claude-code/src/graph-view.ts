@@ -10,8 +10,8 @@ import {
   PALETTES,
   readNote,
   tooLarge,
-} from '@graph-note/core';
-import type { Palette, Refusal } from '@graph-note/core';
+} from '@thoughtknot/core';
+import type { Palette, Refusal } from '@thoughtknot/core';
 import type { Laid } from './graphviz-process.ts';
 
 /** One graph as the pane shows it: the SVG where it could be drawn, and always the same graph as lines of text. */

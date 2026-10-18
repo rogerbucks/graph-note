@@ -38,7 +38,7 @@ const REMOTE = {
   ceiling: 'Internal',
   endpoint: 'https://api.example.com/v1/chat/completions',
   model: 'big-1',
-  keyName: 'graph-note-remote',
+  keyName: 'thoughtknot-remote',
 };
 const ON = settingsFrom({ aiUse: 'on', aiModels: [LOCAL, REMOTE] });
 // a key made here, so no line of this file has the shape of one
@@ -168,7 +168,7 @@ describe('a key is kept secret (keys_kept_secret)', () => {
     const { p, calls, result } = await sent({ model: 'Remote' }, undefined, KEY);
     assert.equal(calls[0].headers.Authorization, `Bearer ${KEY}`);
     assert.ok(!JSON.stringify(p).includes(KEY), 'not in what is shown');
-    assert.match(p.headersShown.Authorization, /graph-note-remote/);
+    assert.match(p.headersShown.Authorization, /thoughtknot-remote/);
     assert.ok(!JSON.stringify(result).includes(KEY), 'not in the record or the proposal');
   });
 
@@ -198,7 +198,7 @@ describe('a key is kept secret (keys_kept_secret)', () => {
     const p = prepared({ model: 'Remote' });
     const t = fake();
     const result = await sendPrepared(p, confirmSend(p), { transport: t.transport, key: null, now: CLOCK });
-    assert.match(result.refused, /graph-note-remote/);
+    assert.match(result.refused, /thoughtknot-remote/);
     assert.equal(t.calls.length, 0);
   });
 
@@ -327,8 +327,8 @@ describe('the user sees exactly what is sent, and to which model, first (seen_be
     s.aiModels[1].endpoint = 'https://elsewhere.example.com/v1';
     s.aiModels[1].keyName = 'another-key';
     assert.equal(p.model.endpoint, REMOTE.endpoint);
-    assert.equal(p.model.keyName, 'graph-note-remote');
-    assert.match(p.summary.join('\n'), /key named graph-note-remote/);
+    assert.equal(p.model.keyName, 'thoughtknot-remote');
+    assert.match(p.summary.join('\n'), /key named thoughtknot-remote/);
     const t = fake();
     await sendPrepared(p, confirmSend(p), { transport: t.transport, key: KEY, now: CLOCK });
     assert.equal(t.calls[0].url, REMOTE.endpoint);

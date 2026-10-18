@@ -8,8 +8,8 @@
 // limit is never read: by its size on disk alone it is not shown, saying why, or, a photograph, shown from the vault's
 // own address. An image is only ever shown by an image element, never put inline: an SVG attachment put in the page
 // would run as part of it. Each card counts what moves on it, its details among it, and lets every image go with it.
-import { IMAGE_LIMITS, LIMITS_SAID, imageFacts, imagesOf, neverMoves, playRefusal, startOf } from '@graph-note/core';
-import type { ImageFacts, PictureBox, Start } from '@graph-note/core';
+import { IMAGE_LIMITS, LIMITS_SAID, imageFacts, imagesOf, neverMoves, playRefusal, startOf } from '@thoughtknot/core';
+import type { ImageFacts, PictureBox, Start } from '@thoughtknot/core';
 import type { FoundImage, ImageSource } from '../images/image-source';
 import { STILL_PIXELS } from '../images/still-frame';
 import { figureView, pictureView, refusedFigure, refusedPicture, squareIn } from './image-views';
@@ -28,7 +28,7 @@ const PAUSED = 'Paused. Press Play to move it.';
 
 /** Whether an event came from an image's control, which a tap or a key on is never one on the drawing. */
 export const onImageControl = (target: EventTarget | null): boolean =>
-  !!(target as Element | null)?.closest?.('.graph-note-image-control');
+  !!(target as Element | null)?.closest?.('.thoughtknot-image-control');
 
 /** The animated images of one card: how many move now, and every image, by where it is shown, to let go. */
 export class MovingImages {
@@ -214,7 +214,7 @@ export function renderImages(el: HTMLElement, props: Record<string, unknown>, ca
     named = imagesOf(props);
   if (!images || !named.length) return;
   el.createEl('h4', { text: 'Images' });
-  const list = el.createDiv({ cls: 'graph-note-images' });
+  const list = el.createDiv({ cls: 'thoughtknot-images' });
   const made: [ImageView, FoundImage][] = [];
   for (const n of named) {
     const caption = `${n.property}: ${n.value}`;

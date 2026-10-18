@@ -23,14 +23,14 @@ const MAX_WORDS = 40;
 
 /** The refusal, in words: it names no path, command or text of the call. */
 export const DATA_FOLDER_REFUSAL =
-  'graph-note: this is the mod’s data folder, which holds the settings (settings.json) that decide what Claude ' +
+  'thoughtknot: this is the mod’s data folder, which holds the settings (settings.json) that decide what Claude ' +
   'may open, so Claude may not write to it. The user changes these settings, by editing settings.json in the ' +
-  'graph-note plugin data folder (CLAUDE_PLUGIN_DATA, or else the plugins data folder under their Claude config ' +
+  'thoughtknot plugin data folder (CLAUDE_PLUGIN_DATA, or else the plugins data folder under their Claude config ' +
   'folder). Nothing was changed.';
 
 /** The refusal when the guard could not tell where a path leads, so it cannot say the call leaves the folder alone. */
 export const CHECK_FAILED_REFUSAL =
-  'graph-note: this call was refused because the guard for the mod’s data folder could not check where it ' +
+  'thoughtknot: this call was refused because the guard for the mod’s data folder could not check where it ' +
   'leads (node could not be run, or did not answer). Nothing was changed. Try again, or ask the user.';
 
 /** What the guard asks of the host: the folder, the home and working folders, and a real-path call. */

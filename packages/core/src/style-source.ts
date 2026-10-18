@@ -2,8 +2,8 @@
 // source stays byte-identical to the Python library's (spec §12) and, with no nudges, a drawing is laid out from exactly
 // that source (no_nudges_layout_places). Beside puts two things on one rank, before orders them with a link never drawn,
 // group draws its things in a labelled box, and direction sets the direction the drawing is laid out in.
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
-import type { Graph } from '@graph-note/graph-spec';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { arrowlessLinks } from './arrows.ts';
 import { inlineRows } from './inline-properties.ts';
 import { STYLE } from './layout.ts';

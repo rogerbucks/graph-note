@@ -11,7 +11,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, speakIn } from '../packages/obsidian/test/host/load-plugin.js';
 import { built, cleanUp } from '../packages/claude-code/test/editor-page-support.js';
-import { isPseudoWord, PSEUDO_LANGUAGES, setLanguage, SOURCE_LANGUAGE, SOURCE_WORDS } from '@graph-note/core';
+import { isPseudoWord, PSEUDO_LANGUAGES, setLanguage, SOURCE_LANGUAGE, SOURCE_WORDS } from '@thoughtknot/core';
 import { openWindow, toHtml } from './repository/wcag.js';
 import { openEditorPage } from './repository/wcag-page.js';
 import { OBSIDIAN } from './repository/views-obsidian.js';
@@ -28,11 +28,11 @@ const STILL_SAID_BY_CODE = { obsidian: 40, page: 14 };
 
 /** The parts set at a point measured on the screen, by class: these keep a physical side (as in test/rtl.test.js). */
 const PLACED = [
-  'graph-note-table',
-  'graph-note-svg',
-  'graph-note-sheet',
-  'graph-note-pointer',
-  'graph-note-quick-info',
+  'thoughtknot-table',
+  'thoughtknot-svg',
+  'thoughtknot-sheet',
+  'thoughtknot-pointer',
+  'thoughtknot-quick-info',
   'gn-menu',
 ];
 
@@ -210,23 +210,23 @@ describe('the browser editor’s page: every state, in each test language', () =
 
 /** The rules that clip words or keep them on one line, each with why: a longer language would be cut off in any other. */
 const CLIPS = {
-  '.graph-note-view': 'the card, whose words wrap inside it; it clips only its rounded corners',
-  '.graph-note-viewport': 'the drawing, which is moved and zoomed inside it',
-  '.graph-note-overlay':
+  '.thoughtknot-view': 'the card, whose words wrap inside it; it clips only its rounded corners',
+  '.thoughtknot-viewport': 'the drawing, which is moved and zoomed inside it',
+  '.thoughtknot-overlay':
     'the coloured picture of the text, which wraps; it clips only the plain-English note after a long line',
-  '.graph-note-text': 'the field over that picture, which wraps as the picture does and is as tall as it',
-  '.graph-note-table th': 'a column of the table, which scrolls sideways when wide',
-  '.graph-note-table td': 'a cell of the table, which scrolls sideways when wide',
-  '.graph-note-sr': 'the screen reader’s text, kept off the screen on purpose',
+  '.thoughtknot-text': 'the field over that picture, which wraps as the picture does and is as tall as it',
+  '.thoughtknot-table th': 'a column of the table, which scrolls sideways when wide',
+  '.thoughtknot-table td': 'a cell of the table, which scrolls sideways when wide',
+  '.thoughtknot-sr': 'the screen reader’s text, kept off the screen on purpose',
 };
 
 /** The rules with a fixed width that hold no words, each with why. */
 const HOLDS_NO_WORDS = {
-  '.graph-note-swatch': 'a line in a colour of the drawing',
-  '.graph-note-sr': 'the screen reader’s text, kept off the screen on purpose',
+  '.thoughtknot-swatch': 'a line in a colour of the drawing',
+  '.thoughtknot-sr': 'the screen reader’s text, kept off the screen on purpose',
   '.gn-icon': 'an icon',
-  '.graph-note-switch-track': 'a switch drawn as a toggle; its words sit beside it',
-  '.graph-note-switch-track::before': 'the toggle’s knob',
+  '.thoughtknot-switch-track': 'a switch drawn as a toggle; its words sit beside it',
+  '.thoughtknot-switch-track::before': 'the toggle’s knob',
 };
 
 /** A length that does not grow with the words: pixels, points, em or characters. */
@@ -236,7 +236,7 @@ describe('a longer language fits every box', () => {
   for (const sheet of SHEETS) {
     test(`${sheet} fixes the width of no box that holds words`, () => {
       const fixed = rulesOf(sheet)
-        .filter((r) => !r.selectors.every((s) => s.startsWith('.graph-note-svg')))
+        .filter((r) => !r.selectors.every((s) => s.startsWith('.thoughtknot-svg')))
         .filter((r) => FIXED.test(valueOf(r, 'width') ?? ''))
         .filter((r) => !r.selectors.every((s) => Object.hasOwn(HOLDS_NO_WORDS, s)))
         .map((r) => `${r.selectors.join(', ')} → width: ${valueOf(r, 'width')}`);

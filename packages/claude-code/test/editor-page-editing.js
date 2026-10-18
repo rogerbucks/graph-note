@@ -47,7 +47,7 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
       assert.deepEqual(own, ['block-editor.ts', 'block-note.ts', 'note-writing.ts'], 'the plugin’s share is its vault');
       const facade = readFileSync(at('packages/obsidian/src/block-editor/block-editor.ts'), 'utf8');
       assert.ok(
-        importsOf(facade).includes('@graph-note/core/display/editor/block-editor'),
+        importsOf(facade).includes('@thoughtknot/core/display/editor/block-editor'),
         'it runs the layer’s editor',
       );
       assert.ok(!existsSync(at('packages/obsidian/src/layout-worker/refusal-banner.ts')), 'one refusal banner');
@@ -87,7 +87,10 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
     test('it opens with the drawing, the details of a thing and the text, each named for a screen reader', async () => {
       const page = await (await open()).ready();
       const doc = page.doc;
-      assert.ok(doc.querySelector('.graph-note-pane-drawing svg.graph-note-svg'), 'the drawing is the layer’s, inline');
+      assert.ok(
+        doc.querySelector('.thoughtknot-pane-drawing svg.thoughtknot-svg'),
+        'the drawing is the layer’s, inline',
+      );
       assert.equal(doc.querySelector('.gn-drawing img'), null, 'no longer a picture of it');
       const field = page.field();
       const named = doc.getElementById(field.getAttribute('aria-labelledby'));
@@ -98,9 +101,9 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
       // the details of a thing open from the drawing, as they do in Obsidian
       const box = doc.querySelector('g.node[data-key]');
       box.dispatchEvent(new page.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      await until(() => !!doc.querySelector('.graph-note-details'));
+      await until(() => !!doc.querySelector('.thoughtknot-details'));
       assert.match(
-        doc.querySelector('.graph-note-details').textContent,
+        doc.querySelector('.thoughtknot-details').textContent,
         /Which device\?|Large reader|Easy on the eyes/,
       );
     });
@@ -108,7 +111,7 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
     test('every control of the pane is a real control with a name, and the text can be reached by the keyboard', async () => {
       const page = await (await open()).ready();
       const doc = page.doc;
-      const pane = doc.querySelector('.graph-note-pane');
+      const pane = doc.querySelector('.thoughtknot-pane');
       for (const b of pane.querySelectorAll('button'))
         assert.ok(
           b.getAttribute('aria-label') || b.textContent.trim(),
@@ -143,7 +146,7 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
         assert.doesNotMatch(m, /<[^>]*\sstyle=/, 'no style attribute in the markup the drawing is parsed from');
         assert.doesNotMatch(m, /<style[\s>]/, 'no style sheet in it either');
       }
-      const label = page.doc.querySelector('.graph-note-svg g.node text');
+      const label = page.doc.querySelector('.thoughtknot-svg g.node text');
       assert.ok(label.style.getPropertyValue('fill'), 'a label’s colour is set, through the CSSOM');
       assert.equal(label.getAttribute('data-gn-style'), null, 'the waiting attribute is gone');
       // the page itself holds no inline style, and the policy is the server’s, unchanged: self only, never unsafe-inline
@@ -160,7 +163,7 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
       page.type(typed);
       await until(() => page.file() !== NOTE, 5000);
       assert.equal(page.file(), NOTE.replace(READER, typed));
-      await until(() => page.doc.querySelectorAll('.graph-note-svg g.node').length === 4, 8000);
+      await until(() => page.doc.querySelectorAll('.thoughtknot-svg g.node').length === 4, 8000);
     });
 
     test('Undo and Redo take back and put back the page’s own writes, through the server', async () => {
@@ -182,10 +185,10 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
       const theirs = NOTE.replace(READER, READER + ',\n(theirs:Reason)');
       page.write(theirs); // no watcher told the page: its next write is made over a version it has not seen
       page.type(READER + ',\n(mine:Reason)');
-      await until(() => !page.doc.querySelector('.graph-note-draft').hidden, 5000);
+      await until(() => !page.doc.querySelector('.thoughtknot-draft').hidden, 5000);
       assert.equal(page.file(), theirs, 'not overwritten');
       assert.equal(page.field().value, READER + ',\n(theirs:Reason)', 'the block as the note has it');
-      assert.match(page.doc.querySelector('.graph-note-draft').textContent, /kept as a draft/);
+      assert.match(page.doc.querySelector('.thoughtknot-draft').textContent, /kept as a draft/);
       page.button('Restore draft').click();
       assert.equal(page.field().value, READER + ',\n(mine:Reason)', 'the draft is what was typed');
     });
@@ -223,7 +226,7 @@ export function editingCases({ at, LAYER, importsOf, bundled }) {
       page.fireChange();
       await until(() => /no longer shown/i.test(text(page)), 5000);
       page.type(READER + ',\n(mine:Reason)');
-      await until(() => !page.doc.querySelector('.graph-note-draft').hidden, 5000);
+      await until(() => !page.doc.querySelector('.thoughtknot-draft').hidden, 5000);
       assert.equal(existsSync(join(page.vault, NOTE_PATH)), false, 'the note was not written back');
     });
   });

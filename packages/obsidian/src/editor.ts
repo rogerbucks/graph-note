@@ -5,7 +5,7 @@
 // takes back only it. The rules are the core's.
 import { EditorView } from '@codemirror/view';
 import { Transaction } from '@codemirror/state';
-import { colonInNote, commaInNote } from '@graph-note/core';
+import { colonInNote, commaInNote } from '@thoughtknot/core';
 
 /** The note editor's extension that adds the comma and the colon for you as you type. */
 export const addForYou = EditorView.updateListener.of((u) => {

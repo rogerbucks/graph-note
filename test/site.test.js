@@ -73,7 +73,7 @@ describe('search engines and AI assistants can find and read it', () => {
     const data = JSON.parse(doc.querySelector('script[type="application/ld+json"]').textContent);
     assert.equal(data['@context'], 'https://schema.org');
     assert.equal(data['@type'], 'SoftwareApplication');
-    assert.equal(data.name, 'Graph Note');
+    assert.equal(data.name, 'ThoughtKnot');
     assert.equal(data.url, SITE_URL);
     assert.equal(data.softwareVersion, '0.6.0');
     assert.equal(data.license, 'https://www.mozilla.org/en-US/MPL/2.0/');
@@ -94,19 +94,19 @@ describe('search engines and AI assistants can find and read it', () => {
     assert.ok(files['robots.txt'].split('\n').includes(`Sitemap: ${SITE_URL}sitemap.xml`));
     assert.ok(files['sitemap.xml'].includes(`<loc>${SITE_URL}</loc>\n    <lastmod>2026-10-18</lastmod>`));
     const llms = files['llms.txt'];
-    assert.match(llms, /^# Graph Note\n\n> Free, open-source Obsidian plugin/);
+    assert.match(llms, /^# ThoughtKnot\n\n> Free, open-source Obsidian plugin/);
     assert.match(
       llms,
-      /\n## Docs\n\n- \[How to use Graph Note\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/wiki\/How-to-use-Graph-Note\)/,
+      /\n## Docs\n\n- \[How to use ThoughtKnot\]\(https:\/\/github\.com\/rogerbucks\/graph-note\/wiki\/How-to-use-ThoughtKnot\)/,
     );
     assert.equal(files['.nojekyll'], '');
   });
 
   test('another address, such as a domain of its own, is used everywhere', () => {
-    const url = 'https://graph-note.example.org/';
+    const url = 'https://thoughtknot.example.org/';
     const files = made({ url });
-    assert.match(files['index.html'], /<link rel="canonical" href="https:\/\/graph-note\.example\.org\/" \/>/);
-    assert.match(files['robots.txt'], /Sitemap: https:\/\/graph-note\.example\.org\/sitemap\.xml/);
+    assert.match(files['index.html'], /<link rel="canonical" href="https:\/\/thoughtknot\.example\.org\/" \/>/);
+    assert.match(files['robots.txt'], /Sitemap: https:\/\/thoughtknot\.example\.org\/sitemap\.xml/);
     assert.doesNotMatch(Object.values(files).join('\n'), /rogerbucks\.github\.io/);
   });
 

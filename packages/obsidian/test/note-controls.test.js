@@ -16,8 +16,8 @@ const GRAPH = `// graph: trip
 (mid:Place {name: 'Middle'})`;
 const FILES = { [PATH]: ['# Trip', '', fence(GRAPH), ''].join('\n') };
 /** The block as typed in the editor's field, not the note field in the details. */
-const text = (el) => el.querySelector('textarea.graph-note-text').value;
-const panelOf = (el) => el.querySelector('.graph-note-details');
+const text = (el) => el.querySelector('textarea.thoughtknot-text').value;
+const panelOf = (el) => el.querySelector('.thoughtknot-details');
 const pressed = (el, label) =>
   panelOf(el)
     .querySelectorAll('button')
@@ -85,7 +85,7 @@ describe('note_add: the details offer to add, change and remove a note while the
       pressed(el, 'Add a note').click();
       panelOf(el).querySelector('textarea').value = 'A note.';
       pressed(el, 'Save note').click();
-      assert.match(panelOf(el).querySelector('.graph-note-note-said').textContent, /line of its own/);
+      assert.match(panelOf(el).querySelector('.thoughtknot-note-said').textContent, /line of its own/);
       assert.equal(text(el), before, 'nothing written');
     } finally {
       env.uninstall();

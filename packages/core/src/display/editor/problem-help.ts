@@ -1,6 +1,6 @@
 // The block editor's help with problems (spec §4, §8): the list of every problem with its line, the problems on the
 // caret's line with their fixes as buttons, a fix's edits applied to the text, and new problems said to screen readers.
-import type { Diagnostic } from '@graph-note/core';
+import type { Diagnostic } from '@thoughtknot/core';
 import { withFix } from '../fix-changes';
 import type { FixChanges } from '../fix-changes';
 import { button } from './editor-layout';
@@ -16,14 +16,14 @@ export type { FixChanges };
 export function listProblems(list: HTMLElement, problems: Diagnostic[]): void {
   list.empty();
   if (!problems.length) {
-    list.createEl('p', { cls: 'graph-note-quiet', text: 'No problems.' });
+    list.createEl('p', { cls: 'thoughtknot-quiet', text: 'No problems.' });
     return;
   }
   const ul = list.createEl('ul');
   for (const d of problems) {
     const li = ul.createEl('li', { cls: classOf(d) });
     li.createSpan({ text: `Line ${d.range.start.line + 1}: ${d.message} ` });
-    li.createSpan({ cls: 'graph-note-fix', text: d.data.fix });
+    li.createSpan({ cls: 'thoughtknot-fix', text: d.data.fix });
   }
 }
 
@@ -46,7 +46,7 @@ export function showFixes(
     const row = fixbar.createDiv({ cls: classOf(d) });
     row.createSpan({ text: `${d.severity === HINT ? 'ℹ' : '⚠'} ${d.message}` });
     for (const f of d.data.fixes) button(row, f.title, null, () => apply(f.edit.changes), f.title);
-    if (!d.data.fixes.length) row.createSpan({ cls: 'graph-note-fix', text: ` ${d.data.fix}` });
+    if (!d.data.fixes.length) row.createSpan({ cls: 'thoughtknot-fix', text: ` ${d.data.fix}` });
   }
 }
 

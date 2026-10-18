@@ -1,6 +1,6 @@
 // The graph blocks of a note (spec §3): where each gql fenced block is, and what its graph line says — the graph it draws,
 // whether it holds data or a schema, a shared schema or one that names a shared schema, or a graph line that cannot be read.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import type { Block, Problem } from './note-reading.ts';
 import { N, S, SPACE, trim } from './whitespace.ts';
 

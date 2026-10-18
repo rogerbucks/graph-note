@@ -5,7 +5,7 @@
 // spaces, and its comments, refused where XML refuses one. So an escape the writer leaves out shows as a difference,
 // never as a reader being kind. Each also gives the notes it keeps (editor spec §24, note_standard): a GQL block's
 // `///` lines, read by the library's notes; a GraphML comment directly before a node or edge, its escapes read here.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 
 /** A graph as a data export holds it: things as [id, kinds, properties], links as [from, type, to, properties]. */
 export const dataOf = (g) => ({

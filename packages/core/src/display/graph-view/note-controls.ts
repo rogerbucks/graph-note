@@ -3,8 +3,8 @@
 // does the writing — the `///` lines above the thing or link, nothing else in the block changing — and the block is
 // replaced through the editor, so the editor's own undo takes the note away or brings it back. A refusal is said in
 // words beside the controls, nothing written.
-import { linkInBlock, setNote, word } from '@graph-note/core';
-import type { NoteReading, Target, ThingNote } from '@graph-note/core';
+import { linkInBlock, setNote, word } from '@thoughtknot/core';
+import type { NoteReading, Target, ThingNote } from '@thoughtknot/core';
 
 /** What the controls need of the editor open on the card. */
 export interface NoteEditing {
@@ -23,8 +23,8 @@ const plain = (parent: HTMLElement, text: string, onClick: () => void): void => 
 
 /** The note controls for one thing or link: its buttons, and, while one is pressed, a field for the note's words. */
 function controls(el: HTMLElement, note: ThingNote | undefined, edit: NoteEditing): void {
-  const box = el.createDiv({ cls: 'graph-note-note-controls' }),
-    said = box.createDiv({ cls: 'graph-note-note-said', attr: { role: 'alert' } }),
+  const box = el.createDiv({ cls: 'thoughtknot-note-controls' }),
+    said = box.createDiv({ cls: 'thoughtknot-note-said', attr: { role: 'alert' } }),
     body = box.createDiv();
   const write = (words: string | null): void => {
     const target = edit.target();
@@ -38,18 +38,18 @@ function controls(el: HTMLElement, note: ThingNote | undefined, edit: NoteEditin
   };
   const offer = (): void => {
     body.empty();
-    const row = body.createDiv({ cls: 'graph-note-note-buttons' });
+    const row = body.createDiv({ cls: 'thoughtknot-note-buttons' });
     plain(row, note ? word('note.change') : word('note.add'), ask);
     if (note) plain(row, word('note.remove'), () => write(null));
   };
   const ask = (): void => {
     body.empty();
     const field = body.createEl('textarea', {
-      cls: 'graph-note-note-field',
+      cls: 'thoughtknot-note-field',
       attr: { 'aria-label': word('note.field'), rows: '4' },
     });
     field.value = note?.text ?? '';
-    const row = body.createDiv({ cls: 'graph-note-note-buttons' });
+    const row = body.createDiv({ cls: 'thoughtknot-note-buttons' });
     plain(row, word('note.save'), () => write(field.value));
     plain(row, word('note.cancel'), offer);
     field.focus();

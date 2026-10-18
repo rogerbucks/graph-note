@@ -11,9 +11,9 @@ import { tapKey } from './host/inspector-steps.js';
 
 before(() => build());
 
-const details = (el) => el.querySelector('.graph-note-details');
-const parts = (el) => details(el).querySelectorAll('.graph-note-links-part');
-const said = (el) => details(el).querySelector('.graph-note-details-said')?.textContent;
+const details = (el) => el.querySelector('.thoughtknot-details');
+const parts = (el) => details(el).querySelectorAll('.thoughtknot-links-part');
+const said = (el) => details(el).querySelector('.thoughtknot-details-said')?.textContent;
 
 describe('a thing’s details', () => {
   let env, el;
@@ -29,9 +29,9 @@ describe('a thing’s details', () => {
       said(el),
       'This question is answered by ‘Large reader’ and ‘Tablet’. It has 1 property and no problems.',
     );
-    const body = details(el).querySelector('.graph-note-details-body');
-    const first = body.children.find((c) => !c.classList.contains('graph-note-trail'));
-    assert.ok(first.classList.contains('graph-note-details-said'), 'the sentence comes first');
+    const body = details(el).querySelector('.thoughtknot-details-body');
+    const first = body.children.find((c) => !c.classList.contains('thoughtknot-trail'));
+    assert.ok(first.classList.contains('thoughtknot-details-said'), 'the sentence comes first');
   });
 
   test('show links in before links out, each part labelled and counted, saying so when it has none', () => {
@@ -40,27 +40,27 @@ describe('a thing’s details', () => {
     assert.equal(ins.querySelector('h4').textContent, 'Links in2');
     assert.equal(ins.getAttribute('aria-labelledby'), ins.querySelector('h4').id);
     assert.equal(outs.querySelector('h4').textContent, 'Links out0');
-    assert.equal(outs.querySelector('.graph-note-none').textContent, 'Links to nothing.');
+    assert.equal(outs.querySelector('.thoughtknot-none').textContent, 'Links to nothing.');
   });
 
   test('head each group with its reading, and list its things one to a row, each a button', () => {
     tapKey(el, 'eyes');
     const [, outs] = parts(el);
-    const groups = outs.querySelectorAll('.graph-note-link-group');
+    const groups = outs.querySelectorAll('.thoughtknot-link-group');
     assert.deepEqual(
-      groups.map((g) => g.querySelector('.graph-note-link-reading').textContent),
+      groups.map((g) => g.querySelector('.thoughtknot-link-reading').textContent),
       ['favours', 'counts against'],
     );
-    const rows = groups[0].querySelectorAll('.graph-note-link-row');
+    const rows = groups[0].querySelectorAll('.thoughtknot-link-row');
     assert.deepEqual(
-      rows.map((r) => r.querySelector('button.graph-note-link-thing').textContent),
+      rows.map((r) => r.querySelector('button.thoughtknot-link-thing').textContent),
       ['Large reader'],
     );
   });
 
   test('show its properties as a table of name and value', () => {
     tapKey(el, 'large');
-    const dl = details(el).querySelector('dl.graph-note-rich-properties');
+    const dl = details(el).querySelector('dl.thoughtknot-rich-properties');
     assert.ok(dl, 'a description list');
     assert.deepEqual(
       dl.querySelectorAll('dt').map((d) => d.textContent),

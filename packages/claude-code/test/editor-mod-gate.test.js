@@ -115,8 +115,8 @@ describe('the yes goes to the server, for the content it was given about (cc_cla
     await launcher.edit(writeNote(where, 'plan2.md', 'Confidential', `${NEVER}\n`));
     await launcher.confirm();
     const [request] = host.requests;
-    assert.match(request.env.GRAPH_NOTE_EDITOR_CONFIRMED, /^[0-9a-f]{64}$/);
-    assert.deepEqual(JSON.parse(request.env.GRAPH_NOTE_EDITOR_SETTINGS).classifications, [
+    assert.match(request.env.THOUGHTKNOT_EDITOR_CONFIRMED, /^[0-9a-f]{64}$/);
+    assert.deepEqual(JSON.parse(request.env.THOUGHTKNOT_EDITOR_SETTINGS).classifications, [
       'Public',
       'Internal',
       'Confidential',
@@ -129,7 +129,7 @@ describe('the yes goes to the server, for the content it was given about (cc_cla
     const where = modVault();
     const { launcher, host } = launcherFor(where);
     await launcher.edit(writeNote(where, 'ok.md', 'Internal'));
-    assert.equal(host.requests[0].env.GRAPH_NOTE_EDITOR_CONFIRMED, '');
+    assert.equal(host.requests[0].env.THOUGHTKNOT_EDITOR_CONFIRMED, '');
   });
 
   test('a note changed after the question was asked asks again, rather than carrying the yes over', async () => {

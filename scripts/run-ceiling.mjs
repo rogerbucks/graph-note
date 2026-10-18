@@ -12,24 +12,24 @@
 // Defaults, measured on 11 Oct 2026 with the whole suite (`node --test`, about 700 tests): it peaked at 1.3 GB
 // resident across 21 processes and took 64 s, on a 10-core machine (more cores run more test files at once, and use
 // more memory; fewer take longer). The slowest single test took 23 s. So:
-//   GRAPH_NOTE_TEST_MEMORY_MB   memory ceiling for the whole run, in MB: default 4096, three times the measured peak,
+//   THOUGHTKNOT_TEST_MEMORY_MB   memory ceiling for the whole run, in MB: default 4096, three times the measured peak,
 //                               and inside a CI runner's 7 to 16 GB
-//   GRAPH_NOTE_TEST_MINUTES     time ceiling for the whole run, in minutes (a fraction is allowed): default 20
+//   THOUGHTKNOT_TEST_MINUTES     time ceiling for the whole run, in minutes (a fraction is allowed): default 20
 //   the heap limit              3072 MB for each Node process, under the memory ceiling
 //   --test-timeout=300000       each test's own limit, set in package.json: 5 minutes, well over the slowest test
 //
 // Usage:
 //   node scripts/run-ceiling.mjs node --test                       (npm test; npm run test:ai and test:changed too)
-//   GRAPH_NOTE_TEST_MEMORY_MB=8192 npm test                         a run that really needs more memory
-//   GRAPH_NOTE_TEST_MINUTES=40 npm test                             or longer
+//   THOUGHTKNOT_TEST_MEMORY_MB=8192 npm test                         a run that really needs more memory
+//   THOUGHTKNOT_TEST_MINUTES=40 npm test                             or longer
 //
 // Writes: nothing (it only runs the command, and kills it when it passes a ceiling).
 import { execFile, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-/** The memory ceiling, in MB, when GRAPH_NOTE_TEST_MEMORY_MB is not set. */
+/** The memory ceiling, in MB, when THOUGHTKNOT_TEST_MEMORY_MB is not set. */
 export const DEFAULT_MEMORY_MB = 4096;
-/** The time ceiling, in minutes, when GRAPH_NOTE_TEST_MINUTES is not set. */
+/** The time ceiling, in minutes, when THOUGHTKNOT_TEST_MINUTES is not set. */
 export const DEFAULT_MINUTES = 20;
 /** The JavaScript heap limit each Node process gets, in MB, when NODE_OPTIONS sets none. */
 export const HEAP_MB = 3072;
@@ -49,10 +49,10 @@ export function ceilings(env) {
     const value = Number(text);
     return Number.isFinite(value) && value > 0 ? value : undefined;
   };
-  const memoryMb = read('GRAPH_NOTE_TEST_MEMORY_MB', DEFAULT_MEMORY_MB);
-  const minutes = read('GRAPH_NOTE_TEST_MINUTES', DEFAULT_MINUTES);
+  const memoryMb = read('THOUGHTKNOT_TEST_MEMORY_MB', DEFAULT_MEMORY_MB);
+  const minutes = read('THOUGHTKNOT_TEST_MINUTES', DEFAULT_MINUTES);
   const bad =
-    memoryMb === undefined ? 'GRAPH_NOTE_TEST_MEMORY_MB' : minutes === undefined ? 'GRAPH_NOTE_TEST_MINUTES' : '';
+    memoryMb === undefined ? 'THOUGHTKNOT_TEST_MEMORY_MB' : minutes === undefined ? 'THOUGHTKNOT_TEST_MINUTES' : '';
   if (bad) return { error: `${SAY} ${bad} must be a positive number, not ${JSON.stringify(env[bad])}` };
   return { memoryMb, minutes };
 }
@@ -117,7 +117,7 @@ function main(argv) {
       const ceiling = `${limits.minutes}-minute`;
       return stop(
         `${STOPPED} after ${seconds.toFixed(1)} s, over its ${ceiling} time ceiling. ` +
-          `If it really needs longer, set GRAPH_NOTE_TEST_MINUTES (default ${DEFAULT_MINUTES}).`,
+          `If it really needs longer, set THOUGHTKNOT_TEST_MINUTES (default ${DEFAULT_MINUTES}).`,
       );
     }
     if (windows || child.pid === undefined) return;
@@ -127,7 +127,7 @@ function main(argv) {
       if (mb > limits.memoryMb)
         stop(
           `${STOPPED} at ${mb} MB of memory, over its ${limits.memoryMb} MB ceiling. ` +
-            `A test is probably growing without bound; if the run really needs more, set GRAPH_NOTE_TEST_MEMORY_MB ` +
+            `A test is probably growing without bound; if the run really needs more, set THOUGHTKNOT_TEST_MEMORY_MB ` +
             `(default ${DEFAULT_MEMORY_MB}).`,
         );
     });

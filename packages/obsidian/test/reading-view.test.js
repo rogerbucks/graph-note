@@ -154,7 +154,7 @@ describe('the pane in front decides', () => {
     const env = await loaded();
     try {
       pane(env, 'source');
-      await env.app.workspace.getLeaf('split', 'vertical').setViewState({ type: 'graph-note-pane', state: {} });
+      await env.app.workspace.getLeaf('split', 'vertical').setViewState({ type: 'thoughtknot-pane', state: {} });
       env.state.activeView = null; // the edit pane is not a Markdown view
       assert.equal(env.app.workspace.getActiveFile()?.path, PATH, 'Obsidian still gives the last note');
       await convert(env).callback();
@@ -182,7 +182,7 @@ describe('the pane in front decides', () => {
     try {
       pane(env, 'preview', { front: true });
       await env.plugin.openEditor({ path: PATH, line: 2, graph: 'g' });
-      const t = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl.querySelector('textarea');
+      const t = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl.querySelector('textarea');
       t.value = `${SLIP},`;
       t.dispatch('input');
       await until(() => env.state.files.get(PATH).includes(`${SLIP},`), 2000);

@@ -2,8 +2,8 @@
 // broken where it names nothing in the vault (links_shown, broken_links_problems); and a thing with attachments given a
 // paperclip with their count, said to screen readers too (attachments_at_a_glance). Marked on the SVG Graphviz drew, by
 // class and one mark, so the layout source stays the Python library's.
-import { attachmentsOf, linksIn } from '@graph-note/core';
-import type { NoteReading } from '@graph-note/core';
+import { attachmentsOf, linksIn } from '@thoughtknot/core';
+import type { NoteReading } from '@thoughtknot/core';
 import { cornerOf } from '../graph-view/parked';
 import type { LinkHost } from './link-types';
 
@@ -15,7 +15,7 @@ export function markLinks(svg: SVGSVGElement, reading: NoteReading, graph: strin
     // a link that is never opened is never drawn as one (safe_to_click)
     const links = linksIn(t.textContent ?? '').filter((l) => l.kind !== 'refused');
     if (!links.length) continue;
-    t.classList.add('graph-note-link');
+    t.classList.add('thoughtknot-link');
     const broken = links.some((l) => (l.kind === 'note' || l.kind === 'file') && l.target && !host.found(l.target));
     t.classList.toggle('is-unresolved', broken);
   }
@@ -28,7 +28,7 @@ export function markLinks(svg: SVGSVGElement, reading: NoteReading, graph: strin
     const at = cornerOf(g);
     if (!at) continue;
     const mark = g.appendChild(activeDocument.createElementNS(SVG, 'text'));
-    mark.setAttribute('class', 'graph-note-attachments');
+    mark.setAttribute('class', 'thoughtknot-attachments');
     mark.setAttribute('x', String(at.left + 4));
     mark.setAttribute('y', String(at.top + 10));
     mark.textContent = `📎 ${n}`;

@@ -5,7 +5,7 @@
 // only when the user presses Run (`runStep`): what is given at each point, a graph of the note or a view of one, is
 // checked against the point first (steps-input.ts); the rule is matched over the inputs together (steps-match.ts); and
 // the graph it gives is offered as a proposal (§17) of the links new to the step's graph, never written by the step.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { firstLine, gqlBlocks, graphOfBlock, isStepBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { formatCount } from './locale-formats.ts';
