@@ -21,25 +21,25 @@
     "quiet_run_bytes": 14,
     "coverage_percent": 99.2,
     "speed_index": 3.86,
-    "instructions_draw_fifty": 1333083547,
-    "instructions_reading_limits": 25528121836,
-    "instructions_layout_refusals": 615690849,
-    "instructions_naming": 4083537016,
-    "instructions_keystroke": 591341531,
+    "instructions_draw_fifty": 1380525246,
+    "instructions_reading_limits": 25362265324,
+    "instructions_layout_refusals": 652146276,
+    "instructions_naming": 2863014144,
+    "instructions_keystroke": 387972569,
     "instruction_claims_broken": 0,
-    "instructions_cold_start": 3857361145,
-    "instructions_draw_five_hundred": 15228485484,
-    "instructions_mesh_query": 73957711
+    "instructions_cold_start": 2955317956,
+    "instructions_draw_five_hundred": 11939327114,
+    "instructions_mesh_query": 233985607
   },
   "details": {
     "instructions": {
       "machine": {
         "os": "linux",
         "arch": "x64",
-        "node_major": 22,
-        "node": "v22.22.0",
+        "node_major": 24,
+        "node": "v24.20.0",
         "valgrind": "valgrind-3.22.0",
-        "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz"
+        "cpu": "AMD EPYC 9V74 80-Core Processor"
       }
     },
     "max_source_file": "packages/obsidian/src/block-editor/block-editor.ts",
