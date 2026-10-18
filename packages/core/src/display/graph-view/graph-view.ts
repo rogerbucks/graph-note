@@ -309,12 +309,12 @@ export class GraphView extends Lifecycle {
 
   /** The viewport's size to draw it at (viewport-size.ts). */
   private viewportSize() {
-    return viewportSize(this.viewport, this.drawn, this.o.mode, this.across);
+    return viewportSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest);
   }
 
   /** The viewport's size to tell the zoom: none while hidden or not yet laid out, so the zoom keeps its view (§25). */
   private zoomSize() {
-    return zoomSize(this.viewport, this.drawn, this.o.mode, this.across);
+    return zoomSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest);
   }
 
   /**
