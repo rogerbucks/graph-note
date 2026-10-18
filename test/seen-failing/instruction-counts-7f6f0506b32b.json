@@ -1,0 +1,6 @@
+{
+  "file": "test/instruction-counts.test.js",
+  "test": "keeping the count of a benchmark that has not changed > another Valgrind, Node or machine counts everything again, whatever the bundles",
+  "seen_failing_first": false,
+  "evidence": "a control: before counts were kept, every benchmark was counted, as this asks where the machine changed"
+}

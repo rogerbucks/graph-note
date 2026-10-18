@@ -2,10 +2,21 @@ name: Quality baseline
 
 # Run by hand. Measures the quality metrics on the CI runner (Linux, Node 24) and uploads the result, so it can be
 # committed as quality/baseline.json by a normal pull request. The benchmarks' instruction counts are held only against
-# counts from the same machine; until then they warn. It also counts the benchmarks three times over, so the spread
-# between runs, which the instruction counts' tolerance must be wider than, is measured where they are. The job only reads.
+# counts from the same machine; until then they warn. A benchmark whose fingerprint (its bundle, the machine, Node and
+# Valgrind) is the same as in the committed baseline keeps its count there, uncounted, unless every one is asked for.
+# Asked, it also counts the benchmarks three times over, so the spread between runs, which the instruction counts'
+# tolerance must be wider than, is measured where they are. The job only reads.
 on:
   workflow_dispatch:
+    inputs:
+      count_all:
+        description: Count every benchmark, keeping no count from the baseline
+        type: boolean
+        default: false
+      spread:
+        description: Also count every benchmark three times over, for the spread between runs
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,8 +41,14 @@ jobs:
       # Valgrind (GPL-3.0) is installed in this job alone and never shipped: licences/bundled.json, ciOnlyTools
       - name: Install Valgrind, whose Cachegrind counts the benchmarks' instructions
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends valgrind
-      - run: node scripts/quality-metrics.mjs --out quality/metrics.json
+      - name: Measure, keeping the count of each benchmark that has not changed since the baseline
+        if: ${{ !inputs.count_all }}
+        run: node scripts/quality-metrics.mjs --out quality/metrics.json --reuse quality/baseline.json
+      - name: Measure, counting every benchmark
+        if: ${{ inputs.count_all }}
+        run: node scripts/quality-metrics.mjs --out quality/metrics.json
       - name: Count the benchmarks three times, for the spread between runs
+        if: ${{ inputs.spread }}
         run: node scripts/instruction-counts.mjs --runs 3 --out quality/instruction-spread.json
       # printed as well as uploaded, so the counts can be read from the job's log where the artifact cannot be fetched
       - name: Print what was measured
