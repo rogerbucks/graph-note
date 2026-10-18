@@ -1,6 +1,6 @@
 // A drawing that runs across is read right to left when Obsidian is in a right-to-left language (editor spec §42,
-// rtl_drawing_direction): the first thing on the right, the last on the left, its words as written. The built plugin,
-// loaded against the stand-ins for the page, laying out with the real engine.
+// rtl_drawing_direction). Its first thing is on the right and its last on the left, its words as written. The test
+// loads the built plugin against the stand-ins for the page, laying out with the real engine.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';

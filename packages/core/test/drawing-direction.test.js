@@ -1,6 +1,7 @@
-// A drawing that runs across is read right to left in a right-to-left language (editor spec §42, rtl_drawing_direction):
-// Graphviz lays it out left to right as always, and the drawing is mirrored after, so the layout source and every export
-// stay byte for byte the same. Its words are not mirrored: each label keeps its letters and is anchored at its other end.
+// A drawing that runs across is read right to left in a right-to-left language (editor spec §42, rtl_drawing_direction).
+// Graphviz lays it out left to right as always, and the drawing is mirrored after. So the layout source and every
+// export stay byte for byte the same. Its words are not mirrored: each label keeps its letters and is anchored at its
+// other end.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
