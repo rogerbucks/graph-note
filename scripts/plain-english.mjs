@@ -1,4 +1,4 @@
-// The plain-English check of what the user reads (editor spec §41, ux_copy_auto). It scores each message's reading
+// The plain-language check of what the user reads (editor spec §41, ux_copy_auto). It scores each message's reading
 // level, its longest sentence and the jargon in it, with no dependency. It also holds the limits a message must keep
 // to. The messages themselves are gathered from every view by test/ux-copy.test.js. The ones that miss a limit for a
 // reason are recorded in quality/copy.json. So a new miss, or a recorded one getting worse, fails.

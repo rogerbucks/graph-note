@@ -110,7 +110,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       graph.append(bar);
       button(bar, word('bar.export'), 'download', () => toggleExportForm(graph, exporting), word('bar.export'));
     };
-    // the graph as plain-English sentences, under the editor, made again with the note (cc_text_version)
+    // the graph as plain-language sentences, under the editor, made again with the note (cc_text_version)
     let words: HTMLElement | null = null;
     const addTextVersion = () => {
       words?.remove();

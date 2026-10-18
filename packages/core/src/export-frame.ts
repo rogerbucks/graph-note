@@ -1,5 +1,5 @@
 // The frame round an exported image (editor spec §16, export_self_explaining, export_fixed_theme). It has a background
-// of its own, a title and what the image shows in plain English, and the legend. A footer says which note it came from
+// of its own, a title and what the image shows in plain language, and the legend. A footer says which note it came from
 // and when, so the image explains itself outside Obsidian. The text is in the locked style's font and sizes, in the
 // palette's fixed colours. The title is at the font size, the reading and legend at the edge-label size, and the footer
 // at the caption size. The drawing is nested inside, untouched, at its natural size. Widths of text are estimated, as

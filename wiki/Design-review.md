@@ -150,7 +150,7 @@ already keeps the reason as data and the words apart. That pattern scales.
 - Every problem gets a stable code, as the Language Server Protocol already allows (`problem_codes`), the same from
   the JavaScript and the Python libraries. The message is looked up by code, and people can search for it.
 - Translations are plain files per language, checked for the same keys and placeholders (`translations_as_files`).
-- The plain-English check (`ux_copy_auto`) keeps running on the source language.
+- The plain-language check (`ux_copy_auto`) keeps running on the source language.
 
 ## 6. Culture (numbers, dates, sorting)
 
@@ -209,7 +209,7 @@ Checked against WCAG 2.2, Apple's and Microsoft's design guidance and common des
 | Narrow screens and reflow | Yes (`a11y_targets_reflow_auto`) | — |
 | Empty states | Yes (`empty_view`, `empty_export`, `empty_block_start`) | — |
 | Undo | Yes (`undo_everything` and others) | — |
-| Plain-English messages | Yes (`ux_copy_auto`) | — |
+| Plain-language messages | Yes (`ux_copy_auto`) | — |
 | Theme tokens for the interface | Partly (drawing only) | `ui_theme_tokens`, `plugin_theme_tokens` |
 | High contrast and forced colours | No | `forced_colours` |
 | Text enlarged to 200 per cent | No | `text_scaling` |

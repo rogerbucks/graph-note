@@ -1,6 +1,6 @@
 // A proposal laid over the drawing (editor spec §17, proposal_shown_not_applied and proposals_read_back). It says which
 // boxes and links each change adds, changes or removes, so a host can mark them — in words as well as in colour. Each
-// change is read back in plain English, in the words the text pane reads a line in (`readBack`).
+// change is read back in plain language, in the words the text pane reads a line in (`readBack`).
 import { hops } from './estimates.ts';
 import { readBack } from './help.ts';
 import type { NoteReading } from './note-reading.ts';
@@ -67,7 +67,7 @@ export function marksOf(reading: NoteReading, graph: string, changes: readonly P
 
 /**
  * What a change is, exactly, as it would be written, as the change set writes it. That is the GQL an addition adds, the
- * SET statement of a change of a property, or the DELETE statement of a removal. The plain English of `saidOf` can say
+ * SET statement of a change of a property, or the DELETE statement of a removal. The plain language of `saidOf` can say
  * less than this; this never does.
  */
 export function exactOf(c: ProposedChange): string {
@@ -75,7 +75,7 @@ export function exactOf(c: ProposedChange): string {
 }
 
 /**
- * A change in plain English, as the text pane reads a line. Examples: "Added: Small reader is an Option"; "Changed:
+ * A change in plain language, as the text pane reads a line. Examples: "Added: Small reader is an Option"; "Changed:
  * Large reader: price is 4"; "Removed: Alice is a Person". Read in `reading`, the graph with the change laid over it
  * where it adds or changes. So the things it names are there to be called by their text.
  */

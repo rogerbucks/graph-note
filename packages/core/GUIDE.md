@@ -695,7 +695,7 @@ reads `· QUERY` as a query, and the core draws no query as data. So a view is n
 - `views.ts` — `viewsOf` finds the views of a note, each with its graph, its block and its query text.
   - Some blocks are listed with a `fault`, never skipped. That is a block meant as a view with no name, or a name that
     is not one word. It is also a name already used in its graph.
-  - `readingOf` says a view in plain English ("everything within 2 steps of Alice").
+  - `readingOf` says a view in plain language ("everything within 2 steps of Alice").
 - `view-profile.ts` — the view profile.
   - `parseView` reads the five shapes of query into a `ViewSpec`. The shapes are a hand-picked set, everything near a
     thing, how one thing reaches another, only some kinds, and a walked path.
@@ -1057,7 +1057,7 @@ shown over the graph and never written until a person accepts a change. Then it 
   - `newProblems`: what a change leaves wrong that was not before.
   - It is not exported by the entry: only a review writes a change.
 - `proposals-marks.ts` — which boxes and links each change adds, changes or removes. `MARK_WORDS` says it in words, never
-  by colour alone. Each change is read back in plain English as the text pane reads a line (`readBack`).
+  by colour alone. Each change is read back in plain language as the text pane reads a line (`readBack`).
 - `proposals-review.ts` — `ProposalReview`.
   - `show`: the proposal laid over the graph, with rows, groups, marks, provenance, and whether the graph has moved. It
     writes nothing.

@@ -1,4 +1,4 @@
-// The graph as plain-English sentences, in the page for screen readers and everyone else (spec §26, cc_text_version; §11).
+// The graph as plain-language sentences, in the page for screen readers and everyone else (spec §26, cc_text_version; §11).
 // The sentences are the core's own `textVersion`, the same the Obsidian plugin gives a screen reader, so the two hosts
 // say one thing. It is a labelled section of the page, never hidden, and it stands in alone when the drawing cannot be
 // made. It is made again with every drawing, so it is always the graph as the note now holds it.

@@ -1,4 +1,4 @@
-// The plain-English check of every message the user reads (editor spec §41, ux_copy_auto). Every view of every host, the
+// The plain-language check of every message the user reads (editor spec §41, ux_copy_auto). Every view of every host, the
 // same views test/wcag.test.js checks, gives up its messages: its words, and the names, hints and titles on its
 // controls, with the notices and menu items the host shows; the person's own words (the drawing, the text being edited)
 // are left out. Each message must read at grade 9 or lower, keep its sentences to 25 words, and use none of the listed

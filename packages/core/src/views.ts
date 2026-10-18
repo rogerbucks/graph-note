@@ -1,5 +1,5 @@
 // Views in a note (editor spec §2 views_in_the_note, §7 view_is_query, views_by_tapping). A view is a named query
-// block, its graph line `// graph: <graph> · QUERY view <name>`. This finds them, and says each in plain English. The
+// block, its graph line `// graph: <graph> · QUERY view <name>`. This finds them, and says each in plain language. The
 // shapes a view may take are in view-profile.ts, and what a view returns is in view-evaluate.ts.
 //
 // The reader already reads `· QUERY` as a query block. The core draws no query as data (blocks.ts `dataKind`), so a
@@ -64,7 +64,7 @@ const and = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1
 const steps = (n: number) => `${n} step${n === 1 ? '' : 's'}`;
 
 /**
- * A view in plain English (views_by_tapping). Examples: "Alice, Bob and Carol, picked by hand"; "everything within 2
+ * A view in plain language (views_by_tapping). Examples: "Alice, Bob and Carol, picked by hand"; "everything within 2
  * steps of Alice"; "how Alice reaches Dan, in up to 6 steps"; "only Person and Team"; "the walked path Tour, in order".
  * `textOf` gives a thing's text as the drawing shows it; the kinds are named as they are written.
  */
