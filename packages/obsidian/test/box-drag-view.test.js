@@ -246,7 +246,7 @@ describe('dragging a box in a radial drawing', () => {
         drop = at(hub.x + far * Math.cos(angle), hub.y + far * Math.sin(angle));
       vp.dispatch('pointerdown', mouse(1, boxOf('c'), at(c.x, c.y)));
       vp.dispatch('pointermove', mouse(1, vp, drop));
-      assert.equal(el.querySelector('.graph-note-move-hint').textContent, 'Put C before A');
+      assert.equal(el.querySelector('.thoughtknot-move-hint').textContent, 'Put C before A');
       vp.dispatch('pointerup', mouse(1, vp, drop));
       await until(() => /:Nudge /.test(env.state.files.get(PATH)));
       assert.match(env.state.files.get(PATH), /\(nudge_1:Nudge \{word: 'before', thing: 'c', other: 'a'\}\)/);

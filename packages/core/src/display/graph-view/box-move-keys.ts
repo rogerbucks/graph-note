@@ -2,8 +2,8 @@
 // details, picks it up and says the first place it could go and the nudge that writes it; the arrow keys step through
 // every place there is (box-drag.ts, placesFor), the box it would go by marked; Enter writes the nudge shown, through the
 // card's host, and Escape puts the box down and writes nothing. Nothing moves while the card is only read.
-import { landingSaid, placesFor, word } from '@graph-note/core';
-import type { Landing } from '@graph-note/core';
+import { landingSaid, placesFor, word } from '@thoughtknot/core';
+import type { Landing } from '@thoughtknot/core';
 import type { BoxMoving } from './box-drag-view';
 import type { Taps } from './taps';
 
@@ -21,8 +21,8 @@ export interface KeysHost {
 /** The line that says where a box being moved would go, made once for the viewport and shared with a drag. */
 export function moveHint(viewport: HTMLElement): HTMLElement {
   return (
-    viewport.querySelector<HTMLElement>('.graph-note-move-hint') ??
-    viewport.createDiv({ cls: 'graph-note-move-hint', attr: { role: 'status' } })
+    viewport.querySelector<HTMLElement>('.thoughtknot-move-hint') ??
+    viewport.createDiv({ cls: 'thoughtknot-move-hint', attr: { role: 'status' } })
   );
 }
 

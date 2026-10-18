@@ -4,8 +4,8 @@
 // marked, and a line says the nudge it would write; letting go writes that nudge to the style graph, through the card's
 // host. Escape, or letting go where no place is shown, puts the box back and writes nothing. The core decides where it
 // lands (box-drag.ts); this draws it.
-import { landingFor, landingSaid, word } from '@graph-note/core';
-import type { Landing, NudgeWrite, View, WrittenNudge } from '@graph-note/core';
+import { landingFor, landingSaid, word } from '@thoughtknot/core';
+import type { Landing, NudgeWrite, View, WrittenNudge } from '@thoughtknot/core';
 import { moveHint } from './box-move-keys';
 import type { Taps } from './taps';
 

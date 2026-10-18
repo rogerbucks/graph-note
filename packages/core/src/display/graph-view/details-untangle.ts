@@ -1,7 +1,7 @@
 // What a thing's details offer to untangle the drawing (spec §25): its neighbourhood alone, the shortest path to another
 // thing, and, for a busy hub, folding or opening its links; and moving its box (§6). A graph drawn as a table (§15) has
 // nothing to hide or bring forward, so there none of it is offered.
-import { word } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
 import type { ThingActions } from './untangle';
 
 /**
@@ -15,7 +15,7 @@ export function untangleOffers(
   move?: (key: string) => void,
 ): void {
   if (!on) return;
-  const row = el.createDiv({ cls: 'graph-note-untangle-offers' });
+  const row = el.createDiv({ cls: 'thoughtknot-untangle-offers' });
   if (move)
     row
       .createEl('button', { text: word('details.move'), attr: { type: 'button' } })

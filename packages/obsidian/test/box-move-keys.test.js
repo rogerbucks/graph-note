@@ -19,7 +19,7 @@ describe('moving a box from the keyboard', () => {
       const ann = boxOf('ann');
       assert.ok(vp.dispatch('keydown', key(ann, 'm')).defaultPrevented, 'M is taken');
       assert.ok(ann.classList.contains('is-held'), 'picked up');
-      const hint = el.querySelector('.graph-note-move-hint');
+      const hint = el.querySelector('.thoughtknot-move-hint');
       assert.equal(hint.getAttribute('role'), 'status', 'said to a screen reader too');
       const first = hint.textContent;
       assert.match(first, /^Put Ann (beside|before|after) (Bob|Cy) \(1 of \d+\)/);
@@ -35,7 +35,7 @@ describe('moving a box from the keyboard', () => {
       assert.equal(env.state.notices.at(-1), `Moved: ${said}`);
       assert.ok(!ann.classList.contains('is-held'), 'put down');
       assert.equal(hint.hidden, true);
-      assert.equal(el.querySelector('.graph-note-details').hidden, true, 'Enter moved it, and opened nothing');
+      assert.equal(el.querySelector('.thoughtknot-details').hidden, true, 'Enter moved it, and opened nothing');
     } finally {
       env.uninstall();
     }
@@ -50,7 +50,7 @@ describe('moving a box from the keyboard', () => {
       vp.dispatch('keydown', key(bob, 'ArrowDown'));
       assert.ok(vp.dispatch('keydown', key(bob, 'Escape')).defaultPrevented);
       assert.ok(!bob.classList.contains('is-held'));
-      assert.equal(el.querySelector('.graph-note-move-hint').hidden, true);
+      assert.equal(el.querySelector('.thoughtknot-move-hint').hidden, true);
       assert.equal(el.querySelectorAll('g.node.is-landing').length, 0);
       vp.dispatch('keydown', key(bob, 'Enter'));
       assert.deepEqual(writes, [], 'nothing written: the Enter after only opens the box');
@@ -65,12 +65,12 @@ describe('moving a box from the keyboard', () => {
     try {
       const cy = boxOf('cy');
       vp.dispatch('keydown', key(cy, 'Enter'));
-      const move = el.querySelectorAll('.graph-note-details button').find((b) => b.textContent === 'Move…');
+      const move = el.querySelectorAll('.thoughtknot-details button').find((b) => b.textContent === 'Move…');
       assert.ok(move, 'offered in its details');
       move.click();
       assert.ok(cy.classList.contains('is-held'));
       assert.equal(env.doc.activeElement, cy);
-      assert.match(el.querySelector('.graph-note-move-hint').textContent, /^Put Cy /);
+      assert.match(el.querySelector('.thoughtknot-move-hint').textContent, /^Put Cy /);
       vp.dispatch('keydown', key(cy, 'Enter'));
       await until(() => /:Nudge /.test(env.state.files.get(PATH)));
     } finally {
