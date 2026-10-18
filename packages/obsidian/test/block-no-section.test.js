@@ -7,6 +7,7 @@ import { build, load, until, wait } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { fakeContext } from './host/fake-obsidian.js';
 import { tapKey } from './host/inspector-steps.js';
+import { propertiesShown } from './host/details-read.js';
 
 before(() => build());
 
@@ -38,10 +39,7 @@ describe('a graph with no section info is read-only', () => {
       assert.ok(labelled(el, 'Show source'), 'Source is offered');
       tapKey(el, 'large');
       const panel = el.querySelector('.graph-note-details');
-      assert.ok(
-        panel.querySelectorAll('li').some((li) => li.textContent === 'weight: 180'),
-        'its properties are shown',
-      );
+      assert.ok(propertiesShown(panel).includes('weight: 180'), 'its properties are shown');
       assert.equal(panel.querySelectorAll('input, [role="button"]').length, 0, 'nothing to change them with');
       const card = children.find((c) => c.o?.drawn);
       card.o.onEdit?.();

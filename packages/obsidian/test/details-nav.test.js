@@ -1,5 +1,5 @@
 // Finding your way from the details (editor spec §25, slice 3): a thing's links listed by relationship type and
-// direction, in words with a count (details_links_listed); choosing one selects it, shows its details and brings it into
+// direction, in words with a count (details_links_listed), links in before links out; choosing one selects it, shows its details and brings it into
 // view, keeping the zoom unless the thing would be too small to read (details_choose_moves), briefly animated, and at once
 // when the system asks for reduced motion (details_move_motion); a trail of the things chosen, with back and forward
 // (details_trail); an arrow at the edge pointing to a selection out of view (selection_pointer); and, in view mode, the
@@ -8,6 +8,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load as loadCard, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
+import { groupRead } from './host/details-read.js';
 import { load, GRAPH, show } from './host/view-notes.js';
 import { editing, tapKey } from './host/inspector-steps.js';
 import { PATH, NOTE } from './host/card-notes.js';
@@ -94,29 +95,21 @@ describe('a thing’s links are listed by relationship type and direction, in wo
 
   test('two links of one type coming in are one group: its reading back, the things, and how many', () => {
     tapKey(el, 'q');
-    assert.deepEqual(
-      groups(el).map((g) => g.textContent),
-      ['is answered by Large reader and Tablet (2)'],
-    );
+    assert.deepEqual(groups(el).map(groupRead), ['is answered by Large reader and Tablet (2)']);
   });
 
   test('links out of different types are a group each, read forward, with no count for one', () => {
     tapKey(el, 'eyes');
-    assert.deepEqual(
-      groups(el).map((g) => g.textContent),
-      ['favours Large reader', 'counts against Tablet'],
-    );
+    assert.deepEqual(groups(el).map(groupRead), ['favours Large reader', 'counts against Tablet']);
   });
 
-  test('links out come before links in, each under its heading', () => {
+  test('links in come before links out, each under its heading', () => {
     tapKey(el, 'large');
-    const text = details(el).textContent;
-    assert.deepEqual(
-      groups(el).map((g) => g.textContent),
-      ['answers Which device?', 'is favoured by Easy on the eyes'],
-    );
-    assert.ok(text.indexOf('Links out') < text.indexOf('answers Which device?'));
+    const text = details(el).querySelector('.graph-note-ins-outs').textContent;
+    assert.deepEqual(groups(el).map(groupRead), ['is favoured by Easy on the eyes', 'answers Which device?']);
     assert.ok(text.indexOf('Links in') < text.indexOf('is favoured by'));
+    assert.ok(text.indexOf('is favoured by') < text.indexOf('Links out'));
+    assert.ok(text.indexOf('Links out') < text.indexOf('answers'));
   });
 
   test('each linked thing and each link in a group is a button, named, that the keyboard reaches', () => {
@@ -141,10 +134,7 @@ describe('a thing’s links are listed by relationship type and direction, in wo
 (bob)-[:REPORTS_TO {since: 2025}]->(ann)`;
     const c = (await show(env, fence(twice))).el;
     tapKey(c, 'ann');
-    assert.deepEqual(
-      groups(c).map((g) => g.textContent),
-      ['is reported to by Bob (2)'],
-    );
+    assert.deepEqual(groups(c).map(groupRead), ['is reported to by Bob (2)']);
     assert.deepEqual(
       groups(c)[0]
         .querySelectorAll('button')
@@ -159,10 +149,7 @@ describe('a thing’s links are listed by relationship type and direction, in wo
       const c = await editing(card);
       tapKey(c, 'q');
       assert.ok(c.querySelector('.graph-note-inspector, .metadata-container'), 'the inspector is open');
-      assert.deepEqual(
-        groups(c).map((g) => g.textContent),
-        ['is answered by Large reader'],
-      );
+      assert.deepEqual(groups(c).map(groupRead), ['is answered by Large reader']);
     } finally {
       card.uninstall();
     }

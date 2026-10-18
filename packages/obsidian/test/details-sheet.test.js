@@ -13,6 +13,7 @@ import { fence, labelled } from './host/notes.js';
 import { rules, winner } from './host/cascade.js';
 import { load, GRAPH, show, styles } from './host/view-notes.js';
 import { tapKey } from './host/inspector-steps.js';
+import { groupsRead } from './host/details-read.js';
 
 before(() => build());
 
@@ -437,7 +438,7 @@ describe('minimised to a bar, or restored to a panel that never fills the screen
     assert.ok(details(el).querySelector('.graph-note-details-head').contains(t));
     assert.equal(t.getAttribute('aria-expanded'), 'true');
     assert.ok(!body(el).hidden);
-    assert.match(body(el).textContent, /answers Which device\?/);
+    assert.ok(groupsRead(body(el)).includes('answers Which device?'));
   });
 
   test('minimised, it is a single bar with the thing’s name and kind, and its toggle says it will restore', () => {

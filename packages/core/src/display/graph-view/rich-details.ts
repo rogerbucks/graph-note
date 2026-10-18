@@ -101,15 +101,15 @@ export class RichDetails {
     noteControls(el, this.o.reading, this.o.graph, target, text, replace);
   }
 
-  /** Properties to read, each `name:` and its value rendered by Obsidian (spec §3, §14). */
+  /** Properties to read, as a table of each name and its value rendered by Obsidian (spec §3, §14, details_properties_table). */
   properties(el: HTMLElement, properties: [string, string][]): void {
-    el.createEl('h4', { text: word('details.properties') });
-    const ul = el.createEl('ul', { cls: 'graph-note-rich-properties' });
+    el.createEl('h4', { cls: 'graph-note-section-label', text: word('details.properties') });
+    const dl = el.createEl('dl', { cls: 'graph-note-rich-properties' });
     for (const [k, v] of properties) {
-      const li = ul.createEl('li');
-      li.createSpan({ cls: 'graph-note-property-name', text: `${k}: ` });
-      if (this.o.links) this.render(li, v, 'graph-note-rich-value');
-      else li.appendText(v);
+      dl.createEl('dt', { cls: 'graph-note-property-name', text: k });
+      const dd = dl.createEl('dd');
+      if (this.o.links) this.render(dd, v, 'graph-note-rich-value');
+      else dd.appendText(v);
     }
   }
 

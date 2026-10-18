@@ -962,8 +962,14 @@ details.graph-note-style > summary {
   min-height: 44px;
 }
 .graph-note-details h4 {
-  margin: var(--gn-space-2) 0 0;
-  font-size: var(--gn-font-size-s);
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-2);
+  margin: var(--gn-space-3) 0 var(--gn-space-1);
+  font-size: var(--gn-font-size-xs);
+  font-weight: var(--gn-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--gn-text-muted);
 }
 .graph-note-kind {
@@ -1115,34 +1121,127 @@ details.graph-note-style > summary {
   display: none;
 }
 
-/* A thing's links in words (spec §25): each name a choice, read as a link in the sentence, with the link's own small
-   button beside it; the trail's back and forward above them. On touch, every choice is 44 points. */
-.graph-note-details ul.graph-note-link-groups {
+/* A thing's details (spec §25): a sentence on what is going on (details_said); its links in and out, side by side where
+   the panel is wide and one above the other where it is narrow (details_ins_outs), each group headed by its reading,
+   its things one to a row, each a choice in the link colour with its link's own small button beside it; its properties
+   as a table of name and value (details_properties_table). Section labels are small capitals, as a box's kind is on the
+   drawing. On touch, every choice is 44 points. */
+.graph-note-details-said {
+  margin: var(--gn-space-2) 0 var(--gn-space-3);
+  line-height: 1.5;
+}
+.graph-note-count {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0 var(--gn-space-half-2);
+  border: 1px solid var(--gn-border);
+  border-radius: 999px;
+  font-size: var(--gn-font-size-xs);
+  font-weight: var(--gn-font-weight-semibold);
+  line-height: 1.5;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--gn-text-normal);
+}
+.graph-note-ins-outs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--gn-space-3);
+  margin: var(--gn-space-2) 0;
+}
+.graph-note-links-part {
+  min-width: 0;
+  padding: var(--gn-space-2) var(--gn-space-3);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+}
+.graph-note-details .graph-note-links-part > h4 {
+  margin-top: 0;
+}
+.graph-note-none {
+  margin: var(--gn-space-1) 0;
+  color: var(--gn-text-muted);
+}
+.graph-note-details ul.graph-note-link-groups,
+.graph-note-details ul.graph-note-link-rows {
   list-style: none;
+  margin: 0;
   padding-inline-start: 0;
 }
-.graph-note-link-group {
-  margin: var(--gn-space-half-1) 0;
+.graph-note-link-group + .graph-note-link-group {
+  margin-top: var(--gn-space-2);
 }
-.graph-note-link-group button.graph-note-link-thing {
-  display: inline;
+.graph-note-link-reading {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-2);
+  margin: var(--gn-space-1) 0 var(--gn-space-half-1);
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
+}
+.graph-note-link-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-half-2);
+  border-top: 1px solid var(--gn-border);
+}
+.graph-note-link-row:first-child {
+  border-top: 0;
+}
+.graph-note-link-row button.graph-note-link-thing {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 32px;
   height: auto;
-  padding: 0 var(--gn-space-half-1);
+  justify-content: flex-start;
+  padding: var(--gn-space-1) var(--gn-space-half-2);
   background: none;
+  border: 0;
   box-shadow: none;
-  /* the link colour mixed with the text colour, underlined: the link colour alone is under 4.5:1 on the card in Obsidian's
-     default themes (SC 1.4.3); 70% of it keeps the hue and reaches 5:1 in both */
+  border-radius: var(--gn-radius-s);
+  /* the link colour mixed with the text colour: the link colour alone is under 4.5:1 on the card in Obsidian's default
+     themes (SC 1.4.3); 70% of it keeps the hue and reaches 5:1 in both */
   color: color-mix(in srgb, var(--gn-link) 70%, var(--gn-text-normal));
-  text-decoration: underline;
   font-size: inherit;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
-.graph-note-link-group button.graph-note-link-choice {
+.graph-note-link-row button.graph-note-link-choice {
   --icon-size: var(--gn-icon-xs);
+  flex: none;
   display: inline-flex;
-  vertical-align: middle;
   height: auto;
-  padding: var(--gn-space-half-1);
+  min-height: 32px;
+  padding: var(--gn-space-1);
+  background: none;
+  border: 0;
+  box-shadow: none;
+  color: var(--gn-text-muted);
+}
+.graph-note-link-row button:hover {
+  background: var(--gn-bg-hover);
+}
+.graph-note-link-row button:focus-visible {
+  outline: 2px solid var(--gn-accent);
+  outline-offset: -2px;
+}
+.graph-note-details dl.graph-note-rich-properties {
+  display: grid;
+  grid-template-columns: minmax(5rem, max-content) minmax(0, 1fr);
+  gap: var(--gn-space-1) var(--gn-space-3);
+  margin: var(--gn-space-1) 0 var(--gn-space-2);
+}
+.graph-note-rich-properties dt {
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+  overflow-wrap: anywhere;
+}
+.graph-note-rich-properties dd {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 .graph-note-trail {
   display: flex;
@@ -1154,8 +1253,8 @@ details.graph-note-style > summary {
   min-height: 44px;
 }
 @media (pointer: coarse) {
-  .graph-note-link-group button.graph-note-link-thing,
-  .graph-note-link-group button.graph-note-link-choice {
+  .graph-note-link-row button.graph-note-link-thing,
+  .graph-note-link-row button.graph-note-link-choice {
     min-width: 44px;
     min-height: 44px;
   }
@@ -1520,10 +1619,9 @@ details.graph-note-style > summary {
   gap: var(--gn-space-2);
   margin-top: var(--gn-space-1);
 }
-/* A property's value, rendered by Obsidian, follows its name on the line, as the plain value did. */
+/* A property's value, rendered by Obsidian, sits in its cell of the table with no margin of its own. */
 .graph-note-rich-properties .graph-note-rich-value,
 .graph-note-rich-properties .graph-note-rich-value > p {
-  display: inline;
   margin: 0;
 }
 .graph-note-note-body {

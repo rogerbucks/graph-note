@@ -57,7 +57,7 @@
 // words_catalogue) the same day, and the theme tokens (THEME_TOKENS, OBSIDIAN_TOKEN_MAP, themeTokenCss,
 // themeTokenContract, ThemeToken, ThemeTokenUse) the same day; pseudoWords, PSEUDO_LANGUAGES, isPseudoWord and optionSaid
 // on 18 Oct 2026, and the tallest drawing in a note (tallestOf, DrawingHeightSetting, drawing_height_setting) the same
-// day. The lists moved here from index.test.js in the review of #452.
+// day, and thingSaid (details_said) too. The lists moved here from index.test.js in the review of #452.
 import { TYPES_LATE } from './index-types-late.js';
 
 /** The values src/index.ts exports, sorted. */
@@ -390,6 +390,7 @@ export const VALUES = [
   'themeTokenCss',
   'themed',
   'thingChange',
+  'thingSaid',
   'thresholdValue',
   'toStandard',
   'tokenize',
