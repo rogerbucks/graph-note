@@ -185,12 +185,16 @@ describe('the browser editor’s page: every state’s drawing, in both themes',
     test(`${name} is drawn as its reference`, async () => {
       const wrong = [];
       for (const theme of THEMES) {
-        const { window } = await state();
+        const page = await state();
+        const { window } = page;
         const { style, variables } = pageStyleFor(readFileSync(join(dir, 'page.css'), 'utf8'), theme);
         const sheet = window.document.createElement('style');
         sheet.textContent = style;
         window.document.head.append(sheet);
         const pictures = drawingsIn(window.document.body).map((svg) => pictureOf(window, svg, variables));
+        // put away as soon as it is drawn: a page held to the end of the file holds its worker and its DOM
+        await page.stop();
+        window.close();
         wrong.push(differs('claude-code', name, theme, pictures));
       }
       assert.deepEqual(wrong.filter(Boolean), []);
