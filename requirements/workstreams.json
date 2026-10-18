@@ -701,5 +701,11 @@
       "cowork_no_server",
       "cowork_released"
     ]
+  },
+  "D2": {
+    "title": "Project home page",
+    "requirements": [
+      "landing_page"
+    ]
   }
 }

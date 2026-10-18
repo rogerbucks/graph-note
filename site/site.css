@@ -1,0 +1,234 @@
+/* The project's home page (spec §41, landing_page): one sheet, a light scheme and a dark one by the system's choice, every
+   side said by where reading starts and ends so the page mirrors for a right-to-left language. */
+:root {
+  --page: #ffffff;
+  --surface: #f4f2fb;
+  --text: #1c1b22;
+  --muted: #4a4858;
+  --accent: #4b32c3;
+  --accent-text: #ffffff;
+  --line: #d9d5ea;
+  --focus: #4b32c3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #15141b;
+    --surface: #211f2b;
+    --text: #ecebf3;
+    --muted: #b9b6c8;
+    --accent: #b5a7ff;
+    --accent-text: #15141b;
+    --line: #3a3747;
+    --focus: #b5a7ff;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  background-color: var(--page);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+a:link,
+a:visited {
+  color: var(--accent);
+  text-underline-offset: 0.15em;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.skip:link {
+  position: absolute;
+  inset-inline-start: 1rem;
+  inset-block-start: -4rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--page);
+  color: var(--accent);
+}
+
+.skip:focus {
+  inset-block-start: 1rem;
+}
+
+.top,
+main,
+.bottom {
+  max-inline-size: 68rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding-block: 1.25rem;
+}
+
+.brand:link,
+.brand:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.top ul,
+.features,
+.links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.top ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+}
+
+.top nav a {
+  display: inline-block;
+  padding-block: 0.6rem;
+}
+
+.hero {
+  padding-block: 3rem 2rem;
+}
+
+h1 {
+  max-inline-size: 22ch;
+  margin: 0 0 1rem;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1.15;
+}
+
+h2 {
+  margin: 3rem 0 1.25rem;
+  font-size: 1.6rem;
+}
+
+h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+}
+
+.lede {
+  max-inline-size: 60ch;
+  font-size: 1.2rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block: 1.75rem 0.75rem;
+}
+
+.button:link,
+.button:visited {
+  display: inline-block;
+  min-block-size: 44px;
+  padding: 0.65rem 1.25rem;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background-color: var(--page);
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.button.primary:link,
+.button.primary:visited {
+  background-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.version,
+.note,
+.made {
+  color: var(--muted);
+}
+
+.shot {
+  margin: 2.5rem 0 0;
+}
+
+.shot img {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+
+.features li {
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+.features p {
+  margin: 0;
+}
+
+.steps {
+  max-inline-size: 60ch;
+  padding-inline-start: 1.5rem;
+}
+
+.steps li {
+  margin-block-end: 0.5rem;
+}
+
+.links li {
+  margin-block-end: 0.6rem;
+}
+
+.links a {
+  display: inline-block;
+  padding-block: 0.3rem;
+}
+
+.bottom {
+  margin-block-start: 4rem;
+  padding-block: 2rem 3rem;
+  border-block-start: 1px solid var(--line);
+  font-size: 0.95rem;
+}
