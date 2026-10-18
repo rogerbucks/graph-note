@@ -728,14 +728,31 @@ details.graph-note-style > summary {
   color: var(--gn-text-muted);
   cursor: pointer;
 }
-/* Walked paths (spec §7): the strip below the bar; the step playing outlined heavier; each recorded step numbered. */
+/* The card's tools (spec §5, §7): Play or Record a path, Make a view and Add a thing in one row under the bar, each a
+   button until it is opened, when its form takes the whole row; the row is gone when none of them is shown. */
+.graph-note-card-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-2);
+  border-bottom: 1px solid var(--gn-border);
+  padding: var(--gn-space-1) var(--gn-space-2);
+}
+.graph-note-card-tools:not(:has(> :not([hidden]))) {
+  display: none;
+}
+.graph-note-card-tools > [hidden] {
+  display: none;
+}
+.graph-note-card-tools > :has(input, select, ol, ul) {
+  flex-basis: 100%;
+}
+/* Walked paths (spec §7): the step playing outlined heavier; each recorded step numbered. */
 .graph-note-walk {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
-  padding: var(--gn-space-1) var(--gn-space-2);
-  border-bottom: 1px solid var(--gn-border);
 }
 .graph-note-walk button {
   min-width: 44px;
@@ -747,7 +764,6 @@ details.graph-note-style > summary {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--gn-space-2);
-  padding: var(--gn-space-1) var(--gn-space-2);
 }
 .graph-note-view-maker :is(button, select, input) {
   min-width: 44px;
@@ -760,7 +776,6 @@ details.graph-note-style > summary {
   flex-wrap: wrap;
   align-items: end;
   gap: var(--gn-space-2);
-  padding: var(--gn-space-1) var(--gn-space-2);
 }
 .graph-note-add-thing label {
   display: flex;
@@ -1361,6 +1376,26 @@ details.graph-note-style > summary {
 }
 .graph-note-pane-tools button[aria-disabled='true'] {
   cursor: not-allowed;
+}
+/* Done, the way out of editing in place: last in the row, framed in the accent and in bold. Not filled with the accent,
+   whose white words fall short of 4.5:1 in Obsidian's default theme. */
+.graph-note-pane-tools button.graph-note-primary {
+  order: 1;
+  border: 1px solid var(--gn-accent);
+  font-weight: var(--gn-font-weight-semibold);
+}
+/* In place, the tools are the header of the text: one frame, the tools on its tinted top strip. */
+.graph-note-inline > .graph-note-pane-head {
+  margin-bottom: calc(-1 * var(--gn-space-2));
+  border: 1px solid var(--gn-border);
+  border-bottom: 0;
+  border-radius: var(--gn-radius-s) var(--gn-radius-s) 0 0;
+  background: var(--gn-bg-alt);
+  padding: var(--gn-space-1) var(--gn-space-2);
+}
+.graph-note-inline .graph-note-editor {
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
 }
 .graph-note-tabs {
   display: flex;

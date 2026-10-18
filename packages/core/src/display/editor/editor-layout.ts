@@ -157,7 +157,8 @@ export function showTools(
   },
 ): void {
   tools.empty();
-  if (o.inline) button(tools, word('editor.done'), 'check', () => o.done(), word('editor.done'));
+  if (o.inline)
+    button(tools, word('editor.done'), 'check', () => o.done(), word('editor.done')).addClass('graph-note-primary');
   const again = o.again;
   if (again) button(tools, word('editor.open-again'), 'refresh-cw', () => again(), word('editor.open-again'));
   const step = (label: string, icon: string, why: string | null, onClick: () => void) => {
