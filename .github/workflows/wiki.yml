@@ -3,7 +3,8 @@ name: Wiki
 # Makes the project's GitHub wiki from the repository on every push to main and every published stable release (spec §41,
 # wiki_generated and user_guide_wiki): scripts/wiki-screens.mjs takes the user guide's screenshots from the build in
 # the runner's Chrome, and scripts/wiki.mjs writes every page. A button of the drawing the guide does not explain is a
-# warning on the run, never a failure.
+# warning on the run, never a failure. The developer pages (developer_wiki) describe main, the nightly build, and mark
+# what is in the latest stable release apart from what is only on main, read from the requirements at that release's tag.
 #
 # People may edit the wiki too, and their pages are never changed here. On every run, and whenever a page is edited
 # (gollum), `review` checks each page whose last change is a person's (scripts/wiki-review.mjs) and `report` keeps one
@@ -50,10 +51,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --exclude-pre-releases --json tagName,name,publishedAt > "$RUNNER_TEMP/releases.json"
+      - name: Read the requirements as they stood at the latest release
+        run: |
+          tag=$(jq -r '[.[] | select(.tagName | test("-") | not)][0].tagName // empty' "$RUNNER_TEMP/releases.json")
+          if [ -n "$tag" ]; then
+            git fetch --depth=1 --no-tags origin "refs/tags/$tag"
+            git show FETCH_HEAD:requirements/editor-requirements.gql > "$RUNNER_TEMP/released.gql"
+          fi
       - name: Take the user guide's screenshots
         run: node scripts/wiki-screens.mjs --out wiki-out/images --chrome "$(command -v google-chrome)"
       - name: Write the pages
-        run: node scripts/wiki.mjs --out wiki-out --sha "$GITHUB_SHA" --releases "$RUNNER_TEMP/releases.json" --labels wiki-out/images/labels.json
+        run: node scripts/wiki.mjs --out wiki-out --sha "$GITHUB_SHA" --releases "$RUNNER_TEMP/releases.json" --released "$RUNNER_TEMP/released.gql" --labels wiki-out/images/labels.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: wiki

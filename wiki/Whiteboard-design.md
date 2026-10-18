@@ -111,7 +111,7 @@ sequenceDiagram
   A->>Doc: move sticky (one line changes)
   Doc-->>B: change arrives within a second
   B->>Doc: offline: rename the same sticky
-  Note over Doc: on reconnect both edits merge;<br/>a true clash keeps both and is flagged
+  Note over Doc: on reconnect both edits merge,<br/>a true clash keeps both and is flagged
   A-->>B: presence only: pointer, selection, name
 ```
 

@@ -14,8 +14,8 @@ app**, a **VS Code plugin** and a **JavaScript library**.
 
 - **New to ThoughtKnot?** Read [How to use ThoughtKnot](How-to-use-ThoughtKnot).
 - **Following the project?** See the [Status](Status), the [Roadmap](Roadmap) and the [Decisions](Decisions) made so far.
-- **Building it?** The repository's [README](https://github.com/rogerbucks/graph-note#readme) and
-  [CONTRIBUTING](https://github.com/rogerbucks/graph-note/blob/main/CONTRIBUTING.md) say how.
+- **Building it, or writing a plug-in?** Start at [For developers](For-developers): the architecture, plug-ins, hosts
+  and the reference.
 
-Every page of this wiki except the guide's words and the architecture page is made from the repository each time it
-changes, so the figures are always current. To change a page, change the repository.
+Every figure, list and drawing in this wiki is made from the repository each time it changes, so they are always
+current. To change a page, change the repository.
