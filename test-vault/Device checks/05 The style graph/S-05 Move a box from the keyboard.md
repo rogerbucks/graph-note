@@ -29,4 +29,4 @@
 
 > **S-05** Keyboard: Tab to a box and press M. The line at the top says "Put … (1 of …)" and the box it would go by is outlined. The arrow keys step through the places; Enter writes the nudge and says "Moved: …"; Escape writes nothing. Move… in a box's details does the same. In reading view there is no Move….
 
-**Back to the checklist:** [S-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-05 in its list.
+**Back to the checklist:** [S-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-05 in its list.

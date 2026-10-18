@@ -35,4 +35,4 @@
 
 > **S-06** In a radial drawing, drag a box to just past another one around the centre. The line says "Put … before …" or "… after …", never beside, and letting go moves the box round to that place.
 
-**Back to the checklist:** [S-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-06 in its list.
+**Back to the checklist:** [S-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-06 in its list.
