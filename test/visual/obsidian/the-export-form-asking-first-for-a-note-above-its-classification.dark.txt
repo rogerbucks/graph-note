@@ -1,0 +1,22 @@
+<svg viewBox="0 0 361 71" width="481.33" height="94.67" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:inline;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
+    <g id="p2">
+      <path d="M59.9,-56.4C59.9,-56.4 12,-56.4 12,-56.4 6,-56.4 0,-50.4 0,-44.4 0,-44.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 59.9,0 59.9,0 65.9,0 71.9,-6 71.9,-12 71.9,-12 71.9,-44.4 71.9,-44.4 71.9,-50.4 65.9,-56.4 59.9,-56.4" paint="fill:rgba(83, 223, 221, 0.16);stroke:rgb(117, 222, 220)">
+      <text x="19.39" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> PLACE
+      <text x="19.28" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Home
+    <g id="p3">
+      <path d="M208.81,-56.4C208.81,-56.4 144.92,-56.4 144.92,-56.4 138.92,-56.4 132.92,-50.4 132.92,-44.4 132.92,-44.4 132.92,-12 132.92,-12 132.92,-6 138.92,0 144.92,0 144.92,0 208.81,0 208.81,0 214.81,0 220.81,-6 220.81,-12 220.81,-12 220.81,-44.4 220.81,-44.4 220.81,-50.4 214.81,-56.4 208.81,-56.4" paint="fill:rgba(83, 223, 221, 0.16);stroke:rgb(117, 222, 220)">
+      <text x="160.31" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> PLACE
+      <text x="152.2" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> The park
+    <g id="p4">
+      <path d="M72.36,-28.2C88.05,-28.2 106.8,-28.2 124.01,-28.2" paint="stroke:rgb(223, 221, 139)">
+      <polygon points="123.81,-30.65 130.81,-28.2 123.81,-25.75 123.81,-30.65" paint="fill:rgb(223, 221, 139);stroke:rgb(223, 221, 139)">
+      <text x="102.41" y="-31.35" text-anchor="middle" paint="fill:rgb(221, 220, 166)"> near
+    <g id="p5">
+      <path d="M334.79,-56.4C334.79,-56.4 293.82,-56.4 293.82,-56.4 287.82,-56.4 281.82,-50.4 281.82,-44.4 281.82,-44.4 281.82,-12 281.82,-12 281.82,-6 287.82,0 293.82,0 293.82,0 334.79,0 334.79,0 340.79,0 346.79,-6 346.79,-12 346.79,-12 346.79,-44.4 346.79,-44.4 346.79,-50.4 340.79,-56.4 334.79,-56.4" paint="fill:rgba(2, 122, 255, 0.16);stroke:rgb(56, 146, 246)">
+      <text x="300.86" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> CAFE
+      <text x="301.1" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Cafe
+    <g id="p6">
+      <path d="M221.09,-28.2C237.84,-28.2 256.89,-28.2 273.31,-28.2" paint="stroke:rgb(223, 221, 139)">
+      <polygon points="273.12,-30.65 280.12,-28.2 273.12,-25.75 273.12,-30.65" paint="fill:rgb(223, 221, 139);stroke:rgb(223, 221, 139)">
+      <text x="251.32" y="-31.35" text-anchor="middle" paint="fill:rgb(221, 220, 166)"> near
