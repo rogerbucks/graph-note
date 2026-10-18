@@ -61,6 +61,7 @@ describe('the workstreams file', () => {
       'M1',
       'X1',
       'D2',
+      'D3',
     ]);
     assert.deepEqual(
       Object.values(workstreams).map((w) => w.title),
@@ -132,6 +133,7 @@ describe('the workstreams file', () => {
         'Copilot Cowork skill',
         'Text to graph with AI',
         'Project home page',
+        'Developer site',
       ],
     );
   });
