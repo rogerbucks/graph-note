@@ -1,0 +1,377 @@
+{
+  "about": "The committed references of every view's drawing, in the light and the dark theme (editor spec §41, visual_regression_auto; test/visual-regression.test.js): each picture's file under test/visual/, its sha256, why it is as it is, and the day it was accepted. A drawing that differs from its reference fails until it is accepted with a reason; a reference changed by hand fails until its record is.",
+  "accepted": [
+    {
+      "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/a-menu-open.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/a-menu-open.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/a-notice-shown.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
+      "sha256": "0d198fd36078d682a78e9fda82ffcd8b52d0d7692e4b0e3bcada00bab84f97d3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.light.txt",
+      "sha256": "cfc9cafc678f9fc15bca5562e592789a7bd9ffb9584def1328bb40408454797c",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.dark.txt",
+      "sha256": "953f1f1a87dbd4a52458579289c2943707fccf6541475883bd02f77a19f99c28",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.light.txt",
+      "sha256": "70c76da9d4dec1a31079603376c6578ef0eabf6dd8245bc1665a4e2f217fe02e",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
+      "sha256": "bfa135b884701531fdb6d9dc126978fd6f1ec2a734e9f45755e28f37b0ba734b",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
+      "sha256": "bc986b26d987bd62a1f3da04d1960bf91ed81198333adfd8deffdc83e74e4acf",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-export-form-open.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
+      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
+      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
+      "sha256": "bf23acd7aa5f6ee8a9be085649709669d8d74a12fbcd7810ba869a25f234b904",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
+      "sha256": "216a71df397344a5d32950d2bfffa404698e097e7eb3fd3f7b16e307cf0a9d4e",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
+      "sha256": "04c3a1953389eb0eea6148f9a77e21d1cbe5922ee323994ff3027a0dc203ffd1",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
+      "sha256": "852e58bde203d3778b2fd94dfc31b051a3b367e94c55ddbfb4116f1beb6effcf",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
+      "sha256": "d9ce8048652697df5e5da4a291da35098dcaf52f57de17a438f584cb30ad6e10",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
+      "sha256": "2d73a823b9cfb590a34f8826965a6478dea695ab21353fb9614f481fc8dc2eec",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
+      "sha256": "dd14478c4a5c2753e0551f71e5e494088d1f5917e4aba2f93643a15c7f65ba34",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-card-with-its-problems-listed.light.txt",
+      "sha256": "d8adb0cb9d66f6ffbb53a133719995783119eee0c573489cf27a2bcc87e785b3",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
+      "sha256": "a7270fe668421c13e2e16010ec9317a7546618d5bf394edaeac2ce1707b6f8d6",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
+      "sha256": "64eb4c714424d082f002ea625189b3383c59f6a2a2692790baea095f8d1d4b2a",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
+      "sha256": "cc7176b99725a247270c06a750ca97c701e338c6c547d324dad93ff248805510",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
+      "sha256": "ccf80e6d3722f98648fd365abd27e2d67d45003c6cadaccead75f344e1b84598",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
+      "sha256": "743d766c3798d232cff67197491f864c5e460d9684a96c1539de70deb8e6b577",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
+      "sha256": "ccfc502f7432a90606314358999a0ecf5ee44be2c26e5cd6e115230f7fed548a",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
+      "sha256": "32d7228991cc7e8c6852a86cd5e96829be86f013e7a3c30b821848765a389b11",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.light.txt",
+      "sha256": "fc0b6114558c1585fa57c0d5bcc9fd2732497841e2484cafffef0d2ab0a33717",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
+      "sha256": "bf23acd7aa5f6ee8a9be085649709669d8d74a12fbcd7810ba869a25f234b904",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
+      "sha256": "216a71df397344a5d32950d2bfffa404698e097e7eb3fd3f7b16e307cf0a9d4e",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
+      "sha256": "2be762cf436221e75f514fa1a98ab0d683874fa92755cb9128be897ecd61cd69",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
+      "sha256": "7945b1a574237add339fd475f8c8278ef863332b56cbf2266f912748eca69c25",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
+      "sha256": "45fd09b3152b5d8cd436bcc7aea6615ff53ba985b0d928fb56b82e2e0e92c2a8",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
+      "sha256": "e1c3c3f4a45593363813eb7018de374d2011df0e5a72603868e1482d9c10a59f",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
+      "sha256": "100bad4e24d770a7deaf6756f58990773a5480d747d1d487ba5d706eb4f53688",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
+      "sha256": "2cdef738e46e68b16ddb90178663d1bda697051da11a14a7cd02092879338232",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
+      "sha256": "cd7c38080e93d2bffef9ab653fd25cbb75e1830c1cfc3bb8ab30b85153bdf0c1",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-edit-pane.light.txt",
+      "sha256": "14933f0f9ec39fc4655ce9b1a53ba9d16e6b0785ab76c2a1dd9df4bfb85a4917",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
+      "sha256": "32d7228991cc7e8c6852a86cd5e96829be86f013e7a3c30b821848765a389b11",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
+      "sha256": "fc0b6114558c1585fa57c0d5bcc9fd2732497841e2484cafffef0d2ab0a33717",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
+      "sha256": "32d7228991cc7e8c6852a86cd5e96829be86f013e7a3c30b821848765a389b11",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-export-form-open-on-a-card.light.txt",
+      "sha256": "fc0b6114558c1585fa57c0d5bcc9fd2732497841e2484cafffef0d2ab0a33717",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
+      "sha256": "d9ce8048652697df5e5da4a291da35098dcaf52f57de17a438f584cb30ad6e10",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
+      "sha256": "2d73a823b9cfb590a34f8826965a6478dea695ab21353fb9614f481fc8dc2eec",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
+      "sha256": "4170aad1d18ea83947c3c45379e7fc70239ae830fb97b8de5723857206341416",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
+      "sha256": "ff7fa2995d5394e0057f8a1e38f07de7226fc638619af0a0bbc7dafcf881b9b9",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
+      "sha256": "ea5751785d362dc2dabf35cd22069ab4ed8c3f516bf44a7e9e361b5be21e3a5f",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    },
+    {
+      "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.light.txt",
+      "sha256": "5b85dd846579554b9224e7cf6be2760b8adaf20f1b2de6eec0fb2082c4ecd1dc",
+      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
+      "day": "2026-10-18"
+    }
+  ]
+}

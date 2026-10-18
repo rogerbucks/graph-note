@@ -1,0 +1,22 @@
+<svg viewBox="0 0 176 289" width="234.67" height="385.33" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:15px;font-weight:400;font-style:normal;color:rgb(34, 34, 34);display:inline;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 281.6)">
+    <g id="p2">
+      <path d="M107.85,-56.4C107.85,-56.4 12,-56.4 12,-56.4 6,-56.4 0,-50.4 0,-44.4 0,-44.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 107.85,0 107.85,0 113.85,0 119.85,-6 119.85,-12 119.85,-12 119.85,-44.4 119.85,-44.4 119.85,-50.4 113.85,-56.4 107.85,-56.4" paint="fill:rgba(236, 117, 0, 0.16);fill-opacity:0;stroke:rgb(186, 96, 9);stroke-width:1">
+      <text x="33.54" y="-35.6" text-anchor="start" paint="fill:rgb(92, 92, 92);fill-opacity:0.95"> QUESTION
+      <text x="19.28" y="-15.3" text-anchor="start" paint="fill:rgb(34, 34, 34);fill-opacity:0.95"> Which device?
+    <g id="p3">
+      <path d="M102.99,-165.4C102.99,-165.4 16.86,-165.4 16.86,-165.4 10.86,-165.4 4.86,-159.4 4.86,-153.4 4.86,-153.4 4.86,-121 4.86,-121 4.86,-115 10.86,-109 16.86,-109 16.86,-109 102.99,-109 102.99,-109 108.99,-109 114.99,-115 114.99,-121 114.99,-121 114.99,-153.4 114.99,-153.4 114.99,-159.4 108.99,-165.4 102.99,-165.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108);stroke-width:2">
+      <text x="40.51" y="-144.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> OPTION
+      <text x="24.14" y="-124.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Large reader
+    <g id="p4">
+      <path d="M59.92,-108.64C59.92,-95.29 59.92,-79.09 59.92,-64.81" paint="stroke:rgb(9, 152, 150);stroke-width:1">
+      <polygon points="62.37,-65.18 59.92,-58.18 57.47,-65.18 62.37,-65.18" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150);stroke-width:1">
+      <text x="79.47" y="-79.55" text-anchor="middle" paint="fill:rgb(17, 113, 111);fill-opacity:0.95"> answers
+    <g id="p5">
+      <path d="M85.21,-274.4C85.21,-274.4 34.64,-274.4 34.64,-274.4 28.64,-274.4 22.64,-268.4 22.64,-262.4 22.64,-262.4 22.64,-230 22.64,-230 22.64,-224 28.64,-218 34.64,-218 34.64,-218 85.21,-218 85.21,-218 91.21,-218 97.21,-224 97.21,-230 97.21,-230 97.21,-262.4 97.21,-262.4 97.21,-268.4 91.21,-274.4 85.21,-274.4" paint="fill:rgba(8, 109, 221, 0.16);stroke:rgb(15, 90, 174);stroke-width:2">
+      <text x="38.76" y="-253.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> REASON
+      <text x="55.75" y="-233.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> E
+    <g id="p6">
+      <path d="M59.92,-217.64C59.92,-204.29 59.92,-188.09 59.92,-173.81" paint="stroke:rgb(92, 92, 92);stroke-width:3">
+      <polygon points="62.37,-174.18 59.92,-167.18 57.47,-174.18 62.37,-174.18" paint="fill:rgb(92, 92, 92);stroke:rgb(92, 92, 92);stroke-width:3">
+      <text x="110.69" y="-188.55" text-anchor="middle" paint="fill:rgb(92, 92, 92)"> ⚠ favours (estimated)

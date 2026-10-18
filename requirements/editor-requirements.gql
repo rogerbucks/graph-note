@@ -902,7 +902,7 @@
 (test_a11y_targets_reflow_auto:Test {proves: 'every pointer target is at least 24 by 24 CSS pixels and every view reflows at 320 pixels with nothing lost', file: 'test/a11y-targets-reflow.test.js', where: 'repo', status: 'written'}),
 (test_ux_journey_auto:Test {proves: 'the first-run journey runs in every host, and more steps or interactions without a reason fail the ratchet', file: 'test/ux-journey.test.js', where: 'repo', status: 'planned'}),
 (test_ux_copy_auto:Test {proves: 'every user-facing message passes the plain-language check, and a worse score without a reason fails', file: 'test/ux-copy.test.js', where: 'repo', status: 'written'}),
-(test_visual_regression_auto:Test {proves: 'every view matches its reference drawing in both themes, and a change without a recorded reason fails', file: 'test/visual-regression.test.js', where: 'repo', status: 'planned'}),
+(test_visual_regression_auto:Test {proves: 'every view matches its reference drawing in both themes, and a change without a recorded reason fails', file: 'test/visual-regression.test.js', where: 'repo', status: 'written'}),
 (test_speed_budgets:Test {proves: 'each host stays within its instruction budgets for 50 and 500 things, the 10 000-thing query and a cold start', file: 'test/speed-budgets.test.js', where: 'repo', status: 'partial'}),
 (test_thresholds_named:Test {proves: 'each open number is a named setting with a default and range, and its edges behave as stated', file: 'packages/core/test/thresholds-named.test.js', where: 'repo', status: 'partial'}),
 (test_lib_github_release:Test {proves: 'a release carries the library as a semantically tagged GitHub release with a changelog, and nothing is published to npm', file: 'test/lib-release.test.js', where: 'repo', status: 'planned'}),

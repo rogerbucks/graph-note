@@ -789,6 +789,15 @@ These test behaviour across modules, or the repository itself, so they are named
   - The judging is tried first on made-up measures and planted faults.
   - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
     except in CI.
+- `test/visual-regression.test.js` — every view's drawing against its committed reference, in the light and the dark
+  theme (spec §41, visual_regression_auto).
+  - The views are each view of each host that draws, the views `test/wcag.test.js` checks.
+  - Each drawing is written as a picture by `test/repository/visual.js`. It holds each shape's geometry and words, and
+    its paint as the theme's stylesheet works it out. Classes and ids are left out, and numbers are cut to a hundredth.
+  - The pictures are held against `test/visual/`. Each reference is recorded in `quality/visual.json` with its hash, a
+    reason and the day.
+  - A drawing that changes fails until it is accepted. To accept it, run
+    `THOUGHTKNOT_VISUAL_ACCEPT="why" npm run -s test:ai -- test/visual-regression.test.js`. CI never accepts.
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 
 ## The requirements in a GitHub Project

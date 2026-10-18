@@ -1,0 +1,10 @@
+<svg viewBox="0 0 68 163" width="90.67" height="217.33" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:inline;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 155.6)">
+    <g id="p2">
+      <path d="M42,-56.4C42,-56.4 12,-56.4 12,-56.4 6,-56.4 0,-50.4 0,-44.4 0,-44.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 42,0 42,0 48,0 54,-6 54,-12 54,-12 54,-44.4 54,-44.4 54,-50.4 48,-56.4 42,-56.4" paint="fill:rgba(250, 153, 205, 0.16);stroke:rgb(242, 169, 208)">
+      <text x="23.89" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> T
+      <text x="22.83" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> A
+    <g id="p3">
+      <path d="M42,-148.4C42,-148.4 12,-148.4 12,-148.4 6,-148.4 0,-142.4 0,-136.4 0,-136.4 0,-104 0,-104 0,-98 6,-92 12,-92 12,-92 42,-92 42,-92 48,-92 54,-98 54,-104 54,-104 54,-136.4 54,-136.4 54,-142.4 48,-148.4 42,-148.4" paint="fill:rgba(250, 153, 205, 0.16);stroke:rgb(242, 169, 208)">
+      <text x="23.89" y="-127.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> T
+      <text x="22.83" y="-107.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> B
