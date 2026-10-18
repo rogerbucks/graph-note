@@ -54,7 +54,7 @@ export function restIssueList(issues, query, { pulls = [], unlisted = [], slurp 
  */
 export function fakeGithub({
   owner = 'rogerbucks',
-  name = 'graph-note',
+  name = 'thoughtknot',
   login = owner,
   pageSize = 100,
   now = '2026-10-15T09:30:00Z',

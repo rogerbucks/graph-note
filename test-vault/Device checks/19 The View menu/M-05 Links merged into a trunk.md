@@ -57,4 +57,4 @@
 
 > **M-05** Turn Parallel links merged on: the links running from one group to the other share one thick trunk. Tap a link at either end: its details open, reading as before, and VoiceOver reads it as the same link. In the style block, merge: 'on' starts the graph merged.
 
-**Back to the checklist:** [M-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-05 in its list.
+**Back to the checklist:** [M-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-05 in its list.

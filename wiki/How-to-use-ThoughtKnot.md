@@ -102,7 +102,7 @@ ThoughtKnot can ask an AI model to suggest changes to a graph. It is **off until
 
 To start, turn on **Use AI models** in the settings, add a model, then run the command **Ask an AI model to propose
 changes**. The full details are in the
-[privacy section of the README](https://github.com/rogerbucks/graph-note#privacy-and-network-use).
+[privacy section of the README](https://github.com/rogerbucks/thoughtknot#privacy-and-network-use).
 
 ## Tips
 

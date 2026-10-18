@@ -469,7 +469,7 @@ describe('the whole plan, printed', () => {
     );
     assert.match(text, /create issue focus_link "Viewing · focus link" \(open;/);
     assert.match(text, /create label workstream:W1/);
-    assert.match(text, /create project "graph-note requirements"/);
+    assert.match(text, /create project "ThoughtKnot requirements"/);
     assert.match(text, /create field Slice \(Slice 3, Slice 4\)/);
     assert.match(text, /add to project focus_link/);
     assert.match(text, /add to project focus_link \(Slice 4 · W1: Focus, hover and untangle · open\)/);

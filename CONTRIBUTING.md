@@ -329,7 +329,7 @@ These test behaviour across modules, or the repository itself, so they are named
 ## The requirements in a GitHub Project
 
 - **One way only.** `requirements/editor-requirements.gql` stays the only source. `scripts/github-project.mjs` mirrors it
-  into a GitHub Project titled "graph-note requirements", one issue for each requirement of the chosen slices
+  into a GitHub Project titled "ThoughtKnot requirements", one issue for each requirement of the chosen slices
   (`--slices 3,4` by default). The issues and project items are derivatives: regenerated, never edited by hand, and each
   opens on its rule, then a do-not-edit banner. Its title is the requirement's section, a dot and the id's words.
 - **Where each requirement goes.** `requirements/workstreams.json` maps a workstream id to its title and its requirement
@@ -474,7 +474,7 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ## The wiki
 
-The [GitHub wiki](https://github.com/rogerbucks/graph-note/wiki) is made from the repository by `.github/workflows/wiki.yml`
+The [GitHub wiki](https://github.com/rogerbucks/thoughtknot/wiki) is made from the repository by `.github/workflows/wiki.yml`
 on every push to main and every release, so it is never edited by hand: an edit there is overwritten. `scripts/wiki.mjs`
 writes the status, roadmap, decisions, open questions, quality and releases pages from the files that hold them, and
 copies the pages written by a person from `wiki/`, filling each `<!-- wiki:NAME -->` marker. `wiki/How-to-use-ThoughtKnot.md`

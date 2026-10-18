@@ -39,4 +39,4 @@
 
 > **F-06** Press Filter by kind or link: each kind and relationship type is a button with its count. Choose one: it comes forward, the rest fade, and the button says "in front". Choose it again: it is hidden, struck through, and says "hidden". Once more: it is back.
 
-**Back to the checklist:** [F-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-06 in its list.
+**Back to the checklist:** [F-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-06 in its list.

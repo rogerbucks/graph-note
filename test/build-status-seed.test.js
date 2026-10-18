@@ -14,7 +14,7 @@ import { fakeGithub } from './repository/github-project-fake.js';
 import { fakeRepoSide, pull } from './repository/build-status-fake.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const HEAD = 'a'.repeat(40);
 const OTHER = 'e'.repeat(40);
 const written = (id, file) =>

@@ -36,4 +36,4 @@
 
 > **Z-08** In a locked graph, a kind or link type its schema does not declare shows a ⚠ on its line. A link type with no reading of its own reads back as an arrow (Drive —HOPE→ …), not as a guess at words.
 
-**Back to the checklist:** [Z-08 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-08 in its list.
+**Back to the checklist:** [Z-08 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-08 in its list.

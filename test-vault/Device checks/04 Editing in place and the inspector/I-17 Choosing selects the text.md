@@ -27,4 +27,4 @@
 
 > **I-17** While editing, in the card or the pane, choosing a box selects the pattern that writes it in the text, and choosing a link selects its brackets and arrow.
 
-**Back to the checklist:** [I-17 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-17 in its list.
+**Back to the checklist:** [I-17 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-17 in its list.

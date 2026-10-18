@@ -28,4 +28,4 @@
 
 > **I-15** Add a property named `rivals` and choose List. The form says, in one sentence, that the values become things linked by the relationship and that the row is named after it. After Make list the row reads `rivals · HAS_RIVAL` for as long as the editor stays open, and `HAS_RIVAL` alone after Done and a reload. A value typed in as `Reading tablet` is written as `reading_tablet` when the graph's names are snake case, with the words kept as its name.
 
-**Back to the checklist:** [I-15 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-15 in its list.
+**Back to the checklist:** [I-15 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-15 in its list.

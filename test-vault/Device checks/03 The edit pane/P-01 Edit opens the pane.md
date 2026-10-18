@@ -35,4 +35,4 @@ A second graph, so there is something to pick between.
 
 > **P-01** Edit opens a pane beside the note, on the block that was tapped. A note with several graphs offers a picker.
 
-**Back to the checklist:** [P-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-01 in its list.
+**Back to the checklist:** [P-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-01 in its list.

@@ -28,4 +28,4 @@
 
 > **P-16** Phone: the pane offers Drawing and Text as two tabs, with problems in a sheet at the bottom. Every button is easy to hit with a thumb, and nothing needs a hover.
 
-**Back to the checklist:** [P-16 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-16 in its list.
+**Back to the checklist:** [P-16 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-16 in its list.

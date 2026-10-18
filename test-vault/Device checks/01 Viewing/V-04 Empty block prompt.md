@@ -29,4 +29,4 @@ An empty graph.
 
 > **V-04** The empty block shows a prompt to start with a thing, and an Edit button.
 
-**Back to the checklist:** [V-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-04 in its list.
+**Back to the checklist:** [V-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-04 in its list.
