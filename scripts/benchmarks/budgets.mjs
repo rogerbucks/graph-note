@@ -8,23 +8,23 @@
 export const SPEED_BUDGETS = {
   draw_fifty: {
     most: 2_000_000_000,
-    why: 'half a second on a mid-range phone’s big core at about 4 instructions a nanosecond (spec §11, fifty_in_half_second)',
+    why: 'half a second on a mid-range phone’s big core at about 4 instructions a nanosecond (spec §11, fifty_in_half_second); one draw was about 590 million by Apple silicon’s hardware counter (12 Oct 2026)',
   },
   draw_five_hundred: {
-    most: 0,
-    why: '',
+    most: 12_600_000_000,
+    why: 'the larger of its two cases, 7.62 billion, counted on Linux x86-64 under Node 22 (18 Oct 2026), times 1.36 for the release runner (as draw_fifty counts there), and a fifth more',
   },
   mesh_query: {
-    most: 0,
-    why: '',
+    most: 73_000_000,
+    why: 'the larger of its two queries, 44.0 million, counted on Linux x86-64 under Node 22 (18 Oct 2026), times 1.36 for the release runner, and a fifth more',
   },
   cold_start_obsidian: {
-    most: 0,
-    why: '',
+    most: 3_150_000_000,
+    why: 'the plugin’s first drawing, 1.90 billion, counted on Linux x86-64 under Node 22 (18 Oct 2026), times 1.36 for the release runner, and a fifth more',
   },
   cold_start_claude_code: {
-    most: 0,
-    why: '',
+    most: 3_230_000_000,
+    why: 'the pane’s first drawing, 1.95 billion, counted on Linux x86-64 under Node 22 (18 Oct 2026), times 1.36 for the release runner, and a fifth more',
   },
 };
 
