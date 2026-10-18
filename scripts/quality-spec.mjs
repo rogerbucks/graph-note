@@ -2,7 +2,16 @@
 // tolerates before a worse figure counts. Measured by quality-metrics.mjs, compared by quality-check.mjs.
 
 /** The instruction-count benchmarks, by name (scripts/benchmarks/index.mjs; a test holds the two lists the same). */
-export const BENCHMARK_NAMES = ['draw_fifty', 'reading_limits', 'layout_refusals', 'naming', 'keystroke'];
+export const BENCHMARK_NAMES = [
+  'draw_fifty',
+  'reading_limits',
+  'layout_refusals',
+  'naming',
+  'keystroke',
+  'draw_five_hundred',
+  'mesh_query',
+  'cold_start',
+];
 
 /**
  * How much an instruction count may grow with no reason recorded: 5%. Cachegrind counts the same code alike from run to
