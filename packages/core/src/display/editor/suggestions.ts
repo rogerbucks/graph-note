@@ -40,16 +40,57 @@ export function chooseSuggestion(list: HTMLElement, t: HTMLTextAreaElement, acti
   } else t.removeAttribute('aria-activedescendant');
 }
 
-/** Puts the list under the caret's line, at its column: the field is in a fixed-width font, so a column is a character. */
-export function placeSuggestions(list: HTMLElement, t: HTMLTextAreaElement): void {
-  const before = t.value.slice(0, t.selectionStart ?? t.value.length);
+/** The parts of the coloured picture that are not the field's text: the ghost text, and the sign and note after a line. */
+const NOT_TEXT = ['graph-note-ghost', 'graph-note-line-end'];
+
+/** Where the caret is in the picture, as a collapsed range at the `at`th character of the field's text, if it can be found. */
+function caretIn(overlay: HTMLElement, at: number): Range | null {
+  let left = at;
+  const walk = (node: Node): Range | null => {
+    for (const child of Array.from(node.childNodes)) {
+      if (child.nodeType === 3) {
+        const len = child.textContent?.length ?? 0;
+        if (left <= len) {
+          const r = overlay.doc.createRange();
+          r.setStart(child, left);
+          return r;
+        }
+        left -= len;
+      } else if (child.nodeType === 1 && !NOT_TEXT.some((c) => (child as HTMLElement).hasClass(c))) {
+        const r = walk(child);
+        if (r) return r;
+      }
+    }
+    return null;
+  };
+  return walk(overlay);
+}
+
+/**
+ * Puts the list under the caret, on the row it is on: measured in the coloured picture, which wraps as the field does
+ * (long_lines_wrap); where nothing can be measured, under its line at its column, the field being in a fixed-width font.
+ */
+export function placeSuggestions(list: HTMLElement, t: HTMLTextAreaElement, overlay?: HTMLElement): void {
+  const at = t.selectionStart ?? t.value.length,
+    before = t.value.slice(0, at);
   const line = before.split('\n').length - 1,
     column = before.length - before.lastIndexOf('\n') - 1;
-  list.setCssProps({
+  const props: Record<string, string> = {
     '--graph-note-caret-line': String(line),
     '--graph-note-caret-column': String(column),
     '--graph-note-caret-scroll': `${t.scrollLeft}px`,
-  });
+  };
+  try {
+    const box = overlay && caretIn(overlay, at)?.getBoundingClientRect(),
+      frame = list.parentElement?.getBoundingClientRect();
+    if (box && frame && box.height) {
+      props['--graph-note-caret-top'] = `${box.bottom - frame.top}px`;
+      props['--graph-note-caret-left'] = `${box.left - frame.left}px`;
+    }
+  } catch {
+    // a page that cannot measure a range: the line and column above
+  }
+  list.setCssProps(props);
 }
 
 /** Writes a suggestion into the field, from where the word being typed starts to the caret, with the focus kept there. */

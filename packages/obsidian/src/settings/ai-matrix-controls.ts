@@ -5,7 +5,7 @@
 // matched by no classification, a row named twice and two columns for one class are flagged, never guessed. The row is
 // only ever chosen here, never worked out from the model.
 import type { SettingDefinition } from 'obsidian';
-import { classMapProblems, matrixGrants, matrixProblems, unmatchedClasses } from '@graph-note/core';
+import { classMapProblems, matrixGrants, matrixProblems, unmatchedClasses, word } from '@graph-note/core';
 import type { AiModel, ClassGrant, MatrixRow, MatrixSwitch, Settings } from '@graph-note/core';
 
 const NO_ROW = '';
@@ -50,22 +50,20 @@ export function matrixControls(s: Settings, m: AiModel, i: number, rows: MatrixR
   ];
   const names = [...new Set([...rows.map((r) => r.name), ...(m.matrixRow ? [m.matrixRow] : [])])];
   const options: Record<string, string> = {
-    [NO_ROW]: 'None: use the ceiling',
+    [NO_ROW]: word('models.no-row'),
     ...Object.fromEntries(names.map((r): [string, string] => [r, r])),
   };
   const said = grants.length
-    ? grants
-        .map((g) => `${g.name} ${MARKS[g.mark]}${g.level === null ? ' (flagged: matches no classification)' : ''}`)
-        .join(', ')
+    ? grants.map((g) => `${g.name} ${MARKS[g.mark]}${g.level === null ? word('models.unmatched') : ''}`).join(', ')
     : m.matrixRow
-      ? `${m.matrixRow} is not in the matrix note now, or is there more than once: nothing is sent to this model until a row is chosen again.`
-      : 'Choose a row of the destination matrix to hold this model to it, in place of its ceiling.';
+      ? word('models.row-gone', { row: m.matrixRow })
+      : word('models.choose-row');
   return [
     {
-      name: 'Matrix row',
+      name: word('models.row'),
       desc: [
         said,
-        ...(unmatched.length && !grants.length ? [`Flagged in the matrix: ${unmatched.join(', ')}.`] : []),
+        ...(unmatched.length && !grants.length ? [word('models.flagged', { classes: unmatched.join(', ') })] : []),
         ...problems,
       ].join(' '),
       control: { type: 'dropdown', key: `aiModels.${i}.matrixRow`, options },
@@ -73,8 +71,8 @@ export function matrixControls(s: Settings, m: AiModel, i: number, rows: MatrixR
     ...grants
       .filter((g) => g.mark === 'conditional' && g.level !== null && g.condition)
       .map((g): SettingDefinition => ({
-        name: `Send ${g.level} notes`,
-        desc: `The row’s condition: ${g.condition ?? ''}. Off until you switch it on for this model.${g.changed ? ' The condition has changed since you switched it on: read it, then switch it on again.' : ''}`,
+        name: word('models.send-level', { level: g.level ?? '' }),
+        desc: `${word('models.condition', { condition: g.condition ?? '' })}${g.changed ? word('models.condition-changed') : ''}`,
         control: { type: 'toggle', key: switchKey(i, g.name) },
       })),
   ];
