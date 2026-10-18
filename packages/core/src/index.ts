@@ -344,7 +344,8 @@ export {
 export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
-export type { MiniMapSetting, SwitchSetting } from './settings.ts';
+export type { DrawingHeightSetting, MiniMapSetting, SwitchSetting } from './settings.ts';
+export { tallestOf } from './settings-aids.ts';
 export {
   applyChanges,
   attachmentType,
