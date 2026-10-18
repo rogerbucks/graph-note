@@ -24,6 +24,6 @@
 
 **Checklist line:**
 
-> **P-09** In the note itself, with Obsidian's "Auto pair brackets" on (Settings → Editor), and again with it off: the comma comes when ( is typed, and the colon when ] is typed or stepped over.
+> **P-09** In the note itself, try it with Obsidian's "Auto pair brackets" on (Settings → Editor), and again with it off. The comma comes when ( is typed, and the colon when ] is typed or stepped over.
 
 **Back to the checklist:** [P-09 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-09 in its list.

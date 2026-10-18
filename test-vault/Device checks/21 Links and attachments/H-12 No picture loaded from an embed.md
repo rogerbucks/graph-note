@@ -26,8 +26,6 @@ Two pictures follow.
 
 **Checklist line:**
 
-> **H-12** With the phone online, a thing that stands for a note holding a picture from the web, written as Markdown
-> and as HTML, shows each picture in its details only as a link with its address, and no picture is loaded; a note
-> that note embeds is a link too.
+> **H-12** With the phone online, take a thing that stands for a note holding a picture from the web, written as Markdown and as HTML. Its details show each picture only as a link with its address, and no picture is loaded. A note that note embeds is a link too.
 
 **Back to the checklist:** [H-12 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-12 in its list.

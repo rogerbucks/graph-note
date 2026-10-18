@@ -21,6 +21,6 @@
 
 **Checklist line:**
 
-> **Q-04** A block drawn from a file that is not there says which file and why, never a blank card: `Graph files/nowhere.gql` is "not in the vault". Move `trip.gql` of Q-03 into another folder: Q-03's card says at once that it is not there any more and where a file of that name now is, and moving it back draws it again.
+> **Q-04** A block drawn from a file that is not there says which file and why, and is never a blank card. `Graph files/nowhere.gql` is "not in the vault". Move `trip.gql` of Q-03 into another folder. Q-03's card says at once that it is not there any more, and where a file of that name now is. Moving it back draws it again.
 
 **Back to the checklist:** [Q-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Q-04 in its list.

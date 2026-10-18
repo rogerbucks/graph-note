@@ -42,8 +42,8 @@ export const unescaped = (text) => text.replace(/\\</g, '<');
 
 /**
  * The checklist's sections, each with its heading and its items. An item is `{ number, checked, text, line }`. That is
- * its number ('' when it has none), its tick, its words with the wrapped lines joined (and no tick), and its 1-based
- * line.
+ * its number ('' when it has none), its tick, its words and its 1-based line. The words are its wrapped lines and its
+ * indented sub-items joined, with no tick; a sub-item keeps its dash.
  */
 export function checklistSections(text = read(CHECKLIST)) {
   const sections = [];
@@ -57,7 +57,7 @@ export function checklistSections(text = read(CHECKLIST)) {
     } else if (start && sections.length) {
       item = { number: NUMBER.exec(start[2])?.[1] ?? '', checked: start[1] === 'x', text: start[2], line: i + 1 };
       sections.at(-1).items.push(item);
-    } else if (item && /^ {6}\S/.test(line)) item.text += ` ${line.trim()}`;
+    } else if (item && /^ {2,}\S/.test(line)) item.text += ` ${line.trim()}`;
     else item = null;
   });
   return sections.map((s) => ({ ...s, items: s.items.map((it) => ({ ...it, text: words(it.text) })) }));

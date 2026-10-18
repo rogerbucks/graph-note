@@ -31,9 +31,9 @@
 
 **Checklist line:**
 
-> **G-01** Tap a box with several links of one type: its details list them by type and way, in words, each group once
-> with a count where there are several, such as "is answered by Kindle and Tablet (2)". Each name is underlined; tap
-> one and it becomes the selection, its details open and the drawing glides to it at the same zoom. Zoomed far out,
-> it is brought up to a size that can be read.
+> **G-01** Tap a box with several links of one type: its details list them by type and way, in words. Each group is listed once, with a count where there are several, such as "is answered by Kindle and Tablet (2)".
+>
+> - Each name is underlined. Tap one and it becomes the selection, its details open and the drawing glides to it at the same zoom.
+> - Zoomed far out, it is brought up to a size that can be read.
 
 **Back to the checklist:** [G-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-01 in its list.

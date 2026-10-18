@@ -24,6 +24,6 @@
 
 **Checklist line:**
 
-> **C-06** A note with a line that cannot be read, in front, and "Convert this note to standard GQL" from the command palette: the note is left as it is, and the notice says why.
+> **C-06** A note with a line that cannot be read is in front. Run "Convert this note to standard GQL" from the command palette. The note is left as it is, and the notice says why.
 
 **Back to the checklist:** [C-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for C-06 in its list.

@@ -53,6 +53,12 @@ The second graph, with its schema in a later block.
 
 **Checklist line:**
 
-> **D-03** In a locked graph whose schema does not declare Deferred and DEFERS, Edit here, tap a box, press Park for later, fill the form and press Park it: the message says to declare them, and a button "Declare Deferred and DEFERS in the schema" appears below it, as big as the other buttons to touch and read by VoiceOver. Press it: the two declarations are written at the end of the block that holds the schema (in the text being edited, or, when the schema is in a later block, in that block of the note), the Deferred is written with what you typed in the form, and the badge says "No problems, 1 parked". Pressing the button twice fast parks once. Blank What is needed first and press it: nothing is declared, and the message says what is missing. Undo takes back the park, and, when the schema is in the same block, the declarations with it; when the schema is in another block the declarations are not undone with the park, and stay until removed by hand.
+> **D-03** Take a locked graph whose schema does not declare Deferred and DEFERS. Edit here, tap a box, press Park for later, fill the form and press Park it.
+>
+> - The message says to declare them. A button "Declare Deferred and DEFERS in the schema" appears below it. It is as big as the other buttons to touch, and read by VoiceOver.
+> - Press it: the two declarations are written at the end of the block that holds the schema. That is in the text being edited, or, when the schema is in a later block, in that block of the note.
+> - The Deferred is written with what you typed in the form, and the badge says "No problems, 1 parked". Pressing the button twice fast parks once.
+> - Blank What is needed first and press it: nothing is declared, and the message says what is missing.
+> - Undo takes back the park. When the schema is in the same block, it takes the declarations back with it. When the schema is in another block, the declarations are not undone with the park, and stay until removed by hand.
 
 **Back to the checklist:** [D-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for D-03 in its list.

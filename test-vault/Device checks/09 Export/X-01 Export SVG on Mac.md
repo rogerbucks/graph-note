@@ -32,6 +32,10 @@
 
 **Checklist line:**
 
-> **X-01** Mac: Export on a card, The whole diagram, SVG, Light, Export it: a file `\<note>-\<graph>-\<day>.svg` appears next to the note; opened outside Obsidian (Finder's Quick Look) it reads the same, with the graph's name, its legend, and "From \<note>, exported \<day>". Dark: the same in dark colours. The console says nothing about the main thread: the export was laid out in the worker, as a drawing is (§9, layout_contained).
+> **X-01** Mac: Export on a card, The whole diagram, SVG, Light, Export it. A file `\<note>-\<graph>-\<day>.svg` appears next to the note.
+>
+> - Opened outside Obsidian (Finder's Quick Look), it reads the same. It has the graph's name, its legend, and "From \<note>, exported \<day>".
+> - Dark: the same in dark colours.
+> - The console says nothing about the main thread: the export was laid out in the worker, as a drawing is (§9, layout_contained).
 
 **Back to the checklist:** [X-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-01 in its list.

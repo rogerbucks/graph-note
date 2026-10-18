@@ -28,6 +28,12 @@
 
 **Checklist line:**
 
-> **P-10** Completing as you type, in the pane and in the card: typing { shows a faint } after the caret, and the text after it does not move. Tab writes it with the caret left inside; Escape puts it away until the next typing; one undo takes back what Tab wrote. Typing the closer yourself where one is already there steps over it (and a stepped-over ] still gets its colon), and one undo goes back to the text as it was on screen. Likewise a keyword (MA), a kind after (z:, a type after -[:, a property name after {, and a value already used after name: '; these Enter takes too, but Enter never takes a closer, and with nothing to take it is a new line. After a bare ( the names are suggested and Tab takes the first, as before. On the phone, Enter on the keyboard takes a word (there is no Tab); confirm that the Enter ending an IME composition (e.g. Japanese keyboard) takes nothing.
+> **P-10** Completing as you type, in the pane and in the card: typing { shows a faint } after the caret. The text after it does not move.
+>
+> - Tab writes it with the caret left inside. Escape puts it away until the next typing. One undo takes back what Tab wrote.
+> - Typing the closer yourself where one is already there steps over it (and a stepped-over ] still gets its colon). One undo goes back to the text as it was on screen.
+> - Likewise a keyword (MA), a kind after (z:, a type after -[:, a property name after {, and a value already used after name: '; Enter takes these too. But Enter never takes a closer, and with nothing to take it is a new line.
+> - After a bare ( the names are suggested and Tab takes the first, as before.
+> - On the phone, Enter on the keyboard takes a word (there is no Tab). Confirm that the Enter ending an IME composition (for example, a Japanese keyboard) takes nothing.
 
 **Back to the checklist:** [P-10 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-10 in its list.

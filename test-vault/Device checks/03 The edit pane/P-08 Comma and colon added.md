@@ -25,6 +25,6 @@
 
 **Checklist line:**
 
-> **P-08** Typing ( to start the next pattern on a new line adds the comma to the line before; typing ] after a link type written without its colon, such as -[favours, adds the colon and the type as the graph spells it, [:FAVOURS]. One undo takes either back. Both work in the pane, in place and in the note itself.
+> **P-08** Typing ( to start the next pattern on a new line adds the comma to the line before. Typing ] after a link type written without its colon, such as -[favours, adds the colon and writes the type as the graph spells it, [:FAVOURS]. One undo takes either back. Both work in the pane, in place and in the note itself.
 
 **Back to the checklist:** [P-08 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-08 in its list.

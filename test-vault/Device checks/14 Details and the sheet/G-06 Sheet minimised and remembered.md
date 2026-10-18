@@ -31,8 +31,6 @@
 
 **Checklist line:**
 
-> **G-06** Press the arrow in the sheet's header: it shrinks to a bar with the box's name and kind, and the drawing
-> settles; press it again and the full details return, scrolling inside the sheet, which never covers more than
-> about half the screen. Minimise it, close it and tap another box, in this card or another: it opens minimised.
+> **G-06** Press the arrow in the sheet's header: it shrinks to a bar with the box's name and kind, and the drawing settles. Press it again and the full details return, scrolling inside the sheet. The sheet never covers more than about half the screen. Minimise it, close it and tap another box, in this card or another: it opens minimised.
 
 **Back to the checklist:** [G-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-06 in its list.

@@ -29,8 +29,6 @@
 
 **Checklist line:**
 
-> **G-02** Settings › Accessibility › Reduce motion on the Mac, or Reduce Motion on the iPhone: choosing a linked thing
-> jumps straight to it, with no glide. With it off, the glide is brief, and the box is marked selected and named in
-> the details as the glide starts.
+> **G-02** Turn on Settings › Accessibility › Reduce motion on the Mac, or Reduce Motion on the iPhone. Choosing a linked thing jumps straight to it, with no glide. With it off, the glide is brief. The box is marked selected and named in the details as the glide starts.
 
 **Back to the checklist:** [G-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-02 in its list.

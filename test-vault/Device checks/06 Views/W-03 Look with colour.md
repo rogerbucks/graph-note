@@ -38,6 +38,6 @@ MATCH (n IS Place) RETURN n
 
 **Checklist line:**
 
-> **W-03** A Look with a colour and its meaning: the thing is drawn in that hue, readable in light and dark, and the legend shows the swatch and the words.
+> **W-03** A Look with a colour and its meaning: the thing is drawn in that hue, readable in light and dark. The legend shows the swatch and the words.
 
 **Back to the checklist:** [W-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for W-03 in its list.

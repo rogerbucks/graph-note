@@ -146,6 +146,6 @@ Filler line 60, so the card below starts below the fold.
 
 **Checklist line:**
 
-> **I-04** Live Preview: typing in a card, with the card's top above the view or the note scrolled to its end, never moves the page: the box stays where it is on screen, and the note's other text with it.
+> **I-04** Live Preview: typing in a card never moves the page, with the card's top above the view or the note scrolled to its end. The box stays where it is on screen, and the note's other text with it.
 
 **Back to the checklist:** [I-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-04 in its list.

@@ -34,6 +34,6 @@
 
 **Checklist line:**
 
-> **I-08** In edit mode, tapping a box or a link shows its properties, looking as a note's Properties panel looks in this theme: the same rows, icons, spacing, type and colours, in both the light and dark themes.
+> **I-08** In edit mode, tapping a box or a link shows its properties. They look as a note's Properties panel looks in this theme, in both light and dark. They have the same rows, icons, spacing, type and colours.
 
 **Back to the checklist:** [I-08 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-08 in its list.

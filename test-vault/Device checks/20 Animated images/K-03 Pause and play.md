@@ -32,9 +32,6 @@ The style block: Tom's picture on his box.
 
 **Checklist line:**
 
-> **K-03** Desktop: Tab to the picture's control on a box and press Enter: the picture stops on its first frame and the
-> control shows Play; press Space: it moves again. The details do not open. In the details, Tab to Pause and press
-> Enter, then Play. Phone: tap the control on a box, then the button in the details: each pauses and plays, and the
-> tap never selects the box.
+> **K-03** Desktop: Tab to the picture's control on a box and press Enter. The picture stops on its first frame and the control shows Play. Press Space: it moves again. The details do not open. In the details, Tab to Pause and press Enter, then Play. Phone: tap the control on a box, then the button in the details. Each pauses and plays, and the tap never selects the box.
 
 **Back to the checklist:** [K-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-03 in its list.
