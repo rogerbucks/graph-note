@@ -9,5 +9,5 @@ body:
   - type: input
     id: version
     attributes:
-      label: Thoughtknot version
+      label: ThoughtKnot version
       placeholder: 0.5.0

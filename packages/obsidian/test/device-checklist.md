@@ -22,7 +22,7 @@ holds the two together).
 
 - [ ] **B-01** The build is installed as real files in `.obsidian/plugins/thoughtknot/`, and the test images are made
       (`node scripts/reset-test-vault.mjs` does both, big.gif among the images), and both have synced to the phone.
-- [ ] **B-02** Thoughtknot is switched on. If gql-highlight is also on, it has been reloaded since.
+- [ ] **B-02** ThoughtKnot is switched on. If gql-highlight is also on, it has been reloaded since.
 - [ ] **B-03** The phone is in aeroplane mode for the whole check: everything below must work offline.
 
 ## Viewing — spec §3
@@ -75,7 +75,7 @@ holds the two together).
       inside a note in Live Preview. Properties are shown but never added or changed: no Add property, no field, no type
       menu, no x or add field on a list. There is no Park for later, no fix that writes a suggested name, no Record a path
       or Make a view, no Fade or Hide others or Save as shown, and no Edit here or Edit in pane, even while the block is
-      edited in Live Preview, and in full screen opened from reading view too. A Thoughtknot pane already open on the block
+      edited in Live Preview, and in full screen opened from reading view too. A ThoughtKnot pane already open on the block
       keeps saving while another pane shows the note in reading view.
 - [ ] **Z-10** Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
 
@@ -265,7 +265,7 @@ holds the two together).
 
 ## Settings — spec §21
 
-- [ ] **C-01** Settings › Thoughtknot, desktop and phone: one page, with Strictness, AI models, Formatting and Drawing, each
+- [ ] **C-01** Settings › ThoughtKnot, desktop and phone: one page, with Strictness, AI models, Formatting and Drawing, each
       option with a sentence saying what it does. Searching the settings for "strictness" finds it (slice 2,
       settings_page).
 - [ ] **C-02** Strictness Standard: a block missing a comma at a line's end shows it as an error (✖) behind the badge, and is
@@ -284,7 +284,7 @@ holds the two together).
       palette: the note is left as it is, and the notice says why (slice 2, simplified_back_to_standard).
 - [ ] **C-07** With the pane in front showing a note in reading view, "Convert this note to standard GQL" from the command
       palette, and the button on the page: the note is left as it is, and the notice says why. With no note in the pane in
-      front (the Thoughtknot pane, a canvas, a PDF, an empty tab), nothing is converted, and the notice says the pane holds
+      front (the ThoughtKnot pane, a canvas, a PDF, an empty tab), nothing is converted, and the notice says the pane holds
       no note. The pane in front decides: in Live Preview it converts, even while another pane shows the note in reading
       view.
 
@@ -301,7 +301,7 @@ holds the two together).
       becomes an empty outline and its words stay as easy to read; nothing moves or disappears. Tap empty space, or press
       Escape: everything is back as it was. Desktop and phone, light and dark (slice 3, focus_neighbours, focus_readable,
       focus_cleared).
-- [ ] **F-02** Tap a link: it and the two boxes it joins stay at full strength and the rest fade. Settings › Thoughtknot › Focus
+- [ ] **F-02** Tap a link: it and the two boxes it joins stay at full strength and the rest fade. Settings › ThoughtKnot › Focus
       reaches › Two steps: tap a box and the boxes two links away stay at full strength too (slice 3, focus_link,
       focus_depth).
 - [ ] **F-03** Mac, pointer: point at a box and it gets a glow round its outline and its words are underlined; point at a link and
@@ -476,7 +476,7 @@ Settings › Accessibility › Display › Reduce motion; on the iPhone, Setting
 ## The View menu — spec §25
 
 - [ ] **M-01** Press View on a graph's bar: four switches, Labels by zoom, Busy hubs folded, Groups folded and Parallel links
-      merged, each saying on or off; labels and hubs are on, groups and merging off. In Settings › Thoughtknot, change a
+      merged, each saying on or off; labels and hubs are on, groups and merging off. In Settings › ThoughtKnot, change a
       switch's default under Drawing, then open the note again: its graphs start as the settings now say (slice 3,
       view_switches, view_switch_defaults).
 - [ ] **M-02** On the phone, a wide graph fitted to the note shows its boxes but no link labels; pinch to zoom in and the

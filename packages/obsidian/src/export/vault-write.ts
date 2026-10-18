@@ -4,10 +4,10 @@
 // never overwritten.
 import { TFile } from 'obsidian';
 import type { WriteOps } from '@thoughtknot/core';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 
 /** The vault's ways of writing a file, as the core's safe write needs them. A file is never replaced: see `freePath`. */
-export function vaultOps(plugin: ThoughtknotPlugin): WriteOps {
+export function vaultOps(plugin: ThoughtKnotPlugin): WriteOps {
   const { vault } = plugin.app;
   const at = (path: string) => vault.getAbstractFileByPath(path);
   return {
@@ -42,7 +42,7 @@ export function vaultOps(plugin: ThoughtknotPlugin): WriteOps {
  * `paths`, or, when a file is already at any of them, each as `<name>-2.<ext>`, or `-3`…, the first number free for all of
  * them: the pages of one export keep one number between them.
  */
-export function freePaths(plugin: ThoughtknotPlugin, paths: string[]): string[] {
+export function freePaths(plugin: ThoughtKnotPlugin, paths: string[]): string[] {
   const taken = (p: string) => !!plugin.app.vault.getAbstractFileByPath(p);
   const numbered = (path: string, n: number) => {
     const dot = path.lastIndexOf('.');
@@ -56,4 +56,4 @@ export function freePaths(plugin: ThoughtknotPlugin, paths: string[]): string[] 
 }
 
 /** `path`, or, when a file is already there, the first of `<name>-2.<ext>`, `<name>-3.<ext>`… that is free. */
-export const freePath = (plugin: ThoughtknotPlugin, path: string): string => freePaths(plugin, [path])[0] ?? path;
+export const freePath = (plugin: ThoughtKnotPlugin, path: string): string => freePaths(plugin, [path])[0] ?? path;

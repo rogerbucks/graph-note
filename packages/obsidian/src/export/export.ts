@@ -35,7 +35,7 @@ import type {
 } from '@thoughtknot/core';
 import type { ExportAsk, ExportOutcome } from '@thoughtknot/core/display/export/export-types';
 import { exportRefusalWords } from '@thoughtknot/core/hosts/refusal-words';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 import { classificationOf } from './classification';
 import { deviceOf, imageFiles, tooLargeWords } from './image';
 import type { ExportFile } from './image';
@@ -98,7 +98,7 @@ function playedWalk(
 }
 
 /** Carries out an export the form asked for; never rejects: whatever goes wrong is said, and nothing half-done is left. */
-export async function exportGraph(plugin: ThoughtknotPlugin, ask: ExportAsk): Promise<ExportOutcome> {
+export async function exportGraph(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<ExportOutcome> {
   try {
     return await exporting(plugin, ask);
   } catch (e) {
@@ -106,7 +106,7 @@ export async function exportGraph(plugin: ThoughtknotPlugin, ask: ExportAsk): Pr
   }
 }
 
-async function exporting(plugin: ThoughtknotPlugin, ask: ExportAsk): Promise<ExportOutcome> {
+async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<ExportOutcome> {
   const file = plugin.app.vault.getAbstractFileByPath(ask.path);
   if (!(file instanceof TFile)) return said({ stopped: 'The note is not there any more, so nothing was exported.' });
   const text = await plugin.app.vault.read(file);
@@ -242,7 +242,7 @@ async function takenAway(ops: WriteOps, paths: string[]): Promise<string> {
  * when one cannot be written, those written before it are taken away again, and any that cannot be is named. Then the
  * companion note, when set: an image's shows it, the data's links it and says how much it holds.
  */
-async function intoVault(plugin: ThoughtknotPlugin, x: VaultExport): Promise<ExportOutcome> {
+async function intoVault(plugin: ThoughtKnotPlugin, x: VaultExport): Promise<ExportOutcome> {
   const { files } = x;
   const paths = freePaths(
     plugin,

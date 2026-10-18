@@ -243,7 +243,7 @@ export function withoutSystemAsks(css) {
  * A page for a view: the view's HTML inside a document with a language and a title (the host gives these in Obsidian), the
  * stylesheets written out with the theme's variables, the theme's class on the body and its page colour behind.
  */
-export function pageFor({ html, css, theme, title = 'Thoughtknot view', lang = 'en' }) {
+export function pageFor({ html, css, theme, title = 'ThoughtKnot view', lang = 'en' }) {
   const vars = obsidianVariables(theme);
   const style = withVariables(withObsidianNames(withoutSystemAsks(css)), vars);
   return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><title>${escapeText(title)}</title><style>${style}</style></head><body class="theme-${theme}" style="background-color: ${vars['--background-primary']}; color: ${vars['--text-normal']}">${html}</body></html>`;

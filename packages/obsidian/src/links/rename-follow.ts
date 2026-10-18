@@ -6,10 +6,10 @@
 import { TFile } from 'obsidian';
 import type { TAbstractFile } from 'obsidian';
 import { applyChanges, renamedLinks } from '@thoughtknot/core';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 
 /** Follows the file renamed from `old` to where `file` now is, in every graph block of every note of the vault. */
-export async function followLinks(plugin: ThoughtknotPlugin, file: TAbstractFile, old: string): Promise<void> {
+export async function followLinks(plugin: ThoughtKnotPlugin, file: TAbstractFile, old: string): Promise<void> {
   if (!(file instanceof TFile)) return;
   const { vault, metadataCache } = plugin.app;
   for (const note of vault.getMarkdownFiles()) {

@@ -2,7 +2,7 @@
 // of the note's graph blocks, and on a phone Drawing and Text as two tabs.
 import { ItemView } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
-import type ThoughtknotPlugin from './main';
+import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
 import { BlockEditor } from './block-editor/block-editor';
 import { word } from '@thoughtknot/core';
@@ -14,7 +14,7 @@ export const PANE = 'thoughtknot-pane';
 export class GraphPane extends ItemView {
   private readonly editor: BlockEditor;
 
-  constructor(leaf: WorkspaceLeaf, plugin: ThoughtknotPlugin) {
+  constructor(leaf: WorkspaceLeaf, plugin: ThoughtKnotPlugin) {
     super(leaf);
     this.editor = new BlockEditor(plugin, 'pane');
     // a setting that changes how the text is read or drawn: read again at once (spec §21)

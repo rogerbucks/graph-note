@@ -26,7 +26,7 @@ import {
   word,
 } from '@thoughtknot/core';
 import type { Block, Drawn, Problem, Refusal } from '@thoughtknot/core';
-import type ThoughtknotPlugin from './main';
+import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { renderStyleBlock } from './style-block';
@@ -50,7 +50,7 @@ import { linkHost, vaultNames } from './links/link-host';
  * editor open in place keeps its place in the card, so the text can still be made small enough to draw.
  */
 function asText(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   root: HTMLElement,
   source: string,
   why: Refusal,
@@ -80,7 +80,7 @@ function asText(
  * (§3). Resolves to why nothing was written, or null.
  */
 async function writeBlock(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   path: string,
   fence: number,
   was: string,
@@ -104,7 +104,7 @@ async function writeBlock(
  * unloaded first, so nothing of it is left behind.
  */
 export async function renderShown(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -134,7 +134,7 @@ export async function renderShown(
  * `redraw` draws the card again, for one drawn from another note or a file when that source changes (§20).
  */
 export async function renderBlock(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -263,7 +263,7 @@ export async function renderBlock(
     // a graph drawn as a table is the plugin's own table, never laid out (§15)
     drawn = diagram?.table ? tableDrawn(diagram.table) : await laidOut(owner);
   } catch (e) {
-    console.error('Thoughtknot could not draw', graph, e);
+    console.error('ThoughtKnot could not draw', graph, e);
     root.createDiv({
       cls: 'thoughtknot-banner',
       attr: { role: 'alert' },

@@ -7,7 +7,7 @@ import { MarkdownRenderChild, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext, TAbstractFile } from 'obsidian';
 import { namesSharedSchema, READ_LIMITS, readSource } from '@thoughtknot/core';
 import type { GraphSource, SourceFetched, SourceRead, SourceRefusal } from '@thoughtknot/core';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 
 /** The last part of a place: the file's name, a note's with `.md` when its link leaves it off. */
 function nameOf(source: GraphSource): string {
@@ -16,7 +16,7 @@ function nameOf(source: GraphSource): string {
 }
 
 /** The file a source names, found as a link from the note at `from` is found, else by its path from the vault's root. */
-function fileOf(plugin: ThoughtknotPlugin, source: GraphSource, from: string): TFile | null {
+function fileOf(plugin: ThoughtKnotPlugin, source: GraphSource, from: string): TFile | null {
   const { vault, metadataCache } = plugin.app;
   const linked = metadataCache.getFirstLinkpathDest(source.target, from);
   if (linked instanceof TFile) return linked;
@@ -28,7 +28,7 @@ function fileOf(plugin: ThoughtknotPlugin, source: GraphSource, from: string): T
 }
 
 /** What the vault holds at a source's place: its text, why it cannot be read, or that it is missing and where its name is. */
-async function lookUp(plugin: ThoughtknotPlugin, source: GraphSource, from: string): Promise<SourceFetched> {
+async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: string): Promise<SourceFetched> {
   const file = fileOf(plugin, source, from);
   if (!file) {
     const name = nameOf(source);
@@ -54,7 +54,7 @@ async function lookUp(plugin: ThoughtknotPlugin, source: GraphSource, from: stri
  * schemas given when its blocks name one), or why it cannot be drawn, naming it.
  */
 export async function readFromVault(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   source: GraphSource,
   from: string,
 ): Promise<SourceRead | SourceRefusal> {
@@ -70,7 +70,7 @@ export async function readFromVault(
  * listeners go with the card's own drawing (`ctx`), so a card drawn again never listens twice.
  */
 export function watchSource(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
   source: GraphSource,

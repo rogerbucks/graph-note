@@ -19,7 +19,7 @@
 1. With this note in front in Live Preview or Source mode (reading view never changes a note: see C-07), open the command palette and run "Convert this note to standard GQL".
 2. Check a comma is now at the end of the first two lines of the block, and the notice above appears.
 3. Press undo once and check both commas are gone.
-4. In Settings, Thoughtknot, press the same button on the page, and check the same result.
+4. In Settings, ThoughtKnot, press the same button on the page, and check the same result.
 
 **Checklist line:**
 

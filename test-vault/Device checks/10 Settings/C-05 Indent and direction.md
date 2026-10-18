@@ -18,7 +18,7 @@
 **Do this:**
 
 0. Open this note in Live Preview (not reading view): reading view hides the Edit, Park, Record and Lock buttons.
-1. In Settings, Thoughtknot, Formatting, set Indent to Two spaces.
+1. In Settings, ThoughtKnot, Formatting, set Indent to Two spaces.
 2. Press Edit here on the draft above, then Lock the graph. In the schema block, check the lines inside each `({…})` start with two spaces.
 3. Undo the lock. In Drawing, set Direction to Top to bottom and check every drawing in the note runs top to bottom.
 4. Set Direction to Best fit and check the earlier choice returns.

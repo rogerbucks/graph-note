@@ -1,11 +1,11 @@
-# How to use Thoughtknot
+# How to use ThoughtKnot
 
 A short guide for everyone, with no technical knowledge needed. The pictures are taken from the latest version each
 time it changes, so they show what you will see.
 
 ## What it does
 
-You write a few lines in a note that say what things there are and how they are linked. Thoughtknot turns them into a
+You write a few lines in a note that say what things there are and how they are linked. ThoughtKnot turns them into a
 drawing right inside the note. You can move around the drawing, change how it is laid out, and edit it, either by typing
 or by working with the drawing itself.
 
@@ -30,7 +30,7 @@ In any note, start a block with three backticks and the word `gql`, then list yo
 - A **link** joins two things with an arrow, and its kind goes in square brackets.
 - Switch to reading view, or move your cursor out of the block, and the drawing appears.
 
-You do not need to get it perfect. If something is wrong, Thoughtknot says what, where, and how to fix it (see step 5).
+You do not need to get it perfect. If something is wrong, ThoughtKnot says what, where, and how to fix it (see step 5).
 
 ## 2. Move around the drawing
 
@@ -54,7 +54,7 @@ Tap any thing to see its details and the things linked to it.
 ## 3. Change the layout
 
 Press **Diagram type** (just above the drawing) to choose how it is laid out: a network, a tree, a flow, a circle around
-one thing, lanes, a timeline, or a table. Thoughtknot suggests the type that suits your graph best, and explains why a
+one thing, lanes, a timeline, or a table. ThoughtKnot suggests the type that suits your graph best, and explains why a
 type cannot be used when it does not fit.
 
 <!-- wiki:shot diagram-types -->
@@ -94,7 +94,7 @@ reasons in its favour". It is shown as text. Press **Copy** to copy it, or **Edi
 
 ## 8. Use AI, safely
 
-Thoughtknot can ask an AI model to suggest changes to a graph. It is **off until you turn it on**, and even then:
+ThoughtKnot can ask an AI model to suggest changes to a graph. It is **off until you turn it on**, and even then:
 
 - nothing is sent until you press Send, and you see exactly what will be sent first;
 - you choose which AI models it may use, and how sensitive a note each one may see;
@@ -106,7 +106,7 @@ changes**. The full details are in the
 
 ## Tips
 
-- **Lost some typing?** Run the command **Recover kept drafts into a new note**. Thoughtknot keeps a draft of every edit
+- **Lost some typing?** Run the command **Recover kept drafts into a new note**. ThoughtKnot keeps a draft of every edit
   until it is saved into the note.
 - **Sharing a note with other tools?** The command **Convert this note to standard GQL** rewrites the shortcuts Graph
   Note allows into the standard form other tools read.
@@ -115,7 +115,7 @@ changes**. The full details are in the
 
 ## Settings
 
-Find these in Obsidian under Settings, then Community plugins, then Thoughtknot. This list is made from the plugin
+Find these in Obsidian under Settings, then Community plugins, then ThoughtKnot. This list is made from the plugin
 itself, so it is always complete.
 
 <!-- wiki:settings -->

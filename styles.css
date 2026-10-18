@@ -1,4 +1,4 @@
-/* Thoughtknot — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
+/* ThoughtKnot — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
 
 /* The design tokens (editor spec §44, ui_theme_tokens): Obsidian's theme mapped to the --gn-* tokens every rule below reads,
    by the core's one table (packages/core/src/theme-tokens.ts, OBSIDIAN_TOKEN_MAP). They are worked out on each of the

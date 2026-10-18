@@ -18,7 +18,7 @@ import {
   word,
 } from '@thoughtknot/core';
 import type { MatrixRow, PreparedSend, ScopeChoice } from '@thoughtknot/core';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
 import { obsidianTransport } from './send';
@@ -53,7 +53,7 @@ export class SendDialog extends Modal {
   private sendButton: ButtonComponent | null = null;
 
   constructor(
-    private readonly plugin: ThoughtknotPlugin,
+    private readonly plugin: ThoughtKnotPlugin,
     private readonly file: TFile,
     private readonly note: string,
     /** The note's classification, read each time it is asked, against the classifications as they are then. */

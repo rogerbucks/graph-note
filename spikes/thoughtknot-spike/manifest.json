@@ -1,6 +1,6 @@
 {
   "id": "thoughtknot-spike",
-  "name": "Thoughtknot Spike",
+  "name": "ThoughtKnot Spike",
   "version": "0.0.1",
   "minAppVersion": "1.13.0",
   "description": "Throwaway: times the Graphviz WebAssembly engine drawing a code block, on desktop and phone.",

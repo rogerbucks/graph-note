@@ -2,7 +2,7 @@
 // from another note or a .gql file, naming it, and, for a note, a button that opens it, as a tap on a link would. What
 // it says is read where it is written, so this is the way to change it.
 import type { GraphSource } from '@thoughtknot/core';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 
 /** The source's name as the strip and its button say it: a note by its link, a file by its path. */
 const shortName = (s: GraphSource) => s.target.replace(/\.md$/i, '');
@@ -13,7 +13,7 @@ const shortName = (s: GraphSource) => s.target.replace(/\.md$/i, '');
  */
 export function sourceStrip(
   parent: HTMLElement,
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   source: GraphSource,
   from: string,
 ): HTMLElement {

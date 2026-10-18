@@ -27,7 +27,7 @@ import type {
   TooLargeToAnimate,
 } from '@thoughtknot/core';
 import { exportFailureWords, exportRefusalWords } from '@thoughtknot/core/hosts/refusal-words';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 import { vaultImages } from '../images/vault-images';
 import { STILL_PIXELS } from '@thoughtknot/core/display/images/still-frame';
 
@@ -68,7 +68,7 @@ type GraphRead = NonNullable<NoteReading['world'][string]>;
 
 /** The image's files, one or a page each; or why there are none, in words. Rejects only on a failure not the layout's. */
 export async function imageFiles(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   x: ImageAsk,
 ): Promise<{ files: ExportFile[]; animation?: string } | { stopped: string }> {
   let layoutFailed = false;
@@ -100,7 +100,7 @@ export async function imageFiles(
   if (!image)
     return {
       stopped:
-        'The export was stopped: Thoughtknot was unloaded before the layout finished. Nothing was saved. Try again once Thoughtknot is enabled again.',
+        'The export was stopped: ThoughtKnot was unloaded before the layout finished. Nothing was saved. Try again once ThoughtKnot is enabled again.',
     };
   if ('reason' in image) return { stopped: exportRefusalWords(image) };
   if ('why' in image) return { stopped: tooLargeWords(image) };
@@ -144,7 +144,7 @@ export async function imageFiles(
  * The loader of the images on an export's boxes (§18, export-pictures.ts): each found from the note at `note`, read
  * through the vault, what its bytes say, and, for one that moves, its first frame drawn; or why it cannot be had.
  */
-function picturesFrom(plugin: ThoughtknotPlugin, note: string): PictureLoad {
+function picturesFrom(plugin: ThoughtKnotPlugin, note: string): PictureLoad {
   const source = vaultImages(plugin.app, note);
   return async (value) => {
     const found = source.find(value);

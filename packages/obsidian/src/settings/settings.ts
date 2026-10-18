@@ -13,7 +13,7 @@ import {
   word,
 } from '@thoughtknot/core';
 import type { MatrixRow, Option, Settings } from '@thoughtknot/core';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 import { knownClass } from '../ai/matrix-known';
 import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
@@ -31,10 +31,10 @@ const SECTION_WORDS = {
 } as const;
 
 /** The plugin's settings page. */
-export class ThoughtknotSettingTab extends PluginSettingTab {
+export class ThoughtKnotSettingTab extends PluginSettingTab {
   constructor(
     app: App,
-    private readonly owner: ThoughtknotPlugin,
+    private readonly owner: ThoughtKnotPlugin,
   ) {
     super(app, owner);
   }

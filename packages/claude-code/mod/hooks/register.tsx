@@ -1,4 +1,4 @@
-// /graph: draws a graph note's first graph in a pane, with the Thoughtknot core (spec §10, a Claude Code host). Reading,
+// /graph: draws a graph note's first graph in a pane, with the ThoughtKnot core (spec §10, a Claude Code host). Reading,
 // the layout source and theming run here, in the mod's own environment (graph.js); Graphviz runs as a process through
 // node (bin/render.mjs), since a mod has no WebAssembly. Where no drawing can be, the pane shows the graph as text with
 // the reason: when node is missing, on the terminal (which draws no Svg), and for a graph too large to draw.
@@ -37,7 +37,7 @@ const EDITOR_USAGE = 'No editor is running. /graph edit <path to a note> starts 
 const NO_PICTURES = 'This surface cannot draw pictures, so the graph is shown as text. The desktop app draws it.';
 const PROPOSE = 'mcp__thoughtknot__propose';
 const PROPOSE_TOOL =
-  'Propose changes to the graph of the note open in the Thoughtknot editor. Nothing is applied: the changes wait on a card ' +
+  'Propose changes to the graph of the note open in the ThoughtKnot editor. Nothing is applied: the changes wait on a card ' +
   'in the editor for the user to accept or reject. Each change is one of: {op: "add-thing", name, kind, properties?}, ' +
   '{op: "add-link", from, type, to}, {op: "set", thing, key, value}, {op: "remove-thing", thing}, ' +
   '{op: "remove-link", from, type, to}, each with an optional "reason". Names are one word. You cannot add a Person, ' +

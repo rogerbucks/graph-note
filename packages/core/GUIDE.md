@@ -592,7 +592,7 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   `page-source-words.ts`, and editing's (properties, adding a thing, Edit, kept drafts) in `edit-source-words.ts`, and the AI dialog's and AI models' in `ai-source-words.ts`, each spread
   into `SOURCE_WORDS`.
 - `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
-  where a `ThoughtknotPlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
+  where a `ThoughtKnotPlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
   of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a
   call into one that throws is caught and named (`PluginResult`). Its first point is the data exports (`DataExporter`);
   its second, `theme`, hands a plug-in the core's tokens and adds its own (theme-tokens.ts), each refused, saying why,

@@ -1,6 +1,6 @@
 {
   "id": "thoughtknot",
-  "name": "Thoughtknot",
+  "name": "ThoughtKnot",
   "version": "0.6.0",
   "minAppVersion": "1.13.0",
   "description": "Draw the graphs written in your notes, and edit them as text, in place or beside the note.",

@@ -123,8 +123,8 @@ const PROPOSAL = /^\/api\/notes\/[0-9a-f]{32}\/proposal$/;
 
 /** The page where the build's files are not there (a server started from source, not from the built mod): it says so, and loads nothing. */
 const PAGE =
-  '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>Thoughtknot editor</title></head>\n' +
-  '<body><p>The Thoughtknot editor is not here yet.</p></body></html>\n';
+  '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>ThoughtKnot editor</title></head>\n' +
+  '<body><p>The ThoughtKnot editor is not here yet.</p></body></html>\n';
 
 const realEvery: Every = (ms, check) => {
   const timer = setInterval(check, ms);

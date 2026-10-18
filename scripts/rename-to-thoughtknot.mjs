@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Renames the product from Graph Note to Thoughtknot across the tracked files: the name people read, the plugin and
+// Renames the product from Graph Note to ThoughtKnot across the tracked files: the name people read, the plugin and
 // package ids, the CSS class and variable prefix, and the paths that hold the name. It is mechanical and safe to run
 // again, so a branch made before the rename runs it after merging main and is renamed the same way.
 //
@@ -46,9 +46,10 @@ const KEEP = [
 
 /** The renames, in order: longer and cased forms first. Lower-case "graph note" is the kind of note and stays. */
 const RENAMES = [
-  [/Graph Note/g, 'Thoughtknot'],
-  [/Graph-Note/g, 'Thoughtknot'],
-  [/GraphNote/g, 'Thoughtknot'],
+  [/Graph Note/g, 'ThoughtKnot'],
+  [/Graph-Note/g, 'ThoughtKnot'],
+  [/GraphNote/g, 'ThoughtKnot'],
+  [/Thoughtknot/g, 'ThoughtKnot'],
   [/GRAPH_NOTE/g, 'THOUGHTKNOT'],
   [/GRAPH-NOTE/g, 'THOUGHTKNOT'],
   [/graphNote/g, 'thoughtknot'],

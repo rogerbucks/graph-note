@@ -1,6 +1,6 @@
 # Design review: language, plug-ins, theming and tests
 
-A solution architect's review of how ready Thoughtknot is for the things users will ask for: other languages and
+A solution architect's review of how ready ThoughtKnot is for the things users will ask for: other languages and
 cultures, right-to-left scripts, plug-ins, themes, and tests that check each layer and run only what a change touches.
 It says what is there today, where the code already has a place to fit each one, and the design to build. Reviewed on
 17 October 2026, against version 0.5.0.
@@ -95,7 +95,7 @@ adapter's and plug-in's contract suite.
 **Design.** One small registry in the core (`plugin_interface`):
 
 ```ts
-interface ThoughtknotPlugin {
+interface ThoughtKnotPlugin {
   id: string;            // 'acme.mermaid-export'
   version: string;       // semver
   api: '1';              // the plug-in interface version it was built for
@@ -111,7 +111,7 @@ interface ThoughtknotPlugin {
 - A plug-in gets only the capabilities its manifest lists. One that throws or runs too long is stopped and named, and
   the drawing falls back to text, as a layout that is too large does today.
 - Plug-ins are versioned with the library (`lib_public_api`), so a breaking change needs a new major version.
-- Obsidian plug-ins and VS Code extensions keep working as they are; this is Thoughtknot's own interface inside them.
+- Obsidian plug-ins and VS Code extensions keep working as they are; this is ThoughtKnot's own interface inside them.
 
 ## 4. Theming, inherited by plug-ins
 

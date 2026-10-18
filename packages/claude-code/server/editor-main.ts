@@ -58,7 +58,7 @@ export function gateSettings(raw: string | undefined): GateSettings {
  */
 export async function pageFiles(here = dirname(fileURLToPath(import.meta.url))): Promise<PageAssets> {
   const files = await loadPageAssets(join(here, basename(here) === 'bin' ? '../page' : '../mod/page'));
-  if (!files.has('/')) throw new Error('The editor page is not built: run `npm run build` for the Thoughtknot mod.');
+  if (!files.has('/')) throw new Error('The editor page is not built: run `npm run build` for the ThoughtKnot mod.');
   return files;
 }
 

@@ -3,12 +3,12 @@
 // every control that writes, it is taken away where the card is only read (spec §3): reading view, an embed, a hover
 // preview, or a card that cannot say which line of which note it is.
 import { word } from '@thoughtknot/core';
-import type ThoughtknotPlugin from './main';
+import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
 import { readOnlyHere, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 
 /** Puts Edit into `parent`, opening the block at `target` in the pane; none when there is no target. */
-export function editInPane(parent: HTMLElement, plugin: ThoughtknotPlugin, target: EditTarget | null): void {
+export function editInPane(parent: HTMLElement, plugin: ThoughtKnotPlugin, target: EditTarget | null): void {
   if (!target) return;
   const edit = parent.createEl('button', {
     text: word('editor.edit'),

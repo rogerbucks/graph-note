@@ -1,4 +1,4 @@
-# Thoughtknot
+# ThoughtKnot
 
 An Obsidian plugin that draws the graphs written in notes, and lets them be edited beside the note — by typing, or by tapping and dragging the drawing. It works on desktop and mobile, offline.
 

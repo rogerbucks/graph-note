@@ -19,7 +19,7 @@ import {
 } from '@thoughtknot/core';
 import type { LeftAt, LinkHost } from '@thoughtknot/core/display/links/link-types';
 import { FOLLOWED, followAnchor } from '@thoughtknot/core/display/links/links-list';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 
 /** The source the plugin's links are hovered from, as Page preview's settings name it. */
 export const HOVER_SOURCE = 'thoughtknot';
@@ -88,7 +88,7 @@ function followRendered(el: HTMLElement, host: LinkHost, where: () => LeftAt | n
 }
 
 /** The links of graph `graph` in the note at `path`, followed through Obsidian. */
-export function linkHost(plugin: ThoughtknotPlugin, path: string, graph: string): Omit<LinkHost, 'broken'> {
+export function linkHost(plugin: ThoughtKnotPlugin, path: string, graph: string): Omit<LinkHost, 'broken'> {
   const key = `${path}\u0000${graph}`;
   const left = () => LEFT.get(plugin) ?? LEFT.set(plugin, new Map()).get(plugin)!;
   const hoverParent = { hoverPopover: null };
@@ -175,6 +175,6 @@ export function linkHost(plugin: ThoughtknotPlugin, path: string, graph: string)
 }
 
 /** The names a vault holds, as a link names them: a note without `.md`, any other file with its extension. */
-export function vaultNames(plugin: ThoughtknotPlugin): string[] {
+export function vaultNames(plugin: ThoughtKnotPlugin): string[] {
   return plugin.app.vault.getFiles().map((f) => (f.extension === 'md' ? f.name.slice(0, -3) : f.name));
 }

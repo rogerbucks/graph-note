@@ -185,7 +185,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
 
 ### `src/settings/` — the settings page (spec §21)
 
-- `settings.ts` — `ThoughtknotSettingTab`: one page in Obsidian's plugin settings, in its declarative form, built from the
+- `settings.ts` — `ThoughtKnotSettingTab`: one page in Obsidian's plugin settings, in its declarative form, built from the
   core's `OPTIONS` so every option is on it with its sentence: strictness and the departures Simplified allows, with
   the action that converts a note to standard GQL; the classifications; formatting; drawing.
 - `ai-models.ts` — the AI models of §19 as a list, a page for each: name, purpose (the spec's purposes suggested),

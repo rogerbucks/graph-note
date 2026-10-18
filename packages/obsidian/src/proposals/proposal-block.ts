@@ -16,7 +16,7 @@ import {
   readStyle,
 } from '@thoughtknot/core';
 import type { Which } from '@thoughtknot/core';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from '../graph-card';
 import { readOnlyHere, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
@@ -29,10 +29,10 @@ import type { ProposalCard } from '@thoughtknot/core/display/proposals/proposal-
  * typed, or "you" when none is set (decider_named); the judgement graph records it with the time, beside what was
  * decided. The core compares a person's name with the proposer's as they are written, in any case.
  */
-const personOf = (plugin: ThoughtknotPlugin) => ({ name: deciderName(plugin.settings.decider) });
+const personOf = (plugin: ThoughtKnotPlugin) => ({ name: deciderName(plugin.settings.decider) });
 
 /** Opens the note at the change set's line, for its text to be read or changed there. */
-function openAt(plugin: ThoughtknotPlugin, path: string, line: number): void {
+function openAt(plugin: ThoughtKnotPlugin, path: string, line: number): void {
   const file = plugin.app.vault.getAbstractFileByPath(path);
   const leaf = plugin.app.workspace.getLeaf(false);
   if (file instanceof TFile && typeof leaf.openFile === 'function')
@@ -42,7 +42,7 @@ function openAt(plugin: ThoughtknotPlugin, path: string, line: number): void {
 
 /** Draws the change set `source` where the note shows it: the proposal over its graph, or why it cannot be shown. */
 export async function renderProposalBlock(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -167,7 +167,7 @@ export async function renderProposalBlock(
   try {
     drawn = await plugin.layout(drawing, owner);
   } catch (e) {
-    console.error('Thoughtknot could not draw proposal', review.proposal.id, e);
+    console.error('ThoughtKnot could not draw proposal', review.proposal.id, e);
     root.createDiv({
       cls: 'thoughtknot-banner',
       attr: { role: 'alert' },

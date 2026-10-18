@@ -1,4 +1,4 @@
-// Thoughtknot: draws the graphs written in notes (spec §3), and edits them in a pane beside the note (spec §4).
+// ThoughtKnot: draws the graphs written in notes (spec §3), and edits them in a pane beside the note (spec §4).
 import { Notice, Plugin, TFile, editorInfoField } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { MarkdownPostProcessorContext } from 'obsidian';
@@ -39,7 +39,7 @@ import { stillFrame } from '@thoughtknot/core/display/images/still-frame';
 import { vaultImages } from './images/vault-images';
 import type { CardImages } from '@thoughtknot/core/display/graph-view/animated-images';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
-import { ThoughtknotSettingTab } from './settings/settings';
+import { ThoughtKnotSettingTab } from './settings/settings';
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
@@ -72,7 +72,7 @@ interface Saved {
 }
 
 /** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
-export default class ThoughtknotPlugin extends Plugin {
+export default class ThoughtKnotPlugin extends Plugin {
   private engine: Promise<Engine> | null = null;
   private saved: Saved = {};
   /** The vault's shared schema blocks, by note: read once, the first time a graph names one, then kept up to date. */
@@ -84,7 +84,7 @@ export default class ThoughtknotPlugin extends Plugin {
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
-    this.addSettingTab(new ThoughtknotSettingTab(this.app, this));
+    this.addSettingTab(new ThoughtKnotSettingTab(this.app, this));
     this.addCommand({
       id: 'convert-to-standard',
       name: 'Convert this note to standard GQL',
@@ -94,7 +94,7 @@ export default class ThoughtknotPlugin extends Plugin {
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followRename(this, f.path, old)));
     // a renamed note or file is followed by every link to it in graph blocks; Page preview previews the cards' links (§18)
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followLinks(this, f, old)));
-    this.registerHoverLinkSource(HOVER_SOURCE, { display: 'Thoughtknot', defaultMod: true });
+    this.registerHoverLinkSource(HOVER_SOURCE, { display: 'ThoughtKnot', defaultMod: true });
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
     // nothing is sent unless the user opens this, chooses, sees exactly what goes and presses Send (§19)
     this.addCommand({ ...AI_COMMAND, callback: () => askAi(this) });
@@ -110,7 +110,7 @@ export default class ThoughtknotPlugin extends Plugin {
       );
     } catch (e) {
       // Only one plugin may draw a code block language. Say which setting to change, rather than fail quietly.
-      console.error('Thoughtknot could not take gql blocks', e);
+      console.error('ThoughtKnot could not take gql blocks', e);
       new Notice(
         'Another plugin already draws gql blocks, so graphs cannot be drawn. Update or turn off the gql-highlight plugin, then reload Obsidian.',
         0,

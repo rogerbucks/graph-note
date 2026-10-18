@@ -322,7 +322,7 @@ describe('laid out like a drawing, under the same limits', () => {
       const out = await pending;
       assert.equal(
         out.stopped,
-        'The export was stopped: Thoughtknot was unloaded before the layout finished. Nothing was saved. Try again once Thoughtknot is enabled again.',
+        'The export was stopped: ThoughtKnot was unloaded before the layout finished. Nothing was saved. Try again once ThoughtKnot is enabled again.',
       );
       assert.deepEqual(saved(env), []);
     });

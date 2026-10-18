@@ -13,7 +13,7 @@ import {
   lockBlock,
   namesSharedSchema,
 } from '@thoughtknot/core';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 import type { DeclaredDeferred } from '@thoughtknot/core/display/graph-view/view-options';
 import { RECOVER_COMMAND, keyBeside, keyOf, newDraftId } from '../drafts';
 import { NOTE_DELETED } from '@thoughtknot/core/display/editor/editor-note';
@@ -32,9 +32,9 @@ export class BlockNote implements EditorNote {
   text = '';
   /** The session on the block being edited, or null when the note has no graph block to edit. */
   session: PaneSession | null = null;
-  private readonly plugin: ThoughtknotPlugin;
+  private readonly plugin: ThoughtKnotPlugin;
 
-  constructor(plugin: ThoughtknotPlugin) {
+  constructor(plugin: ThoughtKnotPlugin) {
     this.plugin = plugin;
   }
 

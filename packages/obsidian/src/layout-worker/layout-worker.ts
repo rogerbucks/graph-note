@@ -17,9 +17,9 @@ import { layoutWorker } from 'thoughtknot:layout-worker';
 /** What is said once in the console, for each thing the runner tells. */
 const SAID: Record<Told, string> = {
   'on-the-page':
-    'Thoughtknot: web workers cannot run here, so graphs are laid out on the main thread, with lower size limits. A slow layout cannot be stopped there.',
+    'ThoughtKnot: web workers cannot run here, so graphs are laid out on the main thread, with lower size limits. A slow layout cannot be stopped there.',
   stopped:
-    'Thoughtknot: several layouts in a row took too long or failed, so drawing is paused until the plugin is reloaded.',
+    'ThoughtKnot: several layouts in a row took too long or failed, so drawing is paused until the plugin is reloaded.',
 };
 
 /** Whether this host can start a worker from a Blob: every Obsidian can, desktop and phone; a test may not. */

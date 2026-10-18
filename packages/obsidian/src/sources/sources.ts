@@ -15,7 +15,7 @@ import {
   underStrictness,
 } from '@thoughtknot/core';
 import type { Drawn, Refusal, SourceRead } from '@thoughtknot/core';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from '../graph-card';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
@@ -31,7 +31,7 @@ import { sourceAlert, sourceStrip } from './source-strip';
  * note draws `graph` from its own blocks.
  */
 export async function sourcedView(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   texts: string[],
   graph: string,
   el: HTMLElement,
@@ -48,7 +48,7 @@ export async function sourcedView(
 
 /** Draws a FROM block where the note shows it: the whole graph from its source, read-only, or why it cannot be drawn. */
 export async function renderSourceBlock(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   text: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -99,7 +99,7 @@ export async function renderSourceBlock(
   try {
     drawn = await plugin.layout(styledDrawing(plain, styling.style, reading.world[graph]), owner);
   } catch (e) {
-    console.error('Thoughtknot could not draw', graph, e);
+    console.error('ThoughtKnot could not draw', graph, e);
     sourceAlert(root, 'The drawing engine could not start, so this graph is shown as text.');
     renderCode(root, text);
     return;

@@ -1,6 +1,6 @@
 # Architecture
 
-Thoughtknot is built in layers. Each layer only uses the ones below it, so a new app can be added on top without
+ThoughtKnot is built in layers. Each layer only uses the ones below it, so a new app can be added on top without
 changing what is underneath.
 
 ```mermaid

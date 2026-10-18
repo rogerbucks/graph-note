@@ -11,7 +11,7 @@ import { graphmlText } from './export-data-graphml.ts';
 import type { DataInfo, DataLink, DataThing, ExportedData } from './export-data-model.ts';
 import type { ExportScope } from './export-scope.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
-import { PLUGIN_API, pluginRegistry, type ThoughtknotPlugin } from './plugins.ts';
+import { PLUGIN_API, pluginRegistry, type ThoughtKnotPlugin } from './plugins.ts';
 
 /** The formats the data is offered in (export_data_formats): a GQL block, CSV and GraphML. */
 export const DATA_FORMATS = ['gql', 'csv', 'graphml'] as const;
@@ -82,7 +82,7 @@ function notesOf(things: DataThing[], whole: GraphDrawing, numbers: number[]): P
  * The built-in data exports, added through the plug-in interface as any plug-in's are (plugin_interface): a GQL block,
  * CSV and GraphML.
  */
-export const CORE_EXPORTS: ThoughtknotPlugin = {
+export const CORE_EXPORTS: ThoughtKnotPlugin = {
   id: 'thoughtknot.data-exports',
   version: '1.0.0',
   api: PLUGIN_API,

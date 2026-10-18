@@ -3,7 +3,7 @@
 // picture is not the note's text, so it never writes; the schema is changed in its text, as any block is.
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlBlocks, namesSharedSchema, schemaPicture } from '@thoughtknot/core';
-import type ThoughtknotPlugin from './main';
+import type ThoughtKnotPlugin from './main';
 import { graphCard } from './graph-card';
 
 /**
@@ -11,7 +11,7 @@ import { graphCard } from './graph-card';
  * did, so any other block, or one the picture cannot be laid out for, is drawn as a graph block always is.
  */
 export async function renderSchemaBlock(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -30,7 +30,7 @@ export async function renderSchemaBlock(
   try {
     drawn = await plugin.layout(drawing, owner);
   } catch (e) {
-    console.error('Thoughtknot could not draw the schema of', picture.graph, e);
+    console.error('ThoughtKnot could not draw the schema of', picture.graph, e);
     return false;
   }
   if (drawn && 'reason' in drawn) return false; // too large to lay out: shown as its text, as any graph is

@@ -19,7 +19,7 @@ import {
 } from '@thoughtknot/core';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
 import type { GraphStep, StepFault, StepGiven, StepRun } from '@thoughtknot/core';
-import type ThoughtknotPlugin from './main';
+import type ThoughtKnotPlugin from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { readOnlyHere, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import { editInPane } from './edit-in-pane';
@@ -63,7 +63,7 @@ function sayRun(said: HTMLElement, step: GraphStep, run: StepRun | null): void {
 
 /** Runs the step named `step` in the note at `path`, as the note is when written, and writes its proposal beside its graph. */
 async function run(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   path: string,
   step: GraphStep,
   given: Record<string, StepGiven>,
@@ -95,7 +95,7 @@ async function run(
 
 /** Draws a step block where the note shows it: what it does and takes, the choices for each point, and Run. */
 export function renderStepBlock(
-  plugin: ThoughtknotPlugin,
+  plugin: ThoughtKnotPlugin,
   source: string,
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
@@ -156,7 +156,7 @@ export function renderStepBlock(
     void run(plugin, ctx.sourcePath, step, given)
       .then((r) => sayRun(said, step, r))
       .catch((e: unknown) => {
-        console.error('Thoughtknot could not run step', step.name, e);
+        console.error('ThoughtKnot could not run step', step.name, e);
         new Notice(word('step.could-not-run', { name: step.name }));
       })
       .finally(() => {

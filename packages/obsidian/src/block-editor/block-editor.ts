@@ -8,7 +8,7 @@ import { BlockEditor as SharedEditor } from '@thoughtknot/core/display/editor/bl
 import type { Layout } from '@thoughtknot/core/display/editor/editor-layout';
 import type { Chosen, DeclaredDeferred } from '@thoughtknot/core/display/graph-view/view-options';
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
-import type ThoughtknotPlugin from '../main';
+import type ThoughtKnotPlugin from '../main';
 import { BlockNote } from './block-note';
 
 export type { Layout };
@@ -20,7 +20,7 @@ export class BlockEditor extends Component {
   /** The lists made while the editor is open, which the inspector shows even before they hold a value. */
   lists?: DeclaredList[];
 
-  constructor(plugin: ThoughtknotPlugin, layout: Layout) {
+  constructor(plugin: ThoughtKnotPlugin, layout: Layout) {
     super();
     this.layout = layout;
     this.editor = new SharedEditor(

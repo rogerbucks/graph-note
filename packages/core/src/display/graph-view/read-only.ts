@@ -125,11 +125,11 @@ export function gateWrites(o: ViewOptions, readOnly: () => boolean): ViewOptions
     }
     if ((v instanceof Map || v instanceof Set) && holdsFunction(v))
       throw new Error(
-        `Thoughtknot: the card's option ${path} holds functions, or objects of a class with methods, in a Map or a Set, whose writes cannot be closed in reading view. Give them in a plain object, or name what only reads in READS (read-only.ts).`,
+        `ThoughtKnot: the card's option ${path} holds functions, or objects of a class with methods, in a Map or a Set, whose writes cannot be closed in reading view. Give them in a plain object, or name what only reads in READS (read-only.ts).`,
       );
     if (!builtIn(v) && hasMethods(v))
       throw new Error(
-        `Thoughtknot: the card's option ${path} holds an object of a class with methods, whose writes cannot be closed in reading view. Give it as a plain object, or name what only reads in READS (read-only.ts).`,
+        `ThoughtKnot: the card's option ${path} holds an object of a class with methods, whose writes cannot be closed in reading view. Give it as a plain object, or name what only reads in READS (read-only.ts).`,
       );
     return v;
   };

@@ -275,7 +275,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/slice-board-style.test.js` — the slice board's stylesheet: colour tokens that agree in light and dark, the altitude switch by CSS alone, a layout that holds at 400px, and the source written one rule and one declaration to a line.
 - `test/slice-board.test.js` — the slice board: a CSS-only HTML page of how far the slice under way is proved, from the requirements copy and, optionally, the open pull requests.
 - `test/wiki.test.js` — the project wiki: every page made from its file in the repository, ending with the file and commit it came from, the proved counts as the slice board gives them, every answered question a decision and every other open, the roadmap's chart free of the characters it reads as syntax, and the releases from GitHub or `versions.json`.
-- `test/rename-to-thoughtknot.test.js` — the rename to Thoughtknot (`scripts/rename-to-thoughtknot.mjs`): every form of the product name changes, the repository's address, its site, the GitHub Project's title and the kind of note keep theirs, and a second run changes nothing.
+- `test/rename-to-thoughtknot.test.js` — the rename to ThoughtKnot (`scripts/rename-to-thoughtknot.mjs`): every form of the product name changes, the repository's address, its site, the GitHub Project's title and the kind of note keep theirs, and a second run changes nothing.
 - `test/wiki-guide.test.js` — the wiki's user guide: every screenshot taken shown once and no other asked for, every setting listed from the editor's own options, plain words, and a new button of the drawing reported when the guide does not explain it.
 - `test/wiki-review.test.js` — the review of the wiki pages people write or edit: each checked and never changed, a suggestion for each broken link or picture, old version and long sentence, a person's edit to a made page reported, and an issue text that pings no one.
 - `test/wiki-workflow.test.js` — the workflow that makes the wiki: woken by a push to main or a stable release, the pages made with read access only, and the one job that writes running no code of the repository.
@@ -467,7 +467,7 @@ These test behaviour across modules, or the repository itself, so they are named
 The [GitHub wiki](https://github.com/rogerbucks/graph-note/wiki) is made from the repository by `.github/workflows/wiki.yml`
 on every push to main and every release, so it is never edited by hand: an edit there is overwritten. `scripts/wiki.mjs`
 writes the status, roadmap, decisions, open questions, quality and releases pages from the files that hold them, and
-copies the pages written by a person from `wiki/`, filling each `<!-- wiki:NAME -->` marker. `wiki/How-to-use-Thoughtknot.md`
+copies the pages written by a person from `wiki/`, filling each `<!-- wiki:NAME -->` marker. `wiki/How-to-use-ThoughtKnot.md`
 is the user guide, in plain words for people who are not technical: a change people will see changes it in the same pull
 request. Its pictures are `<!-- wiki:shot NAME -->` markers, taken from the build by `scripts/wiki-screens.mjs` (each
 shot is a state of `packages/obsidian/harness`, listed in `SHOTS`), and its settings come from the core's `OPTIONS`. A

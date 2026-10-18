@@ -1,5 +1,5 @@
 // The plug-in interface (editor spec §43, plugin_interface and plugin_manifest_limits): one typed, versioned way in for
-// what Thoughtknot can be extended with, used by the built-in ones too. A plug-in names itself, the interface version it
+// what ThoughtKnot can be extended with, used by the built-in ones too. A plug-in names itself, the interface version it
 // was built for and, in its manifest, the extension points it uses; it is given only those. What it adds is checked as it
 // is added, and a call into it that throws is caught and named, never let through to blank a drawing. The first
 // extension point is the data exports, and the second the theme tokens (§44, plugin_theme_tokens): a plug-in inherits the
@@ -41,7 +41,7 @@ export interface ExtensionPoints {
 }
 
 /** A plug-in: who it is, what it uses, and what it adds. */
-export interface ThoughtknotPlugin {
+export interface ThoughtKnotPlugin {
   /** Its own name, dotted and lower case: `acme.mermaid-export`. */
   id: string;
   /** Its own version, as major.minor.patch. */
@@ -64,7 +64,7 @@ const WORD = /^[a-z][a-z0-9-]*$/;
 /** The plug-ins installed and what each added; one for each host, made by `pluginRegistry`. */
 export interface PluginRegistry {
   /** Installs `plugin`; throws, saying why, when its manifest or what it adds is refused, and then installs none of it. */
-  register: (plugin: ThoughtknotPlugin) => void;
+  register: (plugin: ThoughtKnotPlugin) => void;
   /** The ids of the plug-ins installed, in the order they were. */
   plugins: () => string[];
   /** Every data export added, in the order added. */
