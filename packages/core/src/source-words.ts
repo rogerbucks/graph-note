@@ -191,6 +191,12 @@ export const SOURCE_WORDS = {
     'Whether the details panel stays open beside the drawing, or below it where the card is narrow. While nothing is chosen, it shows a summary of the graph. Off unless you turn it on.',
   'settings.details-open.on': 'On',
   'settings.details-open.off': 'Off',
+  'settings.drawing-height.name': 'Tallest drawing in a note',
+  'settings.drawing-height.sentence':
+    'How much of the window a drawing in a note may take. A taller one is fitted inside, so the rest of the note stays in reach.',
+  'settings.drawing-height.half': 'Half the window',
+  'settings.drawing-height.most': 'Three quarters of the window',
+  'settings.drawing-height.none': 'No limit',
   'settings.export-theme.name': 'Export theme',
   'settings.export-theme.sentence':
     'The colours an exported image is drawn in, fixed so it reads the same outside Obsidian.',
