@@ -4,19 +4,22 @@
 // dialog of ours must keep the focus in it. An action out of the tab order must be in a widget whose arrow keys reach it.
 // One of each kind of action the page draws itself (no browser operates it) is operated with Enter or Space, and each
 // dialog of ours is left with Escape from every element in it. The check itself is tried first, on planted faults, so a
-// pass means it looked. Test support: test/repository/keyboard-run.js.
-import { test, describe, before, after } from 'node:test';
+// pass means it looked. The browser editor's page is run in test/a11y-keyboard-page-*.test.js, its states split over
+// those files so they run side by side; here each state is checked to be in one of them. Test support:
+// test/repository/keyboard-run.js and keyboard-page.js.
+import { test, describe, before } from 'node:test';
+import { existsSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { build } from '../packages/obsidian/test/host/load-plugin.js';
-import { built, cleanUp } from '../packages/claude-code/test/editor-page-support.js';
 import { openWindow, pageFor, toHtml } from './repository/wcag.js';
-import { openEditorPage, styleFor } from './repository/wcag-page.js';
 import { OBSIDIAN } from './repository/views-obsidian.js';
 import { pageStates } from './repository/views-page.js';
+import { PAGE_PARTS } from './repository/keyboard-page.js';
 import {
   escapeProblems,
   operateProblem,
   ownActionKinds,
+  runProblems,
   tabOrder,
   unreachedProblems,
   walkProblems,
@@ -112,37 +115,6 @@ describe('the check itself', () => {
   });
 });
 
-/** Every problem of the keyboard run of one view, reopened by `reopen()` for each action and dialog it operates. */
-async function runProblems(reopen, docOf, snapshotOf, close) {
-  const first = await reopen();
-  const doc = docOf(first);
-  // the kinds as drawn, before the walk marks what it focuses
-  const kinds = ownActionKinds(doc);
-  const problems = [...walkProblems(doc), ...unreachedProblems(doc)];
-  close(first);
-  for (const kind of kinds) {
-    const view = await reopen();
-    try {
-      const problem = operateProblem(docOf(view), kind, () => snapshotOf(view));
-      if (problem) problems.push(problem);
-    } finally {
-      close(view);
-    }
-  }
-  const opened = [];
-  const again = async () => {
-    const view = await reopen();
-    opened.push(view);
-    return docOf(view);
-  };
-  try {
-    problems.push(...(await escapeProblems(await again(), again)));
-  } finally {
-    opened.forEach(close);
-  }
-  return problems;
-}
-
 describe('the Obsidian host: every view, from the keyboard alone', () => {
   before(() => build());
 
@@ -158,36 +130,10 @@ describe('the Obsidian host: every view, from the keyboard alone', () => {
     });
 });
 
-describe('the browser editor’s page: every state, from the keyboard alone', () => {
-  let dir;
-  const opened = [];
-  before(async () => {
-    ({ dir } = await built());
+describe('the browser editor’s page: every state is run', () => {
+  test('each state of the page is in exactly one of the files that run them, and each file is there', () => {
+    const run = Object.values(PAGE_PARTS).flat();
+    assert.deepEqual([...run].sort(), Object.keys(pageStates(() => {})).sort());
+    for (const part of Object.keys(PAGE_PARTS)) assert.ok(existsSync(`test/a11y-keyboard-page-${part}.test.js`), part);
   });
-  after(async () => {
-    await Promise.all(opened.map((o) => o.stop()));
-    await cleanUp();
-  });
-
-  const open = (hash, note, draft) => {
-    const page = openEditorPage(dir, hash, note, draft);
-    opened.push(page);
-    return page;
-  };
-  const STATES = pageStates(open);
-
-  for (const [name, state] of Object.entries(STATES))
-    test(`${name}: every action reached and operated, and every focus left`, async () => {
-      const problems = await runProblems(
-        async () => {
-          const page = await state();
-          styleFor(dir, page.window, 'light');
-          return page;
-        },
-        (page) => page.window.document,
-        (page) => page.window.document.body.innerHTML,
-        (page) => page.window.close(),
-      );
-      assert.deepEqual(problems, []);
-    });
 });

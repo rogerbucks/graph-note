@@ -122,7 +122,7 @@ describe('a quiet test run', () => {
     assert.equal(scripts.test, 'node scripts/run-ceiling.mjs node --test --test-timeout=300000');
     assert.equal(scripts['test:ai'], `${scripts.test} --test-reporter=./scripts/quiet-reporter.mjs`);
     // six files at once on CI's four cores: the files mostly wait on the processes they start
-    assert.ok(read('.github/workflows/ci.yml').includes('run: npm test -- --test-concurrency=6\n'));
+    assert.ok(read('.github/workflows/ci.yml').includes('run: npm test -- --test-concurrency=6 '));
   });
 });
 

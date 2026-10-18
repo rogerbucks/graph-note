@@ -176,7 +176,7 @@ describe('a baseline committed worse than its parent’s', () => {
       }
     }
     assert.deepEqual(suiteJobs.sort(), [
-      'ci.yml test',
+      'ci.yml suite',
       'quality-baseline.yml measure',
       'release-check.yml quality',
       'release.yml quality',

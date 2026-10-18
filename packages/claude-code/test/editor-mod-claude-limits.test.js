@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { READ_LIMITS } from '@graph-note/core';
 import { ask } from './editor-threats-support.js';
-import { PLAN, launcherFor, modVault, partsOf, writeNote } from './editor-mod-support.js';
+import { PLAN, launcherFor, modVault, opens, partsOf, writeNote } from './editor-mod-support.js';
 
 const thing = (name, extra = {}) => ({ op: 'add-thing', name, kind: 'Task', properties: { name }, ...extra });
 
@@ -15,8 +15,7 @@ const thing = (name, extra = {}) => ({ op: 'add-thing', name, kind: 'Task', prop
 async function opened(where = modVault(), path = where.plan) {
   const sent = [];
   const { launcher, host } = launcherFor(where, { sent });
-  const outcome = await launcher.edit(path);
-  assert.equal(outcome.ok, true, outcome.why);
+  await opens(launcher, path);
   return { where, launcher, host, sent, page: partsOf(launcher.link) };
 }
 

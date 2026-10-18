@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-keyboard.test.js",
+  "test": "the browser editor’s page: every state is run > each state of the page is in exactly one of the files that run them, and each file is there",
+  "seen_failing_first": false,
+  "evidence": "A guard over a split of existing tests into four files (CI speed, 17 Oct 2026): the split and its list are test support, which travels to the parent, so it passes there; no code changed."
+}

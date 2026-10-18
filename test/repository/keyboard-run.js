@@ -243,3 +243,34 @@ export async function escapeProblems(doc, reopen) {
   }
   return problems;
 }
+
+/** Every problem of the keyboard run of one view, reopened by `reopen()` for each action and dialog it operates. */
+export async function runProblems(reopen, docOf, snapshotOf, close) {
+  const first = await reopen();
+  const doc = docOf(first);
+  // the kinds as drawn, before the walk marks what it focuses
+  const kinds = ownActionKinds(doc);
+  const problems = [...walkProblems(doc), ...unreachedProblems(doc)];
+  close(first);
+  for (const kind of kinds) {
+    const view = await reopen();
+    try {
+      const problem = operateProblem(docOf(view), kind, () => snapshotOf(view));
+      if (problem) problems.push(problem);
+    } finally {
+      close(view);
+    }
+  }
+  const opened = [];
+  const again = async () => {
+    const view = await reopen();
+    opened.push(view);
+    return docOf(view);
+  };
+  try {
+    problems.push(...(await escapeProblems(await again(), again)));
+  } finally {
+    opened.forEach(close);
+  }
+  return problems;
+}

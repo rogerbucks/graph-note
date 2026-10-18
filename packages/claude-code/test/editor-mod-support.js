@@ -3,6 +3,7 @@
 // loop is left), a vault on disk in a temporary folder, and the launcher made over them. Test code only: nothing here ships.
 // The servers serve the page the build makes; it is built here first when it is not there, as in a fresh checkout.
 import { after } from 'node:test';
+import assert from 'node:assert/strict';
 import { execFile, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
@@ -188,6 +189,13 @@ export function launcherFor(where, over = {}) {
     launcher.confirm = (origin = COMPOSER) => confirm(origin);
   }
   return { launcher, host };
+}
+
+/** Opens `path` in the launcher's editor, failing with the launcher's own why when it does not, so a failure names its cause. */
+export async function opens(launcher, path) {
+  const outcome = await launcher.edit(path);
+  assert.equal(outcome.ok, true, `the editor did not open: ${outcome.why}`);
+  return outcome;
 }
 
 /** The token in an address's fragment, and the note id beside it. */

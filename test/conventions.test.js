@@ -45,9 +45,8 @@ describe('one code style', () => {
     assert.ok(exists('.prettierignore'));
   });
 
-  test('the code is formatted, and CI checks it', () => {
-    const r = spawnSync(path('node_modules/.bin/prettier'), ['--check', '.'], { cwd: ROOT, encoding: 'utf8' });
-    assert.equal(r.status, 0, r.stdout + r.stderr);
+  // the check itself runs once, in CI's lint job, and not again here: over the whole repository it takes 25 seconds
+  test('CI checks that every file is formatted', () => {
     assert.equal(readJSON('package.json').scripts['format:check'], 'prettier --check .');
     assert.match(ci(), /run: npm run format:check/);
   });
