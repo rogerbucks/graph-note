@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only eight jobs may write: the release, the nightly, the lock, the build status comment, the mirror’s issues, the review, the wiki and its review issue",
+  "seen_failing_first": false,
+  "evidence": "Renamed from 'only seven jobs may write' to name the nightly's publish job; the allowance it adds holds a job the parent does not have, so the parent passes it."
+}
