@@ -6,6 +6,7 @@
 // lands (box-drag.ts); this draws it.
 import { landingFor, landingSaid, word } from '@thoughtknot/core';
 import type { Landing, NudgeWrite, View, WrittenNudge } from '@thoughtknot/core';
+import { moveHint } from './box-move-keys';
 import type { Taps } from './taps';
 
 /** How far, in screen pixels, a press on a box moves before it is a drag rather than a tap. */
@@ -17,6 +18,8 @@ const HOLD_MS = 500;
 export interface BoxMoving {
   /** The nudges already written for the graph, so a place already nudged is not offered again. */
   written: readonly WrittenNudge[];
+  /** In a radial drawing, the thing at its centre: the others go round it in order (radial_spoke_order). */
+  centre?: string;
   /** Writes the nudge into the style graph, and says `done` once it is written. */
   move: (nudge: NudgeWrite, done: string) => void;
 }
@@ -107,6 +110,7 @@ export class BoxDrag {
       this.host.taps.boxes(keyOf),
       this.host.rankdir(),
       this.host.moving.written,
+      this.host.moving.centre,
     );
     this.mark(press);
     return true;
@@ -146,7 +150,7 @@ export class BoxDrag {
       Array.from(this.host.viewport.querySelectorAll<SVGElement>('g.node'))
         .find((g) => g.getAttribute('data-key') === l.other)
         ?.addClass('is-landing');
-    this.hint ??= this.host.viewport.createDiv({ cls: 'thoughtknot-move-hint', attr: { role: 'status' } });
+    this.hint ??= moveHint(this.host.viewport);
     this.hint.hidden = false;
     this.hint.textContent = l
       ? landingSaid(l, press.key, this.host.textOf)

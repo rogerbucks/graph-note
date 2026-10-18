@@ -18,3 +18,15 @@ test('the community files are present: a code of conduct, a trademark note and t
   assert.match(contributing, /https:\/\/developercertificate\.org/);
   assert.match(read('.github/pull_request_template.md'), /- \[ \] Every commit is signed off/);
 });
+
+// The security policy (spec §13, security_policy): which versions get fixes, a private way to report, and a reply time.
+test('the security policy names the supported versions, a private way to report and a reply time (Roger, 18 Oct 2026)', () => {
+  const policy = read('SECURITY.md');
+  assert.match(policy, /^# Security policy/m);
+  assert.match(policy, /^## Supported versions$/m);
+  assert.match(policy, /^## How to report a problem$/m);
+  assert.match(policy, /https:\/\/github\.com\/rogerbucks\/thoughtknot\/security\/advisories\/new/);
+  assert.match(policy, /not .*public issue/i);
+  assert.match(policy, /^## What happens next$/m);
+  assert.match(policy, /\d+ (working )?days/);
+});

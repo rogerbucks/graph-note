@@ -329,6 +329,7 @@ export const VALUES = [
   'pictureFor',
   'picturesFor',
   'placeholdersOf',
+  'placesFor',
   'playRefusal',
   'pluginRegistry',
   'pngPages',

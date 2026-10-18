@@ -159,3 +159,62 @@ describe('each nudge', () => {
     assert.match(svg, /C:\\ &quot;inside&quot;\\n/);
   });
 });
+
+describe('before, in a radial drawing', () => {
+  // proves: radial_spoke_order
+  test('moves the thing just before the other in the order the boxes are written, which the radial layout follows', () => {
+    const { drawing, style, keys } = styled("(n1:Nudge {word: 'before', thing: 'lake', other: 'park'})");
+    const dot = layoutSource(drawing, 'LR').source;
+    const out = nudgedSource(dot, style.nudges, keys, { type: 'radial' });
+    const written = (src) => [...src.matchAll(/^ {2}"(\w+)" \[label=/gm)].map((m) => m[1]);
+    assert.deepEqual(written(dot), ['home', 'park', 'cafe', 'lake']);
+    assert.deepEqual(written(out), ['home', 'lake', 'park', 'cafe']);
+    assert.ok(
+      !out.includes('style=invis'),
+      'no link never drawn: in a radial drawing it would move a box off its ring',
+    );
+    assert.equal(out.split('\n').length, dot.split('\n').length, 'every line kept');
+  });
+});
+
+const HUB = `// graph: hub
+(sun:Thing {name: 'Sun'}),
+(a:Thing {name: 'A'}),
+(b:Thing {name: 'B'}),
+(c:Thing {name: 'C'}),
+(d:Thing {name: 'D'}),
+(sun)-[:SEES]->(a),
+(sun)-[:SEES]->(b),
+(sun)-[:SEES]->(c),
+(sun)-[:SEES]->(d)`;
+
+/** The things around the centre of a radial drawing, in order anticlockwise as drawn (the drawing's y
+ * runs down the page), from A. */
+async function spokes(...nudges) {
+  const texts = [HUB, ['// graph: hub_style · STYLE hub', "(d1:Diagram {type: 'radial'})", ...nudges].join('\n')];
+  const reading = readNote(texts);
+  const { style } = readStyle(texts, 'hub', reading);
+  const { svg } = draw(styledDrawing(reading.graphs.get('hub'), style, reading.world.hub), await loadEngine());
+  // each box by the name drawn last in it, where that name sits
+  const at = Object.fromEntries(
+    [...svg.matchAll(/<g id="node\d+" class="node">([\s\S]*?)<\/g>/g)].map((m) => {
+      const [, x, y, name] = [...m[1].matchAll(/<text[^>]* x="([-\d.]+)" y="([-\d.]+)"[^>]*>([^<]*)<\/text>/g)].at(-1);
+      return [name.toLowerCase(), [+x, +y]];
+    }),
+  );
+  const [cx, cy] = at.sun;
+  const turn = (k) =>
+    (Math.atan2(cy - at[k][1], at[k][0] - cx) - Math.atan2(cy - at.a[1], at.a[0] - cx) + 4 * Math.PI) % (2 * Math.PI);
+  return ['a', 'b', 'c', 'd'].sort((p, q) => turn(p) - turn(q));
+}
+
+describe('the order around the centre of a radial drawing', () => {
+  // proves: radial_spoke_order
+  test('follows the before nudges: a thing written before another is drawn next to it, just before it', async () => {
+    const was = await spokes();
+    const moved = await spokes(",(n1:Nudge {word: 'before', thing: 'd', other: 'b'})");
+    const after = (order, k) => order[(order.indexOf(k) + 1) % order.length];
+    assert.notEqual(after(was, 'd'), 'b', 'D is not just before B to begin with');
+    assert.equal(after(moved, 'd'), 'b', 'moved, D is drawn just before B');
+  });
+});
