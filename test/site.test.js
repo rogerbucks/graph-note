@@ -24,7 +24,7 @@ describe('the page is made from its template and its words', () => {
   test('fills every word and value, and leaves no placeholder', () => {
     const html = made()['index.html'];
     assert.doesNotMatch(html, /\{\{|\}\}/);
-    assert.match(html, /<h1 id="hero-title">Draw the graphs you write in your notes<\/h1>/);
+    assert.match(html, /<h1 id="hero-title">Turn what you know into a map you can see<\/h1>/);
     assert.match(html, /Latest release: 0\.6\.0/);
     assert.match(html, /Made from commit abc1234 on 2026-10-18\./);
   });
@@ -95,7 +95,7 @@ describe('search engines and AI assistants can find and read it', () => {
     assert.ok(files['robots.txt'].split('\n').includes(`Sitemap: ${SITE_URL}sitemap.xml`));
     assert.ok(files['sitemap.xml'].includes(`<loc>${SITE_URL}</loc>\n    <lastmod>2026-10-18</lastmod>`));
     const llms = files['llms.txt'];
-    assert.match(llms, /^# ThoughtKnot\n\n> Free, open-source Obsidian plugin/);
+    assert.match(llms, /^# ThoughtKnot\n\n> Free, open-source tool that draws what you know/);
     assert.match(
       llms,
       /\n## Docs\n\n- \[How to use ThoughtKnot\]\(https:\/\/github\.com\/rogerbucks\/thoughtknot\/wiki\/How-to-use-ThoughtKnot\)/,
