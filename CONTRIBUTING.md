@@ -290,6 +290,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/tests-first-complete.test.js` — that command line's `--complete`: a commit that changed a test and has no record fails, until `--update` records it.
 - `test/tests-first-failing.test.js` — that replay when a new test fails at its own commit: kept in the record as not replayed, or, when it passes run again, a failure of the record.
 - `test/tests-first-faults.test.js` — `--excuse --fault` keeps the reason a test failed at its own commit, only for a test the records hold as a fault; `--tally` and `summary` count it as `faultsExcused`, not as not replayed, and `--check` does not warn of it.
+- `test/tests-first-checkout.test.js` — that replay's checkout of a commit: its own workspace packages linked under the scope its manifests give, so a commit from before a package scope was renamed still runs its own code.
 - `test/tests-first-keeping.test.js` — that replay when something at the commit's own code cannot be trusted: a commit that cannot be replayed, a record updated over what it holds.
 - `test/tests-first-later.test.js` — that replay when the test and its code do not come together: a test corrected later, one that comes before its code, a new file whose code is not there yet, test support changed with it.
 - `test/tests-first-passed.test.js` — that replay when a new test passes against the code before it: reported, unless a reason is kept, and never excused by a name every object has.
