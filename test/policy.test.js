@@ -46,7 +46,7 @@ const allDeps = (pkg) => ({
 describe('the plugin-store files', () => {
   test('manifest.json carries every field the store requires', () => {
     const m = readJSON('manifest.json');
-    assert.equal(m.id, 'graph-note');
+    assert.equal(m.id, 'thoughtknot');
     assert.match(m.version, SEMVER);
     assert.match(m.minAppVersion, SEMVER);
     for (const key of ['name', 'description', 'author']) {
@@ -407,10 +407,10 @@ describe('GitHub Actions', () => {
   test('every library the plugin bundles is linted with the Obsidian review rules', () => {
     const deps = (name) =>
       Object.keys(readJSON(`packages/${name.split('/')[1]}/package.json`).dependencies ?? {}).filter((d) =>
-        d.startsWith('@graph-note/'),
+        d.startsWith('@thoughtknot/'),
       );
     const bundled = new Set();
-    for (const todo = deps('@graph-note/obsidian'); todo.length;) {
+    for (const todo = deps('@thoughtknot/obsidian'); todo.length;) {
       const name = todo.pop();
       if (!bundled.has(name)) {
         bundled.add(name);

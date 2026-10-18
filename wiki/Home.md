@@ -1,8 +1,8 @@
-# Graph Note
+# ThoughtKnot
 
-**Graph Note turns what you know into a map you can see, change and share.**
+**ThoughtKnot turns what you know into a map you can see, change and share.**
 
-You write things and the links between them as plain text. Graph Note draws them, checks them and keeps them safe. It
+You write things and the links between them as plain text. ThoughtKnot draws them, checks them and keeps them safe. It
 works across your notes, your devices and your team.
 
 ## One product, many ways in
@@ -33,7 +33,7 @@ The [Roadmap](Roadmap) shows when each part lands.
 
 ## Start here
 
-- **New to Graph Note?** Read [How to use Graph Note](How-to-use-Graph-Note).
+- **New to ThoughtKnot?** Read [How to use ThoughtKnot](How-to-use-ThoughtKnot).
 - **Following the project?** See the [Status](Status), the [Roadmap](Roadmap) and the [Decisions](Decisions).
 - **Building it, or writing a plug-in?** Start at [For developers](For-developers).
 

@@ -24,7 +24,7 @@ const EMPTY = `${TRIP},
 (idle:Path {title: 'Nowhere yet'})`;
 const noteOf = (block) => ['# Trip', '', fence(block), ''].join('\n');
 const nodeOf = (el, key) => el.querySelectorAll('g.node').find((n) => n.getAttribute('data-key') === key);
-const strip = (el) => el.querySelector('.graph-note-walk');
+const strip = (el) => el.querySelector('.thoughtknot-walk');
 
 describe('Play', () => {
   test('steps through a path in order, one thing at a time, marked and said', async () => {
@@ -33,15 +33,15 @@ describe('Play', () => {
       const el = await show(env);
       labelled(el, 'Play Sunday walk').click();
       assert.match(strip(el).querySelector('[aria-live]').textContent, /^Step 1 of 3: Home$/);
-      assert.ok(nodeOf(el, 'home').classList.contains('graph-note-step-current'));
+      assert.ok(nodeOf(el, 'home').classList.contains('thoughtknot-step-current'));
       labelled(el, 'Next step').click();
       assert.match(strip(el).querySelector('[aria-live]').textContent, /^Step 2 of 3: The park$/);
-      assert.ok(nodeOf(el, 'park').classList.contains('graph-note-step-current'));
-      assert.ok(!nodeOf(el, 'home').classList.contains('graph-note-step-current'), 'one step at a time');
+      assert.ok(nodeOf(el, 'park').classList.contains('thoughtknot-step-current'));
+      assert.ok(!nodeOf(el, 'home').classList.contains('thoughtknot-step-current'), 'one step at a time');
       labelled(el, 'Previous step').click();
       assert.match(strip(el).querySelector('[aria-live]').textContent, /^Step 1 of 3/);
       labelled(el, 'Stop playing').click();
-      assert.ok(!el.querySelectorAll('g.node').some((n) => n.classList.contains('graph-note-step-current')));
+      assert.ok(!el.querySelectorAll('g.node').some((n) => n.classList.contains('thoughtknot-step-current')));
     } finally {
       env.uninstall();
     }
@@ -106,11 +106,14 @@ describe('Record, while the card is edited', () => {
       const number = (key) =>
         nodeOf(el, key)
           .querySelectorAll('text')
-          .find((t) => t.getAttribute('class') === 'graph-note-step-number')?.textContent;
+          .find((t) => t.getAttribute('class') === 'thoughtknot-step-number')?.textContent;
       assert.equal(number('cafe'), '1');
       assert.equal(number('home'), '2');
       assert.match(strip(el).querySelector('[aria-live]').textContent, /2 steps/);
-      assert.ok(el.querySelector('.graph-note-details').hidden, 'a tap while recording adds a step, and opens nothing');
+      assert.ok(
+        el.querySelector('.thoughtknot-details').hidden,
+        'a tap while recording adds a step, and opens nothing',
+      );
       const title = el.querySelectorAll('input').find((x) => x.getAttribute('aria-label') === 'Path title');
       title.value = 'Coffee first';
       labelled(el, 'Save path').click();
@@ -191,7 +194,7 @@ describe('Record, while the card is edited', () => {
       assert.equal(
         nodeOf(el, 'home')
           .querySelectorAll('text')
-          .some((t) => t.getAttribute('class') === 'graph-note-step-number'),
+          .some((t) => t.getAttribute('class') === 'thoughtknot-step-number'),
         false,
       );
       labelled(el, 'Cancel recording').click();

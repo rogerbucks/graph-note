@@ -1,8 +1,8 @@
 // Help that finds and fixes problems (spec §8), written in the shapes of the Language Server Protocol (spec §10) — ranges,
 // diagnostics, code actions with text edits, completion items — so a VS Code host can show them as its own, and the
 // Obsidian pane shows them in place. Positions are 0-based lines and characters within the block being edited.
-import gs from '@graph-note/graph-spec';
-import type { Graph } from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { blockItems } from './block-items.ts';
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { distance, hops } from './estimates.ts';
@@ -40,7 +40,7 @@ export interface Diagnostic {
   range: Range;
   severity: (typeof SEVERITY)[keyof typeof SEVERITY];
   code?: string;
-  source: 'graph-note';
+  source: 'thoughtknot';
   message: string;
   /** The fix in words, and the fixes that can be applied as edits. */
   data: { fix: string; fixes: CodeAction[] };
@@ -178,7 +178,7 @@ export function diagnostics(
       severity: p.severity === 'warning' ? SEVERITY.Warning : p.severity === 'hint' ? SEVERITY.Hint : SEVERITY.Error,
       // the reader's stable code, the same from both libraries (editor spec §42, problem_codes)
       ...(p.code ? { code: p.code } : {}),
-      source: 'graph-note',
+      source: 'thoughtknot',
       message: sentence(p.message, !!p.replace && p.message.startsWith(p.replace.written)),
       data: { fix: sentence(p.fix), fixes },
     });
@@ -203,7 +203,7 @@ export function diagnostics(
           range,
           severity: SEVERITY.Warning,
           code: 'near-duplicate',
-          source: 'graph-note',
+          source: 'thoughtknot',
           message: `The kind ${k} is ${dist === 1 ? 'one letter' : 'two letters'} from ${u}, already in the graph.`,
           data: {
             fix: `Change ${k} to ${u}, or keep ${k} if it is a new kind.`,

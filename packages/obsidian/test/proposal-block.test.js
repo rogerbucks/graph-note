@@ -7,7 +7,7 @@
 // (rejecting_recorded); and on a phone the list is a bottom sheet, one row to a change (proposals_phone).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { ProposalReview, basisOf, makeProposal, thingChange } from '@graph-note/core';
+import { ProposalReview, basisOf, makeProposal, thingChange } from '@thoughtknot/core';
 import { build, load, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
@@ -60,11 +60,11 @@ function proposed(changes = CHANGES, over = {}) {
 async function card(note, options = {}) {
   const env = await load({ files: { [PATH]: note }, ...options });
   const shown = await show(env, note, 1);
-  await until(() => !!shown.el.querySelector('svg') || !!shown.el.querySelector('.graph-note-banner'));
+  await until(() => !!shown.el.querySelector('svg') || !!shown.el.querySelector('.thoughtknot-banner'));
   return { env, el: shown.el };
 }
 const node = (el, key) => el.querySelectorAll('g.node').find((g) => g.getAttribute('data-key') === key);
-const rows = (el) => el.querySelectorAll('li.graph-note-proposal-row');
+const rows = (el) => el.querySelectorAll('li.thoughtknot-proposal-row');
 // a change by its place in the list, 'c1' the first row: ids are derived from each statement, so no test writes one
 const row = (el, place) => rows(el)[Number(place.slice(1)) - 1];
 const press = (el, label) => {
@@ -89,10 +89,10 @@ describe('a change set in a note is a proposal, shown over its graph', () => {
       assert.ok(node(el, 'small_reader').classList.contains('is-add'));
       assert.ok(node(el, 'large_reader').classList.contains('is-change'));
       assert.ok(node(el, 'alice').classList.contains('is-remove'));
-      assert.equal(node(el, 'question').classList.contains('graph-note-proposed'), false);
+      assert.equal(node(el, 'question').classList.contains('thoughtknot-proposed'), false);
       assert.match(node(el, 'small_reader').getAttribute('aria-label'), /added by the proposal/);
       assert.match(node(el, 'alice').getAttribute('aria-label'), /removed by the proposal/);
-      const words = (g) => g.querySelector('.graph-note-proposal-mark').textContent;
+      const words = (g) => g.querySelector('.thoughtknot-proposal-mark').textContent;
       assert.deepEqual(
         [words(node(el, 'small_reader')), words(node(el, 'large_reader')), words(node(el, 'alice'))],
         ['+ added', '~ changed', '− removed'],
@@ -133,14 +133,14 @@ describe('a change set in a note is a proposal, shown over its graph', () => {
     const { env, el } = await card(note);
     try {
       assert.deepEqual(
-        el.querySelectorAll('.graph-note-proposal-provenance li').map((li) => li.textContent),
+        el.querySelectorAll('.thoughtknot-proposal-provenance li').map((li) => li.textContent),
         [
           'The change set says it was proposed by ada, a model.',
           'It says it was proposed on 13 Oct 2026, 09:00 UTC.',
           'It says it read: reader.',
         ],
       );
-      assert.match(el.querySelector('.graph-note-proposal-head').textContent, /nothing is written until you accept/);
+      assert.match(el.querySelector('.thoughtknot-proposal-head').textContent, /nothing is written until you accept/);
     } finally {
       env.uninstall();
     }
@@ -151,7 +151,7 @@ describe('a change set in a note is a proposal, shown over its graph', () => {
     const { env, el } = await card(note);
     try {
       assert.deepEqual(
-        rows(el).map((r) => r.querySelector('.graph-note-proposal-said').textContent),
+        rows(el).map((r) => r.querySelector('.thoughtknot-proposal-said').textContent),
         [
           'Added: Small reader is an Option',
           'Added: Small reader —ANSWERS→ Which device?',
@@ -177,7 +177,7 @@ describe('a change set in a note is a proposal, shown over its graph', () => {
           "MATCH (v {id: 'alice'}) DETACH DELETE v",
         ],
       );
-      const accept = row(el, 'c3').querySelector('.graph-note-proposal-accept');
+      const accept = row(el, 'c3').querySelector('.thoughtknot-proposal-accept');
       assert.equal(
         accept.getAttribute('aria-label'),
         'Accept: Changed: Large reader: price is 4 (SET large_reader.price = 4)',
@@ -225,11 +225,11 @@ describe('a person decides, a change at a time', () => {
         [true, false, false, false, false],
       );
       assert.match(
-        row(again.el, 'c1').querySelector('.graph-note-proposal-decision').textContent,
+        row(again.el, 'c1').querySelector('.thoughtknot-proposal-decision').textContent,
         /Accepted by you on /,
       );
       assert.equal(row(again.el, 'c1').querySelectorAll('button').length, 0);
-      assert.equal(row(again.el, 'c2').querySelector('.graph-note-proposal-blocked'), null);
+      assert.equal(row(again.el, 'c2').querySelector('.thoughtknot-proposal-blocked'), null);
     } finally {
       env.uninstall();
     }
@@ -316,7 +316,7 @@ describe('a person decides, a change at a time', () => {
       await until(() => env.state.notices.length > 0);
       assert.equal(noteNow(env), note, 'nothing was written');
       assert.match(env.state.notices.at(-1), /Nothing was decided: the graph spec’s check of this change set fails/);
-      assert.match(el.querySelector('.graph-note-proposal-status').textContent, /check of this change set fails/);
+      assert.match(el.querySelector('.thoughtknot-proposal-status').textContent, /check of this change set fails/);
     } finally {
       env.uninstall();
     }
@@ -344,12 +344,15 @@ describe('a person decides, a change at a time', () => {
     const { note } = proposed(CHANGES, { by: { name: 'stranger', kind: 'model' } });
     const { env, el } = await card(note);
     try {
-      assert.match(el.querySelector('.graph-note-proposal-checked').textContent, /fails 1 of \d+/);
-      assert.match(el.querySelector('.graph-note-proposal-checked').textContent, /stranger is a known person or model/);
+      assert.match(el.querySelector('.thoughtknot-proposal-checked').textContent, /fails 1 of \d+/);
+      assert.match(
+        el.querySelector('.thoughtknot-proposal-checked').textContent,
+        /stranger is a known person or model/,
+      );
       press(row(el, 'c3'), 'Accept');
       await until(() => env.state.notices.length > 0);
       assert.equal(noteNow(env), note);
-      assert.match(el.querySelector('.graph-note-proposal-status').textContent, /stranger is a known person or model/);
+      assert.match(el.querySelector('.thoughtknot-proposal-status').textContent, /stranger is a known person or model/);
     } finally {
       env.uninstall();
     }
@@ -363,7 +366,7 @@ describe('a person decides, a change at a time', () => {
       await until(() => env.state.notices.length > 0);
       assert.equal(noteNow(env), note);
       assert.match(
-        el.querySelector('.graph-note-proposal-status').textContent,
+        el.querySelector('.thoughtknot-proposal-status').textContent,
         /Nothing was decided: .* needs small_reader/,
       );
     } finally {
@@ -401,8 +404,8 @@ describe('a person decides, a change at a time', () => {
     const { note } = proposed([{ op: 'add', gql: "(alice:Person {name: 'Alicia'})" }]);
     const { env, el } = await card(note);
     try {
-      assert.match(row(el, 'c1').querySelector('.graph-note-proposal-blocked').textContent, /alice is already a name/);
-      assert.equal(row(el, 'c1').querySelector('.graph-note-proposal-accept').disabled, true);
+      assert.match(row(el, 'c1').querySelector('.thoughtknot-proposal-blocked').textContent, /alice is already a name/);
+      assert.equal(row(el, 'c1').querySelector('.thoughtknot-proposal-accept').disabled, true);
       assert.equal(noteNow(env), note);
     } finally {
       env.uninstall();
@@ -416,10 +419,10 @@ describe('a proposal whose graph has moved', () => {
     const moved = noteOf(GRAPH.replace('price: 3', 'price: 5'), block, PEOPLE);
     const { env, el } = await card(moved);
     try {
-      const notice = el.querySelector('.graph-note-proposal-stale');
+      const notice = el.querySelector('.thoughtknot-proposal-stale');
       assert.equal(notice.getAttribute('role'), 'alert');
       assert.match(notice.textContent, /changed since this was proposed/);
-      const accept = row(el, 'c1').querySelector('.graph-note-proposal-accept');
+      const accept = row(el, 'c1').querySelector('.thoughtknot-proposal-accept');
       assert.equal(accept.disabled, true);
       notice.querySelectorAll('button')[0].click();
       assert.equal(accept.disabled, false);
@@ -449,7 +452,7 @@ describe('a big proposal', () => {
     const { note } = proposed(MANY);
     const { env, el } = await card(note);
     try {
-      const groups = el.querySelectorAll('details.graph-note-proposal-group');
+      const groups = el.querySelectorAll('details.thoughtknot-proposal-group');
       assert.deepEqual(
         groups.map((g) => g.querySelector('summary').textContent),
         ['New Option — 12 changes, 12 waiting', 'Prices — 6 changes, 6 waiting'],
@@ -470,7 +473,7 @@ describe('on a phone', () => {
     const { note } = proposed();
     const { env, el } = await card(note, { mobile: true });
     try {
-      const sheet = el.querySelector('.graph-note-proposal');
+      const sheet = el.querySelector('.thoughtknot-proposal');
       assert.ok(sheet.classList.contains('is-sheet'));
       assert.equal(rows(sheet).length, 5);
       for (const r of rows(sheet)) assert.equal(r.querySelectorAll('button').length, 2);
@@ -483,7 +486,7 @@ describe('on a phone', () => {
     const { note } = proposed();
     const { env, el } = await card(note);
     try {
-      assert.equal(el.querySelector('.graph-note-proposal').classList.contains('is-sheet'), false);
+      assert.equal(el.querySelector('.thoughtknot-proposal').classList.contains('is-sheet'), false);
     } finally {
       env.uninstall();
     }
@@ -504,7 +507,7 @@ describe('in reading view', () => {
       await env.state.processors.get('gql')(block, el, fakeContext(note, fences[1]));
       await until(() => !!el.querySelector('svg'));
       assert.equal(rows(el).length, 5);
-      assert.equal(el.querySelectorAll('.graph-note-proposal button').length, 0);
+      assert.equal(el.querySelectorAll('.thoughtknot-proposal button').length, 0);
     } finally {
       env.uninstall();
     }
@@ -521,8 +524,8 @@ describe('in reading view', () => {
       const { fakeContext } = await import('./host/fake-obsidian.js');
       await env.state.processors.get('gql')(block, el, fakeContext(note, 2));
       await until(() => rows(el).length === 5);
-      assert.ok(el.querySelector('.graph-note-empty'), 'nothing to draw');
-      assert.equal(el.querySelectorAll('.graph-note-proposal button').length, 0);
+      assert.ok(el.querySelector('.thoughtknot-empty'), 'nothing to draw');
+      assert.equal(el.querySelectorAll('.thoughtknot-proposal button').length, 0);
       assert.equal(noteNow(env), note);
     } finally {
       env.uninstall();
@@ -538,7 +541,7 @@ describe('in reading view', () => {
       const ctx = { ...fakeContext('', 0), getSectionInfo: () => null };
       await env.state.processors.get('gql')(block, el, ctx);
       await until(() => rows(el).length === 5);
-      assert.equal(el.querySelectorAll('.graph-note-proposal button').length, 0);
+      assert.equal(el.querySelectorAll('.thoughtknot-proposal button').length, 0);
     } finally {
       env.uninstall();
     }

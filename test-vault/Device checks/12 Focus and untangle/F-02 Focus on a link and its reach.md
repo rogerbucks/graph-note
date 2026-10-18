@@ -30,13 +30,13 @@
 
 1. Tap the link from Desk to Lamp, or its label "near". Check that only that link, Desk and Lamp stay filled with the heavier outline.
 2. Tap empty space to clear it.
-3. Open Settings, then Graph Note, and under Drawing set Focus reaches to Two steps.
+3. Open Settings, then ThoughtKnot, and under Drawing set Focus reaches to Two steps.
 4. Tap Desk. Check that Oak, Lamp, Northwood, Chair and Steel are at full strength too, and Rug and Shed are not.
 5. Tap the same link again and check the setting makes no difference to it.
 6. Set Focus reaches back to One step and tap Desk: only its own links and their other ends stay at full strength.
 
 **Checklist line:**
 
-> **F-02** Tap a link: it and the two boxes it joins stay at full strength and the rest fade. Settings › Graph Note › Focus reaches › Two steps: tap a box and the boxes two links away stay at full strength too.
+> **F-02** Tap a link: it and the two boxes it joins stay at full strength and the rest fade. Settings › ThoughtKnot › Focus reaches › Two steps: tap a box and the boxes two links away stay at full strength too.
 
 **Back to the checklist:** [F-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-02 in its list.

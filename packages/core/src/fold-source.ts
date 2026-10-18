@@ -7,7 +7,7 @@
 // its own two lines, from its thing to the trunk (`edge7_tail`) and from the trunk on with its reading (`edge7`), so it is
 // still tapped and read as itself. Ids are written with underscores, which Graphviz writes into the SVG as they are. The
 // Python library writes the same (graphspec/style/fold_source.py).
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { LINK_LINE } from './arrows.ts';
 import { STYLE } from './layout.ts';
 import type { Folding } from './untangle-fold.ts';

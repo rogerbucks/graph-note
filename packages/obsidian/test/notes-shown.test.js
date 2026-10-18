@@ -34,8 +34,8 @@ async function drawn(env) {
   await until(() => !!el.querySelector('g.node'));
   return el;
 }
-const panelOf = (el) => el.querySelector('.graph-note-details');
-const noteIn = (panel) => panel.querySelector('.graph-note-thing-note');
+const panelOf = (el) => el.querySelector('.thoughtknot-details');
+const noteIn = (panel) => panel.querySelector('.thoughtknot-thing-note');
 /** The link whose number is given, opened by the keyboard as a tap does. */
 const tapLink = (el, n) => el.querySelector(`g.edge[data-link="${n}"]`).dispatch('keydown', { key: 'Enter' });
 
@@ -53,7 +53,7 @@ describe('note_shown: a note is shown in the details of its thing or link, as Ma
       assert.ok(handed, 'the note is rendered by the host');
       assert.ok(handed.sourcePath === PATH && handed.component, 'from its note, owned by a component of its own');
       assert.ok(handed.markdown.includes('\n\nPacked'), 'a bare /// line is a paragraph break');
-      assert.equal(panelOf(el).querySelectorAll('.graph-note-thing-note').length, 1);
+      assert.equal(panelOf(el).querySelectorAll('.thoughtknot-thing-note').length, 1);
     } finally {
       env.uninstall();
     }
@@ -112,7 +112,7 @@ describe('note_shown: a note is shown in the tooltip of its thing or link, as Ma
     pointerOver(pick(el));
     time.fire();
     await until(() => open(env));
-    return tipOf(env).querySelector('.graph-note-quick-note');
+    return tipOf(env).querySelector('.thoughtknot-quick-note');
   }
 
   test('a thing’s tooltip shows the first paragraph of its note rendered as Markdown, from its note, by the one renderer', async () => {
@@ -178,7 +178,7 @@ function boxOf(el, key) {
   }
   return { left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys) };
 }
-const callouts = (el) => el.querySelectorAll('g.graph-note-callout');
+const callouts = (el) => el.querySelectorAll('g.thoughtknot-callout');
 const numbers = (n, ...attrs) => attrs.map((a) => Number(n.getAttribute(a)));
 
 describe('note_callouts: a setting draws notes as callouts, joined to their thing by a dashed line, off by default', () => {
@@ -211,8 +211,8 @@ describe('note_callouts: a setting draws notes as callouts, joined to their thin
           .map((t) => t.textContent)
           .join(' ');
         assert.equal(words, SUMMARIES[c.getAttribute('data-for')], c.getAttribute('data-for'));
-        assert.ok(c.querySelector('line.graph-note-callout-line'), 'joined by a line');
-        assert.ok(c.querySelector('rect.graph-note-callout-box'), 'in a box of its own');
+        assert.ok(c.querySelector('line.thoughtknot-callout-line'), 'joined by a line');
+        assert.ok(c.querySelector('rect.thoughtknot-callout-box'), 'in a box of its own');
       }
     } finally {
       env.uninstall();
@@ -282,10 +282,11 @@ describe('note_callouts: a setting draws notes as callouts, joined to their thin
   test('the line is dashed and the box and words use the theme’s colours, in the style sheet', () => {
     const css = readFileSync(`${root}styles.css`, 'utf8');
     const rule = (name) => new RegExp(`\\.${name}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? '';
-    assert.match(rule('graph-note-callout-line'), /stroke-dasharray:\s*\d/);
-    for (const name of ['graph-note-callout-box', 'graph-note-callout-text']) assert.match(rule(name), /var\(--/, name);
+    assert.match(rule('thoughtknot-callout-line'), /stroke-dasharray:\s*\d/);
+    for (const name of ['thoughtknot-callout-box', 'thoughtknot-callout-text'])
+      assert.match(rule(name), /var\(--/, name);
     assert.ok(
-      !/#[0-9a-f]{3,8}\b/i.test(rule('graph-note-callout-box') + rule('graph-note-callout-text')),
+      !/#[0-9a-f]{3,8}\b/i.test(rule('thoughtknot-callout-box') + rule('thoughtknot-callout-text')),
       'no fixed colour',
     );
   });

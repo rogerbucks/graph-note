@@ -7,7 +7,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { gqlSpans, readNote } from '@graph-note/core';
+import { gqlSpans, readNote } from '@thoughtknot/core';
 import { ask } from './editor-threats-support.js';
 import { PLAN, launcherFor, modVault, opens, partsOf, writeNote } from './editor-mod-support.js';
 
@@ -396,7 +396,7 @@ describe('Claude’s direct writes through the editor are refused (cc_claude_pro
     assert.match(register, /tool\.register\(/);
     assert.equal((register.match(/tool\.register\(/g) ?? []).length, 1);
     assert.match(register, /'tool\.call'/);
-    assert.match(register, /mcp__graph-note__propose/);
+    assert.match(register, /mcp__thoughtknot__propose/);
     assert.ok(!/\$\.fs\.write|fs\.write\(|\$\.tool\.call\(/.test(register), 'the mod writes no file itself');
   });
 

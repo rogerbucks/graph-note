@@ -1,8 +1,8 @@
 // Taps and keys in a drawing (spec §3, tap_cycles_near): what a tap or a key lands on — a box, a written link or an
 // estimated one — and what is near enough to a tap to be what was meant: within a fingertip, the nearest first, and the
 // next of them when the same place is tapped again.
-import { TapCycle, boundsOf, centres, hitAreas, nearby } from '@graph-note/core';
-import type { Bounds, HitAreas, PlacedBox, View } from '@graph-note/core';
+import { TapCycle, boundsOf, centres, hitAreas, nearby } from '@thoughtknot/core';
+import type { Bounds, HitAreas, PlacedBox, View } from '@thoughtknot/core';
 
 /** What a tap or a key can land on: a box, by its id, or an estimated link, by its place in the drawing's estimates. */
 export type Target = { key: string } | { estimate: number } | { link: number };

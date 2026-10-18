@@ -4,7 +4,7 @@
 // `decided_by` texts stay, as typed; the decider is still never a link to a Person of the data graph.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 import { readNote } from '../src/drawing.ts';
 import { ProposalReview } from '../src/proposals-review.ts';
 import { C1, C2, C3, C4, NOTE_WITH_ADA, NOW, blocksOf, noteWithChangeSet, proposalOf } from './proposals-fixtures.js';

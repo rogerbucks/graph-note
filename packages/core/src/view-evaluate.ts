@@ -7,7 +7,7 @@
 // queries, 11 Oct 2026). So a thing is on a route of up to k steps from a to b when its steps from a and its steps on to b
 // add up to k or fewer, and a link is when the steps to its start, the link itself and the steps on from its end do:
 // two breadth-first searches, however many routes there are.
-import type { Graph } from '@graph-note/graph-spec';
+import type { Graph } from '@thoughtknot/graph-spec';
 import { pathsOf } from './paths.ts';
 import type { PathReading } from './paths.ts';
 import type { ViewSpec } from './view-profile.ts';

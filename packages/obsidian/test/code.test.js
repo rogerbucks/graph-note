@@ -18,7 +18,7 @@ const all = rules(styles, 'styles.css');
 const copyButton = (...around) => ({
   tag: 'button',
   classes: ['copy-code-button'],
-  ancestors: [{ tag: 'pre', classes: ['language-gql', 'graph-note-code'] }, ...around],
+  ancestors: [{ tag: 'pre', classes: ['language-gql', 'thoughtknot-code'] }, ...around],
 });
 const livePreview = { tag: 'div', classes: ['cm-embed-block', 'markdown-rendered'] };
 const readingView = { tag: 'div', classes: ['block-language-gql'] };
@@ -32,7 +32,7 @@ describe('a query block shown as code', () => {
 
   test('is a code block holding one copy button, named for a screen reader and drawn with an icon', async () => {
     const { el } = await show(env, `${fence(GRAPH)}\n\n${fence(QUERY)}`, 1);
-    const code = el.querySelector('pre.graph-note-code');
+    const code = el.querySelector('pre.thoughtknot-code');
     assert.ok(code, 'shown as code, not drawn');
     const buttons = code.querySelectorAll('button.copy-code-button');
     assert.equal(buttons.length, 1);

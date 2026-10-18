@@ -1,0 +1,6 @@
+{
+  "file": "test/rename-to-thoughtknot.test.js",
+  "test": "the rename to ThoughtKnot > keeps the repository, its site, the Project title and the kind of note",
+  "seen_failing_first": false,
+  "evidence": "Renamed from 'the rename to Thoughtknot' when the name took a capital K; it pins what the rename keeps, which the parent kept too, so the parent passes it."
+}

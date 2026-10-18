@@ -83,8 +83,8 @@ describe('the test vault holds dummy notes, each tied to what it exercises', () 
 });
 
 describe('only the notes and two settings are committed', () => {
-  test('the vault turns on graph-note and no other community plugin', () => {
-    assert.deepEqual(readJSON(`${VAULT}/.obsidian/community-plugins.json`), ['graph-note']);
+  test('the vault turns on thoughtknot and no other community plugin', () => {
+    assert.deepEqual(readJSON(`${VAULT}/.obsidian/community-plugins.json`), ['thoughtknot']);
     assert.equal(typeof readJSON(`${VAULT}/.obsidian/app.json`), 'object');
   });
 
@@ -104,7 +104,7 @@ describe('only the notes and two settings are committed', () => {
       '.obsidian/core-plugins.json',
       '.obsidian/appearance.json',
       '.obsidian/hotkeys.json',
-      ...PLUGIN_FILES.map((p) => `.obsidian/plugins/graph-note/${p}`),
+      ...PLUGIN_FILES.map((p) => `.obsidian/plugins/thoughtknot/${p}`),
       '.obsidian/plugins/another-plugin/main.js',
       'A folder/A note typed in a session.md',
       'pasted image.png',
@@ -206,7 +206,7 @@ describe('each session in the vault starts and ends clean', () => {
   test('the plugin files are regular files with the build bytes, and an old link is replaced', () => {
     const dir = scratchRepo();
     try {
-      const target = OBSIDIAN(dir, 'plugins', 'graph-note');
+      const target = OBSIDIAN(dir, 'plugins', 'thoughtknot');
       mkdirSync(target, { recursive: true });
       symlinkSync(join('..', '..', '..', '..', 'main.js'), join(target, 'main.js'));
       reset(dir);
@@ -226,7 +226,7 @@ describe('each session in the vault starts and ends clean', () => {
     try {
       reset(dir);
       const files = [
-        ...PLUGIN_FILES.map((p) => OBSIDIAN(dir, 'plugins', 'graph-note', p)),
+        ...PLUGIN_FILES.map((p) => OBSIDIAN(dir, 'plugins', 'thoughtknot', p)),
         join(dir, VAULT, 'Long note.md'),
         OBSIDIAN(dir, 'app.json'),
       ];
@@ -243,7 +243,7 @@ describe('each session in the vault starts and ends clean', () => {
       });
       writeFileSync(join(dir, 'styles.css'), 'a new build\n');
       reset(dir);
-      assert.equal(readFileSync(OBSIDIAN(dir, 'plugins', 'graph-note', 'styles.css'), 'utf8'), 'a new build\n');
+      assert.equal(readFileSync(OBSIDIAN(dir, 'plugins', 'thoughtknot', 'styles.css'), 'utf8'), 'a new build\n');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

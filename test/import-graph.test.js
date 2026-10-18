@@ -11,7 +11,7 @@ const P = (rest) => ['packages', rest].join('/');
 /** A small repository: each file's text. */
 const FILES = {
   [P('core/package.json')]: JSON.stringify({
-    name: '@graph-note/core',
+    name: '@thoughtknot/core',
     exports: { '.': './src/index.ts', './display/*': './src/display/*.ts' },
   }),
   [P('core/src/index.ts')]: "export { zoom } from './zoom.ts';\nexport * from './words.ts';\n",
@@ -23,11 +23,11 @@ const FILES = {
   [P('core/test/zoom.test.js')]: "import { zoom } from '../src/zoom.ts';\n",
   [P('core/test/later.test.js')]: "test('x', async () => { await import('../src/words.ts'); });\n",
   [P('obsidian/src/main.ts')]:
-    "import { zoom } from '@graph-note/core';\nimport { host } from '@graph-note/core/display/host';\n",
+    "import { zoom } from '@thoughtknot/core';\nimport { host } from '@thoughtknot/core/display/host';\n",
   [P('obsidian/test/main.test.js')]:
     "import {\n  start,\n} from '../src/main.ts';\nimport { helper } from './host/fake.js';\n",
   [P('obsidian/test/host/fake.js')]: 'export const helper = 1;\n',
-  [P('claude-code/page/page-main.ts')]: "import { hello } from '@graph-note/core';\n",
+  [P('claude-code/page/page-main.ts')]: "import { hello } from '@thoughtknot/core';\n",
   [P('claude-code/test/page.test.js')]: "await build({ entryPoints: ['page/page-main.ts'] });\n",
   [P('claude-code/page/keys.ts')]: 'export const keys = 1;\n',
   [P('claude-code/test/page-files.test.js')]: 'const folder = `${PACKAGE}page`;\nreaddirSync(folder);\n',

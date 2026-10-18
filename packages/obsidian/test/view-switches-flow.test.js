@@ -45,8 +45,8 @@ const KIT_FLOW = `// graph: kit_style · STYLE kit
 
 const edge = (el, id) => el.querySelectorAll('g.edge').find((g) => g.getAttribute('id') === id);
 const turn = (el, name) =>
-  el.querySelectorAll('.graph-note-view-menu button').find((b) => b.textContent.startsWith(name));
-const legend = (el) => el.querySelector('.graph-note-flow-legend');
+  el.querySelectorAll('.thoughtknot-view-menu button').find((b) => b.textContent.startsWith(name));
+const legend = (el) => el.querySelector('.thoughtknot-flow-legend');
 
 async function card(note) {
   const env = await load({ files: { [PATH]: note } });
@@ -59,12 +59,12 @@ describe('a graph laid out again by a switch', () => {
     const note = noteOf(TOWN, GROUPS("(f1:Flow {motion: 'dot', type: 'NEAR', means: 'people walk this way'})"));
     const { env, el } = await card(note);
     try {
-      assert.ok(edge(el, 'edge1').classList.contains('graph-note-flow-dot'));
+      assert.ok(edge(el, 'edge1').classList.contains('thoughtknot-flow-dot'));
       turn(el, 'Parallel links merged').click();
       await until(() => !!edge(el, 'trunk_1'));
       for (const id of ['edge1', 'edge1_tail', 'edge2', 'edge2_tail']) {
-        assert.ok(edge(el, id).classList.contains('graph-note-flow-dot'), id);
-        assert.equal(edge(el, id).querySelectorAll('.graph-note-flow-runner').length, 1, `${id} has its dot`);
+        assert.ok(edge(el, id).classList.contains('thoughtknot-flow-dot'), id);
+        assert.equal(edge(el, id).querySelectorAll('.thoughtknot-flow-runner').length, 1, `${id} has its dot`);
       }
       assert.match(edge(el, 'edge1_tail').getAttribute('aria-label'), /people walk this way/);
     } finally {
@@ -81,7 +81,7 @@ describe('a graph laid out again by a switch', () => {
       await until(() => !!edge(el, 'trunk_1'));
       assert.ok(!labelled(el, 'Pause'), 'stopped');
       assert.ok(labelled(el, 'Play Evening walk'), 'Play is offered again');
-      assert.equal(el.querySelectorAll('.graph-note-step-current').length, 0);
+      assert.equal(el.querySelectorAll('.thoughtknot-step-current').length, 0);
     } finally {
       env.uninstall();
     }
@@ -103,8 +103,8 @@ describe('a path played along a link merged into a trunk', () => {
       labelled(el, 'Play Evening walk').click();
       waiting.shift()();
       for (const id of ['edge1', 'edge1_tail'])
-        assert.equal(edge(el, id).querySelectorAll('.graph-note-path-runner').length, 1, id);
-      assert.equal(edge(el, 'edge2').querySelectorAll('.graph-note-path-runner').length, 0);
+        assert.equal(edge(el, id).querySelectorAll('.thoughtknot-path-runner').length, 1, id);
+      assert.equal(edge(el, 'edge2').querySelectorAll('.thoughtknot-path-runner').length, 0);
     } finally {
       env.uninstall();
     }

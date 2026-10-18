@@ -26,7 +26,7 @@ const keys = (el) => el.querySelectorAll('g.node').map((g) => g.getAttribute('da
 const faded = (el) =>
   el
     .querySelectorAll('g.node')
-    .filter((g) => g.classList.contains('graph-note-faded'))
+    .filter((g) => g.classList.contains('thoughtknot-faded'))
     .map((g) => g.getAttribute('data-key'));
 const written = (note) => note.split("(home:Place {name: 'Home'})").length - 1;
 
@@ -59,7 +59,7 @@ describe('a view in one note of a graph written in another', () => {
       await until(() => keys(el).length > 0);
       assert.deepEqual(keys(el).sort(), ['cafe', 'home', 'lake', 'park']);
       assert.deepEqual(faded(el), ['lake']);
-      assert.match(el.querySelector('.graph-note-view-reading').textContent, /everything within 1 step of The park/);
+      assert.match(el.querySelector('.thoughtknot-view-reading').textContent, /everything within 1 step of The park/);
       assert.equal(written(here), 0, 'nothing of the data is in the note');
       assert.equal(env.state.writes, undefined);
     } finally {
@@ -74,7 +74,7 @@ describe('a view in one note of a graph written in another', () => {
     try {
       const { el } = await show(env, here, 1);
       await until(() => keys(el).length > 0);
-      assert.match(el.querySelector('.graph-note-source').textContent, /Drawn from the note Trip/);
+      assert.match(el.querySelector('.thoughtknot-source').textContent, /Drawn from the note Trip/);
       labelled(el, 'Open Trip').click();
       assert.deepEqual(env.state.opened, { link: 'Trip', from: 'Some note.md' });
     } finally {
@@ -128,7 +128,7 @@ describe('views of one graph in several notes', () => {
       await env.app.vault.modify(env.app.vault.getFileByPath(SOURCE), noteOf(changed));
       await until(() => keys(b.el).includes('zoo'));
       await until(() => /The big park/.test(a.el.textContent));
-      assert.match(a.el.querySelector('.graph-note-view-reading').textContent, /The big park/);
+      assert.match(a.el.querySelector('.thoughtknot-view-reading').textContent, /The big park/);
       assert.equal(written(second) + written(third), 0, 'neither note holds a copy');
     } finally {
       env.uninstall();

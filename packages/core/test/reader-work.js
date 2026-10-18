@@ -1,7 +1,7 @@
 // The work a step gives the reader and the drawing, counted for the core's speed tests (spec §9, layout_contained and
 // reading_contained), where what is held is really work: a text never read, a block read again only within the budget,
 // drawing instructions never written. A count is the same on every machine and under any load, as no time is.
-import gs from '@graph-note/graph-spec';
+import gs from '@thoughtknot/graph-spec';
 
 /**
  * Runs a step with the reader watched: what the step gave, how many times a block was handed to the reader to apply

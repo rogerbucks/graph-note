@@ -12,7 +12,7 @@ Short on purpose. How to check your work cheaply, where things live, and what no
   `-- --list` shows the plan. A folder named in pieces is missed, so run the full suite before a merge.
 - `npm run test:ai:py` — the Python library's tests, quietly (needs `uv`). Add test file names to run only those.
 - Never run bare `node --test`: only these npm scripts and `npm test` are capped, by `scripts/run-ceiling.mjs`. Its
-  line `run-ceiling: stopped the run …` means a test runs away: fix the test; raise `GRAPH_NOTE_TEST_*` only if need be.
+  line `run-ceiling: stopped the run …` means a test runs away: fix the test; raise `THOUGHTKNOT_TEST_*` only if need be.
 
 ## Before a merge: the full commands
 

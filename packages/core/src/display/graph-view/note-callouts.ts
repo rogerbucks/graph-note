@@ -2,9 +2,9 @@
 // small box beside its thing or link, joined to it by a dashed line, after the layout has placed everything. The layout
 // source never reads a note, so it stays byte-identical with the Python library's and the boxes sit where they would
 // without callouts; a callout is only added over the finished SVG, within its viewBox, and its words are text, never HTML.
-// Its look is the style sheet's alone (`graph-note-callout-*`); the full note shows in the thing's details.
-import { hitAreas } from '@graph-note/core';
-import type { Drawn, GraphDrawing, Shape } from '@graph-note/core';
+// Its look is the style sheet's alone (`thoughtknot-callout-*`); the full note shows in the thing's details.
+import { hitAreas } from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, Shape } from '@thoughtknot/core';
 
 const SVG = 'http://www.w3.org/2000/svg';
 /** The size of a callout's words, the width of a line of them in characters, and how many lines it may hold. */
@@ -89,7 +89,7 @@ export function markCallouts(svg: SVGSVGElement, drawn: Drawn, d: GraphDrawing):
   if (!noted.length) return;
   const { shapes, viewBox: vb } = hitAreas(drawn.svg);
   if (!vb.width || !vb.height) return;
-  const layer = make('g', { class: 'graph-note-callouts' }),
+  const layer = make('g', { class: 'thoughtknot-callouts' }),
     placed: Rect[] = [];
   for (const n of noted) {
     const shape = shapes.find((s) => s.id === n.id),
@@ -118,14 +118,14 @@ export function markCallouts(svg: SVGSVGElement, drawn: Drawn, d: GraphDrawing):
       from = { x: right ? at.right : at.left, y: middle },
       to = { x: right ? rect.x : rect.x + width, y: rect.y + height / 2 };
     const g = make('g', {
-      class: 'graph-note-callout',
+      class: 'thoughtknot-callout',
       'data-for': n.of,
       role: 'note',
       'aria-label': `Note: ${words}`,
     });
-    g.appendChild(make('line', { class: 'graph-note-callout-line', x1: from.x, y1: from.y, x2: to.x, y2: to.y }));
-    g.appendChild(make('rect', { class: 'graph-note-callout-box', ...rect, rx: 3 }));
-    const text = make('text', { class: 'graph-note-callout-text', 'font-size': FONT, x: rect.x + PAD });
+    g.appendChild(make('line', { class: 'thoughtknot-callout-line', x1: from.x, y1: from.y, x2: to.x, y2: to.y }));
+    g.appendChild(make('rect', { class: 'thoughtknot-callout-box', ...rect, rx: 3 }));
+    const text = make('text', { class: 'thoughtknot-callout-text', 'font-size': FONT, x: rect.x + PAD });
     lines.forEach((line, i) => {
       const span = make('tspan', { x: rect.x + PAD, y: rect.y + PAD + FONT * (1.15 + 1.3 * i) });
       span.textContent = line;

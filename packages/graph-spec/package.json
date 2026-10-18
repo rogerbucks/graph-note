@@ -1,5 +1,5 @@
 {
-  "name": "@graph-note/graph-spec",
+  "name": "@thoughtknot/graph-spec",
   "version": "0.6.0",
   "private": true,
   "description": "Reads graph blocks in the document profile and checks them against the graph spec's rules, in plain JavaScript with no dependencies.",

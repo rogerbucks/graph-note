@@ -1,8 +1,8 @@
 // The gate inside the editor's server (spec §26, cc_classified_asks, cc_credential_never): the core's `claudeGate` asked
 // before every send of a note, not only when the mod opens it, so a note changed on disk after the check never reaches
 // the page, which Claude can read. A refusal is words that name a kind and a level, never the note's label or its text.
-import { claudeGate, sha256 } from '@graph-note/core';
-import type { Gate, GateSettings } from '@graph-note/core';
+import { claudeGate, sha256 } from '@thoughtknot/core';
+import type { Gate, GateSettings } from '@thoughtknot/core';
 
 /** What the store asks before it sends a note's text, or a draft: the reason it may not be sent, or null when it may. */
 export interface NoteGate {

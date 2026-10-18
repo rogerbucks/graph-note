@@ -1,6 +1,6 @@
 # Copilot Cowork skill design
 
-A skill for Microsoft 365 Copilot Cowork that does the graph-note work there: read, check, draw and edit the graph
+A skill for Microsoft 365 Copilot Cowork that does the thoughtknot work there: read, check, draw and edit the graph
 blocks of Markdown notes kept in OneDrive or SharePoint. Designed on 18 October 2026, against version 0.5.0, at Roger's
 request. Not built yet.
 
@@ -31,11 +31,11 @@ Checked against Microsoft Learn on 18 October 2026
 
 ```mermaid
 flowchart LR
-  subgraph Repo["graph-note repository"]
+  subgraph Repo["thoughtknot repository"]
     Lib["Library (R1)<br/>read · check · lay out · edit"]
     Ref["Notation reference"]
   end
-  Lib -->|"built into"| Pkg["graph-note.skill<br/>SKILL.md + companion files"]
+  Lib -->|"built into"| Pkg["thoughtknot.skill<br/>SKILL.md + companion files"]
   Ref --> Pkg
   Pkg -->|"GitHub release"| CW["Copilot Cowork"]
   CW <-->|"user's own permissions"| OD["Notes in OneDrive / SharePoint"]
@@ -51,7 +51,7 @@ flowchart LR
   (`cowork_same_bytes`).
 - **Safety.** The note's classification and the AI ceiling are checked before a note is read into the conversation,
   as `/graph edit` does in Claude Code (`cowork_ceiling`). No server, connector or secret of ours (`cowork_no_server`).
-- **Release.** Built from the tag, attached to the GitHub release as `graph-note.skill` (`cowork_released`).
+- **Release.** Built from the tag, attached to the GitHub release as `thoughtknot.skill` (`cowork_released`).
 
 ## Scripts
 

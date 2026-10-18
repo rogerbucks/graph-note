@@ -6,7 +6,7 @@ follows `python/graph_spec` function for function, and the parity tests hold the
 ## The entry point, and the built file
 
 - **`src/graph-spec-check.js`** is the entry point. It requires the feature modules below and exports the one API
-  object (`test/graph-spec-check-api.test.mjs` holds its names). The core imports it as `@graph-note/graph-spec`, and
+  object (`test/graph-spec-check-api.test.mjs` holds its names). The core imports it as `@thoughtknot/graph-spec`, and
   the plugin's esbuild bundles it from here.
 - **`dist/graph-spec-check.js`** is the built file: every module in one self-contained script that sets the global
   `GraphSpecCheck` in a page and is the module under `require()`. `npm run build` (here, or at the root) makes it with

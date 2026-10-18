@@ -1,7 +1,7 @@
 // Graphviz for the Claude Code host (spec §10; decision of 11 Oct 2026): a mod has no WebAssembly, so the core's own
 // engine runs as a process through node, DOT in and SVG out (bin/render-process.ts). When node is missing it is said in
 // words, so the pane shows the graph as text with the reason, never a blank drawing; any other failure says what it was.
-import { LAYOUT_LIMITS } from '@graph-note/core';
+import { LAYOUT_LIMITS } from '@thoughtknot/core';
 
 /** What a process gave back, as the host's `$.process.run` resolves it. */
 export interface ProcessResult {

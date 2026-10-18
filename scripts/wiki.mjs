@@ -271,7 +271,7 @@ export function renderWiki({
     '**[Home](Home)**',
     '',
     '**Using it**',
-    '- [How to use Graph Note](How-to-use-Graph-Note)',
+    '- [How to use ThoughtKnot](How-to-use-ThoughtKnot)',
     '',
     '**The project**',
     ...(ethosText === undefined ? [] : ['- [Ethos](Ethos)']),
@@ -338,7 +338,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   for (const [name, text] of Object.entries(made)) writeFileSync(join(out, name), text);
   const labelsFile = flag(args, '--labels');
   if (labelsFile && existsSync(labelsFile))
-    for (const label of unexplained(JSON.parse(readFileSync(labelsFile, 'utf8')), pages['How-to-use-Graph-Note.md']))
-      console.log(`::warning::The user guide (wiki/How-to-use-Graph-Note.md) does not explain the "${label}" button`);
+    for (const label of unexplained(JSON.parse(readFileSync(labelsFile, 'utf8')), pages['How-to-use-ThoughtKnot.md']))
+      console.log(`::warning::The user guide (wiki/How-to-use-ThoughtKnot.md) does not explain the "${label}" button`);
   console.log(`wrote ${Object.keys(made).length} pages to ${out}`);
 }

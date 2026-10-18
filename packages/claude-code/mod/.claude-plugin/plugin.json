@@ -1,7 +1,7 @@
 {
-  "name": "graph-note",
+  "name": "thoughtknot",
   "version": "0.6.0",
-  "description": "/graph draws a graph note's first graph in a pane, with the Graph Note core",
+  "description": "/graph draws a graph note's first graph in a pane, with the ThoughtKnot core",
   "author": {
     "name": "rogerbucks",
     "url": "https://github.com/rogerbucks"

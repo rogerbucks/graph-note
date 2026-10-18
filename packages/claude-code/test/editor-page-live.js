@@ -92,7 +92,7 @@ export async function livePage(note, { files = {}, settings = '{}', fire = true,
     /** Tells the page the note changed on disk, as the watcher does. */
     fireChange: () => watcher.fire(NOTE_PATH),
     /** The page's text field, once the editor has built it. */
-    field: () => doc.querySelector('textarea.graph-note-text'),
+    field: () => doc.querySelector('textarea.thoughtknot-text'),
     /** A button of the page named `label`, as a screen reader finds it. */
     button: (label) => Array.from(doc.querySelectorAll('button')).find((b) => b.getAttribute('aria-label') === label),
     /** Types `text` into the field as a person does: its value changes and the page hears an input. */
@@ -117,7 +117,7 @@ export async function livePage(note, { files = {}, settings = '{}', fire = true,
     press: (label) => page.done(() => page.button(label).click()),
     /** Waits for the editor and the drawing to be there. */
     ready: async () => {
-      await until(() => !!page.field() && !!doc.querySelector('.graph-note-svg'), 8000);
+      await until(() => !!page.field() && !!doc.querySelector('.thoughtknot-svg'), 8000);
       return page;
     },
     stop: async () => {

@@ -47,7 +47,7 @@ describe('writing to the note', () => {
       await wait(400);
       assert.equal(note(env), theirs, 'not overwritten');
       assert.equal(textarea(env.el).value, READER + ',\n(theirs:Reason)', 'reloaded');
-      const banner = env.el.querySelector('.graph-note-draft');
+      const banner = env.el.querySelector('.thoughtknot-draft');
       assert.match(banner.textContent, /kept as a draft/);
       assert.deepEqual(
         Object.values(env.state.data.drafts).map((d) => d.text),
@@ -65,7 +65,7 @@ describe('writing to the note', () => {
       data: { drafts: { [`${PATH}#reader`]: { text: READER + ',\n(mine:Reason)', kept: '2026-10-07T22:00:00.000Z' } } },
     });
     try {
-      const banner = env.el.querySelector('.graph-note-draft');
+      const banner = env.el.querySelector('.thoughtknot-draft');
       assert.ok(!banner.hidden);
       labelled(banner, 'Discard draft').click();
       assert.deepEqual(env.state.data.drafts, {});
@@ -146,8 +146,8 @@ describe('shared schemas', () => {
       });
       assert.match(el.querySelector('g.edge').textContent, /can see/);
       await env.plugin.openEditor({ path: 'View.md', line: 0, graph: 'view' });
-      const pane = env.app.workspace.getLeavesOfType('graph-note-pane')[0].view.contentEl;
-      assert.ok(pane.querySelectorAll('.graph-note-readback').some((s) => /A can see B/.test(s.textContent)));
+      const pane = env.app.workspace.getLeavesOfType('thoughtknot-pane')[0].view.contentEl;
+      assert.ok(pane.querySelectorAll('.thoughtknot-readback').some((s) => /A can see B/.test(s.textContent)));
     } finally {
       env.uninstall();
     }

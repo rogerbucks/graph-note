@@ -78,7 +78,7 @@ function structuredData({ description, url, version, image }) {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'Graph Note',
+    name: 'ThoughtKnot',
     description,
     url,
     applicationCategory: 'ProductivityApplication',
@@ -96,7 +96,7 @@ function structuredData({ description, url, version, image }) {
 /** The llms.txt of llmstxt.org: what the project is, then where an assistant reads more. */
 function llmsText({ words, url }) {
   return [
-    '# Graph Note',
+    '# ThoughtKnot',
     '',
     `> ${words['page.description']}`,
     '',
@@ -104,7 +104,7 @@ function llmsText({ words, url }) {
     '',
     '## Docs',
     '',
-    `- [How to use Graph Note](${WIKI}/How-to-use-Graph-Note): the guide, in plain words, with pictures`,
+    `- [How to use ThoughtKnot](${WIKI}/How-to-use-ThoughtKnot): the guide, in plain words, with pictures`,
     `- [Roadmap](${WIKI}/Roadmap): what is done and what comes next`,
     `- [Releases](${REPO}/releases): the plugin's files and both libraries, for each version`,
     `- [Source code](${REPO}): the plugin, the core and the graph format libraries in JavaScript and Python`,

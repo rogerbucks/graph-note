@@ -2,9 +2,9 @@
 // with the part in view outlined, which moves the view when it is tapped or dragged. It shows by the setting: never, only
 // when the drawing is bigger than its view (the default), or always. It is drawn from the same areas a tap reaches, as a box
 // for each thing and a line for each link, so it is a copy of the layout and never lays anything out; its look is the style
-// sheet's alone (`graph-note-mini-*`). Pointer only: the drawing is moved from the keyboard by its own keys.
-import { hitAreas, word } from '@graph-note/core';
-import type { Drawn, HitAreas, MiniMapSetting, Size, View, Zoom } from '@graph-note/core';
+// sheet's alone (`thoughtknot-mini-*`). Pointer only: the drawing is moved from the keyboard by its own keys.
+import { hitAreas, word } from '@thoughtknot/core';
+import type { Drawn, HitAreas, MiniMapSetting, Size, View, Zoom } from '@thoughtknot/core';
 import type { Lifecycle } from '../lifecycle';
 import { make } from './note-callouts';
 
@@ -13,7 +13,7 @@ const LONGEST = 120;
 
 /** Whether an event's target is the mini-map, which a press on is never a press on the drawing. */
 export const onMiniMap = (target: EventTarget | null): boolean =>
-  !!(target as Element | null)?.closest?.('.graph-note-mini-map');
+  !!(target as Element | null)?.closest?.('.thoughtknot-mini-map');
 
 /** What the mini-map asks of its card, given late because the card builds them after it. */
 export interface MiniMapHost {
@@ -39,7 +39,7 @@ export class MiniMap {
   constructor(viewport: HTMLElement, card: Lifecycle, host: MiniMapHost) {
     this.host = host;
     this.el = viewport.createDiv({
-      cls: 'graph-note-mini-map',
+      cls: 'thoughtknot-mini-map',
       attr: { role: 'img', 'aria-label': word('drawing.mini-map') },
     });
     this.el.hidden = true;
@@ -71,7 +71,7 @@ export class MiniMap {
     if (!vb.width || !vb.height) return;
     const k = LONGEST / Math.max(vb.width, vb.height);
     const svg = make('svg', {
-      class: 'graph-note-mini-svg',
+      class: 'thoughtknot-mini-svg',
       viewBox: `${vb.x} ${vb.y} ${vb.width} ${vb.height}`,
       width: Math.round(vb.width * k),
       height: Math.round(vb.height * k),
@@ -87,7 +87,7 @@ export class MiniMap {
           y = Math.min(...ys);
         svg.appendChild(
           make('rect', {
-            class: 'graph-note-mini-box',
+            class: 'thoughtknot-mini-box',
             x,
             y,
             width: Math.max(...xs) - x,
@@ -98,13 +98,19 @@ export class MiniMap {
         for (const line of s.lines)
           svg.appendChild(
             make('polyline', {
-              class: 'graph-note-mini-line',
+              class: 'thoughtknot-mini-line',
               points: line.map(([x, y]) => `${x},${y}`).join(' '),
               fill: 'none',
             }),
           );
     }
-    this.frame = make('rect', { class: 'graph-note-mini-frame', x: vb.x, y: vb.y, width: vb.width, height: vb.height });
+    this.frame = make('rect', {
+      class: 'thoughtknot-mini-frame',
+      x: vb.x,
+      y: vb.y,
+      width: vb.width,
+      height: vb.height,
+    });
     svg.appendChild(this.frame);
     this.el.appendChild(svg);
     this.svg = svg;

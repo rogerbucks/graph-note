@@ -94,7 +94,7 @@ describe('the Obsidian host: every view, in both themes', () => {
     try {
       const el = await editing(env);
       tapKey(el, 'large');
-      row(el.querySelector('.graph-note-details'), 'name').querySelector('.metadata-property-icon').click();
+      row(el.querySelector('.thoughtknot-details'), 'name').querySelector('.metadata-property-icon').click();
       const { items } = env.state.menus.at(-1);
       assert.ok(items.length > 1, 'the property type menu');
       for (const item of items) assert.ok(item.title.trim(), `an item with no name: ${JSON.stringify(item)}`);

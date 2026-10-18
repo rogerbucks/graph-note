@@ -1,8 +1,8 @@
 // The coloured picture under the block editor's text field (spec §4): the text in gql-highlight's colours, each problem
 // underlined over exactly its words with a sign at the end of its line, each link in a text or a comment marked as a
 // link (§18, links_shown), and each line read back in plain English after it, wrapping as the field wraps.
-import { linksIn, tokenize } from '@graph-note/core';
-import type { Diagnostic } from '@graph-note/core';
+import { linksIn, tokenize } from '@thoughtknot/core';
+import type { Diagnostic } from '@thoughtknot/core';
 import type { Ghost } from './inline-completion';
 
 /** A piece of the text in the picture: its class, its words, and whether it is ghost text, which is no part of the text. */
@@ -62,7 +62,7 @@ export function paintText(
     let col = 0;
     for (const p of parts) {
       if (p.ghost) {
-        overlay.createSpan({ cls: 'graph-note-ghost', text: p.s });
+        overlay.createSpan({ cls: 'thoughtknot-ghost', text: p.s });
         continue;
       }
       // split each token where a problem or a link starts or ends, so the mark covers exactly its words
@@ -84,8 +84,8 @@ export function paintText(
           d = cut(col + a, col + b);
         const cls = [
           p.c ? `gql-${p.c}` : '',
-          (p.c === 'string' || p.c === 'comment') && inLink(col + a, col + b) ? 'graph-note-text-link' : '',
-          d ? `graph-note-problem is-${d.severity === 1 ? 'error' : d.severity === 4 ? 'hint' : 'warning'}` : '',
+          (p.c === 'string' || p.c === 'comment') && inLink(col + a, col + b) ? 'thoughtknot-text-link' : '',
+          d ? `thoughtknot-problem is-${d.severity === 1 ? 'error' : d.severity === 4 ? 'hint' : 'warning'}` : '',
         ]
           .filter(Boolean)
           .join(' ');
@@ -98,9 +98,9 @@ export function paintText(
     const sign = marks.some((d) => d.severity !== 4);
     const said = parts.some((p) => p.ghost) ? undefined : back.get(n); // the ghost has the end of its line
     if (sign || said) {
-      const end = overlay.createSpan({ cls: 'graph-note-line-end' });
-      if (sign) end.createSpan({ cls: 'graph-note-line-sign', text: ' ⚠' });
-      if (said) end.createSpan({ cls: 'graph-note-readback', text: ` — ${said}` });
+      const end = overlay.createSpan({ cls: 'thoughtknot-line-end' });
+      if (sign) end.createSpan({ cls: 'thoughtknot-line-sign', text: ' ⚠' });
+      if (said) end.createSpan({ cls: 'thoughtknot-readback', text: ` — ${said}` });
     }
     overlay.appendText('\n');
   });

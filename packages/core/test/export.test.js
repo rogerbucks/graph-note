@@ -6,7 +6,7 @@
 // however large the graph (export_data_formats, export_lossless).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import GraphLayout from '@graph-note/graph-spec/src/graph-layout.js';
+import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { loadEngine } from '../src/engine.ts';
 import { readNote } from '../src/drawing.ts';
 import { EXPORT_FORMATS, PNG_MIN_SCALE, exportSvg, exportWithLayout, pngSize } from '../src/export.ts';

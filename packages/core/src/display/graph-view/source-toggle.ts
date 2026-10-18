@@ -2,7 +2,7 @@
 // back; the button that does it names what it will show next.
 import { setIcon } from '../host';
 import { renderCode } from '../code';
-import { word } from '@graph-note/core';
+import { word } from '@thoughtknot/core';
 
 /** What the toggle asks of its card. */
 export interface SourceHost {

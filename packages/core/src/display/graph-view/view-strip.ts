@@ -2,8 +2,8 @@
 // the choice in the style graph (fade_or_hide_in_style), and Save as shown (view_saved_as_shown); the legend of the
 // colours its looks use, each with what it means (styling_keeps_locked_rules); and, on the drawing, what is outside the
 // view faded, and each look drawn in the locked style's own blend of its hue (styled_paths_and_views).
-import { hueColour, word } from '@graph-note/core';
-import type { LegendChoice, LegendEntry, Outside, ThingLook, View } from '@graph-note/core';
+import { hueColour, word } from '@thoughtknot/core';
+import type { LegendChoice, LegendEntry, Outside, ThingLook, View } from '@thoughtknot/core';
 import { button } from './view-bar';
 
 /** What a drawing shown as a view is given, beyond a plain drawing's options. */
@@ -34,9 +34,9 @@ export function renderViewStrip(
   v: ViewShown,
   now: () => { view: View; selected: string | null; legend: readonly LegendChoice[] },
 ): HTMLElement[] {
-  const strip = root.createDiv({ cls: 'graph-note-view-strip' });
+  const strip = root.createDiv({ cls: 'thoughtknot-view-strip' });
   strip.createSpan({
-    cls: 'graph-note-view-reading',
+    cls: 'thoughtknot-view-reading',
     text: word('strip.reading', { name: v.name, reading: v.reading }),
   });
   const other: Outside = v.outside === 'fade' ? 'hide' : 'fade';
@@ -51,10 +51,10 @@ export function renderViewStrip(
     }),
   ];
   if (!v.legend.length) return writes;
-  const legend = root.createEl('ul', { cls: 'graph-note-legend', attr: { 'aria-label': word('strip.legend') } });
+  const legend = root.createEl('ul', { cls: 'thoughtknot-legend', attr: { 'aria-label': word('strip.legend') } });
   for (const e of v.legend) {
     const li = legend.createEl('li');
-    li.createSpan({ cls: 'graph-note-swatch' }).setCssProps({ '--graph-note-swatch': hueColour(e.colour, 'line') });
+    li.createSpan({ cls: 'thoughtknot-swatch' }).setCssProps({ '--thoughtknot-swatch': hueColour(e.colour, 'line') });
     li.createSpan({ text: e.means });
   }
   return writes;
@@ -69,10 +69,10 @@ const say = (g: SVGElement, words: string) => {
 const lookClasses = (g: SVGElement, look: ThingLook | undefined, means: Map<string, string>) => {
   if (!look) return;
   if (look.hue) say(g, means.get(look.hue) ?? '');
-  g.classList.add('graph-note-look');
-  if (look.line) g.classList.add(`graph-note-line-${look.line}`);
-  if (look.format) g.classList.add(`graph-note-format-${look.format}`);
-  if (look.hue) g.setCssProps({ '--graph-note-look-line': hueColour(look.hue, 'line') });
+  g.classList.add('thoughtknot-look');
+  if (look.line) g.classList.add(`thoughtknot-line-${look.line}`);
+  if (look.format) g.classList.add(`thoughtknot-format-${look.format}`);
+  if (look.hue) g.setCssProps({ '--thoughtknot-look-line': hueColour(look.hue, 'line') });
 };
 
 /** Marks the drawing as the view says: what is outside it faded, and each look drawn. */
@@ -82,13 +82,13 @@ export function markView(svg: SVGSVGElement, v: ViewShown): void {
     means = new Map(v.legend.map((e) => [e.colour, e.means]));
   for (const g of Array.from(svg.querySelectorAll<SVGGElement>('g.node'))) {
     const key = g.getAttribute('data-key') ?? '';
-    g.classList.toggle('graph-note-faded', faded.has(key));
+    g.classList.toggle('thoughtknot-faded', faded.has(key));
     if (faded.has(key)) say(g, 'outside the view');
     lookClasses(g, v.looks.things.get(key), means);
   }
   for (const g of Array.from(svg.querySelectorAll<SVGGElement>('g.edge[data-link]'))) {
     const n = g.getAttribute('data-link') ?? '';
-    g.classList.toggle('graph-note-faded', fadedLinks.has(n));
+    g.classList.toggle('thoughtknot-faded', fadedLinks.has(n));
     if (fadedLinks.has(n)) say(g, 'outside the view');
     lookClasses(g, v.looks.links.get(Number(n)), means);
   }

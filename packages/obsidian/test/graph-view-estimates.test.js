@@ -27,12 +27,12 @@ const FIX = 'Change small_reeder to small_reader';
 const tapGuess = (el, n = 0) => {
   // by its number among the estimates: Graphviz may write the links in another order
   const guess = el.querySelectorAll('g.edge').find((g) => g.getAttribute('data-estimate') === String(n)),
-    vp = el.querySelector('.graph-note-viewport');
+    vp = el.querySelector('.thoughtknot-viewport');
   vp.dispatch('pointerdown', { target: guess, pointerId: 9, pointerType: 'touch', clientX: 5, clientY: 5, button: 0 });
   vp.dispatch('pointerup', { target: guess, pointerId: 9, pointerType: 'touch', clientX: 5, clientY: 5, button: 0 });
   return guess;
 };
-const details = (el) => el.querySelector('.graph-note-details');
+const details = (el) => el.querySelector('.thoughtknot-details');
 
 /** Draws the note's block where Obsidian's reading view puts it, as block-reading-view.test.js does. */
 async function showReading(env) {
@@ -124,7 +124,7 @@ describe('an estimated link, tapped', () => {
       const t = el.querySelector('textarea');
       assert.equal(t.selectionStart, BLOCK.indexOf('small_reeder'));
       assert.equal(env.doc.activeElement, t, 'the focus in the text, so the selection shows');
-      assert.ok(labelled(el.querySelector('.graph-note-fixbar'), FIX), 'the fix bar offers the same fix');
+      assert.ok(labelled(el.querySelector('.thoughtknot-fixbar'), FIX), 'the fix bar offers the same fix');
     } finally {
       env.uninstall();
     }
@@ -149,7 +149,7 @@ describe('an estimated link, tapped', () => {
     try {
       const el = await showReading(env);
       labelled(el, 'Full screen').click();
-      const full = env.doc.body.querySelector('.graph-note-fullscreen');
+      const full = env.doc.body.querySelector('.thoughtknot-fullscreen');
       assert.ok(full, 'full screen is open');
       tapGuess(full);
       assert.match(details(full).textContent, /taken to mean small_reader/, 'it is still explained');
@@ -189,7 +189,7 @@ describe('an estimated link, tapped', () => {
   test('in the pane, the quick fix changes the pane’s text, and Edit the link selects the misspelt name in it', async () => {
     const env = await openPane({ note: NOTE });
     try {
-      const drawing = () => env.el.querySelector('.graph-note-pane-drawing');
+      const drawing = () => env.el.querySelector('.thoughtknot-pane-drawing');
       await until(() => !!drawing().querySelector('g.edge[data-estimate]'), 3000);
       tapGuess(drawing());
       labelled(details(drawing()), 'Edit the link').click();
@@ -206,7 +206,7 @@ describe('an estimated link, tapped', () => {
   test('in the pane, a fix pressed after typing writes nothing over what was typed, and says so', async () => {
     const env = await openPane({ note: NOTE });
     try {
-      const drawing = () => env.el.querySelector('.graph-note-pane-drawing');
+      const drawing = () => env.el.querySelector('.thoughtknot-pane-drawing');
       await until(() => !!drawing().querySelector('g.edge[data-estimate]'), 3000);
       tapGuess(drawing());
       const fix = labelled(details(drawing()), FIX),
@@ -226,7 +226,7 @@ describe('an estimated link, tapped', () => {
   test('in the pane, a fix pressed once its editor is gone writes nothing, and says so', async () => {
     const env = await openPane({ note: NOTE });
     try {
-      const drawing = () => env.el.querySelector('.graph-note-pane-drawing');
+      const drawing = () => env.el.querySelector('.thoughtknot-pane-drawing');
       await until(() => !!drawing().querySelector('g.edge[data-estimate]'), 3000);
       tapGuess(drawing());
       const fix = labelled(details(drawing()), FIX);
@@ -267,7 +267,7 @@ describe('the fix of an estimated link acts on its own word', () => {
       labelled(details(el), 'Edit the link').click();
       const t = el.querySelector('textarea');
       assert.deepEqual([t.selectionStart, t.selectionEnd], [own(1), own(1) + 'small_reeder'.length]);
-      const offered = el.querySelector('.graph-note-fixbar').querySelectorAll('button');
+      const offered = el.querySelector('.thoughtknot-fixbar').querySelectorAll('button');
       assert.equal(offered.length, 2, 'both links’ fixes, on their line');
       offered[1].click();
       assert.equal(t.value, fixedAt(TWO, own(1)), 'the second link’s word, and nothing else');

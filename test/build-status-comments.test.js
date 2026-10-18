@@ -200,7 +200,7 @@ describe('a release', () => {
     const w = world();
     release(w);
     mergedAndLocked(w);
-    w.side.hub.pulls[7].head.repo.full_name = 'someone/graph-note';
+    w.side.hub.pulls[7].head.repo.full_name = 'someone/thoughtknot';
     const result = await send(w);
     assert.deepEqual(result.release.pulls, []);
     assert.deepEqual(w.comments(), []);

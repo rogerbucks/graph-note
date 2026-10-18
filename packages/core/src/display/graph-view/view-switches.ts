@@ -14,14 +14,14 @@ import {
   labelsHidden,
   optionSaid,
   word,
-} from '@graph-note/core';
+} from '@thoughtknot/core';
 
 /** A switch's name in the person's language: its setting's, which the settings page says too. */
 const nameOf = (s: ViewSwitch): string => {
   const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
   return o ? optionSaid(o).name : SWITCH_NAMES[s];
 };
-import type { Drawn, GraphDrawing, ViewState, ViewSwitch } from '@graph-note/core';
+import type { Drawn, GraphDrawing, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
 
 /** A card's View menu, hidden until the bar's button opens it. */
@@ -41,19 +41,19 @@ export function renderViewMenu(
   state: ViewState,
   turned: (s: ViewSwitch, on: boolean) => void,
 ): ViewMenu {
-  const el = root.createDiv({ cls: 'graph-note-view-menu', attr: { role: 'group', 'aria-label': word('bar.view') } });
+  const el = root.createDiv({ cls: 'thoughtknot-view-menu', attr: { role: 'group', 'aria-label': word('bar.view') } });
   el.hidden = true;
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
   for (const s of VIEW_SWITCHES) {
-    const b = el.createEl('button', { cls: 'graph-note-switch', attr: { type: 'button', role: 'switch' } });
+    const b = el.createEl('button', { cls: 'thoughtknot-switch', attr: { type: 'button', role: 'switch' } });
     // the name is the switch's name; the toggle and its words show its state, which aria-checked says to a screen reader
-    b.createSpan({ cls: 'graph-note-switch-name', text: nameOf(s) });
-    b.createSpan({ cls: 'graph-note-switch-track', attr: { 'aria-hidden': 'true' } });
-    const says = b.createSpan({ cls: 'graph-note-switch-state', attr: { 'aria-hidden': 'true' } });
+    b.createSpan({ cls: 'thoughtknot-switch-name', text: nameOf(s) });
+    b.createSpan({ cls: 'thoughtknot-switch-track', attr: { 'aria-hidden': 'true' } });
+    const says = b.createSpan({ cls: 'thoughtknot-switch-state', attr: { 'aria-hidden': 'true' } });
     b.addEventListener('click', () => turned(s, !state.switches[s]));
     switches.push({ s, b, says });
   }
-  const status = el.createDiv({ cls: 'graph-note-quiet', attr: { role: 'status' } });
+  const status = el.createDiv({ cls: 'thoughtknot-quiet', attr: { role: 'status' } });
   const refresh = () => {
     for (const { s, b, says } of switches) {
       b.setAttribute('aria-checked', String(state.switches[s]));

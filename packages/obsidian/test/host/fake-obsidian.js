@@ -224,7 +224,7 @@ export function fakeObsidian(state = {}) {
     constructor(app_, manifest) {
       super();
       this.app = app_ ?? app;
-      this.manifest = manifest ?? { id: 'graph-note' };
+      this.manifest = manifest ?? { id: 'thoughtknot' };
     }
     registerView(type, factory) {
       state.views.set(type, factory);

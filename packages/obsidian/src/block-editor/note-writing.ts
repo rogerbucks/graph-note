@@ -4,9 +4,9 @@
 import { Notice } from 'obsidian';
 import type { TFile, Vault } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
-import type { PaneSession } from '@graph-note/core';
-import type { Refused } from '@graph-note/core/display/editor/editor-note';
-import { LOCK_FAILED, lockedNote } from '@graph-note/core/display/editor/lock-text';
+import type { PaneSession } from '@thoughtknot/core';
+import type { Refused } from '@thoughtknot/core/display/editor/editor-note';
+import { LOCK_FAILED, lockedNote } from '@thoughtknot/core/display/editor/lock-text';
 
 export type { Refused };
 
@@ -41,7 +41,7 @@ export function writeThroughEditor(cm: EditorView, s: PaneSession, keep: Keep): 
     b++;
   cm.dispatch({
     changes: { from: a, to: data.length - b, insert: r.note.slice(a, r.note.length - b) },
-    userEvent: 'input.graph-note',
+    userEvent: 'input.thoughtknot',
   });
   keep(r.note);
   return null;

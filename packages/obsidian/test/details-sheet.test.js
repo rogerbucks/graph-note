@@ -17,22 +17,22 @@ import { groupsRead } from './host/details-read.js';
 
 before(() => build());
 
-const details = (el) => el.querySelector('.graph-note-details');
-const body = (el) => details(el).querySelector('.graph-note-details-body');
+const details = (el) => el.querySelector('.thoughtknot-details');
+const body = (el) => details(el).querySelector('.thoughtknot-details-body');
 const toggle = (el) => labelled(details(el), 'Minimise details') ?? labelled(details(el), 'Restore details');
 const selected = (el) => el.querySelector('g.is-selected')?.getAttribute('data-key') ?? null;
 const reduce = (env) => (env.doc.defaultView.matchMedia = (q) => ({ media: q, matches: q.includes('reduce') }));
 const all = rules(styles, 'styles.css');
 /** What the stylesheet gives an element of the sheet, inside a card on the page. */
 const css = (el, property) => {
-  const card = { tag: 'div', classes: ['graph-note-view', 'is-note'] };
+  const card = { tag: 'div', classes: ['thoughtknot-view', 'is-note'] };
   return winner(
     all,
-    { ...el, ancestors: [...(el.ancestors ?? []), card, { tag: 'div', classes: ['graph-note'] }] },
+    { ...el, ancestors: [...(el.ancestors ?? []), card, { tag: 'div', classes: ['thoughtknot'] }] },
     property,
   )?.value;
 };
-const SHEET = { tag: 'div', classes: ['graph-note-details', 'graph-note-sheet'] };
+const SHEET = { tag: 'div', classes: ['thoughtknot-details', 'thoughtknot-sheet'] };
 /** A box on the screen, from its top to its foot, 700 wide unless said. */
 const rect = (top, bottom, left = 0, width = 700) => ({
   top,
@@ -50,7 +50,7 @@ const laidOut =
   (d, height = 100) =>
   () => {
     if (d.hidden || d.hasClass('is-away')) return rect(0, 0, 0, 0);
-    const p = (k) => parseFloat(d.cssProps[`--graph-note-sheet-${k}`] ?? '0');
+    const p = (k) => parseFloat(d.cssProps[`--thoughtknot-sheet-${k}`] ?? '0');
     return rect(800 - p('bottom') - height, 800 - p('bottom'), p('left'), p('width'));
   };
 /** Draws the graph's block into `el` as Obsidian does, wherever `el` is. */
@@ -90,19 +90,19 @@ describe('in view mode the details open as a sheet pinned to the foot of the vis
   test('tapping a thing opens its details as the sheet', () => {
     tapKey(el, 'large');
     assert.ok(!details(el).hidden);
-    assert.ok(details(el).hasClass('graph-note-sheet'));
+    assert.ok(details(el).hasClass('thoughtknot-sheet'));
     assert.match(details(el).textContent, /Large reader/);
   });
 
   test('it is fixed to the screen, so it stays in place while the note scrolls, over the card and at its width', () => {
     assert.equal(css(SHEET, 'position'), 'fixed');
-    assert.match(css(SHEET, 'bottom'), /var\(--graph-note-sheet-bottom/);
-    assert.match(css(SHEET, 'left'), /var\(--graph-note-sheet-left/);
-    assert.match(css(SHEET, 'width'), /var\(--graph-note-sheet-width/);
+    assert.match(css(SHEET, 'bottom'), /var\(--thoughtknot-sheet-bottom/);
+    assert.match(css(SHEET, 'left'), /var\(--thoughtknot-sheet-left/);
+    assert.match(css(SHEET, 'width'), /var\(--thoughtknot-sheet-width/);
     assert.ok(css(SHEET, 'z-index'), 'over the note');
     assert.match(css(SHEET, 'background'), /var\(--gn-bg\)/, 'the note does not show through');
-    assert.equal(details(el).cssProps['--graph-note-sheet-left'], '0px');
-    assert.equal(details(el).cssProps['--graph-note-sheet-width'], '700px');
+    assert.equal(details(el).cssProps['--thoughtknot-sheet-left'], '0px');
+    assert.equal(details(el).cssProps['--thoughtknot-sheet-width'], '700px');
   });
 
   test('its width counts its border and padding, so it is laid out exactly as wide as the card it was given', () => {
@@ -116,16 +116,16 @@ describe('in view mode the details open as a sheet pinned to the foot of the vis
     holder.appendChild(shownEl);
     await drawInto(env, shownEl);
     // the card runs on below the note's visible part
-    shownEl.querySelector('.graph-note-view').getBoundingClientRect = () => rect(300, 760);
+    shownEl.querySelector('.thoughtknot-view').getBoundingClientRect = () => rect(300, 760);
     details(shownEl).getBoundingClientRect = laidOut(details(shownEl));
     tapKey(shownEl, 'q');
-    assert.equal(details(shownEl).cssProps['--graph-note-sheet-bottom'], '100px', 'the window is 800 high');
-    assert.ok(details(shownEl).hasClass('graph-note-sheet'));
+    assert.equal(details(shownEl).cssProps['--thoughtknot-sheet-bottom'], '100px', 'the window is 800 high');
+    assert.ok(details(shownEl).hasClass('thoughtknot-sheet'));
   });
 
   test('when the card leaves the screen the sheet goes, and comes back with it', () => {
     tapKey(el, 'large');
-    const card = el.querySelector('.graph-note-view');
+    const card = el.querySelector('.thoughtknot-view');
     const w = watched.find((x) => x.target === card);
     assert.ok(w, 'the card is watched while the sheet is open');
     w.tell(false);
@@ -140,7 +140,7 @@ describe('in view mode the details open as a sheet pinned to the foot of the vis
 
   test('scrolled while its card is away, the sheet is still the sheet when the card comes back, placed again', () => {
     const d = details(el),
-      card = el.querySelector('.graph-note-view');
+      card = el.querySelector('.thoughtknot-view');
     d.getBoundingClientRect = laidOut(d);
     tapKey(el, 'large');
     const w = watched.find((x) => x.target === card);
@@ -148,9 +148,9 @@ describe('in view mode the details open as a sheet pinned to the foot of the vis
     for (const fn of env.doc.listeners.get('scroll') ?? []) fn({ type: 'scroll', target: env.doc.body });
     card.getBoundingClientRect = () => rect(100, 500);
     w.tell(true);
-    assert.ok(d.hasClass('graph-note-sheet'), 'still the sheet');
+    assert.ok(d.hasClass('thoughtknot-sheet'), 'still the sheet');
     assert.ok(toggle(el), 'with its toggle');
-    assert.equal(d.cssProps['--graph-note-sheet-bottom'], '300px', 'placed again over the card where it is now');
+    assert.equal(d.cssProps['--thoughtknot-sheet-bottom'], '300px', 'placed again over the card where it is now');
     labelled(d, 'Close details').click();
     card.getBoundingClientRect = () => rect(0, 400);
   });
@@ -159,7 +159,7 @@ describe('in view mode the details open as a sheet pinned to the foot of the vis
     const holder = env.doc.body.createDiv();
     const ctx = await drawInto(env, holder);
     tapKey(holder, 'large');
-    const card = holder.querySelector('.graph-note-view');
+    const card = holder.querySelector('.thoughtknot-view');
     assert.ok(
       watched.some((x) => x.target === card),
       'watched while open',
@@ -179,16 +179,16 @@ describe('where the sheet covers the whole drawing, the note scrolls the chosen 
       holder.scrollTop = 0;
       const el = holder.createDiv();
       await drawInto(env, el);
-      const vp = el.querySelector('.graph-note-viewport'),
-        svg = el.querySelector('svg.graph-note-svg'),
-        high = parseFloat(vp.cssProps['--graph-note-height']);
+      const vp = el.querySelector('.thoughtknot-viewport'),
+        svg = el.querySelector('svg.thoughtknot-svg'),
+        high = parseFloat(vp.cssProps['--thoughtknot-height']);
       // the drawing begins 100 pixels above the foot of the screen, and the sheet's top is above the drawing's
       vp.getBoundingClientRect = () => rect(700, 700 + high);
-      el.querySelector('.graph-note-view').getBoundingClientRect = () => rect(660, 720 + high);
+      el.querySelector('.thoughtknot-view').getBoundingClientRect = () => rect(660, 720 + high);
       const d = details(el);
       d.getBoundingClientRect = laidOut(d, 150);
       tapKey(el, 'q');
-      assert.ok(d.hasClass('graph-note-sheet'));
+      assert.ok(d.hasClass('thoughtknot-sheet'));
       const { readNote } = await import('../../core/src/drawing.ts');
       const [{ loadEngine }, { draw }, { hitAreas, boundsOf }] = await Promise.all([
         import('../../core/src/engine.ts'),
@@ -197,7 +197,7 @@ describe('where the sheet covers the whole drawing, the note scrolls the chosen 
       ]);
       const areas = hitAreas(draw(readNote([GRAPH]).graphs.get('reader'), await loadEngine()).svg);
       const b = boundsOf(areas, el.querySelector('g.node[data-key="q"]').getAttribute('id'));
-      const y = parseFloat(vp.cssProps['--graph-note-y']);
+      const y = parseFloat(vp.cssProps['--thoughtknot-y']);
       assert.equal(y, 0, 'the drawing itself does not move');
       const foot = 700 + y + (b.y + b.height) * Number(svg.getAttribute('height'));
       assert.ok(Math.abs(holder.scrollTop - (foot - 650 + 8)) < 1e-6, `${holder.scrollTop} for a foot at ${foot}`);
@@ -214,17 +214,17 @@ describe('the sheet follows its card and the window', () => {
     reduce(env);
     el = env.doc.body.createDiv();
     await drawInto(env, el);
-    card = el.querySelector('.graph-note-view');
+    card = el.querySelector('.thoughtknot-view');
     d = details(el);
     d.getBoundingClientRect = laidOut(d);
   });
   after(() => env.uninstall());
-  const prop = (k) => d.cssProps[`--graph-note-sheet-${k}`];
+  const prop = (k) => d.cssProps[`--thoughtknot-sheet-${k}`];
 
   test('over a card that ends above the foot of the screen, the sheet sits at the card’s foot, not below it', () => {
     card.getBoundingClientRect = () => rect(100, 500);
     tapKey(el, 'large');
-    assert.ok(d.hasClass('graph-note-sheet'));
+    assert.ok(d.hasClass('thoughtknot-sheet'));
     assert.equal(prop('bottom'), '300px', 'the note below the card, and its caret, are not covered');
   });
 
@@ -257,12 +257,12 @@ describe('the sheet follows its card and the window', () => {
   });
 
   test('and the drawing pans again so the chosen thing stays clear: the sheet grown over it moves it up', () => {
-    const vp = el.querySelector('.graph-note-viewport'),
-      high = parseFloat(vp.cssProps['--graph-note-height']);
+    const vp = el.querySelector('.thoughtknot-viewport'),
+      high = parseFloat(vp.cssProps['--thoughtknot-height']);
     vp.getBoundingClientRect = () => rect(800 - high, 800);
     card.getBoundingClientRect = () => rect(760 - high, 800);
     labelled(d, 'Close details').click();
-    const y = () => parseFloat(vp.cssProps['--graph-note-y']);
+    const y = () => parseFloat(vp.cssProps['--thoughtknot-y']);
     // a sheet with no height at first, covering nothing; then it is taller, over the lower 90% of the drawing, where the
     // question is (the graph runs down the page, the question at its foot)
     d.getBoundingClientRect = laidOut(d, 0);
@@ -293,7 +293,7 @@ describe('where the sheet cannot be pinned, the details stay in the card', () =>
     };
     tapKey(el, 'large');
     assert.ok(!d.hidden, 'the details are shown');
-    assert.ok(!d.hasClass('graph-note-sheet'), 'in the card, not as the sheet');
+    assert.ok(!d.hasClass('thoughtknot-sheet'), 'in the card, not as the sheet');
     assert.ok(!labelled(d, 'Minimise details') && labelled(d, 'Close details'));
   });
 
@@ -302,7 +302,7 @@ describe('where the sheet cannot be pinned, the details stay in the card', () =>
     await drawInto(env, el);
     details(el).getBoundingClientRect = laidOut(details(el));
     tapKey(el, 'large');
-    assert.ok(details(el).hasClass('graph-note-sheet'));
+    assert.ok(details(el).hasClass('thoughtknot-sheet'));
   });
 
   for (const where of ['canvas-node', 'hover-popover'])
@@ -312,7 +312,7 @@ describe('where the sheet cannot be pinned, the details stay in the card', () =>
       details(el).getBoundingClientRect = laidOut(details(el));
       tapKey(el, 'large');
       assert.ok(!details(el).hidden);
-      assert.ok(!details(el).hasClass('graph-note-sheet'));
+      assert.ok(!details(el).hasClass('thoughtknot-sheet'));
     });
 });
 
@@ -331,7 +331,7 @@ describe('the sheet in Live Preview, inside the editor', () => {
 
   test('Escape on the sheet’s toggle closes it: the widget is not the note being typed in', () => {
     tapKey(el, 'large');
-    assert.ok(details(el).hasClass('graph-note-sheet'));
+    assert.ok(details(el).hasClass('thoughtknot-sheet'));
     const e = toggle(el).dispatch('keydown', { key: 'Escape' });
     assert.ok(details(el).hidden, 'closed');
     assert.ok(e.defaultPrevented);
@@ -339,7 +339,7 @@ describe('the sheet in Live Preview, inside the editor', () => {
 
   test('a key typed in the note’s text, around the card, is never taken, and nothing listens for keys outside the card', () => {
     tapKey(el, 'large');
-    assert.ok(details(el).hasClass('graph-note-sheet'), 'the sheet is open');
+    assert.ok(details(el).hasClass('thoughtknot-sheet'), 'the sheet is open');
     const text = content.createDiv({ cls: 'cm-line' });
     for (const target of [content, text])
       for (const key of ['Escape', 'ArrowDown', 'Enter', 'a']) {
@@ -359,9 +359,9 @@ describe('the drawing pans so the chosen thing stays visible above the sheet', (
     env = await load();
     reduce(env);
     el = (await show(env, fence(GRAPH))).el;
-    high = parseFloat(el.querySelector('.graph-note-viewport').cssProps['--graph-note-height']);
+    high = parseFloat(el.querySelector('.thoughtknot-viewport').cssProps['--thoughtknot-height']);
     // the drawing fills the foot of an 800-pixel screen; the sheet, restored, covers its lower 60%, minimised a bar
-    el.querySelector('.graph-note-viewport').getBoundingClientRect = () => ({
+    el.querySelector('.thoughtknot-viewport').getBoundingClientRect = () => ({
       top: 800 - high,
       bottom: 800,
       left: 0,
@@ -369,7 +369,7 @@ describe('the drawing pans so the chosen thing stays visible above the sheet', (
       width: 700,
       height: high,
     });
-    el.querySelector('.graph-note-view').getBoundingClientRect = () => rect(760 - high, 800);
+    el.querySelector('.thoughtknot-view').getBoundingClientRect = () => rect(760 - high, 800);
     const d = details(el);
     d.getBoundingClientRect = () => {
       const h = d.hasClass('is-minimised') ? BAR : high * 0.6;
@@ -377,11 +377,11 @@ describe('the drawing pans so the chosen thing stays visible above the sheet', (
     };
   });
   after(() => env.uninstall());
-  const y = () => parseFloat(el.querySelector('.graph-note-viewport').cssProps['--graph-note-y']);
+  const y = () => parseFloat(el.querySelector('.thoughtknot-viewport').cssProps['--thoughtknot-y']);
   /** The foot of a thing on the screen, as the drawing is shown now. */
   const foot = async (key) => {
     const { hitAreas, boundsOf } = await import('../../core/src/hits.ts');
-    const svg = el.querySelector('svg.graph-note-svg');
+    const svg = el.querySelector('svg.thoughtknot-svg');
     const g = el.querySelector(`g.node[data-key="${key}"]`);
     const b = boundsOf(hitAreas(env.drawnSvg), g.getAttribute('id'));
     return 800 - high + y() + (b.y + b.height) * Number(svg.getAttribute('height'));
@@ -435,7 +435,7 @@ describe('minimised to a bar, or restored to a panel that never fills the screen
   test('restored, it shows the full details, and its toggle says it will minimise', () => {
     const t = labelled(details(el), 'Minimise details');
     assert.ok(t, 'the toggle in the header');
-    assert.ok(details(el).querySelector('.graph-note-details-head').contains(t));
+    assert.ok(details(el).querySelector('.thoughtknot-details-head').contains(t));
     assert.equal(t.getAttribute('aria-expanded'), 'true');
     assert.ok(!body(el).hidden);
     assert.ok(groupsRead(body(el)).includes('answers Which device?'));
@@ -447,7 +447,7 @@ describe('minimised to a bar, or restored to a panel that never fills the screen
     assert.ok(t);
     assert.equal(t.getAttribute('aria-expanded'), 'false');
     assert.ok(body(el).hidden, 'the details below the bar are hidden');
-    const head = details(el).querySelector('.graph-note-details-head');
+    const head = details(el).querySelector('.thoughtknot-details-head');
     assert.match(head.textContent, /Large reader/);
     assert.match(head.textContent, /Option/);
     t.click();
@@ -455,11 +455,11 @@ describe('minimised to a bar, or restored to a panel that never fills the screen
   });
 
   test('restored, it scrolls within itself, and is never taller than its share of the screen', () => {
-    const BODY = { tag: 'div', classes: ['graph-note-details-body'], ancestors: [SHEET] };
+    const BODY = { tag: 'div', classes: ['thoughtknot-details-body'], ancestors: [SHEET] };
     assert.equal(css(BODY, 'overflow-y'), 'auto');
     const max = css(SHEET, 'max-height');
-    assert.match(max, /^min\(45vh, var\(--graph-note-sheet-max/, max);
-    const limit = parseFloat(details(el).cssProps['--graph-note-sheet-max']);
+    assert.match(max, /^min\(45vh, var\(--thoughtknot-sheet-max/, max);
+    const limit = parseFloat(details(el).cssProps['--thoughtknot-sheet-max']);
     assert.ok(limit > 0 && limit <= 800 * 0.45, `${limit}`);
   });
 });
@@ -493,7 +493,7 @@ describe('it opens in the state last chosen, for the rest of the session', () =>
     try {
       const c = (await show(fresh, fence(GRAPH))).el;
       tapKey(c, 'large');
-      assert.ok(details(c).hasClass('graph-note-sheet') && !details(c).hasClass('is-minimised'));
+      assert.ok(details(c).hasClass('thoughtknot-sheet') && !details(c).hasClass('is-minimised'));
       assert.ok(labelled(details(c), 'Minimise details'));
     } finally {
       fresh.uninstall();
@@ -512,7 +512,7 @@ describe('a close button, Escape or clearing the selection closes it', () => {
 
   test('the close button closes it and clears the selection', () => {
     tapKey(el, 'large');
-    assert.ok(details(el).hasClass('graph-note-sheet'), 'the sheet');
+    assert.ok(details(el).hasClass('thoughtknot-sheet'), 'the sheet');
     labelled(details(el), 'Close details').click();
     assert.ok(details(el).hidden);
     assert.equal(selected(el), null);
@@ -528,16 +528,16 @@ describe('a close button, Escape or clearing the selection closes it', () => {
 
   test('Escape in the drawing, or a tap on empty space, clears the selection and closes it', () => {
     tapKey(el, 'large');
-    assert.ok(details(el).hasClass('graph-note-sheet'), 'the sheet');
-    el.querySelector('.graph-note-viewport').dispatch('keydown', { key: 'Escape' });
+    assert.ok(details(el).hasClass('thoughtknot-sheet'), 'the sheet');
+    el.querySelector('.thoughtknot-viewport').dispatch('keydown', { key: 'Escape' });
     assert.ok(details(el).hidden);
     tapKey(el, 'large');
-    const vp = el.querySelector('.graph-note-viewport');
+    const vp = el.querySelector('.thoughtknot-viewport');
     const at = { target: vp, pointerId: 4, pointerType: 'touch', clientX: 5000, clientY: 5000, button: 0 };
     vp.dispatch('pointerdown', at);
     vp.dispatch('pointerup', at);
     assert.ok(details(el).hidden);
-    assert.ok(!details(el).hasClass('graph-note-sheet'), 'no longer the sheet');
+    assert.ok(!details(el).hasClass('thoughtknot-sheet'), 'no longer the sheet');
   });
 });
 
@@ -569,12 +569,12 @@ describe('its toggle and close button are named, work by keyboard, and are 44 po
   });
 
   test('each is at least 44 points square', () => {
-    const HEAD = { tag: 'div', classes: ['graph-note-details-head'], ancestors: [SHEET] };
-    for (const cls of [[], ['graph-note-sheet-toggle']]) {
+    const HEAD = { tag: 'div', classes: ['thoughtknot-details-head'], ancestors: [SHEET] };
+    for (const cls of [[], ['thoughtknot-sheet-toggle']]) {
       const b = { tag: 'button', classes: ['clickable-icon', ...cls], ancestors: [HEAD, SHEET] };
       assert.equal(css(b, 'min-width'), '44px');
       assert.equal(css(b, 'min-height'), '44px');
     }
-    assert.ok(toggle(el).hasClass('graph-note-sheet-toggle'), 'the toggle is drawn as such');
+    assert.ok(toggle(el).hasClass('thoughtknot-sheet-toggle'), 'the toggle is drawn as such');
   });
 });
