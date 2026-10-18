@@ -19,7 +19,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
 `ImageSource`) are in the layer, and `link-host.ts`, `export.ts` and `vault-images.ts` implement them.
 
 - `main.ts` — the plugin: registers the block processor, the pane, the editor extension, the settings page and the
-  command that converts a note to standard GQL; keeps the settings, drafts and shared schemas; opens the editors.
+  command that converts a note to standard GQL; keeps the settings, drafts and shared schemas, the standard ones after the vault's (§27); opens the editors.
 - `inline-editors.ts` — the editors open in place: each found by its block's identity, never by another block that comes
   to its line, even one of the same graph; one to a block, however often Edit here is pressed; released, its typing
   written, when it is off the page and its note is closed, whether a card left or the editing view closed; never kept
@@ -45,6 +45,8 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
   Reading view, an embed and a hover preview offer no Run.
 - `edit-in-pane.ts` — Edit on a FROM block's card and a step's, opening the block in the pane as an empty graph's card
   does; taken away where the card is only read.
+- `schema-block.ts` — a block that holds only a schema (§3, schema_drawn), drawn as the core's `schemaPicture`: its
+  kinds and relationship types, read-only with Source showing its text; any other block is left to `block.ts`.
 - `style-block.ts` — a style block (§2): never drawn, folded away until opened, saying whose style it is, what it holds
   (its diagram types among the rest) and how many problems it has. The graph it styles is drawn with its nudges, and its problems listed, by `block.ts`.
 - `code.ts` (now the shared layer's, `core/src/display/code.ts`) — a block that is not a graph, shown as coloured code; a very long one plain.

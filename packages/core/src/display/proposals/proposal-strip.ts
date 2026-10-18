@@ -4,6 +4,7 @@
 // person presses Accept. On a phone the list is a sheet at the bottom of the screen (proposals_phone), as the inspector
 // is; each control is a 44-point target and says in words what it does.
 import { isPhone } from '../host';
+import { word } from '@graph-note/core';
 import type { ProposalShown, Which } from '@graph-note/core';
 
 /** What a card is given of a proposal: data to show, and the functions that decide, which reading view closes. */
@@ -22,7 +23,6 @@ const day = (at: string) => at.slice(0, 10);
 // A reason as its source gave it: the note keeps a model's reason with each Markdown mark escaped (§19), so it never
 // renders there; the card sets it as plain text, so the marks are shown as written, never read
 const plainReason = (reason: string) => reason.replace(/\\([\\`*_{}[\]()#+!|<>~&/@])/g, '$1');
-const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 
 /** Draws the card under `root`; returns the buttons that write, which a read-only place takes away. */
 export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTMLElement[] {
@@ -32,12 +32,12 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   let seen = false;
   const strip = root.createDiv({
     cls: 'graph-note-proposal',
-    attr: { role: 'region', 'aria-label': `Proposal ${card.id} for graph ${card.graph}` },
+    attr: { role: 'region', 'aria-label': word('proposal.region', { id: card.id, graph: card.graph }) },
   });
   strip.toggleClass('is-sheet', isPhone());
   const head = strip.createDiv({ cls: 'graph-note-proposal-head' });
-  head.createEl('strong', { text: `Proposal ${card.id}` });
-  head.createSpan({ cls: 'graph-note-kind', text: 'nothing is written until you accept' });
+  head.createEl('strong', { text: word('proposal.name', { id: card.id }) });
+  head.createSpan({ cls: 'graph-note-kind', text: word('proposal.not-yet-written') });
   const info = strip.createEl('ul', { cls: 'graph-note-proposal-provenance' });
   for (const line of shown.provenance) info.createEl('li', { text: line });
   // the graph spec's own check of the change set, said in words, each line that failed named (proposals_checked)
@@ -46,8 +46,8 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
     cls: `graph-note-proposal-checked${failed.length ? ' is-failed' : ''}`,
     attr: { role: 'status' },
     text: failed.length
-      ? `The graph spec’s check of this change set fails ${failed.length} of ${shown.checked.results.length}:`
-      : `The graph spec’s check of this change set passes all ${shown.checked.results.length}.`,
+      ? word('proposal.check-fails', { failed: failed.length, count: shown.checked.results.length })
+      : word('proposal.check-passes', { count: shown.checked.results.length }),
   });
   if (failed.length) {
     const list = checked.createEl('ul');
@@ -63,7 +63,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
     const b = into.createEl('button', {
       text: label,
       cls: `graph-note-proposal-${kind}`,
-      attr: { type: 'button', 'aria-label': `${label}: ${said}` },
+      attr: { type: 'button', 'aria-label': word('proposal.decide', { label, said }) },
     });
     b.addEventListener('click', () => {
       b.disabled = true;
@@ -82,7 +82,7 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   if (shown.stale) {
     const notice = strip.createDiv({ cls: 'graph-note-banner graph-note-proposal-stale', attr: { role: 'alert' } });
     notice.createEl('p', { text: shown.stale.message });
-    const ok = notice.createEl('button', { text: 'I have read this', attr: { type: 'button' } });
+    const ok = notice.createEl('button', { text: word('proposal.read-this'), attr: { type: 'button' } });
     writes.push(ok); // it only lets Accept on, so where nothing can be accepted it is taken away with the rest
     ok.addEventListener('click', () => {
       seen = true;
@@ -97,26 +97,26 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
     const some = waiting.filter((r) => !r.blocked).length;
     // the ones that can be accepted now, by id: a change that cannot be does not stop the others
     const all = decide(
-      `Accept all (${some})`,
-      `every change that can be accepted now, ${plural(some, 'change')}`,
+      word('proposal.accept-all', { count: some }),
+      word('proposal.accept-all.said', { count: some }),
       'accept',
       waiting.filter((r) => !r.blocked).map((r) => r.id),
       bulk,
     );
     accepts.push({ b: all, blocked: some === 0 });
     decide(
-      `Reject all (${waiting.length})`,
-      `every change still waiting, ${plural(waiting.length, 'change')}`,
+      word('proposal.reject-all', { count: waiting.length }),
+      word('proposal.reject-all.said', { count: waiting.length }),
       'reject',
       { all: true },
       bulk,
     );
-  } else bulk.createSpan({ cls: 'graph-note-quiet', text: 'Every change has been decided.' });
+  } else bulk.createSpan({ cls: 'graph-note-quiet', text: word('proposal.all-decided') });
   if (card.undo) {
     const undo = card.undo;
     const b = bulk.createEl('button', {
-      text: 'Undo',
-      attr: { type: 'button', 'aria-label': 'Undo the last decision' },
+      text: word('proposal.undo'),
+      attr: { type: 'button', 'aria-label': word('proposal.undo.said') },
     });
     b.addEventListener('click', () => void undo().then((result) => status.setText(result)));
     writes.push(b);
@@ -136,18 +136,21 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
       text.createEl('code', { cls: 'graph-note-proposal-code', text: row.text });
       if (row.reason) text.createSpan({ cls: 'graph-note-proposal-reason', text: ` — ${plainReason(row.reason)}` });
       if (row.blocked)
-        text.createDiv({ cls: 'graph-note-proposal-blocked', text: `Cannot be accepted yet: ${row.blocked}` });
+        text.createDiv({ cls: 'graph-note-proposal-blocked', text: word('proposal.blocked', { why: row.blocked }) });
       if (row.decision)
         text.createDiv({
           cls: 'graph-note-proposal-decision',
-          text: `${row.decision.state === 'accepted' ? 'Accepted' : 'Rejected'} by ${row.decision.by.replace(/_/g, ' ')} on ${day(row.decision.at)}`,
+          text: word(row.decision.state === 'accepted' ? 'proposal.accepted-by' : 'proposal.rejected-by', {
+            who: row.decision.by.replace(/_/g, ' '),
+            day: day(row.decision.at),
+          }),
         });
       if (row.state !== 'pending') continue;
       const actions = li.createDiv({ cls: 'graph-note-proposal-actions' });
       // each button is named for the sentence and the text it acts on
       const named = `${row.said} (${row.text})`;
-      accepts.push({ b: decide('Accept', named, 'accept', [row.id], actions), blocked: !!row.blocked });
-      decide('Reject', named, 'reject', [row.id], actions);
+      accepts.push({ b: decide(word('proposal.accept'), named, 'accept', [row.id], actions), blocked: !!row.blocked });
+      decide(word('proposal.reject'), named, 'reject', [row.id], actions);
     }
   };
 
@@ -159,22 +162,30 @@ export function renderProposalStrip(root: HTMLElement, card: ProposalCard): HTML
   else
     for (const g of shown.groups) {
       const fold = strip.createEl('details', { cls: 'graph-note-proposal-group', attr: { open: '' } });
-      fold.createEl('summary', { text: `${g.name} — ${plural(g.ids.length, 'change')}, ${g.pending} waiting` });
+      fold.createEl('summary', {
+        text: word('proposal.group', { group: g.name, count: g.ids.length, waiting: g.pending }),
+      });
       if (g.pending) {
         const actions = fold.createDiv({ cls: 'graph-note-proposal-bulk' });
         // those of the group that can be accepted now, by id, so one that cannot be does not stop the rest
         const ready = shown.rows.filter((r) => g.ids.includes(r.id) && r.state === 'pending' && !r.blocked);
         accepts.push({
           b: decide(
-            `Accept ${g.name}`,
-            `the ${plural(ready.length, 'change')} in ${g.name} that can be accepted now`,
+            word('proposal.accept-group', { group: g.name }),
+            word('proposal.accept-group.said', { group: g.name, count: ready.length }),
             'accept',
             ready.map((r) => r.id),
             actions,
           ),
           blocked: ready.length === 0,
         });
-        decide(`Reject ${g.name}`, `the ${g.pending} waiting in ${g.name}`, 'reject', { group: g.name }, actions);
+        decide(
+          word('proposal.reject-group', { group: g.name }),
+          word('proposal.reject-group.said', { group: g.name, count: g.pending }),
+          'reject',
+          { group: g.name },
+          actions,
+        );
       }
       rowsOf(fold, g.ids);
     }

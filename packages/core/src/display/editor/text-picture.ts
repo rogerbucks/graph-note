@@ -1,6 +1,6 @@
 // The coloured picture under the block editor's text field (spec §4): the text in gql-highlight's colours, each problem
 // underlined over exactly its words with a sign at the end of its line, each link in a text or a comment marked as a
-// link (§18, links_shown), and each line read back in plain English.
+// link (§18, links_shown), and each line read back in plain English after it, wrapping as the field wraps.
 import { linksIn, tokenize } from '@graph-note/core';
 import type { Diagnostic } from '@graph-note/core';
 import type { Ghost } from './inline-completion';
@@ -94,9 +94,14 @@ export function paintText(
       }
       col += p.s.length;
     }
-    if (marks.some((d) => d.severity !== 4)) overlay.createSpan({ cls: 'graph-note-line-sign', text: ' ⚠' });
+    // the sign and the note after the line, out of the flow of the text: the line wraps as the field's does (long_lines_wrap)
+    const sign = marks.some((d) => d.severity !== 4);
     const said = parts.some((p) => p.ghost) ? undefined : back.get(n); // the ghost has the end of its line
-    if (said) overlay.createSpan({ cls: 'graph-note-readback', text: ` — ${said}` });
+    if (sign || said) {
+      const end = overlay.createSpan({ cls: 'graph-note-line-end' });
+      if (sign) end.createSpan({ cls: 'graph-note-line-sign', text: ' ⚠' });
+      if (said) end.createSpan({ cls: 'graph-note-readback', text: ` — ${said}` });
+    }
     overlay.appendText('\n');
   });
 }

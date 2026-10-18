@@ -7,6 +7,7 @@ import { changesView, markedChanges, NO_CHANGES } from '../../core/src/changes-v
 import type { ChangesShown } from '../../core/src/changes-view.ts';
 import type { GraphDrawing } from '../../core/src/note-reading.ts';
 import { PALETTES } from '../../core/src/palette.ts';
+import { word } from '../../core/src/words.ts';
 import type { Drawn } from '../../core/src/render.ts';
 import type { Refusal } from '../../core/src/layout-limits.ts';
 
@@ -67,18 +68,14 @@ export function changesFigure(
     const drawn = await deps.layout(drawing, theme).catch(() => null);
     if (!drawn || 'reason' in drawn)
       return void picture.replaceChildren(
-        Object.assign(doc.createElement('p'), { textContent: 'The changes are listed as text only: not drawn here.' }),
+        Object.assign(doc.createElement('p'), { textContent: word('changes.not-drawn') }),
       );
     const svg = markedChanges(drawn.svg, shown, PALETTES[theme]);
     const url = win.URL.createObjectURL(new win.Blob([svg], { type: 'image/svg+xml' }));
     keep(url);
     const img = doc.createElement('img');
     img.src = url;
-    const n = shown.changes.length;
-    img.setAttribute(
-      'alt',
-      `${named}: ${n} ${n === 1 ? 'change' : 'changes'}, added drawn heavy, changed dashed, removed dotted`,
-    );
+    img.setAttribute('alt', word('changes.alt', { name: named, count: shown.changes.length }));
     img.setAttribute('aria-describedby', listId);
     picture.replaceChildren(img);
   };
@@ -90,10 +87,10 @@ export function changesSection(win: Window & typeof globalThis, graph: string, d
   const doc = win.document;
   const section = doc.createElement('section');
   section.setAttribute('class', 'gn-changes');
-  section.setAttribute('aria-label', 'Changes');
+  section.setAttribute('aria-label', word('changes.section'));
   const open = doc.createElement('button');
   open.setAttribute('type', 'button');
-  open.textContent = 'Compare with…';
+  open.textContent = word('changes.compare');
   const chooser = doc.createElement('div');
   chooser.setAttribute('class', 'gn-changes-pick');
   const result = doc.createElement('div');
@@ -104,7 +101,7 @@ export function changesSection(win: Window & typeof globalThis, graph: string, d
   let shownUrl: string | null = null;
 
   const show = async (commit: string, label: string) => {
-    say('Reading that version…');
+    say(word('changes.reading'));
     let shown: ChangesShown;
     try {
       shown = changesView(await deps.textAt(commit), deps.text(), graph);
@@ -112,18 +109,26 @@ export function changesSection(win: Window & typeof globalThis, graph: string, d
       return say(e instanceof Error ? e.message : String(e));
     }
     const heading = doc.createElement('h2');
-    heading.textContent = `Changes in graph ${graph} since ${label}`;
-    const figure = changesFigure(win, graph, shown, `Graph ${graph} since ${label}`, CHANGES_LIST_ID, deps, (url) => {
-      if (shownUrl) win.URL.revokeObjectURL(shownUrl);
-      shownUrl = url;
-    });
+    heading.textContent = word('changes.heading', { graph, label });
+    const figure = changesFigure(
+      win,
+      graph,
+      shown,
+      word('changes.figure', { graph, label }),
+      CHANGES_LIST_ID,
+      deps,
+      (url) => {
+        if (shownUrl) win.URL.revokeObjectURL(shownUrl);
+        shownUrl = url;
+      },
+    );
     result.replaceChildren(heading, ...figure.parts);
     await figure.drawn;
   };
 
   open.addEventListener('click', () => {
     void (async () => {
-      say('Reading the earlier versions…');
+      say(word('changes.reading-versions'));
       let versions: PageVersion[];
       try {
         versions = await deps.versions();
@@ -131,7 +136,7 @@ export function changesSection(win: Window & typeof globalThis, graph: string, d
         return say(e instanceof Error ? e.message : String(e));
       }
       const label = doc.createElement('label');
-      label.textContent = 'Version to compare with';
+      label.textContent = word('changes.version');
       const pick = doc.createElement('select');
       pick.setAttribute('id', 'gn-changes-pick');
       label.setAttribute('for', pick.id);
@@ -143,7 +148,7 @@ export function changesSection(win: Window & typeof globalThis, graph: string, d
       }
       const go = doc.createElement('button');
       go.setAttribute('type', 'button');
-      go.textContent = 'Show changes';
+      go.textContent = word('changes.show');
       go.addEventListener('click', () => {
         const chosen = versions[pick.selectedIndex];
         if (chosen) void show(chosen.commit, chosen.label);

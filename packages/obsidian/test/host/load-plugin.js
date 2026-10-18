@@ -21,8 +21,18 @@ export const speakIn = (tag) => {
   speaking = tag;
 };
 
+let device = {};
+/**
+ * Sets the device every load after is on, unless a load names its own: a phone or a tablet (`mobile`, with the
+ * document's `width`), for a check run on each device (keyboard_any_device); undefined puts it back.
+ */
+export const onDevice = (d) => {
+  device = d ?? {};
+};
+
 /** Loads main.js — CommonJS, as Obsidian loads it — with the stand-ins; returns the plugin, the stand-ins' record, the document and the app. */
 export async function load(options = {}) {
+  options = { ...device, ...options };
   const doc = fakeDocument(options.width ?? 700),
     uninstall = installGlobals(doc);
   const state = {

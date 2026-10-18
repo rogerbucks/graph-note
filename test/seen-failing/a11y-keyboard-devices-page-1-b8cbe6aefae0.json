@@ -1,0 +1,6 @@
+{
+  "file": "test/a11y-keyboard-devices-page-1.test.js",
+  "test": "the browser editor’s page on a phone with a keyboard: every state, from the keyboard alone > the skip link focused: every action reached and operated, and every focus left",
+  "seen_failing_first": false,
+  "evidence": "A new check over a page that already worked by keyboard in its phone layout: it guards keyboard_any_device on the browser page from here on."
+}

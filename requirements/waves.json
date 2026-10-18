@@ -128,16 +128,23 @@
       "workstreams": ["M1"]
     },
     {
-      "title": "Wave 19 · Held: project home page",
+      "title": "Wave 19 · Held: text to graph with AI",
       "start": "2027-05-24",
       "end": "2027-06-06",
+      "estimate": true,
+      "workstreams": ["X1"]
+    },
+    {
+      "title": "Wave 20 · Held: project home page",
+      "start": "2027-06-07",
+      "end": "2027-06-20",
       "estimate": true,
       "workstreams": ["D2"]
     },
     {
       "title": "Roger’s held changes, after all waves",
-      "start": "2027-06-07",
-      "end": "2027-06-20",
+      "start": "2027-06-21",
+      "end": "2027-07-04",
       "estimate": true,
       "workstreams": []
     }

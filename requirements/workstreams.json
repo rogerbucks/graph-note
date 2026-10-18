@@ -531,6 +531,7 @@
     "title": "Automated quality checks",
     "requirements": [
       "a11y_keyboard_auto",
+      "keyboard_any_device",
       "a11y_semantics_auto",
       "a11y_targets_reflow_auto",
       "ux_journey_auto",
@@ -700,6 +701,18 @@
       "cowork_ceiling",
       "cowork_no_server",
       "cowork_released"
+    ]
+  },
+  "X1": {
+    "title": "Text to graph with AI",
+    "requirements": [
+      "text_to_graph",
+      "text_to_graph_one_contract",
+      "text_to_graph_checked",
+      "text_to_graph_in_editor",
+      "text_to_graph_skill",
+      "text_to_graph_merge",
+      "text_to_graph_sources"
     ]
   },
   "D2": {

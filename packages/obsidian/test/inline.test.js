@@ -21,6 +21,26 @@ describe('edit here, in the card', () => {
     }
   });
 
+  test('while edited, Record a path, Make a view and Add a thing sit in one row of the card’s tools, not a row each', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('textarea'));
+      const rows = ['Record a path', 'Make a view', 'Add a thing'].map(
+        (name) => labelled(el, name)?.closest('.graph-note-card-tools') ?? null,
+      );
+      assert.ok(rows[0], 'in the card’s tools');
+      assert.ok(
+        rows.every((r) => r === rows[0]),
+        'one row',
+      );
+      assert.ok(labelled(el, 'Done').classList.contains('graph-note-primary'), 'Done stands out as the way out');
+    } finally {
+      env.uninstall();
+    }
+  });
+
   test('Edit here opens the text inside the drawing’s own card, with the help the pane has, and the focus in it', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {

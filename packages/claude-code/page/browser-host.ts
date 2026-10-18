@@ -2,6 +2,7 @@
 // shared layer asks its host for, made of plain DOM, as Obsidian's is made of its own. An icon is a span the stylesheet fills
 // from an image file the server holds (`/icons/<name>.svg`), so no icon library ships and no icon is ever shown as its name;
 // a name with no file shows a plain dashed square. Everything the page says is set as text.
+import { word } from '../../core/src/words.ts';
 import type { DisplayHost, MenuEntry } from '@graph-note/core/display/host';
 
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -28,7 +29,7 @@ function showMenu(entries: MenuEntry[], at: { x: number; y: number }, doc: Docum
   const menu = doc.createElement('div');
   menu.setAttribute('class', 'gn-menu');
   menu.setAttribute('role', 'menu');
-  menu.setAttribute('aria-label', 'Menu');
+  menu.setAttribute('aria-label', word('page.menu'));
   menu.setAttribute('aria-orientation', 'vertical');
   menu.style.left = `${at.x}px`;
   menu.style.top = `${at.y}px`;

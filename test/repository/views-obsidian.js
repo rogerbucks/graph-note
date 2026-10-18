@@ -168,7 +168,12 @@ export const OBSIDIAN = {
   },
   'the edit pane': async () => {
     const env = await paneNotes.open();
-    await until(() => env.el.querySelectorAll('g.node').length === 3);
+    // on a phone the pane opens on its text tab, the drawing kept until its tab is chosen
+    await until(
+      () =>
+        env.el.querySelectorAll('g.node').length === 3 ||
+        (!!env.el.querySelector('.graph-note-tabs') && !!env.el.querySelector('textarea')),
+    );
     return { env, el: env.el };
   },
   'the export form open on a card': async () => {
@@ -232,7 +237,7 @@ export const OBSIDIAN = {
     const { env, el } = await shownBlock(noteOf(GRAPH), 0);
     tapKey(el, 'large');
     el.querySelectorAll('button')
-      .find((b) => b.textContent.includes('Show only this and its neighbours'))
+      .find((b) => b.textContent.includes(word('details.show-only')))
       .click();
     assert.ok(el.querySelector('.graph-note-untangle'), 'the banner');
     return { env, el };
@@ -262,14 +267,14 @@ export const OBSIDIAN = {
   'adding a thing, while editing in place': async () => {
     const env = await load({ files: { [cardNotes.PATH]: cardNotes.NOTE } });
     const el = await editing(env);
-    await until(() => !!labelled(el, 'Add a thing'));
-    labelled(el, 'Add a thing').click();
+    await until(() => !!labelled(el, word('add.thing')));
+    labelled(el, word('add.thing')).click();
     assert.equal(el.querySelector('.graph-note-add-thing')?.hidden, false, 'the strip');
     return { env, el };
   },
   'the diagram types listed': async () => {
     const { env, el } = await shownBlock(noteOf(TEAM), 0);
-    labelled(el, 'Diagram type').click();
+    labelled(el, word('type.choose')).click();
     assert.equal(el.querySelector('.graph-note-type-list').hidden, false, 'the list');
     return { env, el };
   },
