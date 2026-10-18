@@ -239,6 +239,8 @@ export class DetailsPanel {
 
   /** Called when the details are closed, by the button, Escape or a tap on empty space. */
   onClosed?: () => void;
+  /** Picks a thing's box up to move it from the keyboard, as M does (§6, move_box_keyboard); unset when no box moves. */
+  onMove?: (key: string) => void;
 
   /**
    * Draws open details again when editing starts or ends: the inspector is for edit mode only (spec §14), so what is open
@@ -294,7 +296,7 @@ export class DetailsPanel {
       (n) => linkWords(this.o.reading, this.o.graph, n),
       (s) => this.choose(s),
     );
-    if (!this.o.diagram?.table) untangleOffers(el, key, this.actions);
+    if (!this.o.diagram?.table) untangleOffers(el, key, this.actions, this.o.readOnly?.() ? undefined : this.onMove); // read-only: nothing moves
     this.readOnlyProperties(
       el,
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
