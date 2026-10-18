@@ -545,7 +545,8 @@
     "title": "Library release on GitHub",
     "requirements": [
       "lib_github_release",
-      "lib_public_api"
+      "lib_public_api",
+      "nightly_prerelease"
     ]
   },
   "R2": {

@@ -100,16 +100,16 @@ export const usesRefs = (text) => [...text.matchAll(/^\s*(?:-\s*)?uses:\s*['"]?(
 
 /** Every `run:` command in a workflow, in order, joined into one string per step. */
 export const runCommands = (text) =>
-  [...text.matchAll(/^(\s*)(?:-\s*)?run:\s*(\|?)(.*)$/gm)].map((m, i, all) => {
+  [...text.matchAll(/^(\s*(?:-\s*)?)run:\s*(\|?)(.*)$/gm)].map((m) => {
     if (!m[2]) return m[3].trim();
-    // A block scalar: the indented lines that follow.
+    // A block scalar: the lines that follow, indented further than the `run:` key itself.
     const after = text
       .slice(m.index + m[0].length)
       .split('\n')
       .slice(1);
     const body = [];
     for (const l of after) {
-      if (l.trim() && l.length - l.trimStart().length <= m[1].length + 2) break;
+      if (l.trim() && l.length - l.trimStart().length <= m[1].length) break;
       body.push(l.trim());
     }
     return body.join('\n').trim();

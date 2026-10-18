@@ -164,11 +164,11 @@ export function releaseBefore(run, repo, tag) {
 
 /**
  * The published releases, oldest first, as [{tag, publishedAt}]. A draft is not one: it has not been published, so it is
- * not in the list, and its tag is never read.
+ * not in the list, and its tag is never read. Nor is a pre-release, a nightly build: only a stable release releases.
  */
 export function publishedReleases(run, repo) {
   return json(run, repo, `releases?per_page=${PAGE}`)
-    .filter((r) => !r.draft && r.published_at)
+    .filter((r) => !r.draft && !r.prerelease && r.published_at)
     .map((r) => ({ tag: r.tag_name, publishedAt: r.published_at }))
     .sort((a, b) => String(a.publishedAt).localeCompare(String(b.publishedAt)));
 }

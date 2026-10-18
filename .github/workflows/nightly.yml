@@ -1,0 +1,121 @@
+name: Nightly
+
+# A nightly build from main, published as a GitHub pre-release (spec §41, nightly_prerelease), for those who want the
+# newest work; everyone else stays on the stable releases release.yml makes from a bare version tag. It runs at 16:00 UTC
+# (2 am in Brisbane), and by hand. A night on which main has not moved since the last nightly publishes nothing.
+#
+# Three jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
+# nightly. `build` checks out main, installs and runs main's own code with read access only: the full suite, the content
+# check and the build, so a nightly is published only when every test passes. It uploads the same assets a release
+# carries, with the nightly version (scripts/nightly-version.mjs) in their manifest. `publish` may write the
+# repository's contents, which a release needs, and so runs no code of the repository at all: no checkout, no install,
+# no Node. It creates the pre-release with gh alone, and keeps the last seven nightlies. A pre-release never counts as a
+# release: the build status and the wiki are woken only by a stable one (types: [released]) and leave pre-releases out.
+on:
+  schedule:
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One nightly at a time, none cancelled.
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      moved: ${{ steps.moved.outputs.moved }}
+    steps:
+      - name: Has main moved since the last nightly?
+        id: moved
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          last=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease --jq '[.[] | select(.isPrerelease and (.tagName | test("-nightly\\.")))][0].tagName // ""')
+          built=""
+          if [ -n "$last" ]; then built=$(gh release view "$last" --repo "$GITHUB_REPOSITORY" --json targetCommitish --jq .targetCommitish); fi
+          if [ "$built" = "$sha" ] && [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
+            echo "Main is still at $sha, built as $last: nothing to publish."
+            echo "moved=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "moved=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.moved == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      sha: ${{ steps.version.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+          # the full history: npm test runs the tests-first records test, which needs it
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm audit signatures
+      - run: node scripts/check-classification.mjs --all
+      - run: npm test
+      - run: npm run build
+      - name: The nightly version, written into the manifest the build carries
+        id: version
+        run: |
+          echo "version=$(node scripts/nightly-version.mjs --date "$(date -u +%Y%m%d)" --write)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Bundle the core's layout source into one file, for the vault's layout parity check
+        run: npm run build:layout
+      - name: Archive the graph-spec libraries from the built commit, for the vault to vendor
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: git archive --format=tar.gz -o "graph-spec-libraries-$VERSION.tar.gz" --prefix=packages/graph-spec/src/ --add-file=packages/graph-spec/dist/graph-spec-check.js --prefix=packages/core/dist/ --add-file=packages/core/dist/layout-source-node.cjs --prefix= HEAD LICENSE THIRD_PARTY_NOTICES.md packages/graph-spec/package.json packages/graph-spec/src ':(exclude)packages/graph-spec/src/graph-spec-check.js' packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src
+      - name: Checksums for every asset
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" > SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nightly
+          path: |
+            main.js
+            manifest.json
+            styles.css
+            THIRD_PARTY_NOTICES.md
+            graph-spec-libraries-*.tar.gz
+            SHA256SUMS
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: nightly
+          path: nightly
+      - name: Publish the pre-release, and keep the last seven nightlies
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          SHA: ${{ needs.build.outputs.sha }}
+        run: |
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}$ ]] || { echo "::error::$VERSION is not a nightly version"; exit 1; }
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::$SHA is not a commit"; exit 1; }
+          cd nightly
+          gh release delete "$VERSION" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes 2>/dev/null || true
+          gh release create "$VERSION" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" SHA256SUMS --repo "$GITHUB_REPOSITORY" --prerelease --target "$SHA" --title "Nightly $VERSION" --notes "A nightly build of main at $SHA. Every test passed on it, but it has not been through a stable release's checks. For the newest work only; most people should use the latest stable release."
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease,createdAt --jq '[.[] | select(.isPrerelease and (.tagName | test("-nightly\\.")))] | sort_by(.createdAt) | reverse | .[7:] | .[].tagName' |
+            while read -r old; do gh release delete "$old" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes; done
