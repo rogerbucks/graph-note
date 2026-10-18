@@ -9,6 +9,7 @@ import { installHost, notice, readInHostDirection } from '@graph-note/core/displ
 import { toggleExportForm } from '@graph-note/core/display/export/export-form';
 import { button } from '@graph-note/core/display/graph-view/view-bar';
 import { gqlBlocks } from '../../core/src/blocks.ts';
+import { word } from '../../core/src/words.ts';
 import { readNote } from '../../core/src/drawing.ts';
 import { browserHost, PHONE_WIDTH } from './browser-host.ts';
 import { openEditorPane } from './editor-pane.ts';
@@ -36,6 +37,9 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
   installHost(browserHost(win));
   // the whole page reads in the browser's language's direction, so its own parts mirror with the shared ones (rtl_mirrors)
   readInHostDirection(doc.documentElement);
+  doc.title = word('page.title');
+  const title = doc.querySelector('.gn-title');
+  if (title) title.textContent = word('page.title');
   const root = doc.getElementById('gn-page');
   if (!root) return;
   const skip = doc.querySelector<HTMLElement>('.gn-skip');
@@ -102,9 +106,9 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       bar = doc.createElement('div');
       bar.setAttribute('class', 'graph-note-bar gn-export-bar');
       bar.setAttribute('role', 'toolbar');
-      bar.setAttribute('aria-label', `Graph ${first.graph}`);
+      bar.setAttribute('aria-label', word('bar.name', { graph: first.graph }));
       graph.append(bar);
-      button(bar, 'Export', 'download', () => toggleExportForm(graph, exporting), 'Export');
+      button(bar, word('bar.export'), 'download', () => toggleExportForm(graph, exporting), word('bar.export'));
     };
     // the graph as plain-English sentences, under the editor, made again with the note (cc_text_version)
     let words: HTMLElement | null = null;

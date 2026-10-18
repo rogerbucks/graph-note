@@ -99,7 +99,7 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
   const box = parent.createDiv({ cls: 'graph-note-inspector metadata-container' });
   box
     .createDiv({ cls: 'metadata-properties-heading' })
-    .createDiv({ cls: 'metadata-properties-title', text: 'Properties' });
+    .createDiv({ cls: 'metadata-properties-title', text: word('details.properties') });
   const content = box.createDiv({ cls: 'metadata-content' });
   const rows = content.createDiv({ cls: 'metadata-properties' });
   const alert = box.createDiv({ cls: 'graph-note-alert', attr: { role: 'alert' } });

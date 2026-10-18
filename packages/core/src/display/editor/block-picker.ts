@@ -62,7 +62,7 @@ export class BlockPicker {
 
   /** The picker element, first in the head. */
   private made(head: HTMLElement): HTMLSelectElement {
-    const picker = head.createEl('select', { cls: 'dropdown', attr: { 'aria-label': 'Graph block' } });
+    const picker = head.createEl('select', { cls: 'dropdown', attr: { 'aria-label': word('editor.block-picker') } });
     head.prepend(picker);
     picker.addEventListener('change', () => void this.chosen(picker.value));
     this.select = picker;

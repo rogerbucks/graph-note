@@ -5,6 +5,7 @@ import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
 import type GraphNotePlugin from './main';
 import type { EditTarget } from './main';
 import { BlockEditor } from './block-editor/block-editor';
+import { word } from '@graph-note/core';
 
 /** The edit pane's view type. */
 export const PANE = 'graph-note-pane';
@@ -24,7 +25,7 @@ export class GraphPane extends ItemView {
     return PANE;
   }
   getDisplayText(): string {
-    return this.editor.session ? `Graph ${this.editor.session.graph}` : 'Graph';
+    return this.editor.session ? word('bar.name', { graph: this.editor.session.graph }) : word('editor.pane-title');
   }
   override getIcon(): string {
     return 'git-fork';

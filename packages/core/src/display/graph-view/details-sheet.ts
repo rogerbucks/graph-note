@@ -6,7 +6,7 @@
 // of the drawing it covers, so the card can keep the chosen thing clear above it (sheet_keeps_thing_clear). Its keys are
 // its own: nothing typed in the note is taken. While the block is edited, the details are the inspector, in the card.
 import { setIcon } from '../host';
-import { sheetLimit } from '@graph-note/core';
+import { sheetLimit, word } from '@graph-note/core';
 import { screenOf } from './placement';
 
 /** Minimised to a bar, or restored to the full details. */
@@ -141,7 +141,7 @@ export class DetailsSheet {
     if (!t) return;
     t.empty();
     setIcon(t, min ? 'chevron-up' : 'chevron-down');
-    t.setAttribute('aria-label', min ? 'Restore details' : 'Minimise details');
+    t.setAttribute('aria-label', word(min ? 'details.restore' : 'details.minimise'));
     t.setAttribute('aria-expanded', String(!min));
   }
 

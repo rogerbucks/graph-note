@@ -3,7 +3,7 @@
 // details_choose_moves); the back and forward steps of the trail of things chosen (details_trail); and the move to what
 // is chosen, brief and eased, at once when the system asks for reduced motion (details_move_motion). The words, the walk
 // and the easing are the core's; this puts them on the page and runs the move frame by frame.
-import { MOVE_MS, glideAt } from '@graph-note/core';
+import { MOVE_MS, glideAt, word } from '@graph-note/core';
 import type { LinkGroup, NoteReading, Place, Trail, TrailStep, Zoom } from '@graph-note/core';
 import { button } from './view-bar';
 
@@ -20,7 +20,9 @@ export function linkWords(reading: NoteReading, graph: string, link: number): st
   const d = reading.graphs.get(graph),
     l = d?.links[link],
     text = (k: string) => d?.boxes.find((b) => b.key === k)?.text ?? k;
-  return l ? `Link: ${text(l.from)} ${l.reading} ${text(l.to)}` : 'Link';
+  return l
+    ? word('details.link-said', { from: text(l.from), reading: l.reading, to: text(l.to) })
+    : word('details.link');
 }
 
 /** A step of the trail, or the selection, by name: a thing's text, or "the link Tablet answers Which device?". */
@@ -71,9 +73,20 @@ export function renderTrail(
   const back = trail.previous(),
     next = trail.next();
   if (!back && !next) return;
-  const row = el.createDiv({ cls: 'graph-note-trail', attr: { role: 'navigation', 'aria-label': 'Trail' } });
-  if (back) button(row, `Back to ${name(back)}`, 'arrow-left', () => go('back'), 'Back');
-  if (next) button(row, `Forward to ${name(next)}`, 'arrow-right', () => go('forward'), 'Forward');
+  const row = el.createDiv({
+    cls: 'graph-note-trail',
+    attr: { role: 'navigation', 'aria-label': word('details.trail') },
+  });
+  if (back)
+    button(row, word('details.back-to', { name: name(back) }), 'arrow-left', () => go('back'), word('details.back'));
+  if (next)
+    button(
+      row,
+      word('details.forward-to', { name: name(next) }),
+      'arrow-right',
+      () => go('forward'),
+      word('details.forward'),
+    );
 }
 
 /** Whether the system asks for reduced motion. */
