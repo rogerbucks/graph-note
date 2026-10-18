@@ -187,7 +187,7 @@ export const OBSIDIAN = {
   },
   'the AI send dialog, showing what will be sent': async () => {
     const { env, el } = await sendDialog();
-    const shower = el.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === 'Show what will be sent');
+    const shower = el.querySelectorAll('button').find((b) => b.getAttribute('aria-label') === word('ai.show'));
     shower.click();
     await until(() => !!el.querySelector('.graph-note-ai-body'));
     return { env, el };

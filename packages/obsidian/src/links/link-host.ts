@@ -15,6 +15,7 @@ import {
   linkTo,
   refusedWords,
   safeMarkdown,
+  word,
 } from '@graph-note/core';
 import type { LeftAt, LinkHost } from '@graph-note/core/display/links/link-types';
 import { FOLLOWED, followAnchor } from '@graph-note/core/display/links/links-list';
@@ -40,7 +41,7 @@ class LeaveObsidian extends Modal {
 
   override onOpen(): void {
     readInHostDirection(this.modalEl);
-    this.setTitle('Leave Obsidian?');
+    this.setTitle(word('leave.title'));
     // where it goes, first and large: the web site's host, or whom a mail is written to
     let where = '';
     try {
@@ -52,12 +53,16 @@ class LeaveObsidian extends Modal {
     this.contentEl.createEl('p', { cls: 'graph-note-leave-host', text: shown });
     this.contentEl.createEl('p', { text: this.words });
     const row = this.contentEl.createDiv({ cls: 'graph-note-leave-row' });
-    row.createEl('button', { text: 'Open', cls: 'mod-cta', attr: { type: 'button' } }).addEventListener('click', () => {
-      this.close();
-      // handed to Obsidian, which gives an address to the system's browser or mail app; the plugin fetches nothing
-      activeWindow.open(this.address, '_blank');
-    });
-    row.createEl('button', { text: 'Cancel', attr: { type: 'button' } }).addEventListener('click', () => this.close());
+    row
+      .createEl('button', { text: word('leave.open'), cls: 'mod-cta', attr: { type: 'button' } })
+      .addEventListener('click', () => {
+        this.close();
+        // handed to Obsidian, which gives an address to the system's browser or mail app; the plugin fetches nothing
+        activeWindow.open(this.address, '_blank');
+      });
+    row
+      .createEl('button', { text: word('leave.cancel'), attr: { type: 'button' } })
+      .addEventListener('click', () => this.close());
   }
 }
 
