@@ -15,6 +15,12 @@ export function build() {
   assert.equal(r.status, 0, r.stderr);
 }
 
+let speaking;
+/** Sets the language Obsidian says it is in for every load after (the test languages' check); undefined puts it back. */
+export const speakIn = (tag) => {
+  speaking = tag;
+};
+
 /** Loads main.js — CommonJS, as Obsidian loads it — with the stand-ins; returns the plugin, the stand-ins' record, the document and the app. */
 export async function load(options = {}) {
   const doc = fakeDocument(options.width ?? 700),
@@ -24,6 +30,7 @@ export async function load(options = {}) {
     mobile: options.mobile,
     files: new Map(Object.entries(options.files ?? {})),
     data: options.data ?? null,
+    language: options.language ?? speaking,
   };
   const obsidian = fakeObsidian(state);
   const Module = require('node:module'),

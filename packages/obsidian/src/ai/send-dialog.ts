@@ -5,6 +5,7 @@
 // set beside the graph, and every send is recorded in the plugin's data, whatever came of it.
 import { Modal, Notice, Setting } from 'obsidian';
 import type { ButtonComponent, TFile } from 'obsidian';
+import { readInHostDirection } from '@graph-note/core/display/host';
 import {
   confirmSend,
   gqlBlocks,
@@ -78,6 +79,7 @@ export class SendDialog extends Modal {
   }
 
   override onOpen(): void {
+    readInHostDirection(this.modalEl);
     this.setTitle('Ask an AI model to propose changes');
     this.draw();
   }

@@ -6,6 +6,7 @@
 // was (back_where_you_were). Nothing here fetches anything: every opening is Obsidian's.
 import { Component, Keymap, MarkdownRenderer, Modal, Notice, TFile } from 'obsidian';
 import type { App } from 'obsidian';
+import { readInHostDirection } from '@graph-note/core/display/host';
 import {
   embedParts,
   embeddedMarkdown,
@@ -38,6 +39,7 @@ class LeaveObsidian extends Modal {
   }
 
   override onOpen(): void {
+    readInHostDirection(this.modalEl);
     this.setTitle('Leave Obsidian?');
     // where it goes, first and large: the web site's host, or whom a mail is written to
     let where = '';
