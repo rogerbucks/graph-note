@@ -121,6 +121,47 @@ describe('the diagram types', () => {
   });
 });
 
+/** Each box's inside, a pixel in from its outline, and the points along each link's line, read from a drawing. */
+function boxesAndLines(svg) {
+  const pairs = (d) => [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])]);
+  const boxes = [...svg.matchAll(/class="node">\s*<path [^>]*d="([^"]*)"/g)].map((m) => {
+    const p = pairs(m[1]);
+    const xs = p.map(([x]) => x),
+      ys = p.map(([, y]) => y);
+    return [Math.min(...xs) + 1, Math.min(...ys) + 1, Math.max(...xs) - 1, Math.max(...ys) - 1];
+  });
+  const lines = [...svg.matchAll(/class="edge">\s*<path [^>]*d="([^"]*)"/g)].map((m) => {
+    const p = pairs(m[1]),
+      along = [];
+    for (let i = 0; i + 3 < p.length; i += 3)
+      for (let t = 0; t <= 1; t += 0.05) {
+        const [a, b, c, d] = [(1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t ** 2, t ** 3];
+        along.push([0, 1].map((k) => a * p[i][k] + b * p[i + 1][k] + c * p[i + 2][k] + d * p[i + 3][k]));
+      }
+    return along;
+  });
+  return { boxes, lines };
+}
+
+describe('a radial drawing', () => {
+  // proves: radial_links_round
+  test('curves a link between two outer things around the centre, never through it', async () => {
+    // the centre linked to two things that are linked to each other: drawn as a line, the link between them crossed it
+    const { plain, style, g } = shown(TEAMS, "(d1:Diagram {type: 'radial'})");
+    const drawing = styledDrawing(plain, style, g);
+    assert.equal(drawing.diagram?.type, 'radial');
+    const { boxes, lines } = boxesAndLines(draw(drawing, await loadEngine()).svg);
+    assert.equal(boxes.length, 3, 'every box read');
+    assert.equal(lines.length, 3, 'every link read');
+    for (const [l, along] of lines.entries())
+      for (const [b, [x0, y0, x1, y1]] of boxes.entries())
+        assert.ok(
+          along.every(([x, y]) => x < x0 || x > x1 || y < y0 || y > y1),
+          `link ${l + 1} is drawn through box ${b + 1}`,
+        );
+  });
+});
+
 describe('a type is offered only when the data fits it, and says why when it does not', () => {
   // proves: type_only_when_fits
   test('each type that does not fit says why, in words naming the things at fault', () => {

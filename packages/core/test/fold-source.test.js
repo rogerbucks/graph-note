@@ -162,6 +162,24 @@ describe('links routed', () => {
     const folded = routedSource('digraph G {\n  "a" -> "b" [id="edge2", label="x"];\n}', 'right-angled');
     assert.ok(folded.includes('  "a" -> "b" [id="edge2", xlabel="x"];'));
   });
+
+  // proves: radial_links_round
+  test('a radial drawing curves its links unless they are routed, and then they go the way chosen', () => {
+    const radial = 'digraph G {\n  rankdir=LR;\n  graph [layout=twopi, root="a", overlap=false, splines=true];\n}';
+    assert.equal(routedSource(radial, undefined), radial, 'curved: as the radial drawing asks');
+    for (const [routing, splines] of [
+      ['straight', 'line'],
+      ['right-angled', 'ortho'],
+    ]) {
+      const routed = routedSource(radial, routing);
+      assert.deepEqual(
+        [...routed.matchAll(/splines=(\w+)/g)].map((m) => m[1]),
+        [splines],
+        `${routing}: one way to route`,
+      );
+      assert.ok(routed.includes('  graph [layout=twopi, root="a", overlap=false];'), `${routing}: still radial`);
+    }
+  });
 });
 
 describe('Graphviz draws it so', () => {

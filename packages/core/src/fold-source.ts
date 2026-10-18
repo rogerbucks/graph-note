@@ -142,15 +142,16 @@ export function foldedSource(dot: string, plan: Folding | undefined): string {
 }
 
 const LINK_LABEL = /^( {2}"[^"]*" -> "[^"]*" \[(?:id="[^"]*", )?)label=/;
+const TYPE_CURVES = /^( {2}graph \[.*), splines=true\];$/;
 
 /**
  * The source `dot` with its links routed (untangle_routing): straight lines, or right angles, whose readings are set
- * beside them (`xlabel`), as Graphviz places a right-angled link's label. Curved, or none, is how Graphviz draws them:
- * `dot` unchanged.
+ * beside them (`xlabel`), as Graphviz places a right-angled link's label; the curves a radial drawing asks for
+ * (graph-layout.js, typedSource) give way to them. Curved, or none, is how Graphviz draws them: `dot` unchanged.
  */
 export function routedSource(dot: string, routing: string | undefined): string {
   if (routing !== 'straight' && routing !== 'right-angled') return dot;
-  const lines = dot.split('\n');
+  const lines = dot.split('\n').map((l) => l.replace(TYPE_CURVES, '$1];'));
   const routed = routing === 'straight' ? lines : lines.map((l) => l.replace(LINK_LABEL, '$1xlabel='));
   routed.splice(1, 0, `  graph [splines=${routing === 'straight' ? 'line' : 'ortho'}];`);
   return routed.join('\n');
