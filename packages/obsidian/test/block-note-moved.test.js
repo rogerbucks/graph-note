@@ -1,7 +1,8 @@
-// The note behind a block editor renamed or deleted while its block is edited (spec §9, nothing_typed_lost; slice 2's
-// end-of-slice review, 11 Oct 2026: "text typed after the note is renamed or deleted is lost silently"). Renamed or
-// moved, the editor follows the note, so what is typed keeps reaching it; deleted, what is typed is kept as a draft, and
-// the editor says so. In the pane and in place alike.
+// The note behind a block editor renamed or deleted while its block is edited (spec §9, nothing_typed_lost).
+// Slice 2's end-of-slice review, 11 Oct 2026, found: "text typed after the note is renamed or deleted is lost silently".
+// - Renamed or moved, the editor follows the note, so what is typed keeps reaching it.
+// - Deleted, what is typed is kept as a draft, and the editor says so.
+// In the pane and in place alike.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -92,8 +93,8 @@ describe('the pane, when its note is renamed or deleted', () => {
   });
 });
 
-// the third review of #91, 11 Oct 2026: after a rename, an editor took the block's first draft for its own, so Restore
-// and Discard deleted another's draft, and its next refused write kept a stale copy beside its own
+// The third review of #91, 11 Oct 2026: after a rename, an editor took the block's first draft for its own.
+// So Restore and Discard deleted another's draft, and its next refused write kept a stale copy beside its own.
 describe('an editor’s own draft, after its note is renamed', () => {
   const OLD = { text: READER + ',\n(old:Reason)', kept: '2026-10-10T08:00:00.000Z' };
   /** The pane on a note that already keeps the draft "old"; "new" typed and refused, so kept beside it; then renamed. */
@@ -173,13 +174,14 @@ describe('an editor’s own draft, after its note is renamed', () => {
   });
 });
 
-// the fourth review of #91, 11 Oct 2026, and Roger's choice A: a draft is known by an id kept with it, and the banner's
-// buttons act on the very draft they showed, never on whichever draft is found where it was
+// The fourth review of #91, 11 Oct 2026, and Roger's choice A: a draft is known by an id kept with it.
+// The banner's buttons act on the very draft they showed, never on whichever draft is found where it was.
 describe('the banner acts on the draft it showed, and on no other', () => {
   const OLD = { text: card.READER + ',\n(old:Option)', kept: '2026-10-10T08:00:00.000Z' };
   /**
-   * "old" kept; the pane and the card both open on the block, both showing it; the pane restores it, so it is no longer
-   * kept; the pane's next refused write keeps "P1", where "old" was. The card's banner still shows "old".
+   * "old" kept. The pane and the card both open on the block, both showing it.
+   * The pane restores it, so it is no longer kept. The pane's next refused write keeps "P1", where "old" was.
+   * The card's banner still shows "old".
    */
   async function oldThenP1() {
     const env = await load({ files: { [card.PATH]: card.NOTE }, data: { drafts: { [`${card.PATH}#reader`]: OLD } } });

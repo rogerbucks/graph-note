@@ -35,8 +35,6 @@ The style block: a picture on every cat's box.
 
 **Checklist line:**
 
-> **K-06** Seven cats, each with an animated GIF and a Picture: six pictures move and the seventh is still, saying six
-> are already moving here; pressing its Play says so again. Pause one of the six, then press Play on the seventh:
-> it moves.
+> **K-06** Seven cats, each with an animated GIF and a Picture: six pictures move and the seventh is still. It says six are already moving here, and pressing its Play says so again. Pause one of the six, then press Play on the seventh: it moves.
 
 **Back to the checklist:** [K-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-06 in its list.

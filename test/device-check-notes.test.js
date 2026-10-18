@@ -1,9 +1,11 @@
-// The device check notes: the device checklist (packages/obsidian/test/device-checklist.md) numbers every item, and the
-// test vault holds a note for each item after Before, in test-vault/Device checks/, that shows the case on a graph to try
-// it on. This holds the two together, so a changed checklist fails here, loudly, until the notes follow it. It holds
-// each note's graph blocks to what the note says they read as, with the graph's own reader and checkers (a view of a graph
-// drawn FROM another note of the device checks put to that note's graph, as the plugin puts it), and the index to the
-// notes it lists. Editor spec §3, tried first in a test vault.
+// The device check notes. The device checklist (packages/obsidian/test/device-checklist.md) numbers every item. The
+// test vault holds a note for each item after Before, in test-vault/Device checks/. Each note shows the case on a graph
+// to try it on. This holds the two together, so a changed checklist fails here, loudly, until the notes follow it.
+// It also holds:
+// - each note's graph blocks to what the note says they read as, with the graph's own reader and checkers.
+// - a view of a graph drawn FROM another note of the device checks put to that note's graph, as the plugin puts it.
+// - the index to the notes it lists.
+// Editor spec §3, tried first in a test vault.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -52,10 +54,14 @@ const notes = () => {
   return files.map((file) => ({ file, text: read(file) }));
 };
 /**
- * What a note may expect of its graph blocks, one `<!-- expect: … -->` line each: `clean`, or `problem "…"` for each
- * problem; `hint "…"`; `check "…"` for a rule of the graph spec the checker fails; `refused "…"` for a view the profile
- * refuses; `view-empty` for one that matches nothing; `parked N` and `overdue N` for the things drawn parked; and the
- * words in QUOTED, for a text the note quotes (test/device-check-quotes.test.js computes each).
+ * What a note may expect of its graph blocks, one `<!-- expect: … -->` line each:
+ * - `clean`, or `problem "…"` for each problem.
+ * - `hint "…"`.
+ * - `check "…"` for a rule of the graph spec the checker fails.
+ * - `refused "…"` for a view the profile refuses.
+ * - `view-empty` for one that matches nothing.
+ * - `parked N` and `overdue N` for the things drawn parked.
+ * - the words in QUOTED, for a text the note quotes (test/device-check-quotes.test.js computes each).
  */
 const KINDS = ['clean', 'problem', 'hint', 'check', 'refused', 'view-empty', 'parked', 'overdue', ...QUOTED];
 
@@ -232,9 +238,10 @@ describe('what each note holds, in the order it is read', () => {
 });
 
 /**
- * What the note’s graph blocks read as, with the graph’s own reader and checker: the problems the reader and the style
- * blocks’ reader give (a hint is no problem, so is listed apart), the rules of the graph spec the checker fails, and each
- * view block parsed.
+ * What the note’s graph blocks read as, with the graph’s own reader and checker. That is:
+ * - the problems the reader and the style blocks’ reader give. A hint is no problem, so is listed apart.
+ * - the rules of the graph spec the checker fails.
+ * - each view block parsed.
  */
 function readingOf(text) {
   const texts = gqlBlocks(text).map((b) => b.text);
@@ -257,8 +264,8 @@ function readingOf(text) {
 }
 
 /**
- * The reading a view of `graph` is put to when its note draws the graph FROM another note of the device checks (editor
- * spec §7, view_of_another_note), read there as the plugin reads it; else null, for the note's own reading.
+ * The reading a view of `graph` is put to when its note draws the graph FROM another note of the device checks. That is
+ * editor spec §7, view_of_another_note. It is read there as the plugin reads it. Else null, for the note's own reading.
  */
 function sourced(texts, graph) {
   const s = sourceFor(texts, graph);
@@ -391,8 +398,8 @@ describe('the notes are committed, and a clean session keeps them', () => {
   test('git would commit every note and the index, and nothing in the folder but notes', () => {
     const files = tracked();
     for (const f of [...noteFiles(), INDEX]) assert.ok(files.includes(f), `${f} can be committed`);
-    // the small images and the PDF the generator makes are kept too (test/test-files.test.js holds them to it); the
-    // large GIF is made at set-up and ignored
+    // The small images and the PDF the generator makes are kept too (test/test-files.test.js holds them to it). The
+    // large GIF is made at set-up and ignored.
     assert.deepEqual(
       files.filter((f) => !f.endsWith('.md')).sort(),
       TEST_FILES.filter((e) => !e.large && e.dir.startsWith('Device checks/'))

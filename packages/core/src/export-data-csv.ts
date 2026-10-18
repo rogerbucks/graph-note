@@ -1,15 +1,17 @@
-// The data as CSV (editor spec §16, export_data_formats, export_lossless): one table, as RFC 4180 writes it, records ending
-// at CRLF. Its header names six columns — kind, id, labels, from, type, to — then each property with the kind of its
-// values, `size:number`, a column for each kind a property's values come in. A row is a thing (its id and its kinds,
-// joined by `;`) or a link (its from, type and to), things first, each in the order written; in a view exported with its
-// faded context, a row outside the view is of kind `faded thing` or `faded link`. So it reads back exactly:
-// - a property a row does not have is an empty cell; an empty text is `""`, quoted, so the two are told apart;
-// - a text a spreadsheet would run as a formula, one starting with =, +, -, @, a tab or a carriage return, is guarded by
-//   an apostrophe before it, as is one that starts with an apostrophe already; a reader takes one apostrophe off, and
-//   a spreadsheet shows it;
-// - a number is written as it reads back, -0 too; a truth value as true or false; a day as YYYY-MM-DD; an instant in UTC.
-// CSV has no comments, so a thing's or link's `///` note is left out (§24, note_standard): never a `note` column, which
-// a reader could not tell from a property called note, and which would make a comment data.
+// The data as CSV (editor spec §16, export_data_formats, export_lossless). It is one table, as RFC 4180 writes it, with
+// records ending at CRLF. Its header names six columns — kind, id, labels, from, type, to. Then comes each property
+// with the kind of its values, `size:number`, a column for each kind a property's values come in. A row is a thing (its
+// id and its kinds, joined by `;`) or a link (its from, type and to). Things come first, each in the order written. In
+// a view exported with its faded context, a row outside the view is of kind `faded thing` or `faded link`. So it reads
+// back exactly:
+// - a property a row does not have is an empty cell. An empty text is `""`, quoted, so the two are told apart;
+// - a text a spreadsheet would run as a formula is guarded by an apostrophe before it. That is one starting with =, +,
+//   -, @, a tab or a carriage return. So is one that starts with an apostrophe already. A reader takes one apostrophe
+//   off, and a spreadsheet shows it;
+// - a number is written as it reads back, -0 too; a truth value as true or false; a day as YYYY-MM-DD; an instant in
+//   UTC.
+// CSV has no comments, so a thing's or link's `///` note is left out (§24, note_standard). It is never a `note` column,
+// which a reader could not tell from a property called note, and which would make a comment data.
 import type { Value } from '@thoughtknot/graph-spec';
 import { kindOf, numberText, timeText } from './export-data-model.ts';
 import type { ExportedData, ValueKind } from './export-data-model.ts';

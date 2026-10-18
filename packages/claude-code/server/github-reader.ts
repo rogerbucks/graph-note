@@ -1,9 +1,12 @@
-// Pull requests, merges and commits read from GitHub for review (editor spec §41, github_review_items): the repository
-// the open note lives in, named by its git remote `origin` on github.com, read by the user's own GitHub command line,
-// gh, with gh's own sign-in. The server keeps no token and is handed none: gh is run with fixed arguments and no shell,
-// for GET alone and on github.com alone, under an environment that carries no token, and only when the user asks
-// (Roger, 17 Oct 2026). Every path, number and commit put in an address is checked first, so nothing the repository or
-// the page writes becomes another request.
+// Pull requests, merges and commits read from GitHub for review (editor spec §41, github_review_items). The repository
+// is the one the open note lives in, named by its git remote `origin` on github.com. The user's own GitHub command
+// line, gh, reads it, with gh's own sign-in. The server keeps no token and is handed none. gh is run:
+// - with fixed arguments and no shell;
+// - for GET alone and on github.com alone;
+// - under an environment that carries no token;
+// - and only when the user asks (Roger, 17 Oct 2026).
+// Every path, number and commit put in an address is checked first. So nothing the repository or the page writes
+// becomes another request.
 import { execFile } from 'node:child_process';
 import type { ChangedFile, ReviewItem } from '@thoughtknot/core';
 import { originOf } from './note-history.ts';

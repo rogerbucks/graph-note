@@ -1,6 +1,6 @@
-// Types for graph-spec-check.js, for the TypeScript that uses it (packages/core). Only what the core calls is declared;
-// the library itself stays plain JavaScript: its entry point's API, gathered from the feature modules (GUIDE.md), and the
-// same API in the built file pages load.
+// Types for graph-spec-check.js, for the TypeScript that uses it (packages/core). Only what the core calls is declared.
+// The library itself stays plain JavaScript. These types cover its entry point's API, gathered from the feature modules
+// (GUIDE.md). They cover the same API in the built file pages load too.
 
 declare namespace GraphSpecCheck {
   /** A property value as the document profile reads it. */
@@ -40,8 +40,8 @@ declare namespace GraphSpecCheck {
     bares: { graph: string; line: number; written: string; type: string }[];
     /** Applies one block, and returns the graph it wrote to. Throws ProfileError. */
     apply(block: string): string;
-    /** A block this store applied, with each bare type written with its colon and each missing comma written at the
-     * end of the code on its line, no line added: the text an engine may be given (req:3.engine-gets-commas). */
+    /** A block this store applied, with each bare type written with its colon. Each missing comma is written at the
+     * end of the code on its line, no line added. It is the text an engine may be given (req:3.engine-gets-commas). */
     corrected(block: string): string;
   }
 
@@ -66,7 +66,7 @@ declare namespace GraphSpecCheck {
   /** A graph's canonical text, hashed: the state a change set is made against is its first sixteen digits. */
   function canon(g: Graph): string;
 
-  /** A change set's first line (§24 H1): its graph, its id, the state it was made against and its author; null when it is not one. */
+  /** A change set's first line (§24 H1): its graph, its id, the state it was made against and its author. Null when it is not one. */
   function changesetHeader(block: string): { graph: string; id: string; against: string; by: string } | null;
   /** A change set checked against its base blocks: each check with whether it passed, its header and the graph's state after it. */
   function checkChangeset(
@@ -121,9 +121,10 @@ declare namespace GraphSpecCheck {
     set?: Record<string, Value>;
   }
   /**
-   * A change set's block split as the check splits it: `additions` is the block with the statements' lines blanked (every
-   * line keeps its number), and `changes` are its DELETE and SET statements: the 1-based line each begins on, the
-   * 0-based lines it takes, its text and the `//@ reason:` hint directly above it.
+   * A change set's block split as the check splits it.
+   * - `additions` is the block with the statements' lines blanked (every line keeps its number).
+   * - `changes` are its DELETE and SET statements. Each has the 1-based line it begins on, the 0-based lines it takes,
+   *   its text and the `//@ reason:` hint directly above it.
    */
   function splitChangeset(block: string): {
     additions: string;
@@ -164,8 +165,8 @@ declare namespace GraphSpecCheck {
   /** A data block's shape against the profile, without applying it: the problem, or null. */
   function checkSyntax(block: string): ProfileError | null;
 
-  /** One element's notes and //@ lines (§26, §27): the element's line, the element, its tags as [key, value] in
-   * order, its note's lines ('' for a bare ///) and the note's first paragraph. */
+  /** One element's notes and //@ lines (§26, §27). It holds the element's line, the element, and its tags as
+   * [key, value] in order. It holds its note's lines ('' for a bare ///) and the note's first paragraph. */
   interface OwnedComment {
     line: number;
     element: { thing: string } | { link: [string, string, string] };
@@ -177,8 +178,8 @@ declare namespace GraphSpecCheck {
    * key. Throws ProfileError where the reader does; a query or an excerpt owns nothing. */
   function ownedComments(block: string): { owned: OwnedComment[]; unowned: number[]; malformed: number[] };
 
-  /** A note on a thing or a link (§26; editor spec §24): its element's line, the element, its /// lines' numbers, its
-   * text (CommonMark, for the host to render) and its summary, the text's first paragraph. */
+  /** A note on a thing or a link (§26; editor spec §24). It holds its element's line, the element and its /// lines'
+   * numbers. It holds its text (CommonMark, for the host to render) and its summary, the text's first paragraph. */
   interface ElementNote {
     line: number;
     element: { thing: string } | { link: [string, string, string] };

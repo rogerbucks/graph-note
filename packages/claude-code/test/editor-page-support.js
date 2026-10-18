@@ -1,6 +1,7 @@
-// Test support for the browser page's cases (editor-page.test.js, workstream C5): the page built once into a folder of its
-// own, served by the real server from that folder, and the layout worker's file run as a worker thread. Test code only:
-// what a case starts is put away by `cleanUp`, which the file runs once, after its last case.
+// Test support for the browser page's cases (editor-page.test.js, workstream C5). It holds:
+// - the page, built once into a folder of its own and served by the real server from that folder;
+// - the layout worker's file, run as a worker thread.
+// Test code only: what a case starts is put away by `cleanUp`, which the file runs once, after its last case.
 import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

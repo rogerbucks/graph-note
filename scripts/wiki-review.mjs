@@ -1,13 +1,18 @@
 #!/usr/bin/env node
-// Reviews the wiki pages people write or edit (spec §41, wiki_reviewed): the wiki is made from the repository
-// (scripts/wiki.mjs), but anyone with access may also edit it. Such a page is never changed here. Each is checked and
-// every suggestion is written up for the "Wiki review" issue that .github/workflows/wiki.yml keeps: a link to a page
-// or a repository file that is not there, a picture that is missing, a version older than the current one, or a
-// sentence too long to read easily. A person's edit to a page the wiki makes is reported too, as the next run
-// replaces it: the change belongs in the repository. Plain text only: it reads the wiki and the repository, nothing more.
+// Reviews the wiki pages people write or edit (spec §41, wiki_reviewed). The wiki is made from the repository
+// (scripts/wiki.mjs), but anyone with access may also edit it. Such a page is never changed here. Each is checked, and
+// every suggestion is written up for the "Wiki review" issue that .github/workflows/wiki.yml keeps. A suggestion is one
+// of these:
+// - a link to a page or a repository file that is not there;
+// - a picture that is missing;
+// - a version older than the current one;
+// - a sentence too long to read easily.
+// A person's edit to a page the wiki makes is reported too, as the next run replaces it. The change belongs in the
+// repository. Plain text only: it reads the wiki and the repository, nothing more.
 //
 // Usage:
 //   node scripts/wiki-review.mjs --wiki DIR --out FILE
+//
 // DIR is a clone of the wiki with its history. FILE gets the issue's body in Markdown, or is left empty when nothing
 // needs saying.
 import { execFileSync } from 'node:child_process';
@@ -40,7 +45,7 @@ export const quiet = (text) =>
 
 /**
  * The suggestions for one page written by a person: [{line, text}]. `pages` is the set of the wiki's page names
- * (without .md), `files` the wiki's other files by path, `exists` says whether a path is in the repository, and
+ * (without .md). `files` is the wiki's other files by path. `exists` says whether a path is in the repository.
  * `version` is the current version.
  */
 export function checkPage(text, { pages, files, exists, version }) {
@@ -120,8 +125,9 @@ function walk(dir, base = dir) {
 }
 
 /**
- * The issue's body for a wiki: one section for each page made here that a person changed, then one for each page a
- * person wrote with its suggestions. Empty when there is nothing to say. `changes` gives the last change to a path.
+ * The issue's body for a wiki. It has one section for each page made here that a person changed. Then it has one for
+ * each page a person wrote, with its suggestions. Empty when there is nothing to say. `changes` gives the last change
+ * to a path.
  */
 export function review({ files, read, changes, made, exists, version }) {
   const pages = new Set(files.filter((f) => f.endsWith('.md')).map((f) => f.replace(/\.md$/, '')));

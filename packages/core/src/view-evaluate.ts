@@ -1,12 +1,13 @@
-// What a view shows (editor spec §7: views_agree_with_grafeo, empty_view): a view put to the graph the core already holds,
-// never to a copy of it. The things it returns are those Grafeo returns for the view's query; the links are every link of
-// the graph whose two ends are in the view (for how one thing reaches another, the links of the routes found; for a walked
-// path, its steps in order). A view that matches nothing says so, in a sentence that also says what to change.
+// What a view shows (editor spec §7: views_agree_with_grafeo, empty_view). It is a view put to the graph the core
+// already holds, never to a copy of it. The things it returns are those Grafeo returns for the view's query. The links
+// are every link of the graph whose two ends are in the view. For how one thing reaches another, they are the links of
+// the routes found. For a walked path, they are its steps in order. A view that matches nothing says so, in a sentence
+// that also says what to change.
 //
-// Grafeo takes a quantified pattern such as -[]->{1,6} as a walk: it may use the same link again (found by running the
-// queries, 11 Oct 2026). So a thing is on a route of up to k steps from a to b when its steps from a and its steps on to b
-// add up to k or fewer, and a link is when the steps to its start, the link itself and the steps on from its end do:
-// two breadth-first searches, however many routes there are.
+// Grafeo takes a quantified pattern such as -[]->{1,6} as a walk. It may use the same link again (found by running the
+// queries, 11 Oct 2026). So take a route of up to k steps from a to b. A thing is on one when its steps from a and its
+// steps on to b add up to k or fewer. A link is on one when the steps to its start, the link itself and the steps on
+// from its end do. That takes two breadth-first searches, however many routes there are.
 import type { Graph } from '@thoughtknot/graph-spec';
 import { pathsOf } from './paths.ts';
 import type { PathReading } from './paths.ts';
@@ -14,7 +15,10 @@ import type { ViewSpec } from './view-profile.ts';
 
 type Edge = Graph['edges'][number];
 
-/** What a view returns: its things (ids), the links to draw with them (indexes into the graph's drawn links), and, when nothing matches, a sentence saying so. */
+/**
+ * What a view returns: its things (ids), and the links to draw with them (indexes into the graph's drawn links). When
+ * nothing matches, it holds a sentence saying so.
+ */
 export interface ViewResult {
   things: string[];
   /** Indexes into `reading.graphs.get(graph).links`, in the order the view shows them (a walked path: by step). */
@@ -59,12 +63,15 @@ function spread(g: Graph, start: string, most: number, forwards: boolean, backwa
 }
 
 /**
- * A view put to a graph of a reading, giving what Grafeo gives for the view's query: a hand-picked set is the things named
- * that the graph holds; everything near a thing is it and whatever is 1 to 3 links from it in either direction; how one
- * thing reaches another is the things and links on the routes of up to 6 steps; some kinds is the things of those kinds;
- * a walked path is the Path and its steps in order. The links are indexes into the graph's drawn links. A view that
- * matches nothing is `empty`, with a sentence saying so and what to change. Things with no box (a schema's) are walked
- * through but never returned, as they are never drawn.
+ * A view put to a graph of a reading, giving what Grafeo gives for the view's query:
+ * - a hand-picked set is the things named that the graph holds;
+ * - everything near a thing is it and whatever is 1 to 3 links from it in either direction;
+ * - how one thing reaches another is the things and links on the routes of up to 6 steps;
+ * - some kinds is the things of those kinds;
+ * - a walked path is the Path and its steps in order.
+ *
+ * The links are indexes into the graph's drawn links. A view that matches nothing is `empty`, with a sentence saying so
+ * and what to change. Things with no box (a schema's) are walked through but never returned, as they are never drawn.
  */
 export function evaluate(view: ViewSpec, reading: PathReading, graph: string): ViewResult {
   const drawing = reading.graphs.get(graph),

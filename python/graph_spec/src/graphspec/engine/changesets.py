@@ -214,8 +214,8 @@ def check_changeset(
     # the reader reads the base, then the change set, each in its graph, before Grafeo is given
     # either; Grafeo is given nothing the reader refuses (req:3.engine-reads-first), and what it
     # is given is the reader's corrected text (req:3.engine-gets-corrected). Grafeo loads
-    # a base text into the graph its tuple gives, the reader into the one its first line names, so
-    # the two must be one graph
+    # a base text into the graph its tuple gives. The reader loads it into the one its first line
+    # names. So the two must be one graph
     st = Store()
     for g, text in base:
         try:

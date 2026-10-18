@@ -1,6 +1,6 @@
-// Which names in the matrix note's header are classes the vault knows (editor spec §19, model_ceiling): a classification,
-// or a name the settings map to one. The matrix is the table with such a class across it, so another table that happens
-// to have an empty corner is not taken for it.
+// Which names in the matrix note's header are classes the vault knows (editor spec §19, model_ceiling). Each is a
+// classification, or a name the settings map to one. The matrix is the table with such a class across it. So another
+// table that happens to have an empty corner is not taken for it.
 import { matchClass } from '@thoughtknot/core';
 import type { Settings } from '@thoughtknot/core';
 

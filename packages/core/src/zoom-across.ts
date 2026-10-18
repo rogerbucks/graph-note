@@ -1,8 +1,8 @@
-// A wide drawing that scrolls one way only (editor spec §15, wide_types_phone): a tree, a flow or a timeline wider than
-// its card on a phone (types-table.ts, `scrollsOneWay`) is fitted to the card's height and shown from its start; one
-// finger moves it across and never up or down, while the browser keeps scrolling the page up and down. Zoomed in, by a
-// pinch or a button, it pans both ways, as any drawing does, and Fit brings the one-way view back. Everything else is
-// Zoom's own (zoom.ts), which this only adds to, so the two never differ in anything else.
+// A wide drawing that scrolls one way only (editor spec §15, wide_types_phone). Take a tree, a flow or a timeline wider
+// than its card on a phone (types-table.ts, `scrollsOneWay`). It is fitted to the card's height and shown from its
+// start. One finger moves it across and never up or down, while the browser keeps scrolling the page up and down.
+// Zoomed in, by a pinch or a button, it pans both ways, as any drawing does, and Fit brings the one-way view back.
+// Everything else is Zoom's own (zoom.ts), which this only adds to, so the two never differ in anything else.
 import { Zoom } from './zoom.ts';
 import { MAX_SCALE } from './zoom-fit.ts';
 import type { Mode, Size } from './zoom-fit.ts';

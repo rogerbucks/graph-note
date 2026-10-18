@@ -1,6 +1,7 @@
-// How tall a drawing's viewport is in a note (spec §3, note_height_capped; §24, drawing_height_setting): as tall as the
-// drawing fitted to its width, but never taller than the share of the window the settings allow, so what follows the
-// drawing in the note, its details among it, stays in reach. Full screen and the pane are as tall as they are given.
+// How tall a drawing's viewport is in a note (spec §3, note_height_capped; §24, drawing_height_setting). It is as tall
+// as the drawing fitted to its width. It is never taller than the share of the window the settings allow. So what
+// follows the drawing in the note, its details among it, stays in reach. Full screen and the pane are as tall as they
+// are given.
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { viewportSize } from '../src/display/graph-view/viewport-size.ts';

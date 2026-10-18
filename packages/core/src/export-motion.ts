@@ -1,9 +1,9 @@
-// Movement in an exported SVG (editor spec §7, §16; links_show_flow, motion_reduced_respected): an animated SVG moves by
-// CSS inside the file itself, so it needs no encoder and nothing loaded from elsewhere. The links a style graph moves run
-// their dashes, or a dot travels along a copy of each one's line, so the line itself is still drawn; and every animation
-// stops under `@media (prefers-reduced-motion: reduce)`, leaving the still drawing: the dashes, each link's icon and the
-// legend's words, so the image never tells anything by movement alone (motion_not_alone). A PNG is drawn from a still
-// image, which has none of this.
+// Movement in an exported SVG (editor spec §7, §16; links_show_flow, motion_reduced_respected). An animated SVG moves
+// by CSS inside the file itself. So it needs no encoder and nothing loaded from elsewhere. The links a style graph
+// moves run their dashes. Or a dot travels along a copy of each one's line, so the line itself is still drawn. Every
+// animation stops under `@media (prefers-reduced-motion: reduce)`. That leaves the still drawing: the dashes, each
+// link's icon and the legend's words. So the image never tells anything by movement alone (motion_not_alone). A PNG is
+// drawn from a still image, which has none of this.
 import type { FlowLink } from './link-flow.ts';
 
 /** How long a dash pattern takes to run its length, and a dot to travel a link, in seconds. */
@@ -11,7 +11,7 @@ const DASH_SECONDS = 1,
   DOT_SECONDS = 2;
 
 /**
- * The class an exported image carries on its root, which every rule of its style sheet is written under, so a sheet in
+ * The class an exported image carries on its root, which every rule of its style sheet is written under. So a sheet in
  * an SVG put inline in a page reaches nothing of the page's own.
  */
 export const IMAGE_CLASS = 'thoughtknot-image';
@@ -34,7 +34,7 @@ const FLOW_CSS = [
 ].join('\n');
 
 /**
- * An SVG with a style sheet of its own, first inside its root element, where every shape sees it; the root given the
+ * An SVG with a style sheet of its own, first inside its root element, where every shape sees it. The root is given the
  * image's class (`IMAGE_CLASS`) the sheet's rules are written under, once.
  */
 export function withStyleSheet(svg: string, css: string): string {
@@ -47,8 +47,8 @@ export function withStyleSheet(svg: string, css: string): string {
 }
 
 /**
- * A copy of a link's line that a dot travels along: the same path, its length counted as 100, so a dash pattern of a dot
- * and a gap of 200 puts a single dot on it, wherever along it the pattern is moved to.
+ * A copy of a link's line that a dot travels along. It is the same path, its length counted as 100. So a dash pattern
+ * of a dot and a gap of 200 puts a single dot on it, wherever the pattern is moved to.
  */
 export const runnerOf = (pathTag: string, cls: string): string =>
   pathTag
@@ -56,8 +56,8 @@ export const runnerOf = (pathTag: string, cls: string): string =>
     .replace(/^<path\b/, `<path class="${cls}" pathLength="100"`);
 
 /**
- * A drawn SVG (themed, before its frame) with a dot's runner on each link a dot moves along: a copy of the link's line
- * after it, in its group (`edge<n>`, Graphviz's numbering). With no dot, the SVG as it was.
+ * A drawn SVG (themed, before its frame) with a dot's runner on each link a dot moves along. The runner is a copy of
+ * the link's line after it, in its group (`edge<n>`, Graphviz's numbering). With no dot, the SVG as it was.
  */
 export function withRunners(svg: string, flow: readonly FlowLink[]): string {
   const dots = new Set(flow.filter((f) => f.motion === 'dot').map((f) => f.index + 1));

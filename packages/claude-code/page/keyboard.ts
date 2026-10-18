@@ -1,5 +1,6 @@
-// The page's keyboard help (spec §26, cc_keyboard; WCAG 2.2 AA, spec §11): the skip link to the note, and keeping the
-// keyboard where it was when part of the page is drawn again, which a change on disk or a decision does. Plain DOM.
+// The page's keyboard help (spec §26, cc_keyboard; WCAG 2.2 AA, spec §11). Plain DOM.
+// - The skip link to the note.
+// - Keeping the keyboard where it was when part of the page is drawn again. A change on disk or a decision does that.
 
 /** The controls and targets the keyboard can rest on. */
 const RESTING = 'a[href], button, input, select, textarea, [tabindex]';
@@ -16,9 +17,9 @@ export function skipLink(doc: Document, link: HTMLElement): void {
 }
 
 /**
- * Runs `redraw`, which empties and makes again what is in `root`, and gives the focus back to the control that had it:
- * the same kind of element with the same name, counting the ones of that name in the same order. A control that is gone
- * is not guessed at, and the focus outside `root` is not touched.
+ * Runs `redraw`, which empties and makes again what is in `root`. Then it gives the focus back to the control that had
+ * it. That is the same kind of element with the same name, counting the ones of that name in the same order. A control
+ * that is gone is not guessed at, and the focus outside `root` is not touched.
  */
 export async function keepFocus(root: HTMLElement, redraw: () => Promise<void>): Promise<void> {
   const active = root.ownerDocument.activeElement;

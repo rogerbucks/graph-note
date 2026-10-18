@@ -1,5 +1,5 @@
-// A graph block in reading view (spec §3 "Read-only in Reading view", §4; decided 9 Oct 2026): read-only, with Source in
-// place of Edit, and never taking the editor in place.
+// A graph block in reading view (spec §3 "Read-only in Reading view", §4; decided 9 Oct 2026).
+// It is read-only, with Source in place of Edit, and never takes the editor in place.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -9,8 +9,8 @@ import { PATH, READER, NOTE, showIn } from './host/card-notes.js';
 before(() => build());
 
 describe('reading view is read-only', () => {
-  // Decided by Roger, 9 Oct 2026 (spec §3 "Read-only in Reading view", §4 "In the editing view only"): a graph is edited
-  // only where the note is edited, in Live Preview or Source mode, or in the pane. In reading view the bar offers Source
+  // Decided by Roger, 9 Oct 2026 (spec §3 "Read-only in Reading view", §4 "In the editing view only").
+  // A graph is edited only where the note is edited, in Live Preview or Source mode, or in the pane. In reading view the bar offers Source
   // in place of Edit: the block's text, coloured and read-only, in place of the drawing, and back.
   test('in reading view the bar offers Source, and neither Edit here nor Edit in pane', async () => {
     const env = await load({ files: { [PATH]: NOTE } });

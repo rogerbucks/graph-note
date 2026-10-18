@@ -1,7 +1,10 @@
-// The GitHub mirror when a requirement's proof goes down (proved to part, or to open) and when GitHub is slow to list the
-// issues the bot has just made. The two met in run 38891890822: a new issue was made, the creator list had not caught up,
-// the creating stopped, and the downgrade of cc_editor_opens (reopen, relabel, Status) was never done because the issues
-// were edited after the creating. Every case runs against the in-memory stand-in for gh (test/repository/github-project-
+// The GitHub mirror when a requirement's proof goes down (proved to part, or to open). Also, when GitHub is slow to
+// list the issues the bot has just made. The two met in run 38891890822:
+// - A new issue was made, and the creator list had not caught up.
+// - The creating stopped.
+// - The downgrade of cc_editor_opens (reopen, relabel, Status) was never done, because the issues were edited after the
+//   creating.
+// Every case runs against the in-memory stand-in for gh (test/repository/github-project-
 // fake.js), so no network is touched. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

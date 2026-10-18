@@ -26,6 +26,6 @@
 
 **Checklist line:**
 
-> **P-12** A graph locked by an earlier build shows a ⚠ that its schema does not declare its types; its fix adds the DECLARES links, and the ⚠ goes.
+> **P-12** A graph locked by an earlier build shows a ⚠ that its schema does not declare its types. Its fix adds the DECLARES links, and the ⚠ goes.
 
 **Back to the checklist:** [P-12 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-12 in its list.

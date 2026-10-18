@@ -26,7 +26,7 @@ function jcs(v) {
 }
 // The first 16 hex digits of the SHA-256 of a value's canonical JSON.
 const hash16 = (o) => sha256hex(jcs(o)).slice(0, 16);
-// rule:basis-hash@1: hash16 of only the properties a judgement read, named in reads, comma-separated; one it
+// rule:basis-hash@1: hash16 of only the properties a judgement read, named in reads, comma-separated. One it
 // lacks counts as null, and a date or instant as its text.
 const basisHash = (props, reads) => {
   const o = {};

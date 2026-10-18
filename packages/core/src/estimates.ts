@@ -1,7 +1,7 @@
-// Estimated links (spec §3). A link that names a thing not in the graph, one or two letters from a thing that is, is
-// drawn to that thing as a guess; so is a relationship type one or two letters from a type of the graph. A guess is never
-// written to the note, never made between equals, and always explained. Only near misses are guessed — never a link
-// from the pattern of the graph.
+// Estimated links (spec §3). A link may name a thing not in the graph, one or two letters from a thing that is. It is
+// drawn to that thing as a guess. So is a relationship type one or two letters from a type of the graph. A guess is
+// never written to the note, never made between equals, and always explained. Only near misses are guessed — never a
+// link from the pattern of the graph.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { graphOf } from './blocks.ts';
@@ -31,8 +31,9 @@ export interface Estimate {
   /** For a type: which of the drawing's links it is. */
   index?: number;
   /**
-   * Where the word its problem's fix changes is written: a 0-based line of the block and the characters it spans, the
-   * place of that problem's `span`. Unset when it could not be found whole, as for a path written over a budget's cut.
+   * Where the word its problem's fix changes is written: a 0-based line of the block and the characters it spans. It is
+   * the place of that problem's `span`. Unset when it could not be found whole, as for a path written over a budget's
+   * cut.
    */
   span?: Place;
 }
@@ -56,8 +57,8 @@ export function distance(a: string, b: string): number {
 const plain = (s: string) => s.replace(/_/g, '').toLowerCase();
 
 /**
- * The nearest of `among` to `name`, by the rule decided 7 Oct 2026: near is one letter for names under eight characters
- * and two from eight, ignoring case and underscores, as the graph library counts near duplicates; a name under three
+ * The nearest of `among` to `name`, by the rule decided 7 Oct 2026. Near is one letter for names under eight characters
+ * and two from eight. Case and underscores are ignored, as the graph library counts near duplicates. A name under three
  * characters is never estimated. The one, or the several equally near, or none.
  */
 export function nearest(
@@ -135,8 +136,9 @@ export function hops(text: string): [string, string, string][] {
 }
 
 /**
- * Where the k-th link of a type was written in a graph's blocks: the block, the 1-based line in it, and the place of the
- * type's name in its brackets. Strings and comments are blanked first, so a word in them is never taken for it.
+ * Where the k-th link of a type was written in a graph's blocks. It gives the block, the 1-based line in it, and the
+ * place of the type's name in its brackets. Strings and comments are blanked first, so a word in them is never taken
+ * for it.
  */
 function whereType(
   texts: string[],
@@ -163,7 +165,8 @@ function whereType(
 
 /**
  * The estimates of one graph, and their problems rewritten to say what was guessed. `problems` (the note's) is updated
- * in place: a missing name that is estimated becomes a warning; one between equals lists them; a near-miss type adds one.
+ * in place. A missing name that is estimated becomes a warning; one between equals lists them; a near-miss type adds
+ * one.
  */
 export function estimate(
   g: Graph,
@@ -175,8 +178,8 @@ export function estimate(
 ): Estimate[] {
   const out: Estimate[] = [],
     ids = new Set(g.nodes.keys()),
-    // a thing drawn under a suggested name is a name nobody wrote: a near miss is never changed to it, which would write
-    // it without its fix (§4); a link naming it exactly still links to it
+    // a thing drawn under a suggested name is a name nobody wrote. A near miss is never changed to it, which would
+    // write it without its fix (§4). A link naming it exactly still links to it
     unnamed = new Set(d.boxes.filter((b) => b.suggested).map((b) => b.key)),
     guessable = new Set([...ids].filter((i) => !unnamed.has(i))),
     readings = gs.readings(g, shared);
@@ -230,8 +233,8 @@ export function estimate(
     p.fix = `change ${missing} to ${near.one}`;
     p.replace = { written: missing, with: [near.one] };
     p.severity = 'warning';
-    // the fix acts where the path names each word, never on the same word in a text or another link on its line; and
-    // one press changes every name the sentence says to change
+    // the fix acts where the path names each word, never on the same word in a text or another link on its line. One
+    // press changes every name the sentence says to change
     const places = placesOf.get(p.block) ?? placesOf.set(p.block, new BlockPlaces(texts[p.block] ?? '')).get(p.block);
     const at = places?.names(p.line, p.dropped, missing, words);
     if (at) {

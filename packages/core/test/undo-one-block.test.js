@@ -1,7 +1,7 @@
-// Undo stays in its block (editor spec §9, undo_stays_in_its_block): switching the pane to another block starts that
-// block's own history, so Undo and Redo never write one block's text into another, and a reason that held for the
-// block left is not given for the one chosen. Found in review of #451, 15 Oct 2026: select() kept the history, so Undo
-// after switching blocks wrote block A's old text over block B.
+// Undo stays in its block (editor spec §9, undo_stays_in_its_block). Switching the pane to another block starts that
+// block's own history. So Undo and Redo never write one block's text into another. A reason that held for the block
+// left is not given for the one chosen. Found in review of #451, 15 Oct 2026: select() kept the history, so Undo after
+// switching blocks wrote block A's old text over block B.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaneSession } from '../src/pane.ts';

@@ -1,5 +1,5 @@
-// The one module of the plugin that reaches the network (spec §13, §19): a request to an AI model the user set up, made
-// with Obsidian's own request function, never an AI vendor's library. It is reached only from the send dialog, when the
+// The one module of the plugin that reaches the network (spec §13, §19). It makes a request to an AI model the user set
+// up. It uses Obsidian's own request function, never an AI vendor's library. It is reached only from the send dialog, when the
 // user presses Send on exactly what they were shown (test/policy.test.js holds both).
 import { requestUrl } from 'obsidian';
 import type { Transport } from '@thoughtknot/core';

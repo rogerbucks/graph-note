@@ -600,7 +600,8 @@
       "wiki_generated",
       "user_guide_wiki",
       "wiki_reviewed",
-      "developer_wiki"
+      "developer_wiki",
+      "plain_docs_auto"
     ]
   },
   "G1": {

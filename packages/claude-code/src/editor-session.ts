@@ -1,10 +1,10 @@
-// The page's side of a note open in the browser editor (spec §26, cc_redrawn_on_change, cc_undo_safe), on the core's
-// PaneSession and TextHistory: what is typed into a block, the note and the version the page last had from the
-// server, and what to write, always against that version, so the server refuses a write made over a change it has not
-// seen. A change on disk is drawn again or said to be a conflict, keeping what is typed (`changed`). Undo never undoes
-// over another program's change: once one has changed the block, the writes made before it are no longer undone, and
-// undo says so instead; the typing history starts again from the block as reloaded, so it cannot bring theirs back.
-// Host-free: the page sends what `write` and `undo` give, and passes back what the server answers.
+// The page's side of a note open in the browser editor (spec §26, cc_redrawn_on_change, cc_undo_safe). It runs on the
+// core's PaneSession and TextHistory. It holds what is typed into a block, and the note and version the page last had
+// from the server. It says what to write, always against that version. So the server refuses a write made over a change
+// it has not seen. A change on disk is drawn again or said to be a conflict, keeping what is typed (`changed`). Undo
+// never undoes over another program's change. Once one has changed the block, the writes made before it are no longer
+// undone. Undo says so instead. The typing history starts again from the block as reloaded, so it cannot bring theirs
+// back. Host-free: the page sends what `write` and `undo` give, and passes back what the server answers.
 import { PaneSession, TextHistory, type Change, type TextState } from '@thoughtknot/core';
 
 /** What a change on disk did to the page: nothing to its block, the block drawn again, or a conflict with what is typed. */
@@ -103,8 +103,8 @@ export class EditorSession {
   }
 
   /**
-   * The page wrote `note` whole itself, as Lock the graph or declaring Deferred does, and the server took it as `version`:
-   * the note now, its block followed as it is in it. Not a change by another program, so no history is dropped.
+   * The page wrote `note` whole itself, as Lock the graph or declaring Deferred does. The server took it as `version`.
+   * It is the note now, its block followed as it is in it. Not a change by another program, so no history is dropped.
    */
   wrote(note: string, version: string): Redraw {
     this.note = note;
@@ -128,8 +128,9 @@ export class EditorSession {
   }
 
   private step(against: string, way: 'undo' | 'redo'): ToWrite {
-    // the core drops the steps written before another program changed the block (undo_never_over_theirs), and says so;
-    // stopped by a copy of the block it cannot tell from it, it says that in its own words (block_followed_not_its_copy)
+    // the core drops the steps written before another program changed the block (undo_never_over_theirs), and says so.
+    // Stopped by a copy of the block it cannot tell from it, it says that in its own words
+    // (block_followed_not_its_copy)
     const why = this.pane.stepRefusal(way);
     // a refusal for the history needs no draft: nothing typed is lost (`history`, as the pane's own are marked)
     if (why) return { ok: false, reason: this.pane.stopped ? why : UNDO_OVER_THEIRS, history: true };

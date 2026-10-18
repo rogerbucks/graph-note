@@ -1,10 +1,13 @@
-// A proposal in a note (editor spec §17, AI proposals — accepted or rejected in the editor): a change set block is drawn over
-// its graph with what it adds, changes and removes marked in words as well as drawn (proposal_shown_not_applied), who
-// proposed it, when and what it read shown, with a notice first if the graph has moved since (proposal_provenance); each
-// change listed in plain English with Accept and Reject (proposal_one_by_one, proposals_read_back), in groups when there
-// are many (big_proposal); nothing written until a person presses one (person_decides); an Accept writes the change as
-// an edit that can be undone (accepting_is_an_edit), a Reject writes only the record in the change set
-// (rejecting_recorded); and on a phone the list is a bottom sheet, one row to a change (proposals_phone).
+// A proposal in a note (editor spec §17, AI proposals — accepted or rejected in the editor).
+// - A change set block is drawn over its graph. What it adds, changes and removes is marked in words as well as drawn
+//   (proposal_shown_not_applied).
+// - Who proposed it, when, and what it read are shown. A notice comes first if the graph has moved since (proposal_provenance).
+// - Each change is listed in plain language with Accept and Reject (proposal_one_by_one, proposals_read_back). There are
+//   groups when there are many (big_proposal).
+// - Nothing is written until a person presses one (person_decides).
+// - An Accept writes the change as an edit that can be undone (accepting_is_an_edit).
+// - A Reject writes only the record in the change set (rejecting_recorded).
+// - On a phone the list is a bottom sheet, one row to a change (proposals_phone).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { ProposalReview, basisOf, makeProposal, thingChange } from '@thoughtknot/core';

@@ -1,6 +1,6 @@
-// What an export holds (editor spec §16): the whole diagram, or a view; a view only of what is in it, unless the faded
-// context is asked for, and then the whole graph with what is outside the view marked to be faded. A graph or view with
-// nothing in it is said to be empty, never drawn as a blank.
+// What an export holds (editor spec §16): the whole diagram, or a view. A view holds only what is in it, unless the
+// faded context is asked for. Then it holds the whole graph with what is outside the view marked to be faded. A graph
+// or view with nothing in it is said to be empty, never drawn as a blank.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

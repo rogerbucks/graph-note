@@ -1,7 +1,8 @@
 # Design review: language, plug-ins, theming and tests
 
-A solution architect's review of how ready ThoughtKnot is for the things users will ask for: other languages and
-cultures, right-to-left scripts, plug-ins, themes, and tests that check each layer and run only what a change touches.
+A solution architect's review of how ready ThoughtKnot is for the things users will ask for. These are other languages
+and cultures, right-to-left scripts, plug-ins, themes, and tests that check each layer and run only what a change
+touches.
 It says what is there today, where the code already has a place to fit each one, and the design to build. Reviewed on
 17 October 2026, against version 0.5.0.
 
@@ -22,8 +23,8 @@ sections 42 to 44, and the order they are built in is in
 | Culture (numbers, dates, sorting) | No: fixed to UK English in 5 places | Small | Small |
 | Right-to-left | No: 25 style rules are left or right only | Medium | High |
 
-**Recommendation:** build the contracts and the plug-in interface in Wave 6 with the host and storage contracts already
-planned there, then language, theming and right-to-left in Wave 7, before the standalone app and VS Code are built.
+**Recommendation:** build the contracts and the plug-in interface in Wave 6, with the host and storage contracts already
+planned there. Then build language, theming and right-to-left in Wave 7, before the standalone app and VS Code.
 Each new app then gets them for free instead of being retrofitted.
 
 ## How the layers fit
@@ -51,8 +52,8 @@ after it, a package's entry, a page module or shared test support ran the whole 
 modules, so most changes ran all of it.
 
 **Done in this change.** The quick run now also follows the import graph
-([`scripts/import-graph.mjs`](https://github.com/rogerbucks/thoughtknot/blob/main/scripts/import-graph.mjs)): every test
-that imports a changed file, directly or through other modules, or names it to build or walk, runs. The whole suite now
+([`scripts/import-graph.mjs`](https://github.com/rogerbucks/thoughtknot/blob/main/scripts/import-graph.mjs)). Every test
+runs that imports a changed file, directly or through other modules, or names it to build or walk. The whole suite now
 runs for only 6 modules, and a typical change runs about 39 test files out of 435. The full suite still runs before
 every merge and in CI.
 
@@ -79,8 +80,8 @@ adapter's and plug-in's contract suite.
   interface in the core and is exported, so anyone building an app or plug-in can run it.
 - Every real adapter runs it in CI (`hosts_pass_contract`): Obsidian's against its test shim, the browser page's in a
   DOM, and the app and VS Code when they arrive.
-- One layer check (`layers_checked`) replaces the scattered ones: each layer imports only the layers below it, read
-  from the same import graph the quick test run uses.
+- One layer check (`layers_checked`) replaces the scattered ones. Each layer imports only the layers below it. The check
+  reads the same import graph the quick test run uses.
 
 ## 3. Plug-in interface
 
@@ -108,8 +109,8 @@ interface ThoughtKnotPlugin {
 
 - The built-in diagram types and exports move behind it first, so the interface is proved by real use before anyone
   else relies on it.
-- A plug-in gets only the capabilities its manifest lists. One that throws or runs too long is stopped and named, and
-  the drawing falls back to text, as a layout that is too large does today.
+- A plug-in gets only the capabilities its manifest lists. One that throws or runs too long is stopped and named. The
+  drawing then falls back to text, as a layout that is too large does today.
 - Plug-ins are versioned with the library (`lib_public_api`), so a breaking change needs a new major version.
 - Obsidian plug-ins and VS Code extensions keep working as they are; this is ThoughtKnot's own interface inside them.
 
@@ -124,7 +125,7 @@ light and dark, at the locked contrast. The interface's style sheet uses Obsidia
 - One set of named design tokens, `--gn-*`, for colour, type, spacing, corners and motion (`ui_theme_tokens`). Each
   host maps its own theme to them in one table, as the colour map does for the drawing. Every rule in the style sheets
   uses only tokens.
-- A plug-in inherits every token and may add its own for the items it adds, each with a light and a dark value
+- A plug-in inherits every token. It may add its own for the items it adds, each with a light and a dark value
   (`plugin_theme_tokens`, through `points.theme.add`). CI checks each against the locked contrast.
 - Later, `theme_graph` sets the same tokens from a graph, so a theme written as a note restyles the app too.
 
@@ -149,7 +150,7 @@ already keeps the reason as data and the words apart. That pattern scales.
 - Every problem gets a stable code, as the Language Server Protocol already allows (`problem_codes`), the same from
   the JavaScript and the Python libraries. The message is looked up by code, and people can search for it.
 - Translations are plain files per language, checked for the same keys and placeholders (`translations_as_files`).
-- The plain-English check (`ux_copy_auto`) keeps running on the source language.
+- The plain-language check (`ux_copy_auto`) keeps running on the source language.
 
 ## 6. Culture (numbers, dates, sorting)
 
@@ -162,8 +163,8 @@ and the Claude Code
 [`graph-view.ts:33`](https://github.com/rogerbucks/thoughtknot/blob/main/packages/claude-code/src/graph-view.ts#L33).
 
 **Design.**
-- One small formatter module in the core (`locale_formats`) for counts, sizes, dates, times, lists and sorting, built
-  on the browser's own `Intl`, with the locale and time zone from the host.
+- One small formatter module in the core (`locale_formats`) for counts, sizes, dates, times, lists and sorting. It is
+  built on the browser's own `Intl`, with the locale and time zone from the host.
 - What is written to a note never changes with locale (`locale_never_changes_bytes`): ISO dates and a full stop for
   decimals. This protects the byte-for-byte promises the editor already makes (`round_trips`, `layout_byte_identical`).
 
@@ -189,7 +190,7 @@ and the Claude Code
 - A right-to-left drawing is offered (`rtl_drawing_direction`). Graphviz lays out left to right; the drawing is
   mirrored after layout, so the layout source stays byte for byte the same.
 
-**Checked automatically.** CI runs every view in a long, accented pseudo-locale and a right-to-left one, and fails on
+**Checked automatically.** CI runs every view in a long, accented pseudo-locale and a right-to-left one. It fails on
 clipped text, untranslated words or controls on the wrong side (`pseudo_locales_checked`). This fits the existing
 WCAG, keyboard and visual-regression checks (`a11y_*_auto`, `visual_regression_auto`), so nobody checks by hand.
 
@@ -208,7 +209,7 @@ Checked against WCAG 2.2, Apple's and Microsoft's design guidance and common des
 | Narrow screens and reflow | Yes (`a11y_targets_reflow_auto`) | — |
 | Empty states | Yes (`empty_view`, `empty_export`, `empty_block_start`) | — |
 | Undo | Yes (`undo_everything` and others) | — |
-| Plain-English messages | Yes (`ux_copy_auto`) | — |
+| Plain-language messages | Yes (`ux_copy_auto`) | — |
 | Theme tokens for the interface | Partly (drawing only) | `ui_theme_tokens`, `plugin_theme_tokens` |
 | High contrast and forced colours | No | `forced_colours` |
 | Text enlarged to 200 per cent | No | `text_scaling` |

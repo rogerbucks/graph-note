@@ -1,5 +1,5 @@
-// Source, in reading view (spec §3): the block's text, coloured and read-only, shown in place of the drawing, and the drawing
-// back; the button that does it names what it will show next.
+// Source, in reading view (spec §3). It is the block's text, coloured and read-only, shown in place of the drawing, and
+// the drawing back. The button that does it names what it will show next.
 import { setIcon } from '../host';
 import { renderCode } from '../code';
 import { word } from '@thoughtknot/core';

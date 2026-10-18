@@ -33,8 +33,8 @@ class GuessedReadings(unittest.TestCase):
         for kind, reading, reverse in CASES:
             self.assertEqual(gr.guess_readings(kind), (reading, reverse), kind)
 
-    # the cases found on 6 Oct 2026: the vault's lock wrote "is proved by by", "is part of by" and
-    # "is decided in by"; the plugin's wrote "inverse of …" for all three
+    # The cases found on 6 Oct 2026. The vault's lock wrote "is proved by by", "is part of by"
+    # and "is decided in by". The plugin's wrote "inverse of …" for all three.
     def test_proved_by_reads_is_proved_by_and_back_proves(self):
         self.assertEqual(gr.guess_readings("PROVED_BY"), ("is proved by", "proves"))
 

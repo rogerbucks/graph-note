@@ -1,5 +1,5 @@
-// A model's address (editor spec §19, user_models): plain http only to this device, by its exact name, and nothing in the
-// address that could send a request somewhere else than it says, or carry a secret in it.
+// A model's address (editor spec §19, user_models): plain http only to this device, by its exact name. Nothing in the
+// address could send a request somewhere else than it says, or carry a secret in it.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { endpointProblem } from '../src/ai-choice.ts';

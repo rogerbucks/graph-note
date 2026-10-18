@@ -1,6 +1,7 @@
-// A proposal as data (editor spec §17): who proposed it, when, what it read and the state it was made against; its changes —
-// additions, changes of a property and removals — each with an id and a group; and the builders a source with its answer
-// as data uses (an AI's answer, §19, or a graph step's output, §20), so a proposal does not have to be written as GQL.
+// A proposal as data (editor spec §17): who proposed it, when, what it read and the state it was made against. Its
+// changes — additions, changes of a property and removals — each have an id and a group. It has the builders a source
+// with its answer as data uses (an AI's answer, §19, or a graph step's output, §20). So a proposal does not have to be
+// written as GQL.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -113,8 +114,8 @@ describe('the value of a change of a property', () => {
       assert.match(refused(value), /gives one value, and nothing else/, value);
   });
 
-  // the document profile holds no list value (the reader: "'[' is not a value in the profile"), so a list literal is no
-  // value to write: refused here, rather than accepted and then refused when the change is written
+  // the document profile holds no list value (the reader: "'[' is not a value in the profile"). So a list literal is no
+  // value to write. It is refused here, rather than accepted and then refused when the change is written
   test('is never a list literal, which the profile cannot hold, alone or with more', () => {
     for (const value of ['[1, 2]', "['a', 'b']", '[1, 2], extra: 3'])
       assert.match(refused(value), /gives one value, and nothing else/, value);

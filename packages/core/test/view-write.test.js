@@ -1,5 +1,5 @@
-// Writing a view (editor spec §7 views_by_tapping, §2 views_in_the_note): the query for a view built by tapping, and the
-// block it is stored as. Whatever is written is a query the profile reads back to the same view.
+// Writing a view (editor spec §7 views_by_tapping, §2 views_in_the_note). It covers the query for a view built by
+// tapping, and the block it is stored as. Whatever is written is a query the profile reads back to the same view.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseView, VIEW_FORMS } from '../src/view-profile.ts';

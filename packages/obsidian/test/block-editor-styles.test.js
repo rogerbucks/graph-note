@@ -1,5 +1,7 @@
-// The block editor in a drawing's card, as it looks (editor spec §4, "In place"): as tall as its text, its coloured
-// picture never a code block, and the theme's hover and focus styles never reaching the box (inline_untouched_by_theme).
+// The block editor in a drawing's card, as it looks (editor spec §4, "In place"):
+// - It is as tall as its text.
+// - Its coloured picture is never a code block.
+// - The theme's hover and focus styles never reach the box (inline_untouched_by_theme).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -11,8 +13,8 @@ import { PATH, READER, NOTE, show } from './host/card-notes.js';
 before(() => build());
 
 describe('the text in the card fits its text', () => {
-  // the try-out of 8 Oct 2026: the box in the card had a tall empty area under the text that the caret could land in, and
-  // the note's own code styles wrapped the coloured picture of the text out of step with the field under it
+  // The try-out of 8 Oct 2026: the box in the card had a tall empty area under the text that the caret could land in.
+  // And the note's own code styles wrapped the coloured picture of the text out of step with the field under it.
   test('the coloured picture is not a code block, so the note’s own code styles never reach it', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
@@ -39,8 +41,8 @@ describe('the text in the card fits its text', () => {
 });
 
 describe('the box in the card, untouched by the theme', () => {
-  // inline_untouched_by_theme (spec §4, 8 Oct 2026): the in-place box looks the same whether hovered, focused or neither,
-  // and its accessible name raises no tooltip.
+  // inline_untouched_by_theme (spec §4, 8 Oct 2026): the in-place box looks the same whether hovered, focused or neither.
+  // Its accessible name raises no tooltip.
   const styles = readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8');
 
   // the try-out of 8 Oct 2026: Obsidian shows a tooltip for any aria-label, so hovering the field showed "Text of graph trip"
@@ -116,9 +118,10 @@ describe('the box in the card, untouched by the theme', () => {
 });
 
 describe('a long line wraps, in the pane and in place', () => {
-  // long_lines_wrap (spec §4, Roger, 18 Oct 2026): a long line ran off the right of the box, cut off, with its
-  // plain-English note after it. The field and its coloured picture wrap alike, the note sits out of the flow so it never
-  // adds a row the field does not have, and the picture, not the field, sets the box's height.
+  // long_lines_wrap (spec §4, Roger, 18 Oct 2026). A long line ran off the right of the box, cut off.
+  // Its plain-language note came after it. Now the field and its coloured picture wrap alike.
+  // The note sits out of the flow, so it never adds a row the field does not have.
+  // The picture, not the field, sets the box's height.
   const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
   const inEditor = (tag, cls, inline) => ({
     tag,

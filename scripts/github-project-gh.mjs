@@ -1,11 +1,17 @@
-// The thin layer between the GitHub mirror's plan and the gh command (spec §12, requirements_checked_in_ci): it reads
-// what GitHub holds, and does a plan with `gh issue`, `gh label` and `gh api graphql`. All the thinking is
-// in github-project-plan.mjs; this layer only asks and tells, through a runner handed in — run(args, input) gives gh's
-// output — so a test can hand in a stand-in and no network is touched. It never deletes anything. It is careful where it
-// goes (gh runs in this repository's folder, with no repository or host from the environment; the repository gh points
-// at must be the origin's; every issue and label call names the repository, and every project call the owner) and how
-// fast (a pause between calls that change something, one retry on a secondary rate limit, and a refusal of any list that
-// hit its cap and so may be only part of what GitHub holds).
+// The thin layer between the GitHub mirror's plan and the gh command (spec §12, requirements_checked_in_ci). It reads
+// what GitHub holds, and does a plan with `gh issue`, `gh label` and `gh api graphql`. All the thinking is in
+// github-project-plan.mjs. This layer only asks and tells, through a runner handed in: run(args, input) gives gh's
+// output. So a test can hand in a stand-in and no network is touched. It never deletes anything.
+//
+// It is careful where it goes:
+// - gh runs in this repository's folder, with no repository or host from the environment;
+// - the repository gh points at must be the origin's;
+// - every issue and label call names the repository, and every project call the owner.
+//
+// It is careful how fast it goes:
+// - a pause between calls that change something;
+// - one retry on a secondary rate limit;
+// - a refusal of any list that hit its cap and so may be only part of what GitHub holds.
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -77,8 +83,8 @@ const UPDATE_FIELD = `mutation($field: ID!, $options: [ProjectV2SingleSelectFiel
 /**
  * The real runner: run(args, input) runs `gh` with the arguments, giving it the input on its standard input, and gives
  * its output. Throws with gh's own words when gh fails or cannot be started. `spawn` is spawnSync, or a stand-in.
- * `options.env` is the environment gh starts from (the process's own by default) and `options.set` names variables to
- * add to it, or, given as undefined, to take out, so that a runner can hold its own token and see no other.
+ * `options.env` is the environment gh starts from (the process's own by default). `options.set` names variables to add
+ * to it, or, given as undefined, to take out. So a runner can hold its own token and see no other.
  */
 export function ghRunner(spawn = spawnSync, { env: from = process.env, set = {} } = {}) {
   // GH_REPO and GH_HOST would send gh somewhere the checkout does not say, so gh never sees them.
@@ -145,11 +151,14 @@ const readLabels = (run, repo) =>
 
 /**
  * What GitHub holds now: {login, adopters, labelNames, issues, project}. `repo` is `owner/name`. The login is the one
- * that makes issues: `creator` where it is given (the workflow's bot, whose token may not ask who it is), else the one
- * signed in. Only the issues of the adopters (the owner and the bot) may be adopted, and only theirs are read. Each issue
- * is {number, title, body, state, labels (names), author (login), url, closedAt}; the project is null when none has the
- * title, undefined when `project` is false (it is not read), else as readProject gives it, with the items of adopted
- * issues only. Throws for a list that hit its cap.
+ * that makes issues. It is `creator` where that is given (the workflow's bot, whose token may not ask who it is), else
+ * the one signed in. Only the issues of the adopters (the owner and the bot) may be adopted, and only theirs are read.
+ * Each issue is {number, title, body, state, labels (names), author (login), url, closedAt}. The project is:
+ * - null when none has the title;
+ * - undefined when `project` is false (it is not read);
+ * - else as readProject gives it, with the items of adopted issues only.
+ *
+ * Throws for a list that hit its cap.
  */
 export function readRemote(run, repo, { creator, project = true } = {}) {
   const login = creator ?? JSON.parse(run(['api', 'user'])).login;
@@ -169,12 +178,13 @@ export function readRemote(run, repo, { creator, project = true } = {}) {
 
 /**
  * For a call that changes something, how to find out after a transient failure whether it already went through (see
- * paced): a function that re-reads what GitHub holds and gives {value}, what the call would have given, or undefined.
- * A create has one. An issue is taken up only as readRemote would adopt it: by the requirement id in its marker, and
- * only when one of the adopters wrote it, so somebody else's issue with the same title and body is never taken. A call
- * that changes only to a state it is given (an edit, a close, a reopen, adding to a project, setting a value, replacing
- * a field's options) has one that always says undefined, so it is simply tried again. A call a second try could repeat
- * (a comment, a new field) gives null and is not tried again.
+ * paced). It is a function that re-reads what GitHub holds. It gives {value}, what the call would have given, or
+ * undefined. A create has one. An issue is taken up only as readRemote would adopt it. That is by the requirement id
+ * in its marker, and only when one of the adopters wrote it. So somebody else's issue with the same title and body is
+ * never taken. Some calls change only to a state they are given. They are an edit, a close, a reopen, adding to a
+ * project, setting a value, and replacing a field's options. Such a call has one that always says undefined, so it is
+ * tried again.
+ * A call a second try could repeat (a comment, a new field) gives null and is not tried again.
  */
 function lookup(args, input, read, owner, adopters) {
   const [group, verb] = args;
@@ -202,8 +212,8 @@ const flags = (flag, values) => values.flatMap((v) => [flag, v]);
 function doIssues(act, repo, plan, guard) {
   const made = {};
   const issue = (...args) => inRepo(repo, ['issue', ...args]);
-  // The changes to the issues GitHub holds come first, so a creating that stops (guard.after) never keeps back a
-  // downgrade: a requirement whose proof went down is reopened and relabelled whatever happens to the new issues.
+  // The changes to the issues GitHub holds come first. So a creating that stops (guard.after) never keeps back a
+  // downgrade. A requirement whose proof went down is reopened and relabelled whatever happens to the new issues.
   for (const u of plan.issues.update) {
     const args = ['edit', String(u.number)];
     if (u.title) args.push('--title', u.issue.title);
@@ -266,15 +276,17 @@ function doFields(act, project, remote, fieldPlans) {
 
 /**
  * Does a plan from buildPlan in `repo` (`owner/name`), in order: labels, issues, then the project. The project is read
- * again after its fields change, because replacing a field's options gives them new ids and clears the values set from
- * them, and its items and values are planned afresh from that — so a run stopped half way is finished by the next, which
- * changes only what is still different. Each call that changes something goes through a pause, and a retry once on a
- * secondary rate limit; a call that fails in a transient way (a timeout, a reset connection, a 502, 503 or 504, "Bad
- * Gateway", "something went wrong") is tried again up to three times after `delays`, and a create that may have half
- * happened is looked for first, so it is never made twice. `opts` may give another `sleep` (milliseconds, blocking),
- * `pauseMs`, `retryMs` and `delays`. Throws, with gh's words, at the first call that fails for good, except in the
- * blocked-by links (github-project-blocks.mjs), which are set after the issues and whose failure is only a warning.
- * Gives {warnings}.
+ * again after its fields change. Replacing a field's options gives them new ids and clears the values set from them.
+ * Its items and values are planned afresh from that. So a run stopped half way is finished by the next, which changes
+ * only what is still different.
+ *
+ * Each call that changes something goes through a pause, and a retry once on a secondary rate limit. A call may fail in
+ * a transient way: a timeout, a reset connection, a 502, 503 or 504, "Bad Gateway", "something went wrong". It is tried
+ * again up to three times after `delays`. A create that may have half happened is looked for first, so it is never
+ * made twice. `opts` may give another `sleep` (milliseconds, blocking), `pauseMs`, `retryMs` and `delays`.
+ *
+ * Throws, with gh's words, at the first call that fails for good. The exception is the blocked-by links
+ * (github-project-blocks.mjs). They are set after the issues, and their failure is only a warning. Gives {warnings}.
  */
 export function executePlan(run, repo, plan, opts = {}) {
   const owner = ownerOf(repo);

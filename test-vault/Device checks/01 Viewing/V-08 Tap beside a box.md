@@ -28,6 +28,6 @@
 
 **Checklist line:**
 
-> **V-08** Tapping just beside a box or a link, not on it, still chooses it. Where several are near, tapping again in the same place chooses the next, round to the first, and two quick taps or a double-click on or near things only choose, never zoom.
+> **V-08** Tapping just beside a box or a link, not on it, still chooses it. Where several are near, tapping again in the same place chooses the next, round to the first. Two quick taps or a double-click on or near things only choose, and never zoom.
 
 **Back to the checklist:** [V-08 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-08 in its list.

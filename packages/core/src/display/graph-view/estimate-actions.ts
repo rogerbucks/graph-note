@@ -1,9 +1,11 @@
-// What an estimated link offers when tapped (spec §3, estimate_never_written; device check V-06, Roger, 11 Oct 2026: "I
-// can't click on the estimated link to review it / edit it / fix it. Make that simple (quick fix or full edit options)"):
-// the quick fix, which accepts the estimate with its problem's own fix — the one the editor's fix bar offers, found by
-// the core's `estimateFix` — written into the text being edited, or else into the note; and Edit the link, which opens
-// the editor with the misspelt word selected, where the fix bar offers the same fix. Both write only through the card's
-// options, which read-only.ts gates; where the card is read-only neither is offered.
+// What an estimated link offers when tapped (spec §3, estimate_never_written). Device check V-06, Roger, 11 Oct 2026:
+// "I can't click on the estimated link to review it / edit it / fix it. Make that simple (quick fix or full edit
+// options)". It offers two things.
+// - The quick fix accepts the estimate with its problem's own fix. That is the one the editor's fix bar offers, found
+//   by the core's `estimateFix`. It is written into the text being edited, or else into the note.
+// - Edit the link opens the editor with the misspelt word selected, where the fix bar offers the same fix.
+//
+// Both write only through the card's options, which read-only.ts gates; where the card is read-only neither is offered.
 import { estimateFix, word } from '@thoughtknot/core';
 import { withFix } from '../fix-changes';
 import { button } from './view-bar';
@@ -41,8 +43,9 @@ export function estimateActions(el: HTMLElement, index: number, o: ViewOptions):
 }
 
 /**
- * The block with the fix made, written into the text being edited in this card, as the fix bar writes a fix, when that
- * text is the block as drawn; else, with no editor on the card, into the note. Resolves to why nothing was written, or null.
+ * The block with the fix made, written into the text being edited in this card, as the fix bar writes a fix. That is
+ * when that text is the block as drawn. Else, with no editor on the card, it is written into the note. Resolves to why
+ * nothing was written, or null.
  */
 async function accept(o: ViewOptions, block: number, was: string, now: string): Promise<string | null> {
   const ed = o.editing?.();

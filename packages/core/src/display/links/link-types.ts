@@ -1,5 +1,5 @@
-// What a card is given to follow its links (editor spec §18), as the display layer sees it: the host decides how a link is
-// opened, previewed and rendered (the Obsidian plugin's `link-host.ts` does it through Obsidian), and the layer draws the
+// What a card is given to follow its links (editor spec §18), as the display layer sees it. The host decides how a link
+// is opened, previewed and rendered; the Obsidian plugin's `link-host.ts` does it through Obsidian. The layer draws the
 // links and calls these.
 import type { BrokenLink, FoundLink } from '@thoughtknot/core';
 import type { Lifecycle } from '../lifecycle';
@@ -25,7 +25,7 @@ export interface LinkHost {
   /** Shows the host's own preview of a link to a note or file, as a hover over a link in a note does. */
   hover(link: FoundLink, evt: MouseEvent | PointerEvent, el: HTMLElement): void;
   /**
-   * Renders Markdown into `el` through the host's renderer, from the graph's note, owned by `owner`; its links follow
+   * Renders Markdown into `el` through the host's renderer, from the graph's note, owned by `owner`. Its links follow
    * these rules too, `where` saying where the card is when one of them takes its tab.
    */
   render(markdown: string, el: HTMLElement, owner: Lifecycle, where?: () => LeftAt | null): Promise<void>;

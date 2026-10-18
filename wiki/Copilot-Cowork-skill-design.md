@@ -1,14 +1,14 @@
 # Copilot Cowork skill design
 
-A skill for Microsoft 365 Copilot Cowork that does the thoughtknot work there: read, check, draw and edit the graph
-blocks of Markdown notes kept in OneDrive or SharePoint. Designed on 18 October 2026, against version 0.5.0, at Roger's
+A skill for Microsoft 365 Copilot Cowork that does the thoughtknot work there. It reads, checks, draws and edits the
+graph blocks of Markdown notes kept in OneDrive or SharePoint. Designed on 18 October 2026, against version 0.5.0, at Roger's
 request. Not built yet.
 
 The requirements are section 46 of
 [`requirements/editor-requirements.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql),
 slice 10, in workstream M1. They are built in Wave 18 of
 [`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json), after the
-Obsidian community release (R2) and the whiteboard, because Roger's rule is that what he adds now goes after R2.
+Obsidian community release (R2) and the whiteboard. Roger's rule is that what he adds now goes after R2.
 
 ## What a Cowork skill is
 
@@ -44,8 +44,8 @@ flowchart LR
 
 - **One core, no second copy.** The skill's steps call the library from a companion script. Its prose tells Cowork
   when and how to use the script, never the notation's rules, so a rule changes in one place (`cowork_core_only`).
-- **Host contract (L1).** Cowork is the host. File reads and writes go through Cowork's own OneDrive access, so the
-  skill needs a storage backend that reads and writes the text handed to it, the same shape as the plain-folder
+- **Host contract (L1).** Cowork is the host. File reads and writes go through Cowork's own OneDrive access. So the
+  skill needs a storage backend that reads and writes the text handed to it. It has the same shape as the plain-folder
   backend in `storage_contract`. Display is files and a card, not a live pane.
 - **Edits.** Same bytes as Obsidian, proved by the shared edit cases, and shown for approval before a file changes
   (`cowork_same_bytes`).

@@ -1,6 +1,6 @@
-// The words of editing, in UK English (editor spec §42, words_catalogue): a thing's properties in the details, the form
-// that adds a thing while its block is edited, Edit itself, and the editor's kept drafts. source-words.ts keeps them with
-// every other word.
+// The words of editing, in UK English (editor spec §42, words_catalogue). They are a thing's properties in the details,
+// and the form that adds a thing while its block is edited. They are also Edit itself, and the editor's kept drafts.
+// source-words.ts keeps them with every other word.
 
 /** The words of editing, by key, in UK English. */
 export const EDIT_SOURCE_WORDS = {

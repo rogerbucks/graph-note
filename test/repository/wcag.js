@@ -1,13 +1,13 @@
 // The WCAG 2.2 AA check the tests run on every view and page of every host (editor spec §11; test/wcag.test.js). Test code
-// only — nothing here ships. A view is put into a real DOM (jsdom), with the stylesheet that styles it and the colours of
-// the theme it is shown in, and two checks run on it:
+// only — nothing here ships. Each view goes into a real DOM (jsdom). It gets the stylesheet that styles it and the
+// colours of the theme it is shown in. Then two checks run on it:
 //   - axe-core, the accessibility checker, with the rules tagged WCAG 2.0, 2.1 and 2.2, A and AA. It reads the structure:
 //     names, roles, labels, language, headings, ids, ARIA, links, tables and the like. Its colour and size rules need a
-//     browser's layout, which jsdom has none of, so they are not run by it; they are done here instead or left, below.
-//   - contrast (SC 1.4.3): the colour of every piece of text against the colour behind it, worked out from the stylesheet
-//     with the theme's own variables put in, against 4.5:1 (3:1 for large text).
-// Left to a real browser, and said so in the test: the contrast of lines and controls (SC 1.4.11), the size of targets
-// (SC 2.5.8, held by the sheet's own 44-point cases), reflow and spacing (SC 1.4.10, 1.4.12).
+//     browser's layout, which jsdom has none of. So axe does not run them: they are done here instead, or left (below).
+//   - contrast (SC 1.4.3): the colour of every piece of text against the colour behind it. It is worked out from the
+//     stylesheet with the theme's own variables put in. It must reach 4.5:1 (3:1 for large text).
+// Left to a real browser, and said so in the test: the contrast of lines and controls (SC 1.4.11). Also target
+// size (SC 2.5.8, held by the sheet's own 44-point cases), and reflow and spacing (SC 1.4.10, 1.4.12).
 import axe from 'axe-core';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { OBSIDIAN_TOKEN_MAP } from '../../packages/core/src/theme-tokens.ts';
@@ -103,9 +103,9 @@ export function obsidianVariables(theme) {
 }
 
 /**
- * A stylesheet with each var(--name) replaced by the value `variables` gives it, or its fallback; others are left. Each
- * `color-mix(in srgb, a p%, b)` of two colours then written out as the colour it makes, as a browser works it out, because
- * jsdom does not know the function.
+ * A stylesheet with each var(--name) replaced by the value `variables` gives it, or its fallback; others are left. Then
+ * each `color-mix(in srgb, a p%, b)` of two colours is written out as the colour it makes, as a browser works it out.
+ * That is because jsdom does not know the function.
  */
 export function withVariables(css, variables) {
   let text = css;
@@ -129,8 +129,8 @@ export function withVariables(css, variables) {
 
 /**
  * A stylesheet with each design token it reads written as the variable of Obsidian's theme the token is mapped from
- * (theme-tokens.ts, `OBSIDIAN_TOKEN_MAP`), its fallback kept: what the token gives in Obsidian, for a check that cannot
- * follow one custom property to another.
+ * (theme-tokens.ts, `OBSIDIAN_TOKEN_MAP`). Each keeps its fallback. That is what the token gives in Obsidian. It is for
+ * a check that cannot follow one custom property to another.
  */
 export function withObsidianNames(css) {
   return css.replace(/var\(\s*(--gn-[\w-]+)/g, (whole, name) =>
@@ -222,8 +222,8 @@ export const contrastRatio = (a, b) => {
 };
 
 /**
- * A stylesheet without what the system asks for of its own, forced colours and more contrast (test/forced-colours.test.js
- * holds those): jsdom cannot ask a media query and would apply them, and these checks are of the themes as they are.
+ * A stylesheet without forced colours and more contrast, which the system asks for of its own (held in
+ * test/forced-colours.test.js). jsdom cannot ask a media query and would apply them. We check the themes as they are.
  */
 export function withoutSystemAsks(css) {
   let text = css;
@@ -240,8 +240,8 @@ export function withoutSystemAsks(css) {
 
 // ── the DOM ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 /**
- * A page for a view: the view's HTML inside a document with a language and a title (the host gives these in Obsidian), the
- * stylesheets written out with the theme's variables, the theme's class on the body and its page colour behind.
+ * A page for a view: the view's HTML inside a document with a language and a title (the host gives these in Obsidian).
+ * Its stylesheets are written out with the theme's variables. The theme's class is on the body, its page colour behind.
  */
 export function pageFor({ html, css, theme, title = 'ThoughtKnot view', lang = 'en' }) {
   const vars = obsidianVariables(theme);
@@ -260,8 +260,8 @@ export function openWindow(text, options = {}) {
 }
 
 /**
- * The browser page's style sheet for one theme (theme-css.ts writes both): the light variables, or, for the dark theme,
- * the ones the dark scheme sets, which jsdom cannot ask for by media query; and each var() written out.
+ * The browser page's style sheet for one theme (theme-css.ts writes both). For the light theme, the light variables.
+ * For the dark theme, the ones the dark scheme sets, which jsdom cannot ask for by media query. Each var() written out.
  */
 export function pageStyleFor(sheet, theme) {
   const css = withoutSystemAsks(sheet);
@@ -363,9 +363,9 @@ function describe(e) {
 }
 
 /**
- * Checks the page in `dom`, then closes it: {problems, rules}. `problems` is one line for each failure, from axe (its rule,
- * the WCAG criteria and the element) or from the contrast check; `rules` is how many axe rules ran, so a test can see that
- * the check looked at something. `background` is the colour behind the page, as text.
+ * Checks the page in `dom`, then closes it: {problems, rules}. `problems` is one line for each failure, from axe (its
+ * rule, the WCAG criteria and the element) or from the contrast check. `rules` is how many axe rules ran, so a test can
+ * see that the check looked at something. `background` is the colour behind the page, as text.
  */
 export async function audit(dom, theme, background) {
   try {

@@ -1,6 +1,6 @@
-// What a screen reader is told of a view (editor spec §41, a11y_semantics_auto): every control's accessible name, role and
-// state, read from the view's accessibility tree with axe-core's own reading of it, and the graph's text version held
-// against the drawing it describes. Test support only.
+// What a screen reader is told of a view (editor spec §41, a11y_semantics_auto). That is every control's accessible
+// name, role and state, read from the view's accessibility tree with axe-core's own reading of it. The graph's text
+// version is held against the drawing it describes. Test support only.
 import axe from 'axe-core';
 
 /** Everything a person can operate: native controls, ARIA widgets, and anything put in the tab order. */
@@ -121,7 +121,7 @@ export function treeProblems(window) {
 }
 
 /**
- * One line for each drawing in `root` whose text version does not match it: the text version is the list the drawing's
+ * One line for each drawing in `root` whose text version does not match it. The text version is the list the drawing's
  * viewport names as its description. It must count the things drawn, and say of each box what the box is labelled: a box
  * labelled "Type: Name" is a line "Name is a Type.", and a mark after the name (", added by the proposal") is the drawing's.
  */

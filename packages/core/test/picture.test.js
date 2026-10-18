@@ -1,8 +1,9 @@
-// A picture on a box (editor spec §18, animated_image_shown): where its style asks, a thing's image is drawn on its box.
-// A Picture in the style graph names the property that holds the image, for a kind's things or one thing, in the whole
-// graph or a view; the most particular Picture for a box decides. The layout source keeps room for it, a fixed cell at
-// the top of the box marked by its colour, which the host fills with the image (the drawing) or the export embeds it in.
-// Spans picture.ts (the choice and the source), style-checks.ts (the words checked) and style-source.ts and render.ts.
+// A picture on a box (editor spec §18, animated_image_shown): where its style asks, a thing's image is drawn on its
+// box. A Picture in the style graph names the property that holds the image. It does so for a kind's things or one
+// thing, in the whole graph or a view. The most particular Picture for a box decides. The layout source keeps room for
+// it, a fixed cell at the top of the box marked by its colour. The host fills that cell with the image (the drawing),
+// or the export embeds it in it. Spans picture.ts (the choice and the source), style-checks.ts (the words checked) and
+// style-source.ts and render.ts.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

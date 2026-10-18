@@ -1,7 +1,7 @@
-// Links on the drawing (editor spec §18): each line of a box's or a link's words that holds a link drawn as a link, and as
-// broken where it names nothing in the vault (links_shown, broken_links_problems); and a thing with attachments given a
-// paperclip with their count, said to screen readers too (attachments_at_a_glance). Marked on the SVG Graphviz drew, by
-// class and one mark, so the layout source stays the Python library's.
+// Links on the drawing (editor spec §18). Each line of a box's or a link's words that holds a link is drawn as a link.
+// It is drawn as broken where it names nothing in the vault (links_shown, broken_links_problems). A thing with
+// attachments is given a paperclip with their count, said to screen readers too (attachments_at_a_glance). Marked on
+// the SVG Graphviz drew, by class and one mark, so the layout source stays the Python library's.
 import { attachmentsOf, linksIn } from '@thoughtknot/core';
 import type { NoteReading } from '@thoughtknot/core';
 import { cornerOf } from '../graph-view/parked';

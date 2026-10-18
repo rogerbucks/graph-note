@@ -1,65 +1,66 @@
 // The names the core's entry exports, which index.test.js holds src/index.ts to (spec §10): test support only, nothing
-// here ships. src/index.ts is what the plugin imports, so its names hold while the modules behind it
-// change. These are the names it exported when drawing.ts was split into modules (9 Oct 2026), values and types alike,
-// with those added deliberately since: completing as you type (inlineCompletion, stepOver, Inline, InlineKind), lists as
-// linked things (makeList and its kin), and name suggestions (nameFromText, nameSlug, nameStyleOf, nameWords,
-// textFromName and their types), and the layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026),
-// the settings and strictness of §21 (OPTIONS, settingsFrom, toStandard and their kin, 11 Oct 2026), the one colour
-// mapping, with the steps around Graphviz for a host that lays out elsewhere (PALETTES, chosen and their kin, for the
-// Claude Code host, 11 Oct 2026), deferred things (parkForLater, parked, parkedCount and their types, and the fix for a
-// refusal to park: declareDeferred, declareDeferredBlock, DeferredNotDeclared), walked paths (PathRecorder, PathPlayer,
-// pathBlock, pathsOf, pathProblems and their types), the style graph (readStyle, lookOf, legendOf, nudgedSource,
-// styleEdit, hueColour, the words a style may use and their types), and views (viewsOf, parseView, makeView in place of
-// viewQuery and viewBlock, addView, which writes a view into a note and refuses one of a name only suggested there,
-// readingOf, evaluate and their types, 11 Oct 2026), and export (exportScope, exportSvg, exportWithLayout, pngSize, exportPlan,
-// companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE and their types, 11 Oct 2026; the data exports,
-// DATA_FORMATS, isDataFormat, exportedData and dataText, and an image across pages, pngPages and pageSvg, with their
-// types, 13 Oct 2026), and adding, changing and removing a note (setNote, 16 Oct 2026), and the refusal to
-// write a name only suggested (acceptNameFirst, 11 Oct 2026), and adding a thing (addThing, suggestName and their types,
-// 11 Oct 2026), and an estimated link's fix (estimateFix, EstimateFix, 11 Oct 2026), and focus and untangling a large graph
-// (focusOf, highlightOf, FocusState, edgesOf, neighbourhood, LegendFilter, shortestPath, find, nextAlong, Untangle and their
-// types, and boundsOf and centres of the tap areas, 13 Oct 2026), and arrowheads hidden and properties shown inline
-// (styledDrawing, arrowsShown, ARROWHEADS, INLINE, INLINE_ROWS and their types, 13 Oct 2026), and proposals (makeProposal,
-// thingChange, linkChange, ProposalReview, basisOf and their types, 13 Oct 2026: nothing that writes a change without a
-// person deciding is exported; deciderName, DECIDER_DEFAULT and ProposalCheck, 16 Oct 2026; changesIn, the changes a
-// model's answer proposes, which the Claude Code host reads Claude's proposal with, 16 Oct 2026), and finding your way from the details (linkGroups, Trail, glideAt, pointerTo, sheetLimit,
-// coverOf, MOVE_MS, READABLE_SCALE, their types, and the zoom's Place, 13 Oct 2026), and the diagram types (DIAGRAM_TYPES,
-// LARGE_GRAPH, diagramFor, diagramOffer, typeFits, shapeOf, suggestType, nearestType, tableOf, wayIn, scrollsOneWay and
-// their types, 14 Oct 2026; AcrossZoom, the zoom of a drawing scrolled across only, moved out of Zoom in the review of
-// #126), and sending to an AI model (aiReady, modelChoices, endpointProblem, AI_PURPOSES, prepareSend, confirmSend,
-// sendPrepared, noteWithProposal and their types, 13 Oct 2026: the core reaches no network, so a send goes only through
-// the transport a host hands in), and graph sources and steps (isSourceBlock, isStepBlock, sourceOf, sourceFor, readSource,
-// lineInSource, stepOf, runStep, givenLabel and their types, 14 Oct 2026: a source is read from text the host fetches,
-// and a step's output is only ever a proposal), and links that move (FLOW_MOTIONS, FLOW_ICONS, flowFor, flowLegend,
-// flowSaid, reversedLinks and their types, 14 Oct 2026), and a path played on its own and exported as an animated SVG
-// (PathAutoplay, PATH_PACES, DEFAULT_PACE, paceSaid, animationFits, ANIMATION_LIMITS and their types, 14 Oct 2026),
-// and the View menu's folding, merging and routing (ViewState, startingSwitches, labelsHidden, foldsHiding, linksOf,
-// VIEW_SWITCHES, SWITCH_NAMES, SWITCH_SETTINGS, LABEL_SCALE, BUSY_HUB and their types, 14 Oct 2026), and animated images
-// and pictures on boxes (imageFacts, imageLink, imagesOf, neverMoves, IMAGE_EXTENSIONS, IMAGE_LIMITS, LIMITS_SAID,
-// REDUCED_WORDS, pastLimit, playRefusal, startOf, PICTURE_MARK, PICTURE_SIZE, pictureFor, picturesFor, animationSaid
-// and their types, 14 Oct 2026: the host loads the files, and the core says what each can do), and links and
-// attachments (linksIn, linkKind, linkTo, linksHeld, attachmentsOf, noteOf, brokenLinks, withMeant, renamedLinks,
-// applyChanges, safeMarkdown, leavingWords, refusedWords, attachmentType and their types, 15 Oct 2026; an embedded note
-// read and made safe by the host, embedParts, embeddedMarkdown and EmbedPart, the same day). MIN_SCALE, the quarter of
-// natural size, went on 15 Oct 2026: from slice 3 the furthest out is the fit of the whole drawing (zoom_out_to_fit),
-// worked out by the zoom itself. The legend's choices a view saves as shown (LEGEND_CHOICES, LegendChoice and
-// LegendChoiceState, untangle_legend) came the same day. The mini-map's setting (MiniMapSetting, mini_map_setting) came
-// with the viewer aids on 16 Oct 2026. What the browser editor may show Claude (claudeGate, noteClassification,
-// classificationOf, sha256, CLAUDE, Gate, GateSettings and NoteClassification, cc_classified_asks and
-// cc_credential_never) came on 16 Oct 2026. The changes view (changesView, changesText, markedChanges, CHANGE_LOOKS,
-// NO_CHANGES, ChangeLine and ChangesShown, changes_view) came on 17 Oct 2026, and the review items (ReviewItems,
-// reviewLevels, asNote, groupSaid, workstreamsFrom, REVIEW_LEVELS, lineDiff, DIFF_LIMIT and their types,
-// github_review_items) the same day. The plug-in interface (pluginRegistry, PLUGIN_API, EXTENSION_POINTS, CORE_EXPORTS,
-// exporterContract, sampleExports and their types, plugin_interface) came on 17 Oct 2026 as well, and the locale's
-// formats (setLocale, currentLocale, DEFAULT_LOCALE, formatCount, formatSize, formatDay, formatInstant,
-// formatList, sortedForReader, locale_formats) the same day, and the catalogue of words (word, setLanguage, currentLanguage,
-// addTranslation, sayWords, placeholdersOf, translationProblems, SOURCE_LANGUAGE, SOURCE_WORDS and their types,
-// words_catalogue) the same day, and the theme tokens (THEME_TOKENS, OBSIDIAN_TOKEN_MAP, themeTokenCss,
-// themeTokenContract, ThemeToken, ThemeTokenUse) the same day; pseudoWords, PSEUDO_LANGUAGES, isPseudoWord and optionSaid
-// on 18 Oct 2026, the tallest drawing in a note (tallestOf, DrawingHeightSetting, drawing_height_setting),
-// schemaPicture (schema_drawn), withStandardSchemas (standard_schemas), thingSaid and linksSaid (details_said) the
-// same day, and a drawing in the direction it is read (mirrored, inReadingDirection, shownAsRead,
-// rtl_drawing_direction) the same day. The lists moved here from index.test.js in the review of #452.
+// here ships. src/index.ts is what the plugin imports, so its names hold while the modules behind it change. These are
+// the names it exported when drawing.ts was split into modules (9 Oct 2026), values and types alike, and those added
+// deliberately since. Completing as you type (`inlineCompletion, stepOver, Inline, InlineKind`). Lists as linked things
+// (makeList and its kin). Name suggestions (`nameFromText, nameSlug, nameStyleOf, nameWords, textFromName` and their
+// types). The layout kept apart from the interface (LayoutRunner and its kin, 10 Oct 2026). The settings and strictness
+// of §21 (`OPTIONS, settingsFrom, toStandard` and their kin, 11 Oct 2026). The one colour mapping, with the steps
+// around Graphviz for a host that lays out elsewhere. Those are `PALETTES, chosen` and their kin, for the Claude Code
+// host (11 Oct 2026). Deferred things (`parkForLater, parked, parkedCount` and their types), and the fix for a refusal
+// to park (`declareDeferred, declareDeferredBlock, DeferredNotDeclared`). Walked paths (`PathRecorder, PathPlayer,
+// pathBlock, pathsOf, pathProblems` and their types). The style graph (`readStyle, lookOf, legendOf, nudgedSource,
+// styleEdit, hueColour`, the words a style may use and their types). Views (`viewsOf, parseView, makeView` in place of
+// viewQuery and viewBlock, `addView, readingOf, evaluate` and their types, 11 Oct 2026). addView writes a view into a
+// note and refuses one of a name only suggested there. Export (`exportScope, exportSvg, exportWithLayout, pngSize,
+// exportPlan, companionNote, writeSafely, saidDate, EXPORT_FORMATS, PNG_MIN_SCALE` and their types, 11 Oct 2026). The
+// data exports (`DATA_FORMATS, isDataFormat, exportedData, dataText`), and an image across pages (`pngPages, pageSvg`),
+// with their types (13 Oct 2026). Adding, changing and removing a note (setNote, 16 Oct 2026). The refusal to write a
+// name only suggested (acceptNameFirst, 11 Oct 2026). Adding a thing (`addThing, suggestName` and their types, 11 Oct
+// 2026). An estimated link's fix (`estimateFix, EstimateFix`, 11 Oct 2026). Focus and untangling a large graph
+// (`focusOf, highlightOf, FocusState, edgesOf, neighbourhood, LegendFilter, shortestPath, find, nextAlong, Untangle`
+// and their types), and boundsOf and centres of the tap areas (13 Oct 2026). Arrowheads hidden and properties shown
+// inline (`styledDrawing, arrowsShown, ARROWHEADS, INLINE, INLINE_ROWS` and their types, 13 Oct 2026). Proposals
+// (`makeProposal, thingChange, linkChange, ProposalReview, basisOf` and their types, 13 Oct 2026). Nothing that writes
+// a change without a person deciding is exported. deciderName, DECIDER_DEFAULT and ProposalCheck came on 16 Oct 2026.
+// So did changesIn, the changes a model's answer proposes, which the Claude Code host reads Claude's proposal with.
+// Finding your way from the details (`linkGroups, Trail, glideAt, pointerTo, sheetLimit, coverOf, MOVE_MS,
+// READABLE_SCALE`, their types, and the zoom's Place, 13 Oct 2026). The diagram types (`DIAGRAM_TYPES, LARGE_GRAPH,
+// diagramFor, diagramOffer, typeFits, shapeOf, suggestType, nearestType, tableOf, wayIn, scrollsOneWay` and their
+// types, 14 Oct 2026). AcrossZoom, the zoom of a drawing scrolled across only, moved out of Zoom in the review of #126.
+// Sending to an AI model (`aiReady, modelChoices, endpointProblem, AI_PURPOSES, prepareSend, confirmSend, sendPrepared,
+// noteWithProposal` and their types, 13 Oct 2026). The core reaches no network, so a send goes only through the
+// transport a host hands in. Graph sources and steps (`isSourceBlock, isStepBlock, sourceOf, sourceFor, readSource,
+// lineInSource, stepOf, runStep, givenLabel` and their types, 14 Oct 2026). A source is read from text the host
+// fetches, and a step's output is only ever a proposal. Links that move (`FLOW_MOTIONS, FLOW_ICONS, flowFor,
+// flowLegend, flowSaid, reversedLinks` and their types, 14 Oct 2026). A path played on its own and exported as an
+// animated SVG (`PathAutoplay, PATH_PACES, DEFAULT_PACE, paceSaid, animationFits, ANIMATION_LIMITS` and their types, 14
+// Oct 2026). The View menu's folding, merging and routing (`ViewState, startingSwitches, labelsHidden, foldsHiding,
+// linksOf, VIEW_SWITCHES, SWITCH_NAMES, SWITCH_SETTINGS, LABEL_SCALE, BUSY_HUB` and their types, 14 Oct 2026). Animated
+// images and pictures on boxes (`imageFacts, imageLink, imagesOf, neverMoves, IMAGE_EXTENSIONS, IMAGE_LIMITS,
+// LIMITS_SAID, REDUCED_WORDS, pastLimit, playRefusal, startOf, PICTURE_MARK, PICTURE_SIZE, pictureFor, picturesFor,
+// animationSaid` and their types, 14 Oct 2026). The host loads the files, and the core says what each can do. Links and
+// attachments (`linksIn, linkKind, linkTo, linksHeld, attachmentsOf, noteOf, brokenLinks, withMeant, renamedLinks,
+// applyChanges, safeMarkdown, leavingWords, refusedWords, attachmentType` and their types, 15 Oct 2026). An embedded
+// note read and made safe by the host (`embedParts, embeddedMarkdown, EmbedPart`) came the same day. MIN_SCALE, the
+// quarter of natural size, went on 15 Oct 2026. From slice 3 the furthest out is the fit of the whole drawing
+// (zoom_out_to_fit), worked out by the zoom itself. The legend's choices a view saves as shown (`LEGEND_CHOICES,
+// LegendChoice, LegendChoiceState`, untangle_legend) came the same day. The mini-map's setting (MiniMapSetting,
+// mini_map_setting) came with the viewer aids on 16 Oct 2026. What the browser editor may show Claude came on 16 Oct
+// 2026 (`claudeGate, noteClassification, classificationOf, sha256, CLAUDE, Gate, GateSettings, NoteClassification`,
+// cc_classified_asks and cc_credential_never). The changes view (`changesView, changesText, markedChanges,
+// CHANGE_LOOKS, NO_CHANGES, ChangeLine, ChangesShown`, changes_view) came on 17 Oct 2026. The review items
+// (`ReviewItems, reviewLevels, asNote, groupSaid, workstreamsFrom, REVIEW_LEVELS, lineDiff, DIFF_LIMIT` and their
+// types, github_review_items) came the same day. The plug-in interface (`pluginRegistry, PLUGIN_API, EXTENSION_POINTS,
+// CORE_EXPORTS, exporterContract, sampleExports` and their types, plugin_interface) came on 17 Oct 2026 as well. The
+// locale's formats (`setLocale, currentLocale, DEFAULT_LOCALE, formatCount, formatSize, formatDay, formatInstant,
+// formatList, sortedForReader`, locale_formats) came the same day. So did the catalogue of words (`word, setLanguage,
+// currentLanguage, addTranslation, sayWords, placeholdersOf, translationProblems, SOURCE_LANGUAGE, SOURCE_WORDS` and
+// their types, words_catalogue). So did the theme tokens (`THEME_TOKENS, OBSIDIAN_TOKEN_MAP, themeTokenCss,
+// themeTokenContract, ThemeToken, ThemeTokenUse`). pseudoWords, PSEUDO_LANGUAGES, isPseudoWord and optionSaid came on
+// 18 Oct 2026. So did the tallest drawing in a note (`tallestOf, DrawingHeightSetting`, drawing_height_setting),
+// schemaPicture (schema_drawn) and withStandardSchemas (standard_schemas). thingSaid and linksSaid (details_said) came
+// the same day, as did a drawing in the direction it is read (`mirrored, inReadingDirection, shownAsRead`,
+// rtl_drawing_direction). The lists moved here from index.test.js in the review of #452.
 import { TYPES_LATE } from './index-types-late.js';
 
 /** The values src/index.ts exports, sorted. */
@@ -332,6 +333,7 @@ export const VALUES = [
   'pictureFor',
   'picturesFor',
   'placeholdersOf',
+  'placesFor',
   'playRefusal',
   'pluginRegistry',
   'pngPages',

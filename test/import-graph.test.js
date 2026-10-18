@@ -1,5 +1,6 @@
-// Which tests reach a file (editor spec §13, affected_tests_by_imports): the repository's import graph, followed from
-// each test through every module it imports, directly or through others, and the files a test names to build or load.
+// Which tests reach a file (editor spec §13, affected_tests_by_imports). It follows the repository's import graph from
+// each test, through every module it imports, directly or through others. It adds the files a test names to build or
+// load.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { importGraph, testsReaching, isTestFile } from '../scripts/import-graph.mjs';

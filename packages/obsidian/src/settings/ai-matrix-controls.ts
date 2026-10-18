@@ -1,9 +1,11 @@
-// A model's row of the destination matrix on the settings page (spec §19, model_ceiling): a choice among the rows of the
-// matrix note, and a switch for each class the row marks conditional with a condition, off until the user turns it on for
-// that model, with the row's condition beside it. The switch keeps the condition it was turned on under and is dropped,
-// and said to be, if the note's words change. A class marked yes needs no switch and one marked no has none; a class
-// matched by no classification, a row named twice and two columns for one class are flagged, never guessed. The row is
-// only ever chosen here, never worked out from the model.
+// A model's row of the destination matrix on the settings page (spec §19, model_ceiling).
+// - A choice among the rows of the matrix note.
+// - A switch for each class the row marks conditional with a condition. It is off until the user turns it on for that
+//   model. The row's condition is beside it.
+// The switch keeps the condition it was turned on under. It is dropped, and said to be, if the note's words change. A
+// class marked yes needs no switch and one marked no has none. These are flagged, never guessed: a class matched by no
+// classification, a row named twice, and two columns for one class. The row is only ever chosen here, never worked out
+// from the model.
 import type { SettingDefinition } from 'obsidian';
 import { classMapProblems, matrixGrants, matrixProblems, unmatchedClasses, word } from '@thoughtknot/core';
 import type { AiModel, ClassGrant, MatrixRow, MatrixSwitch, Settings } from '@thoughtknot/core';

@@ -1,7 +1,8 @@
-// Completing as you type (editor spec §4): what to offer inline after the caret — the closer of a bracket, brace or quote
-// just opened, a keyword, a declared kind or relationship type, a property name or a value already used — as the best
-// single match, the text to add; and the closer typed where one is already there, stepped over. Nothing here inserts
-// anything: a host shows the offer, and writes it only when the person accepts it.
+// Completing as you type (editor spec §4). It says what to offer inline after the caret, as the best single match: the
+// text to add. The offer may be the closer of a bracket, brace or quote just opened, or a keyword. It may also be a
+// declared kind or relationship type, a property name or a value already used. A closer typed where one is already
+// there is stepped over. Nothing here inserts anything: a host shows the offer, and writes it only when the person
+// accepts it.
 import { completions } from './help.ts';
 import { propertyNames } from './inspector.ts';
 import type { NoteReading } from './note-reading.ts';
@@ -146,11 +147,14 @@ function closerFor(text: string, caret: number, s: Scan): Inline | null {
 }
 
 /**
- * What to offer inline with the caret at `caret` of a graph block's text: the best single match, as the text to add after
- * the caret, or null when there is none. A bracket, brace or quote just opened offers its closer; a word being typed
- * offers a keyword, a kind after `(name:`, a type after `-[:`, a property name after `{` or `,` inside braces, or a value
- * already used for that property after `name: '`; and when none of those fit, whatever is open is closed. Nothing is
- * offered inside a comment, or when text follows the caret on its line.
+ * What to offer inline with the caret at `caret` of a graph block's text. It is the best single match, as the text to
+ * add after the caret, or null when there is none.
+ * - A bracket, brace or quote just opened offers its closer.
+ * - A word being typed offers a keyword, a kind after `(name:`, or a type after `-[:`.
+ * - It also offers a property name after `{` or `,` inside braces, or a value already used for that property after
+ *   `name: '`.
+ * - When none of those fit, whatever is open is closed.
+ * Nothing is offered inside a comment, or when text follows the caret on its line.
  */
 export function inlineCompletion(reading: NoteReading, graph: string, text: string, caret: number): Inline | null {
   const before = text.slice(0, caret),
@@ -201,9 +205,9 @@ export function inlineCompletion(reading: NoteReading, graph: string, text: stri
 }
 
 /**
- * The change that steps over a closer: `text` is `before` with one character typed at `caret - 1`, and that character is a
+ * The change that steps over a closer. `text` is `before` with one character typed at `caret - 1`. That character is a
  * closer — ) ] } or a quote — typed where the same one already follows and closes what is still open. Removing the one
- * that follows leaves the text as if the caret had stepped over it; null when the keystroke is to be left as it is.
+ * that follows leaves the text as if the caret had stepped over it. Null when the keystroke is to be left as it is.
  */
 export function stepOver(before: string, text: string, caret: number): TextChange | null {
   const typed = text.charAt(caret - 1);

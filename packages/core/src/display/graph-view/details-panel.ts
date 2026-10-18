@@ -1,8 +1,8 @@
-// A drawing's details on demand (spec §3, §14): what tapping a box, a link or an estimated link shows — its words, the
-// things at either end or its links in and out, grouped by type and direction in words (§25), its properties and its
-// problems — with the one shown marked as selected; and, while the block is edited in place, the inspector, which
-// changes its properties in the text. What its links reach can be chosen from it, and the walk retraced (§25); in view
-// mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
+// A drawing's details on demand (spec §3, §14). This is what tapping a box, a link or an estimated link shows. It shows
+// its words, the things at either end or its links in and out, its properties and its problems. Links are grouped by
+// type and direction in words (§25). The one shown is marked as selected. While the block is edited in place, it is the
+// inspector, which changes its properties in the text. What its links reach can be chosen from it, and the walk
+// retraced (§25). In view mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
 import { isPhone } from '../host';
 import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, thingSaid, word } from '@thoughtknot/core';
 import type { Estimate, TrailStep } from '@thoughtknot/core';
@@ -72,7 +72,7 @@ export class DetailsPanel {
     // still under reduced motion, as the system asks when the card is drawn (§11)
     this.images = new MovingImages(reducedMotion(activeWindow), o.images);
     this.sheet = new DetailsSheet(el, {
-      // the sheet is for view mode, in a note's card: full screen and the pane show the details in their own place; and a
+      // the sheet is for view mode, in a note's card. Full screen and the pane show the details in their own place. A
       // panel kept open is in the card, beside or below the drawing, never pinned to the screen (§24)
       on: () => o.mode === 'note' && !o.editing?.()?.session && !o.aids?.detailsOpen,
       close: () => this.close(),
@@ -98,7 +98,7 @@ export class DetailsPanel {
   }
 
   /**
-   * The pictures its style draws on the boxes of `svg` (§18), counted as they move with the details' images; those
+   * The pictures its style draws on the boxes of `svg` (§18), counted as they move with the details' images. Those
    * placed on a drawing before let go first, as a drawing laid out again holds none of them.
    */
   pictures(svg: Element): void {
@@ -179,8 +179,8 @@ export class DetailsPanel {
   }
 
   /**
-   * A thing's or link's properties, shown to be read, each as name: value, where the inspector is not open to change
-   * them: outside edit mode, and in reading view, which shows them and never changes them (spec §3, §14).
+   * A thing's or link's properties, shown to be read, each as name: value. This is where the inspector is not open to
+   * change them. That is outside edit mode, and in reading view, which never changes them (spec §3, §14).
    */
   private readOnlyProperties(el: HTMLElement, properties: [string, string][]): void {
     if (!properties.length || this.o.editing?.()?.session) return;
@@ -188,8 +188,8 @@ export class DetailsPanel {
   }
 
   /**
-   * The details panel, emptied and shown, with a header — the heading, in view mode the sheet's toggle, and a close button
-   * — and a body below it, which is returned for the details.
+   * The details panel, emptied and shown, with a header and a body below it. The body is returned for the details. The
+   * header has the heading, in view mode the sheet's toggle, and a close button.
    */
   private panel(title: string, kind?: string): HTMLElement {
     const el = this.el;
@@ -210,8 +210,8 @@ export class DetailsPanel {
   }
 
   /**
-   * The graph's summary, shown while nothing is chosen when the panel is kept open (§24, details_always_visible): how many
-   * things and links it has, of which kinds, and its problems. Nothing is selected, and no trail is begun.
+   * The graph's summary, shown while nothing is chosen when the panel is kept open (§24, details_always_visible). It
+   * says how many things and links it has, of which kinds, and its problems. Nothing is selected; no trail is begun.
    */
   summary(): void {
     this.shown = null;
@@ -239,11 +239,13 @@ export class DetailsPanel {
 
   /** Called when the details are closed, by the button, Escape or a tap on empty space. */
   onClosed?: () => void;
+  /** Picks a thing's box up to move it from the keyboard, as M does (§6, move_box_keyboard); unset when no box moves. */
+  onMove?: (key: string) => void;
 
   /**
-   * Draws open details again when editing starts or ends: the inspector is for edit mode only (spec §14), so what is open
-   * becomes the editable inspector while the card is edited, and the read-only view a tap shows otherwise. Details that
-   * are closed stay closed.
+   * Draws open details again when editing starts or ends. The inspector is for edit mode only (spec §14). So what is
+   * open becomes the editable inspector while the card is edited. Otherwise it becomes the read-only view a tap shows.
+   * Details that are closed stay closed.
    */
   refresh(): void {
     const shown = this.shown;
@@ -258,8 +260,8 @@ export class DetailsPanel {
   }
 
   /**
-   * What tapping estimated link `index` shows, selected as any link is: in a sentence, what was written, what it was
-   * taken to mean, and the fix; then the quick fix that accepts it, and Edit the link.
+   * What tapping estimated link `index` shows, selected as any link is. First, in a sentence, what was written, what it
+   * was taken to mean, and the fix. Then the quick fix that accepts it, and Edit the link.
    */
   showEstimate(e: Estimate, index: number): void {
     this.select(null, null, index);
@@ -294,7 +296,7 @@ export class DetailsPanel {
       (n) => linkWords(this.o.reading, this.o.graph, n),
       (s) => this.choose(s),
     );
-    if (!this.o.diagram?.table) untangleOffers(el, key, this.actions);
+    if (!this.o.diagram?.table) untangleOffers(el, key, this.actions, this.o.readOnly?.() ? undefined : this.onMove); // read-only: nothing moves
     this.readOnlyProperties(
       el,
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
@@ -324,8 +326,8 @@ export class DetailsPanel {
         },
         this.o.indent ?? 'four',
         this.o.graph,
-        // the fix for a locked graph whose schema lacks Deferred and DEFERS: only while this editor is still open on the
-        // card, as for every write here, so a control left from before Done declares nothing
+        // the fix for a locked graph whose schema lacks Deferred and DEFERS. It acts only while this editor is still
+        // open on the card, as for every write here. So a control left from before Done declares nothing
         () =>
           this.o.editing?.() === ed ? ed.declareDeferred() : Promise.reject(new Error(word('details.not-declared'))),
         // the note as it is now: a thing written in another block is found, and one only suggested is not parked (§4)
@@ -342,8 +344,8 @@ export class DetailsPanel {
   }
 
   /**
-   * The inspector (spec §14): in edit mode, every property of the thing or link, each changed, added or removed — its value
-   * checked against its type first — written as text into the block being edited.
+   * The inspector (spec §14). In edit mode, it shows every property of the thing or link, each changed, added or
+   * removed. Its value is checked against its type first, then written as text into the block being edited.
    */
   private inspector(el: HTMLElement, target: { thing: string } | { link: number }, kind: string): void {
     const ed = this.o.editing?.();

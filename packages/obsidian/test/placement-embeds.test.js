@@ -1,5 +1,5 @@
 // A graph in an embed of another note (`![[Some note]]`) is read-only wherever it is shown (spec §3,
-// reading_view_whole_note; Roger, 11 Oct 2026): in a note in reading view, and in a note in Live Preview too, where
+// reading_view_whole_note; Roger, 11 Oct 2026). That holds in a note in reading view, and in Live Preview too. There
 // Obsidian draws the embed as an `.internal-embed.markdown-embed` inside the editor. Only the note's own block, where the
 // note is edited, can be edited.
 import { test, describe, before } from 'node:test';
@@ -20,8 +20,8 @@ const GRAPH = `// graph: reader
 const NOTE = ['# Reader', '', fence(GRAPH), ''].join('\n');
 
 /**
- * Draws the note's graph block as Obsidian draws a note embedded in another: in an embed, inside a note in Live Preview
- * ('live') or in reading view ('reading').
+ * Draws the note's graph block as Obsidian draws a note embedded in another. It goes in an embed, inside a note in Live
+ * Preview ('live') or in reading view ('reading').
  */
 async function showEmbedded(env, where) {
   const lines = NOTE.split('\n'),
@@ -58,7 +58,7 @@ describe('a graph embedded in another note is read-only wherever it is shown', (
       for (const label of ['Edit here', 'Edit in pane', 'Record a path', 'Make a view'])
         assert.ok(!labelled(el, label), `no ${label}`);
       assert.ok(labelled(el, 'Show source'), 'Source is offered');
-      // every other control of the details only finds the way round the drawing (§25): each is pressed, and the note and
+      // every other control of the details only finds the way round the drawing (§25). Each is pressed. Then the note and
       // the text being edited are checked below to be as they were
       assert.deepEqual(
         pressTheRest(el, ['Close details', ...UNTANGLING], () => tapKey(el, 'large'), [

@@ -1,7 +1,10 @@
-// Quick info (editor spec §24, quick_info, quick_info_no_hover_only): pointing at a thing or a link for a moment shows a
-// tooltip in the theme's style — its name, its kind, its first few properties, how many problems it has and the first
-// paragraph of its note; the same tooltip opens by a long press on touch and when the thing has the keyboard focus, so
-// nothing depends on hover (§5); and it never covers the thing it speaks of. The timers are held and let go by the test.
+// Quick info (editor spec §24, quick_info, quick_info_no_hover_only).
+// - Pointing at a thing or a link for a moment shows a tooltip in the theme's style. It shows the name, the kind, the
+//   first few properties, how many problems it has and the first paragraph of its note.
+// - The same tooltip opens by a long press on touch, and when the thing has the keyboard focus. So nothing depends on
+//   hover (§5).
+// - It never covers the thing it speaks of.
+// The timers are held and let go by the test.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

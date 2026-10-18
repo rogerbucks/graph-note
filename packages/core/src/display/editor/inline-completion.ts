@@ -1,6 +1,6 @@
-// The inline match of the block editor (spec §4, autocomplete): the one best completion for the caret, from the core, kept
-// while the field is focused with its caret alone; shown as ghost text in the coloured picture, and written into the field
-// only when taken — never unasked. Escape dismisses it until the text or the caret changes.
+// The inline match of the block editor (spec §4, autocomplete). It is the one best completion for the caret, from the
+// core. It is kept while the field is focused with its caret alone. It is shown as ghost text in the coloured picture.
+// It is written into the field only when taken, never unasked. Escape dismisses it until the text or the caret changes.
 import { inlineCompletion } from '@thoughtknot/core';
 import type { Inline, NoteReading } from '@thoughtknot/core';
 
@@ -23,8 +23,8 @@ export class InlineCompletion {
 
   /**
    * Looks for the match at the field's caret, and says whether what is shown changed. Nothing is offered unless the field
-   * has the focus and a caret alone, and a closer only when there is no name to suggest first (`suggested`), so Tab keeps
-   * taking the name after a bare (.
+   * has the focus and a caret alone. A closer is offered only when there is no name to suggest first (`suggested`). So
+   * Tab keeps taking the name after a bare (.
    */
   update(t: HTMLTextAreaElement, reading: NoteReading | null, graph: string, suggested: boolean): boolean {
     const was = this.offer,

@@ -1,9 +1,12 @@
-// Builds the browser editor's page into one folder (spec §26): the files the server holds and serves from its own origin,
-// and nothing fetched from anywhere. `page.js` is the page; `layout-worker.js` is the worker the core's layout runs in, with
-// the Graphviz engine inside it; `page.css` is the theme (theme-css.ts), the display layer's styles (the plugin's
-// styles.css, which reads the same design tokens), the page's own, with the tokens' mapping, and one rule for each icon
-// file; `index.html` and the `icons/` folder are copied. Used by esbuild.config.mjs, which puts them in the mod, and by
-// the page's tests.
+// Builds the browser editor's page into one folder (spec §26). These are the files the server holds and serves from its
+// own origin. Nothing is fetched from anywhere.
+// - `page.js` is the page.
+// - `layout-worker.js` is the worker the core's layout runs in, with the Graphviz engine inside it.
+// - `page.css` holds the theme (theme-css.ts) and the display layer's styles. Those are the plugin's styles.css, which
+//   reads the same design tokens. It also holds the page's own styles with the tokens' mapping, and one rule per icon
+//   file.
+// - `index.html` and the `icons/` folder are copied.
+// esbuild.config.mjs uses it to put them in the mod. The page's tests use it too.
 import esbuild from 'esbuild';
 import { cpSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -35,8 +38,9 @@ export async function buildPage(out) {
     logLevel: 'warning',
     metafile: true,
   };
-  // the shared layer takes some values from the core's entry, which also names the Graphviz engine: the page never carries
-  // that engine (the worker does), so for the page alone the engine's module is an empty stand-in that refuses to start
+  // the shared layer takes some values from the core's entry, which also names the Graphviz engine. The page never
+  // carries that engine (the worker does). So for the page alone, the engine's module is an empty stand-in that refuses
+  // to start
   const noEngine = {
     name: 'no-engine-on-the-page',
     setup(build) {
@@ -69,7 +73,8 @@ export async function buildPage(out) {
     .filter((f) => f.endsWith('.svg'))
     .map((f) => f.slice(0, -4));
   writeFileSync(join(out, 'page.css'), pageCss(icons));
-  // the page itself last: a server takes a folder holding index.html for a built one, so it comes once the rest is written
+  // the page itself last: a server takes a folder holding index.html for a built one, so it comes once the rest is
+  // written
   cpSync(join(here, 'page/index.html'), join(out, 'index.html'));
   return { page: page.metafile, worker: worker.metafile };
 }

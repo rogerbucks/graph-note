@@ -1,10 +1,12 @@
-// The things of a style graph checked against each other (editor spec §6, nudge_problems; §7; §14; §15): nudges that
-// conflict — two directions, beside and before on one pair, a thing in two groups, a loop of befores — a view set both to
-// fade and to hide, a view saved as shown twice, a colour given two meanings in one view or path, a property switched both
-// on and off for one kind, thing or type in one view, arrowheads both hidden and shown for the same links in one view,
-// two diagram types for the whole graph or one view, links set to move two ways in one view, and two routings or two
-// choices of merging links (§25). Each is a problem with a fix; the first written is kept and the later left out, so
-// what is kept never conflicts.
+// The things of a style graph checked against each other (editor spec §6, nudge_problems; §7; §14; §15). The conflicts:
+// - nudges that conflict: two directions, beside and before on one pair, a thing in two groups, a loop of befores;
+// - a view set both to fade and to hide, or a view saved as shown twice;
+// - a colour given two meanings in one view or path;
+// - a property switched both on and off for one kind, thing or type in one view;
+// - arrowheads both hidden and shown for the same links in one view;
+// - two diagram types for the whole graph or one view, or links set to move two ways in one view;
+// - two routings or two choices of merging links (§25).
+// Each is a problem with a fix. The first written is kept and the later left out, so what is kept never conflicts.
 import type { Problem } from './note-reading.ts';
 import type { Checked } from './style-checks.ts';
 import { emptyStyle, styleProblem } from './style-graph.ts';
@@ -107,8 +109,8 @@ function settleLooks(looks: Look[], graph: string, out: Problem[]): Look[] {
 }
 
 /**
- * The things of one kind that conflict with none written before them: two that choose for the same place (`placeOf`)
- * differently (`choiceOf`) are a problem on the later, which is left out; the same choice written twice is kept.
+ * The things of one kind that conflict with none written before them. Two that choose for the same place (`placeOf`)
+ * differently (`choiceOf`) are a problem on the later, which is left out. The same choice written twice is kept.
  */
 function settleChoices<T extends { at: StyleAt }>(
   things: T[],

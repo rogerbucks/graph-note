@@ -1,5 +1,5 @@
-// The tests-first replay's --complete (spec §12, tests_first; the rest of its command line is
-// tests-first-command.test.js): it fails a commit that changed a test and has no record, and passes once --update
+// The tests-first replay's --complete (spec §12, tests_first). The rest of its command line is in
+// tests-first-command.test.js. It fails a commit that changed a test and has no record, and passes once --update
 // records it. Split from tests-first-command.test.js on 11 Oct 2026, so the suite runs them side by side.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

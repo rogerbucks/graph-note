@@ -1,9 +1,10 @@
-// The browser editor from the Claude Code mod (editor spec §26, slice 4; workstream C2; test_cc_mod, partial until C3 and
-// C7 add their cases at the end of this file): `/graph edit` starts
-// the session's server on the shipped process, as the host starts one, and hands back an address only the pane may draw;
-// a start that fails says why; one session, one server; and the server stops on every trigger the rules name. The
-// launcher is tried over real processes started the way `$.process.spawn` starts them. A test asserts the work done,
-// never the time taken: no fixed sleep, no clock.
+// The browser editor from the Claude Code mod (editor spec §26, slice 4; workstream C2; test_cc_mod). It is partial
+// until C3 and C7 add their cases at the end of this file.
+// - `/graph edit` starts the session's server on the shipped process, as the host starts one.
+// - It hands back an address only the pane may draw. A start that fails says why.
+// - One session, one server. The server stops on every trigger the rules name.
+// The launcher is tried over real processes started the way `$.process.spawn` starts them. A test asserts the work
+// done, never the time taken: no fixed sleep, no clock.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -559,5 +560,5 @@ describe('the highest classification never opens, and a credential never reaches
   });
 });
 
-// C7's cases, Claude as the only AI and its proposals (cc_claude_only, cc_claude_proposes), are in
-// editor-mod-claude.test.js, kept apart so this file stays under the length the conventions allow; both are test_cc_mod.
+// C7's cases are in editor-mod-claude.test.js: Claude as the only AI and its proposals (cc_claude_only,
+// cc_claude_proposes). They are kept apart so this file stays under the length the conventions allow. Both are test_cc_mod.

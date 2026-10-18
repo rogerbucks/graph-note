@@ -5,18 +5,19 @@ const { GTime } = require('../values/times.js');
 const { ProfileError } = require('./profile-error.js');
 const { unquote, utcNaive } = require('./tokens.js');
 
-/** A node's id written as a value that is not text (§3, req:3.id-is-text): the missing comma's retry keeps it, never
- * taking it for a pattern that is not one. */
+/** A node's id written as a value that is not text (§3, req:3.id-is-text). The missing comma's retry keeps it. It
+ * never takes it for a pattern that is not one. */
 class IdNotTextError extends ProfileError {}
 
-// Parses a data block's tokens into its MATCHes, paths and SETs, as the document profile (§3) writes them; a
-// missing comma is read in and its place kept in commas, so the store can write it in.
+// Parses a data block's tokens into its MATCHes, paths and SETs, as the document profile (§3) writes them. A
+// missing comma is read in. Its place is kept in commas, so the store can write it in.
 class Parser {
   constructor(t) {
     this.t = t;
     this.i = 0;
-    // commas: [line, at] for each missing comma read in (§3): the line it is missing from, and where in the block the
-    // code on that line ends, which is where it is written in
+    // commas: [line, at] for each missing comma read in (§3).
+    // - line: the line it is missing from.
+    // - at: where in the block the code on that line ends. That is where it is written in.
     this.commas = [];
   }
   peek(k = 0) {
@@ -91,8 +92,8 @@ class Parser {
       'GN207',
     );
   }
-  /** Refuses a node's id written as a value that is not text — a number, TRUE, FALSE, DATE '…' or DATETIME '…' — with
-   * the fix that quotes it (§3, req:3.id-is-text). */
+  /** Refuses a node's id written as a value that is not text (§3, req:3.id-is-text). That is a number, TRUE, FALSE,
+   * DATE '…' or DATETIME '…'. The fix quotes it. */
   textId() {
     const [k, t, n, raw] = this.peek(),
       next = this.peek(1);

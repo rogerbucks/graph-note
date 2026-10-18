@@ -1,9 +1,9 @@
 // Checking each thing of a style graph (editor spec §2, style_graph_checked; §6; §7; §14; §15, the arrowheads and the
 // diagram type; §7, how links move; §25, how links are routed and merged; §18, a picture on a box): its kind, its words,
-// its values and every name it uses, against the graph it styles. What is sound is kept; each fault is a problem on its
-// line with its fix, and the part at fault — or the whole thing, when nothing of it can be used — is left out of the
-// style. The choices for how a graph or a view is drawn are checked in style-choice-checks.ts, and every thing is read
-// through style-reader.ts.
+// its values and every name it uses, against the graph it styles. What is sound is kept. Each fault is a problem on its
+// line with its fix. The part at fault is left out of the style, or the whole thing when nothing of it can be used. The
+// choices for how a graph or a view is drawn are checked in style-choice-checks.ts. Every thing is read through
+// style-reader.ts.
 import { STYLE } from './layout.ts';
 import { flowOf } from './link-flow.ts';
 import type { Problem } from './note-reading.ts';
@@ -122,8 +122,8 @@ function nudgeOf(raw: RawThing, names: StyledNames, out: Problem[]): Nudge | nul
 export const SHOW_FOR = 'a Show is for one kind, thing or relationship type';
 
 /**
- * A property switched on or off for showing inline, checked: a property of the kind's things, of the thing, or of the
- * type's links, that it names; on unless it says off; in a view when it names one, whose name is the user's own.
+ * A property switched on or off for showing inline, checked. It names a property of the kind's things, of the thing, or
+ * of the type's links. It is on unless it says off. It is in a view when it names one, whose name is the user's own.
  */
 function showOf(raw: RawThing, names: StyledNames, out: Problem[]): Show | null {
   const r = reader(raw, names, out),
@@ -292,8 +292,8 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
       continue;
     }
     const p = c.problems;
-    // a key the style graph does not know: reported on the key; the thing may not mean what it says, so it is left out
-    // (its values at fault are still reported, but not what it lacks, which may be that key: the rename comes first)
+    // a key the style graph does not know: reported on the key. The thing may not mean what it says, so it is left out.
+    // Its values at fault are still reported, but not what it lacks, which may be that key: the rename comes first
     const unknown = unknownKeys(
       kinds[0] as StyleKind,
       Object.keys(raw.props),

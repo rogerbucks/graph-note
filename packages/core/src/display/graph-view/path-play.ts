@@ -1,10 +1,10 @@
-// Playing a walked path in a drawing (spec §7, path_autoplay): the core's `PathAutoplay` stepping through it on its own
-// at the pace the user chooses, with Pause and Play on, Previous and Next (a step by hand pauses it) and Stop; the step
-// now on outlined with a moving highlight, and a dot running the link from the step before when a link joins them; each
-// step said in the strip's one live region. Whenever the system asks for reduced motion each step is marked at once and
-// no dot runs (motion_reduced_respected); `styles.css` stops the highlight's movement there too. Export as an animated
-// SVG opens the Export form on this path at this pace (path_animation_export). The timer is the window's, cancelled
-// when the playing stops or its card goes.
+// Playing a walked path in a drawing (spec §7, path_autoplay). The core's `PathAutoplay` steps through it on its own at
+// the pace the user chooses. It has Pause and Play on, Previous and Next (a step by hand pauses it) and Stop. The step
+// now on is outlined with a moving highlight. A dot runs the link from the step before when a link joins them. Each
+// step is said in the strip's one live region. Whenever the system asks for reduced motion, each step is marked at once
+// and no dot runs (motion_reduced_respected). `styles.css` stops the highlight's movement there too. Export as an
+// animated SVG opens the Export form on this path at this pace (path_animation_export). The timer is the window's,
+// cancelled when the playing stops or its card goes.
 import { DEFAULT_PACE, PATH_PACES, PathAutoplay, PathPlayer, pathsOf, word } from '@thoughtknot/core';
 import type { NoteReading, PathStep, WalkedPath } from '@thoughtknot/core';
 import { openExportForm, paceOffered } from '../export/export-form';

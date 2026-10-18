@@ -1,6 +1,7 @@
-// The desired state of the GitHub mirror of the requirements: for each requirement of the chosen slices, the issue that
-// should exist (title, body, labels, open or closed) and the project fields it fills. Hand-made small graphs stand in
-// for the real file; nothing here touches the network. Editor spec §12, requirements_checked_in_ci.
+// The desired state of the GitHub mirror of the requirements. It holds, for each requirement of the chosen slices, the
+// issue that should exist (title, body, labels, open or closed). It holds the project fields that issue fills.
+// Hand-made small graphs stand in for the real file; nothing here touches the network. Editor spec §12,
+// requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';

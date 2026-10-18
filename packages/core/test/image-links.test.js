@@ -1,6 +1,6 @@
-// Where a thing's image comes from (editor spec §18, animated_image_shown; §13, remote_images_asked): a property whose
-// value names an image attached in the vault, as a link or a path, is the thing's image; an address outside the vault is
-// never loaded, and a place that could leave the vault is refused, each saying why.
+// Where a thing's image comes from (editor spec §18, animated_image_shown; §13, remote_images_asked). A property whose
+// value names an image attached in the vault, as a link or a path, is the thing's image. An address outside the vault
+// is never loaded, and a place that could leave the vault is refused, each saying why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { imageLink, imagesOf, IMAGE_EXTENSIONS, neverMoves } from '../src/image-links.ts';

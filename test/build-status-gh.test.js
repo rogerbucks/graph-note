@@ -1,7 +1,9 @@
-// The thin layer between the build status and GitHub: reading a pull request, the requirements file at a ref, a commit’s
-// checks and releases, leaving one comment, and reading and writing the project’s Build status field. Every case runs
-// against in-memory stand-ins for gh (test/repository/build-status-fake.js and github-project-fake.js) handed in as the
-// runner, so no network is touched. Editor spec §12, requirements_checked_in_ci.
+// The thin layer between the build status and GitHub. It covers:
+// - reading a pull request, the requirements file at a ref, and a commit’s checks and releases.
+// - leaving one comment.
+// - reading and writing the project’s Build status field.
+// Every case runs against in-memory stand-ins for gh (test/repository/build-status-fake.js and github-project-fake.js)
+// handed in as the runner, so no network is touched. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {

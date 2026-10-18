@@ -1,15 +1,17 @@
 #!/usr/bin/env node
-// Renames the product from Graph Note to ThoughtKnot across the tracked files: the name people read, the plugin and
-// package ids, the CSS class and variable prefix, and the paths that hold the name. It is mechanical and safe to run
-// again, so a branch made before the rename runs it after merging main and is renamed the same way.
+// Renames the product from Graph Note to ThoughtKnot across the tracked files. It changes the name people read, the
+// plugin and package ids, the CSS class and variable prefix, and the paths that hold the name. It is mechanical and safe
+// to run again. So a branch made before the rename runs it after merging main, and is renamed the same way.
 //
 // The repository's address (now rogerbucks/thoughtknot, its wiki and its Pages site) and the GitHub Project's title
-// are renamed too. Kept as they are: "graph note" in lower case, which names the kind of note, not the product; and
-// generated or historical files, which their own commands remake.
+// are renamed too. Kept as they are:
+// - "graph note" in lower case, which names the kind of note, not the product;
+// - generated or historical files, which their own commands remake.
 //
 // Usage:
-//   node scripts/rename-to-thoughtknot.mjs           renames in place, then: npm install && npm run build && npm run format
-//   node scripts/rename-to-thoughtknot.mjs --check   exits 1 if any file still needs renaming
+//   node scripts/rename-to-thoughtknot.mjs            renames in place.
+//   Then run: npm install && npm run build && npm run format
+//   node scripts/rename-to-thoughtknot.mjs --check    exits 1 if any file still needs renaming.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';

@@ -45,6 +45,6 @@
 
 **Checklist line:**
 
-> **L-06** iPhone: on the note of 201 steps, press Play and Export as an animated SVG, then Export it: the form says the animated SVG was not made, that the path has 201 steps, more than the 200 an animated SVG can play smoothly on this phone, that nothing was saved, and how to make it fit; nothing is written. On the Mac the same path exports.
+> **L-06** iPhone: on the note of 201 steps, press Play and Export as an animated SVG, then Export it. The form says the animated SVG was not made. It says the path has 201 steps, more than the 200 an animated SVG can play smoothly on this phone. It says nothing was saved, and how to make it fit. Nothing is written. On the Mac the same path exports.
 
 **Back to the checklist:** [L-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for L-06 in its list.

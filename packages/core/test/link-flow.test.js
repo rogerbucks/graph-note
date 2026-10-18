@@ -1,9 +1,11 @@
-// Links that show flow by moving (editor spec §7, §11): dashes running along a link's arrow, or a dot travelling along it,
-// set only in the style graph and off by default (flow_in_style_graph), never the only signal — a moving link carries an
-// icon on its label and says what its movement means in its legend and to a screen reader (motion_not_alone) — and
-// still whenever the system asks for reduced motion (motion_reduced_respected). Spans link-flow.ts (the choice, its
-// words and the source), style-checks.ts and style-conflicts.ts (the words checked), style-source.ts and render.ts (the
-// source drawn) and export-motion.ts (the movement written into an exported SVG).
+// Links that show flow by moving (editor spec §7, §11): dashes running along a link's arrow, or a dot travelling along
+// it. They are set only in the style graph and off by default (flow_in_style_graph). They are never the only signal. A
+// moving link carries an icon on its label. It says what its movement means in its legend and to a screen reader
+// (motion_not_alone). They are still whenever the system asks for reduced motion (motion_reduced_respected). Spans:
+// - link-flow.ts (the choice, its words and the source);
+// - style-checks.ts and style-conflicts.ts (the words checked);
+// - style-source.ts and render.ts (the source drawn);
+// - export-motion.ts (the movement written into an exported SVG).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -19,8 +21,8 @@ import { unscoped } from './sheet-scope.js';
 
 const engine = await loadEngine();
 
-// two kinds only receive links, Source and Tag, so the one that is not the main destination is laid out on the far side
-// with its link drawn backwards (dir=back): its movement must run backwards along the line drawn, so it reads forwards
+// two kinds only receive links, Source and Tag. So the one that is not the main destination is laid out on the far side
+// with its link drawn backwards (dir=back). Its movement must run backwards along the line drawn, so it reads forwards
 const TRIP = `// graph: trip · SOURCE
 (home:Place {name: 'Home'}),
 (park:Place {name: 'The park'}),

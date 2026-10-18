@@ -1,11 +1,11 @@
-// Sending to an AI model (editor spec §19): the one way anything leaves the editor for an AI, host-free. Nothing is sent
-// while AI is off (ai_off_until_chosen). `prepareSend` makes the exact request for what the user chose (user_chooses_what)
-// and refuses one above the model's ceiling, at the highest classification, or holding a credential (never_above_ceiling,
-// never_credential); the user is shown it whole (seen_before_sent), and `confirmSend` is their yes to exactly that, good
-// for one send only (never_in_background). `sendPrepared` sends it through the transport the host hands in — the core
-// itself reaches no network — with the key put in only as it goes (keys_kept_secret), records the send whatever comes
-// of it (record_every_send), says plainly when the model cannot be reached or refuses (ai_unreachable), and gives an
-// answer back as a proposal, never an edit (answers_are_proposals).
+// Sending to an AI model (editor spec §19): the one way anything leaves the editor for an AI, host-free. Nothing is
+// sent while AI is off (ai_off_until_chosen). `prepareSend` makes the exact request for what the user chose
+// (user_chooses_what). It refuses one above the model's ceiling, at the highest classification, or holding a credential
+// (never_above_ceiling, never_credential). The user is shown it whole (seen_before_sent). `confirmSend` is their yes to
+// exactly that, good for one send only (never_in_background). `sendPrepared` sends it through the transport the host
+// hands in; the core itself reaches no network. It puts the key in only as it goes (keys_kept_secret). It records the
+// send whatever comes of it (record_every_send). It says plainly when the model cannot be reached or refuses
+// (ai_unreachable). It gives an answer back as a proposal, never an edit (answers_are_proposals).
 import { proposalFrom } from './ai-answer.ts';
 import { clearance, credentialsIn, levelSaid } from './ai-ceiling.ts';
 import { aiReady, endpointProblem } from './ai-choice.ts';
@@ -92,8 +92,8 @@ export interface SendRefused {
 }
 
 /**
- * The record of one send, kept by the host: never the text sent, only its SHA-256 digest and size, and its scope; the
- * model's name and address, when, and what came of it. The proposal from it names its `id`.
+ * The record of one send, kept by the host. It is never the text sent, only its SHA-256 digest and size, and its scope.
+ * It holds the model's name and address, when, and what came of it. The proposal from it names its `id`.
  */
 export interface SendRecord {
   id: string;
@@ -137,7 +137,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   if ('refused' in cleared) return cleared;
   const scope = aiScope(ask.note, ask.choice, ask.shared);
   if ('refused' in scope) return scope;
-  // everything that goes is looked over as written, before it is put in the request: the address, and the whole
+  // everything that goes is looked over as written, before it is put in the request. That is the address, and the whole
   // message (the graph's name, what was chosen in words, its GQL and the question)
   const held = credentialsIn(`${model.endpoint}\n${askedText(scope, ask.question)}`, ask.secrets);
   if (held.length)
@@ -184,10 +184,10 @@ export interface SendDeps {
 }
 
 /**
- * Sends a prepared request, once the user has said yes to exactly it, through the host's transport, and gives back what
- * came of it with its record. A send with no yes, a yes to something else or already used, or a model whose key is not in
- * the secret store is refused before anything goes. The key is put in the request's header only as it is sent, and
- * taken out of anything said.
+ * Sends a prepared request, once the user has said yes to exactly it, through the host's transport. It gives back what
+ * came of it with its record. Some sends are refused before anything goes: one with no yes, or a yes to something else
+ * or already used. So is one to a model whose key is not in the secret store. The key is put in the request's header
+ * only as it is sent, and taken out of anything said.
  */
 export async function sendPrepared(
   p: PreparedSend,

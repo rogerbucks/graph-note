@@ -24,9 +24,11 @@ function iso(v) {
     '+10:00'
   );
 }
-// §18 the flat projection: [blocks, rels]. One block per node — id, type (its labels), attributes, and a list of
-// targets per relationship type without properties, keyed by the type in lower case — and the relationships with
-// properties, ordered by canonical text. Throws `refused: §18` for a list or a `type` property, which it cannot hold.
+// §18 the flat projection: [blocks, rels].
+// - blocks: one per node. Each has id, type (its labels) and attributes. It also has a list of targets per
+//   relationship type without properties, keyed by the type in lower case.
+// - rels: the relationships with properties, ordered by canonical text. Throws `refused: §18` for a list or a `type`
+//   property, which it cannot hold.
 function project(g) {
   const blocks = {},
     rels = [];

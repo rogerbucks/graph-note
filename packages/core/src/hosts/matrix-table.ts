@@ -1,11 +1,11 @@
-// The destination matrix note's table read into plain rows (editor spec §19, model_ceiling), for the hosts that read the
-// note: Obsidian from the vault, the Claude Code mod from the file. It is host-side code, reached as
-// `@thoughtknot/core/hosts/matrix-table` and imported by no gate or other core module: a host reads the note and hands
-// the gates plain rows, so they never see the note's layout; this is the one reader, so both hosts read a note alike. The matrix is the
-// first Markdown table with an empty top-left cell and at least one column named for a class the vault knows (a
-// classification, or a name mapped in the settings). A cell is a mark only when it is exactly ✅ (yes), ❌ (no), or ⚠️ with
-// the words after it as the condition (conditional); anything else, blank included, is unknown, which refuses. A bar
-// written `\|` stays inside its cell.
+// The destination matrix note's table read into plain rows (editor spec §19, model_ceiling), for the hosts that read
+// the note: Obsidian from the vault, the Claude Code mod from the file. It is host-side code, reached as
+// `@thoughtknot/core/hosts/matrix-table` and imported by no gate or other core module. A host reads the note and hands
+// the gates plain rows, so they never see the note's layout. This is the one reader, so both hosts read a note alike.
+// The matrix is the first Markdown table with an empty top-left cell and at least one column named for a class the
+// vault knows. Such a class is a classification, or a name mapped in the settings. A cell is a mark only when it is
+// exactly ✅ (yes), ❌ (no), or ⚠️ with the words after it as the condition (conditional). Anything else, blank included,
+// is unknown, which refuses. A bar written `\|` stays inside its cell.
 import type { MatrixCell, MatrixRow } from '../ai-matrix.ts';
 
 const ESCAPED_BAR = '\u0000';

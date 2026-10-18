@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 // Checks a change to the requirements graph against the graph it started from. The graph is the one source of the
-// requirements, edited here in pull requests (Roger, 16 Oct 2026: no vault holds them any more), so records, links and
-// comments may be added, changed and removed. What a pull request may never do is move a test back: a test's status
-// goes only forward, from planned to partial or written and from partial to written, a test flipped forward must have
-// its file, and a test that is partial or written is never removed. This refuses exactly those, naming each one.
+// requirements, edited here in pull requests (Roger, 16 Oct 2026: no vault holds them any more). So records, links and
+// comments may be added, changed and removed. What a pull request may never do is move a test back:
+// - a test's status goes only forward, from planned to partial or written and from partial to written;
+// - a test flipped forward must have its file;
+// - a test that is partial or written is never removed.
+// This refuses exactly those, naming each one.
 //
 // Usage:
-//   node scripts/check-requirements-flips.mjs --base-ref <commit>   the committed copy against the copy at <commit>
+//   node scripts/check-requirements-flips.mjs --base-ref <commit>   the committed copy against the copy at <commit>.
 //   node scripts/check-requirements-flips.mjs --merge-base-of <ref>  the committed copy against the copy at the merge base
-//                                                                   of <ref> and HEAD: only the branch's own changes
-//   node scripts/check-requirements-flips.mjs --base <file>         the committed copy against a file
-//   --repo <dir> reads the copy and runs git in another repository (the tests use it)
+//                                                                   of <ref> and HEAD: only the branch's own changes.
+//   node scripts/check-requirements-flips.mjs --base <file>         the committed copy against a file.
+//   --repo <dir> reads the copy and runs git in another repository (the tests use it).
 //
 // Exits 1 and lists each refused difference. A base that holds no copy (the copy is new) has nothing to compare.
 import { existsSync, readFileSync } from 'node:fs';
@@ -86,11 +88,14 @@ function recordProblems(id, was, now, exists) {
 
 /**
  * The differences between two copies of the requirements that a pull request may not make, each as {kind, id,
- * message}: unreadable, flip-back (a test's status moved back), not-a-test (a status flipped on a record that is not a
- * test), missing-file (a test flipped to partial or written whose file the repository does not hold) and removed (a
- * test that was partial or written taken out). Empty for every other change: records, links and comments added,
- * changed or removed, and tests moved forward with their files. exists(path) says whether the repository holds a
- * repo-relative path.
+ * message}. The kinds are:
+ * - unreadable;
+ * - flip-back: a test's status moved back;
+ * - not-a-test: a status flipped on a record that is not a test;
+ * - missing-file: a test flipped to partial or written whose file the repository does not hold;
+ * - removed: a test that was partial or written taken out.
+ * Empty for every other change: records, links and comments added, changed or removed, and tests moved forward with
+ * their files. exists(path) says whether the repository holds a repo-relative path.
  */
 export function refusedChanges(baseText, headText, { exists = (rel) => existsSync(join(ROOT, rel)) } = {}) {
   const base = parse(baseText, 'base');

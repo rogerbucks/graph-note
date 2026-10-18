@@ -1,8 +1,11 @@
-// The plan of the GitHub mirror of the requirements (spec §12, requirements_checked_in_ci): what must be done to make
-// GitHub hold the desired issues and project, found by comparing the desired state (github-project-desired.mjs) with
-// what GitHub holds now (read by github-project-gh.mjs). Pure — two values in, a third out, no network — so the dry run
-// can print it and a test can prove it. A plan changes only what differs and never deletes: an issue whose requirement
-// went is labelled and closed, an issue outside the chosen slices is left alone, a label somebody else added stays.
+// The plan of the GitHub mirror of the requirements (spec §12, requirements_checked_in_ci). It says what must be done
+// to make GitHub hold the desired issues and project. It is found by comparing the desired state
+// (github-project-desired.mjs) with what GitHub holds now (read by github-project-gh.mjs). Pure — two values in, a
+// third out, no network — so the dry run can print it and a test can prove it. A plan changes only what differs and
+// never deletes:
+// - an issue whose requirement went is labelled and closed;
+// - an issue outside the chosen slices is left alone;
+// - a label somebody else added stays.
 import {
   BUILD_STATUSES,
   BUILD_STATUS_FIELD,
@@ -44,15 +47,23 @@ const plain = (text) =>
     .trim();
 
 /**
- * What to do to the issues. `remote` is the issues GitHub holds, each {number, title, body, state ('OPEN' or 'CLOSED'),
- * labels (names), author (login), url}; `known` is every requirement id the copy holds; `login` is the signed-in login.
- * Gives {create, update, close, reopen, removed, unchanged, outside, warnings, held}: the desired issues to make; for an
- * existing issue what to change (`title`, `body`, labels to add and take off); the ones to close and to reopen; the
- * issues of requirements that went, with which of label, comment and close each still needs; the ids with nothing to
- * do; the ids of issues left alone because their requirement is only outside the chosen slices; any warning; and the
- * number and url of each issue held, by id. Only an issue this generator may adopt (written by `login`, with the
- * generated banner and its marker at the end) counts: any other is somebody's own, ignored, and warned of when it
- * carries a marker. Of two adopted with one marker the lowest number counts.
+ * What to do to the issues. `remote` is the issues GitHub holds. Each is {number, title, body, state ('OPEN' or
+ * 'CLOSED'), labels (names), author (login), url}. `known` is every requirement id the copy holds. `login` is the
+ * signed-in login.
+ *
+ * Gives {create, update, close, reopen, removed, unchanged, outside, warnings, held}:
+ * - the desired issues to make;
+ * - for an existing issue, what to change (`title`, `body`, labels to add and take off);
+ * - the ones to close and to reopen;
+ * - the issues of requirements that went, with which of label, comment and close each still needs;
+ * - the ids with nothing to do;
+ * - the ids of issues left alone because their requirement is only outside the chosen slices;
+ * - any warning;
+ * - and the number and url of each issue held, by id.
+ *
+ * Only an issue this generator may adopt counts. It is one written by `login`, with the generated banner and its
+ * marker at the end. Any other is somebody's own, ignored, and warned of when it carries a marker. Of two adopted with
+ * one marker the lowest number counts.
  */
 export function planIssues(desired, remote, known, login) {
   const plan = { create: [], update: [], close: [], reopen: [], removed: [], unchanged: [], outside: [], warnings: [] };
@@ -120,10 +131,14 @@ export function planLabels(wanted, existing) {
 /**
  * What to do to the project. `remote` is the project GitHub holds, {id, number, fields: {name: {id, options}}, typed:
  * {name: {id, type, iterations}}, items: [{itemId, id (the requirement's), values: {field: value}}]}, or null for none.
- * Gives {create, fields, typed, itemsAdd, sets}: whether to make the project; for each single-choice field that is
- * missing or lacks options, {name, create, add: options to add}; the other fields to make, or the Wave field whose
- * iterations to set (planTyped); the requirements to add as items; and each field value to set, {id, field, from, to},
- * `to` null to clear it. Options already there are kept, and an item no longer wanted is left in the project.
+ * Gives {create, fields, typed, itemsAdd, sets}:
+ * - whether to make the project;
+ * - for each single-choice field that is missing or lacks options, {name, create, add: options to add};
+ * - the other fields to make, or the Wave field whose iterations to set (planTyped);
+ * - the requirements to add as items;
+ * - and each field value to set, {id, field, from, to}, `to` null to clear it.
+ *
+ * Options already there are kept, and an item no longer wanted is left in the project.
  * `iterations` are the waves of the plan, or null without one, when Wave and Order are not made.
  */
 export function planProject(desired, wantedFields, remote, iterations = null) {
@@ -142,8 +157,8 @@ export function planProject(desired, wantedFields, remote, iterations = null) {
   refuseMissingSeeds(desired, remote);
   const sets = [];
   for (const d of desired) {
-    // an item whose requirement is not proved (its issue is open) must not stay Done, whatever its Proof reads now: that
-    // repairs one stuck by a run cut short, or whose values an options rebuild cleared. Its Status is set first.
+    // an item whose requirement is not proved (its issue is open) must not stay Done, whatever its Proof reads now.
+    // That repairs one stuck by a run cut short, or whose values an options rebuild cleared. Its Status is set first.
     const downgraded = d.status !== 'proved';
     for (const field of downgraded ? [PROGRESS_FIELD, ...FIELD_NAMES] : [...FIELD_NAMES, PROGRESS_FIELD]) {
       const from = items.get(d.id)?.values?.[field] ?? null;
@@ -174,9 +189,9 @@ const UNREAD = { create: false, fields: [], typed: [], itemsAdd: [], sets: [], u
 /**
  * Whether a field's value on an item is to be set. Slice, Workstream and Proof follow the requirement, so any difference.
  * Build status is set by events (scripts/build-status-run.mjs), so here only a missing value is seeded. The built-in Status
- * is the board's own: a missing value is seeded, and Todo, which is its default and no choice, may be replaced by a seed
- * that says more; In Progress and Done are never overwritten — except Done on an item whose requirement is not proved
- * (planProject), which goes to the Status the requirement has.
+ * is the board's own. A missing value is seeded. Todo, which is its default and no choice, may be replaced by a seed
+ * that says more. In Progress and Done are never overwritten. The exception is Done on an item whose requirement is not
+ * proved (planProject), which goes to the Status the requirement has.
  */
 function differs(field, from, to) {
   if (field === BUILD_STATUS_FIELD) return from === null;
@@ -197,9 +212,16 @@ function refuseMissingSeeds(desired, remote) {
 
 /**
  * The whole plan for a desired state (as desiredState gives it) and what GitHub holds ({login, adopters, labelNames,
- * issues, project}): the plan of the issues, the labels to make, the plan of the project, the warnings, the logins whose
- * issues are adopted, and what the executor needs of the project that exists. Closed on is derived here from the issues
- * GitHub holds (withClosedOn). A project that is undefined was not read, and nothing is planned for it.
+ * issues, project}). It holds:
+ * - the plan of the issues;
+ * - the labels to make;
+ * - the plan of the project;
+ * - the warnings;
+ * - the logins whose issues are adopted;
+ * - and what the executor needs of the project that exists.
+ *
+ * Closed on is derived here from the issues GitHub holds (withClosedOn). A project that is undefined was not read, and
+ * nothing is planned for it.
  */
 export function buildPlan(desired, remote) {
   const adopters = remote.adopters ?? remote.login;
@@ -224,8 +246,9 @@ export function buildPlan(desired, remote) {
 }
 
 /**
- * Why a plan should not be done without the person saying so, or null: the requirements file holds no requirements (so
- * every issue would be removed, as when the file was read wrongly), or the plan removes more than MAX_REMOVALS issues.
+ * Why a plan should not be done without the person saying so, or null. One reason is that the requirements file holds
+ * no requirements, so every issue would be removed, as when the file was read wrongly. The other is that the plan
+ * removes more than MAX_REMOVALS issues.
  */
 export function guardProblem(plan) {
   if (plan.desired.known.length === 0)

@@ -1,8 +1,9 @@
-// Untangling a large graph (editor spec §25, slice 3): a thing and its neighbours alone, the legend bringing a kind or a
-// relationship type forward or hiding it, the shortest path between two things, finding a thing, and walking the links by
-// arrow key. Host-free and pure: each says only what to show, hide or bring forward, so the host changes the drawing and
-// nothing else (untangle_data_untouched). Nothing here is written to the note, and nothing is kept past the drawing but
-// the legend's choices, which a host writes into the style graph when the user saves a view as shown (untangle-saved.ts).
+// Untangling a large graph (editor spec §25, slice 3). It covers a thing and its neighbours alone, and the legend
+// bringing a kind or a relationship type forward or hiding it. It covers the shortest path between two things, finding
+// a thing, and walking the links by arrow key. Host-free and pure: each says only what to show, hide or bring forward.
+// So the host changes the drawing and nothing else (untangle_data_untouched). Nothing here is written to the note.
+// Nothing is kept past the drawing but the legend's choices. A host writes those into the style graph when the user
+// saves a view as shown (untangle-saved.ts).
 import { adjacency, edgesOf, within } from './focus.ts';
 import type { FocusDepth, FocusEdge, Kept } from './focus.ts';
 import { propertiesOf } from './inspector.ts';
@@ -71,10 +72,10 @@ export function kindLegend(d: GraphDrawing): LegendItem[] {
 export type LegendState = 'normal' | 'forward' | 'hidden';
 
 /**
- * The legend's choices for one drawing: choosing a kind or a relationship type brings it forward and fades the rest,
- * choosing it again hides it, and once more puts it back (untangle_legend). Held by the drawing alone: saved only when
- * the user saves a view as shown, written then by its host from `choices` (untangle-saved.ts), and given back by
- * `restore` when that view opens; any other drawing opened again starts with every line as it is.
+ * The legend's choices for one drawing. Choosing a kind or a relationship type brings it forward and fades the rest.
+ * Choosing it again hides it, and once more puts it back (untangle_legend). Held by the drawing alone. They are saved
+ * only when the user saves a view as shown, written then by its host from `choices` (untangle-saved.ts). `restore`
+ * gives them back when that view opens. Any other drawing opened again starts with every line as it is.
  */
 export class LegendFilter {
   private readonly chosen = new Map<string, 'forward' | 'hidden'>();
@@ -118,8 +119,8 @@ export class LegendFilter {
   }
 
   /**
-   * What the choices come to for a drawing and its links (`edgesOf`): `forward`, the things and links brought forward
-   * (null when none is, so nothing is faded), and `hidden`, what is hidden, with every link to a thing hidden. A kind
+   * What the choices come to for a drawing and its links (`edgesOf`). `forward` is the things and links brought forward
+   * (null when none is, so nothing is faded). `hidden` is what is hidden, with every link to a thing hidden. A kind
    * brought forward brings its things and the links among them; a type, its links and the things they join.
    */
   apply(d: GraphDrawing, edges: readonly FocusEdge[]): { forward: Kept | null; hidden: Kept } {
@@ -160,8 +161,9 @@ export interface PathFound {
 }
 
 /**
- * The shortest path between two things, by the fewest links, either way along each; on a tie the one found first in the
- * drawing's order of links. A thing is no steps from itself. Null when no route joins them, or a thing is not drawn.
+ * The shortest path between two things, by the fewest links, either way along each. On a tie, the one found first in
+ * the drawing's order of links. A thing is no steps from itself. Null when no route joins them, or a thing is not
+ * drawn.
  */
 export function shortestPath(edges: readonly FocusEdge[], from: string, to: string): PathFound | null {
   const adj = adjacency(edges);
@@ -205,8 +207,9 @@ export interface Found {
 export const FIND_LIMIT = 20;
 
 /**
- * The things of a graph whose name — the id it is written under, or its words — or the value of a property holds what
- * was typed, whatever the case; names first, then properties, each thing once, in the drawing's order (untangle_find).
+ * The things of a graph whose name or property value holds what was typed, whatever the case. The name is the id it is
+ * written under, or its words. Names come first, then properties, each thing once, in the drawing's order
+ * (untangle_find).
  */
 export function find(reading: NoteReading, graph: string, query: string, limit = FIND_LIMIT): Found[] {
   const d = reading.graphs.get(graph),
@@ -232,9 +235,10 @@ const DIRECTIONS: Record<string, [number, number]> = {
 };
 
 /**
- * Where an arrow key takes the selection from a thing, along its links (untangle_keyboard): to the neighbour most nearly
- * in that direction, whichever way the link points, or null when none lies that way, or the key is no arrow. `places` has
- * the middle of each thing; without them, right and down go on through the thing's links, left and up back.
+ * Where an arrow key takes the selection from a thing, along its links (untangle_keyboard). It goes to the neighbour
+ * most nearly in that direction, whichever way the link points. Null when none lies that way, or the key is no arrow.
+ * `places` has the middle of each thing; without them, right and down go on through the thing's links, left and up
+ * back.
  */
 export function nextAlong(
   edges: readonly FocusEdge[],
@@ -275,8 +279,9 @@ export interface Layers {
 }
 
 /**
- * The untangling of one drawing: the filter to a thing and its neighbours, the legend's choices and the path asked for,
- * held together and worked out into one picture (`layers`). It holds nothing of the note, only what the drawing shows.
+ * The untangling of one drawing: the filter to a thing and its neighbours, the legend's choices and the path asked for.
+ * They are held together and worked out into one picture (`layers`). It holds nothing of the note, only what the
+ * drawing shows.
  */
 export class Untangle {
   /** The legend's choices. */

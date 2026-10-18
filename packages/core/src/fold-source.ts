@@ -1,12 +1,13 @@
-// The layout source of a folded, merged or routed drawing (editor spec §25): the last steps after the source is made, never
-// a change to it, so with nothing folded, merged or routed it stays byte-identical to the Python library's (spec §12).
-// Folded, a busy hub's links are one stub marked with their count (untangle_hubs) and a group is one box showing its count
-// (untangle_groups); merged, two or more links running from one group to another share a trunk (untangle_merge); routed,
-// links are straight or right-angled (untangle_routing). Every box and link still drawn is written with the id Graphviz
-// gave it unfolded (`node3`, `edge7`), so the host finds each by its number as before; each link of a trunk is drawn as
-// its own two lines, from its thing to the trunk (`edge7_tail`) and from the trunk on with its reading (`edge7`), so it is
-// still tapped and read as itself. Ids are written with underscores, which Graphviz writes into the SVG as they are. The
-// Python library writes the same (graphspec/style/fold_source.py).
+// The layout source of a folded, merged or routed drawing (editor spec §25). These are the last steps after the source
+// is made, never a change to it. So with nothing folded, merged or routed it stays byte-identical to the Python
+// library's (spec §12). Folded, a busy hub's links are one stub marked with their count (untangle_hubs). Folded, a
+// group is one box showing its count (untangle_groups). Merged, two or more links running from one group to another
+// share a trunk (untangle_merge). Routed, links are straight or right-angled (untangle_routing). Every box and link
+// still drawn is written with the id Graphviz gave it unfolded (`node3`, `edge7`). So the host finds each by its number
+// as before. Each link of a trunk is drawn as its own two lines. One runs from its thing to the trunk (`edge7_tail`).
+// One runs from the trunk on with its reading (`edge7`). So it is still tapped and read as itself. Ids are written with
+// underscores, which Graphviz writes into the SVG as they are. The Python library writes the same
+// (graphspec/style/fold_source.py).
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { LINK_LINE } from './arrows.ts';
 import { STYLE } from './layout.ts';
@@ -45,10 +46,12 @@ function trunkLines(l: Drawn, t: number): string[] {
 }
 
 /**
- * The Graphviz source `dot` (as render.ts writes it, nudges and all) as `plan` folds and merges it: each thing hidden and
- * each link folded left out, and named nowhere else, so Graphviz never makes it; a folded group's things drawn as its
- * box, the links to them drawn to the box and its box around them gone; each line left given its unfolded id; then each
- * folded group's box, each hub's stub and each trunk, before the last line. With no plan, or nothing it changes, `dot`.
+ * The Graphviz source `dot` (as render.ts writes it, nudges and all) as `plan` folds and merges it:
+ * - each thing hidden and each link folded is left out, and named nowhere else, so Graphviz never makes it;
+ * - a folded group's things are drawn as its box, the links to them drawn to the box, and its box around them gone;
+ * - each line left is given its unfolded id;
+ * - then each folded group's box, each hub's stub and each trunk come before the last line.
+ * With no plan, or nothing it changes, `dot`.
  */
 export function foldedSource(dot: string, plan: Folding | undefined): string {
   if (!plan) return dot;
@@ -145,8 +148,8 @@ const LINK_LABEL = /^( {2}"[^"]*" -> "[^"]*" \[(?:id="[^"]*", )?)label=/;
 const TYPE_CURVES = /^( {2}graph \[.*), splines=true\];$/;
 
 /**
- * The source `dot` with its links routed (untangle_routing): straight lines, or right angles, whose readings are set
- * beside them (`xlabel`), as Graphviz places a right-angled link's label; the curves a radial drawing asks for
+ * The source `dot` with its links routed (untangle_routing). They are straight lines, or right angles. Their readings
+ * are set beside them (`xlabel`), as Graphviz places a right-angled link's label. The curves a radial drawing asks for
  * (graph-layout.js, typedSource) give way to them. Curved, or none, is how Graphviz draws them: `dot` unchanged.
  */
 export function routedSource(dot: string, routing: string | undefined): string {

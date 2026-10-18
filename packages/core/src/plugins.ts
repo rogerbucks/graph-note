@@ -1,11 +1,11 @@
-// The plug-in interface (editor spec §43, plugin_interface and plugin_manifest_limits): one typed, versioned way in for
-// what ThoughtKnot can be extended with, used by the built-in ones too. A plug-in names itself, the interface version it
-// was built for and, in its manifest, the extension points it uses; it is given only those. What it adds is checked as it
-// is added, and a call into it that throws is caught and named, never let through to blank a drawing. The first
-// extension point is the data exports, and the second the theme tokens (§44, plugin_theme_tokens): a plug-in inherits the
-// core's design tokens and may add colours of its own, each meeting the locked contrast (theme-tokens.ts). Diagram types,
-// graph steps and sources, storage, AI providers and commands join them one at a time, each with its own contract suite
-// (plugins-contract.ts).
+// The plug-in interface (editor spec §43, plugin_interface and plugin_manifest_limits). It is one typed, versioned way
+// in for what ThoughtKnot can be extended with, used by the built-in ones too. A plug-in names itself and the interface
+// version it was built for. In its manifest it names the extension points it uses; it is given only those. What it adds
+// is checked as it is added. A call into it that throws is caught and named, never let through to blank a drawing. The
+// first extension point is the data exports, and the second the theme tokens (§44, plugin_theme_tokens). A plug-in
+// inherits the core's design tokens and may add colours of its own, each meeting the locked contrast (theme-tokens.ts).
+// Diagram types, graph steps and sources, storage, AI providers and commands join them one at a time. Each comes with
+// its own contract suite (plugins-contract.ts).
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
 import type { ThemeToken } from './theme-tokens.ts';

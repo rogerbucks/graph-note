@@ -1,8 +1,10 @@
-// Export's harder cases (editor spec §16): a classification however the front matter writes it, or before the note is
-// indexed (classified_export); the share sheet on a phone, opened by its own tap, and nothing saved when it is cancelled
-// (export_share_sheet); an earlier export never overwritten; failures said once, rightly, with no temporary file left
-// among the notes (failed_export); a PNG too large for the device refused as such (export_png_sharp); and the
-// form taking one press at a time, its focus where the person is (accessibility).
+// Export's harder cases (editor spec §16):
+// - a classification however the front matter writes it, or before the note is indexed (classified_export);
+// - the share sheet on a phone, opened by its own tap, and nothing saved when it is cancelled (export_share_sheet);
+// - an earlier export never overwritten;
+// - failures said once, rightly, with no temporary file left among the notes (failed_export);
+// - a PNG too large for the device refused as such (export_png_sharp);
+// - the form taking one press at a time, its focus where the person is (accessibility).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
@@ -180,9 +182,10 @@ describe('writing', () => {
   });
 });
 
-// layout_contained, failed_export: an export is laid out where a drawing is — in the layout worker, under the same size and
-// time limits, and on the page's thread, under the lower limits, only where no worker can run — and one over a limit
-// writes no file and says why, what happened, then what to do
+// layout_contained, failed_export: an export is laid out where a drawing is.
+// - It is laid out in the layout worker, under the same size and time limits.
+// - Only where no worker can run is it laid out on the page's thread, under the lower limits.
+// One over a limit writes no file and says why, what happened, then what to do.
 describe('laid out like a drawing, under the same limits', () => {
   const ASK = { path: PATH, graph: 'trip', format: 'svg', theme: 'light' };
   const things = (n, graph = 'trip') =>
@@ -222,8 +225,8 @@ describe('laid out like a drawing, under the same limits', () => {
         assert.doesNotMatch(a + b, /var\(--|color-mix\(/);
         assert.ok(a.includes('#ffffff') && !a.includes('#1e1e1e'), 'light');
         assert.ok(b.includes('#1e1e1e') && !b.includes('#ffffff'), 'dark');
-        // the drawing's own body, which the worker themes, not only the frame the export puts round it: a node's fill is
-        // its kind's hue in the palette chosen, so a layout themed in the wrong palette fails here
+        // The drawing's own body, which the worker themes, not only the frame the export puts round it.
+        // A node's fill is its kind's hue in the palette chosen. So a layout themed in the wrong palette fails here.
         const hue = GraphLayout.pick(['Place'], STYLE.kind_hues, STYLE.kind_colours).Place;
         const fill = (theme) => hueColour(hue, 'fill', PALETTES[theme]);
         const node = (svg) => /<g id="node\d+" class="node">[\s\S]*?<\/g>/.exec(svg)?.[0] ?? '';

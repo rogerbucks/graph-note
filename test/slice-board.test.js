@@ -1,6 +1,6 @@
-// The slice board: a self-contained HTML page of how far the slice under way is proved, read from the generated
-// requirements copy with the repo's own reader. Hand-made small graphs stand in for the real file, so each rule is seen
-// on a case that shows it; one case runs the real command. Spec §12, requirements_checked_in_ci.
+// The slice board is a self-contained HTML page of how far the slice under way is proved. It reads the generated
+// requirements copy with the repo's own reader. Hand-made small graphs stand in for the real file. So each rule is seen
+// on a case that shows it. One case runs the real command. Spec §12, requirements_checked_in_ci.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

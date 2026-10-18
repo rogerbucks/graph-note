@@ -124,8 +124,8 @@ class DrawnInPart(unittest.TestCase):
         self.assertEqual(problems, [])
 
     def test_a_block_drawn_from_a_file_or_a_note_is_not_drawn(self):
-        # editor spec §20: `· FROM` names where the graph is written; the block holds no data of
-        # its own, as the core's blocks.ts reads it (isSourceBlock), even one with lines in it
+        # editor spec §20: `· FROM` names where the graph is written. The block holds no data of
+        # its own, even one with lines in it. The core's blocks.ts reads it so (isSourceBlock).
         store, problems = gp.read_for_drawing(
             [
                 "// graph: trip · FROM Graphs/trip.gql",

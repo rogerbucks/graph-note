@@ -1,6 +1,6 @@
-// The replay of a commit (tests-first.test.js) when a new test passes against the code before it: it was not written first,
-// and is reported unless a reason is kept for it; and a test named like a property every object has is not excused by
-// that. Split from tests-first.test.js on 11 Oct 2026, so the suite runs it beside the others.
+// The replay of a commit (tests-first.test.js) when a new test passes against the code before it. It was not written
+// first, and is reported unless a reason is kept for it. A test named like a property every object has is not excused
+// by that. Split from tests-first.test.js on 11 Oct 2026, so the suite runs it beside the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { replay, unexplained } from '../scripts/tests-first.mjs';

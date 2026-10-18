@@ -1,8 +1,10 @@
-// Notes on things and links (editor spec §24): the lines of exactly three slashes directly above a thing or a link,
-// read by notes() into each note's text, CommonMark for the host to render, and its summary, and the lines holding more
-// than one thing that a note above belongs to none of. The cases are the shared table, owned-comment-cases.json, which
-// the Python library reads alike (python/graph_spec/tests/test_notes.py), so both readers read the same notes from the
-// same text (note_both_readers). CommonJS, as the package is.
+// Notes on things and links (editor spec §24): the lines of exactly three slashes directly above a thing or a link.
+// notes() reads them into:
+// - each note's text, CommonMark for the host to render, and its summary;
+// - the lines holding more than one thing, which a note above belongs to none of.
+// The cases are the shared table, owned-comment-cases.json. The Python library reads it alike
+// (python/graph_spec/tests/test_notes.py). So both readers read the same notes from the same text (note_both_readers).
+// CommonJS, as the package is.
 'use strict';
 
 const { test } = require('node:test');

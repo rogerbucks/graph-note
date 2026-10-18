@@ -1,6 +1,6 @@
-// Drawing a graph (spec §3): laid out by the Graphviz engine in each direction the style lists, the better fit chosen and
-// themed, as graph_svg.render does; and what tapping a box shows. The engine itself is started by engine.ts and handed in,
-// so these steps need no WebAssembly and run in any host (spec §10).
+// Drawing a graph (spec §3). It is laid out by the Graphviz engine in each direction the style lists. The better fit is
+// chosen and themed, as graph_svg.render does. Also what tapping a box shows. The engine itself is started by engine.ts
+// and handed in, so these steps need no WebAssembly and run in any host (spec §10).
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { drawingSource, layoutSource, STYLE } from './layout.ts';
@@ -38,9 +38,9 @@ export interface Direction {
 }
 
 /**
- * What Graphviz is handed for a drawing: one source for each direction the style lists, in the style's order — or only
- * the drawing's own direction, when it was given one of those (spec §21, settings_formatting; a direction nudge, §6) —
- * or else only its diagram type's direction (§15: a tree down, the other types across).
+ * What Graphviz is handed for a drawing. It is one source for each direction the style lists, in the style's order. Or
+ * it is only the drawing's own direction, when it was given one of those (spec §21, settings_formatting; a direction
+ * nudge, §6). Or else it is only its diagram type's direction (§15: a tree down, the other types across).
  */
 export function directions(drawing: GraphDrawing): Direction[] {
   const own = drawing.direction && STYLE.directions.includes(drawing.direction) ? drawing.direction : undefined;
@@ -48,9 +48,10 @@ export function directions(drawing: GraphDrawing): Direction[] {
   const keys = drawing.boxes.map((b) => b.key);
   return (only ? [only] : STYLE.directions).map((rankdir) => ({
     rankdir,
-    // the diagram type chosen (§15), the links moved (§7), the style graph's arrowheads hidden (§15), properties shown
-    // (§14), room for the pictures on boxes (§18) and nudges written in (§6), then what the View menu folds and merges
-    // and how the links are routed (§25); with none of them, the source the Python library gives, byte for byte
+    // the diagram type chosen (§15), the links moved (§7) and the style graph's arrowheads hidden (§15). Then
+    // properties shown (§14), room for the pictures on boxes (§18) and nudges written in (§6). Then what the View menu
+    // folds and merges and how the links are routed (§25). With none of them, the source the Python library gives, byte
+    // for byte
     dot: routedSource(
       foldedSource(
         nudgedSource(
@@ -80,8 +81,8 @@ export function directions(drawing: GraphDrawing): Direction[] {
 }
 
 /**
- * The drawing, from the SVG Graphviz drew for each direction (in the same order): the better fit, themed in the host's
- * palette from the one table (Obsidian's by default).
+ * The drawing, from the SVG Graphviz drew for each direction (in the same order). It is the better fit, themed in the
+ * host's palette from the one table (Obsidian's by default).
  */
 export function chosen(laidOut: Direction[], svgs: string[], palette?: Palette): Drawn {
   const laid = laidOut.map(({ rankdir, src }, i) => {

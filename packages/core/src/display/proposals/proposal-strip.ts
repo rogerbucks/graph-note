@@ -1,8 +1,8 @@
-// A proposal's card (spec §17): above the drawing, who proposed it, when and what it read; a notice, before anything is
-// accepted, when the graph has moved since; and the changes listed one to a row, each in plain English with Accept and
-// Reject, or accepted and rejected all at once or a group at a time when there are many. Nothing is written until a
-// person presses Accept. On a phone the list is a sheet at the bottom of the screen (proposals_phone), as the inspector
-// is; each control is a 44-point target and says in words what it does.
+// A proposal's card (spec §17). Above the drawing it shows who proposed it, when and what it read. Before anything is
+// accepted, a notice says when the graph has moved since. The changes are listed one to a row, each in plain language
+// with Accept and Reject. When there are many, they can be accepted and rejected all at once or a group at a time.
+// Nothing is written until a person presses Accept. On a phone the list is a sheet at the bottom of the screen
+// (proposals_phone), as the inspector is. Each control is a 44-point target and says in words what it does.
 import { isPhone } from '../host';
 import { word } from '@thoughtknot/core';
 import type { ProposalShown, Which } from '@thoughtknot/core';
@@ -20,8 +20,8 @@ export interface ProposalCard {
 }
 
 const day = (at: string) => at.slice(0, 10);
-// A reason as its source gave it: the note keeps a model's reason with each Markdown mark escaped (§19), so it never
-// renders there; the card sets it as plain text, so the marks are shown as written, never read
+// A reason as its source gave it. The note keeps a model's reason with each Markdown mark escaped (§19), so it never
+// renders there. The card sets it as plain text, so the marks are shown as written, never read
 const plainReason = (reason: string) => reason.replace(/\\([\\`*_{}[\]()#+!|<>~&/@])/g, '$1');
 
 /** Draws the card under `root`; returns the buttons that write, which a read-only place takes away. */

@@ -1,7 +1,10 @@
-// The page's calls for an export (spec §26, cc_exports_new_only), apart from server-calls.ts, which only reads: the place the
-// files will go, asked of the server, and the files handed over to be written. The page names no folder or path of its own;
-// the server writes the files only as new ones in the export folder, and answers the names they were given (a number is
-// added to one that was taken). The token is the one the page holds, passed in; every address is from the server's root.
+// The page's calls for an export (spec §26, cc_exports_new_only). They are apart from server-calls.ts, which only
+// reads.
+// - It asks the server for the place the files will go.
+// - It hands the files over to be written.
+// The page names no folder or path of its own. The server writes the files only as new ones in the export folder. It
+// answers the names they were given (a number is added to one that was taken). The token is the one the page holds,
+// passed in. Every address is from the server's root.
 
 /** One file of an export: its name alone, with its text or its bytes. */
 export interface SavedFile {

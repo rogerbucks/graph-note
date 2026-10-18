@@ -24,7 +24,6 @@
 
 **Checklist line:**
 
-> **H-11** A thing whose id is a global note id, note: and the note's name, shows that note in its details,
-> rendered, with Open beside it; Open opens the note. A thing whose id is a link to the note does the same.
+> **H-11** A thing whose id is a global note id, note: and the note's name, shows that note in its details. It is rendered, with Open beside it, and Open opens the note. A thing whose id is a link to the note does the same.
 
 **Back to the checklist:** [H-11 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-11 in its list.

@@ -1,5 +1,6 @@
-// What a proposal review hands a host (editor spec §17): the proposal as shown — rows, groups, marks, provenance and whether
-// the graph has moved — and the shapes of a decision: who decides, which changes, and what came of it. Types only.
+// What a proposal review hands a host (editor spec §17). It hands the proposal as shown: rows, groups, marks,
+// provenance and whether the graph has moved. It hands the shapes of a decision too: who decides, which changes, and
+// what came of it. Types only.
 import type { NoteReading } from './note-reading.ts';
 import type { Stale } from './proposals-basis.ts';
 import type { MarkKind, Marks } from './proposals-marks.ts';
@@ -31,7 +32,7 @@ export interface ChangeRow {
   group: string;
   mark: MarkKind;
   state: 'pending' | 'accepted' | 'rejected';
-  /** The change read back in plain English, as the text pane reads a line. */
+  /** The change read back in plain language, as the text pane reads a line. */
   said: string;
   /** The change exactly as it would be written: its GQL, its SET line or its removal; what the sentence may say less of. */
   text: string;

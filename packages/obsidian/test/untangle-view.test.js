@@ -1,7 +1,9 @@
-// Untangling a drawing (editor spec §25, slice 3): a thing and its neighbours alone, behind a banner with a step back; the
-// legend bringing a kind or a relationship type forward, then hiding it; the shortest path between two things, or that
-// there is none; finding a thing and bringing it into view; walking the links by arrow key — all of it changing the
-// drawing and never the note. The built plugin, loaded against the stand-ins for the page.
+// Untangling a drawing (editor spec §25, slice 3). All of it changes the drawing and never the note.
+// - A thing and its neighbours alone, behind a banner with a step back.
+// - The legend bringing a kind or a relationship type forward, then hiding it.
+// - The shortest path between two things, or that there is none.
+// - Finding a thing and bringing it into view. Walking the links by arrow key.
+// The built plugin, loaded against the stand-ins for the page.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load as loadWith, until, wait } from './host/load-plugin.js';

@@ -21,8 +21,8 @@ import graph_rules as gr  # noqa: E402
 import graph_spec as gs  # noqa: E402
 from engine_support import needs_engine  # noqa: E402
 
-# a loan, with drawing it down detailed in a sub-flow: guards, an else, actions, a self-transition,
-# and a sub-flow whose end its parent hears as done (§7, §16) — generic test data
+# A loan, with drawing it down detailed in a sub-flow. It has guards, an else, actions and a
+# self-transition. Its sub-flow's end is heard by its parent as done (§7, §16). Generic test data.
 PROCESS = """// graph: loan_process
 (applied:State {id: 'loan/applied', flow: 'loan', initial: TRUE}),
 (approved:State {id: 'loan/approved', flow: 'loan'}),

@@ -1,6 +1,6 @@
-// Marking a drawn SVG for an export (editor spec §16, §7): what is outside a view faded by a style attribute on its group,
-// and each look drawn by attributes of its own, in the locked blends of its hue, because an image cannot take Obsidian's
-// stylesheet. The groups are found by Graphviz's numbering, node1, node2… and edge1, edge2…
+// Marking a drawn SVG for an export (editor spec §16, §7). What is outside a view is faded by a style attribute on its
+// group. Each look is drawn by attributes of its own, in the locked blends of its hue, because an image cannot take
+// Obsidian's stylesheet. The groups are found by Graphviz's numbering, node1, node2… and edge1, edge2…
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { FADED_OPACITY, marked } from '../src/export-marks.ts';

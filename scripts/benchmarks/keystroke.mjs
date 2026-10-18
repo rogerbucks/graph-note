@@ -1,9 +1,12 @@
-// The instruction-count benchmark of a keystroke reaching the note (spec §5, quick_to_note): the core's share of what the
-// edit pane does for one key, in its order (packages/obsidian/src/block-editor): the block as typed read in its note, its
-// problems, the read-back of each line and the colouring, then the write into the note. And the read-back, which runs on
-// every key, against reading the note, which runs on every key already: on a large valid block it costs less, the ratio
-// partial-read.test.js held in processor time. The pane's own wait before writing stays on the test's mock clock
-// (pane-writing.test.js). Run by scripts/instruction-counts.mjs.
+// The instruction-count benchmark of a keystroke reaching the note (spec §5, quick_to_note). It counts the core's share
+// of what the edit pane does for one key, in its order (packages/obsidian/src/block-editor):
+// - the block as typed, read in its note;
+// - its problems;
+// - the read-back of each line, and the colouring;
+// - then the write into the note.
+// It also holds the read-back, which runs on every key, against reading the note, which runs on every key already. On
+// a large valid block it costs less, the ratio partial-read.test.js held in processor time. The pane's own wait before
+// writing stays on the test's mock clock (pane-writing.test.js). Run by scripts/instruction-counts.mjs.
 import { gqlSpans } from '../../packages/core/src/blocks.ts';
 import { readNote } from '../../packages/core/src/drawing.ts';
 import { diagnostics, readBack } from '../../packages/core/src/help.ts';

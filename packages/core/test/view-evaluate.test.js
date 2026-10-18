@@ -1,7 +1,7 @@
-// What a view shows (editor spec §7): each of the five kinds put to a small graph, giving the things Grafeo gives for the
-// same query and the links to draw with them, as indexes into the drawing's links. The expected things were checked
-// against Grafeo too: 2,764 queries on 260 random graphs, run on 11 Oct 2026, gave the same things (and, for how one thing
-// reaches another, the same links) as the core.
+// What a view shows (editor spec §7). Each of the five kinds is put to a small graph, giving the things Grafeo gives
+// for the same query. It gives the links to draw with them too, as indexes into the drawing's links. The expected
+// things were checked against Grafeo too: 2,764 queries on 260 random graphs, run on 11 Oct 2026. They gave the same
+// things as the core, and for how one thing reaches another, the same links.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

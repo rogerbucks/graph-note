@@ -1,9 +1,13 @@
-// What a card is given to follow its links through Obsidian (editor spec §18): a link to a note or file opened by the
-// workspace's own link opener, so a modifier-click opens a new tab as anywhere in Obsidian (host_opens_links); a web or
-// mail address said plainly to leave Obsidian, and handed to the system only once agreed (safe_to_click); any other link
-// never opened; the preview Page preview shows on hover (link_preview); Markdown rendered by Obsidian's own renderer,
-// with nothing remote loaded and no HTML (rich_details); and where the card was left, so the back step finds it as it
-// was (back_where_you_were). Nothing here fetches anything: every opening is Obsidian's.
+// What a card is given to follow its links through Obsidian (editor spec §18).
+// - A link to a note or file is opened by the workspace's own link opener. So a modifier-click opens a new tab, as
+//   anywhere in Obsidian (host_opens_links).
+// - A web or mail address is said plainly to leave Obsidian. It is handed to the system only once agreed
+//   (safe_to_click).
+// - Any other link is never opened.
+// - The preview Page preview shows on hover (link_preview).
+// - Markdown rendered by Obsidian's own renderer, with nothing remote loaded and no HTML (rich_details).
+// - Where the card was left, so the back step finds it as it was (back_where_you_were).
+// Nothing here fetches anything: every opening is Obsidian's.
 import { Component, Keymap, MarkdownRenderer, Modal, Notice, TFile } from 'obsidian';
 import type { App } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
@@ -67,9 +71,9 @@ class LeaveObsidian extends Modal {
 }
 
 /**
- * Each link Obsidian rendered inside `el` not yet followed: one that may not be opened, by its `href` or its `data-href`,
- * becomes its text; the rest open and preview as the card's own links do, `where` saying where the card is when one
- * takes its tab.
+ * Each link Obsidian rendered inside `el` not yet followed. One that may not be opened, by its `href` or its
+ * `data-href`, becomes its text. The rest open and preview as the card's own links do. `where` says where the card is
+ * when one takes its tab.
  */
 function followRendered(el: HTMLElement, host: LinkHost, where: () => LeftAt | null = () => null): void {
   for (const a of Array.from(el.querySelectorAll('a'))) {
@@ -133,8 +137,8 @@ export function linkHost(plugin: ThoughtKnotPlugin, path: string, graph: string)
         await MarkdownRenderer.render(plugin.app, md, into, from, component);
         followRendered(into, { ...host, broken: [] }, where);
       };
-      // a note embedded is read here and rendered made safe, never handed to Obsidian to embed: so nothing it holds,
-      // a remote image among it, is loaded (offline_and_mobile_apis); a note it embeds in turn is a link
+      // a note embedded is read here and rendered made safe, never handed to Obsidian to embed. So nothing it holds is
+      // loaded, a remote image among it (offline_and_mobile_apis). A note it embeds in turn is a link
       const parts = embedParts(markdown);
       for (const part of parts) {
         if ('text' in part) {

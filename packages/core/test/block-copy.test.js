@@ -1,6 +1,6 @@
-// The block followed, not its copy (editor spec §9, block_followed_not_its_copy): after another program pastes a copy of
-// the open block and then edits the original, the session keeps to the original, so Undo never reverts the copy while
-// their edit survives; when it cannot tell the two apart, it stops and says so, writing and undoing neither. Found while
+// The block followed, not its copy (editor spec §9, block_followed_not_its_copy). Another program may paste a copy of
+// the open block, then edit the original. The session keeps to the original, so Undo never reverts the copy while their
+// edit survives. When it cannot tell the two apart, it stops and says so, writing and undoing neither. Found while
 // fixing #451, 15 Oct 2026: the session followed a block by its text alone, so it took the unchanged copy for its own.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -92,8 +92,8 @@ describe('a copy pasted elsewhere, then the original edited', () => {
 });
 
 describe('a block moved, with no copy', () => {
-  // the review of this fix, 15 Oct 2026: a fence line is every block's, so the block cut away brings the next one's fence
-  // to its line; that block, of the same graph, is never taken for the one held, edited
+  // the review of this fix, 15 Oct 2026. A fence line is every block's, so the block cut away brings the next one's
+  // fence to its line. That block, of the same graph, is never taken for the one held, edited
   test('cut and pasted after another block of its graph, it is followed to where it was pasted', () => {
     const more = "// graph: alpha\n(more:T {name: 'More'})";
     const note = ['# Note', '', fence(A), '', fence(more), ''].join('\n');
@@ -169,8 +169,8 @@ describe('a copy it cannot tell from the original', () => {
   });
 });
 
-// The review of #465, 15 Oct 2026: one change can put a copy in place of another block, keeping the count of blocks,
-// and a new block of the same graph is not the held block edited unless it reads as it
+// The review of #465, 15 Oct 2026. One change can put a copy in place of another block, keeping the count of blocks.
+// A new block of the same graph is not the held block edited unless it reads as it
 const B2 = "// graph: alpha\n(b:T {name: 'B'})";
 const B3 = "// graph: beta\n(b:T {name: 'B'})";
 const FRESH = "// graph: alpha\n(fresh:T {name: 'Fresh'})";
@@ -210,8 +210,8 @@ describe('a copy in place of another block, in one change', () => {
 });
 
 describe('a new block that is not the held block edited', () => {
-  // the coordinator, 15 Oct 2026: a block pasted beside it could as well be the original rewritten beside a copy, so the
-  // block is followed, never stopped, but its history is cleared: Undo never reverts what may be a copy
+  // the coordinator, 15 Oct 2026: a block pasted beside it could as well be the original rewritten beside a copy.
+  // So the block is followed, never stopped, but its history is cleared: Undo never reverts what may be a copy
   test('a different block of its graph pasted directly above it: followed, never stopped, its history cleared', () => {
     const { s, note } = written();
     const changed = note.replace(fence(MINE), fence(FRESH) + '\n\n' + fence(MINE));
@@ -255,8 +255,8 @@ describe('a new block that is not the held block edited', () => {
   });
 });
 
-// The re-review of #465, 15 Oct 2026: the original rewritten past half its text after a copy was pasted no longer read
-// as the held block edited, so the copy was the one block left holding its text and the session followed it
+// The re-review of #465, 15 Oct 2026. The original rewritten past half its text after a copy was pasted no longer read
+// as the held block edited. So the copy was the one block left holding its text, and the session followed it
 const REWRITES = {
   'rewritten whole': "// graph: alpha\n(q:T {name: 'Q'})",
   'most lines replaced': "// graph: alpha\n(a:T {name: 'Alpha, renamed'}),\n(x:T), (y:T), (z:T)",
@@ -333,8 +333,8 @@ describe('the original rewritten after a copy is pasted', () => {
   });
 });
 
-// The third review of #465, 15 Oct 2026: a new block of its graph directly beside it, on either side, may be the
-// original rewritten beside a copy; and Undo or Redo pressed before that change is heard must be as wary as after
+// The third review of #465, 15 Oct 2026. A new block of its graph directly beside it, on either side, may be the
+// original rewritten beside a copy. And Undo or Redo pressed before that change is heard must be as wary as after
 const Q = "// graph: alpha\n(q:T {name: 'Q'})";
 const BESIDE = {
   above: (note) => note.replace(fence(MINE), fence(Q) + '\n\n' + fence(MINE)),
@@ -390,7 +390,7 @@ describe('a new block of its graph directly beside it, on either side', () => {
 });
 
 // The re-review of #465, 15 Oct 2026: each new block was compared with every block before, so 8,000 blocks took half a
-// second; the blocks looked at are counted, never timed (spec §12)
+// second. The blocks looked at are counted, never timed (spec §12)
 describe('following is linear in the blocks', () => {
   /** A note of `n` blocks of the graph after the held one, and the note with its first and last lines changed. */
   function many(n) {

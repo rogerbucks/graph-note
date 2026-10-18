@@ -1,8 +1,11 @@
-// Links and attachments (editor spec §18): every kind of link written in a graph is found, shown as a link, opened by the
-// host and kept safe; a thing's attachments are counted and listed; a link that names nothing is drawn as broken and
-// reported with its fix; and a renamed note or file is followed by every link to it inside graph blocks, never in prose.
-// The core's part is tested on its own first; then the built Obsidian plugin, loaded against its stand-ins, shows that the
-// host does the opening, the previewing and the going back (host_opens_links, link_preview, back_where_you_were).
+// Links and attachments (editor spec §18):
+// - every kind of link written in a graph is found, shown as a link, opened by the host and kept safe;
+// - a thing's attachments are counted and listed;
+// - a link that names nothing is drawn as broken and reported with its fix;
+// - a renamed note or file is followed by every link to it inside graph blocks, never in prose.
+// The core's part is tested on its own first. Then the built Obsidian plugin is loaded against its stand-ins. It shows
+// that the host does the opening, the previewing and the going back (host_opens_links, link_preview,
+// back_where_you_were).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

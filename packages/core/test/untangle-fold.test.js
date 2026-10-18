@@ -1,6 +1,6 @@
-// Folding a busy hub's links into one stub, and a group into one box, and merging the links between two groups into
-// trunks (editor spec §25, untangle_hubs, untangle_groups, untangle_merge): what is folded, hidden or merged, worked out
-// from the drawing alone, so the host changes the drawing and nothing else (untangle_data_untouched).
+// Folding a busy hub's links into one stub, and a group into one box (editor spec §25, untangle_hubs, untangle_groups).
+// Also merging the links between two groups into trunks (untangle_merge). What is folded, hidden or merged is worked
+// out from the drawing alone. So the host changes the drawing and nothing else (untangle_data_untouched).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

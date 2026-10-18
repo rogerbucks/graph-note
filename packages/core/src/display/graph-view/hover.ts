@@ -1,7 +1,7 @@
-// The highlight (editor spec §25, hover_highlight, hover_not_alone, hover_still): pointing at a thing or a link marks it, and
-// for a link the two things it joins, for as long as the pointer stays; the same mark follows keyboard focus, and on touch
-// the tap that selects gives it, so nothing depends on hover (§5). It only says what is highlighted — the drawing is marked
-// by classes, so nothing moves, resizes or is laid out again.
+// The highlight (editor spec §25, hover_highlight, hover_not_alone, hover_still). Pointing at a thing or a link marks
+// it, and for a link the two things it joins, for as long as the pointer stays. The same mark follows keyboard focus.
+// On touch the tap that selects gives it, so nothing depends on hover (§5). It only says what is highlighted — the
+// drawing is marked by classes, so nothing moves, resizes or is laid out again.
 import { highlightOf } from '@thoughtknot/core';
 import type { FocusEdge, FocusTarget, Kept } from '@thoughtknot/core';
 

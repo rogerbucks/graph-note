@@ -34,6 +34,6 @@ MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m
 
 **Checklist line:**
 
-> **W-01** A view block (`// graph: trip · QUERY view round_park` with `MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m`): its card says "View round_park: everything within 1 step of The park"; the things outside it are faded. Hide others writes `outside: 'hide'` into the style block and the card redraws with only the view.
+> **W-01** A view block (`// graph: trip · QUERY view round_park` with `MATCH (n {id: 'park'})-[]-{1,1}(m) RETURN n, m`): its card says "View round_park: everything within 1 step of The park". The things outside it are faded. Hide others writes `outside: 'hide'` into the style block. The card redraws with only the view.
 
 **Back to the checklist:** [W-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for W-01 in its list.

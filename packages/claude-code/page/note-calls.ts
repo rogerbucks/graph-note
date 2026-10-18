@@ -1,14 +1,15 @@
-// The page's calls that follow and write the note (spec §26, cc_claude_proposes), apart from `server-calls.ts`, whose calls
-// only read. The user's decision on a proposal is written here: the whole note, against the version the page last had,
-// with the page's own token, which is the only key that writes. The server compares the version under its lock and refuses
-// a stale one (409), keeping what was sent as a draft. Claude's key reaches no route this file calls.
+// The page's calls that follow and write the note (spec §26, cc_claude_proposes), apart from `server-calls.ts`, whose
+// calls only read. The user's decision on a proposal is written here. It writes the whole note, against the version the
+// page last had. It uses the page's own token, which is the only key that writes. The server compares the version under
+// its lock and refuses a stale one (409), keeping what was sent as a draft. Claude's key reaches no route this file
+// calls.
 
 /** A line of the change stream: the note as it is now, or why it is no longer sent. */
 export type FollowLine = { version: string; text: string } | { gone: string };
 
 /**
- * What a write came to: the note's new version, or why nothing was written: the server's status, and, for a stale write
- * (409), the note as it now is, with what was sent kept by the server as a draft.
+ * What a write came to: the note's new version, or why nothing was written. That is the server's status. For a stale
+ * write (409), it is also the note as it now is. The server keeps what was sent as a draft.
  */
 export type Written =
   | { ok: true; version: string }

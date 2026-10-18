@@ -25,8 +25,8 @@ class _Lazy:
         return getattr(self._m, k)
 
 
-# Grafeo is an optional extra, for database work only: a plain install reads, checks, joins and
-# fills hashes without it (req:14.no-engine-install), and a call that needs it says so
+# Grafeo is an optional extra, for database work only. A plain install reads, checks, joins and
+# fills hashes without it (req:14.no-engine-install). A call that needs it says so
 ENGINE_MISSING = (
     "this needs the engine, Grafeo, which a plain install leaves out — it is for database work "
     "only (queries, path search, a graph stored to query later): install graph-spec[grafeo]"

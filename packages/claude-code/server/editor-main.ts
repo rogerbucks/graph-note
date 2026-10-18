@@ -1,8 +1,10 @@
-// What the shipped editor server is handed by the mod that runs it (spec §26, workstream C2): its vault, its note and the
-// folder for drafts, in its environment, never in an argument (it takes none). From them it makes the note store, opens
-// the one note for the session by the path the mod names, and hands the process its API and the note's id for the
-// address. With no vault in its environment it serves no API, as before. A note that cannot be opened, or a folder that
-// is refused, is thrown as plain words, which the process says on stderr before it listens anywhere.
+// What the shipped editor server is handed by the mod that runs it (spec §26, workstream C2). It gets its vault, its
+// note and the folder for drafts, in its environment. It never gets them in an argument (it takes none). From them it:
+// - makes the note store;
+// - opens the one note for the session, by the path the mod names;
+// - hands the process its API, and the note's id for the address.
+// With no vault in its environment it serves no API, as before. A note that cannot be opened, or a folder that is
+// refused, is thrown as plain words. The process says them on stderr before it listens anywhere.
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { EditorProcessOptions } from './editor-process.ts';
@@ -52,9 +54,9 @@ export function gateSettings(raw: string | undefined): GateSettings {
 }
 
 /**
- * The page's files, from the folder the build made: `mod/page/` beside the built `mod/bin/` this process runs from, or
- * `mod/page/` of the package when run from this source folder. Never the page's source folder. With no built page the
- * start fails in plain words, before the server listens, rather than serving a page that cannot run.
+ * The page's files, from the folder the build made. That is `mod/page/` beside the built `mod/bin/` this process runs
+ * from. Or it is `mod/page/` of the package, when run from this source folder. Never the page's source folder. With no
+ * built page the start fails in plain words, before the server listens, rather than serving a page that cannot run.
  */
 export async function pageFiles(here = dirname(fileURLToPath(import.meta.url))): Promise<PageAssets> {
   const files = await loadPageAssets(join(here, basename(here) === 'bin' ? '../page' : '../mod/page'));

@@ -1,8 +1,11 @@
-// Fit to be public, and kept so (spec §13, Delivery): nothing confidential, personal or secret in any commit, every
-// commit from a no-reply address, a stranger's fresh clone sets up from the README's steps alone, and on GitHub no one
-// but a collaborator can contribute. The history check is tried on a small repository made in a temporary folder.
+// Fit to be public, and kept so (spec §13, Delivery):
+// - Nothing confidential, personal or secret in any commit.
+// - Every commit from a no-reply address.
+// - A stranger's fresh clone sets up from the README's steps alone.
+// - On GitHub, no one but a collaborator can contribute.
+// The history check is tried on a small repository made in a temporary folder.
 //
-// The samples are assembled from parts, so this file never holds a line that looks like the real thing: the checks run
+// The samples are assembled from parts, so this file never holds a line that looks like the real thing. The checks run
 // over this file too.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';

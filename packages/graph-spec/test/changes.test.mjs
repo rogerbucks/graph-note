@@ -1,5 +1,5 @@
 // A change set may DELETE and SET, each statement naming one target (graph spec §24, 16 Oct 2026). The cases are
-// change-cases.json, the table python/graph_spec/tests/test_changes.py runs too, so both readers read the same
+// change-cases.json, the table python/graph_spec/tests/test_changes.py runs too. So both readers read the same
 // removals and changes from the same change set (req:24.cs-two-readers).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

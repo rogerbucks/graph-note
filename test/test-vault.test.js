@@ -1,6 +1,6 @@
 // The test vault: an Obsidian vault in the repository, test-vault/, where each build is tried before it is promoted.
 // It holds dummy notes only, each tied to the requirements it exercises, and the two settings that make it a vault with
-// the plugin on. Nothing Obsidian writes as it runs, and no plugin build, is ever committed, and every session in it
+// the plugin on. Nothing Obsidian writes as it runs, and no plugin build, is ever committed. Every session in it
 // starts and ends with the vault restored to what is committed. Spec §13, tried first in a test vault.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,8 +1,8 @@
-// The instruction-count benchmark of the worst cases read at the size limits (spec §9, reading_contained): three broken
-// blocks, each read within the one budget of reading again, against the same block mended. A broken read costs under
-// twice the budget's worth of whole reads of the mended block: as many reads as the budget and two of the block's length
-// allow. This is the ratio partial-read.test.js held in processor time; its work count (what the reader is handed) stays
-// there. Run by scripts/instruction-counts.mjs.
+// The instruction-count benchmark of the worst cases read at the size limits (spec §9, reading_contained). It reads
+// three broken blocks, each within the one budget of reading again, against the same block mended. A broken read costs
+// under twice the budget's worth of whole reads of the mended block. That is as many reads as the budget and two of the
+// block's length allow. This is the ratio partial-read.test.js held in processor time; its work count (what the reader
+// is handed) stays there. Run by scripts/instruction-counts.mjs.
 import { readNote } from '../../packages/core/src/drawing.ts';
 import { REREAD_BUDGET } from '../../packages/core/src/partial-read.ts';
 
@@ -33,7 +33,7 @@ function read(text) {
 }
 
 /**
- * Under twice as many whole reads of the mended block as the budget and two of the broken block's length allow; the
+ * Under twice as many whole reads of the mended block as the budget and two of the broken block's length allow. The
  * length is worked out where the claim is checked, from the same texts.
  */
 const inBudget = (brokenCase, mendedCase) => (n) => [
@@ -47,7 +47,7 @@ export const BENCHMARK = {
   spec: '§9, reading_contained',
   proves: 'the worst broken blocks under the size limits are read within the one budget of reading again',
   setup() {
-    // warm: each case's code path once, on a small block of its own shape, so the compiling a first read does is in
+    // warm: each case's code path once, on a small block of its own shape. So the compiling a first read does is in
     // the setup, taken off every case alike, and never inside a ratio
     const line = Array.from({ length: 60 }, (_, i) => `(n${i}:T {name${i === 59 ? '' : ':'} 'x'})`).join(', ');
     const long = (i) => `Thing number ${i} of many`;

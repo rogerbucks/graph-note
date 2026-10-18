@@ -1,9 +1,12 @@
-// Diagram types (editor spec §15): which of the seven types fit a graph, and why each that does not fit does not
-// (type_only_when_fits, tree_fits, timeline_fits); the type that fits best, suggested and never drawn unless chosen
-// (suggest_type); the type the style graph chooses, drawn only while the data fits it — else the graph is drawn as a
-// network, and the nearest type that fits is offered (type_stops_fitting); and the plan Graphviz lays each type out by
-// (graph-layout.js, `typedSource`). A table is drawn by the host, from types-table.ts. Host-free. The Python library
-// judges and plans the same way (`graphspec/style/diagram_types.py`), held to this byte for byte (type_both_renderers).
+// Diagram types (editor spec §15). This works out:
+// - which of the seven types fit a graph, and why each that does not fit does not (type_only_when_fits, tree_fits,
+//   timeline_fits);
+// - the type that fits best, suggested and never drawn unless chosen (suggest_type);
+// - the type the style graph chooses, drawn only while the data fits it. Else the graph is drawn as a network, and the
+//   nearest type that fits is offered (type_stops_fitting);
+// - the plan Graphviz lays each type out by (graph-layout.js, `typedSource`).
+// A table is drawn by the host, from types-table.ts. Host-free. The Python library judges and plans the same way
+// (`graphspec/style/diagram_types.py`). It is held to this byte for byte (type_both_renderers).
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { DiagramPlan, GraphDrawing } from './note-reading.ts';
 import { DIAGRAM_TYPES } from './style-graph.ts';
@@ -89,8 +92,8 @@ const no = (type: DiagramType, why: string): TypeFit => ({ type, fits: false, wh
 const yes = (type: DiagramType): TypeFit => ({ type, fits: true });
 
 /**
- * Whether a tree fits: along `relationship`, or, none chosen, along the type with the most links that makes one — of two
- * with as many, the first by name, so the choice never hangs on the order written.
+ * Whether a tree fits. It is judged along `relationship`, or, none chosen, along the type with the most links that
+ * makes one. Of two with as many, the first by name wins, so the choice never hangs on the order written.
  */
 function treeFit(shape: GraphShape, relationship: string | undefined, text: (k: string) => string): TypeFit {
   if (!shape.links.length) return no('tree', 'a tree needs links, and there are none');
@@ -107,8 +110,8 @@ function treeFit(shape: GraphShape, relationship: string | undefined, text: (k: 
 }
 
 /**
- * Whether a radial drawing fits: three things or more, every one joined to the centre, whichever way its links run; and
- * no group written, as Graphviz's radial layout cannot draw a group's box.
+ * Whether a radial drawing fits. It needs three things or more, every one joined to the centre, whichever way its links
+ * run. No group may be written, as Graphviz's radial layout cannot draw a group's box.
  */
 function radialFit(shape: GraphShape, text: (k: string) => string): TypeFit {
   if (shape.things.length < 3) return no('radial', 'a radial drawing needs three things or more');
@@ -155,8 +158,8 @@ function lanesFit(shape: GraphShape): TypeFit {
 
 /**
  * Whether each type fits the shape (§15, type_only_when_fits), in the order of `DIAGRAM_TYPES`, each that does not with
- * why. A tree is judged along `relationship` when one is chosen (tree_fits); a timeline needs every thing to carry a date
- * (timeline_fits); a network fits every graph, and with nothing to draw only a network is offered.
+ * why. A tree is judged along `relationship` when one is chosen (tree_fits). A timeline needs every thing to carry a
+ * date (timeline_fits). A network fits every graph, and with nothing to draw only a network is offered.
  */
 export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
   if (!shape.things.length) return DIAGRAM_TYPES.map((t) => (t === 'network' ? yes(t) : no(t, NOTHING)));
@@ -185,10 +188,10 @@ export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
 }
 
 /**
- * The type that best fits (§15, suggest_type), and why: the table first for a graph too large for one drawing
- * (large_way_in); then a timeline when every thing carries a date; a tree whose relationship reaches every thing; a
- * radial drawing of four things or more all linked to its centre; lanes; a flow; and else a network. Only suggested:
- * nothing is drawn as it until it is chosen.
+ * The type that best fits (§15, suggest_type), and why. The table comes first for a graph too large for one drawing
+ * (large_way_in). Then a timeline when every thing carries a date, and a tree whose relationship reaches every thing.
+ * Then a radial drawing of four things or more all linked to its centre, then lanes, a flow, and else a network. Only
+ * suggested: nothing is drawn as it until it is chosen.
  */
 export function suggestType(fits: readonly TypeFit[], shape: GraphShape): Suggestion {
   const fit = (t: DiagramType) => fits.find((f) => f.type === t && f.fits);
@@ -261,8 +264,8 @@ export interface DiagramOffer {
 
 /**
  * Everything a host offers of the diagram types for `drawing` in `view` (none: the whole graph), from one reading of its
- * shape: whether each type fits and why not (type_only_when_fits), the suggestion (suggest_type), and the type drawn,
- * with why and the nearest that fits when the chosen one has stopped fitting (type_stops_fitting).
+ * shape. It gives whether each type fits and why not (type_only_when_fits), and the suggestion (suggest_type). It gives
+ * the type drawn, with why and the nearest that fits when the chosen one has stopped fitting (type_stops_fitting).
  */
 export function diagramOffer(
   drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,
@@ -279,10 +282,10 @@ export function diagramOffer(
 }
 
 /**
- * The type `drawing` is drawn as in `view` (none: the whole graph), judged on what the drawing holds (§15): the type its
- * style graph chooses, while the data fits it; when it does not, a network — never the graph drawn wrongly — with why and
- * the nearest type that fits, for the host to say and offer (type_stops_fitting). With none chosen, a network: a
- * suggestion is never drawn unless chosen (suggest_type).
+ * The type `drawing` is drawn as in `view` (none: the whole graph), judged on what the drawing holds (§15). It is the
+ * type its style graph chooses, while the data fits it. When it does not, it is a network, never the graph drawn
+ * wrongly. Then it comes with why and the nearest type that fits, for the host to say and offer (type_stops_fitting).
+ * With none chosen, a network. A suggestion is never drawn unless chosen (suggest_type).
  */
 export function diagramFor(
   drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,

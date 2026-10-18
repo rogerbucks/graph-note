@@ -1,8 +1,10 @@
 // The block editor stopped by a copy of its block it cannot tell from the block (editor spec §9,
-// block_followed_not_its_copy): the stop is said once in the draft banner, what is typed after it is saved quietly as
-// the draft at each pause, never lost, and Open again goes on with the block, keeping what was typed as a draft. The
-// review of #465, 15 Oct 2026: every debounced write showed the banner again, and the pane's picker could not choose
-// the block it was already on.
+// block_followed_not_its_copy).
+// - The stop is said once in the draft banner.
+// - What is typed after it is saved quietly as the draft at each pause, never lost.
+// - Open again goes on with the block, keeping what was typed as a draft.
+// The review of #465, 15 Oct 2026: every debounced write showed the banner again.
+// And the pane's picker could not choose the block it was already on.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, until } from './host/load-plugin.js';

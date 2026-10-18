@@ -1,7 +1,10 @@
-// The note store hardened after the security review of #450 (spec §26, test_cc_store): a write never clears a draft
-// saved after it began; a note keeps its file mode; a note with another hard link is refused; a folder swapped for a link
-// under a write is caught before the rename, and under a read before anything is read; the drafts folder is its owner's alone; a draft of control characters is
-// still offered; and the real fs.watch is seen to report a change. Each asserts the work done, never the time taken.
+// The note store hardened after the security review of #450 (spec §26, test_cc_store):
+// - A write never clears a draft saved after it began.
+// - A note keeps its file mode. A note with another hard link is refused.
+// - A folder swapped for a link is caught: under a write before the rename, under a read before anything is read.
+// - The drafts folder is its owner's alone. A draft of control characters is still offered.
+// - The real fs.watch is seen to report a change.
+// Each asserts the work done, never the time taken.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -143,8 +146,8 @@ describe('the note’s own file kept (cc_atomic_write)', () => {
 
 describe('the real watcher (cc_redrawn_on_change)', () => {
   test('fs.watch reports a change to the note, and stops when closed', async () => {
-    // macOS starts a folder's watch a moment after it is asked for, and misses what comes first: the note is written
-    // again until the watcher has seen a change, within a polling deadline, and the event is what is asserted
+    // macOS starts a folder's watch a moment after it is asked for, and misses what comes first. So the note is written
+    // again until the watcher has seen a change, within a polling deadline. The event is what is asserted
     const v = tempVault();
     let changes = 0;
     const close = watching.watchWith(0)(dirname(realpathSync(v.plan)), 'plan.md', () => changes++);

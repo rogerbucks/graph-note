@@ -1,16 +1,17 @@
-// What the block editor asks of the note it edits (spec §4, §9; editor spec §26, cc_core_only): the editor is the display
-// layer's and the same in the Obsidian pane and on the browser editor's page; where the note lives, and how it is written
-// safely, are each host's. Obsidian's note is the vault (block-note.ts) and the page's is the editor server's store
-// (page/page-note.ts). Both write through the core's `PaneSession`, which never overwrites a block changed meanwhile, so the
-// same edit writes the same bytes in either (cc_same_bytes).
+// What the block editor asks of the note it edits (spec §4, §9; editor spec §26, cc_core_only). The editor is the
+// display layer's, and the same in the Obsidian pane and on the browser editor's page. Where the note lives, and how it
+// is written safely, are each host's. Obsidian's note is the vault (block-note.ts) and the page's is the editor
+// server's store (page/page-note.ts). Both write through the core's `PaneSession`, which never overwrites a block
+// changed meanwhile. So the same edit writes the same bytes in either (cc_same_bytes).
 import type { PaneSession } from '@thoughtknot/core';
 import type { DeclaredDeferred } from '../graph-view/view-options';
 
 /**
- * A write the note refused, because its block changed meanwhile, or (`edit`) because the note refused an edit made from
- * the drawing (§4): why, and what was typed, to keep as a draft. `history` marks an Undo or Redo with nothing to take
- * back since the block changed outside the editor (§9): only why, as nothing typed needs keeping. `stopped` marks the
- * session stopped by a copy of its block it cannot tell from it, nothing reloaded (block_followed_not_its_copy).
+ * A write the note refused, because its block changed meanwhile. Or (`edit`) the note refused an edit made from the
+ * drawing (§4). It gives why, and what was typed, to keep as a draft. `history` marks an Undo or Redo with nothing to
+ * take back since the block changed outside the editor (§9). It gives only why, as nothing typed needs keeping.
+ * `stopped` marks the session stopped by a copy of its block it cannot tell from it. Nothing is reloaded
+ * (block_followed_not_its_copy).
  */
 export interface Refused {
   reason: string;

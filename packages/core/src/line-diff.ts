@@ -1,7 +1,7 @@
-// The lines changed between two texts (editor spec §41, github_review_items): the deepest level of a review, every line
-// kept, added or removed, found by Myers' shortest edit script, so a change is shown in the fewest lines added and
-// removed. Lines end at LF only, as every reader here reads them. Past `DIFF_LIMIT` lines of edits the rest is said to be
-// too large to compare line by line, never left to run without end.
+// The lines changed between two texts (editor spec §41, github_review_items): the deepest level of a review. Every line
+// is kept, added or removed, found by Myers' shortest edit script. So a change is shown in the fewest lines added and
+// removed. Lines end at LF only, as every reader here reads them. Past `DIFF_LIMIT` lines of edits the rest is said to
+// be too large to compare line by line, never left to run without end.
 import { THRESHOLDS, thresholdValue } from './thresholds.ts';
 
 /** One line of a comparison: kept, added or removed, with its number in the older and the newer text. */
@@ -21,7 +21,7 @@ export const DIFF_LIMIT = THRESHOLDS.diff_limit.value;
 const linesOf = (t: string) => (t === '' ? [] : t.replace(/\n$/, '').split('\n'));
 
 /**
- * The lines of `before` and `after`, each kept, added or removed, in order; null when more than `limit` lines changed
+ * The lines of `before` and `after`, each kept, added or removed, in order. Null when more than `limit` lines changed
  * (`DIFF_LIMIT` unless set within its range), which a host says is too large to show line by line.
  */
 export function lineDiff(before: string, after: string, limit: number = DIFF_LIMIT): DiffLine[] | null {

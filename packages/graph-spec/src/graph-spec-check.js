@@ -1,17 +1,19 @@
 /*
-Checks graph spec documents in plain JavaScript — reads GQL data blocks in the document profile, with no database, and runs the spec's rules: types, the flat projection, certainty, paths, judgements, servings and change sets.
+Checks graph spec documents in plain JavaScript. It reads GQL data blocks in the document profile, with no database.
+It runs the spec's rules: types, the flat projection, certainty, paths, judgements, servings and change sets.
 
 Usage:
-  In a page:  the built file, dist/graph-spec-check.js, as one script; then  GraphSpecCheck.read([blockText, …])  and  GraphSpecCheck.check(world, 'graph name', matrix)
+  In a page:  the built file, dist/graph-spec-check.js, as one script.
+              Then  GraphSpecCheck.read([blockText, …])  and  GraphSpecCheck.check(world, 'graph name', matrix).
   In Node:    require('@thoughtknot/graph-spec'), or  node bin/graph-spec-check-node.js < request.json   (the conformance suite does this)
 
 Writes: nothing (library).
 
-This is the entry point: it gathers the library's feature modules (see GUIDE.md) into the one API object. esbuild.check.mjs
-bundles it into one self-contained file, dist/graph-spec-check.js, that a browser page, an editor plugin or a document
-add-in can load as it is; the release archive ships that file at this file's path. The library follows gql_profile.py and
-graph_rules.py (python/graph_spec) function for function; the conformance suite runs both on every case and requires the
-same answers. SHA-256 is computed here, synchronously, so no platform crypto is needed.
+This is the entry point: it gathers the library's feature modules (see GUIDE.md) into the one API object.
+esbuild.check.mjs bundles it into one self-contained file, dist/graph-spec-check.js. A browser page, an editor plugin
+or a document add-in can load that file as it is. The release archive ships that file at this file's path. The library
+follows gql_profile.py and graph_rules.py (python/graph_spec) function for function. The conformance suite runs both
+on every case and requires the same answers. SHA-256 is computed here, synchronously, so no platform crypto is needed.
 */
 'use strict';
 

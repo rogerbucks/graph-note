@@ -31,6 +31,6 @@ MATCH (n) WHERE n.id IN ['question', 'large_reader'] RETURN n
 
 **Checklist line:**
 
-> **U-04** Choose "A view of it", then "Only the things ticked" with two things ticked, pressing Show what will be sent each time: what is shown holds only those things and the links between them, and none of the note's prose.
+> **U-04** Choose "A view of it", then "Only the things ticked" with two things ticked, pressing Show what will be sent each time. What is shown holds only those things and the links between them, and none of the note's prose.
 
 **Back to the checklist:** [U-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for U-04 in its list.

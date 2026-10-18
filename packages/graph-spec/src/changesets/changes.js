@@ -32,8 +32,8 @@ function hasVerb(line) {
 
 /**
  * A change set's block split into its additions and its changes. A statement begins at a line that begins with MATCH,
- * DELETE, DETACH or SET: a MATCH goes on to the line that holds its DELETE or SET, and any other such line is a
- * statement of its own. A MATCH that no DELETE or SET follows belongs to the additions, which are the block with the
+ * DELETE, DETACH or SET. A MATCH goes on to the line that holds its DELETE or SET. Any other such line is a statement
+ * of its own. A MATCH that no DELETE or SET follows belongs to the additions. The additions are the block with the
  * statements' lines blanked, so every line keeps its number. `reason` is the `//@ reason:` line directly above a
  * statement, a hint only. `basisOk` is false when a line other than the header says what the set was made against or
  * who made it.
@@ -103,8 +103,10 @@ function endOf(p, n) {
 }
 
 /**
- * One statement read: { op, thing } for a thing, { op, from, type, to } for a link (with `labels` and `ends` of the
- * kinds it names), and `set` for the values a SET gives. Refused, as a ProfileError, unless it is a DELETE or a SET of
+ * One statement read:
+ * - { op, thing } for a thing;
+ * - { op, from, type, to } for a link, with `labels` and `ends` of the kinds it names;
+ * - `set` for the values a SET gives. Refused, as a ProfileError, unless it is a DELETE or a SET of
  * exactly one target (req:24.cs-one-target).
  */
 function readChange(text) {
@@ -201,32 +203,33 @@ function changeId(c) {
   return hash16(o);
 }
 
-// A record is corrected by a superseding addition (§12), and a cache is the engine's part (§11, §20): neither is ever
+// A record is corrected by a superseding addition (§12). A cache is the engine's part (§11, §20). Neither is ever
 // removed or changed by a change set, whoever it is by.
 // (matched on any label a thing carries; a Delivery is an event, and an Assessment is a record even without Event)
 const RECORD_LABELS = ['Event', 'IssuedDocument', 'Decision', 'Delivery', 'Assessment'];
 const CACHE_KEYS = ['likelihood', 'confidence', 'status'];
-/** Whether a new thing is a record a model may not add: an event, an issued document or a decision (an assessment it
- * makes as itself is its own to add). */
+/** Whether a new thing is a record a model may not add: an event, an issued document or a decision. An assessment it
+ * makes as itself is its own to add. */
 const isRecordAdd = (labels) =>
   labels.some((x) => RECORD_LABELS.includes(x) && x !== 'Assessment') && !labels.includes('Assessment');
 
 /**
- * The change made on a store's graph g, or what stops it: null when made, else [kind, what] — kind is 'find' when its
- * target is not in the graph, 'dangling' when a DELETE would leave a link without its end, 'record' when it would
- * remove or change a record or a cache. A thing's DELETE sets `links`: the links it removes with it.
+ * The change made on a store's graph g, or what stops it. It is null when made, else [kind, what]. The kind is:
+ * - 'find' when its target is not in the graph;
+ * - 'dangling' when a DELETE would leave a link without its end;
+ * - 'record' when it would remove or change a record or a cache. A thing's DELETE sets `links`: the links it removes with it.
  */
 function applyChange(store, g, c) {
   const graph = store.graph(g),
     has = (k, labels) => k !== null && labels.every((x) => graph.nodes.get(k).labels.has(x));
   const where = c.kind === 'thing' ? c.thing : `${c.from} ${c.type} ${c.to}`;
   const nodeLabels = (key) => graph.nodes.get(key).labels;
-  // a cache is anything WAS_GENERATED_BY an activity that HAD_PLAN a rule (§24, W3C PROV), or by an unknown activity,
-  // one with neither a plan nor an agent associated with it: it fails closed. Work an associated Person or Model made
+  // a cache is anything WAS_GENERATED_BY an activity that HAD_PLAN a rule (§24, W3C PROV). So is anything made by an
+  // unknown activity, one with neither a plan nor an agent associated with it: it fails closed. Work an associated Person or Model made
   // without a plan is ordinary
   const hadPlan = (a) => graph.edges.some((e) => e[1] === 'HAD_PLAN' && e[0] === a);
-  // an agent: a Person, Organization, SoftwareAgent or Model, or a Ref that resolves to one (a Ref that names no graph the
-  // store holds, or nothing in it, is none)
+  // an agent: a Person, Organization, SoftwareAgent or Model, or a Ref that resolves to one. A Ref that names no graph
+  // the store holds, or nothing in it, is none
   const isAgentNode = (key) => {
     if (!nodeLabels(key).has('Ref')) return AGENT_LABELS.some((x) => nodeLabels(key).has(x));
     const p = graph.nodes.get(key).props;

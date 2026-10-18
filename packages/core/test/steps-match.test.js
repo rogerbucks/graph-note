@@ -1,6 +1,6 @@
-// A step's pattern matched within bounds (editor spec §20 graph_step_io; spec §9): every link looked at counts against
-// MOST_TRIES, the ones a thing at its far end does not fit among them, and a step that finds more than MOST_MATCHES
-// matches is stopped; either way nothing is given, and the run says why.
+// A step's pattern matched within bounds (editor spec §20 graph_step_io; spec §9). Every link looked at counts against
+// MOST_TRIES, the ones a thing at its far end does not fit among them. A step that finds more than MOST_MATCHES matches
+// is stopped. Either way nothing is given, and the run says why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks } from '../src/blocks.ts';

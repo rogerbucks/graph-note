@@ -1,5 +1,5 @@
-// A PNG of an exported SVG (spec §16, export_png_sharp, big_export): drawn on a canvas of the size the core gives, and the
-// canvas let go as soon as its PNG is made, so drawing page after page of a large image never holds more than one
+// A PNG of an exported SVG (spec §16, export_png_sharp, big_export). It is drawn on a canvas of the size the core gives.
+// The canvas is let go as soon as its PNG is made. So drawing page after page of a large image never holds more than one
 // canvas's memory. The canvas, the image and the blob are stand-ins: what is proved is what the plugin does with them.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';

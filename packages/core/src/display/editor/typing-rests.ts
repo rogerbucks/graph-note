@@ -1,6 +1,6 @@
-// The block editor's waits after typing (spec §4): what is typed is written once typing rests, in the pane well inside
-// the spec's third of a second and in place longer, and the drawing is redrawn a little after it. A write made at once
-// clears the write waiting, and the editor going clears both, as this is its child component, so no timer outlives it.
+// The block editor's waits after typing (spec §4). What is typed is written once typing rests: in the pane well inside
+// the spec's third of a second, and in place longer. The drawing is redrawn a little after it. A write made at once
+// clears the write waiting. The editor going clears both, as this is its child component, so no timer outlives it.
 import { Lifecycle } from '../lifecycle';
 import type { Layout } from './editor-layout';
 

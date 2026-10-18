@@ -1,7 +1,7 @@
-// Cheap for an AI to check (spec §13, test_cheap_checks): a quiet test run that says little when all is well and only
-// what is needed when not, a way to run just the tests of what a change touches, a short guide for AI sessions, and
-// generated or bulky files kept out of code searches. The reporter and the runner are tried on small fixtures made in
-// a temporary folder, so the fixtures are never picked up by `npm test`.
+// Cheap for an AI to check (spec §13, test_cheap_checks). That means a quiet test run that says little when all is
+// well, and only what is needed when not. It means a way to run just the tests of what a change touches, and a short
+// guide for AI sessions. Generated or bulky files are kept out of code searches. The reporter and the runner are tried
+// on small fixtures made in a temporary folder, so the fixtures are never picked up by `npm test`.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

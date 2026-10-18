@@ -24,9 +24,9 @@ import { read, readJSON, ROOT } from './repository/repo.js';
 
 const fixture = (name) => read(`test/instruction-counts/cachegrind.out.${name}`);
 
-// The fixtures are real Cachegrind 3.24.0 output, of /bin/true in the benchmarks' image (ARM Linux, 12 Oct 2026): its
-// header, the first and last of its cost lines, and its summary, cut in the middle (the whole is 3,199 lines), with the
-// cache simulated (`.simulated`) and not (`.counted`).
+// The fixtures are real Cachegrind 3.24.0 output, of /bin/true in the benchmarks' image (ARM Linux, 12 Oct 2026). Each
+// holds its header, the first and last of its cost lines, and its summary. It is cut in the middle (the whole is 3,199
+// lines). One has the cache simulated (`.simulated`), the other not (`.counted`).
 describe('reading Cachegrind’s output', () => {
   test('the instructions counted, from its summary, and the command that was counted', () => {
     const r = parseCachegrind(fixture('counted'));
@@ -222,8 +222,9 @@ describe('counting the benchmarks', () => {
 });
 
 /**
- * What is wrong with the age a Dockerfile records for its pinned base, or null: the creation of the digest's own
- * images, as `docker buildx imagetools inspect` gives it, at least 7 days before the day it was pinned.
+ * What is wrong with the age a Dockerfile records for its pinned base, or null. The age is the creation of the digest's
+ * own images, as `docker buildx imagetools inspect` gives it. That must be at least 7 days before the day it was
+ * pinned.
  */
 function ageProblem(text) {
   const created = /were created by\s*\n?#?\s*(\d{4}-\d\d-\d\dT[\d:]+Z)/.exec(text)?.[1];
@@ -346,7 +347,7 @@ describe('the benchmarks', () => {
   });
 });
 
-// A baseline is measured again whenever a benchmark changes; one whose code has not changed would count the same, so
+// A baseline is measured again whenever a benchmark changes. One whose code has not changed would count the same, so
 // its count is kept (spec §12, quality_ratchet). The fingerprint is the benchmark's own bundle, with the machine, Node,
 // Valgrind and the flags: change any of them and it is counted again. Every release counts every benchmark.
 describe('keeping the count of a benchmark that has not changed', () => {

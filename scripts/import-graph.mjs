@@ -1,10 +1,13 @@
 // The repository's import graph, and the tests that reach a file through it (editor spec §13, affected_tests_by_imports).
 //
-// A test reaches a file when it imports it, directly or through modules that import it, or names it as a path to build or
-// load, as an esbuild entry point is named, or names a folder of the repository it walks, as the page's tests read its
-// folder: a folder named reaches every file in it. Imports are read from the text: `import … from`, `export … from`, a bare
-// `import '…'` and `import('…')`, relative or by a workspace package's name and the paths its `exports` map. A folder
-// built from several pieces is not seen: the full suite, which runs before every merge and in CI, covers it.
+// A test reaches a file in any of these ways:
+// - it imports it, directly or through modules that import it;
+// - it names it as a path to build or load, as an esbuild entry point is named;
+// - it names a folder of the repository it walks, as the page's tests read their folder. A folder named reaches every
+//   file in it.
+// Imports are read from the text: `import … from`, `export … from`, a bare `import '…'` and `import('…')`. Each is
+// relative, or by a workspace package's name and the paths its `exports` map. A folder built from several pieces is not
+// seen: the full suite, which runs before every merge and in CI, covers it.
 import { dirname, join, normalize } from 'node:path';
 
 const JS_TEST = /\.test\.(js|mjs)$/;
@@ -68,8 +71,9 @@ function existing(bases, present) {
 }
 
 /**
- * The import graph of `files` (paths from the repository's root), read through `read(path)`: for each file of code, the
- * files of the repository it imports, and for each file in a test folder also the files it names as paths.
+ * The import graph of `files` (paths from the repository's root), read through `read(path)`. For each file of code it
+ * gives the files of the repository it imports. For each file in a test folder it also gives the files it names as
+ * paths.
  */
 export function importGraph(files, read) {
   const present = new Set(files);

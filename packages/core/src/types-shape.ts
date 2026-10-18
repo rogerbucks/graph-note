@@ -1,7 +1,9 @@
-// The shape a diagram type is judged on (editor spec §15): the things drawn, with their kinds and first dates, their
-// written links, and the groups the style graph's nudges draw them in; and what types.ts reads from it — the first loop
-// the links make, and the thing with the most links. Host-free. The Python library reads the same shape
-// (`graphspec/style/diagram_types.py`, `shape_of`).
+// The shape a diagram type is judged on (editor spec §15):
+// - the things drawn, with their kinds and first dates;
+// - their written links;
+// - the groups the style graph's nudges draw them in.
+// And what types.ts reads from it: the first loop the links make, and the thing with the most links. Host-free. The
+// Python library reads the same shape (`graphspec/style/diagram_types.py`, `shape_of`).
 import type { Graph } from '@thoughtknot/graph-spec';
 import { linkTypes } from './arrows.ts';
 import { valueText } from './inline-properties.ts';
@@ -39,9 +41,11 @@ const isDate = (v: unknown): boolean =>
 export const dayOf = (date: string): string => date.slice(0, 10);
 
 /**
- * The shape of a drawing: its boxes, with their kinds and the first date each carries (from `g`, the graph as read), its
- * written links, each by the type it is styled by (a guessed type's link by the type it is taken for), and the groups its
- * `nudges` draw, of the things drawn, as the layout source draws them (style-source.ts, `nudgedSource`).
+ * The shape of a drawing:
+ * - its boxes, with their kinds and the first date each carries (from `g`, the graph as read);
+ * - its written links, each by the type it is styled by (a guessed type's link by the type it is taken for);
+ * - the groups its `nudges` draw, of the things drawn, as the layout source draws them (style-source.ts,
+ *   `nudgedSource`).
  */
 export function shapeOf(
   drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>,

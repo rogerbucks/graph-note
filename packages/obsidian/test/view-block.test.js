@@ -1,8 +1,10 @@
 // A view in a note (editor spec §2, views_in_the_note; §7, view_is_query, view_profile, empty_view, fade_or_hide_in_style,
-// styled_paths_and_views, styling_keeps_locked_rules, view_saved_as_shown): a query block named as a view is drawn as
-// the things it picks out of its graph, said in plain English; what is outside it faded or hidden as its style says;
-// looks drawn with their legend; a query outside the view profile refused, saying what is allowed; a view that matches
-// nothing said so, with a way to change it, never a blank drawing; and how it is shown saved, when asked, in the style.
+// styled_paths_and_views, styling_keeps_locked_rules, view_saved_as_shown).
+// - A query block named as a view is drawn as the things it picks out of its graph, said in plain language.
+// - What is outside it is faded or hidden as its style says. Looks are drawn with their legend.
+// - A query outside the view profile is refused, saying what is allowed.
+// - A view that matches nothing says so, with a way to change it, never a blank drawing.
+// - How it is shown is saved in the style, when asked.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
@@ -67,7 +69,7 @@ describe('a view', () => {
     }
   });
 
-  // layout_contained: a note whose graph blocks are over the text limit is never read, so a view in it is shown as its
+  // layout_contained: a note whose graph blocks are over the text limit is never read. So a view in it is shown as its
   // query under the same banner a graph gets, and never as a view that "matches nothing"
   for (const [limit, pad, said] of [
     ['10,000 lines', '// padding\n'.repeat(10_000), /holds? 10,0\d\d lines, and at most 10,000 are read/],

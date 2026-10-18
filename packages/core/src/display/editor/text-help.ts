@@ -1,6 +1,7 @@
-// The help beside the block editor's text (spec §4, §8): what is typed, read; then the coloured picture with each line
-// read back, the problems listed, their fixes offered on the caret's line, suggestions offered where the caret is, and
-// new problems said to screen readers. It keeps what it read, so each of them shows the same reading.
+// The help beside the block editor's text (spec §4, §8). What is typed is read. Then come the coloured picture with
+// each line read back, the problems listed, and their fixes offered on the caret's line. Suggestions are offered where
+// the caret is, and new problems are said to screen readers. It keeps what it read, so each of them shows the same
+// reading.
 import { completions, diagnostics, estimateFix, gqlSpans, linkInBlock, readBack, spanOf } from '@thoughtknot/core';
 import type { CompletionItem, Diagnostic, NoteReading, PaneSession } from '@thoughtknot/core';
 import type { EditorParts } from './editor-layout';
@@ -28,8 +29,9 @@ export class TextHelp {
   /** What the suggestion list shows now, by its words, for the same reason. */
   private shownSuggestions: { bar: HTMLElement; words: string } | null = null;
   /**
-   * Whether the suggestion list is open, and the option chosen in it: it opens as a word is typed (or by Control+Space),
-   * and closes on Escape, a click, the caret moved by the keys, or the focus leaving, so the keys are the field's again.
+   * Whether the suggestion list is open, and the option chosen in it. It opens as a word is typed (or by
+   * Control+Space). It closes on Escape, a click, the caret moved by the keys, or the focus leaving, so the keys are
+   * the field's again.
    */
   private list = { open: false, active: 0 };
   private readonly on: { fix: (changes: FixChanges) => void; accept: (item: CompletionItem) => void };
@@ -84,8 +86,9 @@ export class TextHelp {
   }
 
   /**
-   * The problems on the caret's line, with their fixes: drawn again only when the problems or the line change, so a fix
-   * the keyboard is going to as the field loses the focus is still there to take it (spec §41, a11y_keyboard_auto).
+   * The problems on the caret's line, with their fixes. They are drawn again only when the problems or the line change.
+   * So a fix the keyboard is going to as the field loses the focus is still there to take it (spec §41,
+   * a11y_keyboard_auto).
    */
   fixbar(el: EditorParts): void {
     const line = caretLine(el.text),
@@ -96,9 +99,9 @@ export class TextHelp {
   }
 
   /**
-   * Names, kinds and relationships already in the graph, offered where the caret is: the list drawn again only when they
-   * change, so the option chosen stays chosen as the caret moves within the word. A list kept is the same suggestions, at
-   * the same word, so it takes what it shows. It shows only while open.
+   * Names, kinds and relationships already in the graph, offered where the caret is. The list is drawn again only when
+   * they change, so the option chosen stays chosen as the caret moves within the word. A list kept is the same
+   * suggestions, at the same word, so it takes what it shows. It shows only while open.
    */
   suggest(el: EditorParts, s: PaneSession): void {
     if (!this.reading) return;
@@ -177,9 +180,9 @@ export class TextHelp {
   }
 
   /**
-   * The option chosen in the open list, which Enter or Tab takes in `t`: none when the list is closed, or when the word
-   * being typed already is it, as taking it would change nothing, so the key does what it does anywhere else: Tab leaves
-   * the field and Enter ends the line (spec §41, a11y_keyboard_auto).
+   * The option chosen in the open list, which Enter or Tab takes in `t`. None when the list is closed, or when the word
+   * being typed already is it, as taking it would change nothing. Then the key does what it does anywhere else: Tab
+   * leaves the field and Enter ends the line (spec §41, a11y_keyboard_auto).
    */
   chosen(t: HTMLTextAreaElement): CompletionItem | undefined {
     const item = this.listShown() ? this.suggestions.items[this.list.active] : undefined;

@@ -1,7 +1,9 @@
-// The block editor as Obsidian owns it (spec §4, §9). The editor itself, the text field over its coloured picture, the
-// problems with fixes, suggestions, the drawing beside it, undo, redo and Lock the graph, is the display layer's
-// (`@thoughtknot/core/display/editor/block-editor`), the same one the browser editor's page runs; this wraps it in a
-// component Obsidian owns, to load and unload with the pane or the plugin, over the vault's note (block-note.ts).
+// The block editor as Obsidian owns it (spec §4, §9). The editor itself is the display layer's
+// (`@thoughtknot/core/display/editor/block-editor`). It is the same one the browser editor's page runs. It holds:
+// - the text field over its coloured picture, the problems with fixes, and suggestions;
+// - the drawing beside it, undo, redo and Lock the graph.
+// This wraps it in a component Obsidian owns, to load and unload with the pane or the plugin. It sits over the vault's
+// note (block-note.ts).
 import { Component } from 'obsidian';
 import type { NoteReading, PaneSession } from '@thoughtknot/core';
 import { BlockEditor as SharedEditor } from '@thoughtknot/core/display/editor/block-editor';

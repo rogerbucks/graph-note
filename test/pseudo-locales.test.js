@@ -1,9 +1,12 @@
-// The test languages, in every view of every host (editor spec §42, pseudo_locales_checked): each view is drawn with the
-// host in `en-XA` (every catalogue word accented, bracketed and 40 per cent longer) and in `ar-XB` (the same, read right to
-// left), and fails on a word of the catalogue left in UK English, a view not read in the language's direction, or a part
-// set on a physical side where it should follow the reading direction. The words the code still says itself, not yet in
-// the catalogue, are counted and may not grow. A box too small for a longer word is held in the style sheets: no box that
-// holds words has a fixed width, and none clips or keeps a line from wrapping unless listed here with why.
+// The test languages, in every view of every host (editor spec §42, pseudo_locales_checked). Each view is drawn with
+// the host in `en-XA` (every catalogue word accented, bracketed and 40 per cent longer). It is drawn again in `ar-XB`
+// (the same, read right to left). It fails on any of these:
+// - a word of the catalogue left in UK English;
+// - a view not read in the language's direction;
+// - a part set on a physical side where it should follow the reading direction.
+// The words the code still says itself, not yet in the catalogue, are counted and may not grow. A box too small for a
+// longer word is held in the style sheets. No box that holds words has a fixed width. None clips or keeps a line from
+// wrapping unless listed here with why.
 //
 // Not done here, because jsdom has no layout: whether a longer word overlaps another part as drawn. The release
 // walk-through (RELEASING.md, AX-20 and AX-21) covers that by hand, with the browser page in the test languages.
@@ -37,9 +40,9 @@ const PLACED = [
 ];
 
 /**
- * Each catalogue word as a pattern of a whole text, a count standing for a number and any other placeholder for a name
- * with no stop or comma in it, so a sentence the code says itself is not taken for one: in a test language none shows. A word that is placeholders
- * alone says nothing of its own, so has no pattern.
+ * Each catalogue word as a pattern of a whole text. In it, a count stands for a number, and any other placeholder for a
+ * name with no stop or comma in it. So a sentence the code says itself is not taken for one: in a test language none
+ * shows. A word that is placeholders alone says nothing of its own, so has no pattern.
  */
 const SOURCE_PATTERNS = Object.entries(SOURCE_WORDS).flatMap(([key, entry]) =>
   (typeof entry === 'string' ? [entry] : Object.values(entry))

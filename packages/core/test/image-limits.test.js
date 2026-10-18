@@ -1,7 +1,9 @@
-// How an animated image starts and when it may play (editor spec §18, §11): within the stated limits of size and count
-// it moves, unless the system asks for reduced motion, when it starts still until played (motion_reduced_respected);
-// past a limit it is shown as its first frame, saying why, and playing it is refused with the same reason
-// (animated_image_limited); and only so many move at once in one drawing.
+// How an animated image starts and when it may play (editor spec §18, §11).
+// - Within the stated limits of size and count it moves. When the system asks for reduced motion, it starts still until
+//   played (motion_reduced_respected).
+// - Past a limit it is shown as its first frame, saying why. Playing it is refused with the same reason
+//   (animated_image_limited).
+// - Only so many move at once in one drawing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { IMAGE_LIMITS, LIMITS_SAID, playRefusal, startOf } from '../src/image-limits.ts';

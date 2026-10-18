@@ -26,6 +26,10 @@
 
 **Checklist line:**
 
-> **I-05** Typing in the card, character by character, redraws the drawing and never takes the focus from the box: the caret, the selection and where it is scrolled stay put. Typing a comma at a line's end keeps the box in its card. Undo (⌘Z, or Edit → Undo, or the phone's undo gesture) takes back a run of typing at a time, even after redraws. A line added above the block, or taken away, while the card is edited keeps the box in its card, with its selection and its undo history.
+> **I-05** Typing in the card, character by character, redraws the drawing and never takes the focus from the box. The caret, the selection and where it is scrolled stay put.
+>
+> - Typing a comma at a line's end keeps the box in its card.
+> - Undo (⌘Z, or Edit → Undo, or the phone's undo gesture) takes back a run of typing at a time, even after redraws.
+> - A line may be added above the block, or taken away, while the card is edited. The box stays in its card, with its selection and its undo history.
 
 **Back to the checklist:** [I-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-05 in its list.

@@ -1,8 +1,9 @@
-// Exporting a drawing as an image (editor spec §16): an SVG laid out by the layout the host hands in — the one its drawings
-// go through, apart from the interface and under its limits (layout_contained) — in the fixed colours of the light or the
-// dark theme as chosen, inside a frame that gives its title, its legend, and the note and day it came from
-// (export_self_explaining, export_fixed_theme). The host draws the SVG onto a canvas for a PNG, at the size `pngSize`
-// gives (export_png_sharp), and writes the file; what to export is in export-scope.ts, whether to is in export-plan.ts.
+// Exporting a drawing as an image (editor spec §16). It is an SVG laid out by the layout the host hands in. That is the
+// one its drawings go through, apart from the interface and under its limits (layout_contained). It is drawn in the
+// fixed colours of the light or the dark theme as chosen (export_fixed_theme). A frame gives its title, its legend, and
+// the note and day it came from (export_self_explaining). The host draws the SVG onto a canvas for a PNG. It uses the
+// size `pngSize` gives (export_png_sharp), and writes the file. What to export is in export-scope.ts. Whether to is in
+// export-plan.ts.
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { marked } from './export-marks.ts';
@@ -46,8 +47,8 @@ export interface PngSize {
 }
 
 /**
- * The size of the PNG for an image `width` by `height` in CSS pixels: the scale asked for, never less than twice natural
- * size (a missing or odd scale is twice), and whole pixels, rounded up so nothing is cut off.
+ * The size of the PNG for an image `width` by `height` in CSS pixels. It is the scale asked for, never less than twice
+ * natural size. A missing or odd scale is twice. It is whole pixels, rounded up so nothing is cut off.
  */
 export function pngSize(width: number, height: number, scale: number = PNG_MIN_SCALE): PngSize {
   const s = typeof scale === 'number' && Number.isFinite(scale) ? Math.max(PNG_MIN_SCALE, scale) : PNG_MIN_SCALE;
@@ -55,9 +56,9 @@ export function pngSize(width: number, height: number, scale: number = PNG_MIN_S
 }
 
 /**
- * What an image says about where it came from, and how it is drawn. A style comes with the graph as read, so the
- * properties it shows inline always have their values: one without the other is a type error, never a drawing that
- * quietly leaves its properties out.
+ * What an image says about where it came from, and how it is drawn. A style comes with the graph as read. So the
+ * properties it shows inline always have their values. One without the other is a type error. It is never a drawing
+ * that quietly leaves its properties out.
  */
 export type ExportInfo = {
   /** The note's path in the vault, as the footer says it. */
@@ -67,13 +68,13 @@ export type ExportInfo = {
   /** The fixed colours it is drawn in. */
   theme: ExportTheme;
   /**
-   * Whether the image may move (§7): an SVG moves the links its style moves, and is still under reduced motion; a PNG is
-   * drawn from a still image. Still unless set.
+   * Whether the image may move (§7). An SVG moves the links its style moves, and is still under reduced motion. A PNG
+   * is drawn from a still image. Still unless set.
    */
   motion?: boolean;
   /**
-   * A path played into the image (§7, path_animation_export): an animated SVG, its heavier outline moving from step to
-   * step at its pace, every step numbered, still under reduced motion.
+   * A path played into the image (§7, path_animation_export). It is an animated SVG. Its heavier outline moves from
+   * step to step at its pace, every step numbered, still under reduced motion.
    */
   walk?: ExportWalk;
   /** Where it is made, for the size an animated SVG may be (animation_export_fits); a computer when not said. */
@@ -108,8 +109,8 @@ const chip = (hue: string, p: Palette): Pick<LegendItem, 'fill' | 'stroke'> => (
 });
 
 /**
- * The legend: each kind as the drawing colours it, then each colour a look uses in the view with what it means, then
- * each way a link moves with its icon and what it means (motion_not_alone), so a still image says it too.
+ * The legend. First comes each kind as the drawing colours it. Then each colour a look uses in the view, with what it
+ * means. Then each way a link moves, with its icon and what it means, so a still image says it too (motion_not_alone).
  */
 function legendItems(scope: ExportScope, drawing: GraphDrawing, info: ExportInfo, p: Palette) {
   const { style, walk } = info;
@@ -162,8 +163,9 @@ export const footerText = (note: string, date: string) => `From ${note}, exporte
 const sentence = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
- * A host's layout, the one it draws with: the drawing laid out and themed in the fixed palette of `theme`; or why it is
- * not laid out (over a size limit, or took too long); or null when it is no longer wanted. Rejects when the engine fails.
+ * A host's layout, the one it draws with. It gives the drawing laid out and themed in the fixed palette of `theme`. Or
+ * it gives why it is not laid out (over a size limit, or took too long). Or it gives null when it is no longer wanted.
+ * Rejects when the engine fails.
  */
 export type ExportLayout = (drawing: GraphDrawing, theme: ExportTheme) => Promise<Drawn | Refusal | null>;
 
@@ -172,16 +174,16 @@ const refuseEmpty = (scope: ExportScope): void => {
 };
 
 /**
- * The drawing an export lays out: the scope's, styled as its view or the whole graph is when it has a style — its nudges
- * and direction, the arrowheads it hides and the properties it shows inline (§14, §15).
+ * The drawing an export lays out. It is the scope's, styled as its view or the whole graph is when it has a style. That
+ * style gives its nudges and direction, the arrowheads it hides and the properties it shows inline (§14, §15).
  */
 const laidOutDrawing = (scope: ExportScope, info: ExportInfo): GraphDrawing =>
   info.style ? styledDrawing(scope.drawing, info.style, info.data, scope.view) : scope.drawing;
 
 /**
  * The image of `scope`, laid out by `engine` and drawn in the fixed colours of `info.theme`, in its frame. Refuses an empty
- * scope, which has nothing to draw; an engine that fails raises its failure, so nothing is written (failed_export). It
- * lays out on the thread it is called on, under no limit: a host that draws apart from its interface uses
+ * scope, which has nothing to draw. An engine that fails raises its failure, so nothing is written (failed_export). It
+ * lays out on the thread it is called on, under no limit. A host that draws apart from its interface uses
  * `exportWithLayout`, which lays the export out where its drawings are.
  */
 export function exportSvg(scope: ExportScope, engine: Engine, info: ExportInfo): ExportImage {
@@ -199,12 +201,12 @@ export function exportSvg(scope: ExportScope, engine: Engine, info: ExportInfo):
 }
 
 /**
- * The image of `scope` as `exportSvg` gives it, laid out by the host's `layout` — the one its drawings go through, apart
- * from the interface and under the same size and time limits (layout_contained) — so a huge or hostile graph never holds
- * the page for an export. The limit's refusal is given back whole, for the host to say why and write nothing
- * (failed_export); null when the layout is no longer wanted; an engine that fails raises its failure. Refuses an empty
- * scope before any layout is asked for, and gives back why a played path is too large to animate on its device, and
- * what would make it fit, before any layout is asked for either (animation_export_fits).
+ * The image of `scope` as `exportSvg` gives it, laid out by the host's `layout`. That is the one its drawings go
+ * through, apart from the interface and under the same size and time limits (layout_contained). So a huge or hostile
+ * graph never holds the page for an export. The limit's refusal is given back whole (failed_export). The host then says
+ * why and writes nothing. Gives null when the layout is no longer wanted. An engine that fails raises its failure.
+ * Refuses an empty scope before any layout is asked for. A played path may be too large to animate on its device. Then
+ * it gives back why, and what would make it fit, also before any layout (animation_export_fits).
  */
 export async function exportWithLayout(
   scope: ExportScope,

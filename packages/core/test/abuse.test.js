@@ -1,6 +1,7 @@
 // Abuse (spec §12): no sequence of random edits or random text may crash the viewer or leave it blank. A graph with
-// problems is still drawn (§3), so whatever the text, reading it gives either a drawing or problems to list — never an
-// exception, and never nothing. The drawing engine is run on what is read, too, and must always return a picture.
+// problems is still drawn (§3). So whatever the text, reading it gives either a drawing or problems to list. It never
+// gives an exception, and never nothing. The drawing engine is run on what is read, too, and must always return a
+// picture.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

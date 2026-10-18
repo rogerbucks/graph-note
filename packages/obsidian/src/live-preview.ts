@@ -1,8 +1,8 @@
 // The editing view's own cards (spec §4, "The page stays still"; Roger's choice C, 9 Oct 2026). Obsidian draws a code
-// block in Live Preview with a widget it builds again whenever the block's text changes, so a card being typed in was
-// torn down and drawn again on every write, and CodeMirror, finding it a different height meanwhile, moved the page.
-// Here the plugin draws each graph block with a widget of its own: redrawn in place, the old drawing kept on the page
-// until the new one is ready, and CodeMirror told the card's last height, so it has nothing to correct. Each block keeps
+// block in Live Preview with a widget it builds again whenever the block's text changes. So a card being typed in was
+// torn down and drawn again on every write. CodeMirror found it a different height meanwhile, and moved the page.
+// Here the plugin draws each graph block with a widget of its own. It is redrawn in place. The old drawing is kept on
+// the page until the new one is ready. CodeMirror is told the card's last height, so it has nothing to correct. Each block keeps
 // its identity however lines move above it, so its card, and an editor open in it, survive the move (typing_keeps_focus).
 import { Prec, StateField } from '@codemirror/state';
 import type { ChangeDesc, EditorState, Extension, Range, Text } from '@codemirror/state';
@@ -17,7 +17,7 @@ import { renderShown } from './block';
 import { settlePlacements } from '@thoughtknot/core/display/graph-view/placement';
 
 /**
- * The last height each card was seen at, by its note and the line its fence opens on: what CodeMirror is told while the
+ * The last height each card was seen at, by its note and the line its fence opens on. CodeMirror is told it while the
  * card is drawn again, and when the note is opened again. Only the lines a note's blocks open on now are kept.
  */
 const heights = new Map<string, number>();
@@ -28,7 +28,7 @@ function keepHeights(path: string, opens: readonly number[]): void {
     if (key.startsWith(`${path}|`) && !opens.includes(Number(key.slice(path.length + 1)))) heights.delete(key);
 }
 
-/** A gql block of the note in an editor: where it is, and who it is, which no line added or taken away above it changes. */
+/** A gql block of the note in an editor: where it is, and who it is. No line added or taken away above it changes that. */
 export interface KnownBlock extends Span {
   id: number;
   /** Where its opening fence's line starts in the document. */
@@ -74,7 +74,7 @@ const FOCUSABLE = 'button, a[href], [tabindex]';
 
 /**
  * A press in the card keeps the focus off the editor around it (card_keeps_focus_from_editor). On a phone a tapped
- * button takes no focus, so it fell to the editor, which scrolled to its cursor, often at the note's top: the first tap
+ * button takes no focus, so it fell to the editor. The editor scrolled to its cursor, often at the note's top. So the first tap
  * on Zoom in jumped the page. So the press's own move of the focus is stopped, and the button, link or drawing pressed is
  * given the focus without scrolling. A text box keeps its own: the press places its cursor.
  */
@@ -166,8 +166,8 @@ class GraphBlock extends WidgetType {
   }
 
   /**
-   * The card is gone: its watcher stops, its drawing is unloaded, and one still being drawn is dropped when it is ready;
-   * an editor in place that was in it is released unless it is put in another card (inline-editors.ts).
+   * The card is gone: its watcher stops, its drawing is unloaded, and one still being drawn is dropped when it is ready.
+   * An editor in place that was in it is released unless it is put in another card (inline-editors.ts).
    */
   override destroy(dom: HTMLElement): void {
     const state = drawn.get(dom);
@@ -230,9 +230,9 @@ function cards(plugin: ThoughtKnotPlugin, state: EditorState): DecorationSet {
     out: Range<Decoration>[] = [];
   keepHeights(path, opens);
   for (const s of spans) {
-    // a graph, a view, a style block, a change set (a proposal, §17), a block drawn FROM elsewhere and a step (§20) are
-    // drawn from the other blocks too, so each gets a card that redraws with them; a plain query, a schema, or a block
-    // not yet closed is left to Obsidian. A FROM block and a step are known by their graph line alone, so a long block
+    // some blocks are drawn from the other blocks too. They are a graph, a view, a style block, a change set (a proposal,
+    // §17), a block drawn FROM elsewhere and a step (§20). So each gets a card that redraws with them. A plain query, a schema,
+    // or a block not yet closed is left to Obsidian. A FROM block and a step are known by their graph line alone, so a long block
     // is never read here
     const drawnFromOthers =
       !!graphOfBlock(s.text) ||
@@ -264,8 +264,8 @@ export function graphBlocks(plugin: ThoughtKnotPlugin): Extension {
         : set,
     provide: (f) => EditorView.decorations.from(f),
   });
-  // each editor open on a note, so what is typed in a card can be written through it, never behind its back
-  // an editor closed takes down only the cards drawn at the time: an editor in place whose card was scrolled away goes too
+  // each editor open on a note, so what is typed in a card can be written through it, never behind its back.
+  // An editor closed takes down only the cards drawn at the time: an editor in place whose card was scrolled away goes too
   const editors = ViewPlugin.define((view) => {
     plugin.editorViews.add(view);
     return {

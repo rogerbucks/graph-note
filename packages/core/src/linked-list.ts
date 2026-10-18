@@ -1,7 +1,8 @@
-// A property held as a list of linked things (spec §14, list_as_linked_things): the document profile holds no lists, so
-// choosing List for a property makes each of its values a thing — of a kind, linked from this thing by a relationship,
-// both named by the user — reusing a thing that already has that name. Every edit is a change to the block's text
-// (spec §2), checked against the block as it now stands, so edits made before the note is read again never write a thing twice.
+// A property held as a list of linked things (spec §14, list_as_linked_things). The document profile holds no lists.
+// So choosing List for a property makes each of its values a thing, reusing a thing that already has that name. Each
+// is of a kind, linked from this thing by a relationship, both named by the user. Every edit is a change to the
+// block's text (spec §2), checked against the block as it now stands. So edits made before the note is read again
+// never write a thing twice.
 import type { Item } from './block-items.ts';
 import { blankText, blockItems, items } from './block-items.ts';
 import { readNote } from './drawing.ts';
@@ -26,8 +27,8 @@ export interface ListValue {
 }
 
 /**
- * A list edit: the block's new text, what was done in words, and the things the edit made or reused (the values added);
- * or why it cannot be made here.
+ * A list edit: the block's new text, what was done in words, and the things the edit made or reused (the values
+ * added). Or else, why it cannot be made here.
  */
 export type ListEdit = { ok: true; text: string; said: string; things: ListValue[] } | { ok: false; reason: string };
 
@@ -91,7 +92,10 @@ function known(reading: NoteReading, graph: string, block: string): Known {
   return { things, taken, links, style };
 }
 
-/** The thing of the kind that already has this name — an id equal to the value, or text equal to it whatever the case — else null. */
+/**
+ * The thing of the kind that already has this name: an id equal to the value, or text equal to it whatever the case.
+ * Else null.
+ */
 function existing(k: Known, kind: string, value: string): string | null {
   for (const [id, t] of k.things)
     if (t.kinds.includes(kind) && (id === value || norm(t.text) === norm(value))) return id;
@@ -109,8 +113,8 @@ function itemsFor(
   const lines: string[] = [];
   const isNew = id === null;
   if (id === null) {
-    // the id follows the style of the graph's own names, and is none of them; the value keeps its words as the name
-    // (the style was fixed when the graph was read, so a value is named the same whatever was named before it)
+    // the id follows the style of the graph's own names, and is none of them; the value keeps its words as the name.
+    // The style was fixed when the graph was read, so a value is named the same whatever was named before it
     id = nameFromText(
       value,
       new Map([...k.taken].map((t) => [t, k.things.get(t)?.kinds[0] ?? ''])),
@@ -142,7 +146,7 @@ function notHere(block: string, reading: NoteReading, graph: string, thing: stri
 }
 
 /**
- * Why a list cannot be written for this thing: it is drawn under a suggested name, which the link would write by name
+ * Why a list cannot be written for this thing: it is drawn under a suggested name. The link would write it by name
  * without its fix (§4). The same for a value that reuses such a thing.
  */
 function unwritten(reading: NoteReading, graph: string, ...keys: (string | null)[]): string | null {
@@ -178,9 +182,9 @@ function describe(made: { isNew: boolean }[]): string {
 }
 
 /**
- * Turns a property into linked things: the property is removed from the thing, and each of its values becomes a thing of
- * `shape.kind`, linked from the thing by `shape.rel`. A thing of that kind that already has the name — by id or text — is
- * reused, not written again. With no key, nothing is removed or written (a list with no values yet).
+ * Turns a property into linked things. The property is removed from the thing, and each of its values becomes a thing
+ * of `shape.kind`, linked from the thing by `shape.rel`. A thing of that kind that already has the name — by id or
+ * text — is reused, not written again. With no key, nothing is removed or written (a list with no values yet).
  */
 export function makeList(
   block: string,
@@ -220,7 +224,7 @@ export function makeList(
   };
 }
 
-/** Adds a value to a list: a thing of the kind, new or reused, linked from the thing; refused if it is already in the list. */
+/** Adds a value to a list: a thing of the kind, new or reused, linked from the thing. Refused if already listed. */
 export function addToList(
   block: string,
   reading: NoteReading,
@@ -250,9 +254,9 @@ export function addToList(
 }
 
 /**
- * The block without one of its items, and the comma that parted it from its neighbour — and nothing else but the note
- * and tags directly above it (editor spec §24, note_kept_by_edits), which go with a thing or link written on a line of its
- * own, so the next item never takes them up.
+ * The block without one of its items, and the comma that parted it from its neighbour. Nothing else goes but the note
+ * and tags directly above it (editor spec §24, note_kept_by_edits). They go with a thing or link written on a line of
+ * its own, so the next item never takes them up.
  */
 export function withoutItem(text: string, all: Item[], it: Item): string {
   const lineStart = text.lastIndexOf('\n', it.from - 1) + 1;
@@ -274,9 +278,11 @@ export function withoutItem(text: string, all: Item[], it: Item): string {
 }
 
 /**
- * Removes a thing from a list: the link goes; and the thing goes too, when nothing else links to it, nothing else in
- * the block names it, and it is written as an item of its own in this block — otherwise it stays, and `said` says so.
- * A link written in one path with other things is left to the text.
+ * Removes a thing from a list: the link goes. The thing goes too, when all of these hold:
+ * - nothing else links to it;
+ * - nothing else in the block names it;
+ * - it is written as an item of its own in this block.
+ * Otherwise it stays, and `said` says so. A link written in one path with other things is left to the text.
  */
 export function removeFromList(
   block: string,

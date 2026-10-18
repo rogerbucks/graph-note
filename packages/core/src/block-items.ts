@@ -1,6 +1,6 @@
-// A block's top-level items (spec §3): each path, SET or MATCH by where it is in the text, so what cannot be read can be
-// left out of the drawing while the rest is drawn; the text with strings and comments blanked, so words in them never
-// match; and where each link type written without its colon is.
+// A block's top-level items (spec §3). Each path, SET or MATCH is found by where it is in the text. So what cannot be
+// read can be left out of the drawing while the rest is drawn. It also gives the text with strings and comments
+// blanked, so words in them never match. And it gives where each link type written without its colon is.
 import { isSpace, S } from './whitespace.ts';
 
 /** A top-level item of a block — one path, or one SET or MATCH clause — by its character span. */
@@ -31,8 +31,8 @@ export const blankText = (text: string): string =>
 const BARE = new RegExp(`-\\[${S}*([A-Za-z_]\\w*)(?=${S}*[\\]{])`, 'g');
 
 /**
- * Where each link type written without its colon is in a block, in the order the reader reads them: its line, and the
- * characters its name spans. Strings and comments are blanked first, so words in them are never taken for one.
+ * Where each link type written without its colon is in a block, in the order the reader reads them. It gives its line,
+ * and the characters its name spans. Strings and comments are blanked first, so words in them are never taken for one.
  */
 export function bareNames(text: string): { line: number; character: number; end: number }[] {
   const blanked = blankText(text);
@@ -90,9 +90,9 @@ export function items(text: string): Item[] {
 export const lineAt = (text: string, pos: number): number => text.slice(0, pos).split('\n').length;
 
 /**
- * The 1-based line of any character of a text, as lineAt gives it, found by a binary search of where the text's lines
- * start, so asking for many never slices the text from its start again (spec §9: a broken block is read in time linear in
- * its items, not in their square). It holds for any text with the same line breaks in the same places.
+ * The 1-based line of any character of a text, as lineAt gives it. It is found by a binary search of where the text's
+ * lines start. So asking for many never slices the text from its start again. That is spec §9: a broken block is read
+ * in time linear in its items, not in their square. It holds for any text with the same line breaks in the same places.
  */
 export function lineIndex(text: string): (pos: number) => number {
   const starts = [0];

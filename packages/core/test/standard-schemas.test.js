@@ -1,5 +1,5 @@
 // The standard schemas a graph can name with its version, so a note needs no schema of its own (editor spec §27,
-// standard_schemas), and the warning when a graph names a schema there is none of (schema_named_found).
+// standard_schemas). Also the warning when a graph names a schema there is none of (schema_named_found).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

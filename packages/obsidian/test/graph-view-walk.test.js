@@ -1,6 +1,6 @@
-// Walked paths in a drawing (editor spec §7, record_and_play, path_no_steps, steps_numbered): Play steps through a path
-// written in the note, one thing at a time, said to screen readers; a path with no steps is never played as an empty
-// story; and, while the card is edited, Record writes a path from the boxes tapped in order, each numbered as it is tapped.
+// Walked paths in a drawing (editor spec §7, record_and_play, path_no_steps, steps_numbered). Play steps through a path
+// written in the note, one thing at a time, said to screen readers. A path with no steps is never played as an empty
+// story. While the card is edited, Record writes a path from the boxes tapped in order, each numbered as it is tapped.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';

@@ -1,7 +1,7 @@
-// What an export holds (editor spec §16, export_two_scopes, view_export_stays_view, empty_export): the whole diagram, or a
-// view. A view's export holds only the things in the view and the links between them, so nothing outside it can be read
-// from the image; with the faded context asked for it holds the whole graph and says what is outside the view, for the
-// image to fade. A graph or view with nothing in it is `empty`, with the reason, and is never drawn as a blank.
+// What an export holds (editor spec §16, export_two_scopes, view_export_stays_view, empty_export): the whole diagram,
+// or a view. A view's export holds only the things in the view and the links between them, so nothing outside it can be
+// read from the image. With the faded context asked for, it holds the whole graph and says what is outside the view,
+// for the image to fade. A graph or view with nothing in it is `empty`, with the reason, and is never drawn as a blank.
 import type { Estimate } from './estimates.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
 import { evaluate } from './view-evaluate.ts';
@@ -23,19 +23,19 @@ export interface ExportScope {
   graph: string;
   /** The view's name, for a view. */
   view?: string;
-  /** The view in plain English, for a view. */
+  /** The view in plain language, for a view. */
   reading?: string;
   /** Whether the faded context is drawn: only ever for a view. */
   context: boolean;
   /** What is laid out: the whole graph, or the view's things and the links between them. */
   drawing: GraphDrawing;
   /**
-   * What the image fades: the things outside the view by key, and the links outside it by edge number, counting the
-   * drawing's links in order and then its estimated links to a near-miss name. Empty unless the context is drawn.
+   * What the image fades: the things outside the view by key, and the links outside it by edge number. The count takes
+   * the drawing's links in order, then its estimated links to a near-miss name. Empty unless the context is drawn.
    */
   faded: { things: string[]; links: number[] };
   /**
-   * For a view drawn without its context: each link it holds, by its number among the whole drawing's links, so the
+   * For a view drawn without its context: each link it holds, by its number among the whole drawing's links. So the
    * data export finds the link as written (export-data.ts). Unset when the drawing holds every link of the graph.
    */
   linksAt?: number[];
@@ -56,9 +56,9 @@ function keptEstimates(estimates: Estimate[], things: ReadonlySet<string>, place
 }
 
 /**
- * What an export of `request` holds, from the note as read. A view is put to the graph as `evaluate` puts it, so the image
- * shows what the view shows. The links of a view keep their order in the graph, and a guess (an estimated link) inside the
- * view stays a guess, so it is never drawn as a fact.
+ * What an export of `request` holds, from the note as read. A view is put to the graph as `evaluate` puts it, so the
+ * image shows what the view shows. The links of a view keep their order in the graph. A guess (an estimated link)
+ * inside the view stays a guess, so it is never drawn as a fact.
  */
 export function exportScope(reading: NoteReading, request: ExportRequest): ExportScope {
   const { graph, view } = request;
@@ -102,8 +102,8 @@ export function exportScope(reading: NoteReading, request: ExportRequest): Expor
   }
   const kept = base.links.flatMap((_, i) => (links.has(i) ? [i] : []));
   const placed = new Map(kept.map((old, now) => [old, now]));
-  // each link kept says which written link it is (`edge`), as a view's drawing does, so what is drawn with it — its
-  // properties shown inline — is its own, never the link's now at its place
+  // each link kept says which written link it is (`edge`), as a view's drawing does. So what is drawn with it, its
+  // properties shown inline, is its own, never the link's now at its place
   const g = reading.world[graph],
     drawnKeys = new Set(base.boxes.map((b) => b.key));
   const written = g?.edges.flatMap((e, at) => (drawnKeys.has(e[0]) && drawnKeys.has(e[2]) ? [at] : [])) ?? [];

@@ -1,5 +1,5 @@
-// The inspector (spec §14, inspector_native): while a block is edited in place, a box's or a link's details are Obsidian's
-// own Properties panel — a row for each property, a field suited to its type — and each change is written as text.
+// The inspector (spec §14, inspector_native). While a block is edited in place, a box's or a link's details are Obsidian's
+// own Properties panel. There is a row for each property, with a field suited to its type. Each change is written as text.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';
@@ -9,9 +9,9 @@ import { PATH, READER, NOTE, show } from './host/card-notes.js';
 before(() => build());
 
 describe('the inspector, in edit mode', () => {
-  // inspector_native (spec §14, 7 Oct 2026): it looks and behaves like Obsidian's own Properties panel — one row for each
-  // property with its name and a field suited to its type, adding and removing in place, in the theme's spacing, type and
-  // colours — built on Obsidian's own markup and classes, so it takes the theme for free.
+  // inspector_native (spec §14, 7 Oct 2026): it looks and behaves like Obsidian's own Properties panel. One row for each
+  // property, with its name and a field suited to its type. Adding and removing happen in place. It uses the theme's
+  // spacing, type and colours. It is built on Obsidian's own markup and classes, so it takes the theme for free.
   const PRICED = READER.replace(
     "(large:Option {name: 'Large reader'})",
     "(large:Option {name: 'Large reader', price: 300, ordered: DATE '2026-10-01', checked: TRUE})",

@@ -1,8 +1,11 @@
-// Forced colours and more contrast (editor spec §44, forced_colours): when the system forces its own colours, such as a
-// high contrast theme of Windows, every view is drawn in the system's colours with nothing lost, and when it asks for more
-// contrast, secondary text and lines take the full text colour. Each sheet maps the tokens by the core's tables, the
-// drawing is drawn in the system's colours by its own rules, as the browser does not force a colour written on a shape,
-// nothing is shown by a shadow alone, which forced colours drop, and no focus is hidden without another way of showing it.
+// Forced colours and more contrast (editor spec §44, forced_colours). The system may force its own colours, such as a
+// high contrast theme of Windows. Then every view is drawn in the system's colours with nothing lost. When it asks for
+// more contrast, secondary text and lines take the full text colour. The checks:
+// - each sheet maps the tokens by the core's tables.
+// - the drawing is drawn in the system's colours by its own rules, as the browser does not force a colour written on a
+//   shape.
+// - nothing is shown by a shadow alone, which forced colours drop.
+// - no focus is hidden without another way of showing it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { FORCED_TOKEN_COLOURS, MORE_CONTRAST_TOKENS, THEME_TOKENS } from '../packages/core/src/theme-tokens.ts';

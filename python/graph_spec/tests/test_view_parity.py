@@ -175,10 +175,12 @@ KINDED = (
     "MATCH (n IS Place|{w}) RETURN n",
 )
 
-# The words Grafeo is asked, fixed here and never taken from the lists they test: GQL's reserved,
-# pre-reserved and non-reserved words (ISO/IEC 39075:2024 §21.3, as the openGQL grammar GQL.g4
-# lists them) and its truth values (§21.2), Cypher's keywords (Neo4j's, with the older ones), and
-# the numbers Grafeo reads as words.
+# The words Grafeo is asked, fixed here and never taken from the lists they test:
+# - GQL's reserved, pre-reserved and non-reserved words (ISO/IEC 39075:2024 §21.3).
+#   These are as the openGQL grammar GQL.g4 lists them.
+# - GQL's truth values (§21.2).
+# - Cypher's keywords (Neo4j's, with the older ones).
+# - the numbers Grafeo reads as words.
 GQL_KEPT = """ABS ACOS ALL ALL_DIFFERENT AND ANY ARRAY AS ASC ASCENDING ASIN AT ATAN AVG BIG
 BIGINT BINARY BOOL BOOLEAN BOTH BTRIM BY BYTE_LENGTH BYTES CALL CARDINALITY CASE CAST CEIL
 CEILING CHAR CHAR_LENGTH CHARACTER_LENGTH CHARACTERISTICS CLOSE COALESCE COLLECT_LIST COMMIT
@@ -299,15 +301,15 @@ class GrafeoAgrees(unittest.TestCase):
         return self.dbs[next(n for n in TABLE["notes"] if n["graph"] == "walks")["name"]]
 
     def test_grafeo_refuses_as_a_name_only_the_words_the_core_keeps_from_names(self):
-        # of every word asked, those Grafeo refuses as a name beyond the ones GQL keeps are exactly
-        # the core's list: no view the core reads has a name Grafeo refuses, and none is kept from
-        # names for nothing
+        # Of every word asked, take those Grafeo refuses as a name beyond the ones GQL keeps. They
+        # are exactly the core's list. No view the core reads has a name Grafeo refuses. None is
+        # kept from names for nothing.
         refused = {w for w in CANDIDATES if refused_in(self.walks(), w, NAMED)}
         self.assertEqual(sorted(refused - set(GQL_KEPT)), core_words()["grafeo"])
 
     def test_grafeo_refuses_as_a_kind_exactly_the_words_the_core_refuses_as_kinds(self):
-        # a kind is a label, which Grafeo refuses for fewer words than a name; of every word asked,
-        # it refuses exactly the core's list, whichever way the kind is written
+        # A kind is a label, which Grafeo refuses for fewer words than a name. Of every word asked,
+        # it refuses exactly the core's list, whichever way the kind is written.
         refused = [w for w in CANDIDATES if refused_in(self.walks(), w, KINDED)]
         self.assertEqual(sorted(refused), core_words()["kinds"])
 

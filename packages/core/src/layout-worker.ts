@@ -1,8 +1,9 @@
-// The layout engine kept apart from the interface (spec §9, layout_contained): the drawing instructions are written and
-// Graphviz run in a worker, behind the limits of layout-limits.ts, so a huge or hostile graph never freezes the page. The
-// core holds both sides of the talk — the worker's (serveLayouts) and the page's (LayoutRunner) — and is handed the port
-// between them, so it stays host-free: the plugin gives it a Web Worker, a test a fake or a thread. The worker draws with
-// render.ts's own steps, so a drawing is byte for byte the same wherever it is laid out (spec §12, layout_byte_identical).
+// The layout engine kept apart from the interface (spec §9, layout_contained). The drawing instructions are written and
+// Graphviz run in a worker, behind the limits of layout-limits.ts. So a huge or hostile graph never freezes the page.
+// The core holds both sides of the talk: the worker's (serveLayouts) and the page's (LayoutRunner). It is handed the
+// port between them, so it stays host-free: the plugin gives it a Web Worker, a test a fake or a thread. The worker
+// draws with render.ts's own steps. So a drawing is byte for byte the same wherever it is laid out (spec §12,
+// layout_byte_identical).
 import type { GraphDrawing } from './note-reading.ts';
 import { PALETTES } from './palette.ts';
 import { chosen, directions } from './render.ts';
@@ -23,8 +24,8 @@ export interface LayoutRequest {
 }
 
 /**
- * What the worker says: once, as it starts, that its engine is ready or why it failed; then, to each request, the drawing,
- * the source limit it was over, or what went wrong.
+ * What the worker says. Once, as it starts, it says that its engine is ready or why it failed. Then, to each request,
+ * it sends the drawing, the source limit it was over, or what went wrong.
  */
 export type LayoutReply =
   | { ready: true }
@@ -75,8 +76,8 @@ export interface RunnerOptions {
 export const TIMEOUTS_BEFORE_STOPPING = 3;
 
 /**
- * The worker's side: starts its engine at once and says when it is ready, or why it failed; then writes each drawing's
- * instructions, refuses one over the source limit, and lays the rest out.
+ * The worker's side. It starts its engine at once and says when it is ready, or why it failed. Then it writes each
+ * drawing's instructions, refuses one over the source limit, and lays the rest out.
  */
 export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): void {
   const engine = Promise.resolve().then(load);
@@ -136,12 +137,12 @@ interface Job {
 }
 
 /**
- * The page's side: lays drawings out in one worker, reused, one layout at a time. A worker says when its engine is ready,
- * and only then is a layout handed to it, given the time limit from that moment, so neither a cold start nor a wait
- * behind a stuck layout is charged to it. A worker past the limit is terminated, and the next layout starts a fresh one;
- * after TIMEOUTS_BEFORE_STOPPING in a row, none is started again. Only when the first worker cannot start, or its engine
- * fails, do layouts move to the page's own thread — never one already handed to a worker — and those queued by then are
- * held again to the page's lower limits, as the ones asked for afterwards are.
+ * The page's side: lays drawings out in one worker, reused, one layout at a time. A worker says when its engine is
+ * ready. Only then is a layout handed to it, given the time limit from that moment. So neither a cold start nor a wait
+ * behind a stuck layout is charged to it. A worker past the limit is terminated, and the next layout starts a fresh
+ * one. After TIMEOUTS_BEFORE_STOPPING in a row, none is started again. Layouts move to the page's own thread only when
+ * the first worker cannot start, or its engine fails. One already handed to a worker never moves. Those queued by then
+ * are held again to the page's lower limits, as the ones asked for afterwards are.
  */
 export class LayoutRunner {
   private readonly o: RunnerOptions;
@@ -166,9 +167,10 @@ export class LayoutRunner {
   }
 
   /**
-   * The drawing, laid out and themed; or why it is not drawn; or null when it is no longer wanted — superseded by a newer
-   * drawing for the same `owner` before its layout started, or the runner closed. Rejects when the engine fails. With a
-   * `theme` it is themed in that fixed palette, as an export is, under the same limits and in the same worker.
+   * The drawing, laid out and themed; or why it is not drawn; or null when it is no longer wanted. It is no longer
+   * wanted when the runner closed, or a newer drawing for the same `owner` superseded it before its layout started.
+   * Rejects when the engine fails. With a `theme` it is themed in that fixed palette, as an export is. That runs under
+   * the same limits and in the same worker.
    */
   draw(drawing: GraphDrawing, owner?: object, theme?: ExportTheme): Promise<Drawn | Refusal | null> {
     if (owner)
@@ -275,8 +277,8 @@ export class LayoutRunner {
 
   /**
    * A worker that could not start. The first ever sends layouts to the page from then on: none had been handed to it. A
-   * later one, replacing a worker that timed out, fails the layout waiting for it, and counts as a failure in a row; and
-   * on the page, the engine's own failure fails the layout waiting, as a loud fallback.
+   * later one, replacing a worker that timed out, fails the layout waiting for it. It counts as a failure in a row. On
+   * the page, the engine's own failure fails the layout waiting, as a loud fallback.
    */
   private failedToStart(why: unknown): void {
     this.o.clock.clearTimeout(this.startTimer);
@@ -296,7 +298,7 @@ export class LayoutRunner {
 
   /**
    * From now on layouts run on the page's own thread, where nothing can stop one. Those already queued were checked
-   * against the worker's limits when they were asked for, so they are checked again against the page's, and the ones
+   * against the worker's limits when they were asked for. So they are checked again against the page's, and the ones
    * over are refused: a layout gets the limits of the thread it runs on.
    */
   private toPage(why: unknown): void {

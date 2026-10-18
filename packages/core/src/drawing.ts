@@ -1,6 +1,6 @@
-// What a note's graph blocks draw (spec §3) — the boxes and links of each graph, chosen as graph-spec-draw.py chooses
-// them, so the core's layout source matches graph_svg.py's (spec §12). A graph with problems is still drawn: a path
-// that cannot be read is left out, the rest of its block is drawn, and what was left out is listed as a problem.
+// What a note's graph blocks draw (spec §3): the boxes and links of each graph. They are chosen as graph-spec-draw.py
+// chooses them, so the core's layout source matches graph_svg.py's (spec §12). A graph with problems is still drawn. A
+// path that cannot be read is left out, and the rest of its block is drawn. What was left out is listed as a problem.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph, World } from '@thoughtknot/graph-spec';
 import { estimate } from './estimates.ts';
@@ -69,12 +69,13 @@ function drawingOf(
 
 /**
  * What a note's graph blocks draw, as built by the blocks up to and including block `upTo` (default: all of them).
- * Readings come from each graph's own schema anywhere in the note — a schema is written last — else the shared schema
- * it names, from `shared` (the vault's SCHEMA blocks) or the standard schemas (standard-schemas.ts), which a vault schema of
- * the same name stands in for. Given the vault's, a graph naming a schema none of them holds is warned of (schema-names.ts);
- * not given them, as by a caller that cannot see the vault, it is not. Problems are listed for the blocks up to `upTo`. `budget` caps
- * reading a broken block again (partial-read.ts), as the Python reader's does. `today` (YYYY-MM-DD, default the current
- * day) decides which deferred things are overdue (deferred.ts), as the graph library's completeness check does.
+ * Readings come from each graph's own schema anywhere in the note; a schema is written last. Else they come from the
+ * shared schema it names. That is from `shared` (the vault's SCHEMA blocks) or the standard schemas
+ * (standard-schemas.ts), which a vault schema of the same name stands in for. Given the vault's, a graph naming a
+ * schema none of them holds is warned of (schema-names.ts). Not given them, as by a caller that cannot see the vault,
+ * it is not. Problems are listed for the blocks up to `upTo`. `budget` caps reading a broken block again
+ * (partial-read.ts), as the Python reader's does. `today` (YYYY-MM-DD, default the current day) decides which deferred
+ * things are overdue (deferred.ts). The graph library's completeness check does the same.
  */
 export function readNote(
   blocks: string[],
@@ -86,9 +87,10 @@ export function readNote(
   const upto = blocks.slice(0, upTo + 1);
   // the standard schemas only for a note that names a shared schema, so no other note reads them
   const shared = blocks.some(namesSharedSchema) ? withStandardSchemas(vault) : vault;
-  // measured before anything is read, so no block, however large or broken, holds the page while it is read (§9): the
-  // graph blocks and the shared schemas, which are read; never a query or an excerpt, which are not. The plugin's own
-  // exception to drawing as the Python reader does (drawn_in_part): over the limits it draws nothing at all.
+  // measured before anything is read, so no block, however large or broken, holds the page while it is read (§9). It
+  // covers the graph blocks and the shared schemas, which are read; never a query or an excerpt, which are not. The
+  // plugin's own exception to drawing as the Python reader does (drawn_in_part): over the limits it draws nothing at
+  // all.
   const tooLarge = textTooLarge([...blocks.filter((b) => typeof dataKind(b) === 'string'), ...shared]);
   if (tooLarge) return { graphs: new Map(), problems: [], world: {}, whole: {}, texts: upto, tooLarge };
   // drawn from the blocks up to `upTo`, with names suggested against every block, as the whole note suggests them

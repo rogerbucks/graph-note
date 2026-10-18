@@ -1,6 +1,6 @@
-// The views of the Obsidian host, each drawn in the fake host in the state a check needs (editor spec §11, §41): the one
-// list every accessibility check of every view goes through (test/wcag.test.js, test/a11y-semantics.test.js and
-// test/a11y-keyboard.test.js), so a view a later workstream adds gets its case here once, with the same commit as the
+// The views of the Obsidian host, each drawn in the fake host in the state a check needs (editor spec §11, §41). Every
+// accessibility check of every view goes through this one list (test/wcag.test.js, test/a11y-semantics.test.js and
+// test/a11y-keyboard.test.js). So a view a later workstream adds gets its case here once, with the same commit as the
 // view, and every check covers it.
 import assert from 'node:assert/strict';
 import { load, until } from '../../packages/obsidian/test/host/load-plugin.js';

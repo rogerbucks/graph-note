@@ -1,6 +1,7 @@
-// A plug-in's theme tokens (editor spec §44, plugin_theme_tokens): a plug-in inherits the core's design tokens, and may
-// add tokens of its own for what it adds, each named under its own id, with a light and a dark colour that each meet the
-// locked contrast on the background it sits on. A token that does not is refused, saying why, and leaves nothing behind.
+// A plug-in's theme tokens (editor spec §44, plugin_theme_tokens). A plug-in inherits the core's design tokens. It may
+// add tokens of its own for what it adds, each named under its own id, with a light and a dark colour. Each colour
+// meets the locked contrast on the background it sits on. A token that does not is refused, saying why, and leaves
+// nothing behind.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from '../src/plugins.ts';

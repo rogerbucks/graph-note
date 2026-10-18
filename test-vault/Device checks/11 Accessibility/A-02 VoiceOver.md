@@ -24,6 +24,6 @@
 
 **Checklist line:**
 
-> **A-02** With VoiceOver: the drawing is described as a list of sentences, and a new problem typed in the pane is announced without the focus moving.
+> **A-02** With VoiceOver: the drawing is described as a list of sentences. A new problem typed in the pane is announced without the focus moving.
 
 **Back to the checklist:** [A-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for A-02 in its list.

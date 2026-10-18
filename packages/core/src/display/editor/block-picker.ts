@@ -1,8 +1,9 @@
-// The pane's block picker (spec §4): the note's graph blocks to choose from, built again from the note as the session
-// last saw it each time the head's tools are shown — after every write, reload and change made outside the editor — so
-// the lines it offers are never those of an older note; a block chosen is found again in the note as it is once what was
-// typed is written, by its place among the graph blocks, its graph and its text, and said when it is no longer there.
-// Open again, in the pane and in place, goes on with the block after the session stopped by a copy of it (§9).
+// The pane's block picker (spec §4): the note's graph blocks to choose from. It is built again from the note as the
+// session last saw it each time the head's tools are shown. That is after every write, reload and change made outside
+// the editor. So the lines it offers are never those of an older note. A block chosen is found again in the note as it
+// is once what was typed is written. It is found by its place among the graph blocks, its graph and its text, and said
+// when it is no longer there. Open again, in the pane and in place, goes on with the block after the session stopped by
+// a copy of it (§9).
 import { word } from '@thoughtknot/core';
 import type { Choice, PaneSession } from '@thoughtknot/core';
 import { notice } from '../host';
@@ -36,7 +37,7 @@ export class BlockPicker {
   }
 
   /**
-   * Builds the picker again from the note as the session last saw it, the block edited selected; takes it away when the
+   * Builds the picker again from the note as the session last saw it, the block edited selected. Takes it away when the
    * note has one graph block. Its options are made again in the same element, so a picker with the focus keeps it.
    */
   show(): void {
@@ -70,9 +71,9 @@ export class BlockPicker {
   }
 
   /**
-   * Opens the block chosen: what is typed is written first, which can move the lines below it, so the block is found
-   * again in the note as it is then, at the place among the graph blocks it was shown at, of the graph and the text
-   * shown; another block come to that place is never opened in its stead (the review of #465).
+   * Opens the block chosen. What is typed is written first, which can move the lines below it. So the block is found
+   * again in the note as it is then. It is found at the place among the graph blocks it was shown at, of the graph and
+   * the text shown. Another block come to that place is never opened in its stead (the review of #465).
    */
   private async chosen(value: string): Promise<void> {
     const at = this.shown.findIndex((c) => String(c.line) === value),
@@ -90,10 +91,10 @@ export class BlockPicker {
   }
 
   /**
-   * Open again, once the session stopped as it cannot tell its block from a copy (§9): what is typed is kept as a draft
-   * first, as the stop refuses its write; then the block of its graph on the line the editor last knew it at, else the
-   * first of its graph, is opened with its own history, or the notice says none is left; never another graph's block.
-   * The picker cannot do it, as choosing the block shown changes nothing.
+   * Open again, once the session stopped as it cannot tell its block from a copy (§9). What is typed is kept as a draft
+   * first, as the stop refuses its write. Then the block of its graph on the line the editor last knew it at is opened,
+   * with its own history. Failing that, the first of its graph is opened, or the notice says none is left. Never
+   * another graph's block. The picker cannot do it, as choosing the block shown changes nothing.
    */
   async again(): Promise<void> {
     const s = this.host.session();

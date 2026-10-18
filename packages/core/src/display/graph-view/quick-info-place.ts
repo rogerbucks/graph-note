@@ -1,6 +1,6 @@
-// Where the quick-info tooltip goes (editor spec §24, quick_info_no_hover_only): never over the thing it speaks of. It is
-// tried below the thing, above it, then to its right and its left, and takes the first place where it lies wholly on the
-// page; where none does, the one that spills least — still clear of the thing. Pure: boxes in, a place out.
+// Where the quick-info tooltip goes (editor spec §24, quick_info_no_hover_only): never over the thing it speaks of. It
+// is tried below the thing, above it, then to its right and its left. It takes the first place where it lies wholly on
+// the page. Where none does, it takes the one that spills least, still clear of the thing. Pure: boxes in, a place out.
 
 /** A box on the page. */
 export interface Box {

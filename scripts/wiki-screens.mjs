@@ -1,15 +1,16 @@
 #!/usr/bin/env node
-// Takes the user guide's screenshots (spec §41, user_guide_wiki) from the current build: the plugin drawing the
-// harness's sample note (packages/obsidian/harness) in a headless Chrome, driven over the DevTools protocol with Node's
-// own WebSocket, so no browser library is installed. The harness draws icons as their names; each is swapped here for
-// the same icon the browser editor's page ships (packages/claude-code/page/icons), so a picture looks as the plugin
-// does. Each shot is one state of the page, cut to the part a reader needs to see; SHOTS is the one list of them, and
-// the guide's pictures must match it (scripts/wiki.mjs, test/wiki.test.js).
+// Takes the user guide's screenshots (spec §41, user_guide_wiki) from the current build. They show the plugin drawing
+// the harness's sample note (packages/obsidian/harness) in a headless Chrome. Chrome is driven over the DevTools
+// protocol with Node's own WebSocket, so no browser library is installed. The harness draws icons as their names. Each
+// is swapped here for the same icon the browser editor's page ships (packages/claude-code/page/icons). So a picture
+// looks as the plugin does. Each shot is one state of the page, cut to the part a reader needs to see. SHOTS is the
+// one list of them, and the guide's pictures must match it (scripts/wiki.mjs, test/wiki.test.js).
 //
 // Usage:
 //   node scripts/wiki-screens.mjs --out DIR [--chrome PATH]
-// DIR gets one PNG for each shot, and labels.json: the name of every button the card shows, which the wiki holds
-// against the guide so a new control is never left unexplained.
+//
+// DIR gets one PNG for each shot, and labels.json: the name of every button the card shows. The wiki holds these
+// against the guide, so a new control is never left unexplained.
 import { execFileSync } from 'node:child_process';
 import { findChrome, run, startChrome } from './chrome.mjs';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -28,8 +29,8 @@ const CARD = '#note .block-language-gql';
 const click = (label) => `document.querySelector('${CARD} [aria-label="${label}"]').click()`;
 
 /**
- * Every screenshot of the guide: its file name, what it shows (its alt text), the steps that bring the page to that
- * state (each a line of script run in the page) and the part of the page it is cut to.
+ * Every screenshot of the guide. Each has its file name, what it shows (its alt text), and the part of the page it is
+ * cut to. It also has the steps that bring the page to that state, each a line of script run in the page.
  */
 export const SHOTS = [
   { name: 'card', alt: 'A graph drawn in a note, with its toolbar above it', steps: [], clip: CARD },

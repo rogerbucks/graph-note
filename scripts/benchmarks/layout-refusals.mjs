@@ -1,7 +1,9 @@
 // The instruction-count benchmark of the refusals that keep the layout apart from the interface (spec §9,
-// layout_contained): a 5 MB broken block refused before it is read; a word of 999,000 characters refused on the page's
-// own thread before its drawing instructions are written; and a 600 kB note refused, by the plugin card's own path to
-// the refusal, for less than reading a tenth of it by the same path. The tests count what is never read or written
+// layout_contained). It counts three refusals:
+// - a 5 MB broken block, refused before it is read;
+// - a word of 999,000 characters, refused on the page's own thread before its drawing instructions are written;
+// - a 600 kB note, refused by the plugin card's own path to the refusal. It costs less than reading a tenth of it by
+//   the same path. The tests count what is never read or written
 // (layout-limits.test.js); the cost of refusing is counted here. Run by scripts/instruction-counts.mjs.
 import { gqlBlocks, graphOfBlock, namesSharedSchema, styleOf } from '../../packages/core/src/blocks.ts';
 import { readNote } from '../../packages/core/src/drawing.ts';
@@ -18,9 +20,10 @@ const FENCE = 2;
 const note = (block) => `# A note\n\n\`\`\`gql\n${block}\n\`\`\`\n`;
 
 /**
- * A note's card, as the plugin's processor makes it up to the refusal (packages/obsidian/src/block.ts, renderBlock):
- * the block asked whether it is a view, a style block or a graph; the note's blocks found, and this one among them;
- * whether any names a shared schema; the note read up to this block; and its problems held to the strictness set.
+ * A note's card, as the plugin's processor makes it up to the refusal (packages/obsidian/src/block.ts, renderBlock).
+ * - The block is asked whether it is a view, a style block or a graph.
+ * - The note's blocks are found, and this one among them, and whether any names a shared schema.
+ * - The note is read up to this block, and its problems held to the strictness set.
  * What follows, the banner or the drawing, is the plugin's interface, not counted.
  */
 function asCard(text) {
@@ -59,7 +62,7 @@ export const BENCHMARK = {
   spec: '§9, layout_contained',
   proves: 'a block, a word or a note over a limit is refused at once, for less than reading a tenth of the note',
   setup() {
-    // warm: each case's code path once, as small as still takes that path, so the compiling a first refusal or a first
+    // warm: each case's code path once, as small as still takes that path. So the compiling a first refusal or a first
     // read does is in the setup, and never inside the claim. A refusal needs a text over the limit: 10,500 lines, about
     // 530 kB, is over the 512 kB the 5 MB block and the 600 kB note are refused by
     const over = `// graph: g\n${open(10_500)}`;

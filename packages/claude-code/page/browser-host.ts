@@ -1,7 +1,8 @@
-// The browser page's side of the display layer (spec §26, cc_core_only, cc_icons): the icon, phone test, notice and menu the
-// shared layer asks its host for, made of plain DOM, as Obsidian's is made of its own. An icon is a span the stylesheet fills
-// from an image file the server holds (`/icons/<name>.svg`), so no icon library ships and no icon is ever shown as its name;
-// a name with no file shows a plain dashed square. Everything the page says is set as text.
+// The browser page's side of the display layer (spec §26, cc_core_only, cc_icons). It is the icon, phone test, notice
+// and menu the shared layer asks its host for. They are made of plain DOM, as Obsidian's are made of its own. An icon
+// is a span the stylesheet fills from an image file the server holds (`/icons/<name>.svg`). So no icon library ships,
+// and no icon is ever shown as its name. A name with no file shows a plain dashed square. Everything the page says is
+// set as text.
 import { word } from '../../core/src/words.ts';
 import type { DisplayHost, MenuEntry } from '@thoughtknot/core/display/host';
 

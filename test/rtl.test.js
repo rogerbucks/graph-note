@@ -1,7 +1,7 @@
-// Right to left (editor spec §42, rtl_mirrors): the style sheets say sides by where reading starts and ends, never left or
-// right, so the interface mirrors in a right-to-left language with no rule of its own. The only rules left on a physical
-// side are those placed at a point measured on the screen, which is the same in either direction: each is listed here
-// with why.
+// Right to left (editor spec §42, rtl_mirrors). The style sheets say sides by where reading starts and ends, never left
+// or right. So the interface mirrors in a right-to-left language with no rule of its own. The only rules left on a
+// physical side are those placed at a point measured on the screen. That point is the same in either direction. Each
+// is listed here with why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

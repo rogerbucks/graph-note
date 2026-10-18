@@ -1,5 +1,5 @@
-// A stand-in for the obsidian module, enough to load the built plugin in Node: a Plugin that records what it registers,
-// Components with the lifecycle and DOM events, Notices, icons and tooltips. Pair it with fake-dom.js.
+// A stand-in for the obsidian module, enough to load the built plugin in Node. It has a Plugin that records what it
+// registers, Components with the lifecycle and DOM events, Notices, icons and tooltips. Pair it with fake-dom.js.
 import { createRequire } from 'node:module';
 import { fakeSettings } from './fake-settings.js';
 import { addVaultWrites, fakeFileManager, fakeMetadataCache, getFrontMatterInfo, parseYaml } from './fake-vault.js';
@@ -149,7 +149,7 @@ export function fakeObsidian(state = {}) {
     },
     on: () => ({}),
     offref: () => {},
-    // a link opened, as a tap on a link in a note opens it: kept, for a test to see which, from where, and in which leaf
+    // a link opened, as a tap on a link in a note opens it. Kept, for a test to see which, from where, and in which leaf
     openLinkText: async (link, from, newLeaf) => {
       state.opened = newLeaf === undefined ? { link, from } : { link, from, newLeaf };
     },
@@ -349,8 +349,8 @@ export function fakeObsidian(state = {}) {
       state.modals = state.modals.filter((m) => m !== this);
     }
   }
-  // Obsidian's request function, which never reaches the network here: each request is kept in state.requests and
-  // answered by state.reply(request), a test's own; with none, it fails as an unreachable address does
+  // Obsidian's request function, which never reaches the network here. Each request is kept in state.requests. It is
+  // answered by state.reply(request), a test's own. With none, it fails as an unreachable address does
   state.requests = [];
   const requestUrl = async (request) => {
     state.requests.push(JSON.parse(JSON.stringify(request)));

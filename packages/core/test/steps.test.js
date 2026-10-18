@@ -1,8 +1,8 @@
-// Graph steps (editor spec §20, graph_step_io, step_inputs_checked, run_declared_only, step_output_proposal): a step is
-// a query block named as a step, `// graph: <graph> · QUERY step <name>`, that declares the named points it takes a graph
-// at (`// takes <point>: (:Kind), [:TYPE]`) and is a GQL query over graph data — MATCH a pattern, then INSERT the links
+// Graph steps (editor spec §20, graph_step_io, step_inputs_checked, run_declared_only, step_output_proposal). A step is
+// a query block named as a step, `// graph: <graph> · QUERY step <name>`. It declares the named points it takes a graph
+// at (`// takes <point>: (:Kind), [:TYPE]`). It is a GQL query over graph data — MATCH a pattern, then INSERT the links
 // it implies — never code or a named action. Each input, a whole graph or part of one such as a queried path, is
-// checked against its point before the rule runs; the output is a graph, offered as a proposal (§17) and written only
+// checked against its point before the rule runs. The output is a graph, offered as a proposal (§17) and written only
 // when a person accepts it. Nothing here runs a step unasked: a host calls `runStep` when the user presses Run.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

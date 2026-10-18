@@ -1,6 +1,6 @@
-// Deferred things (editor spec §5 and §8): marking a thing for later writes a Deferred saying what is needed and why it
-// waits (park_for_later); a deferred thing is told apart in the drawing so it can be drawn dashed with a later mark
-// (deferred_drawn); and the problems badge counts what is parked apart from problems, those past their revisit date as
+// Deferred things (editor spec §5 and §8). Marking a thing for later writes a Deferred saying what is needed and why it
+// waits (park_for_later). A deferred thing is told apart in the drawing, so it can be drawn dashed with a later mark
+// (deferred_drawn). The problems badge counts what is parked apart from problems, those past their revisit date as
 // overdue (parked_not_broken).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -228,8 +228,8 @@ describe('parking a thing for later (park_for_later)', () => {
   });
 });
 
-// Roger, 11 Oct 2026: in a locked graph, parking is refused unless the schema declares Deferred and DEFERS, and the
-// refusal offers the fix: the two declarations, written into the schema as Lock writes them (park_for_later)
+// Roger, 11 Oct 2026: in a locked graph, parking is refused unless the schema declares Deferred and DEFERS. The refusal
+// offers the fix: the two declarations, written into the schema as Lock writes them (park_for_later)
 describe('declaring Deferred and DEFERS in the schema (park_for_later)', () => {
   const SCHEMA = `// graph: reader\n${LOCKED.slice(BLOCK.length + 2)}`;
   const noteOf = (...blocks) =>

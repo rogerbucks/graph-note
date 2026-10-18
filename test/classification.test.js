@@ -2,8 +2,8 @@
 // look confidential or personal. Spec §13: no vault content above Public, and
 // confidential or personal content refused, from general patterns only.
 //
-// The samples below are assembled at run time from parts, so this file never
-// holds a line that looks like the real thing — the check runs over this file
+// The samples below are assembled at run time from parts. So this file never
+// holds a line that looks like the real thing. The check runs over this file
 // too, and a sample in plain form would be refused like any other.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -136,8 +136,9 @@ describe('what the check reports', () => {
 });
 
 describe('built from general patterns only', () => {
-  // general_patterns_only (spec §13): the check must never hold a list of personal details — no list of names, as
-  // strings or as a pattern's alternatives. listsIn finds one; it is proved on planted lists, then run on the check.
+  // general_patterns_only (spec §13): the check must never hold a list of personal details. That means no list of
+  // names, as strings or as a pattern's alternatives. listsIn finds one; it is proved on planted lists, then run on
+  // the check.
   const NAME = /^[A-Z][a-z]+(?:[ '-][A-Z]?[a-z]+)*$/;
   function listsIn(source) {
     const found = [];

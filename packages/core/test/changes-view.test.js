@@ -1,5 +1,6 @@
-// The changes view (editor spec §41, changes_view): two versions of a note's graph drawn as one, each thing and link
-// added, removed or changed marked on the drawing by its line as well as its hue, in both themes, and listed as text.
+// The changes view (editor spec §41, changes_view): two versions of a note's graph drawn as one. Each thing and link
+// added, removed or changed is marked on the drawing by its line as well as its hue, in both themes. Each is listed as
+// text too.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadEngine } from '../src/engine.ts';

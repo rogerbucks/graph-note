@@ -1,5 +1,5 @@
-// The edit pane (spec §4, §9): a view beside the note, on one graph block — the block editor, with its own drawing, a picker
-// of the note's graph blocks, and on a phone Drawing and Text as two tabs.
+// The edit pane (spec §4, §9): a view beside the note, on one graph block. It holds the block editor, with its own
+// drawing, and a picker of the note's graph blocks. On a phone, Drawing and Text are two tabs.
 import { ItemView } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
 import type ThoughtKnotPlugin from './main';

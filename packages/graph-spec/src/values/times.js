@@ -24,7 +24,7 @@ const norm = (v) => (isTime(v) ? v.s : v); // as hashed (rule:basis-hash@1)
 // A value as the canonical graph holds it: an instant as its UTC time with +00:00, a date as its day, anything else
 // unchanged.
 const cnorm = (v) => (isTime(v) ? (v.kind === 'datetime' ? v.s + '+00:00' : v.s) : v); // as in the canonical graph
-// Whether two read values are the same: a date and an instant never are, even on the same text, and lists are
+// Whether two read values are the same. A date and an instant never are, even on the same text. Lists are
 // compared item by item.
 function same(a, b) {
   if (isTime(a) || isTime(b)) return isTime(a) && isTime(b) && a.kind === b.kind && a.s === b.s;

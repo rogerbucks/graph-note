@@ -1,7 +1,8 @@
-// Hover and its stand-ins (editor spec §25, slice 3): pointing at a thing or a link highlights it, and for a link the two
-// things it joins, on top of any focus, for as long as the pointer stays; the same highlight follows keyboard focus, and
-// on touch the tap that selects gives it, so nothing depends on hover (§5); and it never moves, resizes or re-lays the
-// drawing. The built plugin, loaded against the stand-ins for the page.
+// Hover and its stand-ins (editor spec §25, slice 3).
+// - Pointing at a thing or a link highlights it, and for a link the two things it joins. It sits on top of any focus,
+//   for as long as the pointer stays.
+// - The same highlight follows keyboard focus. On touch the tap that selects gives it, so nothing depends on hover (§5).
+// - It never moves, resizes or re-lays the drawing. The built plugin, loaded against the stand-ins for the page.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';

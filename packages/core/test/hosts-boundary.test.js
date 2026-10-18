@@ -1,6 +1,6 @@
-// The host-side modules of the core (src/hosts/, reached as `@thoughtknot/core/hosts/<module>`) are for the code that
-// reads a note or a file for a gate, such as the destination matrix note's table; the gates and the rest of the core are
-// handed plain data and never import them, so core logic never learns a note's layout (editor spec §19, model_ceiling).
+// The host-side modules of the core (src/hosts/, reached as `@thoughtknot/core/hosts/<module>`) are for code that reads
+// a note or a file for a gate. One such is the destination matrix note's table. The gates and the rest of the core are
+// handed plain data and never import them. So core logic never learns a note's layout (editor spec §19, model_ceiling).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';

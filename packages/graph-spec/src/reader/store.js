@@ -9,9 +9,9 @@ const { S, N, trim } = require('./whitespace.js');
 const SHARED = new RegExp(`·${S}*SCHEMA${S}+(${N}+)`),
   NAMES_SHARED = new RegExp(`·${S}*schema${S}+(${N}+)`);
 
-/** A table keyed by names the writer chooses, with nothing in it but what is put there: no `constructor`, `toString` or
- * `__proto__` from JavaScript's own objects, so a graph, schema or thing of that name is read as any other (§3). Copies
- * `from`'s own entries, if given. */
+/** A table keyed by names the writer chooses, with nothing in it but what is put there. It has no `constructor`,
+ * `toString` or `__proto__` from JavaScript's own objects. So a graph, schema or thing of that name is read as any
+ * other (§3). Copies `from`'s own entries, if given. */
 const names = (from) => Object.assign(Object.create(null), from);
 
 // Graphs built from data blocks, in the order they are applied: {graph: {nodes: Map key -> {labels, props}, edges}},
@@ -22,8 +22,8 @@ class Store {
     this.k = 0;
     this.schemas = names();
     this.named = names();
-    // schema name -> its graph; data graph -> the schema its header names; commas: [{graph, line}] where a missing comma
-    // was read in (§3); commaPlaces: where each is written in, by block text
+    // schema name -> its graph; data graph -> the schema its header names; commas: [{graph, line}] where a missing
+    // comma was read in (§3); commaPlaces: where each is written in, by block text
     this.commas = [];
     this.commaPlaces = new Map();
     // bares: [{graph, line, written, type}] where a type written without its colon was read as the graph's one type
@@ -70,11 +70,12 @@ class Store {
     this.fixes.get(block).push([r.at, written, found[0]]);
     return found[0];
   }
-  /** The block with each bare type this store read written with its colon, as its graph spells it, and each missing
-   * comma it read in written at the end of the code on its line — the text an engine may be given
-   * (req:3.engine-gets-corrected, req:3.engine-gets-commas), the same text the Python reader gives. No line is added
-   * (req:3.engine-text-keeps-lines). Each is put where the reader read it — a bare type where its token begins, a
-   * comma where the code on its line ends — never found by searching the text. */
+  /** The block as an engine may be given it (req:3.engine-gets-corrected, req:3.engine-gets-commas):
+   * - each bare type this store read is written with its colon, as its graph spells it;
+   * - each missing comma it read in is written at the end of the code on its line.
+   * It is the same text the Python reader gives. No line is added (req:3.engine-text-keeps-lines). Each is put where
+   * the reader read it: a bare type where its token begins, a comma where the code on its line ends. Neither is found
+   * by searching the text. */
   corrected(block) {
     const edits = [
       ...(this.fixes.get(block) ?? []).map(([at, written, type]) => [at, written.length, ':' + type]),
@@ -91,8 +92,8 @@ class Store {
     for (const [k, n] of this.graph(g).nodes) if (n.props.id === id) return k;
     return null;
   }
-  /** Applies a data block whole, or not at all: a block that cannot be read leaves the store as it was, however far
-   * its reading got (req:3.engine-gets-corrected). */
+  /** Applies a data block whole, or not at all (req:3.engine-gets-corrected). A block that cannot be read leaves the
+   * store as it was, however far its reading got. */
   apply(block) {
     const copy = (graph) => ({
       nodes: new Map([...graph.nodes].map(([k, n]) => [k, { labels: new Set(n.labels), props: { ...n.props } }])),
@@ -160,8 +161,8 @@ class Store {
     this.fixes.delete(block); // made again as each bare type is resolved, below
     const graph = this.graph(g),
       bound = names();
-    // each id's node, the first in order, as find() gives it: indexed once for the block, not searched for each thing,
-    // so a block of thousands of things is read in time linear in them (editor spec §9: never freeze)
+    // each id's node, the first in order, as find() gives it. It is indexed once for the block, not searched for
+    // each thing. So a block of thousands of things is read in time linear in them (editor spec §9: never freeze)
     let ids = null;
     const found = (id) => {
       if (!ids) {
@@ -193,7 +194,8 @@ class Store {
     }
     const writes = (n) => n.labels.length || Object.keys(n.props).length;
     for (const [nodes, rels] of paths) {
-      // left to right, as Grafeo binds them: a name is reused only once its node is written — earlier in the block, earlier in this path, or found by MATCH (§3)
+      // left to right, as Grafeo binds them. A name is reused only once its node is written (§3): earlier in the block,
+      // earlier in this path, or found by MATCH
       for (const n of nodes) {
         if (writes(n)) {
           if (n.v in bound)
@@ -264,7 +266,7 @@ class Store {
     return g;
   }
 }
-// A document's blocks applied in order to a fresh store; the first that cannot be read throws its ProfileError.
+// A document's blocks applied, in turn, to a fresh store; the first that cannot be read throws its ProfileError.
 function read(blocks) {
   const s = new Store();
   blocks.forEach((b) => s.apply(b));

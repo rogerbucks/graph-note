@@ -22,8 +22,6 @@
 
 **Checklist line:**
 
-> **H-03** With photo.png and report.pdf made in the vault by the generator (reset-test-vault), the box that links both carries a paperclip and 2 at its top
-> left, and VoiceOver reads "2 attachments" with its name. Its details list them under Attachments (2), as "photo.png —
-> image" and "report.pdf — PDF"; tap one and Obsidian opens it.
+> **H-03** The generator (reset-test-vault) makes photo.png and report.pdf in the vault. The box that links both carries a paperclip and 2 at its top left. VoiceOver reads "2 attachments" with its name. Its details list them under Attachments (2), as "photo.png — image" and "report.pdf — PDF". Tap one and Obsidian opens it.
 
 **Back to the checklist:** [H-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-03 in its list.

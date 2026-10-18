@@ -1,7 +1,8 @@
-// A graph's source read through the vault (editor spec §20 gql_file_source, gql_file_missing; §7 view_of_another_note):
-// the .gql file or note a FROM block names, found as Obsidian finds a link from the note, read where it is written and
-// never copied, and handed to the core to read as a note's own blocks are read. What is not there is looked for by its
-// name elsewhere in the vault, so a moved file is said to be moved; one that cannot be read is said with its reason.
+// A graph's source read through the vault (editor spec §20 gql_file_source, gql_file_missing; §7 view_of_another_note).
+// The source is the .gql file or note a FROM block names. It is found as Obsidian finds a link from the note. It is
+// read where it is written, never copied. The core reads it as it reads a note's own blocks.
+// What is not there is looked for by its name elsewhere in the vault. So a moved file is said to be moved.
+// One that cannot be read is said with its reason.
 // And a card drawn from a source is drawn again whenever that source changes, moves, or comes back.
 import { MarkdownRenderChild, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext, TAbstractFile } from 'obsidian';
@@ -38,8 +39,8 @@ async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: stri
       .map((f) => f.path);
     return { missing: true, elsewhere };
   }
-  // a .gql file over the bytes a note's graph blocks may hold is never read, by the size the vault keeps for it (§9); a
-  // note is read, as Obsidian reads it, and only its graph blocks are held to the limits
+  // A .gql file over the bytes a note's graph blocks may hold is never read (§9). Its size is the one the vault keeps.
+  // A note is read, as Obsidian reads it, and only its graph blocks are held to the limits.
   if (source.kind === 'file' && file.stat.size > READ_LIMITS.bytes)
     return { found: file.path, tooLarge: file.stat.size };
   try {
@@ -50,8 +51,8 @@ async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: stri
 }
 
 /**
- * A source read for the note at `from`: what the core makes of the text the vault holds there (the vault's shared
- * schemas given when its blocks name one), or why it cannot be drawn, naming it.
+ * A source read for the note at `from`. It is what the core makes of the text the vault holds there.
+ * The vault's shared schemas are given when its blocks name one. Or it says why it cannot be drawn, naming it.
  */
 export async function readFromVault(
   plugin: ThoughtKnotPlugin,
@@ -65,9 +66,9 @@ export async function readFromVault(
 }
 
 /**
- * Draws a card again (`redraw`) whenever its source changes: the file it was read from modified, or anything of the
- * source's name made, moved or deleted, so a missing source that comes back, or one moved away, is said at once. The
- * listeners go with the card's own drawing (`ctx`), so a card drawn again never listens twice.
+ * Draws a card again (`redraw`) whenever its source changes. That is the file it was read from modified, or anything
+ * of the source's name made, moved or deleted. So a missing source that comes back, or one moved away, is said at once.
+ * The listeners go with the card's own drawing (`ctx`), so a card drawn again never listens twice.
  */
 export function watchSource(
   plugin: ThoughtKnotPlugin,
@@ -83,8 +84,8 @@ export function watchSource(
   const watcher = new MarkdownRenderChild(el);
   const ours = (f: TAbstractFile, old?: string) =>
     f.path === found || old === found || f.name === name || (old?.split('/').at(-1) ?? '') === name;
-  // drawn again once the vault has told every listener: a redraw takes this card's listeners away, which must not
-  // happen while the vault is still telling the other cards
+  // Drawn again once the vault has told every listener. A redraw takes this card's listeners away.
+  // That must not happen while the vault is still telling the other cards.
   const again = () => void Promise.resolve().then(redraw);
   const vault = plugin.app.vault;
   watcher.registerEvent(vault.on('modify', (f) => f.path === found && again()));

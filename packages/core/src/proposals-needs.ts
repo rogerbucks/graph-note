@@ -1,13 +1,13 @@
-// What a change of a proposal needs of the others (editor spec §17, proposal_one_by_one): a link needs the things it joins,
-// which the graph has or another change adds. A change cannot be accepted until what it needs is there, and a change
-// that adds what another still needs cannot be rejected alone, or the change set left would not load. `have` is the names
-// the graph holds and `waiting` the changes not yet decided.
+// What a change of a proposal needs of the others (editor spec §17, proposal_one_by_one). A link needs the things it
+// joins, which the graph has or another change adds. A change cannot be accepted until what it needs is there. A change
+// that adds what another still needs cannot be rejected alone, or the change set left would not load. `have` is the
+// names the graph holds and `waiting` the changes not yet decided.
 import { namesOf } from './proposals-apply.ts';
 import type { ProposedChange } from './proposals.ts';
 
 /**
- * Why a change cannot be accepted until another is: it needs a thing that one adds, or one that is not there at all;
- * null when what it needs is in `have`.
+ * Why a change cannot be accepted until another is: it needs a thing that one adds, or one that is not there at all.
+ * Null when what it needs is in `have`.
  */
 export function lacking(
   c: ProposedChange,
@@ -40,8 +40,8 @@ export function unmet(
 }
 
 /**
- * Why these changes cannot be rejected yet, or null: a change that waits needs a thing one of them adds, which the graph
- * does not have, so the change set left would not load. It says which to reject too.
+ * Why these changes cannot be rejected yet, or null. A change that waits needs a thing one of them adds, which the
+ * graph does not have. So the change set left would not load. It says which to reject too.
  */
 export function leftNeeding(
   rejecting: readonly ProposedChange[],

@@ -1,7 +1,7 @@
-// The part of the CSS cascade a test needs: for one element, in given states, which declaration wins each property, by
-// importance, then specificity, then order. Not a browser: every @media block is taken to apply, a child combinator is read
-// as a descendant one, :is() is written out as one selector for each argument, and a selector with a pseudo-element or any
-// other functional pseudo-class never matches.
+// The part of the CSS cascade a test needs. For one element, in given states, it finds which declaration wins each
+// property: by importance, then specificity, then order. Not a browser: every @media block is taken to apply. A child
+// combinator is read as a descendant one. :is() is written out as one selector for each argument. A selector with a
+// pseudo-element or any other functional pseudo-class never matches.
 
 /** The shorthands that set each longhand a test asks about. */
 const SHORTHANDS = {
@@ -32,8 +32,8 @@ function splitList(list) {
 }
 
 /**
- * A selector with each :is(a, b) written out as one selector for each of its arguments, as the specificity of :is() is
- * that of its most specific argument: a rule over :is(path, polygon) is two rules, of the one specificity.
+ * A selector with each :is(a, b) written out as one selector for each of its arguments. The specificity of :is() is
+ * that of its most specific argument. So a rule over :is(path, polygon) is two rules, of the one specificity.
  */
 function expandIs(selector) {
   const m = /:is\(([^()]*)\)/.exec(selector);

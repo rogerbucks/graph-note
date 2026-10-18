@@ -1,8 +1,10 @@
-// The instruction-count benchmark of drawing a graph of 50 things (spec §11, fifty_in_half_second): read and drawn by
-// the engine on the calling thread, as render.test.js drew it, and through the core's layout runner, as the plugin draws
-// it apart from its interface (layout-worker.test.js), its port served in this process, as the plugin's page port is,
-// so no second thread, with its own start and its own timing, is in the count. Each is one draw after a warm one; the
-// engine's start and the warm draw are the setup, counted alone and taken off. Run by scripts/instruction-counts.mjs.
+// The instruction-count benchmark of drawing a graph of 50 things (spec §11, fifty_in_half_second). It is read and
+// drawn by two routes:
+// - by the engine on the calling thread, as render.test.js drew it;
+// - through the core's layout runner, as the plugin draws it apart from its interface (layout-worker.test.js).
+// The runner's port is served in this process, as the plugin's page port is. So no second thread, with its own start
+// and its own timing, is in the count. Each is one draw after a warm one. The engine's start and the warm draw are the
+// setup, counted alone and taken off. Run by scripts/instruction-counts.mjs.
 import { readNote } from '../../packages/core/src/drawing.ts';
 import { draw } from '../../packages/core/src/render.ts';
 import { LAYOUT_LIMITS } from '../../packages/core/src/layout-limits.ts';
@@ -35,7 +37,7 @@ function drawn(result, count) {
 
 /**
  * A benchmark of drawing a graph of `count` things and `links` links, on the calling thread and through the layout
- * runner, each case's count held to `budget` (budgets.mjs) by a claim that says `says` of its route.
+ * runner. Each case's count is held to `budget` (budgets.mjs) by a claim that says `says` of its route.
  */
 export function drawingBenchmark({ name, spec, count, links, budget, says }) {
   return {

@@ -1,6 +1,9 @@
-// This repository's own records of the tests-first replay (spec §12, tests_first): the old single files' entries all held,
-// each record named after a commit in the history, every test file with its entry, and a reason for each test that passed
-// before its code. Split from tests-first-records.test.js on 11 Oct 2026, so the suite runs them side by side.
+// This repository's own records of the tests-first replay (spec §12, tests_first):
+// - the old single files' entries, all held;
+// - each record named after a commit in the history;
+// - every test file with its entry;
+// - a reason for each test that passed before its code.
+// Split from tests-first-records.test.js on 11 Oct 2026, so the suite runs them side by side.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -77,8 +80,8 @@ describe('this repository’s records', () => {
           .map(([n]) => `${file} :: ${n}`),
       );
     const excused = named(false);
-    // a test new in a commit whose run against the code before it did not finish was neither seen failing nor passing:
-    // a reason may be kept for it
+    // a test new in a commit whose run against the code before it did not finish was neither seen failing nor
+    // passing. A reason may be kept for it
     const unproved = Object.entries(proved.files).flatMap(([file, e]) =>
       (e.notReplayedCommits ?? []).flatMap((c) => (c.tests ?? []).map((n) => `${file} :: ${n}`)),
     );

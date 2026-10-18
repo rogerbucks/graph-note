@@ -1,6 +1,7 @@
-// The inspector (editor spec §14, slice 1 since 7 Oct 2026): every property of the selected thing or link, each edited,
-// added or removed — as text, in the block where the thing or link is written (§2, edits are text) — with each value
-// checked against its type before it is written, and the names already used on things of the same kind offered first.
+// The inspector (editor spec §14, slice 1 since 7 Oct 2026). It shows every property of the selected thing or link,
+// each edited, added or removed. That is done as text, in the block where the thing or link is written (§2, edits are
+// text). Each value is checked against its type before it is written. The names already used on things of the same kind
+// are offered first.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -169,8 +170,9 @@ describe('in a locked graph', () => {
   });
 });
 
-// Selecting in the drawing moves the editor to the item (editor spec §4, select_moves_text; asked for 7 Oct 2026): the text
-// of the pattern that writes a thing, or of a link's own brackets and arrow, in the block being edited.
+// Selecting in the drawing moves the editor to the item (editor spec §4, select_moves_text; asked for 7 Oct 2026). It
+// moves to the text of the pattern that writes a thing, or of a link's own brackets and arrow, in the block being
+// edited.
 describe('where an item is written in the block', () => {
   const span = (text, t) => {
     const s = spanOf(text, t);

@@ -1,7 +1,7 @@
-// A note or attachment renamed in Obsidian, followed in graph blocks (editor spec §18, renames_follow): every link to it
-// inside a graph block of any note is rewritten in the same step, through the note's editor when it is open in the
-// editing view, as one ordinary change its undo takes back, or else atomically through the vault. Obsidian does not
-// update links inside code blocks, so the plugin does; prose is Obsidian's own, and left to it. A link that cannot be
+// A note or attachment renamed in Obsidian, followed in graph blocks (editor spec §18, renames_follow). Every link to it
+// inside a graph block of any note is rewritten in the same step. It goes through the note's editor when it is open in
+// the editing view, as one ordinary change its undo takes back. Or else it goes atomically through the vault. Obsidian
+// does not update links inside code blocks, so the plugin does. Prose is Obsidian's own, and left to it. A link that cannot be
 // rewritten is left, and its card reports it broken.
 import { TFile } from 'obsidian';
 import type { TAbstractFile } from 'obsidian';

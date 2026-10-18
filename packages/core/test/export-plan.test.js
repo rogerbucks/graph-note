@@ -1,5 +1,6 @@
-// The one decision before an export is written (editor spec §16): nothing to export, ask first because the note is classified
-// above the configured level, or go — with a file name that is safe on every platform. Nothing is written by this; the host
+// The one decision before an export is written (editor spec §16). It is nothing to export, or ask first, or go. It asks
+// first because the note is classified above the configured level. A go comes with a file name that is safe on every
+// platform. Nothing is written by this; the host
 // writes only on a go.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

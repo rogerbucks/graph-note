@@ -1,6 +1,7 @@
-// Completing as you type (editor spec §4, autocomplete): what to offer inline after the caret — the closer of a bracket,
-// brace or quote just opened, a keyword, a declared kind or relationship type, a property name or a value already used —
-// the best single match as the text to add; and the closer typed where it is already there, stepped over.
+// Completing as you type (editor spec §4, autocomplete). It covers what to offer inline after the caret. That may be
+// the closer of a bracket, brace or quote just opened, a keyword, or a declared kind or relationship type. It may be a
+// property name or a value already used. The best single match is the text to add. A closer typed where it is already
+// there is stepped over.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

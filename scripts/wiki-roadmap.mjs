@@ -1,5 +1,6 @@
-// The wiki's Roadmap page (spec §41, wiki_generated): the waves clustered into phases (shipped, now, next, later and
-// held) on one chart, the first release of each minor version marked on it, and each wave's releases counted beside it.
+// The wiki's Roadmap page (spec §41, wiki_generated). It shows the waves clustered into phases (shipped, now, next,
+// later and held) on one chart. The first release of each minor version is marked on it, and each wave's releases are
+// counted beside it.
 // scripts/wiki.mjs gives it the waves' states and its own helpers, so both pages count and date things the same way.
 
 /** The phases the roadmap is clustered into, in order. A wave whose title says held is Held whatever its dates. */
@@ -35,8 +36,8 @@ function minorReleases(dated) {
 }
 
 /**
- * The Roadmap page's Markdown. `states` are the waves with their counts and states (waveStates of wiki.mjs), `releases`
- * GitHub's list (or empty); `counted`, `day`, `footer` and `STATE_MARK` are the helpers of wiki.mjs.
+ * The Roadmap page's Markdown. `states` are the waves with their counts and states (waveStates of wiki.mjs).
+ * `releases` is GitHub's list (or empty). `counted`, `day`, `footer` and `STATE_MARK` are the helpers of wiki.mjs.
  */
 export function roadmapPage(
   { states, workstreams, requirements, releases, sha, today },

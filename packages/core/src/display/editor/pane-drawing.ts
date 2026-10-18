@@ -1,7 +1,7 @@
-// The drawing in the edit pane (spec §4): the graph as typed so far, drawn beside its text; choosing a box or a link in it
-// selects where it is written in the text, and its Edit puts the focus back in the text. In place, in a drawing's card,
+// The drawing in the edit pane (spec §4): the graph as typed so far, drawn beside its text. Choosing a box or a link in
+// it selects where it is written in the text. Its Edit puts the focus back in the text. In place, in a drawing's card,
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
-// is (spec §9): a graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
+// is (spec §9). A graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
 import { ViewState, depthOf, parked, startingSwitches } from '@thoughtknot/core';
 import type { Drawn, FocusDepth, GraphDrawing, NoteReading, PaneSession, Refusal, Settings } from '@thoughtknot/core';
 import { Lifecycle } from '../lifecycle';
@@ -33,8 +33,8 @@ interface Choosing {
 }
 
 /**
- * An estimated link's quick fix in the pane (§3): the session's text becomes `now`, as the fix bar's fix makes it, only
- * while it is still `was`, as drawn, and the editor is still there. Says why nothing was written, or null.
+ * An estimated link's quick fix in the pane (§3). The session's text becomes `now`, as the fix bar's fix makes it. That
+ * happens only while it is still `was`, as drawn, and the editor is still there. Says why nothing was written, or null.
  */
 function fixInPane(s: PaneSession, on: Choosing, was: string, now: string): string | null {
   if (s.text !== was)

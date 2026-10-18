@@ -1,8 +1,8 @@
 // Reading view is read-only, strictly (spec §3 "Read-only in Reading view", decided 9 Oct 2026; Roger's device check
 // Z-09, 11 Oct 2026: "properties can still be added in reading view. I don't want that."). A card in reading view shows
-// everything a tap shows — properties among it — and offers nothing that writes, even while its block is edited in
-// place in Live Preview. One check closes every write: each path a write could take is tried here, by its control and
-// by a direct call, and the note and the text being edited are left as they were.
+// everything a tap shows, properties among it. It offers nothing that writes, even while its block is edited in place in
+// Live Preview. One check closes every write. Each path a write could take is tried here, by its control and by a direct
+// call. The note and the text being edited are left as they were.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -32,16 +32,16 @@ const VIEW = "// graph: reader · QUERY view answers\nMATCH (n {id: 'q'})-[]-{1,
 const VIEW_NOTE = ['# Reader', '', fence(RICH), '', fence(VIEW), ''].join('\n');
 
 /**
- * What a thing's details offer beside closing, where the note is only read (§25): to show the drawing filtered to it, and
- * the shortest path to another thing. Both change the picture and nothing else, so reading view has them.
+ * What a thing's details offer beside closing, where the note is only read (§25). They show the drawing filtered to it,
+ * and the shortest path to another thing. Both change the picture and nothing else, so reading view has them.
  */
 const UNTANGLING = ['Show only this and its neighbours', 'Shortest path to another thing'];
 const KEPT = ['Close details', ...UNTANGLING];
 
 /**
- * The controls of the details beside closing and untangling — a linked thing or link chosen, a step of the trail, the
- * sheet minimised (§25) — each pressed in turn, `reopen` opening the details again before each; the names of the rest.
- * The test then checks the note is unchanged, so any of them that wrote would show.
+ * The controls of the details beside closing and untangling (§25). They are a linked thing or link chosen, a step of the
+ * trail, and the sheet minimised. Each is pressed in turn, and `reopen` opens the details again before each. Returns the
+ * names of the rest. The test then checks the note is unchanged, so any of them that wrote would show.
  */
 const pressed = (el, reopen, all) => pressTheRest(el, KEPT, reopen, all);
 
@@ -58,8 +58,8 @@ const LARGE_LINKS = [
 const details = (el) => el.querySelector('.thoughtknot-details');
 
 /**
- * The block edited in place in Live Preview, as Roger had it, and the same block drawn in reading view: the case where a
- * card in reading view could reach the editor. `children` gathers the reading card's components.
+ * The block edited in place in Live Preview, as Roger had it, and the same block drawn in reading view. This is the case
+ * where a card in reading view could reach the editor. `children` gathers the reading card's components.
  */
 async function readingWhileEdited(env, children = []) {
   const live = await showIn(env, 'live');
@@ -259,8 +259,8 @@ describe('a card in reading view shows its details and offers nothing that write
       labelled(live, 'Edit here').click();
       await until(() => !!live.querySelector('textarea'));
       const box = live.querySelector('textarea');
-      // reading view draws a block into an element of its own, and puts it in the page only after: nothing around it
-      // says reading view until then, so the card is built as if it could write
+      // reading view draws a block into an element of its own, and puts it in the page only after. Nothing around it
+      // says reading view until then. So the card is built as if it could write
       const lines = NOTE.split('\n'),
         open = lines.findIndex((l) => l.startsWith('```gql'));
       const el = env.doc.createElement('div');

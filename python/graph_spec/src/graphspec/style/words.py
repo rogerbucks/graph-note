@@ -28,8 +28,8 @@ ARROWHEADS = ("show", "hide")
 # The diagram types (§15, diagram_type_set): what fits each, and how each is laid out, is in
 # graphspec/style/diagram_types.py.
 DIAGRAM_TYPES = ("network", "tree", "flow", "radial", "lanes", "timeline", "table")
-# How a link moves to show flow (§7, links_show_flow): dashes, a dot, or still; still unless a
-# Flow moves it (graphspec/style/flow.py).
+# How a link moves to show flow (§7, links_show_flow): dashes, a dot, or still. It is still
+# unless a Flow moves it (graphspec/style/flow.py).
 FLOW_MOTIONS = ("dashes", "dot", "still")
 # How links are drawn (§25, untangle_routing): curved, as Graphviz draws them, straight, or with
 # right angles.

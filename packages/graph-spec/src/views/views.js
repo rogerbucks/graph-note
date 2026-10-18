@@ -7,8 +7,10 @@ const { project } = require('../rules/projection.js');
 const { mermaidGraph, legend, mermaidPath } = require('./mermaid.js');
 
 const tops = (g) => strSort(g.labelled('Path').filter((p) => !g.inc(p, 'STEP').some((e) => g.has(e[0], 'Path'))));
-// Every view of one graph: its flat projection, its relationships with their legend, and each top path at each
-// altitude it spans, from its own down to 0.
+// Every view of one graph:
+// - its flat projection;
+// - its relationships with their legend;
+// - each top path at each altitude it spans, from its own down to 0.
 function views(g, shared) {
   const [blocks, rels] = project(g),
     out = {

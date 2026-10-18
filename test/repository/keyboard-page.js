@@ -1,7 +1,8 @@
-// The keyboard-only run of the browser editor's page (editor spec §41, a11y_keyboard_auto), state by state: the run
-// test/a11y-keyboard.test.js makes of every view, over the states of views-page.js. The states are split over the files
-// test/a11y-keyboard-page-<part>.test.js, each running the states its part names, so they run side by side: in one file
-// they took two minutes. test/a11y-keyboard.test.js checks that each state is in exactly one part. Test support only.
+// The keyboard-only run of the browser editor's page (editor spec §41, a11y_keyboard_auto), state by state. It is the
+// run test/a11y-keyboard.test.js makes of every view, over the states of views-page.js. The states are split over the
+// files test/a11y-keyboard-page-<part>.test.js. Each file runs the states its part names, so they run side by side. In
+// one file they took two minutes. test/a11y-keyboard.test.js checks that each state is in exactly one part. Test
+// support only.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { built, cleanUp } from '../../packages/claude-code/test/editor-page-support.js';
@@ -35,8 +36,8 @@ export const PAGE_PARTS = {
 export const PHONE = 390;
 
 /**
- * The page's states in its phone layout (keyboard_any_device), split in two by their order, every state in one half: run
- * by test/a11y-keyboard-devices-page-<half>.test.js.
+ * The page's states in its phone layout (keyboard_any_device), split in two by their order, every state in one half.
+ * Each half is run by test/a11y-keyboard-devices-page-<half>.test.js.
  */
 export const phoneHalf = (names, half) => names.filter((_, i) => i % 2 === half - 1);
 

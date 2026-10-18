@@ -1,13 +1,13 @@
 # Text to graph design
 
-Give an AI a piece of text and get back a graph of the things, kinds and links it names, as a proposal you accept or
-reject. Designed on 18 October 2026, against version 0.5.0, at Roger's request. Not built yet.
+Give an AI a piece of text and get back a graph of the things, kinds and links it names. It comes as a proposal you
+accept or reject. Designed on 18 October 2026, against version 0.5.0, at Roger's request. Not built yet.
 
 The requirements are section 47 of
 [`requirements/editor-requirements.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql),
 slice 10, in workstream X1. They are built in Wave 19 of
 [`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json), after the
-Obsidian community release (R2), because Roger's rule is that what he adds now goes after R2.
+Obsidian community release (R2). Roger's rule is that what he adds now goes after R2.
 
 ## Two doors, one contract
 
@@ -17,7 +17,7 @@ Obsidian community release (R2), because Roger's rule is that what he adds now g
 | As a skill | A Claude skill whose SKILL.md also loads in Copilot Cowork | The conversation's own model; the library proposes the block, nothing is written before approval |
 
 Both take the prompt and the answer's shape from the library released on GitHub, so the same text gives the same kind
-of proposal everywhere. The model's answer is untrusted: the graph format library parses and checks it before anything
+of proposal everywhere. The model's answer is untrusted. The graph format library reads and checks it before anything
 is shown, and a bad answer is refused with the reason.
 
 ## What the proposal shows

@@ -1,7 +1,7 @@
-// The style graph (editor spec §2, §6, §7): nudges, the properties shown and the styling of views and paths are written
-// as their own block, a graph in the same notation, beside the graph they style and never in its data. It is checked like
-// any graph — every name in it must be in the graph it styles — and a style block that cannot be read never stops the
-// drawing: the graph is drawn in the locked style, and the problem is listed.
+// The style graph (editor spec §2, §6, §7). Nudges, the properties shown and the styling of views and paths are written
+// as their own block. It is a graph in the same notation, beside the graph they style and never in its data. It is
+// checked like any graph: every name in it must be in the graph it styles. A style block that cannot be read never
+// stops the drawing. The graph is drawn in the locked style, and the problem is listed.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { dataKind, gqlBlocks, graphOfBlock, styleOf } from '../src/blocks.ts';

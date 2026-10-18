@@ -1,6 +1,7 @@
-// Help that finds and fixes problems (spec §8), written in the shapes of the Language Server Protocol (spec §10) — ranges,
-// diagnostics, code actions with text edits, completion items — so a VS Code host can show them as its own, and the
-// Obsidian pane shows them in place. Positions are 0-based lines and characters within the block being edited.
+// Help that finds and fixes problems (spec §8), written in the shapes of the Language Server Protocol (spec §10). Those
+// are ranges, diagnostics, code actions with text edits and completion items. So a VS Code host can show them as its
+// own, and the Obsidian pane shows them in place. Positions are 0-based lines and characters within the block being
+// edited.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { blockItems } from './block-items.ts';
@@ -293,8 +294,9 @@ export function completions(
       .filter((b) => starts(p)(b.key) && !b.suggested)
       .sort((a, b) => (a.key < b.key ? -1 : 1))
       .map((b) => ({ label: b.key, kind: KIND.Variable, detail: b.kind ? `${b.kind}: ${b.text}` : b.text }));
-    // a kind brings its colon (spec §4): after a new thing's name, the kinds are offered as :Kind, added after the name —
-    // but only once the name can be nothing but a new thing; while it may still be a reference, the names come alone
+    // a kind brings its colon (spec §4). After a new thing's name, the kinds are offered as :Kind, added after the
+    // name. But that is only once the name can be nothing but a new thing. While it may still be a reference, the names
+    // come alone
     const kinds =
       p && !names.length
         ? (schema ? schema.kinds : [...new Set(d.boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))])
@@ -308,7 +310,7 @@ export function completions(
 
 const article = (k: string) => (/^[aeiou]/i.test(k) ? 'an' : 'a');
 
-/** Each pattern of the block read back in plain English, by the 0-based line it ends on: what it writes, in the graph's words. */
+/** Each pattern of the block read back in plain language, by the 0-based line it ends on: what it writes, in the graph's words. */
 export function readBack(reading: NoteReading, graph: string, text: string): Map<number, string> {
   const d = reading.graphs.get(graph),
     out = new Map<number, string>();
@@ -316,8 +318,8 @@ export function readBack(reading: NoteReading, graph: string, text: string): Map
   const texts = new Map<string, string>();
   for (const b of d?.boxes ?? []) if (!texts.has(b.key)) texts.set(b.key, b.text);
   const textOf = (k: string) => texts.get(k) ?? `${k} (not in the graph)`;
-  // a link reads in its type's own words, from its schema; a type with none — a draft's, or one the schema does not
-  // declare — shows itself, as an arrow, rather than a guess at words that may read badly ("Drive hope Sydney")
+  // a link reads in its type's own words, from its schema. A type with none — a draft's, or one the schema does not
+  // declare — shows itself, as an arrow. It is never a guess at words that may read badly ("Drive hope Sydney")
   const whole = reading.whole[graph] ?? reading.world[graph];
   const own = whole
     ? gs.readings(whole, whole.labelled('ElementType').length ? undefined : gs.schemaFor(reading.whole, graph)[1])

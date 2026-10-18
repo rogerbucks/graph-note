@@ -1,5 +1,5 @@
-// The drawing in a note (spec §3), as the built plugin puts it on the page: loaded in Node with a stand-in for Obsidian
-// and a small fake DOM. What it looks like and how it feels is checked on the devices (device-checklist.md); this checks
+// The drawing in a note (spec §3), as the built plugin puts it on the page. It is loaded in Node with a stand-in for
+// Obsidian and a small fake DOM. What it looks like and how it feels is checked on the devices (device-checklist.md); this checks
 // what is there and what each control does. Here: what is drawn, and what is shown when it cannot be.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';

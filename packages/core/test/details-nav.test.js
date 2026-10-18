@@ -1,8 +1,11 @@
-// Finding your way from a thing's details (editor spec §25, slice 3): its links grouped by relationship type and
-// direction, read in words with a count (details_links_listed); the trail of things chosen from them, with back and
-// forward (details_trail); the move to a chosen thing, eased, never too small to read (details_choose_moves,
-// details_move_motion); the arrow at the edge of the view that points to a selection out of sight (selection_pointer);
-// and how tall the sheet may be (sheet_min_max). Host-free: the plugin draws what these say.
+// Finding your way from a thing's details (editor spec §25, slice 3):
+// - its links grouped by relationship type and direction, read in words with a count (details_links_listed);
+// - the trail of things chosen from them, with back and forward (details_trail);
+// - the move to a chosen thing, eased, never too small to read (details_choose_moves, details_move_motion);
+// - the arrow at the edge of the view that points to a selection out of sight (selection_pointer);
+// - how tall the sheet may be (sheet_min_max).
+//
+// Host-free: the plugin draws what these say.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

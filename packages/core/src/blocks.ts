@@ -1,5 +1,6 @@
-// The graph blocks of a note (spec §3): where each gql fenced block is, and what its graph line says — the graph it draws,
-// whether it holds data or a schema, a shared schema or one that names a shared schema, or a graph line that cannot be read.
+// The graph blocks of a note (spec §3): where each gql fenced block is, and what its graph line says. That is the graph
+// it draws and whether it holds data or a schema. It may hold a shared schema or one that names a shared schema. Or it
+// may have a graph line that cannot be read.
 import gs from '@thoughtknot/graph-spec';
 import type { Problem } from './note-reading.ts';
 import { N, S, SPACE, trim } from './whitespace.ts';
@@ -16,7 +17,7 @@ const GRAPH_OF = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)`),
   FROM_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*FROM(?:${S}|·|$)`);
 
 /**
- * Whether a block draws its graph from somewhere else (editor spec §20, sources.ts): its graph line says FROM and a
+ * Whether a block draws its graph from somewhere else (editor spec §20, sources.ts). Its graph line says FROM and a
  * .gql file or a note, `// graph: trip · FROM Graphs/trip.gql`. Such a block holds no data of its own (`dataKind`).
  */
 export const isSourceBlock = (text: string): boolean => FROM_WORD.test(firstLine(text));
@@ -24,8 +25,9 @@ export const isSourceBlock = (text: string): boolean => FROM_WORD.test(firstLine
 const STEP_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*QUERY${S}+step\\b`);
 
 /**
- * Whether a block is meant as a graph step (editor spec §20, steps.ts), by its graph line alone, `// graph: team · QUERY
- * step colleagues`: cheap however long the block is, so the editing view can choose its card without reading it.
+ * Whether a block is meant as a graph step (editor spec §20, steps.ts), by its graph line alone: `// graph: team ·
+ * QUERY step colleagues`. It is cheap however long the block is, so the editing view can choose its card without
+ * reading it.
  */
 export const isStepBlock = (text: string): boolean => STEP_WORD.test(firstLine(text));
 
@@ -52,9 +54,10 @@ export function firstLine(text: string): string {
 const isGraphLine = (text: string) => GRAPH_LINE.test(firstLine(text));
 
 /**
- * The kind of a block, or null when it holds no data to draw: a query (a view or a step among them), an excerpt, a change
- * set, a style block (read only by style.ts), a block drawn FROM elsewhere (read only by sources.ts), or no graph line. A
- * graph line that says STYLE but names no graph to style is a problem, never data.
+ * The kind of a block, or null when it holds no data to draw. A query holds none (a view or a step among them), nor
+ * does an excerpt or a change set. Nor does a style block (read only by style.ts) or a block drawn FROM elsewhere (read
+ * only by sources.ts). Nor does a block with no graph line. A graph line that says STYLE but names no graph to style is
+ * a problem, never data.
  */
 export function dataKind(text: string): 'data' | 'schema' | null | Problem {
   if (styleOf(text) !== null || isSourceBlock(text)) return null;
@@ -93,7 +96,10 @@ export const isSharedSchema = (text: string): boolean => SHARED.test(firstLine(t
 /** Whether a block's graph is typed by a shared schema it names: its graph line says "schema" and the schema's name. */
 export const namesSharedSchema = (text: string): boolean => NAMES_SHARED.test(firstLine(text));
 
-/** The graph a block draws: its name when it is a data block with a graph line, else null — a query, schema, excerpt or plain code. */
+/**
+ * The graph a block draws: its name when it is a data block with a graph line, else null. Null is for a query, schema,
+ * excerpt or plain code.
+ */
 export function graphOfBlock(text: string): string | null {
   return dataKind(text) === 'data' ? graphOf(text) : null;
 }

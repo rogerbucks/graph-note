@@ -1,13 +1,15 @@
-// The comma added for you (editor spec §4, comma_added_for_you): once the next pattern starts on a new line and the line
-// before is otherwise valid, the comma that parts them is added at the end of that line. The reader would read the line
-// break as the comma anyway (format spec §3); adding it keeps the text plain GQL for every other reader.
+// The comma added for you (editor spec §4, comma_added_for_you). Say the next pattern starts on a new line, and the
+// line before is otherwise valid. Then the comma that parts them is added at the end of that line. The reader would
+// read the line break as the comma anyway (format spec §3); adding it keeps the text plain GQL for every other reader.
 import gs from '@thoughtknot/graph-spec';
 import { gqlSpans, graphOfBlock } from './blocks.ts';
 
 /**
- * Where to add the comma after a ( was typed just before `caret` in a block's text — the index in the text, just after
- * the pattern on the line before — or null when none is wanted: the ( is not the first thing on its line, the line before
- * is not a complete pattern, already ends with a comma, or the block up to it is not valid.
+ * Where to add the comma after a ( was typed just before `caret` in a block's text. That is the index in the text, just
+ * after the pattern on the line before. Null when none is wanted:
+ * - the ( is not the first thing on its line;
+ * - the line before is not a complete pattern, or already ends with a comma;
+ * - or the block up to it is not valid.
  */
 export function commaFor(text: string, caret: number): number | null {
   if (text[caret - 1] !== '(') return null;
@@ -70,10 +72,10 @@ function typesIn(text: string): Set<string> {
 }
 
 /**
- * The colon added for you (spec §4, colon_added_for_you): after a ] typed just before `caret` closes a link type written
- * without its colon, the change that writes the colon and the type as the graph spells it — when exactly one type the
- * graph knows so far matches, ignoring case. `earlier` holds the graph's blocks before this one. Null otherwise: a first
- * use, case-only twins, a query, or a ] inside a string or a comment.
+ * The colon added for you (spec §4, colon_added_for_you). A ] typed just before `caret` may close a link type written
+ * without its colon. Then this is the change that writes the colon and the type as the graph spells it. That holds when
+ * exactly one type the graph knows so far matches, ignoring case. `earlier` holds the graph's blocks before this one.
+ * Null otherwise: a first use, case-only twins, a query, or a ] inside a string or a comment.
  */
 export function colonFor(text: string, caret: number, earlier: string[] = []): TextChange | null {
   if (text[caret - 1] !== ']') return null;

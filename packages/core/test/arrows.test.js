@@ -1,8 +1,8 @@
-// Arrowheads hidden or shown (editor spec §15): the style graph may hide a link's arrowhead for the whole graph, for one
-// view, or for one relationship type, and show it again; nothing else ever hides one. The choice is written in the style
-// graph, never in the data, and the direction a link reads in is never lost: its reading when tapped and the text version
-// of the graph say it as before. Spans arrows.ts (the choice and the source), style-checks.ts (the words), style-edit.ts
-// (writing it), render.ts (the source drawn) and help.ts (the text version).
+// Arrowheads hidden or shown (editor spec §15). The style graph may hide a link's arrowhead for the whole graph, for
+// one view, or for one relationship type, and show it again. Nothing else ever hides one. The choice is written in the
+// style graph, never in the data. The direction a link reads in is never lost: its reading when tapped and the text
+// version of the graph say it as before. The tests span arrows.ts (the choice and the source) and style-checks.ts (the
+// words). They span style-edit.ts (writing it), render.ts (the source drawn) and help.ts (the text version) too.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks, gqlSpans, styleOf } from '../src/blocks.ts';
@@ -16,8 +16,8 @@ import { readStyle } from '../src/style.ts';
 import { styleEdit } from '../src/style-edit.ts';
 import { styledDrawing } from '../src/style-source.ts';
 
-// two kinds only receive links, Source and Tag, so the one that is not the main destination is laid out on the far side
-// with its link drawn backwards (dir=back): its arrowhead is hidden and shown like any other
+// two kinds only receive links, Source and Tag. So the one that is not the main destination is laid out on the far side
+// with its link drawn backwards (dir=back). Its arrowhead is hidden and shown like any other
 const TRIP = `// graph: trip · SOURCE
 (home:Place {name: 'Home'}),
 (park:Place {name: 'The park'}),

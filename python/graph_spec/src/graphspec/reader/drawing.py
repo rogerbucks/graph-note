@@ -19,20 +19,21 @@ GRAPH_LINE = re.compile(rf"{S}*//{S}*graph:")
 # blocks.ts reads it — `// graph: trip_style · STYLE trip`
 STYLES = re.compile(rf"{S}*//{S}*graph:[^\n]*·{S}*STYLE{S}+([^{SPACE}·]+)")
 STYLE_WORD = re.compile(rf"{S}*//{S}*graph:[^\n]*·{S}*STYLE(?:{S}|·|\Z)")
-# a block drawn from elsewhere (editor spec §20): its graph line says FROM and a .gql file or a
-# note, as the core's blocks.ts reads it (isSourceBlock) — `// graph: trip · FROM Graphs/trip.gql`
+# a block drawn from elsewhere (editor spec §20). Its graph line says FROM and a .gql file or a
+# note, as the core's blocks.ts reads it (isSourceBlock): `// graph: trip · FROM Graphs/trip.gql`
 FROM_WORD = re.compile(rf"{S}*//{S}*graph:[^\n]*·{S}*FROM(?:{S}|·|\Z)")
 
 
 # ── Drawing in part ──────────────────────────────────────────────────────────────────────────────
-# A block that cannot be read is drawn in part, by every reader (decided with Roger, 8 Oct 2026):
-# what can be read of it is drawn, exactly as packages/core/src/drawing.ts reads it, and the rest
+# A block that cannot be read is drawn in part, by every reader (decided with Roger, 8 Oct 2026).
+# What can be read of it is drawn, exactly as packages/core/src/drawing.ts reads it, and the rest
 # is listed. Drawing only: Store.apply, and so checking and loading, stay all-or-nothing.
-# A thing written without a name is drawn under its suggested name (10 Oct 2026), read in from a
-# copy of its block; the note is never changed.
-# The one exception, the plugin's alone (10 Oct 2026): a note whose graph blocks are too large
-# to read on a phone without freezing it (READ_LIMITS in packages/core/src/layout-limits.ts:
-# 512 kB or 10,000 lines) is not read by the plugin at all, so it draws nothing to compare.
+# A thing written without a name is drawn under its suggested name (10 Oct 2026). It is read in
+# from a copy of its block. The note is never changed.
+# The one exception is the plugin's alone (10 Oct 2026). A note whose graph blocks are too large
+# to read on a phone without freezing it is not read by the plugin at all. So it draws nothing to
+# compare. The limits are READ_LIMITS in packages/core/src/layout-limits.ts: 512 kB or 10,000
+# lines.
 
 
 def _first_line(text):
@@ -147,11 +148,13 @@ def _dangling_comma(text):
 
 
 # How much may be read again, in UTF-16 units, while a block's parts that cannot be read are left
-# out one by one: each read again of the failing block, and each trial to tell which of several
-# parts on a line is at fault, is charged its length. Past it, the rest of the block from the
-# failing line is left out at once. The plugin's core counts and cuts exactly so
-# (packages/core/src/partial-read.ts, REREAD_BUDGET), so it never freezes the page, and both
-# readers draw the same (drawn_in_part, layout_byte_identical, 10 Oct 2026).
+# out one by one. Each of these is charged its length:
+# - each read again of the failing block;
+# - each trial to tell which of several parts on a line is at fault.
+# Past it, the rest of the block from the failing line is left out at once. The plugin's core
+# counts and cuts exactly so (packages/core/src/partial-read.ts, REREAD_BUDGET). So it never
+# freezes the page, and both readers draw the same (drawn_in_part, layout_byte_identical,
+# 10 Oct 2026).
 REREAD_BUDGET = 4_000_000
 
 _CUT = " — too much of this block could not be read, so it is left out from this line on"
@@ -193,8 +196,8 @@ def read_for_drawing(
             if dangling:
                 clean[i] = dangling[0]
                 problems.append({**dangling[1], "block": i, "graph": _graph_of(text)})
-    # a thing given text but no name: a warning whose fix adds the name suggested; the name is
-    # only read in, in a copy, so that the thing is drawn — the note itself is never rewritten
+    # a thing given text but no name: a warning whose fix adds the name suggested. The name is
+    # only read in, in a copy, so that the thing is drawn. The note itself is never rewritten
     named = suggested_names(
         [("" if i in skip else t, _graph_of(blocks[i])) for i, t in enumerate(clean)]
     )

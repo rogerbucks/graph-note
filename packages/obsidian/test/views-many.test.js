@@ -1,7 +1,9 @@
-// Many views of one graph (editor spec §7, many_views_one_data, view_of_another_note): several views of the same graph
-// are shown in one note or in several, each drawn from the one data set where it is written and none copying it; a view
-// in one note draws a graph written in another, read there, saying which note the data comes from and opening it on a
-// tap; and when the data changes where it is written, every view of it in every note draws the change.
+// Many views of one graph (editor spec §7, many_views_one_data, view_of_another_note).
+// - Several views of the same graph are shown in one note or in several. Each is drawn from the one data set where it
+//   is written, and none copies it.
+// - A view in one note draws a graph written in another, read there. It says which note the data comes from, and opens
+//   it on a tap.
+// - When the data changes where it is written, every view of it in every note draws the change.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

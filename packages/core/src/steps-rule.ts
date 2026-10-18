@@ -1,8 +1,9 @@
-// A graph step's rule (editor spec §20, run_declared_only): a GQL query over graph data, never code or a named action, so
-// the editor only ever works out information. The one shape read is a declared rule: MATCH one pattern — things, each
-// with an optional name, kind and properties, joined by up to six links of a type, either way or both — then INSERT
-// the links it implies between things the pattern named. Anything else is refused, saying why and showing the form: a
-// procedure or function called, a write (SET, DELETE…), a RETURN, or anything that reads as code.
+// A graph step's rule (editor spec §20, run_declared_only). It is a GQL query over graph data, never code or a named
+// action. So the editor only ever works out information. The one shape read is a declared rule. It is MATCH one
+// pattern, then INSERT the links it implies between things the pattern named. The pattern is things joined by up to six
+// links of a type, either way or both. Each thing has an optional name, kind and properties. Anything else is refused,
+// saying why and showing the form. That means a procedure or function called, a write (SET, DELETE…), a RETURN, or
+// anything that reads as code.
 import { N, S } from './whitespace.ts';
 
 /** One thing in a step's pattern: the name it is given there, its kind, and the properties it must have. */
@@ -59,8 +60,8 @@ const TOKEN = new RegExp(
 );
 
 /**
- * The rule's tokens up to and including the first mark that cannot be read, which is kept, so nothing is passed over
- * in silence, and nothing after it is read (spec §9): however a rule is written, it is read once, never again from
+ * The rule's tokens up to and including the first mark that cannot be read. That mark is kept, so nothing is passed
+ * over in silence. Nothing after it is read (spec §9). However a rule is written, it is read once, never again from
  * each open quote.
  */
 export function ruleTokens(text: string): Tok[] {
@@ -111,7 +112,7 @@ function valueOf(t: Tok | undefined): string | number | boolean | undefined {
 }
 
 /**
- * A step's rule read from its text (comment lines already taken out), or why it is not one a step may be: the detail,
+ * A step's rule read from its text (comment lines already taken out). Or why it is not one a step may be: the detail,
  * then the form. Only MATCH one pattern, then INSERT links between the things it names, is read.
  */
 export function readRule(text: string): StepRule | { fault: string } {

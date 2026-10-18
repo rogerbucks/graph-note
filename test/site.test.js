@@ -1,7 +1,8 @@
-// The project's home page (spec §41, landing_page): made from site/index.html and its catalogue of words, every word used
-// and none missing; the search and AI basics (title, description, canonical address, structured data, sitemap, robots
-// and llms.txt); WCAG 2.2 AA in the light and the dark scheme, by the same check as every other page; and no side said
-// by left or right, so it mirrors for a right-to-left language.
+// The project's home page (spec §41, landing_page):
+// - Made from site/index.html and its catalogue of words, every word used and none missing.
+// - The search and AI basics: title, description, canonical address, structured data, sitemap, robots and llms.txt.
+// - WCAG 2.2 AA in the light and the dark scheme, by the same check as every other page.
+// - No side said by left or right, so it mirrors for a right-to-left language.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

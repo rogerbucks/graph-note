@@ -1,9 +1,9 @@
-// Diagram types (editor spec §15): the editor offers network, tree, flow, radial, lanes, timeline and table; each only
-// when the data fits it, saying why when it does not; it suggests the type that fits best and never switches without
-// being asked; when an edit makes the data stop fitting the chosen type it says so, offers the nearest type that fits
-// and draws the graph as a network meanwhile, never wrongly; and a graph of more than 50 things is offered the table or
-// a view as the way in. Spans types.ts (what fits, the suggestion, the choice), types-table.ts (the table and the way
-// in), graph-layout.js (each type's source) and render.ts (the directions laid out).
+// Diagram types (editor spec §15). The editor offers network, tree, flow, radial, lanes, timeline and table. It offers
+// each only when the data fits it, saying why when it does not. It suggests the type that fits best and never switches
+// without being asked. An edit may make the data stop fitting the chosen type. Then it says so and offers the nearest
+// type that fits. It draws the graph as a network meanwhile, never wrongly. A graph of more than 50 things is offered
+// the table or a view as the way in. Spans types.ts (what fits, the suggestion, the choice) and types-table.ts (the
+// table and the way in). Also graph-layout.js (each type's source) and render.ts (the directions laid out).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -335,8 +335,9 @@ describe('a timeline', () => {
 
   // proves: timeline_fits
   test('a date and an instant are both dates: things of one day share its rank, whatever the hour, days in order', () => {
-    // a timeline's rank is a day (the first ten characters of the date as the reader keeps it, an instant's in UTC), so
-    // an instant shares the rank of a date on its day, the things in the order drawn; each thing's first date is its own
+    // a timeline's rank is a day (the first ten characters of the date as the reader keeps it, an instant's in UTC). So
+    // an instant shares the rank of a date on its day, the things in the order drawn. Each thing's first date is its
+    // own
     const mixed = `// graph: day
 (a:Event {name: 'Late', at: DATETIME '2026-09-01T18:00:00Z'}),
 (b:Event {name: 'Early', on: DATE '2026-09-01'}),

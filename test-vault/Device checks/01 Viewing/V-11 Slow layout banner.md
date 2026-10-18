@@ -45,6 +45,6 @@ The graph that must still draw after it.
 
 **Checklist line:**
 
-> **V-11** A graph whose layout runs past five seconds shows its text with the "took too long" banner and a clock icon, and the next graph still draws. The console says nothing about the main thread: the layout ran in a worker (§9). The text has no Export button either.
+> **V-11** A graph whose layout runs past five seconds shows its text with the "took too long" banner and a clock icon. The next graph still draws. The console says nothing about the main thread: the layout ran in a worker (§9). The text has no Export button either.
 
 **Back to the checklist:** [V-11 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-11 in its list.

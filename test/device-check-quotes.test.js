@@ -1,10 +1,10 @@
-// The words the device check notes quote from Obsidian's screen: a pane's read-back of a line, an estimated link's label
-// and its tap text, a box's details, an export's footer and file name. A note that quotes one says so in an
-// `<!-- expect: … -->` line, and this computes the text with the real function (readBack, the layout source, the
-// estimate's explanation, details(), the export footer and plan) from the note's own graph blocks, and holds the note to
-// it exactly, so a note's prose cannot drift from what the code writes. It also holds the huge graph V-10 carries and the
-// dense one V-11's script makes to the layout limits, and the filler that puts a card below the fold (editor spec §3,
-// tried first in a test vault).
+// The words the device check notes quote from Obsidian's screen. These are a pane's read-back of a line, an estimated
+// link's label and its tap text, and a box's details. They are also an export's footer and file name. A note that
+// quotes one says so in an `<!-- expect: … -->` line. This computes the text from the note's own graph blocks, with the
+// real function. That is readBack, the layout source, the estimate's explanation, details(), or the export footer and
+// plan. It holds the note to it exactly, so a note's prose cannot drift from what the code writes. It also holds two
+// graphs to the layout limits: the huge graph V-10 carries, and the dense one V-11's script makes. It holds the filler
+// that puts a card below the fold (editor spec §3, tried first in a test vault).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks, graphOfBlock } from '../packages/core/src/blocks.ts';

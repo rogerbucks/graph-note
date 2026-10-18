@@ -1,6 +1,7 @@
-// A card's details as a person reads them, for the tests that check what they show: each property as "name: value",
-// from the table of names and values (details_properties_table), and each group of links as it reads in words, from its
-// heading and its rows of things (details_links_listed, details_ins_outs).
+// A card's details as a person reads them, for the tests that check what they show.
+// - Each property as "name: value", from the table of names and values (details_properties_table).
+// - Each group of links as it reads in words, from its heading and its rows of things (details_links_listed,
+//   details_ins_outs).
 
 /** The properties `el` shows, each "name: value", in order. */
 export const propertiesShown = (el) => {

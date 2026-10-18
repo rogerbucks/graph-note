@@ -1,7 +1,7 @@
-// A card in full screen (spec §3): the same card drawn again in an overlay over the whole window, as a dialog, closed by its
-// own bar or Escape. The overlay belongs to the card it was opened from, and goes with it. As a dialog does (spec §41,
-// a11y_keyboard_auto), it takes the keyboard when it opens, keeps Tab and Shift+Tab in it, leaves on Escape from any
-// control in it, and gives the keyboard back to what had it.
+// A card in full screen (spec §3): the same card drawn again in an overlay over the whole window, as a dialog. It is
+// closed by its own bar or Escape. The overlay belongs to the card it was opened from, and goes with it. It acts as a
+// dialog does (spec §41, a11y_keyboard_auto). It takes the keyboard when it opens and keeps Tab and Shift+Tab in it. It
+// leaves on Escape from any control in it, and gives the keyboard back to what had it.
 import { word } from '@thoughtknot/core';
 import { readInHostDirection } from '../host';
 import type { Child, Lifecycle } from '../lifecycle';

@@ -1,8 +1,8 @@
 // The drawing's colours and size, as graph_svg.py writes them (spec §3, "one style"; §11, "contrast"). Graphviz is given
-// placeholder colours; here they become the host's colours from the one table (palette.ts), Obsidian's theme colours by
-// default, written as inline styles, each hue blended with the theme's text colour so labels reach 4.5:1 and lines 3:1
-// in both themes (the reasons are in the style file). A port of graph_svg._themed and of the direction choice in
-// graph_svg.render, proved against them by the theme tests.
+// placeholder colours. Here they become the host's colours from the one table (palette.ts). Those are Obsidian's theme
+// colours by default, written as inline styles. Each hue is blended with the theme's text colour. So labels reach 4.5:1
+// and lines 3:1 in both themes (the reasons are in the style file). A port of graph_svg._themed and of the direction
+// choice in graph_svg.render, proved against them by the theme tests.
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { STYLE } from './layout.ts';
 import { PALETTES } from './palette.ts';
@@ -26,10 +26,11 @@ export function fixed(x: number, digits: number): string {
 const hex2 = (i: number) => i.toString(16).padStart(2, '0');
 
 /**
- * The theme colour a named hue is drawn in, for a box's fill, a line or border, or a label: the locked style's own blends
- * (fill_opacity, line_mix, label_mix), which give labels 4.5:1 and lines 3:1 in both themes. Every hue a kind, a reading
- * or a look in the style graph (style.ts) is drawn in goes through this one function, so styling keeps that contrast.
- * In the host's colours from the one table (palette.ts), Obsidian's theme unless another is given.
+ * The theme colour a named hue is drawn in, for a box's fill, a line or border, or a label. It uses the locked style's
+ * own blends (fill_opacity, line_mix, label_mix). They give labels 4.5:1 and lines 3:1 in both themes. A kind, a
+ * reading or a look in the style graph (style.ts) is drawn in a hue. Every such hue goes through this one function, so
+ * styling keeps that contrast. In the host's colours from the one table (palette.ts), Obsidian's theme unless another
+ * is given.
  */
 export function hueColour(hue: string, part: 'fill' | 'line' | 'label', p: Palette = PALETTES.obsidian): string {
   if (part === 'fill') return p.fill(hue);
@@ -58,8 +59,8 @@ function colours(kinds: string[], readings: string[], p: Palette): Map<string, s
 }
 
 /**
- * The SVG Graphviz drew, with the host's colours (Obsidian's theme by default), the kind captions tracked out, and sized
- * to fit a note — as graph_svg._themed. A palette with a page paints it behind the drawing.
+ * The SVG Graphviz drew, with the host's colours (Obsidian's theme by default) and the kind captions tracked out. It is
+ * sized to fit a note, as graph_svg._themed does. A palette with a page paints it behind the drawing.
  */
 export function themed(svg: string, kinds: string[], readings: string[], palette: Palette = PALETTES.obsidian): string {
   const colour = colours(kinds, readings, palette);
@@ -116,8 +117,8 @@ export function sizeOf(svg: string): { width: number; height: number } {
 }
 
 /**
- * Of the drawings laid out in each direction, the one that shrinks least to fit the page, as graph_svg.render chooses:
- * one that would stand taller than the style allows loses a quarter, and a later one must be clearly better to win.
+ * Of the drawings laid out in each direction, the one that shrinks least to fit the page, as graph_svg.render chooses.
+ * One that would stand taller than the style allows loses a quarter. A later one must be clearly better to win.
  */
 export function choose<T extends Laid>(laid: T[]): T {
   let best: [number, T] | null = null;
@@ -132,9 +133,10 @@ export function choose<T extends Laid>(laid: T[]): T {
 }
 
 /**
- * The drawing with each blend replaced by its plain theme hue, for where CSS color-mix() is not supported — iOS before
- * 16.2, where Obsidian still runs (it needs iOS 15). There a blend would be dropped and the shape drawn black; the plain hue
- * keeps every colour's meaning, at a little less contrast. The host uses it only where color-mix is unsupported.
+ * The drawing with each blend replaced by its plain theme hue, for where CSS color-mix() is not supported. That is iOS
+ * before 16.2, where Obsidian still runs (it needs iOS 15). There a blend would be dropped and the shape drawn black;
+ * the plain hue keeps every colour's meaning, at a little less contrast. The host uses it only where color-mix is
+ * unsupported.
  */
 export function withoutColorMix(svg: string): string {
   return svg.replace(/color-mix\(in srgb, (var\(--color-\w+\)) \d+%, var\(--text-normal\)\)/g, '$1');

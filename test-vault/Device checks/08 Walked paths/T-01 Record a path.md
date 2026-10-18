@@ -29,6 +29,9 @@
 
 **Checklist line:**
 
-> **T-01** Edit here, press Record a path, tap three boxes: each shows its number at its top left as it is tapped (a box tapped twice shows both). Undo step takes the last back. Give a title and Save path: a Path with STEP 1 to 3 is written; the card redraws. A path through a box drawn under a suggested name (I-19) is refused with "accept its name first", and nothing is written.
+> **T-01** Edit here, press Record a path, tap three boxes. Each shows its number at its top left as it is tapped (a box tapped twice shows both). Undo step takes the last back.
+>
+> - Give a title and Save path: a Path with STEP 1 to 3 is written; the card redraws.
+> - A path through a box drawn under a suggested name (I-19) is refused with "accept its name first". Nothing is written.
 
 **Back to the checklist:** [T-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for T-01 in its list.

@@ -1,11 +1,14 @@
 // Pointer targets and reflow, in a real browser (editor spec §41, a11y_targets_reflow_auto; WCAG 2.2 SC 2.5.8 and
-// 1.4.10). Every view of every host is opened in a headless Chrome, as wide as a desktop and 320 CSS pixels wide: each
-// control a pointer can take must be at least 24 by 24, the page must never scroll sideways at 320, and every control
-// seen wide must still be there narrow, on the page or in a box of its own that scrolls to it. The drawing's own boxes
-// are two-dimensional content and a link inside a sentence is inline, so both are left out of the size rule (WCAG's own
-// exceptions). The judging is tried first on measures made up here, then on planted faults in a real page, so a pass
-// means it looked. The Obsidian host is its harness (packages/obsidian/harness), its views the user guide's own states
-// (scripts/wiki-screens.mjs); the Claude Code host is its page served by the real server over a vault on disk.
+// 1.4.10). Every view of every host is opened in a headless Chrome, as wide as a desktop and 320 CSS pixels wide. Then:
+// - each control a pointer can take must be at least 24 by 24.
+// - the page must never scroll sideways at 320.
+// - every control seen wide must still be there narrow. It may be on the page, or in a box of its own that scrolls
+//   to it.
+// The drawing's own boxes are two-dimensional content, and a link inside a sentence is inline. So both are left out of
+// the size rule (WCAG's own exceptions). The judging is tried first on measures made up here. Then it is tried on
+// planted faults in a real page, so a pass means it looked. The Obsidian host is its harness
+// (packages/obsidian/harness). Its views are the user guide's own states (scripts/wiki-screens.mjs). The Claude Code
+// host is its page served by the real server over a vault on disk.
 //
 // Chrome is the one THOUGHTKNOT_CHROME names, or the first of the usual names on the PATH. Where none is found the
 // browser cases skip with one line, except in CI, where a missing Chrome fails.

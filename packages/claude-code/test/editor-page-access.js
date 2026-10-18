@@ -1,9 +1,10 @@
-// The page's accessibility cases (C8: cc_keyboard, cc_reduced_motion, cc_text_version), registered by editor-page.test.js,
-// which is test_cc_page's file: kept here so that file stays within the repository's size baseline. WCAG 2.2 AA (spec §11)
-// is the standard. The page has no pointer-only action: what it offers is the drawing and its words, the proposal card's
-// buttons, the Export bar and form, menus, and the note's prose; each is reached, named and left by the keyboard. The
-// drawing is an image with its words beside it, so choosing a thing and editing it by pointer are the plugin's alone
-// (not on the page); what the page writes is a decision on a proposal, a real button. Test code only.
+// The page's accessibility cases (C8: cc_keyboard, cc_reduced_motion, cc_text_version). They are registered by
+// editor-page.test.js, which is test_cc_page's file. They are kept here so that file stays within the repository's size
+// baseline. WCAG 2.2 AA (spec §11) is the standard. The page has no pointer-only action. What it offers:
+// - the drawing and its words, the proposal card's buttons, the Export bar and form, menus, and the note's prose.
+// Each is reached, named and left by the keyboard. The drawing is an image with its words beside it. So choosing a
+// thing and editing it by pointer are the plugin's alone (not on the page). What the page writes is a decision on a
+// proposal, a real button. Test code only.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -107,8 +108,8 @@ export function accessCases({ at, ROOT, LAYER }) {
       const selectors = ring.flatMap(([s]) => s.split(',').map((one) => one.trim()));
       for (const el of ['a', 'button', 'select', 'input', 'textarea', '[tabindex]'])
         assert.ok(selectors.includes(`${el}:focus-visible`), el);
-      // the page's own sheet; the shared sheet's two `outline: none` are the plugin's drawing nodes and its overlay editor,
-      // neither of which is on this page (it shows the drawing as an image)
+      // the page's own sheet. The shared sheet's two `outline: none` are the plugin's drawing nodes and its overlay
+      // editor. Neither of them is on this page (it shows the drawing as an image)
       assert.doesNotMatch(pageSources()['page.css'], /outline:\s*(?:none|0)\b/, 'a focus ring is never taken away');
       assert.match(css, /\.gn-skip/);
     });
@@ -390,8 +391,8 @@ export function accessCases({ at, ROOT, LAYER }) {
     });
 
     test('the page redraws the words whenever the note changes: a decision or a change on disk', () => {
-      // C9: the note is the editor's (page-note.ts), which tells the page each time it has a new one, and the page draws
-      // everything but the editor, the words included, again then: a change on disk, a decision, a write of its own
+      // C9: the note is the editor's (page-note.ts). It tells the page each time it has a new one. The page then draws
+      // everything but the editor again, the words included: a change on disk, a decision, a write of its own
       const main = pageSources()['page-main.ts'];
       const draw = main.match(/const draw = \(\) =>([\s\S]*?)\n {6}\}\);/)[1];
       assert.match(draw, /addTextVersion\(\)/, 'drawing the page draws the words');

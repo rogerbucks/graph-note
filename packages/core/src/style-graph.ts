@@ -1,8 +1,8 @@
-// The style graph's shape (editor spec §2, §6, §7, §14, §15): what a style block holds once read — nudges, the properties
-// shown inline, looks for views and paths, whether a view fades or hides what is outside it, how a view was shown,
-// where arrowheads are hidden, the diagram type chosen, how links move and the pictures on boxes (§18) — and the words
-// each may use. A style graph is written in the same notation as the data, in
-// its own block, and never in the data.
+// The style graph's shape (editor spec §2, §6, §7, §14, §15). It is what a style block holds once read, and the words
+// each part may use. It holds nudges, the properties shown inline, and looks for views and paths. It holds whether a
+// view fades or hides what is outside it, and how a view was shown. It holds where arrowheads are hidden, the diagram
+// type chosen, how links move and the pictures on boxes (§18). A style graph is written in the same notation as the
+// data, in its own block, and never in the data.
 import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
 import type { Problem } from './note-reading.ts';
@@ -29,9 +29,10 @@ export const OUTSIDE = ['fade', 'hide'] as const;
 export type Outside = (typeof OUTSIDE)[number];
 
 /**
- * The colours styling may use (§7, styling_keeps_locked_rules): the locked style's own hues, by name — its kinds' and its
- * readings', and red and green, which it keeps for meaning (for and against). Never a raw colour value: a hue is drawn
- * through the locked blends (theme.ts, `hueColour`), so it meets the locked contrast in both themes.
+ * The colours styling may use (§7, styling_keeps_locked_rules). These are the locked style's own hues, by name: its
+ * kinds' and its readings'. Red and green are there too, which it keeps for meaning (for and against). Never a raw
+ * colour value: a hue is drawn through the locked blends (theme.ts, `hueColour`), so it meets the locked contrast in
+ * both themes.
  */
 export const STYLE_HUES: readonly string[] = [...new Set([...STYLE.kind_hues, ...STYLE.edge_hues, 'red', 'green'])];
 
@@ -51,16 +52,16 @@ export const DIAGRAM_TYPES = ['network', 'tree', 'flow', 'radial', 'lanes', 'tim
 export type DiagramType = (typeof DIAGRAM_TYPES)[number];
 
 /**
- * How a link moves to show flow (§7, links_show_flow): dashes running along its arrow, a dot travelling along it, or
- * still, which takes back a movement chosen for a wider place. Links are still unless a Flow moves them (link-flow.ts).
+ * How a link moves to show flow (§7, links_show_flow). Dashes run along its arrow, a dot travels along it, or it is
+ * still. Still takes back a movement chosen for a wider place. Links are still unless a Flow moves them (link-flow.ts).
  */
 export const FLOW_MOTIONS = ['dashes', 'dot', 'still'] as const;
 /** One of the ways a link may move, or still. */
 export type FlowMotion = (typeof FLOW_MOTIONS)[number];
 
 /**
- * How links are drawn (§25, untangle_routing): curved, as Graphviz draws them unless told otherwise, straight, or with
- * right angles, so a dense graph can trade curves for fewer crossings.
+ * How links are drawn (§25, untangle_routing). Curved, as Graphviz draws them unless told otherwise; straight; or with
+ * right angles. So a dense graph can trade curves for fewer crossings.
  */
 export const ROUTINGS = ['curved', 'straight', 'right-angled'] as const;
 /** One of the routings. */
@@ -127,9 +128,9 @@ export interface Nudge {
 }
 
 /**
- * A property switched on or off for showing inline (§14, properties_switch): for every thing of a kind, for one thing, or
- * for every link of a relationship type; in the whole graph, or in one view (properties_remembered). Drawn below the text
- * of its box or link (inline-properties.ts).
+ * A property switched on or off for showing inline (§14, properties_switch). It covers every thing of a kind, one
+ * thing, or every link of a relationship type. It holds in the whole graph, or in one view (properties_remembered).
+ * Drawn below the text of its box or link (inline-properties.ts).
  */
 export interface Show {
   property: string;
@@ -144,8 +145,8 @@ export interface Show {
 }
 
 /**
- * Whether links are drawn with their arrowheads (§15, arrows_switchable): for every link, or for the links of one
- * relationship type; in the whole graph, or in one view. Shown unless hidden (arrows_shown_unless_hidden; arrows.ts).
+ * Whether links are drawn with their arrowheads (§15, arrows_switchable). It covers every link, or the links of one
+ * relationship type, in the whole graph or in one view. Shown unless hidden (arrows_shown_unless_hidden; arrows.ts).
  */
 export interface Arrows {
   arrowheads: ArrowheadsChoice;
@@ -170,8 +171,8 @@ export interface Diagram {
 }
 
 /**
- * How links are drawn (§25): their routing (untangle_routing), and whether the links running between the same two
- * groups are merged into shared trunks (untangle_merge); for the whole graph, or for one view.
+ * How links are drawn (§25), for the whole graph or for one view. It holds their routing (untangle_routing). It holds
+ * whether the links running between the same two groups are merged into shared trunks (untangle_merge).
  */
 export interface Links {
   routing?: Routing;
@@ -182,9 +183,10 @@ export interface Links {
 }
 
 /**
- * How links move (§7, flow_in_style_graph): for every link, or the links of one relationship type; in the whole graph,
- * or in one view. A moving link always says what its movement means (`means`, motion_not_alone), in its legend and to a
- * screen reader, and carries an icon on its label. Still unless a Flow moves it (link-flow.ts).
+ * How links move (§7, flow_in_style_graph). It covers every link, or the links of one relationship type. It holds in
+ * the whole graph, or in one view. A moving link always says what its movement means (`means`, motion_not_alone). It
+ * says so in its legend and to a screen reader, and carries an icon on its label. Still unless a Flow moves it
+ * (link-flow.ts).
  */
 export interface Flow {
   motion: FlowMotion;
@@ -198,8 +200,8 @@ export interface Flow {
 }
 
 /**
- * A thing's image drawn on its box (§18, animated_image_shown): the property that holds it, for every thing of a kind or
- * one thing; in the whole graph, or in one view. The most particular decides (picture.ts).
+ * A thing's image drawn on its box (§18, animated_image_shown). It names the property that holds it, for every thing
+ * of a kind or one thing. It holds in the whole graph, or in one view. The most particular decides (picture.ts).
  */
 export interface Picture {
   property: string;
@@ -246,9 +248,9 @@ export interface Frame {
 }
 
 /**
- * How a view was shown, saved when the user asked (§7, view_saved_as_shown): only what was written and could be read;
- * with the View menu's switches as they stood (§25, view_switch_view_only), and the legend's choices (§25,
- * untangle_legend; untangle-saved.ts).
+ * How a view was shown, saved when the user asked (§7, view_saved_as_shown). It keeps only what was written and could
+ * be read. It keeps the View menu's switches as they stood (§25, view_switch_view_only). It keeps the legend's choices
+ * (§25, untangle_legend; untangle-saved.ts).
  */
 export interface Shown {
   zoom?: number;
@@ -326,8 +328,9 @@ export function emptyStyle(): StyleGraph {
 }
 
 /**
- * A problem with the style of `graph`, on the line of the style thing at `at`: an error, as what it names is left out of
- * the style, and the graph is drawn without it. Listed with the graph it styles, so it is shown with that drawing.
+ * A problem with the style of `graph`, on the line of the style thing at `at`. It is an error, as what it names is
+ * left out of the style. The graph is drawn without it. Listed with the graph it styles, so it is shown with that
+ * drawing.
  */
 export function styleProblem(
   graph: string,
@@ -344,9 +347,9 @@ export const orList = (xs: readonly string[]): string =>
   xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`;
 
 /**
- * The fix for a word that is not one of `among`: the nearest by edit distance — always, when `always` is set (a nudge's
- * word, §6); otherwise only when it is close (within two letters, or half the word) — else the list to choose from.
- * Case is ignored on both sides, so 'tb' is fixed to TB, the direction it means.
+ * The fix for a word that is not one of `among`. It is the nearest by edit distance, always when `always` is set (a
+ * nudge's word, §6). Otherwise it is the nearest only when close: within two letters, or half the word. Else it is the
+ * list to choose from. Case is ignored on both sides, so 'tb' is fixed to TB, the direction it means.
  */
 export function wordFix(written: string, among: readonly string[], always = false): { fix: string; nearest?: string } {
   let best = Infinity,

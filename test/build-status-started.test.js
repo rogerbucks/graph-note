@@ -1,8 +1,8 @@
 // Started on: the day a pull request of this repository, draft or open, first took a requirement on, by its copy or its
-// Requirements line. The build status sets it from the pull request's own creation, keeps it while any pull request
-// holds the item and once it merges, and clears it when the pull request closes unmerged and nothing else holds the item;
-// the mirror's seed puts it right on the next sync. Each case runs against the in-memory stand-ins for gh. Editor spec
-// §12, requirements_checked_in_ci.
+// Requirements line. The build status sets it from the pull request's own creation. It keeps it while any pull request
+// holds the item, and once it merges. It clears it when the pull request closes unmerged and nothing else holds the
+// item. The mirror's seed puts it right on the next sync. Each case runs against the in-memory stand-ins for gh. Editor
+// spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';

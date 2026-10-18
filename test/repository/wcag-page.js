@@ -1,6 +1,7 @@
-// The browser editor's page, run for the WCAG check (editor spec §11, §26; test/wcag.test.js): the page as built (the files
-// the server holds), its own script run in a DOM (jsdom) with the calls it makes answered as the server answers them and its
-// layout worker run as a thread, so what is checked is what the page makes, not a copy of it. Test code only.
+// The browser editor's page, run for the WCAG check (editor spec §11, §26; test/wcag.test.js). It is the page as built
+// (the files the server holds), with its own script run in a DOM (jsdom). The calls it makes are answered as the server
+// answers them, and its layout worker runs as a thread. So what is checked is what the page makes, not a copy of it.
+// Test code only.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Worker } from 'node:worker_threads';
@@ -61,8 +62,10 @@ function narrower(media, width) {
 /**
  * The page as built in `dir`, opened at `hash` (the address's fragment, which carries the token and the note), with the
  * script run. Returns {dom, window, stop}: `stop` puts away the worker threads; the caller closes the DOM (audit does).
- * `draft` is a draft the server holds for the note, which the page offers back; `language`, the browser's language;
- * `width`, the width of the window in CSS pixels, which the page's width queries are answered by (none: a wide window).
+ * - `draft` is a draft the server holds for the note, which the page offers back.
+ * - `language` is the browser's language.
+ * - `width` is the width of the window in CSS pixels, which the page's width queries are answered by (none: a wide
+ *   window).
  */
 export function openEditorPage(dir, hash, note = PAGE_NOTE, draft = null, language = undefined, width = undefined) {
   const html = readFileSync(join(dir, 'index.html'), 'utf8');

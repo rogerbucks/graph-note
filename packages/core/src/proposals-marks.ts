@@ -1,6 +1,6 @@
-// A proposal laid over the drawing (editor spec §17, proposal_shown_not_applied and proposals_read_back): which boxes and
-// links each change adds, changes or removes, so a host can mark them — in words as well as in colour — and each change
-// read back in plain English, in the words the text pane reads a line in (`readBack`).
+// A proposal laid over the drawing (editor spec §17, proposal_shown_not_applied and proposals_read_back). It says which
+// boxes and links each change adds, changes or removes, so a host can mark them — in words as well as in colour. Each
+// change is read back in plain language, in the words the text pane reads a line in (`readBack`).
 import { hops } from './estimates.ts';
 import { readBack } from './help.ts';
 import type { NoteReading } from './note-reading.ts';
@@ -30,9 +30,9 @@ export interface Marks {
 export const markOf = (c: ProposedChange): MarkKind => (c.op === 'add' ? 'add' : c.op === 'set' ? 'change' : 'remove');
 
 /**
- * The marks of these changes on the drawing of `graph` in `reading`: the reading must be the graph with the additions and
- * changes laid over it (what is added is drawn, and a removal is still drawn, to be marked). A change that marks nothing
- * drawn — a thing the drawing does not hold — marks nothing.
+ * The marks of these changes on the drawing of `graph` in `reading`. The reading must be the graph with the additions
+ * and changes laid over it. What is added is drawn, and a removal is still drawn, to be marked. A change that marks
+ * nothing drawn — a thing the drawing does not hold — marks nothing.
  */
 export function marksOf(reading: NoteReading, graph: string, changes: readonly ProposedChange[]): Marks {
   const drawn = reading.graphs.get(graph);
@@ -66,18 +66,18 @@ export function marksOf(reading: NoteReading, graph: string, changes: readonly P
 }
 
 /**
- * What a change is, exactly, as it would be written: the GQL an addition adds, the SET statement of a change of a
- * property, or the DELETE statement of a removal, as the change set writes it. The plain English of `saidOf` can say less
- * than this; this never does.
+ * What a change is, exactly, as it would be written, as the change set writes it. That is the GQL an addition adds, the
+ * SET statement of a change of a property, or the DELETE statement of a removal. The plain language of `saidOf` can say
+ * less than this; this never does.
  */
 export function exactOf(c: ProposedChange): string {
   return statementOf(c);
 }
 
 /**
- * A change in plain English, as the text pane reads a line: "Added: Small reader is an Option", "Changed: Large reader:
- * price is 4", "Removed: Alice is a Person". Read in `reading`, the graph with the change laid over it where it adds or
- * changes, so the things it names are there to be called by their text.
+ * A change in plain language, as the text pane reads a line. Examples: "Added: Small reader is an Option"; "Changed:
+ * Large reader: price is 4"; "Removed: Alice is a Person". Read in `reading`, the graph with the change laid over it
+ * where it adds or changes. So the things it names are there to be called by their text.
  */
 export function saidOf(reading: NoteReading, graph: string, c: ProposedChange): string {
   const kind = (thing: string) =>

@@ -1,8 +1,8 @@
 // The one contract every host of the display layer is held to (editor spec §41, host_contract_published; §43,
-// hosts_pass_contract): what `DisplayHost` promises, as checks any host runs against its own adapter, Obsidian's, the
-// browser page's, the standalone app's and VS Code's alike. The checks need no test framework: each one throws when the
-// host breaks the promise, so a host's tests run them with whatever runner it has. A host lets the checks see what it
-// showed through a probe, as only it knows where its notices and menus go.
+// hosts_pass_contract). It is what `DisplayHost` promises, as checks any host runs against its own adapter code. That holds
+// for Obsidian's, the browser page's, the standalone app's and VS Code's alike. The checks need no test framework. Each
+// one throws when the host breaks the promise, so a host's tests run them with whatever runner it has. A host lets the
+// checks see what it showed through a probe, as only it knows where its notices and menus go.
 import type { DisplayHost, MenuEntry } from './host.ts';
 
 /** The version of the host interface these checks hold a host to; it changes with every change to `DisplayHost`. */

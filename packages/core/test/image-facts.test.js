@@ -1,6 +1,6 @@
-// What an image's own bytes say of it (editor spec §18, animated_image_shown, animated_image_limited): its format, whether
-// it moves, how many frames it has and its size, read from the header and chunks each format writes, never by decoding
-// it and never by its name; and an image that cannot be read said to be none of them.
+// What an image's own bytes say of it (editor spec §18, animated_image_shown, animated_image_limited). It reads its
+// format, whether it moves, how many frames it has and its size. They are read from the header and chunks each format
+// writes, never by decoding it and never by its name. An image that cannot be read is said to be none of them.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { imageFacts } from '../src/image-facts.ts';

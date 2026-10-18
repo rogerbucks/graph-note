@@ -1,8 +1,9 @@
-// Notes drawn as callouts on the drawing (editor spec §24, note_callouts): when the setting is on, each note is drawn in a
-// small box beside its thing or link, joined to it by a dashed line, after the layout has placed everything. The layout
-// source never reads a note, so it stays byte-identical with the Python library's and the boxes sit where they would
-// without callouts; a callout is only added over the finished SVG, within its viewBox, and its words are text, never HTML.
-// Its look is the style sheet's alone (`thoughtknot-callout-*`); the full note shows in the thing's details.
+// Notes drawn as callouts on the drawing (editor spec §24, note_callouts). When the setting is on, each note is drawn
+// in a small box beside its thing or link. It is joined to it by a dashed line, after the layout has placed everything.
+// The layout source never reads a note. So it stays byte-identical with the Python library's, and the boxes sit where
+// they would without callouts. A callout is only added over the finished SVG, within its viewBox, and its words are
+// text, never HTML. Its look is the style sheet's alone (`thoughtknot-callout-*`); the full note shows in the thing's
+// details.
 import { hitAreas } from '@thoughtknot/core';
 import type { Drawn, GraphDrawing, Shape } from '@thoughtknot/core';
 
@@ -75,9 +76,10 @@ export function make<K extends keyof SVGElementTagNameMap>(
 }
 
 /**
- * The notes of the drawing `d`, drawn as callouts in `svg` (the drawing laid out as `drawn`): beside its thing's box or
- * its link's line, kept within the drawing, one placed clear of another, each joined by a dashed line. Nothing is added
- * for a note whose thing or link is not drawn (folded away by the View menu), and the viewBox never changes.
+ * The notes of the drawing `d`, drawn as callouts in `svg` (the drawing laid out as `drawn`). Each is beside its
+ * thing's box or its link's line, kept within the drawing, one placed clear of another, each joined by a dashed line.
+ * Nothing is added for a note whose thing or link is not drawn (folded away by the View menu). The viewBox never
+ * changes.
  */
 export function markCallouts(svg: SVGSVGElement, drawn: Drawn, d: GraphDrawing): void {
   const noted: { id: string; of: string; summary: string }[] = [

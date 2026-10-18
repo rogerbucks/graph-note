@@ -1,9 +1,12 @@
 // The project's fields that are not a single choice (spec §12, requirements_checked_in_ci), each derived and never
-// authored: Wave (an iteration field, one iteration for each wave of requirements/waves.json, with its dates), Order (a
-// number: wave, then workstream, then requirement position), Closed on (the day the requirement's issue was closed, from
-// its closedAt) and Started on (the day a pull request first took the requirement on). Pure: what to make, what differs
-// and the arguments of the gh call that sets a value. github-project-plan.mjs plans with it and github-project-gh.mjs
-// does the plan.
+// authored:
+// - Wave: an iteration field, one iteration for each wave of requirements/waves.json, with its dates;
+// - Order: a number, by wave, then workstream, then requirement position;
+// - Closed on: the day the requirement's issue was closed, from its closedAt;
+// - Started on: the day a pull request first took the requirement on.
+//
+// Pure: what to make, what differs and the arguments of the gh call that sets a value. github-project-plan.mjs plans
+// with it and github-project-gh.mjs does the plan.
 import { adoptedId } from './github-project-desired.mjs';
 
 export const WAVE_FIELD = 'Wave';
@@ -12,8 +15,8 @@ export const CLOSED_FIELD = 'Closed on';
 export const STARTED_FIELD = 'Started on';
 /**
  * The fields, each with its GitHub data type and the key of a desired issue that holds its value. An issue's value is
- * undefined where the mirror leaves the field as it is, null where the field is to be cleared, else the value: a wave's
- * title, a number, or a day as YYYY-MM-DD.
+ * undefined where the mirror leaves the field as it is. It is null where the field is to be cleared. Else it is the
+ * value: a wave's title, a number, or a day as YYYY-MM-DD.
  */
 export const TYPED_FIELDS = [
   { name: WAVE_FIELD, type: 'ITERATION', key: 'wave' },
@@ -41,10 +44,10 @@ const sameIterations = (have, want) =>
   want.every((w, i) => ['title', 'startDate', 'duration'].every((k) => have[i][k] === w[k]));
 
 /**
- * The configuration of the Wave field for `iterations` ({title, startDate, duration} in order), the existing ones (`have`)
- * kept by their ids where a title matches, so their values stay on the items. Each iteration holds only the four keys
- * the schema's ProjectV2Iteration input takes: id, title, startDate and duration. An item whose iteration is made new
- * loses its Wave, and the apply reads the project again and gives it its Wave again (executePlan).
+ * The configuration of the Wave field for `iterations` ({title, startDate, duration} in order). The existing ones
+ * (`have`) are kept by their ids where a title matches, so their values stay on the items. Each iteration holds only
+ * the four keys the schema's ProjectV2Iteration input takes: id, title, startDate and duration. An item whose iteration
+ * is made new loses its Wave, and the apply reads the project again and gives it its Wave again (executePlan).
  */
 export function iterationConfig(iterations, have = []) {
   const [first] = iterations;
@@ -89,8 +92,9 @@ const SET_ITERATIONS = `mutation($field: ID!, $iterations: ProjectV2IterationFie
 }`;
 
 /**
- * The GraphQL mutation, {query, variables}, that does one plan of planTyped in the project `projectId`: makes the field,
- * or sets the iterations of the Wave field (`remote` is the project's fields of these types, as planTyped reads them).
+ * The GraphQL mutation, {query, variables}, that does one plan of planTyped in the project `projectId`. It makes the
+ * field, or sets the iterations of the Wave field. `remote` is the project's fields of these types, as planTyped reads
+ * them.
  */
 export function typedMutation(projectId, plan, remote) {
   if (plan.create) {
@@ -106,8 +110,8 @@ export function typedMutation(projectId, plan, remote) {
 
 /**
  * Whether a field's value on an item is to be changed from `from` to `to`. Undefined leaves it. Started on is only set
- * where there is none, as the first pull request to take the requirement on gives it; any other is set to what differs,
- * and null clears it.
+ * where there is none, as the first pull request to take the requirement on gives it. Any other is set to what
+ * differs, and null clears it.
  */
 export function typedDiffers(name, from, to) {
   if (to === undefined) return false;
@@ -158,9 +162,12 @@ export function itemValueMutation(project, item, name, field, to) {
 }
 
 /**
- * The desired issues with Closed on derived from the issues GitHub holds: the day an adopted issue was closed, for one
- * that is closed and stays closed; null (cleared) for one that is or will be open; undefined (left) for one this run
- * will close or make, whose day is known only once it is done. `adopters` are the logins whose issues are the mirror's.
+ * The desired issues with Closed on derived from the issues GitHub holds. Closed on is:
+ * - the day an adopted issue was closed, for one that is closed and stays closed;
+ * - null (cleared) for one that is or will be open;
+ * - undefined (left) for one this run will close or make, whose day is known only once it is done.
+ *
+ * `adopters` are the logins whose issues are the mirror's.
  */
 export function withClosedOn(issues, remote, adopters) {
   const held = new Map();

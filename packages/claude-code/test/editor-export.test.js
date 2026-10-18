@@ -1,7 +1,11 @@
-// The browser editor's export (editor spec §26, workstream C6; test_cc_export). The page makes the files; the server writes
-// them (cc_exports_new_only): only as new files in the export folder, never over an existing file, never outside the
-// vault, never under a name that is more than a name, and all of an export or none of it. Each case is tried on the real
-// store and a running server, with the escapes laid out in a real vault on disk (editor-store-support.js).
+// The browser editor's export (editor spec §26, workstream C6; test_cc_export). The page makes the files. The server
+// writes them (cc_exports_new_only):
+// - only as new files in the export folder;
+// - never over an existing file, and never outside the vault;
+// - never under a name that is more than a name;
+// - all of an export or none of it.
+// Each case is tried on the real store and a running server. The escapes are laid out in a real vault on disk
+// (editor-store-support.js).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { after } from 'node:test';

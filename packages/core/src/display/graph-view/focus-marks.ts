@@ -1,6 +1,7 @@
-// Focus, filters and the highlight put on the drawing (editor spec §25): what the core says is kept at full strength, hidden
-// or highlighted becomes a class on each box and link of the SVG Graphviz drew, and `styles.css` does the rest. Only
-// classes change, never an attribute that places or sizes anything, so nothing moves and nothing is laid out again.
+// Focus, filters and the highlight put on the drawing (editor spec §25). The core says what is kept at full strength,
+// hidden or highlighted. That becomes a class on each box and link of the SVG Graphviz drew. `styles.css` does the
+// rest. Only classes change, never an attribute that places or sizes anything, so nothing moves and nothing is laid out
+// again.
 import type { FocusTarget, Kept } from '@thoughtknot/core';
 
 /** What the drawing is to show: what stays at full strength (null: all of it), what is hidden, and what is highlighted. */
@@ -11,7 +12,7 @@ export interface Marks {
 }
 
 /**
- * The place among the drawing's links of a link's element, from its id in the SVG (`edge3` is the third, so 2); a link
+ * The place among the drawing's links of a link's element, from its id in the SVG (`edge3` is the third, so 2). A link
  * merged into a trunk (§25) has a second line to the trunk, `edge3_tail`, which is the same link.
  */
 export function edgeNumber(g: Element): number {
@@ -37,10 +38,10 @@ export function sameTarget(a: FocusTarget | null, b: FocusTarget | null): boolea
 }
 
 /**
- * The boxes and links of one drawing, found once, and marked as the drawing is to look: `thoughtknot-hidden` for what is
- * hidden; with something kept, `thoughtknot-kept` for what stays at full strength and `thoughtknot-dim` for what fades —
- * except what is highlighted, which comes forward under the pointer (`thoughtknot-hot`) over any focus, the focus itself
- * being as it was when the highlight goes. A change of highlight marks only the things it touched.
+ * The boxes and links of one drawing, found once, and marked as the drawing is to look. `thoughtknot-hidden` marks what
+ * is hidden. With something kept, `thoughtknot-kept` marks what stays at full strength and `thoughtknot-dim` what
+ * fades. What is highlighted comes forward under the pointer (`thoughtknot-hot`) over any focus. The focus itself is as
+ * it was when the highlight goes. A change of highlight marks only the things it touched.
  */
 export class DrawingMarks {
   private readonly nodes = new Map<string, Element>();

@@ -1,9 +1,11 @@
-// The browser page's colours (spec §26, cc_theme_follows): the core's own theme colours (palette.ts, `THEME_COLOURS`), as
-// the CSS variables of Obsidian's theme, which page.css maps to the design tokens every rule reads (§44, ui_theme_tokens)
-// and the drawing's Obsidian palette names, light by default and dark under
-// `prefers-color-scheme`, which is the scheme the pane is handed. The drawing itself is coloured by the core in those same
-// variables, so the page and the drawing change together and keep the locked contrast (§11): the text and muted text on the
-// page are the core's, 4.5:1 or better in both. Made when the page is built; the page holds no script for the theme.
+// The browser page's colours (spec §26, cc_theme_follows). They are the core's own theme colours (palette.ts,
+// `THEME_COLOURS`), as the CSS variables of Obsidian's theme.
+// - page.css maps them to the design tokens every rule reads (§44, ui_theme_tokens).
+// - The drawing's Obsidian palette names them too.
+// - They are light by default, and dark under `prefers-color-scheme`, which is the scheme the pane is handed.
+// The core colours the drawing itself in those same variables. So the page and the drawing change together and keep the
+// locked contrast (§11). The text and muted text on the page are the core's, 4.5:1 or better in both. This is made when
+// the page is built. The page holds no script for the theme.
 import { THEME_COLOURS } from '../../core/src/palette.ts';
 import type { ThemeColours } from '../../core/src/palette.ts';
 
@@ -37,8 +39,8 @@ function variables(t: ThemeColours): string[] {
     `--text-normal:${t.text}`,
     `--text-muted:${t.muted}`,
     `--text-faint:${t.muted}`,
-    // WCAG 2.2 AA (SC 1.4.3): the hues the drawing uses are not text colours; these are drawn towards the text colour until
-    // text in them reaches 4.5:1 on the page and on the secondary background
+    // WCAG 2.2 AA (SC 1.4.3): the hues the drawing uses are not text colours. These are drawn towards the text colour
+    // until text in them reaches 4.5:1 on the page and on the secondary background
     `--text-error:${shade(t.red ?? t.text, t.text, 35)}`,
     `--text-warning:${shade(t.orange ?? t.text, t.text, 45)}`,
     `--text-on-accent:${t.page}`,

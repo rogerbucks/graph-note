@@ -1,9 +1,9 @@
-// The legend's choices saved with a view (editor spec §25, untangle_legend; §7, view_saved_as_shown): what the legend
-// brings forward and hides (untangle.ts, `LegendFilter`) is written to the style graph only when the user saves the view
-// as shown, as the Shown's `legend`, a text such as 'kind:Person forward, type:NEAR hidden'; never otherwise. Read back,
-// the view opens with its legend as it was saved. Here: the text written, and the text read and checked, each fault a
-// problem on the Shown's line with its fix. The Python library reads it the same (graphspec/style/legend.py), held to
-// one table, python/graph_spec/tests/legend_cases.json.
+// The legend's choices saved with a view (editor spec §25, untangle_legend; §7, view_saved_as_shown). The legend brings
+// things forward and hides them (untangle.ts, `LegendFilter`). Those choices are written to the style graph only when
+// the user saves the view as shown, never otherwise. They go in as the Shown's `legend`, a text such as 'kind:Person
+// forward, type:NEAR hidden'. Read back, the view opens with its legend as it was saved. Here: the text written, and
+// the text read and checked, each fault a problem on the Shown's line with its fix. The Python library reads it the
+// same (graphspec/style/legend.py), held to one table, python/graph_spec/tests/legend_cases.json.
 import { nearest } from './estimates.ts';
 import type { StyledNames } from './style-checks.ts';
 import { orList, wordFix } from './style-graph.ts';
@@ -62,10 +62,11 @@ export function legendRefusal(choices: readonly LegendChoice[]): string | null {
 }
 
 /**
- * The choices a Shown's `legend` holds, read and checked against the graph it styles: each entry between commas is an
- * id and a state, spaces around either taken off. Each fault is a problem with its fix, and that entry left out: an
- * empty entry, one that cannot be read, a state not allowed, a kind or type the graph lacks (the nearest given), or a
- * line chosen again. One fault is said for each entry, the first found. The rest are kept, in the order written.
+ * The choices a Shown's `legend` holds, read and checked against the graph it styles. Each entry between commas is an
+ * id and a state, spaces around either taken off. Each fault is a problem with its fix, and that entry left out. A
+ * fault is an empty entry, one that cannot be read, or a state not allowed. It may also be a kind or type the graph
+ * lacks (the nearest given), or a line chosen again. One fault is said for each entry, the first found. The rest are
+ * kept, in the order written.
  */
 export function legendChecked(r: ThingReader, names: StyledNames): LegendChoice[] | undefined {
   const written = r.text('legend');

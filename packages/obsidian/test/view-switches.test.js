@@ -1,8 +1,10 @@
-// The View menu on a graph's bar (editor spec §25, slice 3): labels by zoom, busy hubs folded, groups folded and parallel
-// links merged, each switched on and off there (view_switches); each starting as the plugin's settings hold it
-// (view_switch_defaults); and each turned redrawing the graph at once, keeping the selection and the focus, and saved
-// with the graph only when the user saves the view (view_switch_view_only). The built plugin, loaded against the
-// stand-ins for the page, laying out with the real engine.
+// The View menu on a graph's bar (editor spec §25, slice 3). It has labels by zoom, busy hubs folded, groups folded and
+// parallel links merged.
+// - Each is switched on and off there (view_switches).
+// - Each starts as the plugin's settings hold it (view_switch_defaults).
+// - Each, when turned, redraws the graph at once, keeping the selection and the focus. It is saved with the graph only
+//   when the user saves the view (view_switch_view_only).
+// The built plugin, loaded against the stand-ins for the page, laying out with the real engine.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

@@ -1,8 +1,8 @@
-// The records of the tests-first replay (spec §12, tests_first), kept so that two branches never write the same file
-// unless they replay the same commit or excuse the same test: any merge, GitHub's own among them, then joins them with
-// nothing to resolve, and with no merge driver, which GitHub's merge would not read.
+// The records of the tests-first replay (spec §12, tests_first). Two branches never write the same file unless they
+// replay the same commit or excuse the same test. So any merge, GitHub's own among them, joins them with nothing to
+// resolve. It needs no merge driver, which GitHub's merge would not read.
 //
-// test/tests-first/ holds one file for each replayed commit that changed a test, named after the commit, over
+// test/tests-first/ holds one file for each replayed commit that changed a test, named after the commit. They sit over
 // baseline.json: the single record as it stood when it was split (11 Oct 2026), frozen at its head. test/seen-failing/
 // holds one file for each test excused for passing before its code, named after its test file and a digest of the test.
 // No field is rewritten by every update, as the single record's head was. Read against the history, the records give
@@ -107,11 +107,14 @@ export const faultExcused = (exceptions, file, test, commit) =>
   exceptions[file][test].commits.includes(commit);
 
 /**
- * Every reason kept, by test file and test: `{ [file]: { [test]: { seen_failing_first, evidence } } }` (a fault's also
- * holds `fault: true` and its `commits`), both levels objects with no prototype, so no key reaches another object. Only
- * `.json` files are read. A file that is not JSON, names no test or one called `__proto__`, `constructor` or
- * `prototype`, holds a field no reason has, a `fault` that is not true or with no commit, or is not named for the test
- * it names, fails, naming the file.
+ * Every reason kept, by test file and test: `{ [file]: { [test]: { seen_failing_first, evidence } } }`. A fault's also
+ * holds `fault: true` and its `commits`. Both levels are objects with no prototype, so no key reaches another object.
+ * Only `.json` files are read. A file fails, naming the file, when it:
+ * - is not JSON;
+ * - names no test, or one called `__proto__`, `constructor` or `prototype`;
+ * - holds a field no reason has;
+ * - holds a `fault` that is not true or with no commit;
+ * - is not named for the test it names.
  */
 export function exceptionsIn(repo) {
   const dir = join(repo, EXCUSALS);
@@ -167,8 +170,9 @@ export function removeRecord(repo, commit) {
 
 /**
  * What the records prove, by test file: the baseline's entries, then each replay in `replays`, oldest first, added in.
- * Each entry: the commits replayed and those that could not be (a new test failing at its own commit among them), the
- * new tests seen failing first, those that passed first, and how many of those have a reason in `exceptions` (`excused`).
+ * Each entry holds the commits replayed and those that could not be (a new test failing at its own commit among them).
+ * It also holds the new tests seen failing first, those that passed first, and how many of those have a reason in
+ * `exceptions` (`excused`).
  * A fault with a reason there (--excuse --fault) is not counted as not replayed, but as `faultsExcused`. Only the
  * test files in `current` are kept, sorted.
  */
@@ -197,8 +201,8 @@ export function tally(baseline, replays, exceptions, current) {
         unreplayed([f.notReplayed, ...why].join('; '));
         continue;
       }
-      // its other new tests are judged and counted; the commit is counted once, as not replayed when a test in it was not
-      // a fault with a reason kept (--excuse --fault) is excused, and the commit counts as replayed
+      // its other new tests are judged and counted. The commit is counted once, as not replayed when a test in it was
+      // not. A fault with a reason kept (--excuse --fault) is excused, and the commit counts as replayed
       if (faulted.length && !faulted.every((x) => faultExcused(exceptions, f.file, x.test, commit)))
         unreplayed(why.join('; '));
       else {
@@ -249,8 +253,10 @@ const testFiles = (repo) =>
   );
 
 /**
- * What the records prove now: `files`, by each test file the repository holds, the commits replayed and not, the tests
- * seen failing first, those that passed first and how many of those are excused; `baseline`, the baseline's head.
+ * What the records prove now:
+ * - `files`, by each test file the repository holds. It gives the commits replayed and not, and the tests seen failing
+ *   first. It also gives those that passed first, and how many of those are excused;
+ * - `baseline`, the baseline's head.
  */
 export function summary(repo) {
   const { baseline, commits } = readRecords(repo);
@@ -271,9 +277,11 @@ const sorted = (value) =>
       : value;
 
 /**
- * What the records prove, for a reader outside the repository (--tally): `summary`, with the tests that passed first
- * counted, and `excused`, each reason kept by test file and test, with its file's path from the root and its content as
- * kept. Read with the readers above, so a reason file that is malformed or names `__proto__` fails, naming it. Every
+ * What the records prove, for a reader outside the repository (--tally). It holds:
+ * - `summary`, with the tests that passed first counted;
+ * - `excused`, each reason kept by test file and test, with its file's path from the root and its content as kept.
+ *
+ * Read with the readers above, so a reason file that is malformed or names `__proto__` fails, naming it. Every
  * object has its keys sorted. Gives the JSON text, and writes nothing.
  */
 export function tallyReport(repo) {
@@ -296,7 +304,7 @@ export function tallyReport(repo) {
 }
 
 /**
- * The commits since the baseline that changed a test and have no record: each is recorded by --update on the branch
+ * The commits since the baseline that changed a test and have no record. Each is recorded by --update on the branch
  * that made it, so no other branch replays it again, perhaps differently (review of #69).
  */
 export function unrecorded(repo) {
@@ -318,11 +326,11 @@ function oldReasons(repo) {
 }
 
 /**
- * Moves records kept in the old single files over, and removes the old files: every reason into a file of its own, and
- * the old record whole into the baseline when there is none yet. When there is one, a branch's own old record is
+ * Moves records kept in the old single files over, and removes the old files. Every reason goes into a file of its own.
+ * The old record goes whole into the baseline when there is none yet. When there is one, a branch's own old record is
  * dropped, never written over it: `--update` replays the commits it held since the baseline. Everything is read and
- * checked before anything is written, so a reason that would be refused leaves both folders and both old files as they
- * were (review of #69). A reason kept already, differently, is left as it is and named, for a person to choose: main
+ * checked before anything is written. So a reason that would be refused leaves both folders and both old files as they
+ * were (review of #69). A reason kept already, differently, is left as it is and named, for a person to choose. Main
  * may have changed it since the branch began. Gives a line for each thing done or left.
  */
 export function migrate(repo) {

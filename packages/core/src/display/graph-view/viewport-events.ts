@@ -1,11 +1,14 @@
-// How a card's drawing is worked by pointer, wheel and keyboard (spec §3, §25): each event passed to the core's Zoom,
-// which decides; a tap on or near a box or link opens it, a tap again in the same place the next of them, and a tap on
-// empty space clears the selection; a box pressed with a mouse or pen and dragged moves it (§6); the highlight under the
-// pointer and with the keyboard focus; and the details sheet placed again as the window and the note move. The card (graph-view.ts) binds these once it has built its parts.
+// How a card's drawing is worked by pointer, wheel and keyboard (spec §3, §25). Each event is passed to the core's
+// Zoom, which decides. A tap on or near a box or link opens it, and a tap again in the same place the next of them. A
+// tap on empty space clears the selection. A box pressed with a mouse or pen and dragged moves it, and so does M on a
+// box (§6). It also covers the highlight under the pointer and with the keyboard focus. The details sheet is placed
+// again as the window and the
+// note move. The card (graph-view.ts) binds these once it has built its parts.
 import type { Lifecycle } from '../lifecycle';
 import type { Zoom, ZoomEvent } from '@thoughtknot/core';
 import { BoxDrag } from './box-drag-view';
 import type { DragHost } from './box-drag-view';
+import { BoxMoveKeys } from './box-move-keys';
 import type { ViewOptions } from './view-options';
 import type { DetailsPanel } from './details-panel';
 import type { Selection } from './selection';
@@ -44,8 +47,18 @@ export interface ViewportHost {
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
 export function bindViewportEvents(host: ViewportHost): void {
   const { card, viewport: vp, zoom, sel, details, taps, svg } = host;
-  const drag = host.o ? boxDragFor(host.o, svg, { viewport: vp, taps, zoom }) : null;
+  const movers = host.o ? boxMoversFor(host.o, svg, { viewport: vp, taps, zoom }) : null,
+    drag = movers?.drag ?? null,
+    keys = movers?.keys ?? null;
   if (drag) card.register(() => drag.onunload());
+  // Move in a box's details picks it up as M does, its box given the focus for the keys that follow (§6)
+  if (keys)
+    details.onMove = (key) => {
+      if (keys.pick(key))
+        Array.from(svg?.querySelectorAll<SVGGElement>('g.node') ?? [])
+          .find((g) => g.getAttribute('data-key') === key)
+          ?.focus({ preventScroll: true });
+    };
   let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean } | null = null;
   /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
   let emptyDown: { id: number; x: number; y: number } | null = null;
@@ -87,7 +100,7 @@ export function bindViewportEvents(host: ViewportHost): void {
       vp.setPointerCapture(e.pointerId);
       vp.focus({ preventScroll: true });
     }
-    // a box pressed with a mouse or pen may be dragged to move it (§6, drag_moves_box); a finger held there first
+    // a box pressed with a mouse or pen may be dragged to move it (§6, drag_moves_box). A finger is held there first
     // (hold_to_drag_touch), so a swipe still scrolls or pans
     const box = (e.target as Element | null)?.closest?.<SVGElement>('g.node');
     if (drag && e.button === 0 && target && 'key' in target && box) {
@@ -131,9 +144,9 @@ export function bindViewportEvents(host: ViewportHost): void {
     // on touch there is no hover: the tap that selects gives the highlight (§25)
     sel.touched(down.touch);
   });
-  // a touch the drawing uses — one finger panning it zoomed in, a pinch, a finger moving a box — goes no further, so
-  // the host never takes it for its own swipe, as Obsidian's side panels do (§25, gestures_stay_in_drawing); a swipe on
-  // a fitted drawing goes on, to scroll the note. While a box is picked up the page under it does not scroll (§6)
+  // a touch the drawing uses goes no further: one finger panning it zoomed in, a pinch, a finger moving a box. So the
+  // host never takes it for its own swipe, as Obsidian's side panels do (§25, gestures_stay_in_drawing). A swipe on a
+  // fitted drawing goes on, to scroll the note. While a box is picked up the page under it does not scroll (§6)
   const owned = (e: TouchEvent) => e.touches.length > 1 || zoom.touchAction() === 'none' || !!drag?.holding;
   card.registerDomEvent(
     vp,
@@ -201,10 +214,20 @@ export function bindViewportEvents(host: ViewportHost): void {
       e.preventDefault();
       return;
     }
+    // a box picked up from the keyboard takes the arrows, Enter and Escape until it is put down; M on a box picks it up
+    if (keys?.key(e)) {
+      e.preventDefault();
+      return;
+    }
     // Enter and Space press an image's control, never the box it is on (§18)
     if (onImageControl(e.target) && (e.key === 'Enter' || e.key === ' ')) return;
     const target = targetAt(e.target),
       fold = foldAt(e.target);
+    const plain = !e.ctrlKey && !e.metaKey && !e.altKey;
+    if (keys && target && 'key' in target && plain && (e.key === 'm' || e.key === 'M') && keys.pick(target.key)) {
+      e.preventDefault();
+      return;
+    }
     // Enter or Space on a fold's stub or box opens it (§25)
     if (fold && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
@@ -227,24 +250,31 @@ export function bindViewportEvents(host: ViewportHost): void {
 }
 
 /**
- * The drag that moves the boxes of a card given `o` and drawing `svg` (§6, drag_moves_box), in the direction the card was
- * laid out in, each box named by the text drawn on it; none when the card was given no way to write a nudge, or draws a
- * table. Nothing moves while the card is only read.
+ * What moves the boxes of a card given `o` and drawing `svg` (§6): the drag (drag_moves_box) and the keys
+ * (move_box_keyboard). They move in the direction the card was laid out in, each box named by the text drawn on it.
+ * None when the card was given no way to write a nudge, or draws a table. Nothing moves while the card is only read.
  */
-function boxDragFor(
+function boxMoversFor(
   o: ViewOptions,
   svg: SVGSVGElement | null,
   host: Pick<DragHost, 'viewport' | 'taps'> & { zoom: Zoom },
-): BoxDrag | null {
+): { drag: BoxDrag; keys: BoxMoveKeys } | null {
   const moving = o.moving;
   if (!moving || !svg) return null;
   const boxes = o.reading.graphs.get(o.graph)?.boxes ?? [];
-  return new BoxDrag({
-    ...host,
-    view: () => host.zoom.view(),
-    rankdir: () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir),
+  const shared = {
+    viewport: host.viewport,
+    taps: host.taps,
     moving,
-    textOf: (key) => boxes.find((b) => b.key === key)?.text ?? key,
+    textOf: (key: string) => boxes.find((b) => b.key === key)?.text ?? key,
     readOnly: () => !!o.readOnly?.(),
-  });
+  };
+  return {
+    drag: new BoxDrag({
+      ...shared,
+      view: () => host.zoom.view(),
+      rankdir: () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir),
+    }),
+    keys: new BoxMoveKeys(shared),
+  };
 }

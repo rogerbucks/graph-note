@@ -1,21 +1,20 @@
 #!/usr/bin/env node
 // Fit to be public, and kept so (spec §13, Delivery). Three checks, the same before the repository goes public and
-// after: nothing confidential or personal and no secret in any commit of the checked-out branch's own history, and
-// every commit from a no-reply address (--history); a stranger's fresh clone sets up and builds from the README's own
-// steps, which name nothing on the maintainer's machine (--setup); and the repository's settings on GitHub let no one
-// but a collaborator change the code or open an issue, while anyone may read the plan and discuss it (--settings). CI and the release run the first two. The third is read, and set,
-// through the GitHub CLI by whoever administers the repository, since CI's own token cannot read a repository's
-// settings.
+// after:
+// - --history: no secret, nothing confidential or personal, in this branch's history. Authors use no-reply addresses.
+// - --setup: a stranger's fresh clone sets up and builds from the README's steps, which name no one's machine.
+// - --settings: only a collaborator may change the code or open an issue. Anyone may read the plan and discuss it.
+//
+// CI and the release run the first two. An admin runs the third with the GitHub CLI: CI's token cannot read settings.
 //
 // Usage:
-//   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history
-//   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; the docs name no machine
-//   node scripts/public-readiness.mjs --setup-since BASE   the same, but the fresh clone only if a setup input changed
-//                                                          since BASE (a pull request's; main and the release run all)
-//   node scripts/public-readiness.mjs --settings           compare the GitHub settings with the wanted ones (admin, gh)
-//   node scripts/public-readiness.mjs --settings --apply   set each one that differs
-//   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag first, then make the
-//                                                          repository public
+//   node scripts/public-readiness.mjs --history            every blob and commit message of HEAD's own history.
+//   node scripts/public-readiness.mjs --setup              a fresh clone runs the README's steps; no doc names a PC.
+//   node scripts/public-readiness.mjs --setup-since BASE   the same, cloning only if a setup input changed since BASE.
+//   node scripts/public-readiness.mjs --settings           compare GitHub's settings with the wanted ones (admin, gh).
+//   node scripts/public-readiness.mjs --settings --apply   set each one that differs.
+//   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag, then make it public.
+// A pull request's run uses --setup-since. Main and the release run everything.
 //
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
 import { execFileSync } from 'node:child_process';
@@ -40,10 +39,11 @@ const NO_ONE = /(@users\.noreply\.github\.com|^noreply@github\.com|^noreply@anth
 
 /**
  * Every problem in the history of `refs` (the checked-out commit's own, `HEAD`, unless told otherwise), each as
- * {where, rule}: a blob that looks confidential, personal or secret, a blob too large, a commit message with the same,
- * or a commit by an address that names a person. The place is a path and line, or a commit; never the text. Other
- * branches are not read: a bot's branch holds commits that are not this history, and a pull request is judged on its
- * own. `refs: ['--all']` reads every branch and tag, as the check before the repository is made public does.
+ * {where, rule}. A problem is a blob that looks confidential, personal or secret, or a blob too large. It may also be a
+ * commit message with the same, or a commit by an address that names a person. The place is a path and line, or a
+ * commit; never the text. Other branches are not read. A bot's branch holds commits that are not this history, and a
+ * pull request is judged on its own. `refs: ['--all']` reads every branch and tag, as the check before the repository
+ * is made public does.
  */
 export function historyProblems(root = ROOT, { refs = ['HEAD'] } = {}) {
   const found = [];
@@ -165,7 +165,7 @@ const endpoint = (name, phase, path, want, keys) => ({
 
 /**
  * The jobs of the CI workflow, by name, read from the file so a job added there is required here too. A job split by a
- * matrix is left out: its checks are named for each part, and the job that needs it stands for them (`test`, `suite`).
+ * matrix is left out. Its checks are named for each part, and the job that needs it stands for them (`test`, `suite`).
  */
 export function ciJobs(root = ROOT) {
   const lines = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8').split('\n');
@@ -196,9 +196,10 @@ const checksRule = (ruleset) => ruleset.rules.find((r) => r.type === 'required_s
  */
 export const WANTED = [
   // Who can contribute: a collaborator opens a pull request or an issue. Issues stay on, with creation set to
-  // collaborators only by hand in the repository's settings: that setting has no API field (as of 11 Oct 2026), so it is
-  // the one thing here the script cannot read or set. Anyone may read the plan, on the requirements project and the
-  // generated wiki, and join a discussion (Roger, 18 Oct 2026); the wiki's editing is kept to collaborators by hand.
+  // collaborators only by hand in the repository's settings. That setting has no API field (as of 11 Oct 2026). So it
+  // is the one thing here the script cannot read or set. Anyone may read the plan, on the requirements project and the
+  // generated wiki. Anyone may join a discussion (Roger, 18 Oct 2026). The wiki's editing is kept to collaborators by
+  // hand.
   repoField('pull_request_creation_policy', 'collaborators_only'),
   repoField('has_pull_requests', true),
   repoField('has_issues', true),
@@ -341,8 +342,7 @@ function main(argv) {
   // Making the repository public publishes every branch and tag, so that gate reads them all.
   if (flag('--history') || flag('--make-public'))
     problems.push(...historyProblems(ROOT, { refs: flag('--make-public') ? ['--all'] : ['HEAD'] }));
-  // --setup-since <base>, for a pull request: the fresh clone only when a setup input changed; main and the release run
-  // it every time
+  // --setup-since <base>, for a pull request: the fresh clone only when a setup input changed
   const since = argv.includes('--setup-since') ? argv[argv.indexOf('--setup-since') + 1] : undefined;
   if (argv.includes('--setup-since') && !since) {
     console.error('--setup-since needs the commit to compare with');

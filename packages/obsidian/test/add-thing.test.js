@@ -1,7 +1,9 @@
-// Adding a thing in a drawing (editor spec §5, add_thing; §4, name_from_text, suggested_name_unique): while the card is
-// edited, Add a thing asks for the thing's text first; the name is suggested from the text as it is typed, in the style of
-// the graph's names and never one of them, and is shown before anything is written; Add the thing then writes the thing
-// into the text being edited, one undo takes it back, and a name of the user's own is kept and held to the same rules.
+// Adding a thing in a drawing (editor spec §5, add_thing; §4, name_from_text, suggested_name_unique).
+// - While the card is edited, Add a thing asks for the thing's text first.
+// - The name is suggested from the text as it is typed. It is in the style of the graph's names and never one of them.
+//   It is shown before anything is written.
+// - Add the thing then writes the thing into the text being edited. One undo takes it back.
+// - A name of the user's own is kept and held to the same rules.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

@@ -1,6 +1,6 @@
-// A request's body read within the core's read limit for a note (spec §26, cc_body_limit; §9, READ_LIMITS): a body
-// declared larger is refused before any of it is read, and one sent in parts with no length is refused as soon as it
-// passes the limit, so no request can make the server hold more than one note's worth.
+// A request's body read within the core's read limit for a note (spec §26, cc_body_limit; §9, READ_LIMITS). A body
+// declared larger is refused before any of it is read. One sent in parts with no length is refused as soon as it passes
+// the limit. So no request can make the server hold more than one note's worth.
 import type { IncomingMessage } from 'node:http';
 import { READ_LIMITS } from '@thoughtknot/core';
 

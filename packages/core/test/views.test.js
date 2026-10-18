@@ -1,5 +1,5 @@
-// Views in a note (editor spec §2 views_in_the_note, §7 view_is_query, views_by_tapping): a view is a named query block
-// whose graph line says QUERY view and its name; this finds each, never draws it as data, and says it in plain English.
+// Views in a note (editor spec §2 views_in_the_note, §7 view_is_query, views_by_tapping). A view is a named query block
+// whose graph line says QUERY view and its name. This finds each, never draws it as data, and says it in plain language.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks } from '../src/blocks.ts';

@@ -1,5 +1,5 @@
-// A fix's edits applied to text (spec §4, §8): the text with the edits a problem's fix gives, as the block editor's fix
-// bar writes them and as an estimated link's quick fix does in the details. No DOM in it.
+// A fix's edits applied to text (spec §4, §8). It gives the text with the edits a problem's fix gives. The block
+// editor's fix bar writes them so, and so does an estimated link's quick fix in the details. No DOM in it.
 import type { Diagnostic } from '@thoughtknot/core';
 
 /** The edits of a fix, by document, as a problem's fix gives them. */

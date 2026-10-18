@@ -1,5 +1,7 @@
-// A drawing's bar and card (spec §3, §8): the problems badge, Fit, zoom, Full screen and Edit, each in words and an icon;
-// the problems and the completeness report behind the badge; and each bar and its details framed in their own card.
+// A drawing's bar and card (spec §3, §8):
+// - the problems badge, Fit, zoom, Full screen and Edit, each in words and an icon;
+// - the problems and the completeness report behind the badge;
+// - each bar and its details framed in their own card.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
@@ -56,8 +58,8 @@ describe('the bar', () => {
 describe('each bar and its details belong to their own drawing', () => {
   // bar_and_details_belong (spec §3, slice 1; Roger, 7 Oct 2026: "the tool strip is not visibly connected to the graphic,
   // which makes it less than obvious which tool strip belongs to which diagram. Also, the same applies to the info
-  // window."): with several drawings in one note, each bar and each details card sit inside their own drawing's card. How
-  // plain that is in a theme is the device check's to judge.
+  // window."). With several drawings in one note, each bar and each details card sit inside their own drawing's card.
+  // How plain that is in a theme is the device check's to judge.
   const rule = (sel) =>
     new RegExp(`(^|\\n)${sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`).exec(styles)?.[2] ?? '';
   let env;

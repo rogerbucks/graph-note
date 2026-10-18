@@ -1,6 +1,6 @@
-// The details' note controls (editor spec §24, note_add): while the block is edited in place, the details of a thing offer
-// to add its note, or change or remove the one it has, each written into the block as the `///` lines above it through the
-// core's setNote (tested in packages/core/test/notes-edits.test.js); a refusal is said, and nothing is written.
+// The details' note controls (editor spec §24, note_add). While the block is edited in place, a thing's details offer to
+// add its note, or to change or remove the one it has. Each is written into the block as the `///` lines above the thing.
+// The core's setNote writes them (tested in packages/core/test/notes-edits.test.js). A refusal is said, and nothing is written.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

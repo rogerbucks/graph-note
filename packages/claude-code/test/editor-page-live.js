@@ -1,7 +1,8 @@
-// The browser editor's page run live (editor spec §26; cc_editor_opens, cc_same_bytes): the page as built, its own script run
-// in a DOM (jsdom), talking to the real editor server over HTTP, which keeps a real vault in a temporary folder and writes
-// it as the shipped server does. What a case types into the page's field is what the page sends the server, and what it
-// reads back is the file the server wrote. The layout worker runs as a thread. Test code only: `stop` puts everything away.
+// The browser editor's page run live (editor spec §26; cc_editor_opens, cc_same_bytes). The page runs as built, its own
+// script in a DOM (jsdom). It talks to the real editor server over HTTP. The server keeps a real vault in a temporary
+// folder and writes it as the shipped server does. What a case types into the page's field is what the page sends the
+// server. What it reads back is the file the server wrote. The layout worker runs as a thread. Test code only: `stop`
+// puts everything away.
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -20,8 +21,8 @@ export const NOTE_PATH = 'Reader.md';
 
 /**
  * The page opened on `note` (written to a vault of its own, with `files` beside it): `{ window, doc, file, read, write,
- * type, field, ... }`. `file()` is the note's text on disk now; `write(text)` is another program changing it, told to the
- * page as the watcher would tell it; `type(text)` is the person typing `text` into the field, as the page hears it.
+ * type, field, ... }`. `file()` is the note's text on disk now. `write(text)` is another program changing it. It is told
+ * to the page as the watcher would tell it. `type(text)` is the person typing `text` into the field, as the page hears it.
  */
 export async function livePage(note, { files = {}, settings = '{}', fire = true, before, gate, github } = {}) {
   const top = mkdtempSync(join(tmpdir(), 'editor-page-live-'));
@@ -103,8 +104,8 @@ export async function livePage(note, { files = {}, settings = '{}', fire = true,
       t.dispatchEvent(new window.Event('input', { bubbles: true }));
     },
     /**
-     * Does `act` and waits for the editor to finish what it began: it draws its tools again once a write, an undo or a
-     * redo has been answered by the server and taken, so the next press is made on the note as the page now has it.
+     * Does `act` and waits for the editor to finish what it began. It draws its tools again once a write, an undo or a
+     * redo has been answered by the server and taken. So the next press is made on the note as the page now has it.
      */
     async done(act) {
       const before = page.button('Undo');

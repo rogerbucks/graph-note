@@ -1,6 +1,7 @@
-// The details panel kept open (editor spec §24, details_always_visible, details_narrow): a setting, off by default, lets the
-// details stay open beside the drawing, in a card and in the pane, showing the graph's summary while nothing is chosen;
-// and a card too narrow for the panel and the drawing side by side puts the panel below the drawing.
+// The details panel kept open (editor spec §24, details_always_visible, details_narrow):
+// - A setting, off by default, lets the details stay open beside the drawing, in a card and in the pane.
+//   They show the graph's summary while nothing is chosen.
+// - A card too narrow for the panel and the drawing side by side puts the panel below the drawing.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

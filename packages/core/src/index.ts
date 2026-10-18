@@ -317,7 +317,7 @@ export { noteWithProposal } from './ai-answer.ts';
 export { changesIn } from './ai-request.ts';
 export type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which } from './proposals-shown.ts';
 export { hitAreas, nearby, TapCycle, boundsOf, centres } from './hits.ts';
-export { landingFor, landingSaid } from './box-drag.ts';
+export { landingFor, landingSaid, placesFor } from './box-drag.ts';
 export { FADE, KEPT, FocusState, depthOf, edgesOf, estimateEdge, focusOf, highlightOf } from './focus.ts';
 export type { FocusDepth, FocusEdge, FocusTarget, Kept } from './focus.ts';
 export {

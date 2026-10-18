@@ -1,5 +1,5 @@
-// What a note's graph blocks draw (spec §3): the boxes and links of each graph, as graph-spec-draw.py chooses them, and
-// a graph with problems still drawn — what can be read is drawn, and the rest is listed as problems.
+// What a note's graph blocks draw (spec §3). They draw the boxes and links of each graph, as graph-spec-draw.py chooses
+// them. A graph with problems is still drawn. What can be read is drawn, and the rest is listed as problems.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -233,8 +233,8 @@ describe('which blocks are graphs', () => {
     }
   });
 
-  // whitespace as GQL names it (§3), U+180E among it, in every reader: the graph line is read alike by the core and the
-  // Python library, so a problem names the same graph in both (decided 10 Oct 2026)
+  // whitespace as GQL names it (§3), U+180E among it, in every reader. The graph line is read alike by the core and the
+  // Python library. So a problem names the same graph in both (decided 10 Oct 2026)
   test('a graph line spaced with U+180E names its graph, in the core as in the Python library', () => {
     const block = "//\u{180e}graph:\u{180e}ws\n(:T {name: 'Large reader'})";
     const core = readNote([block]).problems.map((p) => p.graph);
@@ -252,8 +252,8 @@ describe('which blocks are graphs', () => {
     assert.deepEqual(JSON.parse(py.stdout), ['ws'], 'the Python library');
   });
 
-  // a block drawn FROM elsewhere holds no data of its own (editor spec §20, gql_file_source): neither reader draws it, so
-  // a note holding one draws the same in the plugin and the vault's Python (drawn_in_part)
+  // a block drawn FROM elsewhere holds no data of its own (editor spec §20, gql_file_source). Neither reader draws it.
+  // So a note holding one draws the same in the plugin and the vault's Python (drawn_in_part)
   test('a block drawn FROM a file or a note is no graph of its own, in the core as in the Python library', () => {
     // a FROM block holding lines of its own is a fault (sources.ts), and still never read as data
     const blocks = [
@@ -280,8 +280,9 @@ describe('which blocks are graphs', () => {
 
 describe('a comma with nothing after it', () => {
   // Roger's try-out, 8 Oct 2026: "adding a comma on the last line also causes the whole diagram to error". A comma waiting
-  // for its next pattern is the commonest state while typing; a missing comma is never a failure of the block (7 Oct), and
-  // a block that cannot be read is drawn in part (8 Oct). So it is drawn whole, with one quiet warning whose fix removes it.
+  // for its next pattern is the commonest state while typing. A missing comma is never a failure of the block (7 Oct).
+  // A block that cannot be read is drawn in part (8 Oct). So it is drawn whole, with one quiet warning whose fix
+  // removes it.
   const block = "// graph: g\n(a:T {name: 'A'}),\n(b:T {name: 'B'}),\n(a)-[:R]->(b)";
   for (const tail of [',', ',\n', ',\n\n// the next pattern goes here\n']) {
     test(`everything before it is drawn, with one warning whose fix removes it: ${JSON.stringify(tail)}`, () => {
@@ -313,8 +314,8 @@ describe('a comma with nothing after it', () => {
 
 describe('a comment after code on its line', () => {
   // spec §3: "Comments are whole lines starting //. A comment must not follow code on the same line, because // also
-  // occurs inside identifiers such as ni:/// hashes." Checking refuses it; drawing leaves it out and draws the code,
-  // with a problem that names the rule and whose fix puts the comment on its own line (§4, "Problems in place")
+  // occurs inside identifiers such as ni:/// hashes." Checking refuses it. Drawing leaves it out and draws the code.
+  // Its problem names the rule, and its fix puts the comment on its own line (§4, "Problems in place")
   const RULE = 'a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)';
   test('the code before it is drawn; one warning names the rule, and its fix puts the comment on its own line', () => {
     const block = "// graph: g\n(a:T {name: 'A'}), // the first\n(b:T {name: 'B // not a comment'}),\n(a)-[:R]->(b)";
@@ -335,8 +336,8 @@ describe('a comment after code on its line', () => {
 });
 
 describe('an emoji before what is left out', () => {
-  // drawn in part, byte for byte by both readers (8 Oct 2026): an emoji is two UTF-16 units but one character, and the
-  // core blanked text by characters at places it had counted in units, so whatever followed an emoji on the line slipped
+  // drawn in part, byte for byte by both readers (8 Oct 2026). An emoji is two UTF-16 units but one character. The core
+  // blanked text by characters at places it had counted in units. So whatever followed an emoji on the line slipped
   test('the item at fault is left out exactly, whatever came before it on the line', () => {
     const block = "// graph: g\n(a:T {name: '🙂 smile'}), (b:T {name: 'B'}), (gone)-[:R]->(a), (b)-[:R]->(a)";
     const { graphs, problems } = readNote([block]);
@@ -512,8 +513,8 @@ describe('a schema whose types its GraphMeta does not declare', () => {
 });
 
 describe('a kind or link type the locked graph’s schema does not declare', () => {
-  // the try-out of 8 Oct 2026: a graph locked from its first block, then given HOPE, Reason and FAVOURS the schema never
-  // declared, showed "No problems" on its cards
+  // the try-out of 8 Oct 2026. A graph was locked from its first block, then given HOPE, Reason and FAVOURS. The schema
+  // never declared them, yet it showed "No problems" on its cards
   const STEP1 = [
     '// graph: trip · SOURCE',
     "(trip_question:Question {title: 'How should we get to Sydney?'}),",

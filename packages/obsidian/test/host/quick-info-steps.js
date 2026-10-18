@@ -1,10 +1,11 @@
-// What the tests of the viewer aids (editor spec §24, §25: the quick-info tooltip) do by hand: hold the card's timers so a
-// hover or a long press is let go by the test and not by the clock, find the tooltip, and work out where a box or link is on
-// the page, to see that the tooltip never covers it.
+// What the tests of the viewer aids (editor spec §24, §25: the quick-info tooltip) do by hand.
+// - Hold the card's timers, so a hover or a long press is let go by the test and not by the clock.
+// - Find the tooltip.
+// - Work out where a box or link is on the page, to see that the tooltip never covers it.
 
 /**
- * Holds every timer the card sets through its window from now on: none runs until `fire()`, which runs them all, once,
- * so a hover's delay or a long press is passed by the test, never waited for. `pending()` counts those still held.
+ * Holds every timer the card sets through its window from now on. None runs until `fire()`, which runs them all, once.
+ * So a hover's delay or a long press is passed by the test, never waited for. `pending()` counts those still held.
  */
 export function clock(env) {
   const win = env.doc.defaultView,
@@ -59,8 +60,8 @@ export const touchUp = (el, g, at = { x: 20, y: 20 }, pointerId = 7) =>
 const nums = (s) => (s?.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
 
 /**
- * Where an element of the drawing is on the page: the box round its polygons, paths and ellipses (a link's curve and
- * arrowhead, a box's outline), found from the SVG as the plugin draws it and the card's view of it.
+ * Where an element of the drawing is on the page. It is the box round its polygons, paths and ellipses (a link's curve
+ * and arrowhead, a box's outline). It is found from the SVG as the plugin draws it and the card's view of it.
  */
 export function pageRect(el, g) {
   const svg = el.querySelector('svg'),

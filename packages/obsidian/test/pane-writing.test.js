@@ -1,5 +1,5 @@
-// Writing from the edit pane to the note (spec §4, §9): what is typed reaches the note quickly, never overwrites a block
-// changed meanwhile, is never lost, and can be undone; a draft offers Lock the graph; a graph naming a shared schema reads
+// Writing from the edit pane to the note (spec §4, §9). What is typed reaches the note quickly. It never overwrites a block
+// changed meanwhile, is never lost, and can be undone. A draft offers Lock the graph. A graph naming a shared schema reads
 // in its words.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
@@ -16,11 +16,11 @@ describe('writing to the note', () => {
   test('what is typed reaches the note within about a third of a second', async (t) => {
     const env = await open();
     try {
-      // the wait the pane schedules itself, counted on the test's own mock clock, which takes no real time and so is the
-      // same on every machine: the note changes within 350 ms of it. A test asserts the work done, never the time taken
-      // (spec §12, quality_ratchet, 12 Oct 2026), so what the typing and the write cost is not held here: the cost of a
-      // keystroke reaching the note is counted in instructions (scripts/benchmarks/keystroke.mjs). By the wall clock a
-      // loaded run of the whole suite failed it now and then (12 Oct 2026); in processor time it could still fail under
+      // the wait the pane schedules itself, counted on the test's own mock clock. That clock takes no real time, so it is
+      // the same on every machine: the note changes within 350 ms of it. A test asserts the work done, never the time
+      // taken (spec §12, quality_ratchet, 12 Oct 2026). So the cost of the typing and the write is not held here. The cost
+      // of a keystroke reaching the note is counted in instructions (scripts/benchmarks/keystroke.mjs). By the wall clock,
+      // a loaded run of the whole suite failed it now and then (12 Oct 2026). In processor time it could still fail under
       // coverage (the review of #112)
       t.mock.timers.enable({ apis: ['setTimeout'] });
       Object.assign(env.doc.defaultView, { setTimeout, clearTimeout });

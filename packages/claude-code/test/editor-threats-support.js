@@ -1,6 +1,8 @@
-// Test support for the editor server's threat tests (editor-threats.test.js, editor-threats-process.test.js): requests
-// made on connections of their own, whether an address answers, and the server started as the mod will, as a process,
-// with the test-only notes of fixtures/editor-server-test.ts. Test code only: nothing here ships.
+// Test support for the editor server's threat tests (editor-threats.test.js, editor-threats-process.test.js):
+// - requests made on connections of their own;
+// - whether an address answers;
+// - the server started as the mod will, as a process, with the test-only notes of fixtures/editor-server-test.ts.
+// Test code only: nothing here ships.
 import { after } from 'node:test';
 import http from 'node:http';
 import net from 'node:net';
@@ -48,8 +50,8 @@ export function sendRaw(port, bytes) {
 }
 
 /**
- * Whether anything answers a connection to an address and port. An address of this machine that drops the attempt,
- * as a VPN's may, is given a few seconds: a server listening there would have answered at once.
+ * Whether anything answers a connection to an address and port. Some addresses of this machine drop the attempt, as a
+ * VPN's may. Such an address is given a few seconds: a server listening there would have answered at once.
  */
 export function reachable(host, port) {
   return new Promise((resolve) => {

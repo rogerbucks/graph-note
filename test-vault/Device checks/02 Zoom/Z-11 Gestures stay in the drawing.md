@@ -26,6 +26,6 @@
 
 **Checklist line:**
 
-> **Z-11** Phone: zoomed in, one finger pans the drawing and a pinch zooms it, and neither slides Obsidian's side panels in nor moves the window; a box held and dragged does not either. On a fitted drawing a sideways swipe still opens them.
+> **Z-11** Phone: zoomed in, one finger pans the drawing and a pinch zooms it. Neither slides Obsidian's side panels in nor moves the window; a box held and dragged does not either. On a fitted drawing a sideways swipe still opens them.
 
 **Back to the checklist:** [Z-11 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-11 in its list.

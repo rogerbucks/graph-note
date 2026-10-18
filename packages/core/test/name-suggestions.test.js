@@ -1,5 +1,6 @@
-// Names suggested for things (editor spec §4: name_from_text, text_from_name, suggested_name_unique): a name follows the
-// pattern of the names already in the graph, a text follows from a name, and a suggested name is never one already taken.
+// Names suggested for things (editor spec §4: name_from_text, text_from_name, suggested_name_unique). A name follows
+// the pattern of the names already in the graph, and a text follows from a name. A suggested name is never one already
+// taken.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -116,8 +117,8 @@ describe('a name from a text', () => {
 });
 
 describe('the words of a text', () => {
-  // the graph reader accepts only A–Z, a–z, digits and _ in a name (tokens.js, and lexer.py in the Python library), so an
-  // accent is taken off its letter and a word in another script has no name to give
+  // the graph reader accepts only A–Z, a–z, digits and _ in a name (tokens.js, and lexer.py in the Python library). So
+  // an accent is taken off its letter, and a word in another script has no name to give
   test('lowercase, plain ASCII, with accents taken off, hyphens and apostrophes closed up and other marks parting words', () => {
     assert.deepEqual(nameWords('Café — crème brûlée!'), ['cafe', 'creme', 'brulee']);
     assert.deepEqual(nameWords("Don't e-ink; a/b"), ['dont', 'eink', 'a', 'b']);
@@ -177,8 +178,8 @@ describe('a text from a name', () => {
 });
 
 describe('the table every reader shares', () => {
-  // unnamed_drawn_suggested (spec §4, Roger, 10 Oct 2026): a thing written without a name is drawn under its suggested
-  // name by every reader alike, so the Python library suggests the names the core does — the same words, casing,
+  // unnamed_drawn_suggested (spec §4, Roger, 10 Oct 2026). A thing written without a name is drawn under its suggested
+  // name by every reader alike. So the Python library suggests the names the core does — the same words, casing,
   // numbering and reserved words. Both are held to one table, python/graph_spec/tests/name_cases.json, which the Python
   // tests read too.
   const TABLE = JSON.parse(readFileSync(new URL('../../../python/graph_spec/tests/name_cases.json', import.meta.url)));

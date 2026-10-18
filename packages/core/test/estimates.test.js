@@ -1,6 +1,6 @@
-// Estimated links (spec §3): a near miss of a name or a relationship type is drawn as a guess — dashed, marked with a
-// warning in words — never written to the note, never guessed between equals, and explained in a sentence when tapped.
-// Only near misses are estimated, never links nobody wrote.
+// Estimated links (spec §3). A near miss of a name or a relationship type is drawn as a guess, dashed and marked with a
+// warning in words. It is never written to the note, never guessed between equals, and explained in a sentence when
+// tapped. Only near misses are estimated, never links nobody wrote.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

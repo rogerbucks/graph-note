@@ -1,4 +1,4 @@
-// The note the edit pane's tests open (spec §4, §9) — two graph blocks with prose between — and the pane opened on it as
+// The note the edit pane's tests open (spec §4, §9): two graph blocks with prose between. Also the pane opened on it as
 // the Edit button opens it, with typing into its field as a person types.
 import { readFileSync } from 'node:fs';
 import { load, root } from './load-plugin.js';

@@ -23,8 +23,6 @@
 
 **Checklist line:**
 
-> **H-01** A box whose name holds a link draws it in the link colour, underlined. Tap the box: its details list each
-> link it holds under Links, by property, each underlined. Press Edit here and tap the box again: the inspector lists
-> them too, and in the text the link inside its quotes is underlined.
+> **H-01** A box whose name holds a link draws it in the link colour, underlined. Tap the box: its details list each link it holds under Links, by property, each underlined. Press Edit here and tap the box again: the inspector lists them too. In the text, the link inside its quotes is underlined.
 
 **Back to the checklist:** [H-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-01 in its list.

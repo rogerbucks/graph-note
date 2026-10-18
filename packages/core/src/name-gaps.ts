@@ -1,7 +1,7 @@
 // What a block's things are missing (editor spec §4): a thing given text but no name, and one given a name but no text.
-// A thing with text and no name cannot be read as written, so it is read as if the suggested name were there, in a copy,
-// with a warning that shows the name and a fix that writes it. A thing with no text is drawn by its name, with a hint that
-// offers the text. Nothing is written to the note unasked.
+// A thing with text and no name cannot be read as written. So it is read as if the suggested name were there, in a
+// copy. A warning shows the name, with a fix that writes it. A thing with no text is drawn by its name, with a hint
+// that offers the text. Nothing is written to the note unasked.
 import gs from '@thoughtknot/graph-spec';
 import { lineIndex } from './block-items.ts';
 import { textFromName } from './name-suggestions.ts';
@@ -117,12 +117,12 @@ const textOf = (w: Written): string | undefined => {
 };
 
 /**
- * What each block is missing. A thing written with text and no name gets a name suggested from the text, in the style of
- * the names of its graph (every block of it), not one of them and not a word the language keeps; a thing written with a
- * name and no text gets a text suggested from the name, under the key its kind's other things use — unless a SET, or the
- * thing written again elsewhere in the graph, gives it text. Things in a MATCH, in a schema, and only named again are left
- * alone; so is a thing with neither a name nor text, or whose properties cannot be read, which the reader says in its
- * own words.
+ * What each block is missing. A thing written with text and no name gets a name suggested from the text. It is in the
+ * style of the names of its graph (every block of it). It is not one of them, and not a word the language keeps. A
+ * thing written with a name and no text gets a text suggested from the name, under the key its kind's other things use.
+ * That is unless a SET, or the thing written again elsewhere in the graph, gives it text. Things in a MATCH, in a
+ * schema, and only named again are left alone. So is a thing with neither a name nor text, or whose properties cannot
+ * be read, which the reader says in its own words.
  */
 export function nameGaps(blocks: GapBlock[]): BlockGaps[] {
   const written = blocks.map((b) => writtenIn(b.text));

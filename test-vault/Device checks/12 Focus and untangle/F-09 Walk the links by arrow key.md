@@ -37,6 +37,6 @@
 
 **Checklist line:**
 
-> **F-09** Select a box, then press the arrow keys: the selection moves along a link to the neighbouring box in that direction, and every neighbour can be reached by some arrow. Nothing in the note changes in any of this.
+> **F-09** Select a box, then press the arrow keys. The selection moves along a link to the neighbouring box in that direction. Every neighbour can be reached by some arrow. Nothing in the note changes in any of this.
 
 **Back to the checklist:** [F-09 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-09 in its list.

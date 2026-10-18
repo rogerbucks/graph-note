@@ -36,9 +36,11 @@ from graphspec.style.inline import inline_rows, value_text  # noqa: E402
 with open(os.path.join(HERE, "style_cases.json"), encoding="utf-8") as f:
     CASES = json.load(f)["cases"]
 
-# The core's answer for each note: as the plugin draws a graph (packages/obsidian/src/block.ts and
-# view-block.ts), the style read for it and the drawing styled for the view it is drawn in
-# (style-source.ts, styledDrawing), laid out in each direction (render.ts, directions).
+# The core's answer for each note, as the plugin draws a graph (packages/obsidian/src/block.ts and
+# view-block.ts). It holds:
+# - the style read for it.
+# - the drawing styled for the view it is drawn in (style-source.ts, styledDrawing).
+# - laid out in each direction (render.ts, directions).
 CORE_SCRIPT = """
 const [src, cases] = [process.argv[1], JSON.parse(process.argv[2])];
 const { readNote } = await import(`${src}/drawing.ts`);
@@ -126,8 +128,8 @@ class Styled(unittest.TestCase):
 
     def test_arrowheads_are_hidden_and_shown_as_the_core_hides_and_shows_them(self):
         # arrows_both_renderers: the same links drawn without their arrowheads, and the same
-        # source, byte for byte (a plain loop, never subTest: the tests-first replay counts a test
-        # by its own result)
+        # source, byte for byte. A plain loop, never subTest. The tests-first replay counts a test
+        # by its own result.
         for case, ours, theirs in zip(CASES, self.python, self.core, strict=True):
             self.assertEqual(ours["arrowless"], theirs["arrowless"], case["name"])
             self.assertEqual(ours["drawn"], theirs["drawn"], case["name"])
@@ -139,14 +141,15 @@ class Styled(unittest.TestCase):
             self.assertEqual(ours["inline"], theirs["inline"], case["name"])
 
     def test_each_style_gives_the_cores_problems(self):
-        # the same problems for an Arrows and a Show as the core's, at the same block and line,
-        # with the same words and fix: what cannot be used is left out by both
+        # The same problems for an Arrows and a Show as the core's, at the same block and line.
+        # They have the same words and fix. What cannot be used is left out by both.
         for case, ours, theirs in zip(CASES, self.python, self.core, strict=True):
             self.assertEqual(ours["styles"], theirs["styles"], case["name"])
 
     def test_the_cases_hide_and_show_what_they_say(self):
-        # the table proves what it says: some links are drawn without their arrowheads, some
-        # rows are shown, a crowded box says how many are hidden, and a view changes the choice
+        # The table proves what it says:
+        # - some links are drawn without their arrowheads, and some rows are shown.
+        # - a crowded box says how many are hidden, and a view changes the choice.
         sources = [s for answer in self.core for d in answer["drawn"].values() for s in d.values()]
         self.assertTrue(any("dir=none" in s for s in sources))
         self.assertTrue(
@@ -208,8 +211,8 @@ class Styled(unittest.TestCase):
         self.assertEqual([(v, value_text(v)) for v, _ in cases], cases)
 
     def test_graph_parts_gives_the_boxes_and_links_with_their_properties(self):
-        # the boxes and links a host hands graph_svg, as the core draws them: each box's key, kinds
-        # and text, each link's reading, and their properties for the rows shown inline
+        # The boxes and links a host hands graph_svg, as the core draws them. That is each box's
+        # key, kinds and text, each link's reading, and their properties for the rows shown inline.
         texts = [
             "// graph: trip\n(home:Place:Start {name: 'Home', open: 'always'}),\n"
             "(park:Place {title: 'The park'}),\n(home)-[:NEAR {miles: 2}]->(park)"
@@ -231,8 +234,8 @@ class Styled(unittest.TestCase):
         self.assertEqual(parts["links"], [("NEAR", {"miles": 2})])
 
     def test_graph_parts_reads_links_in_the_words_of_a_shared_schema(self):
-        # a graph typed by a shared schema written in a block of its own: each link is read in
-        # the schema's words, as the core reads it, never in the type's own
+        # A graph typed by a shared schema written in a block of its own. Each link is read in
+        # the schema's words, as the core reads it, never in the type's own.
         texts = [
             "// graph: shared · SCHEMA shared_reader\n(t:Meta:ElementType {name: 'SEES', "
             "kind: 'edge', reading: 'can see', reverse_name: 'is seen by'})",
@@ -244,8 +247,8 @@ class Styled(unittest.TestCase):
         self.assertEqual(parts["edges"], [("x", "can see", "y")])
 
     def test_render_args_draws_every_case_as_the_core_does(self):
-        # parity for any caller: graph_svg.render(**render_args(texts, graph, view)) hands Graphviz
-        # the core's source in each direction, byte for byte, with nothing more to write
+        # Parity for any caller. graph_svg.render(**render_args(texts, graph, view)) hands Graphviz
+        # the core's source in each direction, byte for byte. Nothing more is left to write.
         for case, theirs in zip(CASES, self.core, strict=True):
             for name, sources in theirs["drawn"].items():
                 given = self._rendered(

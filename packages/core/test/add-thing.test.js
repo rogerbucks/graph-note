@@ -1,6 +1,7 @@
-// Adding a thing (editor spec §5, add_thing): it asks for the thing's text first and suggests its name from it, in the style
-// of the graph's names and never one of them (name_from_text, suggested_name_unique); the thing is then written as text,
-// after the block's last item, and nothing else in the block changes. A name of the user's own is held to the same rules.
+// Adding a thing (editor spec §5, add_thing). It asks for the thing's text first and suggests its name from it. The
+// name is in the style of the graph's names and never one of them (name_from_text, suggested_name_unique). The thing is
+// then written as text, after the block's last item, and nothing else in the block changes. A name of the user's own is
+// held to the same rules.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';

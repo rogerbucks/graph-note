@@ -1,5 +1,6 @@
-// The plan of the GitHub mirror: what must be done to make GitHub hold the desired issues and project, found by comparing
-// the desired state with what GitHub holds now. Pure — it reads two values and gives a third, so no network is touched.
+// The plan of the GitHub mirror: what must be done to make GitHub hold the desired issues and project. It is found by
+// comparing the desired state with what GitHub holds now. Pure — it reads two values and gives a third, so no network
+// is touched.
 // Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

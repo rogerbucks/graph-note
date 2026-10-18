@@ -1,6 +1,6 @@
 // The wiki's pages for developers (spec §41, developer_wiki): the architecture, writing a plug-in, adding a host and the
-// reference, each list made from the code and requirements/architecture.gql, each requirement marked against the latest
-// release, and a plug-in example that installs. Pure: the real files are read, nothing is fetched.
+// reference. Each list is made from the code and requirements/architecture.gql. Each requirement is marked against the
+// latest release. The plug-in example installs. Pure: the real files are read, nothing is fetched.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync } from 'node:fs';

@@ -1,7 +1,7 @@
-// One gql block in a note (spec §3): a graph block is drawn, as built by the note's blocks up to it; anything else is
-// shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed; when nothing can be
-// read, or the engine cannot start, or the graph is over a size or time limit (spec §9), the text is shown with its
-// problems or a banner.
+// One gql block in a note (spec §3). A graph block is drawn, as built by the note's blocks up to it. Anything else is
+// shown as coloured code. A graph is never blank: what can be read is drawn and the rest is listed. Sometimes nothing
+// can be read, or the engine cannot start, or the graph is over a size or time limit (spec §9). Then the text is shown
+// with its problems or a banner.
 import { MarkdownRenderChild, Notice, TFile } from 'obsidian';
 import type { Component, MarkdownPostProcessorContext } from 'obsidian';
 import {
@@ -75,9 +75,9 @@ function asText(
 }
 
 /**
- * Writes one block of the note at `path`, whose fence is on 1-based line `fence` (a `Block`'s line), as `now`, through
- * the vault and against the note as it is then, only while the block is still `was`: an estimated link's quick fix
- * (§3). Resolves to why nothing was written, or null.
+ * Writes one block of the note at `path`, whose fence is on 1-based line `fence` (a `Block`'s line), as `now`. It writes
+ * through the vault and against the note as it is then. It writes only while the block is still `was`. This is an
+ * estimated link's quick fix (§3). Resolves to why nothing was written, or null.
  */
 async function writeBlock(
   plugin: ThoughtKnotPlugin,
@@ -99,8 +99,8 @@ async function writeBlock(
 }
 
 /**
- * Draws one gql block where the note shows it, as `renderBlock` does, and draws it again in place whenever a setting
- * that changes how it is read or drawn changes (spec §21), until it leaves the page: what the last drawing added is
+ * Draws one gql block where the note shows it, as `renderBlock` does. It draws it again in place whenever a setting
+ * that changes how it is read or drawn changes (spec §21), until it leaves the page. What the last drawing added is
  * unloaded first, so nothing of it is left behind.
  */
 export async function renderShown(
@@ -129,8 +129,8 @@ export async function renderShown(
 }
 
 /**
- * Draws one gql block where the note shows it (spec §3): its graph with the bar, or its problems, or a prompt when it is
- * empty. `owner` is what the drawing is for, such as Live Preview's card: a newer drawing for it replaces one not yet laid out.
+ * Draws one gql block where the note shows it (spec §3). It draws its graph with the bar, or its problems, or a prompt
+ * when it is empty. `owner` is what the drawing is for, such as Live Preview's card. A newer drawing for it replaces one not yet laid out.
  * `redraw` draws the card again, for one drawn from another note or a file when that source changes (§20).
  */
 export async function renderBlock(
@@ -166,8 +166,8 @@ export async function renderBlock(
   }
 
   const info = ctx.getSectionInfo(el);
-  // with no section info, as when another plugin renders the block, the card cannot know which line of which note it
-  // would write: it is read-only, as in reading view (spec §3)
+  // with no section info, as when another plugin renders the block, the card cannot know where it would write. It
+  // cannot know which line of which note. So it is read-only, as in reading view (spec §3)
   const readOnly = (card: HTMLElement) => !info || readOnlyHere(card);
   let blocks: Block[] = info ? gqlBlocks(info.text) : [];
   let index = info ? blocks.findIndex((b) => b.line - 1 === info.lineStart) : -1;
@@ -189,8 +189,8 @@ export async function renderBlock(
   }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
   const shown = (p: Problem): ShownProblem => ({ ...p, noteLine: (blocks[p.block]?.line ?? 0) + p.line });
-  // its style graph (§2): what is wrong in it listed with the graph's problems; what is sound — its nudges (§6), the
-  // properties it shows inline (§14) and the arrowheads it hides (§15) — drawn
+  // its style graph (§2). What is wrong in it is listed with the graph's problems. What is sound is drawn: its nudges
+  // (§6), the properties it shows inline (§14) and the arrowheads it hides (§15)
   const styling = readStyle(texts, graph, reading);
   // its links followed through Obsidian, and each that names nothing in the vault a problem with its fix (§18)
   const followed = linkHost(plugin, target.path, graph);
@@ -216,8 +216,8 @@ export async function renderBlock(
   const root = el.createDiv({ cls: 'thoughtknot' });
 
   if (!drawing || !drawing.boxes.length) {
-    // while the block is edited in place, the editor keeps its place in the card through every redraw, even when
-    // nothing can be drawn for a moment, such as just after a comma at a line's end (typing_keeps_focus, spec §4)
+    // while the block is edited in place, the editor keeps its place in the card through every redraw. This holds even
+    // when nothing can be drawn for a moment. An example is just after a comma at a line's end (typing_keeps_focus, spec §4)
     const editing = plugin.inlineFor(target.path, target.line);
     if (editing) {
       if (problems.length) renderProblems(root, problems, false);
@@ -254,7 +254,7 @@ export async function renderBlock(
     return;
   }
 
-  // the View menu (§25): one state for every card of this graph in this note, folding it as its switches say; a graph
+  // the View menu (§25). One state for every card of this graph in this note, folding it as its switches say. A graph
   // drawn as a table has none
   const state = diagram?.table ? undefined : plugin.switchesFor(target.path, graph, styling.style);
   const laidOut = (by?: object) => plugin.layout(state ? state.folded(drawing) : drawing, by);
@@ -301,6 +301,7 @@ export async function renderBlock(
         : {
             moving: {
               written: styling.style.nudges,
+              ...(drawing.diagram?.type === 'radial' ? { centre: drawing.diagram.centre } : {}),
               move: (nudge: NudgeWrite, done: string) => void writeStyle(plugin, target.path, graph, { nudge }, done),
             },
           }),
@@ -326,9 +327,9 @@ export async function renderBlock(
       onEdit: () => {
         void plugin.openEditor(target);
       },
-      // edit here: the editor in place sits in the card; one already open for this block moves into the redrawn card
-      // a card just put on the page is acted on at once; one not yet on it says so, rather than doing nothing
-      // given `at`, such as an estimated link's Edit the link (§3), the editor opens with where it is written selected
+      // edit here: the editor in place sits in the card. One already open for this block moves into the redrawn card.
+      // A card just put on the page is acted on at once. One not yet on it says so, rather than doing nothing.
+      // Given `at`, such as an estimated link's Edit the link (§3), the editor opens with where it is written selected
       onEditHere: (at) => {
         if (!slot) settlePlacements();
         if (slot)

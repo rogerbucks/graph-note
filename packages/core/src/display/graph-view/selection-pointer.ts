@@ -1,6 +1,7 @@
-// The arrow to a selection out of view (editor spec §25, selection_pointer): a button at the edge of the drawing's view,
-// on the line from its middle towards the selection and pointing along it, named for what it points to; tapped, it brings
-// the selection into view. Where it sits is the core's `pointerTo`; this puts it on the page.
+// The arrow to a selection out of view (editor spec §25, selection_pointer). It is a button at the edge of the
+// drawing's view, named for what it points to. It sits on the line from its middle towards the selection and points
+// along it. Tapped, it brings the selection into view. Where it sits is the core's `pointerTo`; this puts it on the
+// page.
 import { setIcon } from '../host';
 import { word } from '@thoughtknot/core';
 import type { Pointing } from '@thoughtknot/core';

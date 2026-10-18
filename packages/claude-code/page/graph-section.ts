@@ -1,8 +1,8 @@
-// A note's first graph on the page (spec §9, §26): read by the core, laid out in the worker, and drawn as an image in the
-// palette of the system's scheme, drawn again when the scheme changes (cc_theme_follows). A drawing is an isolated image
-// of the SVG, which the page's policy allows from a blob and which runs nothing and does not move; its words stand beside
-// it, always, as the graph's text version (text-version.ts), and stand in alone when it cannot be drawn. The page never
-// shows a blank for a graph.
+// A note's first graph on the page (spec §9, §26). The core reads it and the worker lays it out. It is drawn as an
+// image in the palette of the system's scheme. It is drawn again when the scheme changes (cc_theme_follows). A drawing
+// is an isolated image of the SVG. The page's policy allows it from a blob. It runs nothing and does not move. Its
+// words always stand beside it, as the graph's text version (text-version.ts). They stand in alone when it cannot be
+// drawn. The page never shows a blank for a graph.
 import { gqlBlocks } from '../../core/src/blocks.ts';
 import { readNote } from '../../core/src/drawing.ts';
 import type { LayoutRunner } from '../../core/src/layout-worker.ts';

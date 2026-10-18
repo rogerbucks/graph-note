@@ -1,6 +1,7 @@
-// The mod's build (spec §10, a Claude Code host): `npm run build --workspace packages/claude-code` writes what the mod
-// loads, graph.js for its hooks module, which must hold no WebAssembly engine and stay under the 1 MiB a mod file may be;
-// and bin/render.mjs, the core's Graphviz engine that node runs, which draws SVG from DOT on its own.
+// The mod's build (spec §10, a Claude Code host). `npm run build --workspace packages/claude-code` writes what the mod
+// loads:
+// - graph.js, its hooks module. It must hold no WebAssembly engine and stay under the 1 MiB a mod file may be.
+// - bin/render.mjs, the core's Graphviz engine that node runs. It draws SVG from DOT on its own.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

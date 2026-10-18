@@ -1,7 +1,7 @@
-// Zooming out stops at the fit (editor spec §25, zoom_out_to_fit, zoom_fit_recomputed): the furthest a drawing zooms out
-// is where the whole of it fits its view, or natural size when it would fit larger, in place of §3's quarter; four times
-// natural size stays the furthest in. The limit is worked out again whenever the view is resized, full screen is entered
-// or left, or the drawing changes, so it is never one worked out for another size.
+// Zooming out stops at the fit (editor spec §25, zoom_out_to_fit, zoom_fit_recomputed). The furthest a drawing zooms
+// out is where the whole of it fits its view, in place of §3's quarter. It is natural size when the drawing would fit
+// larger. Four times natural size stays the furthest in. The limit is worked out again whenever the view is resized,
+// full screen is entered or left, or the drawing changes. So it is never one worked out for another size.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Zoom, MAX_SCALE } from '../src/zoom.ts';

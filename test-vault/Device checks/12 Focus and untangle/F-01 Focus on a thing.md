@@ -38,6 +38,6 @@
 
 **Checklist line:**
 
-> **F-01** Tap a box: it, its links and the boxes at their other ends stay filled, with the heavier outline; every other box becomes an empty outline and its words stay as easy to read; nothing moves or disappears. Tap empty space, or press Escape: everything is back as it was. Desktop and phone, light and dark.
+> **F-01** Tap a box: it, its links and the boxes at their other ends stay filled, with the heavier outline. Every other box becomes an empty outline, and its words stay as easy to read. Nothing moves or disappears. Tap empty space, or press Escape: everything is back as it was. Desktop and phone, light and dark.
 
 **Back to the checklist:** [F-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-01 in its list.

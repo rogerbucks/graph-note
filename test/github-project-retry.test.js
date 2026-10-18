@@ -1,8 +1,8 @@
-// A transient GitHub failure (a network timeout, a reset connection, a 502, 503 or 504, "Bad Gateway", "something went
-// wrong") is tried again, after 5, 15 and 45 seconds, rather than stopping the run. Reads are always tried again; a
-// mutation is tried again only where that cannot do it twice: an issue, label or project create first re-reads what
-// GitHub holds and does not repeat a create that went through. Run against the in-memory stand-in for gh with an
-// injected sleep, so no time passes and no network is touched. Editor spec §12, requirements_checked_in_ci.
+// A transient GitHub failure is tried again, after 5, 15 and 45 seconds, rather than stopping the run. Transient means
+// a network timeout, a reset connection, a 502, 503 or 504, "Bad Gateway" or "something went wrong". Reads are always
+// tried again. A mutation is tried again only where that cannot do it twice. So an issue, label or project create first
+// re-reads what GitHub holds, and does not repeat a create that went through. Run against the in-memory stand-in for gh
+// with an injected sleep, so no time passes and no network is touched. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';

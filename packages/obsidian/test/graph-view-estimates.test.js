@@ -1,6 +1,6 @@
 // An estimated link, tapped (spec §3; device check V-06, Roger, 11 Oct 2026: "I can't click on the estimated link to
-// review it / edit it / fix it. Make that simple (quick fix or full edit options)"): it is selected as any link is, and
-// its details offer the quick fix, which accepts the estimate with its problem's own fix, and Edit the link, which opens
+// review it / edit it / fix it. Make that simple (quick fix or full edit options)"). It is selected as any link is.
+// Its details offer two things. The quick fix accepts the estimate with its problem's own fix. Edit the link opens
 // the editor with the misspelt name selected, where the fix bar offers the same fix.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';

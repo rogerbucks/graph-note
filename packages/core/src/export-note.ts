@@ -1,8 +1,8 @@
-// The companion note of an export saved into the vault (editor spec §16, export_companion_note): a short Markdown note that
-// links the export, names the note it came from, the graph or view, the day and the scope. Of an image it shows the
-// image, and holds nothing of the data beyond what the image shows: the names the image carries, and no property, text
-// or count the image does not. Of the data it links the file, shows nothing, and says how many things and links it
-// holds, and how many of them are a view's faded context.
+// The companion note of an export saved into the vault (editor spec §16, export_companion_note). It is a short Markdown
+// note that links the export. It names the note it came from, the graph or view, the day and the scope. Of an image it
+// shows the image, and holds nothing of the data beyond what the image shows. That means the names the image carries,
+// and no property, text or count the image does not. Of the data it links the file and shows nothing. It says how many
+// things and links it holds, and how many of them are a view's faded context.
 import { saidDate } from './export-frame.ts';
 import type { ExportScope } from './export-scope.ts';
 

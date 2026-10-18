@@ -1,10 +1,10 @@
 // The drafts kept in the plugin's data (spec §9, nothing_typed_lost): what was typed in a graph and could not be written.
-// Each draft has an id, given once when it is first kept and never again, and every change to a draft, deleting or
-// restoring it among them, finds it by that id (Roger's choice A, 11 Oct 2026). Its key, `<note>#<graph>` with a mark
-// such as ` (2)` beside it, only says whose draft it is: for display and for offering it when its block is edited. The
-// drafts follow their note when it is renamed or moved, edited or not, their ids unchanged; drafts kept before ids were
-// are given one when first read; and one command writes every draft, once each, into a new note, so a draft whose note
-// was deleted is never out of reach.
+// Each draft has an id, given once when it is first kept and never again. Every change to a draft finds it by that id,
+// deleting or restoring it among them (Roger's choice A, 11 Oct 2026). Its key is `<note>#<graph>`, with a mark such as
+// ` (2)` beside it. The key only says whose draft it is: for display and for offering it when its block is edited.
+// - The drafts follow their note when it is renamed or moved, edited or not. Their ids are unchanged.
+// - Drafts kept before ids were are given one when first read.
+// - One command writes every draft, once each, into a new note. So a draft whose note was deleted is never out of reach.
 import { Notice } from 'obsidian';
 import type ThoughtKnotPlugin from './main';
 import type { Drafts } from './main';
@@ -14,8 +14,8 @@ import { freePath } from './export/vault-write';
 export const RECOVER_COMMAND = { id: 'recover-drafts', name: 'Recover kept drafts into a new note' };
 
 /**
- * A new draft's id, a random version-4 UUID: never one given before. Where the web view has no crypto.randomUUID, as on
- * some phones or outside a secure context, it is made from crypto.getRandomValues, its version and variant bits set.
+ * A new draft's id, a random version-4 UUID: never one given before. The web view may have no crypto.randomUUID, as on
+ * some phones or outside a secure context. Then it is made from crypto.getRandomValues, its version and variant bits set.
  */
 export function newDraftId(): string {
   if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -52,8 +52,9 @@ export function keyBeside(data: Drafts, key: string): string {
 }
 
 /**
- * The drafts kept for the note at `old`, or for a note in the folder at `old`, moved to where it now is, under `now`,
- * each with its id: beside, never over, a draft already kept there, as a deleted note's at the name the note now takes.
+ * The drafts kept for the note at `old`, or for a note in the folder at `old`, moved to where it now is, under `now`.
+ * Each keeps its id. Each goes beside, never over, a draft already kept there. An example is a deleted note's draft at the
+ * name the note now takes.
  */
 export async function followRename(plugin: ThoughtKnotPlugin, now: string, old: string): Promise<void> {
   const data = plugin.drafts();
@@ -69,8 +70,8 @@ export async function followRename(plugin: ThoughtKnotPlugin, now: string, old: 
 }
 
 /**
- * Writes every kept draft into a new note, once each, by its id, under its note and graph and when it was kept, as plain
- * text so none is drawn or read as part of a graph; and says where. The drafts stay kept, still offered in their editors.
+ * Writes every kept draft into a new note, once each, by its id, under its note and graph and when it was kept. Each is
+ * plain text, so none is drawn or read as part of a graph. Then it says where. The drafts stay kept, still offered in their editors.
  */
 export async function recoverDrafts(plugin: ThoughtKnotPlugin): Promise<void> {
   const byId = new Map(Object.entries(plugin.drafts()).map(([key, d]) => [d.id, [key, d] as const]));

@@ -1,8 +1,9 @@
 // A block that draws its graph from elsewhere (editor spec §20 gql_file_source, gql_file_missing; §7 view_of_another_note):
-// `// graph: trip · FROM Graphs/trip.gql` or `· FROM [[Trip plan]]`. Its card draws the whole graph as written there,
-// read-only, with a line saying where it comes from; it is drawn again when the source changes; and a source that is
-// missing, moved or unreadable, or holds no such graph, is said in a sentence naming it, with the block as text, never a
-// blank drawing. A source too large to read is shown under the banner a note's own blocks get. Views of the graph in
+// `// graph: trip · FROM Graphs/trip.gql` or `· FROM [[Trip plan]]`.
+// - Its card draws the whole graph as written there, read-only, with a line saying where it comes from.
+// - It is drawn again when the source changes.
+// - A source that is missing, moved or unreadable, or holds no such graph, is said in a sentence naming it.
+//   The block shows as text, never a blank drawing. A source too large to read is shown under the banner a note's own blocks get. Views of the graph in
 // the note draw from the same source (view-block.ts, `sourcedView`).
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
@@ -26,9 +27,10 @@ import { readFromVault, watchSource } from './source-read';
 import { sourceAlert, sourceStrip } from './source-strip';
 
 /**
- * The reading a graph of a note is drawn from when the note says it is written elsewhere (`· FROM`): the source read,
- * watched so the card is drawn again when it changes; or the sentence saying why nothing can be drawn; or null when the
- * note draws `graph` from its own blocks.
+ * The reading a graph of a note is drawn from when the note says it is written elsewhere (`· FROM`). It is one of:
+ * - the source read, watched so the card is drawn again when it changes;
+ * - the sentence saying why nothing can be drawn;
+ * - null when the note draws `graph` from its own blocks.
  */
 export async function sourcedView(
   plugin: ThoughtKnotPlugin,
@@ -122,8 +124,8 @@ export async function renderSourceBlock(
       callouts: plugin.settings.noteCallouts === 'on',
       aids: aidsOf(plugin.settings),
       lineOf: (at) => lineInSource(read, at),
-      // the data is written in the source, so the drawing is read-only here; the strip opens a note to change it there,
-      // and Edit opens this block in the pane
+      // The data is written in the source, so the drawing is read-only here.
+      // The strip opens a note to change it there, and Edit opens this block in the pane.
       onEdit: () => {
         if (target) void plugin.openEditor(target);
       },

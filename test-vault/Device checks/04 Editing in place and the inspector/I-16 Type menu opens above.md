@@ -23,6 +23,6 @@
 
 **Checklist line:**
 
-> **I-16** Phone and desktop: with the properties lower down the screen, so the icon is near the bottom of the window, the property type menu opens above the icon and shows every item down to Remove, Checkbox included; with room below it opens under the icon as before. On the phone, where the rows are taller, it also fits.
+> **I-16** Phone and desktop: put the properties lower down the screen, so the icon is near the bottom of the window. The property type menu opens above the icon and shows every item down to Remove, Checkbox included. With room below, it opens under the icon as before. On the phone, where the rows are taller, it also fits.
 
 **Back to the checklist:** [I-16 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-16 in its list.

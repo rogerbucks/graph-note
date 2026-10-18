@@ -1,7 +1,10 @@
-// Links that move in a drawing (editor spec §7, §11): the links a style graph's Flow moves are marked for the plugin's
-// styles to run their dashes or a dot along them (links_show_flow), each named for a screen reader with its movement and
-// what it means, and the card's legend saying each in words beside its icon (motion_not_alone); a view moves its own,
-// and no link moves without a Flow (flow_in_style_graph); under reduced motion no dot runs (motion_reduced_respected).
+// Links that move in a drawing (editor spec §7, §11):
+// - The links a style graph's Flow moves are marked. The plugin's styles run their dashes or a dot along them
+//   (links_show_flow).
+// - Each is named for a screen reader with its movement and what it means.
+//   The card's legend says each in words beside its icon (motion_not_alone).
+// - A view moves its own, and no link moves without a Flow (flow_in_style_graph).
+// - Under reduced motion no dot runs (motion_reduced_respected).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';

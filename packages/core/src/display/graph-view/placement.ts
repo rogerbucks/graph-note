@@ -1,14 +1,14 @@
-// Where a drawing's card is placed (spec §3, §4): read-only in reading view, a hover preview or an embed, editable in
-// Live Preview and Source mode; and, since Live Preview draws a block into a card that goes on the page only after,
-// what waits for a card to be put on the page before deciding what it offers. Also the part of the screen its note is
-// seen in, which the details sheet is pinned to the foot of, and scrolling that note (§25).
+// Where a drawing's card is placed (spec §3, §4). It is read-only in reading view, a hover preview or an embed. It is
+// editable in Live Preview and Source mode. Live Preview draws a block into a card that goes on the page only after. So
+// this also holds what waits for a card to be put on the page before deciding what it offers. It also holds the part of
+// the screen its note is seen in, and scrolling that note (§25). The details sheet is pinned to the foot of that part.
 
 /**
- * Whether a card is where the note is only read, not edited: reading view, a hover preview or an embed, as opposed to
- * Live Preview or Source mode (spec §3, "Read-only in Reading view"; decided 9 Oct 2026). A graph in an embed of another
- * note (`![[Other note]]`, which Obsidian draws in an `.internal-embed.markdown-embed`) is read-only wherever it is shown,
- * inside a note in Live Preview too (reading_view_whole_note, 11 Oct 2026): only the note's own block, where the note is
- * edited, is editable.
+ * Whether a card is where the note is only read, not edited: reading view, a hover preview or an embed. That is as
+ * opposed to Live Preview or Source mode (spec §3, "Read-only in Reading view"; decided 9 Oct 2026). A graph in an
+ * embed of another note is read-only wherever it is shown. Such an embed is `![[Other note]]`, which Obsidian draws in
+ * an `.internal-embed.markdown-embed`. It is read-only inside a note in Live Preview too (reading_view_whole_note, 11
+ * Oct 2026). Only the note's own block, where the note is edited, is editable.
  */
 export const readOnlyHere = (el: HTMLElement): boolean =>
   !!el.closest('.markdown-embed, .internal-embed') ||
@@ -18,8 +18,9 @@ export const readOnlyHere = (el: HTMLElement): boolean =>
 const SCROLLER = '.cm-scroller, .markdown-preview-view';
 
 /**
- * The part of the screen a card's note is seen in (§25, the details sheet): its scroller's top and foot within the window,
- * and how far that foot is above the window's, where a phone's toolbar may sit. The whole window when there is none.
+ * The part of the screen a card's note is seen in (§25, the details sheet). It holds its scroller's top and foot within
+ * the window. It holds how far that foot is above the window's, where a phone's toolbar may sit. The whole window when
+ * there is none.
  */
 export function screenOf(el: HTMLElement): { top: number; bottom: number; below: number } {
   const height = el.win.innerHeight,
@@ -51,10 +52,10 @@ function settle(doc: Document): void {
 
 /**
  * Runs `then` once `el` is on the page, at once when it already is, and never when the card is no longer `wanted`.
- * Live Preview draws a block into a card that goes on the page only after: at once when the block is in view, but only
- * once it is scrolled to when it is not, and a card drawn while the layout engine starts waits for it. So the wait has
- * no time limit; a card given up on would offer nothing, its Edit here doing nothing. It does no work while it waits:
- * one watcher per document hears each change to the page, rather than every card polling on a timer.
+ * Live Preview draws a block into a card that goes on the page only after. That is at once when the block is in view,
+ * but only once it is scrolled to when it is not. A card drawn while the layout engine starts waits for it. So the
+ * wait has no time limit; a card given up on would offer nothing, its Edit here doing nothing. It does no work while
+ * it waits: one watcher per document hears each change to the page, rather than every card polling on a timer.
  */
 export function whenPlaced(el: HTMLElement, then: () => void, wanted: () => boolean = () => true): void {
   if (el.isConnected) return then();
@@ -77,9 +78,9 @@ export function whenPlaced(el: HTMLElement, then: () => void, wanted: () => bool
 }
 
 /**
- * Runs now the checks of cards just put on the page, rather than when the page next tells of a change: the editing
- * view's own card puts a new drawing in place and has its editor moved in at once, so the card is never seen without it
- * (§4); and Edit here pressed on a card acts on it at once.
+ * Runs now the checks of cards just put on the page, rather than when the page next tells of a change. The editing
+ * view's own card puts a new drawing in place and has its editor moved in at once. So the card is never seen without
+ * it (§4). And Edit here pressed on a card acts on it at once.
  */
 export function settlePlacements(): void {
   for (const checks of [...waiting.values()]) for (const check of [...checks]) check();

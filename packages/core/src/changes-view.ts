@@ -1,7 +1,7 @@
-// The changes view (editor spec §41, changes_view): what changed in a graph between two versions of its note, such as the
-// text as it is now and the last commit or a branch. The two versions are drawn as one: every thing and link of the
-// newer, and what the older held that the newer does not, each marked added, removed or changed by its line as well as
-// its colour, and listed in words. Nothing is written; the host gives the older text however it reads it.
+// The changes view (editor spec §41, changes_view): what changed in a graph between two versions of its note. Those may
+// be the text as it is now and the last commit or a branch. The two versions are drawn as one: every thing and link of
+// the newer, and what the older held that the newer does not. Each is marked added, removed or changed by its line as
+// well as its colour, and listed in words. Nothing is written; the host gives the older text however it reads it.
 import type { Graph, Value } from '@thoughtknot/graph-spec';
 import { gqlBlocks } from './blocks.ts';
 import { readNote } from './drawing.ts';
@@ -35,8 +35,8 @@ export interface ChangesShown {
 }
 
 /**
- * How each mark is drawn: added a heavy line, changed dashed, removed dotted with its text in italics, each in its own
- * hue too, so none is told by colour alone (editor spec §11).
+ * How each mark is drawn: added a heavy line, changed dashed, removed dotted with its text in italics. Each is in its
+ * own hue too, so none is told by colour alone (editor spec §11).
  */
 export const CHANGE_LOOKS: Record<MarkKind, ThingLook> = {
   add: { hue: 'green', line: 'bold' },
@@ -147,7 +147,7 @@ export function changesView(before: string, after: string, graph: string, shared
     link('remove', links.length - 1, l);
   }
   // drawn as a plain network in the newer's direction, every link still, nothing folded or nudged and no near miss
-  // guessed, so every change is in sight and what the older held has a place
+  // guessed. So every change is in sight, and what the older held has a place
   const drawing: GraphDrawing = {
     graph,
     boxes,
@@ -167,8 +167,8 @@ export function changesText(shown: ChangesShown): string {
 }
 
 /**
- * The SVG Graphviz drew of the changes view's drawing with each change marked in `palette`'s fixed colours: the line of
- * each box and link its mark's look (CHANGE_LOOKS), so an image or an isolated pane shows it in either theme.
+ * The SVG Graphviz drew of the changes view's drawing with each change marked in `palette`'s fixed colours. The line of
+ * each box and link is its mark's look (CHANGE_LOOKS). So an image or an isolated pane shows it in either theme.
  */
 export function markedChanges(svg: string, shown: ChangesShown, palette: Palette): string {
   const drawing = shown.reading.graphs.get(shown.graph);

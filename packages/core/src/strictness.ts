@@ -1,7 +1,10 @@
-// Strictness (spec §21): the departures from standard GQL that the reader reads as meant, what each of the three levels
-// makes of them, converting a note back to standard GQL, checked before it is written, and the standard text an engine
-// or an export is given whatever the level. A comment after code and a thing without a name are the note format's own
-// rules, not departures from GQL, so no level changes them.
+// Strictness (spec §21):
+// - the departures from standard GQL that the reader reads as meant;
+// - what each of the three levels makes of them;
+// - converting a note back to standard GQL, checked before it is written;
+// - the standard text an engine or an export is given, whatever the level.
+// A comment after code and a thing without a name are the note format's own rules, not departures from GQL, so no
+// level changes them.
 import { gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import type { Departure, Problem } from './note-reading.ts';
@@ -85,7 +88,7 @@ function asStandard(blocks: string[]): { blocks: string[]; changed: number; left
 /**
  * What an engine or an export is given (spec §21, engines_get_standard): each block as standard GQL. The level is never
  * asked: it decides only what is reported. No line is added or taken away. `left` names, by index, any block a
- * departure could not be written out of, so a caller never hands one over as if it were standard.
+ * departure could not be written out of. So a caller never hands one over as if it were standard.
  */
 export function standardBlocks(blocks: string[]): { blocks: string[]; left: number[] } {
   const { blocks: out, left } = asStandard(blocks);
@@ -110,9 +113,9 @@ function graphsOf(blocks: string[]): string {
 }
 
 /**
- * The note converted back to standard GQL in one action (spec §21, simplified_back_to_standard), checked by the
- * standard checker before it is written: the converted note must read with no departure and no error, as the same
- * graphs. Otherwise nothing is converted, and the reason says what stands in the way.
+ * The note converted back to standard GQL in one action (spec §21, simplified_back_to_standard). The standard checker
+ * checks it before it is written: the converted note must read with no departure and no error, as the same graphs.
+ * Otherwise nothing is converted, and the reason says what stands in the way.
  */
 export function toStandard(note: string): Converted {
   const spans = gqlSpans(note);

@@ -1,5 +1,6 @@
-// The completeness report behind the problems badge (spec §8): for each completeness rule the graph declares (§25 of the
-// graph spec), what is covered, what is deferred — and overdue — and what is missing, with a fix for each gap, in words.
+// The completeness report behind the problems badge (spec §8). It covers each completeness rule the graph declares (§25
+// of the graph spec). It says what is covered, what is deferred and overdue, and what is missing, with a fix for each
+// gap.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
