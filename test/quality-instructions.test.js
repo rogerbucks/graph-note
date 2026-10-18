@@ -156,13 +156,16 @@ describe('no baseline yet', () => {
 describe('held to a baseline that holds them', () => {
   const base = () => run(counted());
 
-  test('a count worse by more than the tolerance fails, naming it; within it passes', () => {
+  test('a count worse by more than the tolerance fails, naming it; within it passes; an unsteady one only warns', () => {
     const name = COUNTS[1];
     const by = (share) => run({ ...counted(), [name]: base().metrics[name] * (1 + share) });
     assert.deepEqual(compare(base(), by(INSTRUCTION_TOLERANCE * 0.9), []).failures, []);
     const r = compare(base(), by(INSTRUCTION_TOLERANCE * 1.5), []);
     assert.deepEqual(failed(r), [name]);
     assert.match(r.failures[0].message, /instructions_reading_limits got worse/);
+    const unsteady = compare(base(), run({ ...counted(), [COUNTS[0]]: base().metrics[COUNTS[0]] * 5 }), []);
+    assert.deepEqual(unsteady.failures, []);
+    assert.match(unsteady.warnings[0].message, /instructions_draw_fifty got worse.*reported, never enforced/);
   });
 
   test('counted on another machine, a worse count only warns', () => {
@@ -175,12 +178,13 @@ describe('held to a baseline that holds them', () => {
       const r = compare(base(), run(counted(2), { counter }), []);
       assert.deepEqual(r.failures, [], JSON.stringify(counter));
       assert.deepEqual(warned(r), COUNTS);
-      assert.match(r.warnings[0].message, /a different machine/);
+      const steady = r.warnings.find((w) => w.metric === COUNTS[1]);
+      assert.match(steady.message, /a different machine/);
     }
   });
 
   test('a worse count names the machine that counted it: Node, Valgrind and the processor', () => {
-    const r = compare(base(), run({ ...counted(), [COUNTS[0]]: 2e8 }), []);
+    const r = compare(base(), run({ ...counted(), [COUNTS[1]]: base().metrics[COUNTS[1]] * 2 }), []);
     assert.match(r.failures[0].message, /counted on linux x64, Node v24\.9\.0, valgrind-3\.22\.0, AMD EPYC 7763/);
   });
 });
@@ -263,13 +267,16 @@ describe('the committed baseline holds the counts', () => {
 
 describe('how far a count may move', () => {
   test('a drawing’s count, which moves from run to run on the release runner, has room for that; every other count 5%', async () => {
-    const { METRICS, INSTRUCTION_TOLERANCE, DRAWING_TOLERANCE } = await import('../scripts/quality-spec.mjs');
+    const { METRICS, INSTRUCTION_TOLERANCE, DRAWING_TOLERANCE, UNSTEADY_BENCHMARKS } =
+      await import('../scripts/quality-spec.mjs');
     assert.equal(INSTRUCTION_TOLERANCE, 0.05);
-    // four counts on the release runner (18 Oct 2026), the highest over the lowest of each metric: 1.35, 1.05 and 1.23
-    assert.deepEqual(DRAWING_TOLERANCE, { draw_fifty: 0.4, draw_five_hundred: 0.1, cold_start: 0.3 });
+    // four counts on the release runner (18 Oct 2026): draw_five_hundred moved 1.3%, cold_start 20%, draw_fifty fivefold
+    assert.deepEqual(DRAWING_TOLERANCE, { draw_five_hundred: 0.1, cold_start: 0.3 });
+    assert.deepEqual(UNSTEADY_BENCHMARKS, ['draw_fifty']);
     for (const [name, spec] of Object.entries(METRICS).filter(([, s]) => s.instructions && s.unit === 'instructions')) {
       const benchmark = name.replace(/^instructions_/, '');
       assert.equal(spec.tolerance, DRAWING_TOLERANCE[benchmark] ?? INSTRUCTION_TOLERANCE, name);
+      assert.equal(spec.warnOnly ?? false, UNSTEADY_BENCHMARKS.includes(benchmark), name);
     }
   });
 });

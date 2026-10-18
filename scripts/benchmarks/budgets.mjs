@@ -12,19 +12,19 @@ export const SPEED_BUDGETS = {
   },
   draw_five_hundred: {
     most: 7_700_000_000,
-    why: 'the highest of its two cases over four counts, 6.39 billion, on the release runner (Linux x86-64, Node 24.20.0, 18 Oct 2026), and a fifth more',
+    why: 'the highest of its two cases over four counts, 6.35 billion, on the release runner (Linux x86-64, Node 24.20.0, each benchmark bundled on its own, 18 Oct 2026), and a fifth more',
   },
   mesh_query: {
-    most: 148_000_000,
-    why: 'the larger of its two queries, 122.7 million, the same in all four counts on the release runner (Linux x86-64, Node 24.20.0, 18 Oct 2026), and a fifth more',
+    most: 150_000_000,
+    why: 'the larger of its two queries, 123.3 million, the same in all four counts on the release runner (Linux x86-64, Node 24.20.0, each benchmark bundled on its own, 18 Oct 2026), and a fifth more',
   },
   cold_start_obsidian: {
     most: 2_400_000_000,
-    why: 'the highest of four counts of the plugin’s first drawing, 2.00 billion, on the release runner (Linux x86-64, Node 24.20.0, 18 Oct 2026), and a fifth more',
+    why: 'the highest of four counts of the plugin’s first drawing, 1.87 billion, on the release runner (Linux x86-64, Node 24.20.0, each benchmark bundled on its own, 18 Oct 2026), and a fifth more (2.25 billion), kept at its first setting',
   },
   cold_start_claude_code: {
-    most: 2_000_000_000,
-    why: 'the highest of four counts of the pane’s first drawing, 1.65 billion, on the release runner (Linux x86-64, Node 24.20.0, 18 Oct 2026), and a fifth more',
+    most: 2_300_000_000,
+    why: 'the highest of four counts of the pane’s first drawing, 1.90 billion, on the release runner (Linux x86-64, Node 24.20.0, each benchmark bundled on its own, 18 Oct 2026), and a fifth more',
   },
 };
 
