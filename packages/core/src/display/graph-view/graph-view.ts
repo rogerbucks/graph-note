@@ -226,7 +226,7 @@ export class GraphView extends Lifecycle {
     const room = Math.min(this.viewport.clientWidth || Infinity, activeWindow.innerWidth || Infinity);
     const type = this.o.diagram?.choice.drawn ?? 'network';
     this.across = mode === 'note' && scrollsOneWay(type, isPhone(), this.o.drawn.width, room);
-    const size = { width: this.o.drawn.width, height: this.o.drawn.height };
+    const size = { width: this.o.drawn.width, height: this.o.drawn.height, fromRight: !!this.o.drawn.mirrored };
     this.zoom = this.across ? new AcrossZoom(size, this.zoomSize(), mode) : new Zoom(size, this.zoomSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);
     this.zoom.onExit = () => this.o.onClose?.();

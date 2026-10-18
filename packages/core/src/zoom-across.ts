@@ -30,7 +30,7 @@ export class AcrossZoom extends Zoom {
     return Math.min(this.mode === 'note' ? 1 : MAX_SCALE, Math.max(this.outLimit(), raw));
   }
 
-  /** Fitted, and shown from its start. */
+  /** Fitted, and shown from its start: its right end, for a drawing read right to left (§42). */
   override fit(): void {
     super.fit();
     this.toStart();
@@ -39,7 +39,10 @@ export class AcrossZoom extends Zoom {
   /** At the scale that fits it, and, when wider than its viewport, at its start. */
   override isFitted(): boolean {
     const v = this.view();
-    return Math.abs(v.scale - this.fitScale()) < EPS && (v.width <= this.viewport.width + EPS || Math.abs(v.x) < EPS);
+    const start = this.content.fromRight ? this.viewport.width - v.width : 0;
+    return (
+      Math.abs(v.scale - this.fitScale()) < EPS && (v.width <= this.viewport.width + EPS || Math.abs(v.x - start) < EPS)
+    );
   }
 
   /** Up and down are the browser's, to scroll the page, while the drawing scrolls across. */
@@ -74,6 +77,6 @@ export class AcrossZoom extends Zoom {
 
   /** To the drawing's start, across, when it is wider than its viewport; centred, as Zoom keeps it, when it is not. */
   private toStart(): void {
-    this.panBy(this.view().width, 0);
+    this.panBy(this.content.fromRight ? -this.view().width : this.view().width, 0);
   }
 }
