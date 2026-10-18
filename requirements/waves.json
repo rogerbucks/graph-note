@@ -121,9 +121,16 @@
       "workstreams": ["B3", "B4"]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 18 · Held: Copilot Cowork skill",
       "start": "2027-05-10",
       "end": "2027-05-23",
+      "estimate": true,
+      "workstreams": ["M1"]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-05-24",
+      "end": "2027-06-06",
       "estimate": true,
       "workstreams": []
     }
