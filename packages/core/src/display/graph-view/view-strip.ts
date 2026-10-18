@@ -2,7 +2,7 @@
 // the choice in the style graph (fade_or_hide_in_style), and Save as shown (view_saved_as_shown); the legend of the
 // colours its looks use, each with what it means (styling_keeps_locked_rules); and, on the drawing, what is outside the
 // view faded, and each look drawn in the locked style's own blend of its hue (styled_paths_and_views).
-import { hueColour } from '@graph-note/core';
+import { hueColour, word } from '@graph-note/core';
 import type { LegendChoice, LegendEntry, Outside, ThingLook, View } from '@graph-note/core';
 import { button } from './view-bar';
 
@@ -35,20 +35,23 @@ export function renderViewStrip(
   now: () => { view: View; selected: string | null; legend: readonly LegendChoice[] },
 ): HTMLElement[] {
   const strip = root.createDiv({ cls: 'graph-note-view-strip' });
-  strip.createSpan({ cls: 'graph-note-view-reading', text: `View ${v.name}: ${v.reading}` });
+  strip.createSpan({
+    cls: 'graph-note-view-reading',
+    text: word('strip.reading', { name: v.name, reading: v.reading }),
+  });
   const other: Outside = v.outside === 'fade' ? 'hide' : 'fade';
   // the buttons that write the style graph, which a read-only place (reading view) takes away
   const writes = [
-    button(strip, other === 'hide' ? 'Hide others' : 'Fade others', other === 'hide' ? 'eye-off' : 'eye', () =>
+    button(strip, word(other === 'hide' ? 'strip.hide' : 'strip.fade'), other === 'hide' ? 'eye-off' : 'eye', () =>
       v.setOutside(other),
     ),
-    button(strip, 'Save as shown', 'bookmark', () => {
+    button(strip, word('strip.save'), 'bookmark', () => {
       const { view, selected, legend } = now();
       v.saveShown(view, selected, legend);
     }),
   ];
   if (!v.legend.length) return writes;
-  const legend = root.createEl('ul', { cls: 'graph-note-legend', attr: { 'aria-label': 'Legend' } });
+  const legend = root.createEl('ul', { cls: 'graph-note-legend', attr: { 'aria-label': word('strip.legend') } });
   for (const e of v.legend) {
     const li = legend.createEl('li');
     li.createSpan({ cls: 'graph-note-swatch' }).setCssProps({ '--graph-note-swatch': hueColour(e.colour, 'line') });

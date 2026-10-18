@@ -4,7 +4,7 @@
 // story; and, while the card is edited, Record, which takes the boxes tapped in order — each numbered on the drawing as
 // it is tapped — and writes the path. The strip's controls are built once for each thing it is doing, and only their
 // words change as it goes, so the focus stays where it is; one live region says each step.
-import { PathPlayer, PathRecorder, indentText, pathBlock, pathsOf } from '@graph-note/core';
+import { PathPlayer, PathRecorder, indentText, pathBlock, pathsOf, word } from '@graph-note/core';
 import type { WalkedPath } from '@graph-note/core';
 import { cornerOf } from './parked';
 import { PathPlay } from './path-play';
@@ -35,7 +35,7 @@ export class Walk {
     /** The drawing, once it is on the card: the strip is built above it, before it is drawn. */
     private readonly drawing: () => SVGSVGElement | undefined,
   ) {
-    this.el = parent.createDiv({ cls: 'graph-note-walk', attr: { role: 'group', 'aria-label': 'Walked paths' } });
+    this.el = parent.createDiv({ cls: 'graph-note-walk', attr: { role: 'group', 'aria-label': word('walk.group') } });
     this.controls = this.el.createDiv({ cls: 'graph-note-walk-controls' });
     this.said = this.el.createSpan({ cls: 'graph-note-walk-said', attr: { 'aria-live': 'polite' } });
     this.show();
@@ -60,7 +60,7 @@ export class Walk {
     if (this.recorder && !editing) {
       this.recorder = null;
       this.numberSteps();
-      this.said.setText('The recording ended with the editing: nothing was written.');
+      this.said.setText(word('walk.ended'));
     }
     const doing: Doing = this.recorder ? 'recording' : this.path ? 'playing' : 'offering';
     if (doing !== this.doing || doing === 'offering') this.build(doing, editing);
@@ -73,16 +73,16 @@ export class Walk {
     const el = this.controls;
     el.empty();
     if (doing === 'recording') {
-      el.createEl('input', { attr: { type: 'text', 'aria-label': 'Path title', placeholder: 'Path title' } });
-      button(el, 'Undo step', 'undo', () => {
+      el.createEl('input', {
+        attr: { type: 'text', 'aria-label': word('walk.title'), placeholder: word('walk.title') },
+      });
+      button(el, word('walk.undo'), 'undo', () => {
         this.recorder?.undo();
         this.numberSteps();
         this.show();
       });
-      button(el, 'Save path', 'check', () => this.save());
-      button(el, 'Cancel recording', 'x', () =>
-        this.stopRecording('The recording was cancelled: nothing was written.'),
-      );
+      button(el, word('walk.save'), 'check', () => this.save());
+      button(el, word('walk.cancel'), 'x', () => this.stopRecording(word('walk.cancelled')));
       this.kept.alert = el.createDiv({ attr: { role: 'alert' } });
     } else if (doing === 'playing' && this.path) {
       this.player = new PathPlay(el, this.said, this.path, this.o, this.drawing, this.parent, () => this.stop());
@@ -90,9 +90,16 @@ export class Walk {
       for (const p of pathsOf(this.o.reading, this.o.graph)) {
         const why = PathPlayer.refusal(p);
         if (why) el.createSpan({ cls: 'graph-note-walk-note', text: `⚠ ${why}` });
-        else button(el, `Play ${p.title}`, 'play', () => this.play(p), `Play ${p.title}`);
+        else
+          button(
+            el,
+            word('walk.play', { title: p.title }),
+            'play',
+            () => this.play(p),
+            word('walk.play', { title: p.title }),
+          );
       }
-      if (editing) button(el, 'Record a path', 'circle-dot', () => this.record(), 'Record a path');
+      if (editing) button(el, word('walk.record'), 'circle-dot', () => this.record(), word('walk.record'));
     }
   }
 
@@ -107,9 +114,7 @@ export class Walk {
       const name = last
         ? (this.o.reading.graphs.get(this.o.graph)?.boxes.find((b) => b.key === last)?.text ?? last)
         : '';
-      this.said.setText(
-        `Recording: ${n} step${n === 1 ? '' : 's'}${last ? `, the last ${name}` : ''}. Tap the boxes of the walk in order.`,
-      );
+      this.said.setText(last ? word('walk.recording-last', { count: n, name }) : word('walk.recording', { count: n }));
     }
     this.el.hidden = !this.controls.childElementCount && !this.said.textContent;
   }
@@ -143,7 +148,7 @@ export class Walk {
     const title = this.controls.querySelector('input')?.value ?? '';
     const alert = this.kept.alert;
     if (!rec || !ed || block === undefined) {
-      alert?.setText('The block is no longer being edited, so the path cannot be written.');
+      alert?.setText(word('walk.not-editing'));
       return;
     }
     const indent = indentText(this.o.indent ?? 'four');
@@ -154,7 +159,7 @@ export class Walk {
       return;
     }
     ed.replace(r.text);
-    this.stopRecording(`The path ${title} was written, with ${rec.steps.length} steps.`);
+    this.stopRecording(word('walk.written', { title, count: rec.steps.length }));
   }
 
   private stopRecording(said: string): void {

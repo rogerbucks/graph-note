@@ -181,8 +181,8 @@ export const OBSIDIAN = {
     const { env, el } = await shownBlock(`---\nclassification: Internal\n---\n${noteOf(TRIP)}`, 0);
     labelled(el, word('bar.export')).click();
     const form = el.querySelector('.graph-note-export');
-    labelled(form, 'Export it').click();
-    await until(() => !!labelled(form, 'Export anyway'));
+    labelled(form, word('export.it')).click();
+    await until(() => !!labelled(form, word('export.anyway')));
     return { env, el };
   },
   'the AI send dialog, showing what will be sent': async () => {
@@ -255,7 +255,7 @@ export const OBSIDIAN = {
     const walk = `${TRIP},\n(tour:Path {title: 'Sunday walk'}),\n(tour)-[:STEP {seq: 1}]->(home),\n(tour)-[:STEP {seq: 2}]->(park)`;
     const { env, el } = await shownBlock(noteOf(walk), 0);
     clock(env);
-    labelled(el, 'Play Sunday walk').click();
+    labelled(el, word('walk.play', { title: 'Sunday walk' })).click();
     assert.match(el.querySelector('.graph-note-walk [aria-live]').textContent, /Step 1 of 2/);
     return { env, el };
   },

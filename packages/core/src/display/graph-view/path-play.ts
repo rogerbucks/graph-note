@@ -5,9 +5,9 @@
 // no dot runs (motion_reduced_respected); `styles.css` stops the highlight's movement there too. Export as an animated
 // SVG opens the Export form on this path at this pace (path_animation_export). The timer is the window's, cancelled
 // when the playing stops or its card goes.
-import { DEFAULT_PACE, PATH_PACES, PathAutoplay, PathPlayer, paceSaid, pathsOf } from '@graph-note/core';
+import { DEFAULT_PACE, PATH_PACES, PathAutoplay, PathPlayer, pathsOf, word } from '@graph-note/core';
 import type { NoteReading, PathStep, WalkedPath } from '@graph-note/core';
-import { openExportForm } from '../export/export-form';
+import { openExportForm, paceOffered } from '../export/export-form';
 import { reducedMotion } from './details-nav';
 import { linkGroups, runnerOn } from './flow-marks';
 import { button } from './view-bar';
@@ -45,30 +45,30 @@ export class PathPlay {
       cancel: (handle) => win.clearTimeout(handle as number),
     });
     this.auto.onStep = () => this.update();
-    this.toggle = button(controls, 'Pause', 'pause', () => {
+    this.toggle = button(controls, word('path.pause'), 'pause', () => {
       if (this.auto.playing) this.auto.pause();
       else this.auto.play();
       this.update();
     });
-    this.back = button(controls, 'Previous step', 'chevron-left', () => {
+    this.back = button(controls, word('path.previous'), 'chevron-left', () => {
       this.auto.previous();
       this.update();
     });
-    this.on = button(controls, 'Next step', 'chevron-right', () => {
+    this.on = button(controls, word('path.next'), 'chevron-right', () => {
       this.auto.next();
       this.update();
     });
-    button(controls, 'Stop playing', 'square', stop);
+    button(controls, word('path.stop'), 'square', stop);
     const pace = controls
-      .createEl('label', { cls: 'graph-note-walk-pace', text: 'Pace' })
-      .createEl('select', { attr: { 'aria-label': 'Pace' } });
-    for (const ms of PATH_PACES) pace.createEl('option', { text: paceSaid(ms), attr: { value: String(ms) } });
+      .createEl('label', { cls: 'graph-note-walk-pace', text: word('export.pace') })
+      .createEl('select', { attr: { 'aria-label': word('export.pace') } });
+    for (const ms of PATH_PACES) pace.createEl('option', { text: paceOffered(ms), attr: { value: String(ms) } });
     pace.value = String(DEFAULT_PACE);
     pace.addEventListener('change', () => this.auto.setPace(Number(pace.value)));
     const exporting = o.exporting;
     if (exporting)
       // always opens the form on this path, in place of one already open, never closing it
-      button(controls, 'Export as an animated SVG', 'download', () =>
+      button(controls, word('path.export'), 'download', () =>
         openExportForm(card, {
           ...exporting,
           paths: playablePaths(o.reading, o.graph),
@@ -84,9 +84,9 @@ export class PathPlay {
     this.back.disabled = player.atStart;
     this.on.disabled = player.atEnd;
     const playing = this.auto.playing;
-    this.toggle.setAttribute('aria-label', playing ? 'Pause' : 'Play on');
+    this.toggle.setAttribute('aria-label', word(playing ? 'path.pause' : 'path.play-on'));
     this.toggle.empty();
-    this.toggle.createSpan({ cls: 'graph-note-badge-text', text: playing ? 'Pause' : 'Play on' });
+    this.toggle.createSpan({ cls: 'graph-note-badge-text', text: word(playing ? 'path.pause' : 'path.play-on') });
     this.said.setText(player.sentence);
     this.mark();
   }
