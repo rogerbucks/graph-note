@@ -33,6 +33,10 @@ jobs:
       - run: node scripts/quality-metrics.mjs --out quality/metrics.json
       - name: Count the benchmarks three times, for the spread between runs
         run: node scripts/instruction-counts.mjs --runs 3 --out quality/instruction-spread.json
+      # printed as well as uploaded, so the counts can be read from the job's log where the artifact cannot be fetched
+      - name: Print what was measured
+        if: always()
+        run: cat quality/metrics.json quality/instruction-spread.json || true
       # uploaded whatever the steps before gave, so a failed count still leaves what it measured
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
