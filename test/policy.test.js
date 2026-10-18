@@ -583,7 +583,7 @@ describe('its own repository', () => {
     const { execFileSync } = await import('node:child_process');
     assert.ok(exists('.git'));
     const url = execFileSync('git', ['remote', 'get-url', 'origin'], { cwd: path('.'), encoding: 'utf8' }).trim();
-    assert.match(url, /github\.com[:/][^/]+\/graph-note(\.git)?$/);
+    assert.match(url, /github\.com[:/][^/]+\/thoughtknot(\.git)?$/);
   });
 
   test('it sits inside no Obsidian vault: no folder above it holds one', async () => {
