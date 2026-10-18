@@ -3,9 +3,8 @@
 // plugin and package ids, the CSS class and variable prefix, and the paths that hold the name. It is mechanical and safe
 // to run again. So a branch made before the rename runs it after merging main, and is renamed the same way.
 //
-// Kept as they are:
-// - the repository's address (rogerbucks/graph-note, its wiki and its Pages site), until the repository is renamed;
-// - the GitHub Project's title, which the mirror finds it by;
+// The repository's address (now rogerbucks/thoughtknot, its wiki and its Pages site) and the GitHub Project's title
+// are renamed too. Kept as they are:
 // - "graph note" in lower case, which names the kind of note, not the product;
 // - generated or historical files, which their own commands remake.
 //
@@ -37,18 +36,9 @@ const SKIP = [
   /\.(png|jpe?g|gif|webp|ico|woff2?|ttf|pdf|zip|gz)$/i,
 ];
 
-/** Text that names the repository or the live GitHub Project, which stay as they are until those are renamed. */
-const KEEP = [
-  /rogerbucks(\\?\/)graph-note/g,
-  /rogerbucks\\?\.github\\?\.io(\\?\/)graph-note/g,
-  /graph-note requirements/g,
-  /name = 'graph-note'/g,
-  /RogerBucks\/Graph-Note/g,
-  /\\\/graph-note(?=\(\\\.git\)\?\$|\$\/)/g,
-];
-
 /** The renames, in order: longer and cased forms first. Lower-case "graph note" is the kind of note and stays. */
 const RENAMES = [
+  [/graph-note requirements/g, 'ThoughtKnot requirements'], // the GitHub Project's title, as Roger named it
   [/Graph Note/g, 'ThoughtKnot'],
   [/Graph-Note/g, 'ThoughtKnot'],
   [/GraphNote/g, 'ThoughtKnot'],
@@ -59,17 +49,11 @@ const RENAMES = [
   [/graph-note/g, 'thoughtknot'],
 ];
 
-/** The text renamed, with the kept text untouched. */
-export function renameText(text) {
-  const kept = [];
-  let out = text;
-  for (const re of KEEP) out = out.replace(re, (m) => `\u0000${kept.push(m) - 1}\u0000`);
-  for (const [re, to] of RENAMES) out = out.replace(re, to);
-  return out.replace(/\u0000(\d+)\u0000/g, (_, i) => kept[Number(i)]);
-}
+/** The text renamed. */
+export const renameText = (text) => RENAMES.reduce((t, [re, to]) => t.replace(re, to), text);
 
 /** A path renamed the same way. */
-export const renamePath = (path) => RENAMES.reduce((p, [re, to]) => p.replace(re, to), path);
+export const renamePath = renameText;
 
 const skipped = (path) => SKIP.some((re) => re.test(path));
 

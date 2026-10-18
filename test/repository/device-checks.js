@@ -7,7 +7,7 @@ export const FOLDER = 'test-vault/Device checks';
 export const INDEX = `${FOLDER}/Device checks.md`;
 /** Where the notes link back to: the checklist on GitHub, found there by the item's number. */
 export const CHECKLIST_URL =
-  'https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md';
+  'https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md';
 /** The labels a note has, in the order Roger reads them: the number is its title, then the result, the diagram, the rest. */
 export const LABELS = ['You should see', 'Test diagram', 'Do this', 'Checklist line', 'Back to the checklist'];
 const NUMBER = /^\*\*([A-Z]-\d\d)\*\*/;

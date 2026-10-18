@@ -23,7 +23,7 @@ import { MADE_PAGES } from './wiki.mjs';
 import { SHOTS } from './wiki-screens.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = 'https://github.com/rogerbucks/graph-note';
+const REPO = 'https://github.com/rogerbucks/thoughtknot';
 /** The account the wiki workflow commits as: a page whose last change is by anyone else was edited by a person. */
 export const BOT_EMAIL = '41898282+github-actions[bot]@users.noreply.github.com';
 /** The longest sentence a page should have, in words, as the user guide is held to (test/wiki-guide.test.js). */
@@ -58,7 +58,7 @@ export function checkPage(text, { pages, files, exists, version }) {
     const at = i + 1;
     for (const m of line.matchAll(/(!?)\[[^\]]*\]\(([^)\s]+)[^)]*\)/g)) {
       const [, image, target] = m;
-      const repoFile = target.match(/^https:\/\/github\.com\/rogerbucks\/graph-note\/(?:blob|tree)\/main\/([^#?]+)/);
+      const repoFile = target.match(/^https:\/\/github\.com\/rogerbucks\/thoughtknot\/(?:blob|tree)\/main\/([^#?]+)/);
       if (repoFile && !exists(decodeURIComponent(repoFile[1])))
         found.push({ line: at, text: `links to \`${quiet(repoFile[1])}\`, which is not in the repository on main` });
       else if (/^[a-z]+:|^#|^mailto:/i.test(target)) continue;

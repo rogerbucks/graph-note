@@ -28,4 +28,4 @@
 
 > **Z-04** Double-clicking or double-tapping empty space zooms in there; on or near a box or a link it only chooses, and never zooms. Fit returns to the whole drawing.
 
-**Back to the checklist:** [Z-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-04 in its list.
+**Back to the checklist:** [Z-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Z-04 in its list.

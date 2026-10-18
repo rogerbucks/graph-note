@@ -20,7 +20,7 @@ import { fakeGithub } from './repository/github-project-fake.js';
 import { fakeRepoSide } from './repository/build-status-fake.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const BOT = 'app/github-actions';
 const desired = desiredState(readBoard(FIXTURE), WORKSTREAMS, [3, 4]);
 /** One apply as the workflow does it: the bot makes the issues, and nobody asks GitHub who is signed in. */

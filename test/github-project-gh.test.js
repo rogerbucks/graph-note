@@ -19,7 +19,7 @@ import {
 
 const board = readBoard(FIXTURE);
 const desiredFor = (slices = [3, 4]) => desiredState(board, WORKSTREAMS, slices);
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const noSleep = () => {};
 const generated = (id) => `an old rule\n\n${BANNER_START} old.\n\n${markerOf(id)}\n`;
 
@@ -72,7 +72,7 @@ describe('the first apply, against an empty GitHub', () => {
 
   test('creates the project with its Slice, Workstream and Proof fields, each a single choice', () => {
     const [project] = gh.hub.projects;
-    assert.equal(project.title, 'graph-note requirements');
+    assert.equal(project.title, 'ThoughtKnot requirements');
     const options = (name) => project.fields.find((f) => f.name === name).options.map((o) => o.name);
     assert.deepEqual(options('Slice'), ['Slice 3', 'Slice 4']);
     assert.deepEqual(options('Workstream'), ['W0: Zoom', 'W1: Focus, hover and untangle', 'S3: Slice end']);

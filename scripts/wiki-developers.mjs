@@ -12,7 +12,7 @@ import { readBoard } from './slice-board.mjs';
 import { architectureChart, architectureProblems, label, readArchitecture } from './wiki-architecture.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = 'https://github.com/rogerbucks/graph-note';
+const REPO = 'https://github.com/rogerbucks/thoughtknot';
 const cell = (text) => String(text).replace(/[\\|]/g, '\\$&').replace(/</g, '&lt;');
 const fileLink = (path) => `[\`${path}\`](${REPO}/blob/main/${path})`;
 

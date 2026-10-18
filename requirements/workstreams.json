@@ -734,5 +734,11 @@
     "requirements": [
       "landing_page"
     ]
+  },
+  "D3": {
+    "title": "Developer site",
+    "requirements": [
+      "developer_site"
+    ]
   }
 }

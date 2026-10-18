@@ -28,4 +28,4 @@
 
 > **U-03** In the dialog, choose a model and press Show what will be sent: the exact request is shown, with the model, its address, the headers (the key only by its name) and the note's classification, and Send stays off until then. Change the question: Send goes off again until it is shown again. Press Send: exactly that goes, once, and the answer arrives as a change set under the graph, each change waiting to be accepted or rejected; the graph block is unchanged.
 
-**Back to the checklist:** [U-03 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for U-03 in its list.
+**Back to the checklist:** [U-03 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for U-03 in its list.

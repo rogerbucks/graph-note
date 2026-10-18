@@ -1,0 +1,6 @@
+{
+  "file": "test/public-readiness.test.js",
+  "test": "the settings on GitHub > the repository is read from the origin remote",
+  "seen_failing_first": false,
+  "evidence": "The repository was renamed to rogerbucks/thoughtknot; this test changed only the address it expects, and the local clone's origin already pointed at the new name, so it passed at its parent."
+}

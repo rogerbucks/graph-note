@@ -93,7 +93,7 @@ export function ethosPage(ethos, requirements) {
     `# Ethos\n\nWhat ThoughtKnot stands for, and the rules that follow from it. Each rule says how it is checked, ` +
     `so anyone can see whether it holds. ${auto} of ${ethos.rules.length} rules checked automatically.\n\n` +
     `${sections.join('\n\n')}\n\nA name in the last column is a requirement in ` +
-    `[\`requirements/editor-requirements.gql\`](https://github.com/rogerbucks/graph-note/blob/main/requirements/editor-requirements.gql), ` +
+    `[\`requirements/editor-requirements.gql\`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql), ` +
     `proved by the tests it names.\n`
   );
 }

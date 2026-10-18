@@ -28,4 +28,4 @@
 
 > **P-14** A draft graph offers Lock the graph. Locking writes its schema as a new block after the graph.
 
-**Back to the checklist:** [P-14 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-14 in its list.
+**Back to the checklist:** [P-14 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-14 in its list.
