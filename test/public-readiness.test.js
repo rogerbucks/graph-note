@@ -15,6 +15,7 @@ import { messageProblems } from '../scripts/history-text-problems.mjs';
 import {
   historyProblems,
   machineSpecific,
+  canonicalRepo,
   repoOf,
   setupDocs,
   setupProblems,
@@ -427,6 +428,12 @@ describe('the settings on GitHub', () => {
 
   test('the repository is read from the origin remote', () => {
     assert.match(repoOf(), /^[\w.-]+\/thoughtknot$/);
+  });
+
+  test('a renamed repository is written under its new name, which GitHub gives back for the old one', () => {
+    const read = (repo) => ({ full_name: repo === 'rogerbucks/graph-note' ? 'rogerbucks/thoughtknot' : repo });
+    assert.equal(canonicalRepo('rogerbucks/graph-note', read), 'rogerbucks/thoughtknot');
+    assert.equal(canonicalRepo('rogerbucks/thoughtknot', read), 'rogerbucks/thoughtknot');
   });
 });
 

@@ -1,14 +1,14 @@
 # Whiteboard design
 
-A whiteboard view for brainstorming, with several people at once, that knows the graph: anything on the board can
-become things and links in a graph, and anything in a graph can be put on a board. Designed on 17 October 2026, against
+A whiteboard view for brainstorming, with several people at once, that knows the graph. Anything on the board can
+become things and links in a graph. Anything in a graph can be put on a board. Designed on 17 October 2026, against
 version 0.5.0, at Roger's request.
 
 The requirements are section 45 of
 [`requirements/editor-requirements.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql),
 slice 10, in workstreams B1 to B4. They are built in Waves 16 and 17 of
 [`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json), after the
-Obsidian community release (R2), because Roger's rule is that what he adds now goes after R2.
+Obsidian community release (R2). Roger's rule is that what he adds now goes after R2.
 
 ## The short answer
 
@@ -49,13 +49,13 @@ or synced the way graphs are.
 - Each item is a node of a small, fixed set of kinds: `Sticky`, `Card`, `Text`, `Shape`, `Frame`, `Ink`, `Image`,
   `Glyph`. Its place, size, text, layer and style are properties. A connector is an edge, `CONNECTS`, with its label
   and arrow ends.
-- Positions are whole numbers and properties are written in a fixed order, so moving one item changes one line and the
+- Positions are whole numbers and properties are written in a fixed order. So moving one item changes one line, and the
   same board is always the same bytes.
 - Style is design tokens only (`--gn-*`), so a board follows the theme, forced colours and right to left like every
   other view (`board_look_and_direction`).
 - Ink is stored as a simplified path, and images as links to attachments, never inlined, so the block stays readable.
-- The board graph is checked like any graph (`board_checked`): an unknown kind, or an item linked to a thing that is
-  gone, is a problem with a fix, and the board still draws what it can.
+- The board graph is checked like any graph (`board_checked`). An unknown kind, or an item linked to a thing that is
+  gone, is a problem with a fix. The board still draws what it can.
 
 **Fits the design review.** Item kinds and templates are an extension point of the plug-in interface
 (`points.boardItems.add`, `board_item_plugins`), with a contract suite like every other point. Words come from the
@@ -73,7 +73,7 @@ catalogue; arrow keys follow reading direction.
 | A frame around items | A group (cluster) of their things |
 | A card's properties | The thing's properties |
 
-- It is always shown first as a proposal, with the same accept and reject flow as AI proposals (W8), and written to
+- It is always shown first as a proposal, with the same accept and reject flow as AI proposals (W8). It is written to
   the graph block only when accepted. Undo takes back both blocks in one step.
 - An AI may propose the decomposition (`board_ai_decompose`): names, kinds and links from a wall of stickies. It is off
   until chosen and arrives as proposals, one by one.
@@ -101,7 +101,7 @@ diagram type the graph fits (`board_arranged_by_graph`).
 ## 4. Several people at once
 
 **Default chosen:** local first, through the CRDT that slice 9 already plans to carry every edit at the level of the
-text (`crdt_transport`, Automerge), peer to peer, encrypted, with no server deciding what is true.
+text (`crdt_transport`, Automerge). It is peer to peer and encrypted, with no server deciding what is true.
 
 ```mermaid
 sequenceDiagram
@@ -130,8 +130,8 @@ sequenceDiagram
 
 - **Speed** (`board_speed`): 5,000 items at 60 frames a second, opening within a second on a recent phone, checked by a
   benchmark in CI. Only what is on screen is drawn.
-- **Keyboard and screen readers** (`board_keyboard`): every action by keyboard, every item announced with its kind,
-  text and connections, and an outline view of the board as text. Whiteboards are often unusable without a mouse; this
+- **Keyboard and screen readers** (`board_keyboard`). Every action works by keyboard. Every item is announced with its
+  kind, text and connections, and an outline view shows the board as text. Whiteboards are often unusable without a mouse; this
   one must not be.
 - **Exchange** (`board_exchange`): import and export JSON Canvas, the open format of Obsidian Canvas, plus SVG, PNG and
   PDF.
