@@ -66,12 +66,13 @@ const LINEAR = {
   claims: [{ says: 'the whole is linear', of: (n) => [n.whole, 3 * n.quarters] }],
 };
 /** A counter of processes that gives these counts, by case, in turn for each run; and the calls it was asked. */
-function fakeCounter(counts) {
+function fakeCounter(counts, fingerprints) {
   const asked = [];
   const runs = {};
   return {
     asked,
     counter: async () => ({
+      fingerprints,
       count(benchmark, which) {
         asked.push(`${benchmark} ${which}`);
         const list = [counts[which]].flat();
@@ -83,6 +84,7 @@ function fakeCounter(counts) {
   };
 }
 const HERE = () => 'valgrind-3.22.0';
+const LINEAR_COUNTS = { setup: 1000, whole: 1400, quarters: 1200 };
 
 describe('counting the benchmarks', () => {
   test('without Valgrind, nothing is counted, and it says why: every count null, never a number of another kind', async () => {
@@ -301,12 +303,12 @@ describe('the benchmarks', () => {
   test('a case runs as bundled for Cachegrind, the engine in it: the draw through the runner and the cheapest naming', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'benchmarks-'));
     try {
-      const file = await bundleBenchmarks(dir);
+      const { files } = await bundleBenchmarks(dir, BENCHMARKS);
       for (const [name, which] of [
         ['draw_fifty', 'through-runner'],
         ['naming', 'book-quarters'],
       ]) {
-        const r = spawnSync(process.execPath, [...NODE_FLAGS, file, name, which], { encoding: 'utf8' });
+        const r = spawnSync(process.execPath, [...NODE_FLAGS, files[name], which], { encoding: 'utf8' });
         assert.equal(r.status, 0, `${name} ${which}: ${r.stderr}`);
         assert.equal(r.stdout, '', 'a case prints nothing');
       }
@@ -318,12 +320,100 @@ describe('the benchmarks', () => {
   test('a case that goes wrong fails its process, so no count is kept', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'benchmarks-'));
     try {
-      const file = await bundleBenchmarks(dir);
-      const r = spawnSync(process.execPath, [file, 'naming', 'no-such-case'], { encoding: 'utf8' });
+      const { files } = await bundleBenchmarks(dir, BENCHMARKS);
+      const r = spawnSync(process.execPath, [files.naming, 'no-such-case'], { encoding: 'utf8' });
       assert.notEqual(r.status, 0);
       assert.match(r.stderr, /naming has no case no-such-case/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+// A baseline is measured again whenever a benchmark changes; one whose code has not changed would count the same, so
+// its count is kept (spec §12, quality_ratchet). The fingerprint is the benchmark's own bundle, with the machine, Node,
+// Valgrind and the flags: change any of them and it is counted again. Every release counts every benchmark.
+describe('keeping the count of a benchmark that has not changed', () => {
+  const OTHER = { ...LINEAR, name: 'other' };
+  const counts = { ...LINEAR_COUNTS };
+  const before = async (fingerprints = { linear: 'a', other: 'b' }) =>
+    (
+      await measureInstructions({
+        benchmarks: [LINEAR, OTHER],
+        version: HERE,
+        counter: fakeCounter(counts, fingerprints).counter,
+      })
+    ).details.instructions;
+
+  test('each benchmark counted says its fingerprint, the same for the same bundle on the same machine', async () => {
+    const [once, again] = [await before(), await before()];
+    const prints = once.benchmarks.map((b) => b.fingerprint);
+    assert.ok(
+      prints.every((p) => /^[0-9a-f]{64}$/.test(p)),
+      prints.join(),
+    );
+    assert.deepEqual(
+      again.benchmarks.map((b) => b.fingerprint),
+      prints,
+    );
+    assert.notEqual(prints[0], prints[1], 'each bundle its own');
+  });
+
+  test('a benchmark whose fingerprint matches keeps its count, uncounted; one that changed is counted again', async () => {
+    const reuse = await before();
+    const fake = fakeCounter({ setup: 2000, whole: 2500, quarters: 2200 }, { linear: 'a', other: 'changed' });
+    const r = await measureInstructions({ benchmarks: [LINEAR, OTHER], version: HERE, counter: fake.counter, reuse });
+    assert.deepEqual(fake.asked, ['other setup', 'other whole', 'other quarters', 'done']);
+    const [kept, counted] = r.details.instructions.benchmarks;
+    assert.deepEqual([kept.cases, kept.setup, kept.kept], [{ whole: 400, quarters: 200 }, 1000, true]);
+    assert.deepEqual([counted.cases, counted.setup, counted.kept], [{ whole: 500, quarters: 200 }, 2000, undefined]);
+    assert.deepEqual(r.metrics, { instructions_linear: 400, instructions_other: 500, [CLAIMS_METRIC]: 0 });
+    assert.equal(r.details.instructions.claims.length, 2, 'a kept count is still held to its claims');
+  });
+
+  test('another Valgrind, Node or machine counts everything again, whatever the bundles', async () => {
+    const reuse = await before();
+    for (const changed of [
+      { version: () => 'valgrind-3.23.0' },
+      { reuse: { ...reuse, machine: { ...reuse.machine, node: 'v24.0.0' } } },
+      { reuse: { ...reuse, machine: { ...reuse.machine, cpu: 'another' } } },
+    ]) {
+      const fake = fakeCounter(counts, { linear: 'a', other: 'b' });
+      await measureInstructions({
+        benchmarks: [LINEAR, OTHER],
+        version: HERE,
+        counter: fake.counter,
+        reuse,
+        ...changed,
+      });
+      assert.equal(fake.asked.length, 7, JSON.stringify(changed));
+    }
+  });
+
+  test('counted several times over, for the spread, nothing is kept; nor where the bundles have no fingerprint', async () => {
+    const reuse = await before();
+    const thrice = fakeCounter(counts, { linear: 'a', other: 'b' });
+    await measureInstructions({ benchmarks: [LINEAR], runs: 3, version: HERE, counter: thrice.counter, reuse });
+    assert.equal(thrice.asked.length, 10);
+    const unprinted = fakeCounter(counts);
+    await measureInstructions({ benchmarks: [LINEAR], version: HERE, counter: unprinted.counter, reuse });
+    assert.equal(unprinted.asked.length, 4);
+  });
+
+  test('each benchmark is bundled on its own, so a change to one leaves the others’ fingerprints as they were', async () => {
+    const dirs = [0, 1].map(() => mkdtempSync(join(tmpdir(), 'benchmarks-')));
+    try {
+      const [once, again] = await Promise.all(dirs.map((d) => bundleBenchmarks(d, BENCHMARKS)));
+      assert.deepEqual(Object.keys(once.files).sort(), BENCHMARKS.map((b) => b.name).sort());
+      assert.deepEqual(again.fingerprints, once.fingerprints, 'the same code bundles the same, wherever it is put');
+      assert.equal(new Set(Object.values(once.fingerprints)).size, BENCHMARKS.length);
+    } finally {
+      for (const d of dirs) rmSync(d, { recursive: true, force: true });
+    }
+  });
+
+  test('the command and the quality metrics take an earlier run to keep counts from', () => {
+    assert.match(read('scripts/instruction-counts.mjs'), /--reuse <file>/);
+    assert.match(read('scripts/quality-metrics.mjs'), /--reuse <file>/);
   });
 });

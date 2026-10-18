@@ -531,6 +531,7 @@
     "title": "Automated quality checks",
     "requirements": [
       "a11y_keyboard_auto",
+      "keyboard_any_device",
       "a11y_semantics_auto",
       "a11y_targets_reflow_auto",
       "ux_journey_auto",

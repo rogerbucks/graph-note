@@ -281,6 +281,9 @@ own handlers. Nothing here reaches the network.
 - `lists-held.ts` — the lists a thing holds, read from a drawing (`listsOf`, `linkedValues`); `linked-list.ts` re-exports them.
 - `lock.ts` — Lock the graph: a draft's schema written out, indented as the settings say; `kindLines` and `typeLines`
   are the lines that declare one kind or relationship type, which `declareDeferred` writes the same way.
+- `schema-picture.ts` — a block that holds only a schema, a graph's own or a shared one, drawn as the schema itself
+  (§3, schema_drawn): `schemaPicture` writes its kinds as boxes and its relationship types as arrows between the kinds
+  the data joins, a type not used yet a box of its own, as a small graph of GQL, and reads it; never the note's text.
 
 **Paths (spec §7; graph spec §22)**
 

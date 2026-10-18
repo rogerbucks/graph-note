@@ -56,8 +56,8 @@
 // addTranslation, sayWords, placeholdersOf, translationProblems, SOURCE_LANGUAGE, SOURCE_WORDS and their types,
 // words_catalogue) the same day, and the theme tokens (THEME_TOKENS, OBSIDIAN_TOKEN_MAP, themeTokenCss,
 // themeTokenContract, ThemeToken, ThemeTokenUse) the same day; pseudoWords, PSEUDO_LANGUAGES, isPseudoWord and optionSaid
-// on 18 Oct 2026, and the tallest drawing in a note (tallestOf, DrawingHeightSetting, drawing_height_setting) the same
-// day, and thingSaid (details_said) too. The lists moved here from index.test.js in the review of #452.
+// on 18 Oct 2026, the tallest drawing in a note (tallestOf, DrawingHeightSetting, drawing_height_setting),
+// schemaPicture (schema_drawn) and thingSaid (details_said) the same day. The lists moved here from index.test.js in #452.
 import { TYPES_LATE } from './index-types-late.js';
 
 /** The values src/index.ts exports, sorted. */
@@ -353,6 +353,7 @@ export const VALUES = [
   'saidDate',
   'sampleExports',
   'sayWords',
+  'schemaPicture',
   'scrollsOneWay',
   'sendPrepared',
   'serveLayouts',
@@ -591,7 +592,5 @@ export const TYPES = [
   'PngSize',
   'Pointing',
   'Position',
-  'PreparedSend',
-  'Problem',
   ...TYPES_LATE,
 ];
