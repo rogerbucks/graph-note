@@ -1260,9 +1260,10 @@ details.graph-note-style > summary {
 
 /* A thing's details (spec §25): a sentence on what is going on (details_said); its links in and out, side by side where
    the panel is wide and one above the other where it is narrow (details_ins_outs), each group headed by its reading,
-   its things one to a row, each a choice in the link colour with its link's own small button beside it; its properties
-   as a table of name and value (details_properties_table). Section labels are small capitals, as a box's kind is on the
-   drawing. On touch, every choice is 44 points. */
+   its things one to a row, each a choice with its link's own small button beside it; its properties as a table of name
+   and value (details_properties_table). Section labels are small capitals, as a box's kind is on the drawing; each part
+   is a tile, and each row a quiet 44-point button that shows its hover and focus, as the diagram types and the View
+   menu's switches are. */
 .graph-note-details-said {
   margin: var(--gn-space-2) 0 var(--gn-space-3);
   line-height: 1.5;
@@ -1292,6 +1293,7 @@ details.graph-note-style > summary {
   padding: var(--gn-space-2) var(--gn-space-3);
   border: 1px solid var(--gn-border);
   border-radius: var(--gn-radius-m);
+  background: var(--gn-bg);
 }
 .graph-note-details .graph-note-links-part > h4 {
   margin-top: 0;
@@ -1329,7 +1331,7 @@ details.graph-note-style > summary {
 .graph-note-link-row button.graph-note-link-thing {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 32px;
+  min-height: 44px;
   height: auto;
   justify-content: flex-start;
   padding: var(--gn-space-1) var(--gn-space-half-2);
@@ -1337,21 +1339,23 @@ details.graph-note-style > summary {
   border: 0;
   box-shadow: none;
   border-radius: var(--gn-radius-s);
-  /* the link colour mixed with the text colour: the link colour alone is under 4.5:1 on the card in Obsidian's default
-     themes (SC 1.4.3); 70% of it keeps the hue and reaches 5:1 in both */
-  color: color-mix(in srgb, var(--gn-link) 70%, var(--gn-text-normal));
+  color: var(--gn-text-normal);
   font-size: inherit;
+  font-weight: normal;
   text-align: start;
   white-space: normal;
   overflow-wrap: anywhere;
-  cursor: pointer;
+  cursor: var(--gn-cursor-link);
 }
 .graph-note-link-row button.graph-note-link-choice {
   --icon-size: var(--gn-icon-xs);
   flex: none;
   display: inline-flex;
   height: auto;
-  min-height: 32px;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   padding: var(--gn-space-1);
   background: none;
   border: 0;
@@ -1362,8 +1366,9 @@ details.graph-note-style > summary {
   background: var(--gn-bg-hover);
 }
 .graph-note-link-row button:focus-visible {
-  outline: 2px solid var(--gn-accent);
+  outline: 2px solid var(--gn-border-focus);
   outline-offset: -2px;
+  box-shadow: none;
 }
 .graph-note-details dl.graph-note-rich-properties {
   display: grid;
@@ -1388,13 +1393,6 @@ details.graph-note-style > summary {
 .graph-note-trail button {
   min-width: 44px;
   min-height: 44px;
-}
-@media (pointer: coarse) {
-  .graph-note-link-row button.graph-note-link-thing,
-  .graph-note-link-row button.graph-note-link-choice {
-    min-width: 44px;
-    min-height: 44px;
-  }
 }
 
 /* The arrow to a selection out of view (spec §25): at the edge of the drawing, turned to point at it, 44 points. */
