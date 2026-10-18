@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 153 checks in 21 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md)): 157 checks in 21 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -29,6 +29,8 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/02 Zoom/Z-08 Locked graph undeclared|Z-08 Locked graph undeclared]]
 - [[Device checks/02 Zoom/Z-09 Reading view read only|Z-09 Reading view read only]]
 - [[Device checks/02 Zoom/Z-10 One set of zoom controls|Z-10 One set of zoom controls]]
+- [[Device checks/02 Zoom/Z-11 Gestures stay in the drawing|Z-11 Gestures stay in the drawing]]
+- [[Device checks/02 Zoom/Z-12 First tap does not jump|Z-12 First tap does not jump]]
 
 ## 03 The edit pane
 
@@ -76,6 +78,8 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 
 - [[Device checks/05 The style graph/S-01 Style block folds|S-01 Style block folds]]
 - [[Device checks/05 The style graph/S-02 Broken nudge word|S-02 Broken nudge word]]
+- [[Device checks/05 The style graph/S-03 Drag a box to move it|S-03 Drag a box to move it]]
+- [[Device checks/05 The style graph/S-04 Hold a box to move it|S-04 Hold a box to move it]]
 
 ## 06 Views
 

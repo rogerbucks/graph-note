@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/box-drag-view.test.js",
+  "test": "moving a box with a finger > a swipe begun at once scrolls or pans, and moves nothing, even once the moment has passed",
+  "seen_failing_first": false,
+  "evidence": "pins behaviour that held before a finger could pick a box up and must still hold with it: a swipe still scrolls or pans, and a long press is still a long press"
+}

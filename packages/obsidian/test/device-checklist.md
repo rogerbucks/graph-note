@@ -75,6 +75,10 @@ holds the two together).
       edited in Live Preview, and in full screen opened from reading view too. A Graph Note pane already open on the block
       keeps saving while another pane shows the note in reading view.
 - [ ] **Z-10** Only one set of zoom controls appears: the Mermaid Zoom plugin does not add its own to a graph drawing.
+- [ ] **Z-11** Phone: zoomed in, one finger pans the drawing and a pinch zooms it, and neither slides Obsidian's side panels
+      in nor moves the window; a box held and dragged does not either. On a fitted drawing a sideways swipe still opens them.
+- [ ] **Z-12** Phone, Live Preview, the note just opened and scrolled down: the first tap on Zoom in zooms, and the page
+      does not jump to the top. Nor does the first tap on Find, which opens its box.
 
 ## The edit pane — spec §4, §5, §9
 
@@ -195,6 +199,13 @@ holds the two together).
 - [ ] **S-02** Change a nudge's word to `besides`: the fold says "⚠ 1 problem"; the graph's badge lists "a nudge must be one of
       four words…" and the graph is still drawn (four_nudge_words, nudge_problems). Break the block's text: the graph
       is drawn in the locked style and the problem listed (broken_style_block).
+- [ ] **S-03** Desktop: drag a box with the mouse to just below another box. It follows the pointer, the other box is
+      outlined, and a line at the top says "Put … beside …". Let go: a notice says "Moved: …", the style block gains a
+      beside nudge and the two are drawn side by side. Drag again and press Escape: the box goes back and nothing is
+      written. A short click still opens the box (nudge_preview, drag_moves_box).
+- [ ] **S-04** Phone: hold a finger on a box for a moment. It lifts (a shadow) and its tooltip opens. Drag it to just
+      below another box: the page does not scroll, the line says "Put … beside …", and letting go writes the nudge. A
+      swipe begun at once still scrolls the note, and a hold lifted without moving opens no details (hold_to_drag_touch).
 
 ## Views — spec §2, §7
 

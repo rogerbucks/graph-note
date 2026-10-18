@@ -27,7 +27,7 @@
       "start": "2026-10-16",
       "end": "2026-10-29",
       "estimate": true,
-      "workstreams": ["C0", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "W34", "W35", "W7", "W10"]
+      "workstreams": ["C0", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "W34", "W35", "W36", "W7", "W10"]
     },
     {
       "title": "Wave 5 · Automated quality and releases",
