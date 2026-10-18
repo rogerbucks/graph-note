@@ -1,27 +1,50 @@
 # Device checklist — the graph note editor in Obsidian
 
-The scripted check run by a person in Obsidian on a desktop and on a phone, for what the automated tests cannot see:
-how it looks, how the gestures feel, and that it works offline on a real device. Run it on each slice's build, on the
-desktop and on the phone, and note the build, the device, the date and anything that failed. An item that has passed on
-one device so far carries that device's mark, and is ticked once it passes on both.
+This is the scripted check a person runs in Obsidian, on a desktop and on a phone. It covers what the automated tests
+cannot see: how it looks, how the gestures feel, and that it works offline on a real device.
+
+Run it on each slice's build, on the desktop and on the phone. Note the build, the device, the date and anything that
+failed. An item that has passed on one device so far carries that device's mark. It is ticked once it passes on both.
 
 Use a note that holds the graph guide's example: a graph built in steps over several blocks, a query block, and a
 schema written last. Add one link with a misspelt name, and one empty graph block.
 
 **Numbers.** Every item has a number in its line: its section's letter, a dash and two digits, such as `V-03`, the
-third item of Viewing. The letters are B Before, V Viewing, Z Zoom, P The edit pane, I Editing in place and the
-inspector, S The style graph, W Views, D Parked for later, T Walked paths, X Export, C Settings, A Accessibility, F Focus
-and untangle, R Proposals, G Details and the sheet, E Diagram types, U AI models, Q Sources and steps, L Link flow and
-path play, M The View menu, K Animated images, and H Links and attachments.
-**A number never changes once given**, whatever happens to the item's words or its place; a removed item's number is
-never used again, and **a new item takes the next number in its section**. Each item after Before has a note in
-`test-vault/Device checks/` that shows the case in Obsidian, found by its number (`test/device-check-notes.test.js`
-holds the two together).
+third item of Viewing. The letters are:
+
+- B Before
+- V Viewing
+- Z Zoom
+- P The edit pane
+- I Editing in place and the inspector
+- S The style graph
+- W Views
+- D Parked for later
+- T Walked paths
+- X Export
+- C Settings
+- A Accessibility
+- F Focus and untangle
+- R Proposals
+- G Details and the sheet
+- E Diagram types
+- U AI models
+- Q Sources and steps
+- L Link flow and path play
+- M The View menu
+- K Animated images
+- H Links and attachments
+
+**A number never changes once given**, whatever happens to the item's words or its place. A removed item's number is
+never used again, and **a new item takes the next number in its section**.
+
+Each item after Before has a note in `test-vault/Device checks/` that shows the case in Obsidian, found by its number.
+`test/device-check-notes.test.js` holds the two together.
 
 ## Before
 
-- [ ] **B-01** The build is installed as real files in `.obsidian/plugins/thoughtknot/`, and the test images are made
-      (`node scripts/reset-test-vault.mjs` does both, big.gif among the images), and both have synced to the phone.
+- [ ] **B-01** The build is installed as real files in `.obsidian/plugins/thoughtknot/`, and the test images are made.
+      `node scripts/reset-test-vault.mjs` does both, big.gif among the images. Both have synced to the phone.
 - [ ] **B-02** ThoughtKnot is switched on. If gql-highlight is also on, it has been reloaded since.
 - [ ] **B-03** The phone is in aeroplane mode for the whole check: everything below must work offline.
 
@@ -40,6 +63,8 @@ holds the two together).
 - [ ] **V-08** Tapping just beside a box or a link, not on it, still chooses it. Where several are near, tapping again in the same
       place chooses the next, round to the first, and two quick taps or a double-click on or near things only choose,
       never zoom (slice 2).
+### Size, time, themes and schemas
+
 - [ ] **V-09** A 50-thing graph is drawn in under half a second on the phone (§11).
 - [ ] **V-10** A huge graph (over 2,000 things: graph theory and this project, made by a script) shows its text with a
       banner — an icon, and the limit and the numbers in words — and Obsidian stays responsive: the note scrolls and other
@@ -71,6 +96,8 @@ holds the two together).
       iPhone ✓ 5cfeac6, 8 Oct 2026.
 - [ ] **Z-08** In a locked graph, a kind or link type its schema does not declare shows a ⚠ on its line. A link type with no
       reading of its own reads back as an arrow (Drive —HOPE→ …), not as a guess at words. iPhone ✓ 5cfeac6, 8 Oct 2026.
+### Reading view and the phone
+
 - [ ] **Z-09** Reading view is read-only: the bar offers Source and no Edit. Source shows the block's text, coloured, in place of
       the drawing, and pressed again brings the drawing back. A hover preview or an embed is read-only too, an embed even
       inside a note in Live Preview. Properties are shown but never added or changed: no Add property, no field, no type
@@ -101,6 +128,8 @@ holds the two together).
       undo takes either back. Both work in the pane, in place and in the note itself.
 - [ ] **P-09** In the note itself, with Obsidian's "Auto pair brackets" on (Settings → Editor), and again with it off: the comma
       comes when ( is typed, and the colon when ] is typed or stepped over.
+### Completing, suggested names and declared types
+
 - [ ] **P-10** Completing as you type, in the pane and in the card: typing { shows a faint } after the caret, and the text after
       it does not move. Tab writes it with the caret left inside; Escape puts it away until the next typing; one undo
       takes back what Tab wrote. Typing the closer yourself where one is already there steps over it (and a stepped-over
@@ -118,6 +147,8 @@ holds the two together).
       DECLARES links, and the ⚠ goes.
 - [ ] **P-13** A link type left without its colon is drawn as that type, with a ⚠ whose fix writes the colon. A new type written
       without its colon is an error that says to write it.
+### Locking a graph, and the phone
+
 - [ ] **P-14** A draft graph offers Lock the graph. Locking writes its schema as a new block after the graph.
 - [ ] **P-15** Lock a graph built over two blocks, from its first block: the schema declares every kind and relationship of
       both blocks, and the graph then shows no problems.
@@ -144,6 +175,8 @@ holds the two together).
       coloured text, and no tooltip appears over it. Mac ✓ d601110, 8 Oct 2026.
 - [ ] **I-07** While the card is being edited, its pencil shows as a book (view) icon. Pressing it writes what was typed and
       closes the box, as Done does, and the pencil comes back. Mac ✓ d601110, 8 Oct 2026.
+### The inspector's properties
+
 - [x] **I-08** In edit mode, tapping a box or a link shows its properties, looking as a note's Properties panel looks in this
       theme: the same rows, icons, spacing, type and colours, in both the light and dark themes.
       Mac ✓ 0.3.0, iPhone ✓ 0.3.0, 9 Oct 2026.
@@ -161,6 +194,8 @@ holds the two together).
       says which. The add field adds a value on Enter, or when it is left; an empty value, or one already there, says
       why and writes nothing. Phone: the chips, their x and the add field are easy to hit in the sheet, and the keyboard
       does not cover the field being typed in.
+### Done, lists and where the properties show
+
 - [ ] **I-14** Tap a box so its properties show, then press Done (or the book icon). The properties stay open but read-only, as a
       tap shows them outside edit mode: no fields, no Add property, no x on a chip and no add box. Pressing Edit here
       again, and tapping the box, brings the editable properties back. Details closed before Done stay closed.
@@ -174,6 +209,8 @@ holds the two together).
 - [ ] **I-17** While editing, in the card or the pane, choosing a box selects the pattern that writes it in the text, and
       choosing a link selects its brackets and arrow (slice 2).
 - [ ] **I-18** Phone: the properties open as a sheet at the bottom of the screen, and every field and icon is easy to hit.
+### Suggested names and adding a thing
+
 - [ ] **I-19** A thing written without a name (`(:Option {name: 'Small reader'})`), desktop and phone, light and dark: its box is
       drawn under the suggested name, with a dashed outline and "✎ SUGGESTED NAME" under its text, readable and not
       shown by colour alone. Tapping it opens its details like any box's: "✎ Suggested name: small_reader — not written
@@ -329,6 +366,8 @@ holds the two together).
 - [ ] **F-05** Open a box's details and press Show only this and its neighbours: the other boxes and their links disappear, and a
       banner names the box and the steps. Widen to two steps and Narrow to one step change it; Show the whole graph brings
       everything back (slice 3, untangle_neighbourhood).
+### Filter, shortest path, find and the arrow keys
+
 - [ ] **F-06** Press Filter by kind or link: each kind and relationship type is a button with its count. Choose one: it comes
       forward, the rest fade, and the button says "in front". Choose it again: it is hidden, struck through, and says
       "hidden". Once more: it is back (slice 3, untangle_legend).
@@ -365,6 +404,8 @@ holds the two together).
       the thing it names, and tapping a box in the drawing starts the trail again (slice 3, details_trail).
 - [ ] **G-04** Select a box, then zoom in until it is out of sight: a round arrow at the edge of the drawing points to it.
       Tap the arrow: the box comes back into view and the arrow goes (slice 3, selection_pointer).
+### The details sheet
+
 - [ ] **G-05** iPhone, reading view and Live Preview, a card taller than the screen: tap a box near the foot of the screen.
       The details open as a sheet at the foot of the screen, over the card and as wide as it, and the drawing moves up
       so the box sits above the sheet. Scroll the note: the sheet stays where it is; scroll the card off the screen: the
@@ -400,9 +441,11 @@ holds the two together).
 
 ## AI models — spec §19
 
-Run these on the Mac and the phone with aeroplane mode off, and a model of your own to send to: a local one (Ollama or
-LM Studio on the Mac) is enough. Use a throwaway key, never a real one, and only the dummy notes of the test vault. A
-note with no classification counts as the most sensitive level and so, by default, goes to no model: give each note a
+Run these on the Mac and the phone with aeroplane mode off. You need a model of your own to send to: a local one
+(Ollama or LM Studio on the Mac) is enough. Use a throwaway key, never a real one, and only the dummy notes of the test
+vault.
+
+A note with no classification counts as the most sensitive level. So, by default, it goes to no model. Give each note a
 classification of Public in its front matter first, and take it out again afterwards.
 
 - [ ] **U-01** With Use AI models off, as it is until you turn it on, run "Ask an AI model to propose changes" from the
@@ -418,6 +461,8 @@ classification of Public in its front matter first, and take it out again afterw
       Change the question: Send goes off again until it is shown again. Press Send: exactly that goes, once, and the
       answer arrives as a change set under the graph, each change waiting to be accepted or rejected; the graph block is
       unchanged (slice 3, seen_before_sent, never_in_background, answers_are_proposals).
+### What is sent, classifications and failures
+
 - [ ] **U-04** Choose "A view of it", then "Only the things ticked" with two things ticked, pressing Show what will be sent
       each time: what is shown holds only those things and the links between them, and none of the note's prose
       (slice 3, user_chooses_what).
@@ -434,9 +479,9 @@ classification of Public in its front matter first, and take it out again afterw
 
 ## Sources and steps — spec §7, §20
 
-The .gql file of Q-03 and Q-04 is made by the generator: run `node scripts/reset-test-vault.mjs` (or `node
-scripts/make-test-files.mjs`) in the repository, and `Graph files/trip.gql` is written at the root of the vault. Nothing
-is put in by hand. On the phone it arrives only when Obsidian Sync's "Other file types" is on.
+The .gql file of Q-03 and Q-04 is made by the generator. Run `node scripts/reset-test-vault.mjs` (or
+`node scripts/make-test-files.mjs`) in the repository, and `Graph files/trip.gql` is written at the root of the vault.
+Nothing is put in by hand. On the phone it arrives only when Obsidian Sync's "Other file types" is on.
 
 - [ ] **Q-01** Two views of one graph in one note, the graph block above them: each card draws only its view, from the one
       graph block, and the things outside it are faded. Change a name in the graph block: both views draw the new name.
@@ -453,6 +498,8 @@ is put in by hand. On the phone it arrives only when Obsidian Sync's "Other file
       files/nowhere.gql` is "not in the vault". Move `trip.gql` of Q-03 into another folder: Q-03's card says at once
       that it is not there any more and where a file of that name now is, and moving it back draws it again (slice 3,
       gql_file_missing).
+### Graph steps
+
 - [ ] **Q-05** A step, in Live Preview: its card says what it proposes into and what its point takes, offers the note's graph
       and its view, and nothing in the note changes until Run is pressed. Press Run with the graph chosen: a change set
       appears under the graph, each link waiting to be accepted or rejected, and the graph block is the same. Choose the
@@ -462,8 +509,10 @@ is put in by hand. On the phone it arrives only when Obsidian Sync's "Other file
 
 ## Link flow and path play — spec §7, §11
 
-Run these with the system's reduce-motion setting off, as it is by default, until L-03 turns it on: on the Mac, System
-Settings › Accessibility › Display › Reduce motion; on the iPhone, Settings › Accessibility › Motion › Reduce Motion.
+Run these with the system's reduce-motion setting off, as it is by default, until L-03 turns it on. The setting is:
+
+- on the Mac, System Settings › Accessibility › Display › Reduce motion;
+- on the iPhone, Settings › Accessibility › Motion › Reduce Motion.
 
 - [ ] **L-01** A graph whose style block holds a Flow with dashes for one relationship type: the dashes run along each of
       its links, in the direction of its arrow, and each of its labels opens with ⇢; the other links are still. Under the
@@ -476,6 +525,8 @@ Settings › Accessibility › Display › Reduce motion; on the iPhone, Setting
       no dot is drawn, and the icons and the legend stay. Press Play on a path: each step is marked at once, with no
       pulse and no dot. Open an exported animated SVG in a browser: it is still, every step outlined and numbered. Turn
       the setting off again afterwards (slice 3, motion_reduced_respected).
+### Path play and its export
+
 - [ ] **L-04** Press Play \<title>: the path steps on its own, two seconds a step, the step now on outlined and pulsing,
       and a dot running the link from the step before when a link joins them; "Step 2 of 4: …" is said each step. Choose
       Half a second a step under Pace: it goes faster at once. Pause holds it on its step and Play on carries on from
@@ -505,6 +556,8 @@ Settings › Accessibility › Display › Reduce motion; on the iPhone, Setting
 - [ ] **M-04** Turn Groups folded on: each group is one box with its name and how many things it holds, and the links to
       its things run to the box. Tap a box, or press Enter on it: that group opens and the other stays folded. Find a
       thing inside a folded group: its group opens and it is selected (slice 3, untangle_groups).
+### Merged links, routing and the selection
+
 - [ ] **M-05** Turn Parallel links merged on: the links running from one group to the other share one thick trunk. Tap a
       link at either end: its details open, reading as before, and VoiceOver reads it as the same link. In the style
       block, merge: 'on' starts the graph merged (slice 3, untangle_merge).
@@ -518,12 +571,14 @@ Settings › Accessibility › Display › Reduce motion; on the iPhone, Setting
 
 ## Animated images — spec §18, §11, §16
 
-The images are made, not supplied: run `node scripts/reset-test-vault.mjs` (or `node scripts/make-test-files.mjs`, which
-makes only the test files) in the repository, and the generator writes every file a note names into the folder
-`Device checks/20 Animated images`: real animated GIF, APNG, animated WebP and animated SVG images under the names
-given, and for K-05 a GIF larger than 5 MB, which git does not keep and the script makes each time. Nothing is put in by
-hand. On the phone they arrive only when Obsidian Sync's "Images" file type is on. Each note says which files it needs.
-Reduce motion stays off until K-04 turns it on.
+The images are made, not supplied. Run `node scripts/reset-test-vault.mjs` in the repository, or
+`node scripts/make-test-files.mjs`, which makes only the test files. The generator writes every file a note names into
+the folder `Device checks/20 Animated images`. These are real animated GIF, APNG, animated WebP and animated SVG images
+under the names given. For K-05 it writes a GIF larger than 5 MB, which git does not keep and the script makes each
+time. Nothing is put in by hand.
+
+On the phone they arrive only when Obsidian Sync's "Images" file type is on. Each note says which files it needs. Reduce
+motion stays off until K-04 turns it on.
 
 - [ ] **K-01** Open the details of Ann: under Images, cat.gif, spin.png, dance.webp and loop.svg each move, each with its
       name and a Pause button; a property naming an image outside the vault says it is not loaded, and shows nothing
@@ -538,6 +593,8 @@ Reduce motion stays off until K-04 turns it on.
 - [ ] **K-04** Turn the system's reduce-motion setting on and redraw the note of K-02: every picture and every image in
       the details is still, its first frame, each saying it is still as the system asks; press Play on one: only that
       one moves. Turn the setting off again afterwards (slice 3, motion_reduced_respected).
+### Limits and export
+
 - [ ] **K-05** A thing whose image is the GIF of more than 5 MB: it is never read, so its box shows only its Play control
       where the picture would be, and its image in the details shows nothing, each saying it is over the 5 MB an
       animated image may be, and the limits in a sentence; pressing Play leaves it so and says why again. The drawing is
@@ -570,6 +627,8 @@ Reduce motion stays off until K-04 turns it on.
       and the problems badge lists that it names no note or file, with its fix. Change it to the note it most likely
       meant: the block is written with the right name. Create the note: the note is made, and the link is no longer
       broken (slice 3, broken_links_problems).
+### Renames, web addresses and notes in the details
+
 - [ ] **H-07** Rename a note that a graph block links to, in the file explorer: the link inside the block changes to the
       new name at once, its alias kept. With the note open in Live Preview while renaming, Command-Z takes the change
       back (slice 3, renames_follow).
