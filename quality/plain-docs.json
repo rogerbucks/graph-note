@@ -1,0 +1,4 @@
+{
+  "about": "Misses of the plain-language check of documents and code comments (spec §41, plain_docs_auto; scripts/plain-docs.mjs), counted a file at a time as they stood when the check came in (18 Oct 2026). test/plain-docs.test.js fails on a file with more misses than its count, or on a file not listed with any. A count may only fall: `node scripts/plain-docs.mjs --update` lowers the counts to what is there now.",
+  "counts": {}
+}

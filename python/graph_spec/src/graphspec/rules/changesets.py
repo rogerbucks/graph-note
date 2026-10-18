@@ -152,7 +152,7 @@ def check_changeset(
         """An author is known if the graphs hold it, or the set itself declares it (§24)."""
         who = [world[g].nodes[h["by"]][0] for g in world.graphs if h["by"] in world[g].nodes]
         # the header's `by` reads as WAS_ATTRIBUTED_TO that agent for every change in the set
-        # (req:24.prov-attributed); a software agent is held to what a model is held to
+        # (req:24.prov-attributed). A software agent is held to what a model is held to
         kind = (
             "Model"
             if any(labels & {"Model", "SoftwareAgent"} for labels in who)

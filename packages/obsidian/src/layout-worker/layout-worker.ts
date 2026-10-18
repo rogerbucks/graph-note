@@ -1,14 +1,18 @@
-// The layout kept apart from the interface (spec §9, layout_contained): every graph is laid out in one Web Worker, reused,
-// under the size and time limits the core's LayoutRunner keeps, so a huge or hostile graph never freezes Obsidian.
+// The layout kept apart from the interface (spec §9, layout_contained). Every graph is laid out in one Web Worker,
+// reused. It runs under the size and time limits the core's LayoutRunner keeps. So a huge or hostile graph never
+// freezes Obsidian.
 //
-// How the engine gets into the worker. Obsidian installs only main.js, manifest.json and styles.css, so the worker cannot
-// be a file of its own, and nothing may be fetched (spec §13). The build bundles worker-entry.ts on its own, the Graphviz
-// WebAssembly inside it, and main.js holds that bundle once, as the body of the function `layoutWorker`. A worker is
-// started from a Blob URL of that function's own text — Function.prototype.toString gives a function's source exactly,
-// in V8 and in JavaScriptCore alike — and where no worker can run, the page calls the same function itself. This is the
-// simplest way that works offline in Electron and in the iOS and Android web views: a Blob worker, and WebAssembly in a
-// worker, run in all three. Keeping the bundle as a string instead would put the 1.2 MB engine in main.js twice, or leave
-// the page able to run it only through eval, which the store's linter refuses.
+// How the engine gets into the worker:
+// - Obsidian installs only main.js, manifest.json and styles.css. So the worker cannot be a file of its own. Nothing
+//   may be fetched (spec §13).
+// - The build bundles worker-entry.ts on its own, the Graphviz WebAssembly inside it. main.js holds that bundle once,
+//   as the body of the function `layoutWorker`.
+// - A worker is started from a Blob URL of that function's own text. Function.prototype.toString gives a function's
+//   source exactly, in V8 and in JavaScriptCore alike.
+// - Where no worker can run, the page calls the same function itself.
+// This is the simplest way that works offline in Electron and in the iOS and Android web views. A Blob worker, and
+// WebAssembly in a worker, run in all three. Keeping the bundle as a string instead would put the 1.2 MB engine in
+// main.js twice. Or it would leave the page able to run it only through eval, which the store's linter refuses.
 import { LayoutRunner, PAGE_LIMITS, inThreadPort, serveLayouts } from '@thoughtknot/core';
 import type { Drawn, Engine, GraphDrawing, LayoutLimits, LayoutPort, LayoutReply, Refusal } from '@thoughtknot/core';
 import type { ExportTheme, Told } from '@thoughtknot/core';
@@ -32,8 +36,8 @@ export function engineOnThePage(): Promise<Engine> {
 }
 
 /**
- * The tighter of two sets of limits, field by field, so a setting that lowers a limit lowers it on the page too; but the
- * longer of the two start times, as starting the engine is no layout to hold back.
+ * The tighter of two sets of limits, field by field. So a setting that lowers a limit lowers it on the page too. But it
+ * takes the longer of the two start times, as starting the engine is no layout to hold back.
  */
 const tighter = (a: LayoutLimits, b: LayoutLimits): LayoutLimits => ({
   things: Math.min(a.things, b.things),
@@ -67,9 +71,9 @@ export class Layouts {
   }
 
   /**
-   * The drawing laid out and themed, or why it is shown as text; null when it is no longer wanted, superseded by a newer
-   * drawing for the same `owner` or put away on unload. Rejects when the engine cannot start. With a `theme` it is themed
-   * in that fixed palette, as an export is: an export is laid out here too, under the same limits (spec §16).
+   * The drawing laid out and themed, or why it is shown as text. Null when it is no longer wanted: superseded by a newer
+   * drawing for the same `owner`, or put away on unload. Rejects when the engine cannot start. With a `theme` it is
+   * themed in that fixed palette, as an export is. An export is laid out here too, under the same limits (spec §16).
    */
   draw(drawing: GraphDrawing, owner?: object, theme?: ExportTheme): Promise<Drawn | Refusal | null> {
     return this.runner.draw(drawing, owner, theme);

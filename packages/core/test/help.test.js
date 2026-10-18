@@ -1,7 +1,7 @@
-// Help that finds and fixes problems (spec §8), in the shapes of the Language Server Protocol (spec §10), so a VS Code host
-// can show them as its own: every problem in plain English, with its place and a fix where one exists; names, kinds and
-// relationships suggested while typing — only the schema's in a locked graph; a near duplicate warned of in a draft; and
-// each line read back in plain English.
+// Help that finds and fixes problems (spec §8), in the shapes of the Language Server Protocol (spec §10). So a VS Code
+// host can show them as its own. Every problem is in plain language, with its place and a fix where one exists. Names,
+// kinds and relationships are suggested while typing, only the schema's in a locked graph. A near duplicate is warned
+// of in a draft. Each line is read back in plain language.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -407,7 +407,7 @@ describe('a name or a text suggested for a thing', () => {
   });
 });
 
-// editor spec §4, unnamed_drawn_suggested: nothing is written until the thing's own fix is accepted, so a name only
+// editor spec §4, unnamed_drawn_suggested: nothing is written until the thing's own fix is accepted. So a name only
 // suggested is never offered to be typed into the note, nor named in a fix for something else
 describe('a name only suggested is never offered as a word to write', () => {
   const TEXT = "// graph: g\n(a:X {name: 'A'}),\n(:X {name: 'Small reader'}),\n(a)-[:R]->(a)";

@@ -1,7 +1,8 @@
-// A thing drawn only under a suggested name is never written by that name unasked (editor spec §4, unnamed_drawn_suggested:
-// "nothing is written until its fix is accepted"). Every edit that would write the name into the text — a recorded path, a
-// property made a list, a value added to one, a thing parked for later, a nudge, a look, a view saved as shown — refuses
-// with "accept its name first", and writes nothing; once the name is written, each edit goes through as for any thing.
+// A thing drawn only under a suggested name is never written by that name unasked (editor spec §4,
+// unnamed_drawn_suggested: "nothing is written until its fix is accepted"). Some edits would write the name into the
+// text. They are a recorded path, a property made a list, a value added to one, and a thing parked for later. They are
+// also a nudge, a look, and a view saved as shown. Each refuses with "accept its name first", and writes nothing. Once
+// the name is written, each edit goes through as for any thing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks } from '../src/blocks.ts';
@@ -213,8 +214,8 @@ describe('a style written for a thing drawn under a suggested name', () => {
   });
 });
 
-// Review, 11 Oct 2026: a drawing can be older than the note, and the reader suggests names across every block it reads,
-// a schema block among them; so an edit written into the note is checked against the note as it is when written, read
+// Review, 11 Oct 2026: a drawing can be older than the note. The reader suggests names across every block it reads, a
+// schema block among them. So an edit written into the note is checked against the note as it is when written, read
 // exactly as the reader reads it.
 describe('a thing only suggested in the note as it is when written', () => {
   const A = "// graph: g\n(a:X {name: 'A'}),\n(:X {name: 'Small reader'})";

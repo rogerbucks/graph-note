@@ -1,6 +1,6 @@
-// Asking an AI model to propose changes (spec §19): the command, which does nothing but say so while AI is off or no
-// model is set up (ai_off_until_chosen), and otherwise opens the send dialog on the note in front, with the note's
-// classification read from its text as well as the metadata cache, the higher taken. Obsidian has no AI of its own to
+// Asking an AI model to propose changes (spec §19). The command only says so while AI is off or no model is set up
+// (ai_off_until_chosen). Otherwise it opens the send dialog on the note in front. The note's classification is read
+// from its text as well as the metadata cache, and the higher is taken. Obsidian has no AI of its own to
 // offer first (host_ai_first), so only the models set up in the settings are offered. And the command that clears the
 // record of sends (record_every_send), which keeps only the last ones and never the text sent.
 import { Notice } from 'obsidian';
@@ -30,7 +30,7 @@ export async function askAi(plugin: ThoughtKnotPlugin): Promise<void> {
   const front = noteToRewrite(plugin.app.workspace, 'to ask an AI model about its graph');
   if (!front) return;
   const text = await plugin.app.vault.read(front.file);
-  // read from the text being sent as well as the metadata cache, which can be behind it, the higher taken; and read
+  // read from the text being sent as well as the metadata cache, which can be behind it. The higher is taken. Read
   // again each time the dialog shows what will be sent, against the classifications as they are then
   const levelOf = () => {
     const { classifications: levels, aiUnlabelled } = plugin.settings;

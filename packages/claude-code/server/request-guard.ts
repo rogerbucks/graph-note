@@ -1,20 +1,23 @@
-// The checks the editor server makes on every request before it does anything (spec §26: cc_host_checked,
-// cc_origin_checked, cc_session_token, cc_token_unkept, cc_csp): the Host must name the server itself, nothing may come
-// from another origin, a write must come from the server's own page, and an API call must carry the session's token as
-// a Bearer header, compared in constant time. Also the headers every answer carries, whatever its status.
+// The checks the editor server makes on every request, before it does anything. They are (spec §26: cc_host_checked,
+// cc_origin_checked, cc_session_token, cc_token_unkept, cc_csp):
+// - the Host must name the server itself;
+// - nothing may come from another origin;
+// - a write must come from the server's own page;
+// - an API call must carry the session's token as a Bearer header, compared in constant time.
+// Also the headers every answer carries, whatever its status.
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { IncomingHttpHeaders } from 'node:http';
 
 /**
  * The content security policy of every answer: the server's own origin only, no inline script and no eval, never
- * framed, and no base address, form target or plugin, which `default-src` does not cover.
+ * framed. Also no base address, form target or plugin, which `default-src` does not cover.
  */
 export const CSP =
   "default-src 'self'; script-src 'self'; worker-src 'self'; connect-src 'self'; img-src 'self' data: blob:; " +
   "style-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'; object-src 'none'";
 
 /**
- * The headers every answer carries, Node's own refusals included: the policy, no sniffing, nothing cached, no
+ * The headers every answer carries, Node's own refusals included. They give the policy, no sniffing, nothing cached, no
  * referrer, no use by another site, and no window shared with another origin's.
  */
 export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
@@ -45,8 +48,9 @@ export const originOf = (host: string): string => `http://${host}`;
 const one = (value: string | string[] | undefined): string | undefined => (Array.isArray(value) ? undefined : value);
 
 /**
- * Why a request is refused as cross-origin, or null: an Origin that is not the server's own, or a browser saying the
- * request comes from another site. A navigation typed or opened by the user (`Sec-Fetch-Site: none`) is not.
+ * Why a request is refused as cross-origin, or null. It is refused for an Origin that is not the server's own. It is
+ * also refused when a browser says the request comes from another site. A navigation typed or opened by the user
+ * (`Sec-Fetch-Site: none`) is not.
  */
 export function crossOrigin(headers: IncomingHttpHeaders, host: string): string | null {
   const origin = one(headers.origin);

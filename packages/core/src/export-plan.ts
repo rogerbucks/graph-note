@@ -1,9 +1,11 @@
-// The one decision before an export is written (editor spec §16, empty_export, classified_export, failed_export): there is
-// nothing to export; or the note is classified above the configured level, so the host asks first; or go, with the file's
-// name and place and, as configured, its companion note. Nothing is written here; the host writes only on a go, and only
-// by `writeSafely`. A file name is made from the note, the graph or view and the day, safe on every platform. The data
-// (export_data_formats) is named as an image is, with its own ending, and gets its companion note as an image does; a
-// PNG split across pages (big_export) names each page after the one name, in order.
+// The one decision before an export is written (editor spec §16, empty_export, classified_export, failed_export):
+// - there is nothing to export;
+// - or the note is classified above the configured level, so the host asks first;
+// - or go, with the file's name and place and, as configured, its companion note.
+// Nothing is written here; the host writes only on a go, and only by `writeSafely`. A file name is made from the note,
+// the graph or view and the day, safe on every platform. The data (export_data_formats) is named as an image is, with
+// its own ending, and gets its companion note as an image does. A PNG split across pages (big_export) names each page
+// after the one name, in order.
 import type { ExportFormat } from './export.ts';
 import type { DataFormat } from './export-data.ts';
 import type { ExportScope } from './export-scope.ts';
@@ -47,9 +49,9 @@ export type ExportDecision = { nothing: string } | { ask: string } | { go: Expor
 
 // characters no platform lets a file be named with, and the marks that would break a link to it
 const UNSAFE_IN_A_NAME = '/\\:*?"<>|#^[]';
-// Each part of a name is cut to this many UTF-8 bytes, as file systems count: with the day (10), `with-context` (12), four
-// hyphens and the ending (4) the whole is at most 194 bytes, so it and its `.part` stay within 200. A longer ending, or a
-// page's `-page-1-of-36`, takes its extra bytes from the note's part.
+// Each part of a name is cut to this many UTF-8 bytes, as file systems count. With the day (10), `with-context` (12),
+// four hyphens and the ending (4), the whole is at most 194 bytes. So it and its `.part` stay within 200. A longer
+// ending, or a page's `-page-1-of-36`, takes its extra bytes from the note's part.
 const MOST = { note: 80, graph: 44, view: 40, date: 10 };
 const ENDING = 4;
 
@@ -101,7 +103,7 @@ function question(input: ExportPlanInput): string | null {
 /**
  * What to do about an export. An empty scope says there is nothing to export, whatever else is true. Otherwise a note
  * whose classification is above the configured level is asked about, naming both, until the user has said yes
- * (`confirmed`); a classification that is not one of those set counts as above every level, and a note with none is not
+ * (`confirmed`). A classification that is not one of those set counts as above every level. A note with none is not
  * asked about. Level and classification are compared whatever their case or spaces.
  */
 export function exportPlan(input: ExportPlanInput): ExportDecision {

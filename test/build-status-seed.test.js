@@ -1,9 +1,12 @@
-// The values the mirror gives an item that has none, from where its requirement stands on GitHub: Released and Done for what
-// is proved on main and in a published release, Merged and Done for what is proved on main only, In PR and In Progress for
-// what an open pull request of this repository holds (by its copy's diff or its Requirements line), Not started and Todo for
-// the rest. A draft release does not count. The built-in Status may have Todo replaced by In Progress or Done, since Todo is
-// the board's default and no choice; any other value is never overwritten. Every case runs against in-memory stand-ins for gh,
-// so no network is touched. Editor spec §12, requirements_checked_in_ci.
+// The values the mirror gives an item that has none, from where its requirement stands on GitHub:
+// - Released and Done for what is proved on main and in a published release.
+// - Merged and Done for what is proved on main only.
+// - In PR and In Progress for what an open pull request of this repository holds. It holds it by its copy's diff or its
+//   Requirements line.
+// - Not started and Todo for the rest.
+// A draft release does not count. The built-in Status may have Todo replaced by In Progress or Done. Todo is the
+// board's default and no choice. Any other value is never overwritten. Every case runs against in-memory stand-ins
+// for gh, so no network is touched. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
@@ -25,7 +28,7 @@ const proving = (text, requirement, test) =>
 const MAIN = proving(FIXTURE, 'done_means_proved', 'test_dmp');
 const noSleep = () => {};
 
-/** GitHub as it stands: main, a published release v0.5.0 whose copy is the fixture, a draft release whose copy is main's, and two open pull requests. */
+/** GitHub as it stands: main, a published release v0.5.0 whose copy is the fixture. Also a draft release whose copy is main's, and two open pull requests. */
 function scene() {
   const side = fakeRepoSide();
   const { hub } = side;

@@ -1,5 +1,6 @@
-// The block editor's help with problems (spec §4, §8): the list of every problem with its line, the problems on the
-// caret's line with their fixes as buttons, a fix's edits applied to the text, and new problems said to screen readers.
+// The block editor's help with problems (spec §4, §8). It holds the list of every problem with its line, and the
+// problems on the caret's line with their fixes as buttons. It applies a fix's edits to the text, and says new problems
+// to screen readers.
 import type { Diagnostic } from '@thoughtknot/core';
 import { withFix } from '../fix-changes';
 import type { FixChanges } from '../fix-changes';

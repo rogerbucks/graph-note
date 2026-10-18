@@ -1,7 +1,7 @@
-// Where an image is drawn (editor spec §18): in a thing's details, a figure — the image, its caption, its pause and play
-// button and what it says — and on a box, the image in the room Graphviz kept for it (the core's `PICTURE_MARK` square),
-// with its control drawn in the corner, an SVG button reached by Tab and pressed by Enter, Space, a click or a tap. Both
-// are worked by animated-images.ts through the one `ImageView`; neither decides anything.
+// Where an image is drawn (editor spec §18). In a thing's details it is a figure: the image, its caption, its pause and
+// play button and what it says. On a box it is the image in the room Graphviz kept for it (the core's `PICTURE_MARK`
+// square). Its control is drawn in the corner, an SVG button reached by Tab and pressed by Enter, Space, a click or a
+// tap. Both are worked by animated-images.ts through the one `ImageView`; neither decides anything.
 import { PICTURE_MARK } from '@thoughtknot/core';
 
 const SVG = 'http://www.w3.org/2000/svg';

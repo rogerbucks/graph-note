@@ -1,6 +1,6 @@
-// The controls of a card's details, as the read-only tests check them: every one that can be pressed or typed in, by
-// its name, and pressing in turn those that should only find the way round the drawing (§25), so one that wrote to the
-// note would show when the test then checks the note is unchanged.
+// The controls of a card's details, as the read-only tests check them. It lists every one that can be pressed or typed
+// in, by its name. It presses in turn those that should only find the way round the drawing (§25). So one that wrote
+// to the note would show when the test then checks the note is unchanged.
 import assert from 'node:assert/strict';
 
 const SELECTOR = [
@@ -21,10 +21,10 @@ export const controlsIn = (el) => el.querySelectorAll(SELECTOR);
 export const controls = (el) => controlsIn(el).map(nameOf);
 
 /**
- * Holds the details `reopen` opens to exactly the controls named in `all`, in order, so a control nobody expected fails
- * the test; then presses every one of them but those named in `kept`, each a button and never a field, the details
- * opened again before each, as pressing one draws other details. After a choice in the body it presses the trail's Back
- * and then its Forward, and every other control the choice brings. It opens the details once more after, and returns
+ * Holds the details `reopen` opens to exactly the controls named in `all`, in order. So a control nobody expected fails
+ * the test. Then it presses every one of them but those named in `kept`, each a button and never a field. The details
+ * are opened again before each, as pressing one draws other details. After a choice in the body it presses the trail's
+ * Back and then its Forward, and every other control the choice brings. It opens the details once more after. It returns
  * the names of the controls left, those in `kept`, for the test to hold to what it expects.
  */
 export function pressTheRest(el, kept, reopen, all) {

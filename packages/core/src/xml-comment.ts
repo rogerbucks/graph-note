@@ -1,15 +1,21 @@
-// A `///` note written as an XML comment (editor spec §24, note_standard; graph spec req:26.plain), for an export to
-// a format that is XML: GraphML here, SCXML in the Python library, which writes the same comment for the same note
-// (python/graph_spec/tests/note_comment_cases.json holds both). XML forbids `--` inside a comment and a `-` at its end,
-// and only `-->` ends one, so the note's text is escaped until it can never end its comment, and is read back exactly:
-// a backslash is written `\\`, a hyphen directly after a hyphen `\-`, a carriage return `\r` (XML would make it a
-// line feed) and a character XML 1.0 cannot hold `\u{…}`, its code point in hexadecimal. Nothing else is changed, so
-// a note reads as written in the file. The text is spaced from `<!--` and `-->`, so it never ends with a hyphen.
+// A `///` note written as an XML comment (editor spec §24, note_standard; graph spec req:26.plain). It is for an
+// export to a format that is XML: GraphML here, and SCXML in the Python library. The library writes the same comment
+// for the same note (python/graph_spec/tests/note_comment_cases.json holds both). XML forbids `--` inside a comment
+// and a `-` at its end, and only `-->` ends one. So the note's text is escaped until it can never end its comment, and
+// is read back exactly:
+// - a backslash is written `\\`;
+// - a hyphen directly after a hyphen `\-`;
+// - a carriage return `\r` (XML would make it a line feed);
+// - a character XML 1.0 cannot hold `\u{…}`, its code point in hexadecimal.
+// Nothing else is changed, so a note reads as written in the file. The text is spaced from `<!--` and `-->`, so it
+// never ends with a hyphen.
 
 /**
- * Whether XML 1.0 cannot hold a character, even as a reference: a control character other than tab, line feed and
- * carriage return, the two non-characters U+FFFE and U+FFFF, or half of a surrogate pair alone (a whole pair is one
- * character, beyond U+FFFF, as a string is walked by its characters).
+ * Whether XML 1.0 cannot hold a character, even as a reference:
+ * - a control character other than tab, line feed and carriage return;
+ * - the two non-characters U+FFFE and U+FFFF;
+ * - half of a surrogate pair alone (a whole pair is one character, beyond U+FFFF, as a string is walked by its
+ *   characters).
  */
 export const notXml = (c: string): boolean => {
   const code = c.codePointAt(0) ?? 0;
@@ -22,9 +28,9 @@ export const notXml = (c: string): boolean => {
 };
 
 /**
- * A note's text as the comment writes it, one piece for each character, given out as it is taken: linear by
- * construction, as all it keeps between characters is the last character written (never the text written so far,
- * which a search of would make a run of hyphens quadratic).
+ * A note's text as the comment writes it, one piece for each character, given out as it is taken. It is linear by
+ * construction, as all it keeps between characters is the last character written. It never keeps the text written so
+ * far, which a search of would make a run of hyphens quadratic.
  */
 export function* commentPieces(note: Iterable<string>): Generator<string> {
   let last = '';

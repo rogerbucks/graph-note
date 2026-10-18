@@ -1,7 +1,8 @@
-// The send dialog and the matrix note (editor spec §19, model_ceiling): the note is read each time what will be sent is
-// shown; a note that cannot be read refuses plainly and leaves nothing ready to send; and a read that finishes after the
-// user has changed the model or the question never makes what was shown ready. The rule itself is tested in
-// packages/core/test/ai-matrix.test.js.
+// The send dialog and the matrix note (editor spec §19, model_ceiling).
+// - The note is read each time what will be sent is shown.
+// - A note that cannot be read refuses plainly, and leaves nothing ready to send.
+// - A read that finishes after the user changed the model or the question never makes what was shown ready.
+// The rule itself is tested in packages/core/test/ai-matrix.test.js.
 import { before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

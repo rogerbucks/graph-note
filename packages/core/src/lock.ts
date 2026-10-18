@@ -1,6 +1,6 @@
-// Lock the graph (spec §8): a draft's kinds and relationship types, worked out from its data, written as its schema — a
-// block written last, as the graph spec's §5 asks — with each relationship read both ways. The reverse readings are
-// guesses, and the block says so, for the writer to check.
+// Lock the graph (spec §8). A draft's kinds and relationship types are worked out from its data and written as its
+// schema, with each relationship read both ways. The schema is a block written last, as the graph spec's §5 asks. The
+// reverse readings are guesses, and the block says so, for the writer to check.
 import gs from '@thoughtknot/graph-spec';
 import { dataKind, graphOf } from './blocks.ts';
 import type { NoteReading } from './note-reading.ts';
@@ -23,8 +23,9 @@ export function reverseGuess(reading: string): string {
 const fit = (one: string, first: string, second: string) => (one.length < 70 ? [one] : [first, second]);
 
 /**
- * A string quoted as GQL writes it, by the graph library's own quoting: in single quotes, a backslash and a quote each
- * led by a backslash, and a line break, tab or other control character written as its escape, so it stays on its line.
+ * A string quoted as GQL writes it, by the graph library's own quoting. It is in single quotes, with a backslash and a
+ * quote each led by a backslash. A line break, tab or other control character is written as its escape, so it stays on
+ * its line.
  */
 export const quoted = (s: string): string => gs.quote(s);
 const q = quoted;
@@ -47,16 +48,17 @@ export const typeLines = (id: string, name: string, reading: string, reverse: st
 ];
 
 /**
- * The schema block that locks a draft: every kind and relationship type of the whole graph — across all its blocks in the
- * note, whichever block it is locked from — each with its readings, dated, and each declared by the graph's GraphMeta.
- * Laid out as the guide lays a locked schema out: a long thing split over lines, a "// ──" line before each part. A
- * thing's later lines are indented by `indent`, the text the settings choose (spec §21, settings_formatting).
+ * The schema block that locks a draft. It holds every kind and relationship type of the whole graph, across all its
+ * blocks in the note, whichever block it is locked from. Each comes with its readings, dated, and each is declared by
+ * the graph's GraphMeta. Laid out as the guide lays a locked schema out: a long thing split over lines, a "// ──" line
+ * before each part. A thing's later lines are indented by `indent`, the text the settings choose (spec §21,
+ * settings_formatting).
  */
 export function lockBlock(reading: NoteReading, graph: string, today: string, indent = '    '): string {
   const g = reading.whole[graph] ?? reading.world[graph];
   if (!g) throw new Error(`there is no graph ${graph} to lock`);
-  // the graph line of a block of the graph's data or schema as written, read with whitespace as GQL names it (graph spec
-  // §3): never a view's, which would make the schema a second view
+  // the graph line of a block of the graph's data or schema as written, read with whitespace as GQL names it (graph
+  // spec §3). Never a view's, which would make the schema a second view
   const header =
     reading.texts
       .filter((t) => typeof dataKind(t) === 'string')

@@ -1,5 +1,5 @@
-// The one host contract (editor spec §41, host_contract_published): a test host built from the published interface alone
-// passes every check, and a host that breaks a promise fails the check that holds it, saying what was wanted.
+// The one host contract (editor spec §41, host_contract_published). A test host built from the published interface
+// alone passes every check. A host that breaks a promise fails the check that holds it, saying what was wanted.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';

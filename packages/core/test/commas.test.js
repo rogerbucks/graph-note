@@ -1,6 +1,6 @@
-// The comma added for you (editor spec §4, comma_added_for_you; decided 7 Oct 2026): while typing, once the next pattern
-// starts on a new line and the line before is otherwise valid, the comma is added at the end of the line before. Never
-// when it would not make the block valid, never twice, never inside a string or a comment.
+// The comma added for you (editor spec §4, comma_added_for_you; decided 7 Oct 2026). While typing, the next pattern may
+// start on a new line, with the line before otherwise valid. Then the comma is added at the end of the line before.
+// Never when it would not make the block valid, never twice, never inside a string or a comment.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { commaFor } from '../src/commas.ts';
@@ -67,9 +67,10 @@ test('in a note, the comma is added only inside a graph block: never in a query,
   assert.equal(commaInNote(python, '```python\nf(a)\n('.length), null);
 });
 
-// The colon added for you (editor spec §4, colon_added_for_you; decided 7 Oct 2026): a link type typed without its colon,
-// matching exactly one type of the graph ignoring case, has the colon added — and the type as the graph spells it — as
-// the ] that closes it is typed. Never for a first use, case-only twins, a query, or inside a string or a comment.
+// The colon added for you (editor spec §4, colon_added_for_you; decided 7 Oct 2026). A link type may be typed without
+// its colon, matching exactly one type of the graph ignoring case. Then the colon is added — and the type as the graph
+// spells it — as the ] that closes it is typed. Never for a first use, case-only twins, a query, or inside a string or
+// a comment.
 describe('the colon added for you', async () => {
   const { colonFor, colonInNote } = await import('../src/commas.ts');
   const FIRST = "// graph: g\n(r:Reason {title: 'Sun'}),\n(o:Option {name: 'Coast'}),\n(r)-[:FAVOURS]->(o)";

@@ -1,11 +1,17 @@
-// Export (spec §16): what the Export form asks for, carried out — the scope read from the note as it is now, the plan
-// made (nothing to export, a question to ask first, or go), then the files: the image drawn in fixed colours with its
-// frame (image.ts), on pages when one PNG cannot be sharp (big_export), or the data written as a GQL block, CSV or
-// GraphML (export_data_formats), with no layout asked for, so a graph too large to draw is still exported whole, and a
-// view's faded context marked as outside it when asked for (view_export_stays_view); or a path played into an animated
-// SVG, refused before anything is laid out when too large for the device (animation_export_fits). Then either offered to a phone's
-// share sheet by a tap of its own (export_share_sheet), or written safely into the vault under names of their own, all
-// of them or none, with the companion note when set (export_companion_note). Each outcome is said once.
+// Export (spec §16): what the Export form asks for, carried out.
+// - The scope is read from the note as it is now.
+// - The plan is made: nothing to export, a question to ask first, or go.
+// - Then the files are made. One of these:
+//   - the image drawn in fixed colours with its frame (image.ts), on pages when one PNG cannot be sharp (big_export);
+//   - the data written as a GQL block, CSV or GraphML (export_data_formats), with no layout asked for. So a graph too
+//     large to draw is still exported whole. A view's faded context is marked as outside it when asked for
+//     (view_export_stays_view);
+//   - a path played into an animated SVG. It is refused before anything is laid out when too large for the device
+//     (animation_export_fits).
+// - Then the files are offered to a phone's share sheet by a tap of its own (export_share_sheet). Or they are written
+//   safely into the vault under names of their own, all of them or none. The companion note comes with them when set
+//   (export_companion_note).
+// Each outcome is said once.
 import { Notice, Platform, TFile } from 'obsidian';
 import {
   PATH_PACES,
@@ -69,10 +75,11 @@ const said = (outcome: ExportOutcome): ExportOutcome => {
 };
 
 /**
- * The path an export plays (§7), found in the note as it is now; or why it is not made, before anything is laid out: the
- * path is gone or has no steps, it is asked for as anything but an SVG or at a pace Play does not step at, or it is too
- * large for the device
- * (animation_export_fits), saying why and what would make it fit.
+ * The path an export plays (§7), found in the note as it is now. Or why it is not made, said before anything is laid
+ * out. It is not made when:
+ * - the path is gone or has no steps;
+ * - it is asked for as anything but an SVG, or at a pace Play does not step at;
+ * - it is too large for the device (animation_export_fits), saying why and what would make it fit.
  */
 function playedWalk(
   reading: NoteReading,
@@ -238,8 +245,8 @@ async function takenAway(ops: WriteOps, paths: string[]): Promise<string> {
 }
 
 /**
- * The files written into the vault under names of their own, so no earlier export is overwritten; all of them or none:
- * when one cannot be written, those written before it are taken away again, and any that cannot be is named. Then the
+ * The files written into the vault under names of their own, so no earlier export is overwritten. All of them or none:
+ * when one cannot be written, those written before it are taken away again. Any that cannot be is named. Then the
  * companion note, when set: an image's shows it, the data's links it and says how much it holds.
  */
 async function intoVault(plugin: ThoughtKnotPlugin, x: VaultExport): Promise<ExportOutcome> {

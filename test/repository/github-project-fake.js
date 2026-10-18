@@ -1,8 +1,8 @@
 // A stand-in for the gh command, holding a small GitHub in memory: labels, issues and one project. It answers the calls
-// the GitHub mirror makes the way GitHub does (including a new project’s built-in Status field, and a field’s options
-// being given new ids when they are replaced, and the fields that are not a single choice: dates, numbers and iterations),
-// records every call, and says which of them changed something. Test code only — nothing here ships, and nothing here
-// touches the network.
+// the GitHub mirror makes the way GitHub does. That includes a new project’s built-in Status field, and a field’s
+// options being given new ids when they are replaced. It also includes the fields that are not a single choice: dates,
+// numbers and iterations. It records every call, and says which of them changed something. Test code only — nothing
+// here ships, and nothing here touches the network.
 const flag = (args, name) => args[args.indexOf(name) + 1];
 const flagsOf = (args, name) => args.flatMap((a, i) => (a === name ? [args[i + 1]] : []));
 const json = (value) => `${JSON.stringify(value)}\n`;
@@ -15,10 +15,10 @@ const restLogin = (author) => {
 
 /**
  * The answer of `gh api repos/{o}/{r}/issues?state=all&creator=<login>&per_page=100 --paginate --slurp`, as the REST
- * API gives it: the issues (and `pulls`, pull requests, which that endpoint lists too) the creator made, or all where none
- * is named, each in the REST shape, a hundred to the page, the pages in a list; with `sort=created&direction=desc` the
- * newest first, and without `slurp` the first page alone. A creator in `unlisted` is given none, as if GitHub's creator
- * filter did not find that login's issues.
+ * API gives it. It holds the issues the creator made, or all where none is named. It holds `pulls` too: the pull
+ * requests, which that endpoint lists as well. Each is in the REST shape, a hundred to the page, the pages in a list.
+ * With `sort=created&direction=desc` the newest come first. Without `slurp` the first page comes alone. A creator in
+ * `unlisted` is given none, as if GitHub's creator filter did not find that login's issues.
  */
 export function restIssueList(issues, query, { pulls = [], unlisted = [], slurp = true } = {}) {
   const params = new URLSearchParams(query);
@@ -49,8 +49,9 @@ export function restIssueList(issues, query, { pulls = [], unlisted = [], slurp 
 
 /**
  * An empty GitHub for the repository `owner/name`, with `login` signed in (`app/<name>` for a GitHub App, as gh gives a
- * bot's login). `pageSize` makes the project’s item list page; `now` is the time an issue is closed at. Like gh, it refuses an issue or label call that names no repository or another one, and a project call that
- * names no owner or another one: a call that would reach the wrong place throws instead.
+ * bot's login). `pageSize` makes the project’s item list page; `now` is the time an issue is closed at. Like gh, it
+ * refuses an issue or label call that names no repository or another one. It refuses a project call that names no
+ * owner or another one. A call that would reach the wrong place throws instead.
  */
 export function fakeGithub({
   owner = 'rogerbucks',
@@ -101,8 +102,8 @@ export function fakeGithub({
     const key = { DATE: 'date', NUMBER: 'number', ITERATION: 'title' }[type] ?? 'name';
     return { [key]: value, field: { name } };
   };
-  // an iteration field's configuration, refused as GitHub refuses an input key its schema does not hold (the keys are
-  // the schema's, as the owner read them on 15 Oct 2026, so a drift fails a test); an iteration given an id keeps it
+  // an iteration field's configuration, refused as GitHub refuses an input key its schema does not hold. The keys are
+  // the schema's, as the owner read them on 15 Oct 2026, so a drift fails a test. An iteration given an id keeps it
   const refuseKeys = (what, value, allowed) => {
     for (const key of Object.keys(value))
       if (!allowed.includes(key)) throw new Error(`gh: InputObject '${what}' doesn't accept argument '${key}'`);

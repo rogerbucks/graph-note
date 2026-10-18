@@ -1,8 +1,8 @@
-// Adding, changing and removing a note from the details (editor spec §24, note_add): while the block is edited in place,
-// the details of a thing or link offer to add its note, or to change or remove the one it has. The core's `setNote`
-// does the writing — the `///` lines above the thing or link, nothing else in the block changing — and the block is
-// replaced through the editor, so the editor's own undo takes the note away or brings it back. A refusal is said in
-// words beside the controls, nothing written.
+// Adding, changing and removing a note from the details (editor spec §24, note_add). While the block is edited in
+// place, the details of a thing or link offer to add its note. If it has one, they offer to change or remove it. The
+// core's `setNote` does the writing: the `///` lines above the thing or link, nothing else in the block changing. The
+// block is replaced through the editor, so the editor's own undo takes the note away or brings it back. A refusal is
+// said in words beside the controls, nothing written.
 import { linkInBlock, setNote, word } from '@thoughtknot/core';
 import type { NoteReading, Target, ThingNote } from '@thoughtknot/core';
 
@@ -58,8 +58,9 @@ function controls(el: HTMLElement, note: ThingNote | undefined, edit: NoteEditin
 }
 
 /**
- * The note controls for the thing or link `target` of `graph` in the details, `text` being the block as typed and
- * `replace` writing the block: the note it has now is the reading's, and a link is found among those written in the block.
+ * The note controls for the thing or link `target` of `graph` in the details. `text` is the block as typed and
+ * `replace` writes the block. The note it has now is the reading's, and a link is found among those written in the
+ * block.
  */
 export function noteControls(
   el: HTMLElement,

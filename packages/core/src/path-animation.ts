@@ -1,9 +1,10 @@
-// A played path exported as an animated SVG (editor spec §7, path_animation_export): CSS inside the file moves a heavier
-// outline from step to step at the pace set, round and round, and a dot along the link between two steps that a link
-// joins, forwards along the walk, so no encoder is needed and nothing is loaded from elsewhere. Every step is outlined
-// and numbered on its thing, and the frame says the walk in order, so the still image tells it too (motion_not_alone);
-// under `@media (prefers-reduced-motion: reduce)` every animation stops (motion_reduced_respected). One too large for
-// the device is refused before anything is laid out, saying why and what would make it fit (animation_export_fits).
+// A played path exported as an animated SVG (editor spec §7, path_animation_export). CSS inside the file moves a
+// heavier outline from step to step at the pace set, round and round. A dot moves along the link between two steps that
+// a link joins, forwards along the walk. So no encoder is needed and nothing is loaded from elsewhere. Every step is
+// outlined and numbered on its thing. The frame says the walk in order, so the still image tells it too
+// (motion_not_alone). Under `@media (prefers-reduced-motion: reduce)` every animation stops (motion_reduced_respected).
+// One too large for the device is refused before anything is laid out, saying why and what would make it fit
+// (animation_export_fits).
 import { inImage, runnerOf, withStyleSheet } from './export-motion.ts';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
@@ -15,8 +16,8 @@ import type { WalkedPath } from './paths.ts';
 export type Device = 'phone' | 'desktop';
 
 /**
- * The most an animated SVG may hold on each device: steps, past which its style sheet grows long enough to stutter, and
- * bytes, its estimated size, past which a phone's browser or viewer opens it slowly or not at all.
+ * The most an animated SVG may hold on each device. `steps` is the count past which its style sheet grows long enough
+ * to stutter. `bytes` is its estimated size, past which a phone's browser or viewer opens it slowly or not at all.
  */
 export const ANIMATION_LIMITS: Record<Device, { steps: number; bytes: number }> = {
   phone: { steps: 200, bytes: 2_000_000 },
@@ -36,9 +37,9 @@ export interface TooLargeToAnimate {
 }
 
 /**
- * About how many bytes an animated SVG of this size takes: the drawing's things and links, and each step's share of the
- * style sheet and the drawing (its thing's keyframes and rule, a dot's runner and keyframes, its number, its words in
- * the frame), about 800 bytes.
+ * About how many bytes an animated SVG of this size takes: the drawing's things and links, and each step's share. A
+ * step's share is about 800 bytes of the style sheet and the drawing. That covers its thing's keyframes and rule, a
+ * dot's runner and keyframes, its number, and its words in the frame.
  */
 export const animationBytes = (x: { steps: number; things: number; links: number }): number =>
   2000 + x.things * 800 + x.links * 600 + x.steps * 800;
@@ -46,8 +47,8 @@ export const animationBytes = (x: { steps: number; things: number; links: number
 const where = (device: Device) => (device === 'phone' ? 'this phone' : 'this computer');
 
 /**
- * Whether an animated SVG of a path of `steps` steps, over a drawing of `things` things and `links` links, fits `device`:
- * null when it does; otherwise why not and what would make it fit, said before anything is laid out.
+ * Whether an animated SVG of a path of `steps` steps fits `device`, over a drawing of `things` things and `links`
+ * links. Null when it does. Otherwise why not and what would make it fit, said before anything is laid out.
  */
 export function animationFits(
   x: { steps: number; things: number; links: number },
@@ -85,9 +86,9 @@ export interface PathPlan {
 }
 
 /**
- * The plan of a path over a drawing: each step's thing (a step whose thing is not drawn holds its slot with nothing
- * outlined), and a dot for each two steps in a row that a drawn link joins, either way, the first such link written.
- * `reversed`: the links whose line Graphviz draws from their far end (link-flow.ts, `reversedLinks`).
+ * The plan of a path over a drawing. Each step has its thing; a step whose thing is not drawn holds its slot with
+ * nothing outlined. There is a dot for each two steps in a row that a drawn link joins, either way, the first such link
+ * written. `reversed`: the links whose line Graphviz draws from their far end (link-flow.ts, `reversedLinks`).
  */
 export function pathPlan(drawing: GraphDrawing, path: WalkedPath, reversed: readonly number[]): PathPlan {
   const node = new Map(drawing.boxes.map((b, i) => [b.key, i + 1]));
@@ -131,8 +132,8 @@ function cornerOf(body: string): { x: number; y: number } | null {
 }
 
 /**
- * The drawn SVG (themed, before its frame) with the path in it: each step's number on its thing, at its top left (a
- * thing stepped on twice has both), and a dot's runner after the line of each link a dot travels.
+ * The drawn SVG (themed, before its frame) with the path in it. Each step's number is on its thing, at its top left (a
+ * thing stepped on twice has both). A dot's runner comes after the line of each link a dot travels.
  */
 export function pathBody(svg: string, path: WalkedPath, plan: PathPlan, palette: Palette): string {
   return svg.replace(
@@ -160,10 +161,13 @@ export function pathBody(svg: string, path: WalkedPath, plan: PathPlan, palette:
 }
 
 /**
- * The style sheet that plays the path: every step's thing outlined (as it stays when nothing moves), the outline heavier
- * in its own slots, a slot each step at the pace set, round and round; each dot shown only in its slot, travelling its
- * link; and all of it still under reduced motion, the dots hidden. Only widths, offsets and opacity are set: the colours
- * are the drawing's own, in each shape's style attribute, which a style sheet does not override.
+ * The style sheet that plays the path:
+ * - every step's thing outlined (as it stays when nothing moves), the outline heavier in its own slots;
+ * - a slot each step at the pace set, round and round;
+ * - each dot shown only in its slot, travelling its link;
+ * - all of it still under reduced motion, the dots hidden.
+ * Only widths, offsets and opacity are set. The colours are the drawing's own, in each shape's style attribute, which a
+ * style sheet does not override.
  */
 export function pathCss(plan: PathPlan, pace: number): string {
   const round = seconds(plan.steps * pace),

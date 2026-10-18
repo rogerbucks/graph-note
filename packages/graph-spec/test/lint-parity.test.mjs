@@ -1,7 +1,7 @@
 // The JavaScript dialect linter finds the same traps on the same lines as graph_spec.lint in Python. Two of its patterns
 // were rewritten without a regex lookbehind, which iOS before 16.4 cannot run; this proves the rewrite changed nothing.
-// Each text is linted by both, live, and the answers must match: hand-picked edges first, then random texts built from
-// the characters those patterns turn on.
+// Each text is linted by both, live, and the answers must match. Hand-picked edges come first. Then come random texts
+// built from the characters those patterns turn on.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

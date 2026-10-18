@@ -1,22 +1,25 @@
 #!/usr/bin/env node
-// Runs only the tests of the modules a change touches (spec §13, touched_tests_only), found by the tests-mirror-the-code
-// naming (CONTRIBUTING.md, "Naming"): `zoom.ts` is tested by `zoom.test.js` and `zoom-limits.test.js` in the same
-// package's test folder, `graph_svg.py` by `test_graph_svg*.py`. A changed test file runs itself.
+// Runs only the tests of the modules a change touches (spec §13, touched_tests_only). They are found by the
+// tests-mirror-the-code naming (CONTRIBUTING.md, "Naming"). `zoom.ts` is tested by `zoom.test.js` and
+// `zoom-limits.test.js` in the same package's test folder, `graph_svg.py` by `test_graph_svg*.py`. A changed test file
+// runs itself.
 //
 // This is the quick check while working. The whole suite still runs before every merge, and CI runs it (`npm test`).
-// A module no test is named after, a package's `index.ts`, a page module and test support (the files under test/ or
-// tests/ that are not tests themselves) run the tests that reach them through the import graph instead
-// (affected_tests_by_imports, `import-graph.mjs`): every test that imports the file, directly or through others, or
-// names it to build. When a change touches anything else shared, the whole suite is the answer, and one line says which
-// file made it so: `package.json` and the lock file, workflows, a file no test reaches, and any file this script does
-// not know.
+//
+// Some files run the tests that reach them through the import graph instead (affected_tests_by_imports,
+// `import-graph.mjs`). They are a module no test is named after, a package's `index.ts`, a page module and test
+// support. Test support is the files under test/ or tests/ that are not tests themselves. The tests that reach a file
+// are every test that imports it, directly or through others, or names it to build.
+//
+// When a change touches anything else shared, the whole suite is the answer, and one line says which file made it so.
+// That is `package.json` and the lock file, workflows, a file no test reaches, and any file this script does not know.
 //
 // Usage:
-//   node scripts/changed-tests.mjs                 run the tests of what changed since main (npm run test:changed,
-//                                                  which runs it under the ceiling of scripts/run-ceiling.mjs)
-//   node scripts/changed-tests.mjs --list          only print the plan: the test files, or `whole suite: <why>`
-//   node scripts/changed-tests.mjs --base <ref>    compare with this commit instead of main's
-//   node scripts/changed-tests.mjs [--list] <path>…   plan for these paths, instead of asking git
+//   node scripts/changed-tests.mjs                 run the tests of what changed since main. npm run test:changed
+//                                                  runs it under the ceiling of scripts/run-ceiling.mjs.
+//   node scripts/changed-tests.mjs --list          only print the plan: the test files, or `whole suite: <why>`.
+//   node scripts/changed-tests.mjs --base <ref>    compare with this commit instead of main's.
+//   node scripts/changed-tests.mjs [--list] <path>…   plan for these paths, instead of asking git.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -35,11 +38,14 @@ const DEVICE_QUOTES = 'test/device-check-quotes.test.js';
 
 /**
  * Files whose tests do not carry their name: the tests that read each. A file matched here needs only those tests.
- * Each is what the test opens: conventions.test.js reads CONTRIBUTING.md, every GUIDE.md and the README;
- * policy.test.js reads the README; test-vault.test.js reads test-vault/ and its reset script, and
- * device-check-notes.test.js its Device checks notes and the device checklist; requirements.test.js reads
- * requirements/ and its check; cheap-checks.test.js reads AGENTS.md, CLAUDE.md, .ignore and its own three tools, and
- * run-ceiling.test.js reads AGENTS.md and changed-tests.mjs as well as its own runner, and runs quality-suite.mjs.
+ * Each is what the test opens:
+ * - conventions.test.js reads CONTRIBUTING.md, every GUIDE.md and the README;
+ * - policy.test.js reads the README;
+ * - test-vault.test.js reads test-vault/ and its reset script;
+ * - device-check-notes.test.js reads its Device checks notes and the device checklist;
+ * - requirements.test.js reads requirements/ and its check;
+ * - cheap-checks.test.js reads AGENTS.md, CLAUDE.md, .ignore and its own three tools;
+ * - run-ceiling.test.js reads AGENTS.md and changed-tests.mjs as well as its own runner, and runs quality-suite.mjs.
  */
 const READERS = [
   [/^(AGENTS\.md|scripts\/changed-tests\.mjs)$/, [CHEAP, CEILING]],
@@ -85,8 +91,8 @@ const namedTests = (path, tracked) => {
  * `{ all: true, reason }` with one line saying which changed path is shared. `changed` is the paths git reports (a
  * deleted file among them); `tracked` is every file now in the repository. A deleted module still runs the tests named
  * after it; a deleted test file has nothing left to run. `reach(path)`, when given, is the tests that reach a file
- * through the import graph: a module no test is named after, an entry, a page module or test support then runs those,
- * and is shared only when no test reaches it.
+ * through the import graph. A module no test is named after, an entry, a page module or test support then runs those.
+ * It is shared only when no test reaches it.
  */
 export function testsForChanges(changed, tracked, reach) {
   const present = new Set(tracked);

@@ -1,6 +1,6 @@
-// A box drawn under a suggested name (spec §4, unnamed_drawn_suggested; Roger, 10 Oct 2026): a thing written without a
-// name is drawn dashed and labelled as suggested, is selected like any box, and shows its suggested name with the fix that
-// writes it; nothing is written until the fix is pressed, one undo takes it back, and then the box is drawn as written.
+// A box drawn under a suggested name (spec §4, unnamed_drawn_suggested; Roger, 10 Oct 2026). A thing written without a
+// name is drawn dashed and labelled as suggested. It is selected like any box. It shows its suggested name with the fix
+// that writes it. Nothing is written until the fix is pressed. One undo takes it back, and then the box is drawn as written.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

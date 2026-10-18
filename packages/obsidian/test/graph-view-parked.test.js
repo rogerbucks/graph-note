@@ -1,7 +1,7 @@
-// Things parked for later in a drawing (editor spec §5, park_for_later, deferred_drawn; §8, parked_not_broken): a thing
-// a Deferred defers is drawn dashed with a later mark, said so to screen readers; the badge counts parked things apart
-// from problems, and those past their revisit date as overdue; and, while the card is edited, its details offer Park for
-// later, which writes a Deferred saying what is needed and why it waits.
+// Things parked for later in a drawing (editor spec §5, park_for_later, deferred_drawn; §8, parked_not_broken).
+// - A thing a Deferred defers is drawn dashed with a later mark, said so to screen readers.
+// - The badge counts parked things apart from problems, and those past their revisit date as overdue.
+// - While the card is edited, its details offer Park for later. It writes a Deferred saying what is needed and why it waits.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -225,8 +225,8 @@ describe('Park for later, while the card is edited', () => {
   });
 });
 
-// Roger, 11 Oct 2026: parking in a locked graph is refused unless its schema declares Deferred and DEFERS; the refusal
-// offers a button that writes the two declarations into the schema, and then parks the thing with what was typed
+// Roger, 11 Oct 2026: parking in a locked graph is refused unless its schema declares Deferred and DEFERS. The refusal
+// offers a button that writes the two declarations into the schema. Then it parks the thing with what was typed
 describe('Park for later, in a locked graph whose schema does not declare Deferred and DEFERS', () => {
   const input = (el, name) => el.querySelectorAll('input').find((x) => x.getAttribute('aria-label') === name);
   /** Edit here, tap the small reader, fill the Park for later form and press Park it; the form is left open. */

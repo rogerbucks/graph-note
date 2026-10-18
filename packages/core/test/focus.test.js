@@ -1,6 +1,6 @@
-// Focus (editor spec §25, slice 3): selecting a thing or a link keeps it and its neighbours at full strength and fades the
-// rest, readable and not by colour alone, to a set depth, cleared by an empty tap or Escape. The sums are made here with
-// plain data; the drawing's marks are the Obsidian package's tests.
+// Focus (editor spec §25, slice 3): selecting a thing or a link keeps it and its neighbours at full strength. It fades
+// the rest, readable and not by colour alone, to a set depth, cleared by an empty tap or Escape. The sums are made here
+// with plain data; the drawing's marks are the Obsidian package's tests.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

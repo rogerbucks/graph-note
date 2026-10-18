@@ -1,7 +1,7 @@
-// A graph drawn as a table (spec §15, diagram_type_set): a plain table the plugin draws, never Graphviz — a row for each
-// thing, with its kind and properties, and one for each link — from the core's `tableOf`. Each row is reached and named as
-// a box or a link of a drawing is, so tapping, the details and the inspector work as in every other type
-// (type_one_way_to_work); the card zooms it by the same buttons and gestures, scaling it as a whole.
+// A graph drawn as a table (spec §15, diagram_type_set). It is a plain table the plugin draws, never Graphviz, from the
+// core's `tableOf`. It has a row for each thing, with its kind and properties, and one for each link. Each row is
+// reached and named as a box or a link of a drawing is. So tapping, the details and the inspector work as in every
+// other type (type_one_way_to_work). The card zooms it by the same buttons and gestures, scaling it as a whole.
 import { word } from '@thoughtknot/core';
 import type { DiagramTable } from '@thoughtknot/core';
 

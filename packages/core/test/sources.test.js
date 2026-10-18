@@ -1,7 +1,7 @@
-// Graph sources (editor spec §20, gql_file_source, gql_file_missing): a block whose graph line says `· FROM` and a place
-// draws its graph from a .gql file, or from another note, read where it is written and never copied into the note; it
-// goes through the same partial reader and limits as a note's own blocks; and a source that is missing, moved or
-// unreadable is named, with why, never drawn blank. The host fetches the text; the core says what it draws.
+// Graph sources (editor spec §20, gql_file_source, gql_file_missing). A block whose graph line says `· FROM` and a
+// place draws its graph from a .gql file, or from another note. It is read where it is written and never copied into
+// the note. It goes through the same partial reader and limits as a note's own blocks. A source that is missing, moved
+// or unreadable is named, with why, never drawn blank. The host fetches the text; the core says what it draws.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { dataKind, gqlBlocks } from '../src/blocks.ts';

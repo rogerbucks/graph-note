@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-// Writes each output to a file of its own, then renames it into place, so whatever reads main.js — tests building in
-// parallel, or Obsidian while `npm run dev` rebuilds — sees the old build or the new one, never half of one.
+// Writes each output to a file of its own, then renames it into place. So whatever reads main.js sees the old build or
+// the new one, never half of one. Readers include tests building in parallel, or Obsidian while `npm run dev` rebuilds.
 const swapIn = {
   name: 'swap-in',
   setup(build) {
@@ -23,9 +23,9 @@ const swapIn = {
   },
 };
 
-// The layout worker (spec §9, layout_contained): src/layout-worker/worker-entry.ts bundled on its own, the Graphviz
-// WebAssembly inside it, and handed to the plugin as the body of one function, `layoutWorker`, from the module
-// 'thoughtknot:layout-worker'. main.js holds it once: the worker is started from the function's own text, and the page
+// The layout worker (spec §9, layout_contained). src/layout-worker/worker-entry.ts is bundled on its own, the Graphviz
+// WebAssembly inside it. It is handed to the plugin as the body of one function, `layoutWorker`, from the module
+// 'thoughtknot:layout-worker'. main.js holds it once. The worker is started from the function's own text. The page
 // calls the function where no worker can run (src/layout-worker/layout-worker.ts says why). Rebuilt with every build, and
 // watched with the rest in --watch. The worker's last build is kept in `workerBuild`, so scripts/quality-metrics.mjs can
 // say what is inside that one function, the engine among it.

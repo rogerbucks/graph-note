@@ -1,10 +1,12 @@
-// Writing an export (spec §26, cc_exports_new_only): the files the page made, put into the export folder as new files and
-// nothing else. The folder is made, a folder part at a time, only where it is not there, and every part must be a real
-// folder inside the vault, never a link (a link is never followed, so none can lead out), with the folder's real path
-// checked to be the one expected before each try. A file is opened to be created and no more: exclusively (`O_EXCL`),
-// never through a link (`O_NOFOLLOW`), never truncating or appending, so a file already there, a link among them, is
-// never written to. A name already taken gives the next number, the same for every file of the export; a name is only a
-// name. All of the files or none: one that cannot be written takes away those made before it.
+// Writing an export (spec §26, cc_exports_new_only): the files the page made, put into the export folder as new files
+// and nothing else.
+// - The folder is made a folder part at a time, only where it is not there.
+// - Every part must be a real folder inside the vault, never a link. A link is never followed, so none can lead out.
+// - Before each try, the folder's real path is checked to be the one expected.
+// - A file is opened to be created and no more. It is opened exclusively (`O_EXCL`), never through a link
+//   (`O_NOFOLLOW`), never truncating or appending. So a file already there, a link among them, is never written to.
+// - A name already taken gives the next number, the same for every file of the export. A name is only a name.
+// - All of the files or none. One that cannot be written takes away those made before it.
 import { constants, promises as fs } from 'node:fs';
 import type { FileHandle } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -163,8 +165,9 @@ async function makeAll(ops: ExportFs, paths: string[], files: NewFile[]): Promis
 }
 
 /**
- * Writes `files` as new files in the export folder `folder` of `vault` (its real path), under their names or, when any of
- * the names is taken, all of them under the first number that is free for every one. Never over a file already there.
+ * Writes `files` as new files in the export folder `folder` of `vault` (its real path), under their names. When any of
+ * the names is taken, it writes all of them under the first number that is free for every one. Never over a file
+ * already there.
  */
 export async function writeNewFiles(
   vault: string,

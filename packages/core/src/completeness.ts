@@ -1,6 +1,6 @@
-// The completeness report behind the problems badge (spec §8): each completeness rule the graph declares (§25 of the graph
-// spec), as the graph library checks it — what is covered, what is deferred or overdue, and what is missing with its fix —
-// with each thing named by its text, as the drawing names it.
+// The completeness report behind the problems badge (spec §8). It gives each completeness rule the graph declares (§25
+// of the graph spec), as the graph library checks it. That is what is covered, what is deferred or overdue, and what is
+// missing with its fix. Each thing is named by its text, as the drawing names it.
 import gs from '@thoughtknot/graph-spec';
 import type { NoteReading } from './note-reading.ts';
 

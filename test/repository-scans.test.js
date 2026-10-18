@@ -1,6 +1,8 @@
 // The source scans the repository policy relies on for the one network exception (spec §13, §19), tested on their own:
-// the AI send module found however it is reached, Obsidian's older request function taken for a request, and every
-// timer and event found that could send in the background (test/policy.test.js runs them over the source).
+// - the AI send module, found however it is reached;
+// - Obsidian's older request function, taken for a request;
+// - every timer and event found that could send in the background.
+// test/policy.test.js runs them over the source.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { findsBackground, findsNetwork, reachesSendModule } from './repository/repo.js';

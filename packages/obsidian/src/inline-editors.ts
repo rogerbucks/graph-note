@@ -1,7 +1,9 @@
-// The editors open in place, in drawings' cards (spec §4, typing_keeps_focus): each known by its block's identity in the
-// editing view, so a line added or taken away above the block never loses it, and never taken by another block that comes
-// to sit on its line; one to a block, however often Edit here is pressed; and released, with what was typed written,
-// once its card has left the page and its note is no longer open, so no editor nobody can see keeps listening to the vault.
+// The editors open in place, in drawings' cards (spec §4, typing_keeps_focus).
+// - Each is known by its block's identity in the editing view. So a line added or taken away above the block never
+//   loses it. It is never taken by another block that comes to sit on its line.
+// - There is one to a block, however often Edit here is pressed.
+// - Each is released, with what was typed written, once its card has left the page and its note is no longer open. So
+//   no editor nobody can see keeps listening to the vault.
 import { Component, Notice } from 'obsidian';
 import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
@@ -60,9 +62,9 @@ export class InlineEditors extends Component {
 
   /**
    * The editor open in place on a note's block whose opening fence is on `line` now, if there is one. In the editing view
-   * a block is known by its card's identity, which no line added or taken away above it changes. Once that identity is
-   * gone, as when the block is cut, and elsewhere, it is found where the editor last found its block, or, still opening,
-   * where it was opened; and only when the block there is the one it read, so another block never takes the editor.
+   * a block is known by its card's identity, which no line added or taken away above it changes. That identity can be
+   * gone, as when the block is cut. Then, and elsewhere, it is found where the editor last found its block. Or, still
+   * opening, where it was opened. It is found only when the block there is the one it read. So another block never takes the editor.
    */
   find(path: string, line: number): BlockEditor | undefined {
     const cm = this.plugin.editorFor(path),
@@ -76,7 +78,7 @@ export class InlineEditors extends Component {
         if (at.card === here) return e;
         continue;
       }
-      // the block on the line is the editor's own only when its text is the one the editor last read or wrote there: the
+      // the block on the line is the editor's own only when its text is the one the editor last read or wrote there. The
       // same graph is not enough, as a graph written over several blocks has another block of it come to the line
       const same = !block || !e.session || block.text === e.session.ref.text;
       if ((e.session?.ref.line ?? at.line) === line && same) {
@@ -107,8 +109,8 @@ export class InlineEditors extends Component {
       this.open.set(e, at);
       this.plugin.addChild(e);
       e.mount(slot);
-      // an opening that fails for any reason, reading the note, its shared schemas or drawing the editor, settles all the
-      // same, so a later press never waits on it; and its error is logged, never swallowed
+      // an opening that fails for any reason settles all the same: reading the note, its shared schemas or drawing the
+      // editor. So a later press never waits on it. Its error is logged, never swallowed
       const failed: { why: string | null } = { why: null };
       at.opening = e.open(target.path, target.line).catch((err: unknown) => {
         console.error('ThoughtKnot could not open the block to edit it here', err);
@@ -143,9 +145,9 @@ export class InlineEditors extends Component {
   }
 
   /**
-   * A card has left the page, or an editing view has closed, which takes down only the cards drawn at the time: an
-   * editor in place that a moment later is neither on the page nor on a note still open in the editing view, where a
-   * card drawn again would take it back, is closed as Done closes it, what was typed written first. A card scrolled
+   * A card has left the page, or an editing view has closed, which takes down only the cards drawn at the time. Take an
+   * editor in place that a moment later is not on the page. Nor is it on a note still open in the editing view, where a
+   * card drawn again would take it back. It is closed as Done closes it, what was typed written first. A card scrolled
    * away, or a block cut to be pasted, keeps its editor while its note is open.
    */
   releaseUnseen(): void {

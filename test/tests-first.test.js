@@ -1,12 +1,14 @@
-// Every test is seen to fail before its code (spec §12, tests_first). scripts/tests-first.mjs proves it mechanically: it
-// replays a commit, running the commit's tests against its parent's code, and every test new in the commit must fail
+// Every test is seen to fail before its code (spec §12, tests_first). scripts/tests-first.mjs proves it mechanically.
+// It replays a commit, running the commit's tests against its parent's code. Every test new in the commit must fail
 // there. A test that passes against the old code was not written first, unless its reason is kept in
 // test/seen-failing/. Proved here on small repositories made for the purpose. How the records are kept, and what this
-// repository's own records hold, is tests-first-records.test.js. The replay's tests are in several files so that the
-// suite runs them side by side: each makes git repositories and runs Node over them, a second or two a test, and the
-// tests of one file run one after the other (11 Oct 2026). This file holds how a replay judges a new test that fails
-// first, or moves; the rest are tests-first-passed (a test that passes first), tests-first-later (code that comes
-// later), tests-first-python, tests-first-unfinished, tests-first-keeping and tests-first-failing.
+// repository's own records hold, is tests-first-records.test.js. The replay's tests are in several files, so that the
+// suite runs them side by side. Each makes git repositories and runs Node over them, a second or two a test. The tests
+// of one file run one after the other (11 Oct 2026). This file holds how a replay judges a new test that fails first,
+// or moves. The rest are:
+// - tests-first-passed (a test that passes first);
+// - tests-first-later (code that comes later);
+// - tests-first-python, tests-first-unfinished, tests-first-keeping and tests-first-failing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { replay, unexplained } from '../scripts/tests-first.mjs';

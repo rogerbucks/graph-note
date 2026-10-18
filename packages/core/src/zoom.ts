@@ -1,7 +1,7 @@
-// Zoom, pan and full-screen for a drawing (spec §3), with the gestures maps and photo apps have taught everyone. Host-free:
-// the host passes plain events in and draws the view this returns. handle() says whether the event was used, so the host
-// stops the browser's own handling only then — in a note the wheel and a one-finger drag still scroll the note. The
-// limits it holds the drawing within are zoom-fit.ts's.
+// Zoom, pan and full-screen for a drawing (spec §3), with the gestures maps and photo apps have taught everyone.
+// Host-free: the host passes plain events in and draws the view this returns. handle() says whether the event was used.
+// The host stops the browser's own handling only then: in a note the wheel and a one-finger drag still scroll the
+// note. The limits it holds the drawing within are zoom-fit.ts's.
 import { MAX_SCALE, STEP, clamp, clampPan, fitScale, hasSize, held, outLimit } from './zoom-fit.ts';
 import type { Mode, Size } from './zoom-fit.ts';
 
@@ -13,15 +13,15 @@ const DOUBLE_TAP_MS = 300,
   DOUBLE_TAP_PX = 30,
   TAP_SLOP = 10;
 /**
- * How much faster than the fingers a pinch zooms: each spread, as a factor, is raised to this power, so twice as far apart
- * is 2 ** 1.4 times the size. It was 1, following the fingers exactly (device checks Z-01 and Z-03; Roger, 11 Oct 2026:
- * "pinch zoom in and out should be a little quicker"). The limits still hold.
+ * How much faster than the fingers a pinch zooms. Each spread, as a factor, is raised to this power: twice as far apart
+ * is 2 ** 1.4 times the size. It was 1, following the fingers exactly (device checks Z-01 and Z-03). Roger, 11 Oct
+ * 2026: "pinch zoom in and out should be a little quicker". The limits still hold.
  */
 const PINCH_RATE = 1.4;
 /**
- * How far one unit of wheel travel zooms: a mouse notch of 100 is about a third (e ** 0.28, about 1.32). A trackpad pinch
- * sends small steps as the wheel with Ctrl, so it is as much quicker as a pinch on touch; and so is the wheel itself,
- * with Ctrl or Command in a note, and alone in full screen and the pane, which cannot be told from it.
+ * How far one unit of wheel travel zooms: a mouse notch of 100 is about a third (e ** 0.28, about 1.32). A trackpad
+ * pinch sends small steps as the wheel with Ctrl, so it is as much quicker as a pinch on touch. So is the wheel, with
+ * Ctrl or Command in a note. Alone, it is too in full screen and the pane, which cannot be told from it.
  */
 const WHEEL_RATE = 0.002 * PINCH_RATE;
 
@@ -65,7 +65,7 @@ export type ZoomEvent =
   | { kind: 'dblclick'; x: number; y: number; onBox?: boolean; near?: boolean };
 
 /**
- * `near`: down, or a double click, near a box or link, so a tap or click there chooses between them (the host's), and is
+ * `near`: down, or a double click, near a box or link, so a tap or click there chooses between them (the host's). It is
  * never half of a double tap, nor a double click that zooms (tap_cycles_near, §3).
  */
 interface Pointer {
@@ -181,10 +181,10 @@ export class Zoom {
   }
 
   /**
-   * Where the view would go to bring a rectangle of the drawing (fractions of it) wholly into the part of the viewport not
-   * kept clear, without going there: null when it is already there at a scale of at least `minScale`. Otherwise the zoom
-   * is kept, or raised to `minScale` when it is below (a thing too small to read, §25), and the rectangle centred in that
-   * part, as far as the drawing's edges and the strip kept clear allow.
+   * Where the view would go to bring a rectangle of the drawing (in fractions of it) wholly into view, without going
+   * there. In view means in the part of the viewport not kept clear. Null when it is already there at a scale of at
+   * least `minScale`. Otherwise the zoom is kept, or raised to `minScale` when below (a thing too small to read, §25).
+   * The rectangle is centred in that part, as far as the drawing's edges and the strip kept clear allow.
    */
   aim(box: { x: number; y: number; width: number; height: number }, minScale = 0): Place | null {
     const { width: cw, height: ch } = this.content,
@@ -204,7 +204,7 @@ export class Zoom {
   }
 
   /**
-   * Keeps a strip of `bottom` pixels at the foot of the viewport clear, as a sheet over it covers it (§25): the drawing
+   * Keeps a strip of `bottom` pixels at the foot of the viewport clear, as a sheet over it covers it (§25). The drawing
    * may pan up into it, by as much and no further, so a thing near its bottom can be seen above the sheet. Zero, as at
    * first, puts it back within its edges.
    */
@@ -219,9 +219,9 @@ export class Zoom {
 
   /**
    * A new viewport, and the drawing's size too when the View menu laid it out again (§25). A fitted drawing is fitted
-   * again; any other keeps its zoom, brought up about the viewport's middle to the fit worked out again if that is above
-   * it (zoom_fit_recomputed). A viewport with no size (a hidden card's) is no resize: only the drawing's size is taken,
-   * and the view kept, or, fitted then (`refit`), fitted again at the next resize with a size.
+   * again. Any other keeps its zoom, raised about the viewport's middle to the new fit if that is above it
+   * (zoom_fit_recomputed). A viewport with no size (a hidden card's) is no resize: only the drawing's size is taken.
+   * The view is kept, or, fitted then (`refit`), fitted again at the next resize with a size.
    */
   resize(viewport: Size, content = this.content): void {
     const fitted = this.refit || this.isFitted();
@@ -240,8 +240,8 @@ export class Zoom {
   }
 
   /**
-   * The furthest the drawing zooms out now (zoom_out_to_fit): where the whole of it fits the viewport, or natural size
-   * when it fits larger; worked out again from the viewport and drawing as they are each time it is asked.
+   * The furthest the drawing zooms out now (zoom_out_to_fit). That is where the whole of it fits the viewport, or
+   * natural size when it fits larger. Worked out again from the viewport and drawing as they are each time it is asked.
    */
   outLimit(): number {
     return outLimit(this.content, this.viewport);

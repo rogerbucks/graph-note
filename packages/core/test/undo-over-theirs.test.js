@@ -1,8 +1,8 @@
 // Undo never undoes over a change another program, a sync or another pane made to the note (editor spec §9,
-// undo_never_over_theirs; §26, cc_undo_safe): once the block changes outside the session, its history starts again from
-// the note as it now is, and Undo and Redo say why there is nothing to take back. A change elsewhere in the note leaves
-// the session's own undo working. Found in review, 15 Oct 2026: the pane reloaded the other program's block and kept
-// its history, so Undo wrote the old text over it.
+// undo_never_over_theirs; §26, cc_undo_safe). Once the block changes outside the session, its history starts again from
+// the note as it now is. Undo and Redo say why there is nothing to take back. A change elsewhere in the note leaves the
+// session's own undo working. Found in review, 15 Oct 2026: the pane reloaded the other program's block and kept its
+// history, so Undo wrote the old text over it.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaneSession } from '../src/pane.ts';

@@ -1,8 +1,9 @@
-// Editor spec §42, problem_codes: every problem the document profile reader raises carries a stable code, the
-// diagnostic code of the Language Server Protocol, the same from the JavaScript and the Python libraries, so its message
-// and fix can be translated and looked up. The codes are one table, src/reader/problem-codes.json. The sources are
-// scanned, so every raise site passes a code the table gives, with the table's message and fix; and the blocks of
-// problem-code-cases.json, which python/graph_spec/tests/test_problem_codes.py reads too, are refused with their codes.
+// Editor spec §42, problem_codes: every problem the document profile reader raises carries a stable code. It is the
+// diagnostic code of the Language Server Protocol, the same from the JavaScript and the Python libraries. So its
+// message and fix can be translated and looked up. The codes are one table, src/reader/problem-codes.json.
+// - The sources are scanned, so every raise site passes a code the table gives, with the table's message and fix.
+// - The blocks of problem-code-cases.json are refused with their codes. python/graph_spec/tests/test_problem_codes.py
+//   reads them too.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';

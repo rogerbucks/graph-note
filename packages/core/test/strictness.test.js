@@ -1,6 +1,7 @@
-// Strictness (editor spec §21, strictness_levels, simplified_back_to_standard, engines_get_standard): the departures from
-// standard GQL the reader reads as meant, and what each of the three levels makes of them; converting a note back to
-// standard GQL, checked before it is written; and the standard text an engine or an export is given, whatever the level.
+// Strictness (editor spec §21, strictness_levels, simplified_back_to_standard, engines_get_standard):
+// - the departures from standard GQL the reader reads as meant, and what each of the three levels makes of them;
+// - converting a note back to standard GQL, checked before it is written;
+// - the standard text an engine or an export is given, whatever the level.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

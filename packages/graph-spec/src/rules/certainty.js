@@ -39,12 +39,12 @@ function words([lo, hi]) {
   return a === b ? a : `${a} to ${b}`;
 }
 // rule:combine@1, both true, with dependence unknown: the Fréchet bounds, in percent. The lower bound is the least
-// overlap two claims must have (a + b - 100, never below 0), the upper the weaker of the two; no product, since that
-// would assume independence.
+// overlap two claims must have (a + b - 100, never below 0). The upper is the weaker of the two. There is no product,
+// since that would assume independence.
 const both = (a, b) => [Math.max(0, a[0] + b[0] - 100), Math.min(a[1], b[1])];
-// The 95% Wilson score interval (z = 1.96) for k of n coming true, in percent. Wilson rather than the plain normal
-// interval because it stays inside 0 to 100 and holds up for small n and for k at 0 or n. Rounded outward to 0.1, so
-// the range never claims more precision than it has.
+// The 95% Wilson score interval (z = 1.96) for k of n coming true, in percent. Wilson, not the plain normal
+// interval, because it stays inside 0 to 100. It also holds up for small n and for k at 0 or n. Rounded outward to 0.1,
+// so the range never claims more precision than it has.
 function wilson(k, n, z = 1.96) {
   const p = k / n,
     d = 1 + (z * z) / n,
@@ -52,8 +52,10 @@ function wilson(k, n, z = 1.96) {
     h = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / d;
   return [Math.floor((c - h) * 1000) / 10, Math.ceil((c + h) * 1000) / 10];
 }
-// How a track record's range sits against the band its word names: calibrated only when the whole range lies inside
-// the band; over- or under-confident only when it lies wholly below or above; any overlap is cannot judge yet.
+// How a track record's range sits against the band its word names.
+// - calibrated: only when the whole range lies inside the band.
+// - over- or under-confident: only when it lies wholly below or above.
+// - cannot judge yet: any overlap.
 function verdict([lo, hi], [blo, bhi]) {
   if (lo >= blo && hi <= bhi) return 'calibrated';
   if (hi < blo) return 'over-confident';
@@ -96,9 +98,9 @@ const sourcesOf = (g, c, t) =>
       .filter((e) => g.has(e[2], 'Evidence'))
       .flatMap((e) => g.out(e[2], 'FROM').map((x) => x[2])),
   );
-// Each claim not derived by a rule, with the confidence its evidence gives, counting distinct sources (FROM), not
-// pieces of evidence: high for two or more sources and none against, moderate for more sources for than against,
-// else low.
+// Each claim not derived by a rule, with the confidence its evidence gives. It counts distinct sources (FROM), not
+// pieces of evidence. High is two or more sources and none against. Moderate is more sources for than against. Else
+// low.
 function confidenceFromEvidence(g) {
   const out = new Map();
   for (const c of g.labelled('Claim')) {

@@ -146,7 +146,7 @@ def projects_back(db: GrafeoDB, g: str = "joined") -> bool:
     """§18: whether graph g's flat projection, written as YAML, read back and rebuilt in a fresh
     database, gives back the same graph."""
     blocks, rels = project(db, g)
-    # every character past ASCII written as a YAML escape: written as itself, U+0085 is read back
+    # every character past ASCII written as a YAML escape. Written as itself, U+0085 is read back
     # as a line break, and so as a space
     text = yaml.safe_dump_all(
         list(blocks.values()) + rels,

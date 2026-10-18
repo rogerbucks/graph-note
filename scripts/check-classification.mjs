@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 // Refuses files that look confidential or personal, so they never reach the
-// repository: a classification other than Public, a note's uuid line, an
-// absolute home-folder path, a personal email address, a phone number or a
-// card number. The patterns are general: this file holds no list of anyone's
-// personal details.
+// repository. It looks for any of these:
+// - a classification other than Public, or a note's uuid line;
+// - an absolute home-folder path;
+// - a personal email address, a phone number or a card number.
+// The patterns are general: this file holds no list of anyone's personal
+// details.
 //
 // Usage:
-//   node scripts/check-classification.mjs                staged files (the pre-commit hook)
-//   node scripts/check-classification.mjs --all          every tracked file (CI)
-//   node scripts/check-classification.mjs --stdin NAME   text on stdin, reported as NAME
+//   node scripts/check-classification.mjs                staged files (the pre-commit hook).
+//   node scripts/check-classification.mjs --all          every tracked file (CI).
+//   node scripts/check-classification.mjs --stdin NAME   text on stdin, reported as NAME.
 //
 // Exits 1 and lists each problem by file, line and rule. The matched text is
 // never printed, so a CI log cannot leak it.

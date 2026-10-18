@@ -1,7 +1,7 @@
-// The editor's options (editor spec §21, settings_page, settings_ai_models, settings_formatting): every option with its
-// sentence, its defaults, the AI models of §19 each with a purpose and a ceiling, how written text is formatted, and the
-// drawing defaults, chosen only among what the locked style allows. Saved settings are read back whole, and nothing
-// secret is ever kept in them.
+// The editor's options (editor spec §21, settings_page, settings_ai_models, settings_formatting). Every option comes
+// with its sentence and its defaults. The AI models of §19 each have a purpose and a ceiling. It covers how written
+// text is formatted, and the drawing defaults, chosen only among what the locked style allows. Saved settings are read
+// back whole, and nothing secret is ever kept in them.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { OPTIONS, DEFAULT_SETTINGS, settingsFrom, indentText, aiModel } from '../src/settings.ts';

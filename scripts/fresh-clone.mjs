@@ -1,5 +1,6 @@
-// A stranger's fresh clone, set up from the README's own steps (spec §13, Delivery): the steps, running them in a clone
-// of the repository, and which changed files can change what they do, so a pull request runs the clone only when needed.
+// A stranger's fresh clone, set up from the README's own steps (spec §13, Delivery). It holds the steps, and runs them
+// in a clone of the repository. It also says which changed files can change what they do. So a pull request runs the
+// clone only when needed.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,8 +17,9 @@ export function readmeSteps(text) {
 }
 
 /**
- * What the README's steps read that CI's other jobs, which run the same tests, lint and build from their own fresh
- * checkout, do not: the steps themselves, what they install, the hook they set, and what decides a clone's files.
+ * What the README's steps read that CI's other jobs do not. Those jobs run the same tests, lint and build from their
+ * own fresh checkout. The rest is the steps themselves, what they install, the hook they set, and what decides a
+ * clone's files.
  */
 const SETUP_INPUTS = [
   /^README\.md$/,

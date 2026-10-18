@@ -1,7 +1,8 @@
-// The pane's block picker (spec §4): the note's graph blocks, built again from the note as it is whenever it changes or
-// is written, and a choice found again in the note as it is when it is used, so a block whose line moved is still the
-// one opened. Found while fixing #451, 15 Oct 2026: the picker kept the lines it was built with, so after the note's
-// line count changed, choosing a later block silently did nothing.
+// The pane's block picker (spec §4) lists the note's graph blocks.
+// - It is built again from the note as it is whenever the note changes or is written.
+// - A choice is found again in the note as it is when it is used. So a block whose line moved is still the one opened.
+// Found while fixing #451, 15 Oct 2026: the picker kept the lines it was built with.
+// So after the note's line count changed, choosing a later block silently did nothing.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, until } from './host/load-plugin.js';

@@ -1,5 +1,6 @@
-// The browser page's own words, in UK English (editor spec §42, words_catalogue): its changes and review sections and
-// its landmarks, which only the page shows (packages/claude-code/page). source-words.ts keeps them with every other word.
+// The browser page's own words, in UK English (editor spec §42, words_catalogue). They are its changes and review
+// sections and its landmarks, which only the page shows (packages/claude-code/page). source-words.ts keeps them with
+// every other word.
 
 /** The browser page's own words, by key, in UK English. */
 export const PAGE_SOURCE_WORDS = {

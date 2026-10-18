@@ -1,6 +1,6 @@
-// The architecture of ThoughtKnot as a graph note (spec §41, developer_wiki): requirements/architecture.gql read into its
-// layers, parts and interfaces, checked against the repository and the requirements, and drawn as ThoughtKnot draws a
-// graph. scripts/wiki-developers.mjs puts it on the developer pages.
+// The architecture of ThoughtKnot as a graph note (spec §41, developer_wiki). requirements/architecture.gql is read
+// into its layers, parts and interfaces. It is checked against the repository and the requirements, and drawn as
+// ThoughtKnot draws a graph. scripts/wiki-developers.mjs puts it on the developer pages.
 import { createRequire } from 'node:module';
 
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
@@ -69,9 +69,11 @@ export function readArchitecture(text) {
 }
 
 /**
- * Each fault of the architecture graph, as a line naming the thing: a path or file that is not there (`exists(path)`
- * says), a requirement that is not in the requirements, a part in no layer, a part neither built nor planned, or a layer
- * using one above it.
+ * Each fault of the architecture graph, as a line naming the thing. A fault is one of these:
+ * - a path or file that is not there (`exists(path)` says);
+ * - a requirement that is not in the requirements;
+ * - a part in no layer, or a part neither built nor planned;
+ * - a layer using one above it.
  */
 export function architectureProblems(arch, requirements, exists) {
   const known = new Set(requirements.map((r) => r.id));
@@ -99,9 +101,9 @@ export function architectureProblems(arch, requirements, exists) {
 export const label = (text) => String(text).replace(/"/g, "'").replace(/[<>]/g, '');
 
 /**
- * The architecture drawn as ThoughtKnot draws a graph: each layer a group, each part a box with its kind under its name,
- * a part not built yet dashed, as a suggested thing is, and the interfaces between, each with the parts that offer and
- * implement it.
+ * The architecture drawn as ThoughtKnot draws a graph. Each layer is a group, and each part a box with its kind under
+ * its name. A part not built yet is dashed, as a suggested thing is. The interfaces go between, each with the parts
+ * that offer and implement it.
  */
 export function architectureChart(arch) {
   const lines = ['```mermaid', 'flowchart TB'];

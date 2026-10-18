@@ -1,9 +1,9 @@
-// Exporting the data (editor spec §16, export_data_formats, export_lossless): the things an export holds and the links
-// written between them, as the reader read them, and that data written as a GQL block, as CSV or as GraphML, each of
-// which reads back into the very things and links exported. Only what is written is data: a schema's own things are
-// never drawn and never exported, and a guess (an estimated link) is the drawing's, never the note's. No layout is
-// asked for, so a graph too large to draw is still exported whole. The `///` notes on its things and links are kept
-// where the format has comments, a GQL block and GraphML, and left out of CSV, which has none (§24, note_standard).
+// Exporting the data (editor spec §16, export_data_formats, export_lossless). An export holds things and the links
+// written between them, as the reader read them. It writes that data as a GQL block, as CSV or as GraphML. Each reads
+// back into the very things and links exported. Only what is written is data. A schema's own things are never drawn
+// and never exported. A guess (an estimated link) is the drawing's, never the note's. No layout is asked for, so a
+// graph too large to draw is still exported whole. The `///` notes on its things and links are kept where the format
+// has comments: a GQL block and GraphML. CSV has none, so they are left out of it (§24, note_standard).
 import type { Graph } from '@thoughtknot/graph-spec';
 import { csvText } from './export-data-csv.ts';
 import { gqlBlock } from './export-data-gql.ts';
@@ -24,11 +24,11 @@ export const isDataFormat = (format: string): format is DataFormat =>
   (DATA_FORMATS as readonly string[]).includes(format);
 
 /**
- * The data `scope` holds, from the note as read: the things it draws, in the order written, and the links written
- * between them, in theirs, with every kind and property. A view holds its things and its links, and nothing outside it
- * (view_export_stays_view) unless its faded context is asked for: then the whole graph, with what is outside the view
- * listed in `faded`, for each format to mark. Each thing's and link's note is in `notes` (note_standard), for each
- * format with comments to keep.
+ * The data `scope` holds, from the note as read. It holds the things it draws, in the order written, and the links
+ * written between them, in theirs, with every kind and property. A view holds its things and its links, and nothing
+ * outside it (view_export_stays_view), unless its faded context is asked for. Then it holds the whole graph, with what
+ * is outside the view listed in `faded`, for each format to mark. Each thing's and link's note is in `notes`
+ * (note_standard), for each format with comments to keep.
  */
 export function exportedData(reading: NoteReading, scope: ExportScope): ExportedData {
   const g: Graph | undefined = reading.world[scope.graph];
@@ -38,7 +38,7 @@ export function exportedData(reading: NoteReading, scope: ExportScope): Exported
     const node = g.nodes.get(key);
     return node ? [[key, [...node[0]], { ...node[1] }]] : [];
   });
-  // the links the whole drawing holds are the graph's links between things it draws, in order (drawing.ts); a view's
+  // the links the whole drawing holds are the graph's links between things it draws, in order (drawing.ts). A view's
   // are some of them, by their number there
   const base = reading.graphs.get(scope.graph);
   const drawn = new Set((base ?? scope.drawing).boxes.map((b) => b.key));
@@ -50,7 +50,7 @@ export function exportedData(reading: NoteReading, scope: ExportScope): Exported
   });
   const notes = notesOf(things, base ?? scope.drawing, numbers);
   if (!scope.context) return { graph: scope.graph, ...view, things, links, ...notes };
-  // the context holds every link written, so a link's number in the scope's faded list is its place here; the numbers
+  // the context holds every link written, so a link's number in the scope's faded list is its place here. The numbers
   // past them are the drawing's guesses, never data
   const kept = new Set(things.map(([id]) => id));
   const faded = {
@@ -61,7 +61,7 @@ export function exportedData(reading: NoteReading, scope: ExportScope): Exported
 }
 
 /** The notes of the things and links exported, as the reader put them on the boxes and links of the whole drawing
- * (notes.ts): a written link's note is on the drawn link at its place, `numbers` saying which written link each
+ * (notes.ts). A written link's note is on the drawn link at its place; `numbers` says which written link each
  * exported one is. Nothing when none of them has a note. */
 function notesOf(things: DataThing[], whole: GraphDrawing, numbers: number[]): Pick<ExportedData, 'notes'> {
   const noted = new Map(whole.boxes.flatMap((b) => (b.note ? [[b.key, b.note.text] as const] : [])));

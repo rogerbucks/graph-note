@@ -50,6 +50,11 @@ SET large_reader.price = 4
 
 **Checklist line:**
 
-> **R-01** Phone: a change set proposed against a graph (`// graph: reader · CHANGE SET …`), in Live Preview. The changes are listed in a sheet at the bottom of the screen, one to a row, each in plain English with its own Accept and Reject, and every button is easy to hit with a thumb. The drawing above marks what is added, changed and removed, in words as well as in its outlines. Accept one change: only it is written into the graph, and its row says it was accepted. Reject another: the graph block is the same, and the change set records it. Undo takes the last decision back. A graph changed since the proposal was made shows a notice first, and Accept stays off until the notice is marked read.
+> **R-01** Phone: a change set proposed against a graph (`// graph: reader · CHANGE SET …`), in Live Preview.
+>
+> - The changes are listed in a sheet at the bottom of the screen, one to a row. Each is in plain language, with its own Accept and Reject. Every button is easy to hit with a thumb.
+> - The drawing above marks what is added, changed and removed, in words as well as in its outlines.
+> - Accept one change: only it is written into the graph, and its row says it was accepted. Reject another: the graph block is the same, and the change set records it. Undo takes the last decision back.
+> - A graph changed since the proposal was made shows a notice first. Accept stays off until the notice is marked read.
 
 **Back to the checklist:** [R-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for R-01 in its list.

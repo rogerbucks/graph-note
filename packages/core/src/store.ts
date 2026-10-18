@@ -1,7 +1,7 @@
-// Writing a block back to its note (spec §9). The text of the block is the only store of the graph (§2), so a write
-// replaces the block's own lines and keeps every other byte — line endings included. A block that changed since the pane
-// read it is never overwritten blind: the write is refused, with the block as it now is, so the pane can reload and keep
-// what was typed as a draft. Every write is recorded, so it can be undone back to the original bytes.
+// Writing a block back to its note (spec §9). The text of the block is the only store of the graph (§2). So a write
+// replaces the block's own lines and keeps every other byte, line endings included. A block that changed since the pane
+// read it is never overwritten blind. The write is refused, with the block as it now is, so the pane can reload and
+// keep what was typed as a draft. Every write is recorded, so it can be undone back to the original bytes.
 import { gqlSpans } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import type { Block } from './note-reading.ts';

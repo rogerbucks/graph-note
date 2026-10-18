@@ -1,6 +1,6 @@
-// Edits made from the pane (spec §8, §9, §12): locking a draft writes its schema as a new block, written last, which the
-// graph's own checks then pass; and every edit round-trips — applied and read back it gives the graph intended, and
-// undone it gives the note's original bytes.
+// Edits made from the pane (spec §8, §9, §12). Locking a draft writes its schema as a new block, written last, which
+// the graph's own checks then pass. Every edit round-trips. Applied and read back, it gives the graph intended. Undone,
+// it gives the note's original bytes.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';
@@ -45,8 +45,9 @@ describe('Lock the graph', () => {
   });
 
   test('locking writes a schema block: every kind and relationship, with its readings both ways, each declared by the graph', () => {
-    // the shape and layout of the guide's locked schema (How to write a graph note): lines under 70 characters, a long
-    // thing split over lines, a "// ──" line before each part, and the graph's GraphMeta DECLARES each type
+    // the shape and layout of the guide's locked schema (How to write a graph note). Lines are under 70 characters, a
+    // long thing is split over lines, a "// ──" line comes before each part, and the graph's GraphMeta DECLARES each
+    // type
     const block = lockBlock(readNote([DRAFT]), 'reader', '2026-10-07');
     assert.equal(
       block,

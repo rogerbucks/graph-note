@@ -1,7 +1,7 @@
-// The plain-English check of what the user reads (editor spec §41, ux_copy_auto): each message's reading level, its
-// longest sentence and the jargon in it, scored with no dependency, and the limits a message must keep to. The messages
-// themselves are gathered from every view by test/ux-copy.test.js, and the ones that miss a limit for a reason are
-// recorded in quality/copy.json, so a new miss, or a recorded one getting worse, fails.
+// The plain-language check of what the user reads (editor spec §41, ux_copy_auto). It scores each message's reading
+// level, its longest sentence and the jargon in it, with no dependency. It also holds the limits a message must keep
+// to. The messages themselves are gathered from every view by test/ux-copy.test.js. The ones that miss a limit for a
+// reason are recorded in quality/copy.json. So a new miss, or a recorded one getting worse, fails.
 
 /** The limits: a reading grade of 9 or lower (for a message long enough to have one), and sentences of 25 words or fewer. */
 export const LIMITS = { grade: 9, sentenceWords: 25, gradedFrom: 10 };

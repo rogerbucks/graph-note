@@ -1,14 +1,14 @@
-// The mod's data folder is the user's alone (spec §26): it holds settings.json, which sets Claude's classification gate
-// (the ceiling, the matrix row, the classes switched on, the level for an unlabelled note), and the editor's drafts. A
-// session that could write there could loosen its own gate, so Claude's own Write, Edit, NotebookEdit and Bash calls are
-// refused when they reach it. Reads stay allowed.
+// The mod's data folder is the user's alone (spec §26). It holds the editor's drafts, and settings.json. That file sets
+// Claude's classification gate: the ceiling, the matrix row, the classes switched on, the level for an unlabelled note.
+// A session that could write there could loosen its own gate. So Claude's own Write, Edit, NotebookEdit and Bash calls
+// are refused when they reach it. Reads stay allowed.
 //
-// File tools are judged by the target's real path, links settled, a relative path taken from the session's folder and a
-// file not yet made by its nearest folder that exists. Bash cannot be parsed, so the rule is the conservative one: a
-// command is refused when it names the folder at all, as written, through the home folder or $CLAUDE_PLUGIN_DATA, or in
-// a word that resolves into it. What it cannot see (a path built by the shell, such as `cd` then a bare file name, or a
-// variable other than those named) it does not stop; GUIDE.md says so. No Node module is imported: the real path is
-// asked through the port.
+// File tools are judged by the target's real path, links settled. A relative path is taken from the session's folder. A
+// file not yet made is judged by its nearest folder that exists. Bash cannot be parsed, so the rule is the conservative
+// one. A command is refused when it names the folder at all. That is as written, through the home folder or
+// $CLAUDE_PLUGIN_DATA, or in a word that resolves into it. What it cannot see, it does not stop. That is a path built
+// by the shell, such as `cd` then a bare file name, or a variable other than those named. GUIDE.md says so. No Node
+// module is imported. The real path is asked through the port.
 
 /** The tools whose target is a file path, and the field that holds it. */
 const FILE_TOOLS: Readonly<Record<string, 'file_path' | 'notebook_path'>> = {
@@ -66,7 +66,7 @@ function absolute(path: string, ports: GuardPorts): string {
 
 /** Whether `path` is `folder` or inside it. */
 function inside(path: string, folder: string): boolean {
-  // the case of a name is not told apart: macOS and Windows disks do not, and a folder with only its case changed is
+  // the case of a name is not told apart. macOS and Windows disks do not, and a folder with only its case changed is
   // never worth refusing less
   const here = path.toLowerCase();
   const there = folder.toLowerCase();
@@ -142,8 +142,8 @@ const PLUGINS_DATA = /(^|[^A-Za-z0-9._-])plugins\/data(?![A-Za-z0-9._-])/i;
 const MOVERS = /(^|[\s;|&(`])(mv|rm|cp|rsync|ln)(?=\s)/;
 
 /**
- * A copy of the command as the shell would read it: quotes and backslashes taken out, and the home folder put in for
- * `$HOME`, `${HOME}`, `~` and `~name` (any named user is taken as the home folder, which only widens the match).
+ * A copy of the command as the shell would read it. Quotes and backslashes are taken out. The home folder is put in for
+ * `$HOME`, `${HOME}`, `~` and `~name`. Any named user is taken as the home folder, which only widens the match.
  */
 function plain(command: string, ports: GuardPorts): string {
   const bare = command.replace(/['"`\\]/g, '');

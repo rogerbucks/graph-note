@@ -1,16 +1,16 @@
 // The browser editor's page (editor spec §26; test_cc_page). It is proved here a requirement at a time, as the workstreams
 // that build the page arrive:
-//   - cc_core_only (C4, this file's first cases): the page takes every reading, drawing, check and edit from the core and
-//     from the display layer shared with the Obsidian host (`packages/core/src/display/`), and imports no Obsidian code or
-//     stand-in for it. Tried on the import graph, on a real bundle of the page's side, and on the layer run with no
-//     Obsidian in the process.
-//   - C5 (the second describe below) proves the page's host shell on the page as built and served: one Markdown renderer,
-//     text shown as text, the worker, the theme, icons, offline, settings read only. C8 adds the accessibility and
-//     motion cases.
+//   - cc_core_only (C4, this file's first cases): the page takes every reading, drawing, check and edit from the core.
+//     It takes them also from the display layer shared with the Obsidian host (`packages/core/src/display/`). It imports
+//     no Obsidian code or stand-in for it. Tried on the import graph, on a real bundle of the page's side, and on the
+//     layer run with no Obsidian in the process.
+//   - C5 (the second describe below) proves the page's host shell on the page as built and served. That is one Markdown
+//     renderer, text shown as text, the worker, the theme, icons, offline, settings read only. C8 adds the accessibility
+//     and motion cases.
 //   - C6 (editor-page-export.js, registered below) proves cc_export_same: the page's export is the shared export.
 //   - C8 (editor-page-access.js, registered below) proves cc_keyboard, cc_reduced_motion and cc_text_version.
-//   - C9 (editor-page-editing.js, registered below) proves cc_editor_opens: the page opens the note with the drawing, the
-//     details and the edit pane of the Obsidian host, all from the layer, its colours set under the unchanged policy.
+//   - C9 (editor-page-editing.js, registered below) proves cc_editor_opens. The page opens the note with the drawing,
+//     the details and the edit pane of the Obsidian host. All come from the layer, its colours set under the unchanged policy.
 // With C9 the file proves every rule its record covers, and test_cc_page is `written`.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,7 +1,7 @@
 // What a block's things are missing, and the fix that adds it (editor spec §4: name_from_text, text_from_name,
-// suggested_name_unique): a thing given text but no name, a thing given a name but no text. The suggestion is shown as a
-// warning with its fix and is never written unasked; the thing is drawn as if the suggestion were there. A thing with no
-// text is drawn by its name, with a hint that offers the text.
+// suggested_name_unique). It covers a thing given text but no name, and a thing given a name but no text. The
+// suggestion is shown as a warning with its fix and is never written unasked; the thing is drawn as if the suggestion
+// were there. A thing with no text is drawn by its name, with a hint that offers the text.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -275,9 +275,9 @@ describe('read with the suggestions shown', () => {
 });
 
 describe('drawn under its suggested name until the name is written', () => {
-  // unnamed_drawn_suggested (spec §4, Roger, 10 Oct 2026): a thing written without a name is drawn under its suggested
-  // name, marked as suggested, by every reader alike; nothing is written until its fix is accepted, and the problem stays
-  // listed until then
+  // unnamed_drawn_suggested (spec §4, Roger, 10 Oct 2026). A thing written without a name is drawn under its suggested
+  // name, marked as suggested, by every reader alike. Nothing is written until its fix is accepted, and the problem
+  // stays listed until then
   const UNNAMED = HEAD + "(:Option {name: 'Large reader'}),\n(small_reader)-[:ANSWERS]->(question)";
   /** The block with a problem's fix made, as pressing it does. */
   const fixed = (text, p) => {

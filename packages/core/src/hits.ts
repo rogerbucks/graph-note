@@ -1,6 +1,6 @@
-// What a tap lands on or near (spec §3, tap_cycles_near): the areas of each box and link, read from the drawing's SVG as
-// Graphviz writes it, and which of them are within reach of a point — nearest first. Tapping again in the same place
-// takes the next. Host-free: a point is in the drawing's own units, the host turns a tap into one.
+// What a tap lands on or near (spec §3, tap_cycles_near). It reads the areas of each box and link from the drawing's
+// SVG as Graphviz writes it. It finds which of them are within reach of a point, nearest first. Tapping again in the
+// same place takes the next. Host-free: a point is in the drawing's own units, the host turns a tap into one.
 
 type Pt = [number, number];
 

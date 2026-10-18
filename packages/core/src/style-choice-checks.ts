@@ -1,6 +1,7 @@
-// The style graph's choices for how the whole graph or one view is drawn, each checked on its own (editor spec §15, §25):
-// where arrowheads are hidden (Arrows), the diagram type (Diagram), and how links are routed and whether they are merged
-// into trunks (Links). What is sound is kept; each fault is a problem on its line with its fix, and the thing is left out.
+// The style graph's choices for how the whole graph or one view is drawn, each checked on its own (editor spec §15,
+// §25). They are where arrowheads are hidden (Arrows) and the diagram type (Diagram). So is how links are routed and
+// whether they are merged into trunks (Links). What is sound is kept. Each fault is a problem on its line with its fix,
+// and the thing is left out.
 import type { Problem } from './note-reading.ts';
 import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, ROUTINGS, orList } from './style-graph.ts';
 import type { Arrows, Diagram, Links } from './style-graph.ts';
@@ -10,8 +11,8 @@ import { reader } from './style-reader.ts';
 const inView = (view: string | undefined) => (view === undefined ? {} : { view });
 
 /**
- * Where arrowheads are hidden or shown, checked (§15): show or hide, for every link or the links of a relationship type
- * the graph has, in the whole graph or in a view, whose name is the user's own.
+ * Where arrowheads are hidden or shown, checked (§15). It is show or hide, for every link or the links of a
+ * relationship type the graph has. It holds in the whole graph or in a view, whose name is the user's own.
  */
 export function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arrows | null {
   const r = reader(raw, names, out),
@@ -31,8 +32,8 @@ export function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arr
 export const TREE_ONLY = 'a relationship is chosen only for a tree';
 
 /**
- * The diagram type chosen, checked (§15, type_remembered): one of the types, in the whole graph or a view, whose name is
- * the user's own; for a tree, a relationship type the graph has, which no other type takes.
+ * The diagram type chosen, checked (§15, type_remembered). It is one of the types, in the whole graph or a view, whose
+ * name is the user's own. For a tree, it names a relationship type the graph has, which no other type takes.
  */
 export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Diagram | null {
   const r = reader(raw, names, out),
@@ -51,8 +52,8 @@ export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Di
 }
 
 /**
- * How links are drawn, checked (§25, untangle_routing, untangle_merge): a routing of the three, merging on or off, or
- * both, in the whole graph or in a view, whose name is the user's own.
+ * How links are drawn, checked (§25, untangle_routing, untangle_merge). It is a routing of the three, merging on or
+ * off, or both. It holds in the whole graph or in a view, whose name is the user's own.
  */
 export function linksOf(raw: RawThing, names: StyledNames, out: Problem[]): Links | null {
   const r = reader(raw, names, out),

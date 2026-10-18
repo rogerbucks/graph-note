@@ -1,6 +1,6 @@
-// The standard schemas (spec §27, standard_schemas): shared schemas the library ships, each named with its version, so a
-// graph can name one — `// graph: reader · schema decision@1` — and its note needs no schema of its own. A vault's own
-// schema of the same name and version is used in its place; the standard one is never copied into a note.
+// The standard schemas (spec §27, standard_schemas). These are shared schemas the library ships, each named with its
+// version. So a graph can name one, `// graph: reader · schema decision@1`, and its note needs no schema of its own. A
+// vault's own schema of the same name and version is used in its place; the standard one is never copied into a note.
 import { firstLine } from './blocks.ts';
 import { N, S } from './whitespace.ts';
 

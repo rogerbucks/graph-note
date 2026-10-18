@@ -40,6 +40,6 @@ MATCH (n) WHERE n.id IN ['home', 'lake'] RETURN n
 
 **Checklist line:**
 
-> **Q-01** Two views of one graph in one note, the graph block above them: each card draws only its view, from the one graph block, and the things outside it are faded. Change a name in the graph block: both views draw the new name. Nothing of the graph is copied into the views' blocks.
+> **Q-01** Two views of one graph in one note, the graph block above them. Each card draws only its view, from the one graph block, and the things outside it are faded. Change a name in the graph block: both views draw the new name. Nothing of the graph is copied into the views' blocks.
 
 **Back to the checklist:** [Q-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for Q-01 in its list.

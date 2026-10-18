@@ -5,9 +5,9 @@ const { GTime } = require('../values/times.js');
 const { Store } = require('../reader/store.js');
 const { pyeq, pyround, keystr } = require('./python-text.js');
 
-// A document's block read for joining: the id, schema, as-of date and revision its header names, its nodes by id
-// (labels, and a copy of the properties) and its relationships as [from id, type, to id, properties]. normalise keys
-// them.
+// A document's block read for joining. It holds the id, schema, as-of date and revision its header names. It holds
+// its nodes by id (labels, and a copy of the properties). It holds its relationships as [from id, type, to id,
+// properties]. normalise keys them.
 function parseDoc(block) {
   const m = /document (\S+) · schema (\S+) · as of (\d{4}-\d\d-\d\d)(?: · revision of (\S+))?/.exec(block);
   const st = new Store(),
@@ -40,16 +40,19 @@ const ekey = (f, ty, t, p, config) => [
   t,
   (config.edge_keys[ty] || []).map((a) => (p[a] === undefined ? null : p[a])),
 ];
-// Every property a document states, as a Map from node id and key (joined by NUL) to value: the base's, so normalise
-// can tell a value copied unchanged from it.
+// Every property a document states, as a Map from node id and key (joined by NUL) to value. It is the base's. So
+// normalise can tell a value copied unchanged from it.
 function rawProps(doc) {
   const o = new Map();
   for (const [nid, n] of doc.nodes) for (const [k, v] of Object.entries(n.props)) o.set(nid + '\u0000' + k, v);
   return o;
 }
-// Restates apparent differences before comparing, in place, logging each: ids by the id map, units by the unit maps
-// (rounded as Python rounds), timed properties as relationships, values by the vocabulary maps; then keys each
-// relationship. A value copied unchanged from the earlier version keeps that version's date.
+// Restates apparent differences before comparing, in place, logging each:
+// - ids by the id map;
+// - units by the unit maps (rounded as Python rounds);
+// - timed properties as relationships;
+// - values by the vocabulary maps.
+// Then it keys each relationship. A value copied unchanged from the earlier version keeps that version's date.
 function normalise(doc, log, config, base) {
   for (const [old, nu] of Object.entries(config.id_map))
     if (doc.nodes.has(old)) {

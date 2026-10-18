@@ -1,10 +1,11 @@
-// Quick info (editor spec §24, quick_info, quick_info_no_hover_only): pointing at a thing or a link for a moment shows a
-// tooltip, in the theme's style, with its name, its kind, how a thing is linked, its first few properties, how many problems it has and the first
-// paragraph of its note, rendered as the details render it. It also opens by a long press on touch and when the thing has
-// the keyboard focus, so nothing depends on hover (§5), and then describes it, so a screen reader reads it
-// (quick_info_read_aloud); Escape closes it; and it is put beside the thing, never over it.
-// The tooltip is made of text, and the note by Obsidian's own renderer through the card's links; it sits on the page itself,
-// so no card clips it and a full-screen card does not hide it. One tooltip to a card, taken away with the card.
+// Quick info (editor spec §24, quick_info, quick_info_no_hover_only). Pointing at a thing or a link for a moment shows
+// a tooltip, in the theme's style. It holds its name, its kind, how a thing is linked and its first few properties. It
+// also holds how many problems it has and the first paragraph of its note, rendered as the details render it. It also
+// opens by a long press on touch and when the thing has the keyboard focus, so nothing depends on hover (§5). Then it
+// describes it, so a screen reader reads it (quick_info_read_aloud). Escape closes it, and it is put beside the thing,
+// never over it.
+// The tooltip is made of text, and the note by Obsidian's own renderer through the card's links. It sits on the page
+// itself, so no card clips it and a full-screen card does not hide it. One tooltip to a card, taken away with the card.
 import { readInHostDirection } from '../host';
 import { Lifecycle } from '../lifecycle';
 import { word } from '@thoughtknot/core';

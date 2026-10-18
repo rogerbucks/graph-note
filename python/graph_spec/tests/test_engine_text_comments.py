@@ -34,9 +34,10 @@ from test_engine_gets_corrected import (  # noqa: E402
 # built with chr(), so no editor or tool can read the source's own text as a line end
 LS, PS = chr(0x2028), chr(0x2029)  # line separator, paragraph separator
 
-# a block with its comments: indented, with no space after the slashes, empty, ending in a */ that
-# is not the comment's end, opening a /* inside, and (the last comment but one) holding a
-# U+2028, which is not a line end here
+# A block with its comments. They are:
+# - indented, with no space after the slashes, or empty.
+# - ending in a */ that is not the comment's end, or opening a /* inside.
+# - (the last comment but one) holding a U+2028, which is not a line end here.
 WRITTEN = [
     "(r:Reason {id: 'r', title: 'Sun'}),",
     "// the option",

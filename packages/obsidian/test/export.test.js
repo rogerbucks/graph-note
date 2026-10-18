@@ -1,12 +1,14 @@
-// Export in Obsidian (editor spec §16): an Export button on a drawing exports the whole diagram, or, on a view, the view
-// or the view with its faded context (export_two_scopes, view_export_stays_view); as SVG or PNG (export_formats), the
-// PNG at twice natural size or more (export_png_sharp), in fixed light or dark colours (export_fixed_theme), carrying
-// its title, legend, note and date (export_self_explaining); saved into the vault with a companion note when set
-// (export_companion_note); nothing written for an empty graph (empty_export), nor a half-written file when the write
-// fails (failed_export); and a note above the configured classification named, and asked about first (classified_export).
-// The data is offered too, as a GQL block, CSV and GraphML (export_data_formats), each reading back into the things and
-// links exported, a view's alone, however large the graph (export_lossless); and a PNG too large for one sharp image
-// is split across pages, all of them written or none (big_export).
+// Export in Obsidian (editor spec §16). An Export button on a drawing exports the whole diagram.
+// - On a view it exports the view, or the view with its faded context (export_two_scopes, view_export_stays_view).
+// - It exports as SVG or PNG (export_formats). The PNG is at twice natural size or more (export_png_sharp).
+// - It uses fixed light or dark colours (export_fixed_theme).
+// - It carries its title, legend, note and date (export_self_explaining).
+// - It is saved into the vault with a companion note when set (export_companion_note).
+// - Nothing is written for an empty graph (empty_export), nor a half-written file when the write fails (failed_export).
+// - A note above the configured classification is named, and asked about first (classified_export).
+// The data is offered too, as a GQL block, CSV and GraphML (export_data_formats).
+// Each reads back into the things and links exported, a view's alone, however large the graph (export_lossless).
+// A PNG too large for one sharp image is split across pages, all of them written or none (big_export).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { dataOf, readBack, readFaded } from '../../core/test/export-data-readers.js';
@@ -332,8 +334,8 @@ describe('the data', () => {
 });
 
 describe('a PNG too large for one sharp image', () => {
-  // the trip's image is about 711 by 206: at 250,000 pixels, three pages of about 237 by 206, each over the least a page
-  // may be once the row is evened out
+  // The trip's image is about 711 by 206. At 250,000 pixels, that is three pages of about 237 by 206.
+  // Each is over the least a page may be once the row is evened out.
   const LIMIT = 250_000;
   const two = (n) => String(n).padStart(2, '0');
   const today = () => {

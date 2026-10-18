@@ -1,7 +1,8 @@
-// Stand-ins for the vault's own ways of making files (spec §16, export): create, create binary, modify, rename, delete
-// and make a folder, each kept in `state.files` by path, with a way to make one fail as a full disk would; a rename and a
-// deletion told to whoever listens, as Obsidian's vault tells them (spec §9); and the metadata cache's front matter, read
-// from a note's text.
+// Stand-ins for the vault's own ways of making files (spec §16, export).
+// - Create, create binary, modify, rename, delete and make a folder. Each is kept in `state.files` by path, with a way
+//   to make one fail as a full disk would.
+// - A rename and a deletion told to whoever listens, as Obsidian's vault tells them (spec §9).
+// - The metadata cache's front matter, read from a note's text.
 
 /** Adds the vault's file-making operations to `vault`; `state.failWrite` names a path whose writes fail with ENOSPC. */
 export function addVaultWrites(vault, state, file) {
@@ -52,7 +53,7 @@ function gone(state, f) {
 }
 
 /**
- * The file manager: a file put in the trash is gone from the vault, and kept in `state.trashed`; a new note goes in the
+ * The file manager. A file put in the trash is gone from the vault, and kept in `state.trashed`. A new note goes in the
  * vault's root, as Obsidian's default for new notes puts it.
  */
 export function fakeFileManager(state) {
@@ -93,8 +94,8 @@ export function getFrontMatterInfo(content) {
 }
 
 /**
- * The metadata cache: a note's front matter, and its sections where a test gives them in `state.sections` by path; with
- * `state.noCache`, a note not yet indexed, which has none.
+ * The metadata cache. It has a note's front matter, and its sections where a test gives them in `state.sections` by
+ * path. With `state.noCache`, a note is not yet indexed, and has none.
  */
 export function fakeMetadataCache(state) {
   return {

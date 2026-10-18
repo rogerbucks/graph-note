@@ -1,6 +1,7 @@
-// An exported image drawn with its style graph (editor spec §14, §15, §16): the arrowheads it hides and the properties it
-// shows inline, for the whole diagram or a view, each link's properties its own even where the view leaves out a link
-// before it. Spans export.ts (styledDrawing, with ExportInfo's data) and export-scope.ts (each kept link's edge).
+// An exported image drawn with its style graph (editor spec §14, §15, §16). It has the arrowheads the style graph hides
+// and the properties it shows inline, for the whole diagram or a view. Each link's properties are its own even where
+// the view leaves out a link before it. Spans export.ts (styledDrawing, with ExportInfo's data) and export-scope.ts
+// (each kept link's edge).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadEngine } from '../src/engine.ts';
@@ -14,8 +15,8 @@ const engine = await loadEngine();
 const texts = (svg) => [...svg.matchAll(/>([^<>]+)<\/(?:text|tspan)>/g)].map((m) => m[1]);
 
 describe('arrowheads and properties in an export', () => {
-  // two links between home and park, one each way: a view of how home reaches park, following the arrows, keeps only
-  // the second, so the link it draws first is the graph's second
+  // two links between home and park, one each way. A view of how home reaches park, following the arrows, keeps only
+  // the second. So the link it draws first is the graph's second
   const WALK = [
     `// graph: walk · SOURCE
 (home:Place {name: 'Home'}),

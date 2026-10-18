@@ -1,5 +1,5 @@
-// A translation is checked against the source before it is used (editor spec §42, translations_as_files): the same keys,
-// the same placeholders, and plural forms where the source has them, each problem said on its own line.
+// A translation is checked against the source before it is used (editor spec §42, translations_as_files). It needs the
+// same keys, the same placeholders, and plural forms where the source has them. Each problem is said on its own line.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { translationProblems } from '../src/words.ts';

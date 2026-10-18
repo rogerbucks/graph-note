@@ -1,7 +1,7 @@
-// Writing an export safely (editor spec §16, failed_export): the bytes are written to a temporary file and only then renamed
-// into place, so the target is never left half written; on any failure the temporary file is removed and the reason is
-// said in a sentence, for the editor to show. The core knows no file system: the host gives the three operations, and the
-// rename must put the whole file in place or leave the target as it was.
+// Writing an export safely (editor spec §16, failed_export). The bytes are written to a temporary file and only then
+// renamed into place, so the target is never left half written. On any failure the temporary file is removed and the
+// reason is said in a sentence, for the editor to show. The core knows no file system: the host gives the three
+// operations. The rename must put the whole file in place or leave the target as it was.
 
 /** The file operations the host gives. Each may throw, or reject, with an error that may carry a `code` such as `ENOSPC`. */
 export interface WriteOps {

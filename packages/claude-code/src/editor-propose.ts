@@ -1,9 +1,9 @@
-// Claude's proposal sent to the editor's server (spec §26, cc_claude_proposes): the one way Claude changes a note open in
-// the pane. What leaves the mod is Claude's own input, as JSON, with the key the launcher made for this start, handed to
-// the sender (the shipped process `bin/propose-process.ts`, run through the host) on its standard input. The server makes
-// the change set, holds it to the gate and the graph spec's check, and writes it beside the graph; nothing here applies a
-// change, and nothing here is told the note's text. What comes back is words: how many changes, or why not.
-// No Node module is imported here: the sender is handed in.
+// Claude's proposal sent to the editor's server (spec §26, cc_claude_proposes): the one way Claude changes a note open
+// in the pane. What leaves the mod is Claude's own input, as JSON, with the key the launcher made for this start. It is
+// handed to the sender on its standard input. The sender is the shipped process `bin/propose-process.ts`, run through
+// the host. The server makes the change set and holds it to the gate and the graph spec's check. Then it writes it
+// beside the graph. Nothing here applies a change, and nothing here is told the note's text. What comes back is words:
+// how many changes, or why not. No Node module is imported here: the sender is handed in.
 
 /** What the sender is asked: where the server listens, the note's id, the proposer's key and the body to send. */
 export interface ProposeRequest {

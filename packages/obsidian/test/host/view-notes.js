@@ -1,5 +1,5 @@
-// The drawing's tests (spec §3): the built plugin loaded against fresh stand-ins, as each drawing test has always loaded
-// it, the graph they draw, and its block drawn as Obsidian draws it.
+// The drawing's tests (spec §3). The built plugin loaded against fresh stand-ins, as each drawing test has always loaded
+// it. The graph they draw, and its block drawn as Obsidian draws it.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fakeDocument, installGlobals } from './fake-dom.js';

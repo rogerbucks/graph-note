@@ -1,7 +1,7 @@
-// Every function by keyboard on any device that has or can have one (editor spec §11, keyboard_any_device): the
-// keyboard-only run of test/a11y-keyboard.test.js, over every view of the Obsidian host, on a phone and on a tablet with
-// a keyboard attached, where the layout differs (tabs and a bottom sheet in the pane, a sheet for the details): every
-// action reached and operated, and every focus left.
+// Every function by keyboard on any device that has or can have one (editor spec §11, keyboard_any_device). This is
+// the keyboard-only run of test/a11y-keyboard.test.js, over every view of the Obsidian host. It runs on a phone and on
+// a tablet with a keyboard attached. There the layout differs: tabs and a bottom sheet in the pane, a sheet for the
+// details. Every action is reached and operated, and every focus is left.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, onDevice } from '../packages/obsidian/test/host/load-plugin.js';

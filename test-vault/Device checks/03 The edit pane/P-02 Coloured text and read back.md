@@ -27,6 +27,6 @@
 
 **Checklist line:**
 
-> **P-02** The text is coloured as gql-highlight colours it, and each line is read back in plain English beside it.
+> **P-02** The text is coloured as gql-highlight colours it, and each line is read back in plain language beside it.
 
 **Back to the checklist:** [P-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-02 in its list.

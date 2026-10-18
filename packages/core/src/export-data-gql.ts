@@ -1,9 +1,10 @@
-// The data as a GQL block (editor spec §16, export_data_formats, export_lossless): the graph line, a comment saying where
-// it came from, then each thing and each link on a line of its own, in the document profile, so the graph-spec reader
-// reads it back into the very things and links exported. A thing is written under its id where its id is a name the
-// profile reads as one; otherwise, as for an id with a space or a word the profile keeps, under a name of its own, with
-// its id written in full. A view's faded context, when asked for, is marked by a `//@ faded:` line above each of its
-// things and links. A note (§24, note_standard) is kept as the `///` lines directly above its thing or link.
+// The data as a GQL block (editor spec §16, export_data_formats, export_lossless). It writes the graph line, a comment
+// saying where it came from, then each thing and each link on a line of its own. It is in the document profile, so the
+// graph-spec reader reads it back into the very things and links exported. A thing is written under its id where its id
+// is a name the profile reads as one. Otherwise it is written under a name of its own, with its id written in full.
+// That is the case for an id with a space or a word the profile keeps. A view's faded context, when asked for, is
+// marked by a `//@ faded:` line above each of its things and links. A note (§24, note_standard) is kept as the `///`
+// lines directly above its thing or link.
 import gs from '@thoughtknot/graph-spec';
 import type { GTime, Value } from '@thoughtknot/graph-spec';
 import { saidDate } from './export-frame.ts';
@@ -52,8 +53,8 @@ export function gqlBlock(data: ExportedData, info: DataInfo): string {
   const things = data.things.map(([id, kinds, props]) => {
     const name = names.get(id) ?? id;
     const rest = Object.entries(props).filter(([k]) => k !== 'id');
-    // the id is written unless the name says it, and always for a thing with no kind and nothing else, which the
-    // profile would otherwise read as a mention of a thing written before, never as a thing
+    // the id is written unless the name says it. It is always written for a thing with no kind and nothing else. The
+    // profile would otherwise read that as a mention of a thing written before, never as a thing
     const withId = name !== id || (!kinds.length && !rest.length) ? [['id', id] as [string, Value], ...rest] : rest;
     return `(${name}${kinds.map((k) => `:${k}`).join('')}${propsText(withId)})`;
   });
@@ -64,14 +65,14 @@ export function gqlBlock(data: ExportedData, info: DataInfo): string {
   const what = data.view === undefined ? `graph ${data.graph}` : `view ${data.view} of graph ${data.graph}`;
   const count = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
   const said = `// Exported from ${oneLine(info.note)}, ${oneLine(what)}, ${saidDate(info.date)}: ${count(data.things.length, 'thing')} and ${count(data.links.length, 'link')}.`;
-  // a view's faded context: each thing and link outside the view owns a //@ line saying so (§27), which is a comment to
-  // the reader, so the graph read back is the same, and a tag to the library's ownedComments, so it is told apart
+  // a view's faded context: each thing and link outside the view owns a //@ line saying so (§27). That is a comment to
+  // the reader, so the graph read back is the same. It is a tag to the library's ownedComments, so it is told apart
   const fadedThings = new Set(data.faded?.things ?? []),
     fadedLinks = new Set(data.faded?.links ?? []);
   const tag = `//@ faded: outside view ${oneLine(data.view ?? '')}`;
   const outside = [...data.things.map(([id]) => fadedThings.has(id)), ...data.links.map((_, i) => fadedLinks.has(i))];
-  // each note as the /// lines directly above its thing or link (§26): a line of its text after `/// `, an empty one a
-  // bare `///`, so the library's notes reads back the very text
+  // each note as the /// lines directly above its thing or link (§26). A line of its text goes after `/// `, and an
+  // empty one is a bare `///`. So the library's notes reads back the very text
   const thingNotes = new Map(data.notes?.things ?? []),
     linkNotes = new Map(data.notes?.links ?? []);
   const notes = [...data.things.map(([id]) => thingNotes.get(id)), ...data.links.map((_, i) => linkNotes.get(i))];

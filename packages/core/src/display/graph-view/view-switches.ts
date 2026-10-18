@@ -1,9 +1,9 @@
-// The View menu (editor spec §25, view_switches): a graph's four switches — labels by zoom, busy hubs folded, groups
-// folded and parallel links merged — each a switch on or off, under the bar's View button, starting as the plugin's
+// The View menu (editor spec §25, view_switches): a graph's four switches, each on or off, under the bar's View button.
+// They are labels by zoom, busy hubs folded, groups folded and parallel links merged. They start as the plugin's
 // settings hold them (view_switch_defaults). Turning one redraws the graph at once: labels by zoom in place, the others
-// by laying the graph out again, which the card puts in place keeping the selection and the focus; a busy hub's stub, a
+// by laying the graph out again. The card puts that in place, keeping the selection and the focus. A busy hub's stub, a
 // folded group's box and a hub's details open and fold them the same way. Nothing here reaches the note, so the menu is
-// offered and works in reading view too (view_switch_view_only); it says in words when the graph could not be redrawn.
+// offered and works in reading view too (view_switch_view_only). It says in words when the graph could not be redrawn.
 import {
   OPTIONS,
   SWITCH_NAMES,

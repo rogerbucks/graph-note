@@ -32,9 +32,11 @@ from graphspec.style.legend import legend_layers, legend_text  # noqa: E402
 with open(os.path.join(HERE, "legend_cases.json"), encoding="utf-8") as f:
     CASES = json.load(f)["cases"]
 
-# The core's answer for each note: as the plugin reads a view saved as shown (view-block.ts), the
-# style read for each graph, the view's legend restored into the core's LegendFilter, and what it
-# brings forward and hides in the drawing (untangle.ts, apply).
+# The core's answer for each note, as the plugin reads a view saved as shown (view-block.ts).
+# It holds:
+# - the style read for each graph.
+# - the view's legend restored into the core's LegendFilter.
+# - what it brings forward and hides in the drawing (untangle.ts, apply).
 CORE_SCRIPT = """
 const [src, cases] = [process.argv[1], JSON.parse(process.argv[2])];
 const { readNote } = await import(`${src}/drawing.ts`);
@@ -114,8 +116,8 @@ class Legend(unittest.TestCase):
 
     def test_each_style_gives_the_cores_problems(self):
         # untangle_legend: the same problems for a Shown's legend as the core's, at the same block
-        # and line, with the same words and fix (a plain loop, never subTest: the tests-first
-        # replay counts a test by its own result)
+        # and line, with the same words and fix. A plain loop, never subTest. The tests-first
+        # replay counts a test by its own result.
         for case, ours, theirs in zip(CASES, self.python, self.core, strict=True):
             self.assertEqual(ours["styles"], theirs["styles"], case["name"])
 

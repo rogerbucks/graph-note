@@ -37,10 +37,12 @@ from graphspec.style.picture import PICTURE_MARK  # noqa: E402
 with open(os.path.join(HERE, "fold_cases.json"), encoding="utf-8") as f:
     CASES = json.load(f)["cases"]
 
-# The core's answer for each note: as the plugin draws a graph or a view (block.ts, view-block.ts),
-# its style read, the drawing styled for its view (styledDrawing), folded by a card's state of the
-# View menu started from the default settings and turned as the case says (ViewState), and laid out
-# in each direction (render.ts, directions).
+# The core's answer for each note, as the plugin draws a graph or a view (block.ts, view-block.ts).
+# It holds:
+# - its style read, and the drawing styled for its view (styledDrawing).
+# - folded by a card's state of the View menu (ViewState); that state starts from the default
+#   settings and is turned as the case says.
+# - laid out in each direction (render.ts, directions).
 CORE_SCRIPT = """
 const [src, cases] = [process.argv[1], JSON.parse(process.argv[2])];
 const { readNote } = await import(`${src}/drawing.ts`);
@@ -139,8 +141,8 @@ class Folds(unittest.TestCase):
 
     def test_each_graph_is_folded_merged_and_routed_from_the_cores_source(self):
         # untangle_hubs, untangle_groups, untangle_merge, untangle_routing: the same source in
-        # each direction, byte for byte (a plain loop, never subTest: the tests-first replay
-        # counts a test by its own result)
+        # each direction, byte for byte. A plain loop, never subTest. The tests-first replay
+        # counts a test by its own result.
         for case, ours, theirs in zip(CASES, self.python, self.core, strict=True):
             self.assertEqual(ours["drawn"], theirs["drawn"], case["name"])
 
@@ -150,8 +152,9 @@ class Folds(unittest.TestCase):
             self.assertEqual(ours["styles"], theirs["styles"], case["name"])
 
     def test_the_cases_draw_every_fold_merge_and_routing(self):
-        # the table proves what it says: a stub, a box, a trunk with a link drawn from its far end
-        # and one with its arrowhead hidden, straight and right-angled links, and Links problems
+        # The table proves what it says. It has:
+        # - a stub, a box, a trunk with a link drawn from its far end.
+        # - a trunk with its arrowhead hidden, straight and right-angled links, and Links problems.
         sources = [s for a in self.core for d in a["drawn"].values() for s in d.values()]
         for mark in (
             'id="fold_hub_1"',
@@ -204,10 +207,10 @@ class Folds(unittest.TestCase):
         self.assertIsNotNone(graph_svg.render_args(texts, "kit", None, {})["folding"])
 
     def test_a_picture_stays_on_its_own_box_when_others_are_folded(self):
-        # animated_image_shown with untangle_groups and untangle_hubs: the last case folds a group
-        # of two pictured people into one box and a pictured hub's links into a stub; in both
-        # renderers the room for a picture is kept on the hub's box and on the one person left,
-        # and on no group box or stub, in each direction laid out
+        # animated_image_shown with untangle_groups and untangle_hubs. The last case folds a group
+        # of two pictured people into one box. It folds a pictured hub's links into a stub.
+        # Both renderers keep the room for a picture on the hub's box and on the one person left.
+        # They keep it on no group box or stub, in each direction laid out.
         case = len(CASES) - 1
         self.assertIn("pictures", CASES[case]["name"])
         for theirs, ours in ((self.core[case], "core"), (self.python[case], "python")):

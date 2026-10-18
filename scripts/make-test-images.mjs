@@ -1,7 +1,7 @@
 // Encoders for the images and the PDF the tests and the device checks need (editor spec §12, test_files_generated). Each
-// writes the real format and nothing more: a GIF with LZW-compressed frames, an APNG with zlib-wrapped frames, a lossless
-// animated WebP, an animated SVG and a one-page PDF. No network and no dependency but node:zlib. Everything is
-// deterministic (zlib's stored blocks, not a compression level whose output differs between zlib versions), so a file
+// writes the real format and nothing more. They are a GIF with LZW-compressed frames, an APNG with zlib-wrapped frames,
+// a lossless animated WebP, an animated SVG and a one-page PDF. No network and no dependency but node:zlib. Everything
+// is deterministic: zlib's stored blocks, not a compression level whose output differs between zlib versions. So a file
 // kept in the repository can be compared with a fresh one byte for byte. scripts/make-test-files.mjs says which files to
 // make; test/test-files.test.js decodes what these write.
 import { deflateSync } from 'node:zlib';
@@ -140,8 +140,8 @@ export function png({ width, height, frames, delay = 12 }) {
 const riff = (type, data) => [...ascii(type), ...le32(data.length), ...data, ...(data.length % 2 ? [0] : [])];
 
 /**
- * A lossless (VP8L) image of RGBA bytes, written with the simplest prefix codes the format has: for each channel a code
- * of one or two symbols, so each pixel is at most one bit of each of green, red, blue and alpha. It holds any picture
+ * A lossless (VP8L) image of RGBA bytes, written with the simplest prefix codes the format has. Each channel has a code
+ * of one or two symbols. So each pixel is at most one bit of each of green, red, blue and alpha. It holds any picture
  * whose channels each take at most two values, which the eight-colour test pictures do.
  */
 function vp8l(width, height, rgba) {
@@ -238,8 +238,9 @@ export function pdf(text) {
     file += `${i + 1} 0 obj\n${o}\nendobj\n`;
     return at;
   });
-  // the table of where each object is, as a cross-reference stream (PDF 1.5): an entry of four bytes (1, two bytes of
-  // offset, 0) for each object, the free entry for object 0 first, the stream itself last; zlib-wrapped like a PNG's data
+  // the table of where each object is, as a cross-reference stream (PDF 1.5). Each object has an entry of four bytes
+  // (1, two bytes of offset, 0). The free entry for object 0 is first, the stream itself last. It is zlib-wrapped like
+  // a PNG's data
   const at = file.length,
     entries = [[0, 0, 255], ...offsets.map((o) => [1, o, 0]), [1, at, 0]];
   const table = Buffer.from(entries.flatMap(([type, offset, gen]) => [type, offset >> 8, offset & 0xff, gen]));

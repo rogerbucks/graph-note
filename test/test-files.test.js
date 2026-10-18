@@ -1,8 +1,10 @@
 // The files the tests need are made by the repository, not supplied by hand (editor spec §12, tests_self_contained,
-// test_files_generated). The device-check notes under test-vault/ name images and a PDF; the generator in
-// scripts/make-test-files.mjs makes every one, into a copy of the notes here, never the committed tree. Each made image is
-// held to what its own bytes say (the core's header reader), and decoded: the GIF's compressed data by a decoder written
-// here, the APNG's frames by zlib and its check values, the WebP's frame by a reader of the lossless format.
+// test_files_generated). The device-check notes under test-vault/ name images and a PDF. The generator in
+// scripts/make-test-files.mjs makes every one, into a copy of the notes here, never the committed tree.
+// Each made image is held to what its own bytes say (the core's header reader), and decoded:
+// - the GIF's compressed data, by a decoder written here;
+// - the APNG's frames, by zlib and its check values;
+// - the WebP's frame, by a reader of the lossless format.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, statSync } from 'node:fs';

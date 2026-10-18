@@ -1,6 +1,6 @@
 // Where a drawing's card is placed, and waiting for it to be placed (spec §3, §4). Live Preview puts a card on the page
-// only once it is scrolled to, and cards drawn while the layout engine starts wait for it; what the card offers, Edit
-// here above all, must work however late it is placed, and nothing may be left polling while cards wait.
+// only once it is scrolled to. Cards drawn while the layout engine starts wait for it. What the card offers, Edit here
+// above all, must work however late it is placed. And nothing may be left polling while cards wait.
 import { test, describe, before, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeDocument, installGlobals } from './host/fake-dom.js';

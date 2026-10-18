@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 
 # ── §25 completeness — what a graph says it must contain; reported, never refused ────────────────
-# Counts (Cardinality, after SHACL sh:minCount/sh:maxCount) and grids (Coverage), declared in the
-# graph itself; a Deferred parks a gap on purpose. The JavaScript twin, completeness() in
+# Counts (Cardinality, after SHACL sh:minCount/sh:maxCount) and grids (Coverage). Both are declared
+# in the graph itself. A Deferred parks a gap on purpose. The JavaScript twin, completeness() in
 # graph-spec-check.js, must give the identical report.
 CARD_NEEDS = ("kind", "relationship", "direction")
 COV_NEEDS = ("rows", "columns", "of", "row_link", "column_link", "excused_by")

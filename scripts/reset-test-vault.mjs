@@ -1,19 +1,23 @@
 #!/usr/bin/env node
-// Readies the test vault, test-vault/, for a session in Obsidian, and clears it after: restores its notes and settings
-// to what is committed, removes everything a session added (notes typed, workspace files, other plugins), and copies the
-// plugin build at the repository root into .obsidian/plugins/thoughtknot/ as real files, and makes the test files the
-// device checks need (scripts/make-test-files.mjs), the GIF over the size limit among them. Nothing outside test-vault/ is
-// touched.
+// Readies the test vault, test-vault/, for a session in Obsidian, and clears it after. It:
+// - restores its notes and settings to what is committed;
+// - removes everything a session added (notes typed, workspace files, other plugins);
+// - copies the plugin build at the repository root into .obsidian/plugins/thoughtknot/ as real files;
+// - makes the test files the device checks need (scripts/make-test-files.mjs), the GIF over the size limit among them.
 //
-// The vault is synced to a phone with Obsidian Sync, so the reset is Sync-friendly: it never removes Sync's own files in
-// .obsidian/ (KEEP), it copies the build rather than linking it (Sync may not upload links), and it changes only
-// what differs: git restores only changed tracked files, and a plugin file is written only when its bytes differ.
+// Nothing outside test-vault/ is touched.
+//
+// The vault is synced to a phone with Obsidian Sync, so the reset is Sync-friendly:
+// - it never removes Sync's own files in .obsidian/ (KEEP);
+// - it copies the build rather than linking it (Sync may not upload links);
+// - it changes only what differs. Git restores only changed tracked files, and a plugin file is written only when its
+//   bytes differ.
 //
 // Usage:
-//   node scripts/reset-test-vault.mjs               before and after every session in the vault
-//   node scripts/reset-test-vault.mjs --root DIR    the same, in the repository at DIR (the tests use this)
+//   node scripts/reset-test-vault.mjs               before and after every session in the vault.
+//   node scripts/reset-test-vault.mjs --root DIR    the same, in the repository at DIR (the tests use this).
 //
-// Run `npm run build` first. The vault holds copies, not links, so a new build reaches it only when this reset is run
+// Run `npm run build` first. The vault holds copies, not links. So a new build reaches it only when this reset is run
 // again: build, then reset, then reload the plugin in Obsidian.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
@@ -49,8 +53,8 @@ export function fresh(root) {
   for (const f of PLUGIN_FILES)
     if (!existsSync(join(root, f))) throw new Error(`${f} is not built: run \`npm run build\` first`);
   const git = (...args) => execFileSync('git', args, { cwd: root, stdio: ['ignore', 'pipe', 'inherit'] });
-  // `git restore --worktree` rewrites every file it is given, changed or not, so it is given only the tracked files
-  // that differ; the index is reset first (it holds no file content to rewrite), so a staged change counts as a change
+  // `git restore --worktree` rewrites every file it is given, changed or not. So it is given only the tracked files
+  // that differ. The index is reset first (it holds no file content to rewrite), so a staged change counts as a change
   git('restore', '--source=HEAD', '--staged', '--', VAULT);
   const changed = git('diff', '--name-only', '-z', '--', VAULT).toString().split('\0').filter(Boolean);
   if (changed.length) git('restore', '--worktree', '--', ...changed);
@@ -66,7 +70,7 @@ export function fresh(root) {
     rmSync(target, { force: true }); // an old link is replaced, never written through
     copyFileSync(join(root, f), target);
   }
-  // the images and the PDF the device checks need: the small ones are committed (so this writes nothing), the GIF over
+  // the images and the PDF the device checks need. The small ones are committed (so this writes nothing). The GIF over
   // the size limit is ignored by git, and made here (tests_self_contained, test_files_generated)
   makeTestFiles(join(root, VAULT));
 }

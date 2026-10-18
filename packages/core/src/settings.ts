@@ -1,6 +1,6 @@
-// The editor's options (spec §21): each with its name and a sentence saying what it does, its choices and its default,
-// so a host's settings page shows every one, and saved settings are read back with anything unknown or out of range
-// left out. Nothing secret is kept: an AI model names its key in the host's own secret store (§19), never the key.
+// The editor's options (spec §21), each with its name, a sentence saying what it does, its choices and its default. So
+// a host's settings page shows every one. Saved settings are read back with anything unknown or out of range left out.
+// Nothing secret is kept: an AI model names its key in the host's own secret store (§19), never the key.
 import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
@@ -307,8 +307,8 @@ const oneOf = <T extends string>(key: keyof Settings, v: unknown, fallback: T): 
 
 /**
  * An AI model from what was given, with only its own fields: whatever else was given, such as a key, is dropped. A
- * model with no ceiling gets the lowest classification; one whose ceiling is no longer a classification keeps it as
- * written, so a classification being retyped never loses it, and the settings page says so.
+ * model with no ceiling gets the lowest classification. One whose ceiling is no longer a classification keeps it as
+ * written. So a classification being retyped never loses it, and the settings page says so.
  */
 export function aiModel(given: Partial<AiModel> & Record<string, unknown>, classifications?: string[]): AiModel {
   const levels = classifications ?? DEFAULT_SETTINGS.classifications;

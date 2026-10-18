@@ -1,6 +1,6 @@
-// Completing as you type in the block editor (spec §4, autocomplete): the best match shown inline as ghost text after the
-// caret in the coloured picture, never in the field until accepted with Tab or Enter, dismissed with Escape, and taken
-// back by one undo — in the pane and in the card.
+// Completing as you type in the block editor (spec §4, autocomplete), in the pane and in the card. The best match is
+// shown inline as ghost text after the caret in the coloured picture. It is never in the field until accepted with Tab
+// or Enter. It is dismissed with Escape, and taken back by one undo.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -292,8 +292,8 @@ describe('what Enter takes and what it leaves', () => {
 });
 
 describe('the case being typed', () => {
-  // a kind or type written in another case is replaced by the declared spelling, by the suggestions row, in one step;
-  // the inline match offers only what the typed letters begin exactly, so it never writes an undeclared spelling
+  // a kind or type written in another case is replaced by the declared spelling, by the suggestions row, in one step.
+  // The inline match offers only what the typed letters begin exactly, so it never writes an undeclared spelling
   test('a kind in another case is no inline match; Tab takes the declared kind in its place, and one undo takes it back', async () => {
     const env = await open();
     try {

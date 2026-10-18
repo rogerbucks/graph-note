@@ -1,6 +1,7 @@
-// Play stepping through a walked path on its own (editor spec §7, path_autoplay): from the step it is on, one step at the
-// pace set, until the last; paused or stopped at any step, and played on from where it was paused; a pace the user sets
-// taken at once. The host hands in its timer, so nothing here waits on the clock: the tests run each step themselves.
+// Play stepping through a walked path on its own (editor spec §7, path_autoplay). It goes from the step it is on, one
+// step at the pace set, until the last. It can be paused or stopped at any step, and played on from where it was
+// paused. A pace the user sets is taken at once. The host hands in its timer, so nothing here waits on the clock: the
+// tests run each step themselves.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

@@ -1,14 +1,14 @@
-// A block that holds only a schema, drawn as the schema itself (spec §3, schema_drawn): its kinds of thing as boxes and
-// its relationship types as arrows between them, with the text one press of Source away. The card is read-only: the
-// picture is not the note's text, so it never writes; the schema is changed in its text, as any block is.
+// A block that holds only a schema, drawn as the schema itself (spec §3, schema_drawn). Its kinds of thing are boxes and
+// its relationship types are arrows between them. The text is one press of Source away. The card is read-only: the
+// picture is not the note's text, so it never writes. The schema is changed in its text, as any block is.
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import { gqlBlocks, namesSharedSchema, schemaPicture } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
 import { graphCard } from './graph-card';
 
 /**
- * Draws `source` as its schema's picture where the note shows it, when it holds only a schema; resolves to whether it
- * did, so any other block, or one the picture cannot be laid out for, is drawn as a graph block always is.
+ * Draws `source` as its schema's picture where the note shows it, when it holds only a schema. Resolves to whether it
+ * did. So any other block, or one the picture cannot be laid out for, is drawn as a graph block always is.
  */
 export async function renderSchemaBlock(
   plugin: ThoughtKnotPlugin,

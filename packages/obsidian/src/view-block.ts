@@ -1,8 +1,10 @@
-// A view in a note (spec §2 views_in_the_note; §7): a query block named as a view, drawn as what it picks out of its graph,
-// from the one data set and never a copy of it. A query outside the view profile is refused, saying what is allowed
-// (view_profile); a view that matches nothing says so and offers to change it, never a blank drawing (empty_view); what
-// is outside it is faded or hidden as its style graph says (fade_or_hide_in_style), its looks drawn with their legend,
-// and how it is shown saved in the style graph when asked (view_saved_as_shown).
+// A view in a note (spec §2 views_in_the_note; §7). It is a query block named as a view.
+// It is drawn as what it picks out of its graph, from the one data set and never a copy of it.
+// - A query outside the view profile is refused, saying what is allowed (view_profile).
+// - A view that matches nothing says so and offers to change it, never a blank drawing (empty_view).
+// - What is outside it is faded or hidden as its style graph says (fade_or_hide_in_style).
+// - Its looks are drawn with their legend.
+// - How it is shown is saved in the style graph when asked (view_saved_as_shown).
 import { Notice, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
@@ -58,8 +60,8 @@ export async function writeStyle(
 }
 
 /**
- * Writes a view block made by tapping (views_by_tapping) after the last block of its graph in the note at `path`,
- * against the note as it is when written; resolves to why it was not written, or null.
+ * Writes a view block made by tapping (views_by_tapping) after the last block of its graph in the note at `path`.
+ * It writes against the note as it is when written. Resolves to why it was not written, or null.
  */
 export async function writeViewBlock(
   plugin: ThoughtKnotPlugin,
@@ -125,8 +127,8 @@ export async function renderViewBlock(
   const from = sourced?.read ?? null;
   const read = from ? from.reading : readNote(texts);
   if (read.tooLarge) {
-    // too large to read (spec §9, layout_contained): nothing was read, so there is no graph for the view to match
-    // nothing in — the query, and why, as a graph's text is shown
+    // Too large to read (spec §9, layout_contained). Nothing was read, so there is no graph for the view to match
+    // nothing in. The query, and why, are shown as a graph's text is.
     refusalBanner(root, read.tooLarge);
     renderCode(root, source);
     return;
@@ -238,8 +240,8 @@ export async function renderViewBlock(
     void writeStyle(plugin, ctx.sourcePath, v.graph, { diagram: change }, done);
   });
   let drawn;
-  // styled as this view: its nudges, and the properties, arrowheads, type and moving links chosen for it or the whole
-  // graph (§7, §14, §15); folded as its View menu says (§25)
+  // Styled as this view (§7, §14, §15). That is its nudges, and the properties, arrowheads, type and moving links
+  // chosen for it or the whole graph. Folded as its View menu says (§25).
   const styled = styledDrawing(drawing, style, g, v.name);
   const laidOut = (by?: object) => plugin.layout(state.folded(styled), by);
   try {
@@ -257,9 +259,9 @@ export async function renderViewBlock(
   }
   if (!drawn) return; // no longer wanted: a newer drawing of this card was asked for, or the plugin unloaded
   if ('reason' in drawn) {
-    // over a size or time limit: the query, with a banner saying which limit and the numbers, as a graph's text is; and
-    // its data still offered for export, which needs no layout (spec §16, export_data_formats); an export reads this
-    // note, so a view drawn from elsewhere offers none
+    // Over a size or time limit. The query shows with a banner saying which limit and the numbers, as a graph's text is.
+    // Its data is still offered for export, which needs no layout (spec §16, export_data_formats).
+    // An export reads this note, so a view drawn from elsewhere offers none.
     if (!from)
       dataExportBar(root, {
         path: ctx.sourcePath,

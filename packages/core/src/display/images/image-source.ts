@@ -1,5 +1,5 @@
-// The images a card's things name (spec §18), as the display layer sees them: found and read by the host (the Obsidian
-// plugin's `vault-images.ts` finds them in the vault), shown by the layer.
+// The images a card's things name (spec §18), as the display layer sees them. They are found and read by the host (the
+// Obsidian plugin's `vault-images.ts` finds them in the vault), and shown by the layer.
 
 /** An image found by the host: its file's name and path, its type, its size on disk, and a way to read its bytes. */
 export interface FoundImage {

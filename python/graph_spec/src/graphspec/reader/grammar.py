@@ -19,8 +19,8 @@ class Parser:
     SETs (§3)."""
 
     def __init__(self, toks):
-        # commas: (line, at) for each missing comma read in (§3) — the line it is missing from,
-        # and where in the block the code on that line ends, which is where it is written in
+        # commas: (line, at) for each missing comma read in (§3). line is the line it is missing
+        # from. at is where in the block the code on that line ends. That is where it is written in
         self.t, self.i, self.commas = toks, 0, []
 
     def peek(self, k=0):
@@ -110,8 +110,8 @@ class Parser:
                     "an instant carries its offset (§9, principle 11)",
                     code="GN205",
                 )
-            # an instant as its UTC time, exactly as Grafeo returns it; one whose UTC time is
-            # before year 1 or after 9999 cannot be held, and is refused as any unreadable value is
+            # an instant as its UTC time, exactly as Grafeo returns it. One whose UTC time is
+            # before year 1 or after 9999 cannot be held. It is refused as any unreadable value is
             try:
                 return v.astimezone(UTC).replace(tzinfo=None)
             except OverflowError:

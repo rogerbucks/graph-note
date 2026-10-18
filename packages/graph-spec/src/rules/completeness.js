@@ -17,7 +17,7 @@ const parkedState = (g, ds, today) =>
     ? 'overdue'
     : 'deferred';
 // {rules: one entry per Cardinality and Coverage, by id; deferred_malformed: Deferreds that do not say what and why}.
-// A gap parked by a Deferred is deferred, or overdue once every Deferred parking it is past revisit_by; `today`
+// A gap parked by a Deferred is deferred. It is overdue once every Deferred parking it is past revisit_by. `today`
 // (YYYY-MM-DD) is a parameter so the report is reproducible. The conformance suite requires Python's identical report.
 function completeness(g, today) {
   today = today || new Date().toISOString().slice(0, 10);

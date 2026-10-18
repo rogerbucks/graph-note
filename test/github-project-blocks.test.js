@@ -1,6 +1,6 @@
-// The blocked-by links of the GitHub mirror (spec §12, requirements_checked_in_ci): each open question's issue blocks the
-// issues of the requirements it blocks, with GitHub's own issue dependencies, kept one way from the requirements copy.
-// Every case runs against the in-memory stand-in for gh, so no network is touched.
+// The blocked-by links of the GitHub mirror (spec §12, requirements_checked_in_ci). Each open question's issue blocks
+// the issues of the requirements it blocks. It uses GitHub's own issue dependencies, kept one way from the requirements
+// copy. Every case runs against the in-memory stand-in for gh, so no network is touched.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';

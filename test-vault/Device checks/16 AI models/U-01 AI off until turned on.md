@@ -26,6 +26,6 @@
 
 **Checklist line:**
 
-> **U-01** With Use AI models off, as it is until you turn it on, run "Ask an AI model to propose changes" from the command palette: a notice says AI is off, no dialog opens, and nothing is sent. Turn it on with no model set up: the notice says to set one up. Obsidian has no AI of its own, so the dialog offers only the models you set up.
+> **U-01** Use AI models is off until you turn it on. With it off, run "Ask an AI model to propose changes" from the command palette. A notice says AI is off, no dialog opens, and nothing is sent. Turn it on with no model set up: the notice says to set one up. Obsidian has no AI of its own. So the dialog offers only the models you set up.
 
 **Back to the checklist:** [U-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for U-01 in its list.

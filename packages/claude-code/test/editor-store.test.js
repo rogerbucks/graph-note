@@ -1,9 +1,12 @@
-// The editor's note store (spec §26, slice 4; test_cc_store), against a real vault in a temporary folder, served by a
-// running server: notes by id only, never a path from the page; every escape refused (`..`, symlinks out, hidden
-// folders, other files); writes atomic and version-checked, a draft kept on conflict, outside the vault, and offered on
-// reopen; a change on disk streamed to the page and drawn again; undo never over another program's change; and a stop
-// that waits for a write under way and lets none start. A watcher fired by hand and file operations held at one step
-// stand in for timing: a test asserts the work done, never the time taken.
+// The editor's note store (spec §26, slice 4; test_cc_store). It runs against a real vault in a temporary folder,
+// served by a running server.
+// - Notes by id only, never a path from the page.
+// - Every escape refused (`..`, symlinks out, hidden folders, other files).
+// - Writes atomic and version-checked. A draft is kept on conflict, outside the vault, and offered on reopen.
+// - A change on disk streamed to the page and drawn again. Undo never over another program's change.
+// - A stop that waits for a write under way and lets none start.
+// A watcher fired by hand and file operations held at one step stand in for timing. A test asserts the work done,
+// never the time taken.
 import { test, describe, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';

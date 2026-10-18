@@ -1,5 +1,5 @@
-// The graph's summary (editor spec §24, details_always_visible): what the details panel shows, when it is kept open, while
-// nothing is chosen — how many things and links the graph has, of which kinds, and how many problems — in words, as text.
+// The graph's summary (editor spec §24, details_always_visible). The details panel shows it when it is kept open while
+// nothing is chosen. It says how many things and links the graph has, of which kinds, and how many problems, as text.
 import type { NoteReading } from '@thoughtknot/core';
 import { word } from '@thoughtknot/core';
 

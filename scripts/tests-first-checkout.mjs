@@ -23,7 +23,7 @@ export function checkout(repo, commit) {
   git(repo, 'worktree', 'add', '-q', '--detach', dir, commit);
   const modules = join(repo, 'node_modules');
   if (existsSync(modules)) {
-    // the installed packages, but this checkout's own workspace packages, so its code is what runs; the scopes come from
+    // the installed packages, but this checkout's own workspace packages, so its code is what runs. The scopes come from
     // the manifests, since a commit from before the rename names its packages under the old scope
     const own = workspaces(dir);
     const scopes = new Set(

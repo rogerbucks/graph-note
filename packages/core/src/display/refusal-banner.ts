@@ -1,6 +1,6 @@
-// Why a graph is shown as text instead of drawn (spec §9, layout_contained): a banner in plain words, saying which limit
-// the graph is over and the numbers, or how long its layout was given, with an icon beside the words, never colour alone.
-// The words are the core's (refusal-words.ts), shared with the browser editor's page.
+// Why a graph is shown as text instead of drawn (spec §9, layout_contained). A banner says in plain words which limit
+// the graph is over and the numbers, or how long its layout was given. An icon sits beside the words, never colour
+// alone. The words are the core's (refusal-words.ts), shared with the browser editor's page.
 import { refusalWords } from '../hosts/refusal-words';
 import type { Refusal } from '@thoughtknot/core';
 import { setIcon } from './host';

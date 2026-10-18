@@ -1,11 +1,12 @@
-// The interface's design tokens (editor spec §44, ui_theme_tokens and plugin_theme_tokens): one set of named tokens,
-// `--gn-*`, for colour, type, spacing, corners and depth, which every rule of the style sheets reads and nothing else of
-// a host's. Each host maps its own theme to the tokens in one place: Obsidian's sheet (styles.css) by the table here,
-// written out for each of the plugin's own elements, so the interface takes the theme's colours and sizes where it is
-// shown, as Obsidian's own does; the browser page's sheet from the theme it is built with. A plug-in inherits every token and may add colours of its own,
-// named under its id, each in light and dark and each meeting the locked contrast (§11) on the background it sits on.
-// The drawing's colours are not here: they come from the one colour mapping (palette.ts), and the drawing's own sheet
-// names its colours `--gn-text`, `--gn-page` and the like, which no token takes.
+// The interface's design tokens (editor spec §44, ui_theme_tokens and plugin_theme_tokens). One set of named tokens,
+// `--gn-*`, covers colour, type, spacing, corners and depth. Every rule of the style sheets reads them and nothing else
+// of a host's. Each host maps its own theme to the tokens in one place. Obsidian's sheet (styles.css) does it by the
+// table here, written out for each of the plugin's own elements. So the interface takes the theme's colours and sizes
+// where it is shown, as Obsidian's own does. The browser page's sheet does it from the theme it is built with. A
+// plug-in inherits every token and may add colours of its own, named under its id. Each is in light and dark, and each
+// meets the locked contrast (§11) on the background it sits on. The drawing's colours are not here: they come from the
+// one colour mapping (palette.ts). The drawing's own sheet names its colours `--gn-text`, `--gn-page` and the like,
+// which no token takes.
 import { THEME_COLOURS } from './palette.ts';
 
 /** What kind of thing a token holds. */
@@ -104,10 +105,11 @@ const FORCED_OTHER: Readonly<Record<string, string>> = {
 };
 
 /**
- * Forced colours (editor spec §44, forced_colours): each colour token as the system colour it takes when the system forces
- * its own, such as a high contrast theme of Windows: a background is the canvas, the accent and a selection the
- * highlight, a link the link colour, and every other colour, of text, line, mark or code, the canvas's text. No meaning
- * is lost with the hues, as none is said by colour alone (§5); each sheet writes this out under forced-colors.
+ * Forced colours (editor spec §44, forced_colours). Each colour token is given as the system colour it takes when the
+ * system forces its own, such as a high contrast theme of Windows. A background is the canvas; the accent and a
+ * selection are the highlight; a link is the link colour. Every other colour, of text, line, mark or code, is the
+ * canvas's text. No meaning is lost with the hues, as none is said by colour alone (§5). Each sheet writes this out
+ * under forced-colors.
  */
 export const FORCED_TOKEN_COLOURS: Readonly<Record<string, string>> = Object.freeze(
   Object.fromEntries(
@@ -117,7 +119,7 @@ export const FORCED_TOKEN_COLOURS: Readonly<Record<string, string>> = Object.fre
 
 /**
  * More contrast (editor spec §44, forced_colours): when the system asks for more contrast, secondary text, faint marks
- * and lines take the full text colour; each sheet writes this out under prefers-contrast: more.
+ * and lines take the full text colour. Each sheet writes this out under prefers-contrast: more.
  */
 export const MORE_CONTRAST_TOKENS: Readonly<Record<string, string>> = Object.freeze({
   '--gn-text-muted': 'var(--gn-text-normal)',
@@ -159,8 +161,8 @@ const shade = (from: string, to: string, p: number) => {
 };
 
 /**
- * The core backgrounds a plug-in's colour may sit on, in each theme: Obsidian's default themes, which the browser page's
- * theme gives as well (the secondary background is the page drawn 4 per cent towards the text in both).
+ * The core backgrounds a plug-in's colour may sit on, in each theme: Obsidian's default themes, which the browser
+ * page's theme gives as well. In both, the secondary background is the page drawn 4 per cent towards the text.
  */
 export const TOKEN_BACKGROUNDS: Readonly<Record<'--gn-bg' | '--gn-bg-alt', { light: string; dark: string }>> = {
   '--gn-bg': { light: THEME_COLOURS.light.page, dark: THEME_COLOURS.dark.page },
@@ -228,10 +230,12 @@ export function themeTokenProblem(t: ThemeToken, pluginId: string): string | nul
 }
 
 /**
- * The plug-ins' tokens as CSS a host applies: the light values at the root and under Obsidian's light theme class, the
- * dark ones when the system asks for dark (the browser page) and under Obsidian's dark theme class, which is on the body
- * and so wins over the root whichever the system asks; in forced colours, each the canvas's text, as the core's own
- * text and lines are. Nothing when there are none.
+ * The plug-ins' tokens as CSS a host applies:
+ * - the light values at the root and under Obsidian's light theme class;
+ * - the dark ones when the system asks for dark (the browser page), and under Obsidian's dark theme class. That class
+ *   is on the body, so it wins over the root whichever the system asks;
+ * - in forced colours, each the canvas's text, as the core's own text and lines are.
+ * Nothing when there are none.
  */
 export function themeTokenCss(tokens: readonly ThemeToken[]): string {
   if (!tokens.length) return '';

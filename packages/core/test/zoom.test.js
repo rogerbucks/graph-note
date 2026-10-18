@@ -1,7 +1,7 @@
-// Zoom, pan and full-screen (spec §3): Fit, zoom in and zoom out by button, gesture and key, between the fit of the whole
-// drawing (§25, zoom-fit.test.js) and four times natural size. The host passes plain events in; the zoom says whether
-// it used each one, so the host stops the browser's own handling only then — and the note still scrolls when the
-// drawing does not need the gesture.
+// Zoom, pan and full-screen (spec §3): Fit, zoom in and zoom out by button, gesture and key. They work between the fit
+// of the whole drawing (§25, zoom-fit.test.js) and four times natural size. The host passes plain events in. The zoom
+// says whether it used each one, so the host stops the browser's own handling only then. And the note still scrolls
+// when the drawing does not need the gesture.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Zoom, MAX_SCALE } from '../src/zoom.ts';
@@ -262,8 +262,8 @@ describe('pinching', () => {
     close(ay, mid[1]);
   });
 
-  // device check Z-03 (Roger, 11 Oct 2026): "pinch zoom in and out should be a little quicker" — 1.4 times the rate it
-  // was, which followed the fingers exactly: as a factor, each spread is raised to the power 1.4
+  // device check Z-03 (Roger, 11 Oct 2026): "pinch zoom in and out should be a little quicker". It is 1.4 times the
+  // rate it was, which followed the fingers exactly. As a factor, each spread is raised to the power 1.4
   test('a pinch zooms 1.4 times as fast as the fingers move: twice apart is 2 ** 1.4 times the size, half as far 2 ** -1.4', () => {
     // a drawing large enough to zoom out below natural size: one smaller than its view stops there (zoom_out_to_fit)
     const z = make('pane', { width: 2000, height: 2000 }, { width: 400, height: 400 });
@@ -321,8 +321,8 @@ describe('double tap', () => {
     close(z.view().scale, 0.5);
   });
 
-  // device check V-08 (Roger, 11 Oct 2026): "selecting by double-click also zooms" — a click near a box or a link chooses
-  // it (tap_cycles_near), so a double click there only chooses, as a double tap there does
+  // device check V-08 (Roger, 11 Oct 2026): "selecting by double-click also zooms". A click near a box or a link
+  // chooses it (tap_cycles_near). So a double click there only chooses, as a double tap there does
   test('double-clicking near a box or link, not on it, is left to the host: it selects, and never zooms', () => {
     const z = make();
     assert.equal(z.handle({ kind: 'dblclick', x: 100, y: 50, near: true }), false);

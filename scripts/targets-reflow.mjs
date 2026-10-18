@@ -1,6 +1,6 @@
 // Pointer targets and reflow, measured in a real browser (editor spec §41, a11y_targets_reflow_auto; WCAG 2.2 SC 2.5.8
-// and 1.4.10): each view of a host opened in a headless Chrome (chrome.mjs) as wide as a desktop and 320 CSS pixels
-// wide, every control the page holds measured there, and what was measured judged. Run by
+// and 1.4.10). Each view of a host is opened in a headless Chrome (chrome.mjs), as wide as a desktop and 320 CSS
+// pixels wide. Every control the page holds is measured there, and what was measured is judged. Run by
 // test/a11y-targets-reflow.test.js; the Obsidian host's views are the user guide's own states (wiki-screens.mjs).
 import { startChrome } from './chrome.mjs';
 import { SHOTS, open, serve } from './wiki-screens.mjs';
@@ -13,9 +13,11 @@ export const NARROW = 320;
 export const WIDE = 1400;
 
 /**
- * Run in the page: its width, how wide its content is, and every control a pointer can take that is shown, each named
- * by its tag and its accessible name or text, numbered when the name repeats. A control in the drawing (two-dimensional
- * content) or a link inside a sentence (inline) is marked so, and one in a box of its own that scrolls sideways too.
+ * Run in the page. Gives its width, how wide its content is, and every shown control a pointer can take. Each control
+ * is named by its tag and its accessible name or text, numbered when the name repeats. Some controls are marked so:
+ * - one in the drawing (two-dimensional content);
+ * - a link inside a sentence (inline);
+ * - one in a box of its own that scrolls sideways.
  * A control of a pixel or less is only for a screen reader, and left out.
  */
 export const MEASURE = `(() => {
@@ -54,7 +56,7 @@ const reach = (c, width) => c.scrolls || (c.left >= -1 && c.right <= width + 1);
 
 /**
  * What is wrong with a view, measured wide and narrow: each finding a sentence naming the view. `narrow` is one measure,
- * or one for each tab a phone's layout shows in the view's place (the edit pane's Drawing and Text), and a control seen
+ * or one for each tab a phone's layout shows in the view's place (the edit pane's Drawing and Text). A control seen
  * wide must be on one of them. A control out of reach wide too, as a skip link is until focused, is placed so on purpose.
  */
 export function findings(view, wide, narrow) {
@@ -128,7 +130,7 @@ const tab = (label) =>
 
 /**
  * The Claude Code host's views: the note opened, then each of the choosers under its graph opened. At a phone's width
- * the edit pane shows its Drawing and its Text as tabs, one at a time, so each view is measured narrow on each tab.
+ * the edit pane shows its Drawing and its Text as tabs, one at a time. So each view is measured narrow on each tab.
  */
 const PHONE_TABS = [[tab('Text')], [tab('Drawing')]];
 export const PAGE_VIEWS = [

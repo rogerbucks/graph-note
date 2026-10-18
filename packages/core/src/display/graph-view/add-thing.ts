@@ -1,7 +1,8 @@
-// Adding a thing in a drawing (spec §5, add_thing; §4, name_from_text, suggested_name_unique): while the card is edited,
-// Add a thing asks for the thing's text first, and suggests its name from the text as it is typed — in the style of the
-// graph's names, never one of them — shown before anything is written. Add the thing then writes it into the text being
-// edited, as one edit an undo takes back. A name of the user's own is kept as the text changes, and held to the same rules.
+// Adding a thing in a drawing (spec §5, add_thing; §4, name_from_text, suggested_name_unique). While the card is
+// edited, Add a thing asks for the thing's text first. It suggests its name from the text as it is typed, in the style
+// of the graph's names, never one of them. The name is shown before anything is written. Add the thing then writes it
+// into the text being edited, as one edit an undo takes back. A name of the user's own is kept as the text changes, and
+// held to the same rules.
 import { addThing, suggestName, word } from '@thoughtknot/core';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';

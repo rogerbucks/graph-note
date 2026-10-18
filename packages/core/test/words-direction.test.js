@@ -1,5 +1,5 @@
-// The direction the interface is read in follows the host (editor spec §42, rtl_mirrors): the direction of its language,
-// unless the host says its own, set as a host is installed and given to the root of each view.
+// The direction the interface is read in follows the host (editor spec §42, rtl_mirrors). It is the direction of its
+// language, unless the host says its own. It is set as a host is installed and given to the root of each view.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';

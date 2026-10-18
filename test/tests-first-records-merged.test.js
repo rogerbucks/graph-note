@@ -1,7 +1,8 @@
-// The records of the tests-first replay (spec §12, tests_first) when branches meet: two branches merged by git's own merge
-// with no merge driver, as GitHub merges, and the old single files, test/tests-first.json and test/seen-failing.json,
-// moved over into the folders that replaced them on 11 Oct 2026. Split from tests-first-records.test.js on that day, so
-// the suite runs them side by side.
+// The records of the tests-first replay (spec §12, tests_first) when branches meet:
+// - two branches merged by git's own merge with no merge driver, as GitHub merges;
+// - the old single files, test/tests-first.json and test/seen-failing.json, moved over into the folders that replaced
+//   them on 11 Oct 2026.
+// Split from tests-first-records.test.js on that day, so the suite runs them side by side.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -149,7 +150,7 @@ describe('moving the old single files over', () => {
     const dir = old();
     try {
       const newer = excuse(dir, 'test/twice.test.js', 'already true', 'main’s newer evidence, written since');
-      // a copy the same as main's is simply there already, and needs no choice
+      // a copy the same as main's is there already, and needs no choice
       const same = OLD_REASONS['py/tests/test_half.py']['Half.test_one'];
       excuse(dir, 'py/tests/test_half.py', 'Half.test_one', same.evidence);
       const said = migrate(dir).join('\n');

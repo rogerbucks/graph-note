@@ -33,10 +33,10 @@ function configFrom(d) {
   ]); // no engine here: a GQL constraint runs as its named twin
   return config;
 }
-// A join request answered end to end: each document read, normalised and validated, then joined — merge3 of the
-// first two over the base when there is one, union otherwise — and finished. The answer's rows, claims, pairs,
-// paradoxes, nodes and relationships are sorted and written as JSON values, to compare with the Python library's;
-// switches turn single steps off ('base-dates', 'validate', 'base').
+// A join request answered end to end. Each document is read, normalised and validated, then joined, and finished.
+// The join is merge3 of the first two over the base when there is one, union otherwise. The answer's rows, claims,
+// pairs, paradoxes, nodes and relationships are sorted and written as JSON values. That is to compare with the Python
+// library's. Switches turn single steps off ('base-dates', 'validate', 'base').
 function joinDocs(q) {
   // q: {docs: [block], base: block|null, config, findings, checks, hold, switches}
   const config = configFrom(q.config),

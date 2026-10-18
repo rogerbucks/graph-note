@@ -1,5 +1,5 @@
-// Builds a page that shows the plugin drawing a sample note in an ordinary browser, for looking at it and trying the
-// controls before it goes onto a device: node packages/obsidian/harness/build.mjs <folder>
+// Builds a page that shows the plugin drawing a sample note in an ordinary browser. It is for looking at it and trying
+// the controls before it goes onto a device. Run: node packages/obsidian/harness/build.mjs <folder>
 import esbuild from 'esbuild';
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';

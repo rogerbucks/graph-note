@@ -1,8 +1,9 @@
-// The same edit writes the same bytes in the browser editor and in Obsidian (editor spec §26, cc_same_bytes), proved by
-// shared cases: each case is the text typed into a note's block, and the note that results is read from both hosts, the
-// browser editor's `EditorSession` (what the page sends the server) and the Obsidian plugin's edit pane (what it writes
-// to the vault), loaded as its own tests load it. Both take the write from the core's session, and the display layer
-// they now share (workstream C4) must not change it: the cases hold that, byte for byte, and for Undo and Redo too.
+// The same edit writes the same bytes in the browser editor and in Obsidian (editor spec §26, cc_same_bytes). Shared
+// cases prove it. Each case is the text typed into a note's block. The note that results is read from both hosts:
+// - the browser editor's `EditorSession` (what the page sends the server);
+// - the Obsidian plugin's edit pane (what it writes to the vault), loaded as its own tests load it.
+// Both take the write from the core's session. The display layer they now share (workstream C4) must not change it.
+// The cases hold that, byte for byte, and for Undo and Redo too.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -79,9 +80,9 @@ describe('the same edit writes the same bytes in the browser editor and in Obsid
   });
 });
 
-// C8: the edits the page makes through its own controls. The browser page's one control that writes is the proposal card's
-// Accept and Reject; the details, the properties and the drawing's edits are not on the page (they are the Obsidian
-// plugin's), so the page-control cases are these. Each is made on the same note in both hosts, and the bytes compared.
+// C8: the edits the page makes through its own controls. The browser page's one control that writes is the proposal
+// card's Accept and Reject. The details, the properties and the drawing's edits are not on the page (they are the
+// Obsidian plugin's). So the page-control cases are these. Each is made on the same note in both hosts, and the bytes compared.
 describe('a decision on a proposal writes the same bytes through the page’s card and Obsidian’s strip', () => {
   const GRAPH =
     "// graph: reader\n(question:Question {name: 'Which device?'}),\n(large_reader:Option {name: 'Large reader', price: 3}),\n(alice:Person {name: 'Alice'}),\n(large_reader)-[:ANSWERS]->(question)";

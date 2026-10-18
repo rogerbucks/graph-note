@@ -1,5 +1,6 @@
-// The state of a graph a proposal is made against (editor spec §17, proposal_provenance): graph-spec's own, so a change set
-// made against it is checked as made "against the graph as it stands"; and whether the graph has moved since.
+// The state of a graph a proposal is made against (editor spec §17, proposal_provenance). It is graph-spec's own, so a
+// change set made against it is checked as made "against the graph as it stands". This also tests whether the graph has
+// moved since.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';

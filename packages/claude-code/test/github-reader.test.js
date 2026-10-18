@@ -1,8 +1,10 @@
-// The repository's changes read from GitHub in the browser editor's server (editor spec §41, github_review_items): a
+// The repository's changes read from GitHub in the browser editor's server (editor spec §41, github_review_items). A
 // stand-in for the user's gh, put first on the PATH, keeps every command it is given and answers as GitHub would. The
-// note lives in a real git repository whose origin is on github.com. Nothing is read until the page asks; gh is asked
-// for GET alone, on github.com alone, and is handed no token; a change is opened only once listed; and every file's
-// text is held to the gate before it is sent.
+// note lives in a real git repository whose origin is on github.com.
+// - Nothing is read until the page asks.
+// - gh is asked for GET alone, on github.com alone, and is handed no token.
+// - A change is opened only once listed.
+// - Every file's text is held to the gate before it is sent.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';

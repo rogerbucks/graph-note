@@ -1,5 +1,5 @@
-// The layout source of a drawing — the Graphviz text it is laid out from — byte-identical to graph_svg.py's (spec §12),
-// written by the graph library's own port of dot_source, with the locked style (spec §3, "one style").
+// The layout source of a drawing, the Graphviz text it is laid out from. It is byte-identical to graph_svg.py's (spec
+// §12), written by the graph library's own port of dot_source. It has the locked style (spec §3, "one style").
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 // The locked style lives in the library beside graph_svg.py, its first reader: one file, read by both renderers.
 import STYLE from '../../../python/graph_spec/src/graph_svg.style.json' with { type: 'json' };
@@ -19,7 +19,7 @@ export interface LayoutSource {
 
 /**
  * The Graphviz source for a drawing, laid out across (LR) or down (TB). A box drawn under a suggested name (spec §4) is
- * dashed and labelled as suggested here, as graph_svg.py marks it, so every reader draws it alike.
+ * dashed and labelled as suggested here. That is as graph_svg.py marks it, so every reader draws it alike.
  */
 export function layoutSource(d: GraphDrawing, rankdir: 'LR' | 'TB'): LayoutSource {
   const [source, kinds, readings] = GraphLayout.dotSource(
@@ -33,9 +33,9 @@ export function layoutSource(d: GraphDrawing, rankdir: 'LR' | 'TB'): LayoutSourc
 }
 
 /**
- * The source the drawing is laid out from: the layout source, with estimated links (spec §3) drawn dashed and marked with
- * a warning sign and the word "estimated" — so a guess is never shown by line style alone. With no estimates it is the
- * layout source exactly, as graph_svg.py writes it.
+ * The source the drawing is laid out from: the layout source, with estimated links (spec §3) drawn dashed. They are
+ * marked with a warning sign and the word "estimated", so a guess is never shown by line style alone. With no estimates
+ * it is the layout source exactly, as graph_svg.py writes it.
  */
 export function drawingSource(d: GraphDrawing, rankdir: 'LR' | 'TB'): string {
   const lines = layoutSource(d, rankdir).source.split('\n');

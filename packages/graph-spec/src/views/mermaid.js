@@ -17,8 +17,9 @@ function caption(g, i) {
 // A relationship type's reading (§5); undeclared (a draft), the type's own words: COUNTS_AGAINST -> counts against.
 // A double quote becomes a single one, which Mermaid's label cannot hold.
 const word = (typeWords, t) => ((typeWords.get(t) || [])[0] || t.replace(/_/g, ' ').toLowerCase()).replace(/"/g, "'");
-// The graph's knowledge as a Mermaid flowchart: every node but the schema's, every relationship between them,
-// labelled by its reading (§5), or its type if none is declared. Sorted, so the text is the same as graph_rules.py's.
+// The graph's knowledge as a Mermaid flowchart: every node but the schema's, and every relationship between them.
+// Each relationship is labelled by its reading (§5), or its type if none is declared. Sorted, so the text is the same
+// as graph_rules.py's.
 function mermaidGraph(g, shared) {
   const ids = strSort([...g.nodes.keys()].filter((i) => !SCHEMA_LABELS.some((label) => g.nodes.get(i)[0].has(label)))),
     v = new Map(ids.map((i, k) => [i, 'n' + k])),

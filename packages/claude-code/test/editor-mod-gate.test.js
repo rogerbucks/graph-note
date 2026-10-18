@@ -1,7 +1,7 @@
-// The gate's hardening from the security review of #475 (editor spec §26, cc_classified_asks): only the person typing in
-// the composer can say yes, and the yes goes to the server for the content it was given about. The gate's own cases,
-// asking, the highest classification and credentials, are in editor-mod.test.js (test_cc_mod); these are kept apart
-// so that file stays short, and run in the same suite.
+// The gate's hardening from the security review of #475 (editor spec §26, cc_classified_asks). Only the person typing
+// in the composer can say yes. The yes goes to the server for the content it was given about. The gate's own cases are
+// in editor-mod.test.js (test_cc_mod): asking, the highest classification and credentials. These are kept apart so that
+// file stays short, and run in the same suite.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { COMPOSER, launcherFor, modVault, partsOf, writeNote } from './editor-mod-support.js';

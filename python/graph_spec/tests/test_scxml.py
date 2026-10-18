@@ -96,9 +96,9 @@ class ScxmlKeepsNotes(unittest.TestCase):
         self.assertNotIn("<!--", to_scxml(plain(PROCESS)))
 
 
-# two transitions with the same ends, the first written holding the note: the note is the first's
-# whatever order a source gives the transitions in, as the core puts a note on the first link
-# written with its ends
+# Two transitions with the same ends, the first written holding the note. The note is the first's,
+# whatever order a source gives the transitions in. The core puts a note on the first link
+# written with its ends in the same way.
 ORDERED = "\n".join(
     [
         "// graph: loan_process",

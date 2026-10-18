@@ -1,6 +1,7 @@
-// Draws every gql block of the sample note with the real plugin bundle, as Obsidian's reading view would; and, as
-// Obsidian does, draws a block again when its text in the note changes: the old card leaves the page first, and the new
-// one is built after — on the page, as reading view does, or with ?live off it and put there once drawn, as Live Preview.
+// Draws every gql block of the sample note with the real plugin bundle, as Obsidian's reading view would. As Obsidian
+// does, it draws a block again when its text in the note changes. The old card leaves the page first. The new one is
+// built after. It goes on the page, as reading view does. Or, with ?live, it is built off it and put there once drawn,
+// as Live Preview does.
 import Plugin from '../src/main.ts';
 import { processors, files } from 'obsidian';
 import note from './sample.md';
@@ -106,11 +107,11 @@ async function readingView() {
       const was = shown[i];
       if (!was || was.source === block.source) return;
       redraw(was, block, text);
-      // as Obsidian's reading view does after a write (seen on Roger's Mac, 9 Oct 2026): the block drawn a second time,
-      // some 20 ms after the first
+      // as Obsidian's reading view does after a write (seen on Roger's Mac, 9 Oct 2026). The block is drawn a second
+      // time, some 20 ms after the first
       if (twice) setTimeout(() => redraw(was, block, text), 20);
-      // as reading view also does (seen on Roger's Mac, 9 Oct 2026): the new card taken off the page and put back as it
-      // was, some 20 ms after it is drawn, with no drawing in between
+      // as reading view also does (seen on Roger's Mac, 9 Oct 2026). The new card is taken off the page and put back as
+      // it was. This is some 20 ms after it is drawn, with no drawing in between
       if (reattach)
         setTimeout(() => {
           const mark = document.createComment('again');

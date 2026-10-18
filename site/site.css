@@ -1,5 +1,5 @@
-/* The project's home page (spec §41, landing_page): one sheet, a light scheme and a dark one by the system's choice, every
-   side said by where reading starts and ends so the page mirrors for a right-to-left language. */
+/* The project's home page (spec §41, landing_page). One sheet, with a light scheme and a dark one by the system's
+   choice. Every side is said by where reading starts and ends, so the page mirrors for a right-to-left language. */
 :root {
   --page: #ffffff;
   --surface: #f4f2fb;

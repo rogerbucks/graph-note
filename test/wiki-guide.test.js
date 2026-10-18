@@ -1,6 +1,6 @@
-// The user guide in the wiki (spec §41, user_guide_wiki): a page in plain words for people who are not technical, its
-// pictures taken from the current build by scripts/wiki-screens.mjs, and its list of settings made from the editor's
-// own options. Pure: no browser is started; the pictures' list and the guide are held against each other.
+// The user guide in the wiki (spec §41, user_guide_wiki). It is a page in plain words for people who are not technical.
+// Its pictures are taken from the current build by scripts/wiki-screens.mjs. Its list of settings is made from the
+// editor's own options. Pure: no browser is started; the pictures' list and the guide are held against each other.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { OPTIONS } from '../packages/core/src/settings.ts';

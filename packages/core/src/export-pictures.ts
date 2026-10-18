@@ -1,10 +1,10 @@
-// The pictures on boxes in an exported image (editor spec §16, export_animation_stated; §18; §11): each embedded in the
-// file itself as a data address, so the image stays self-contained and loads nothing. An SVG keeps an animated image
-// moving where its limits allow (image-limits.ts), with its first frame beside it, which the image's own style sheet,
-// scoped under its class, shows instead under reduced motion (motion_reduced_respected); a PNG cannot move, so each is
-// reduced to its first frame, as is one past a limit; and what was done with each animated image is said, a line each,
-// for the host's notice and the image's own frame. A still image is embedded as it is, with nothing to say. The host
-// loads the files (`PictureLoad`): the core never reads the vault.
+// The pictures on boxes in an exported image (editor spec §16, export_animation_stated; §18; §11). Each is embedded in
+// the file itself as a data address, so the image stays self-contained and loads nothing. An SVG keeps an animated
+// image moving where its limits allow (image-limits.ts), with its first frame beside it. Under reduced motion the
+// image's own style sheet, scoped under its class, shows that frame instead (motion_reduced_respected). A PNG cannot
+// move, so each is reduced to its first frame, as is one past a limit. What was done with each animated image is said,
+// a line each, for the host's notice and the image's own frame. A still image is embedded as it is, with nothing to
+// say. The host loads the files (`PictureLoad`): the core never reads the vault.
 import { inImage, withStyleSheet } from './export-motion.ts';
 import type { ImageFacts } from './image-facts.ts';
 import { IMAGE_LIMITS, pastLimit } from './image-limits.ts';
@@ -12,7 +12,10 @@ import type { GraphDrawing } from './note-reading.ts';
 import type { Palette } from './palette.ts';
 import { PICTURE_MARK } from './picture.ts';
 
-/** An image a host has loaded for an export: its file's name, type, bytes in base64 and size, what its bytes say, and its first frame. */
+/**
+ * An image a host has loaded for an export. It has its file's name, type, bytes in base64 and size, what its bytes say,
+ * and its first frame.
+ */
 export interface LoadedImage {
   name: string;
   mime: string;
@@ -37,9 +40,9 @@ export type PictureLoad = (value: string) => Promise<LoadedImage | UnreadImage |
 export type PictureLoaded = LoadedImage | UnreadImage | { why: string } | undefined;
 
 /**
- * The types an image is embedded as: the only words ever written into the file before its bytes, so a type a host
- * gives can never close the attribute and write markup of its own. An image is only ever embedded as an image element
- * from a data address, never put inline: an SVG attachment written into the file would run as part of it.
+ * The types an image is embedded as: the only words ever written into the file before its bytes. So a type a host gives
+ * can never close the attribute and write markup of its own. An image is only ever embedded as an image element from a
+ * data address, never put inline. An SVG attachment written into the file would run as part of it.
  */
 const EMBEDDED = new Set([
   'image/gif',
@@ -86,10 +89,10 @@ const imageAt = (cls: string, at: ReturnType<typeof placeOf>, mime: string, base
   `preserveAspectRatio="xMidYMid meet" href="data:${mime};base64,${base64}"/>`;
 
 /**
- * A drawn SVG (themed, before its frame) with each picture's square filled: by the image loaded for it, moving in an SVG
- * that may move (`moving`) when animated and within the limits, else its first frame; by a dashed frame when none was.
- * With what was done with each animated image, and why a picture was not drawn, a line each: none when nothing was
- * loaded at all (`loaded` empty).
+ * A drawn SVG (themed, before its frame) with each picture's square filled. The image loaded for it fills it, moving in
+ * an SVG that may move (`moving`) when animated and within the limits. Else its first frame fills it. A dashed frame
+ * fills it when none was loaded. It comes with what was done with each animated image, and why a picture was not drawn,
+ * a line each. None when nothing was loaded at all (`loaded` empty).
  */
 export function withPictures(
   svg: string,

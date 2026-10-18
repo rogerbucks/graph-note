@@ -1,8 +1,8 @@
-// The settings the page shows (spec §26, cc_settings_shared): the same ThoughtKnot settings the mod reads from its data
-// folder, which the mod hands the server in its environment (`THOUGHTKNOT_EDITOR_SETTINGS`), read back by the core as the
-// plugin reads them, so a missing or out-of-range one is its default. They are read only: `GET /api/settings` answers, a
-// write is refused, and the page has nothing to change them with. No AI model is passed on, as Claude is the only AI the
-// browser editor offers (cc_claude_only), and none of a model's address or key is ever held here.
+// The settings the page shows (spec §26, cc_settings_shared). They are the same ThoughtKnot settings the mod reads from
+// its data folder. The mod hands them to the server in its environment (`THOUGHTKNOT_EDITOR_SETTINGS`). The core reads
+// them back as the plugin reads them. So a missing or out-of-range one is its default. They are read only. `GET
+// /api/settings` answers, a write is refused, and the page has nothing to change them with. No AI model is passed on,
+// as Claude is the only AI the browser editor offers (cc_claude_only). None of a model's address or key is held here.
 import { settingsFrom } from '@thoughtknot/core';
 import type { ApiHandler } from './start-server.ts';
 

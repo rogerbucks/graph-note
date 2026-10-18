@@ -1,6 +1,9 @@
-// The project fields of the GitHub mirror that are not a single choice, each derived and never authored: Closed on (from
-// each issue's closedAt), Wave (an iteration field, from the waves plan) and Order (a number, from the same plan), and
-// the rule Started on is set by. Every case runs against the in-memory stand-in for gh (test/repository/github-project-
+// The project fields of the GitHub mirror that are not a single choice. Each is derived and never authored:
+// - Closed on, from each issue's closedAt.
+// - Wave, an iteration field, from the waves plan.
+// - Order, a number, from the same plan.
+// - The rule Started on is set by.
+// Every case runs against the in-memory stand-in for gh (test/repository/github-project-
 // fake.js), so no network is touched. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

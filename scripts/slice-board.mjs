@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Prints a self-contained HTML progress board for the slice being built (spec §12, requirements_checked_in_ci), read
-// from the generated requirements copy with the repo's own graph-spec reader. A requirement is proved when it names a
-// test and every one is written, part when some are, open otherwise. The board counts the requirements whose slice
-// equals N exactly, unlike check-requirements.mjs, which holds every slice up to the current one (<=). Its overview says
-// whether the slice is done (done_means_proved), as check-requirements.mjs's `sliceDone` says it. The page is CSS
-// only (its stylesheet is slice-board-style.mjs): no script, font, image or request, so it opens offline, and it
-// switches between three altitudes (Overview, Working, Full) with radio inputs. readBoard also reads the copy's open
-// questions, which the GitHub mirror uses; the board itself does not show them.
+// Prints a self-contained HTML progress board for the slice being built (spec §12, requirements_checked_in_ci). It is
+// read from the generated requirements copy with the repo's own graph-spec reader. A requirement is proved when it
+// names a test and every one is written, part when some are, open otherwise. The board counts the requirements whose
+// slice equals N exactly, unlike check-requirements.mjs, which holds every slice up to the current one (<=). Its
+// overview says whether the slice is done (done_means_proved), as check-requirements.mjs's `sliceDone` says it. The
+// page is CSS only (its stylesheet is slice-board-style.mjs). It has no script, font, image or request, so it opens
+// offline. It switches between three altitudes (Overview, Working, Full) with radio inputs. readBoard also reads the
+// copy's open questions, which the GitHub mirror uses; the board itself does not show them.
 //
 // Usage:
 //   node scripts/slice-board.mjs [--slice N] [--prs FILE] [--date YYYY-MM-DD] [--standalone] > board.html
@@ -33,8 +33,8 @@ const MEANINGS = {
 };
 
 /**
- * The status of a requirement from its tests: proved, part or open. Only written tests prove: a partial test (its file
- * is there but does not yet prove every rule) makes the requirement part, in progress, and never proved.
+ * The status of a requirement from its tests: proved, part or open. Only written tests prove. A partial test makes the
+ * requirement part, in progress, and never proved: its file is there but does not yet prove every rule.
  */
 export function statusOf(tests) {
   const written = tests.filter((t) => t.status === 'written').length;
@@ -120,7 +120,7 @@ export function summariseBySection(requirements, sections, slice) {
 
 /**
  * A pull request's CI rollup as {passed, failed, running}, from check runs and from commit statuses. A rollup that is
- * not a list counts nothing, an entry that is not an object is skipped, and one with neither status nor state is running.
+ * not a list counts nothing. An entry that is not an object is skipped. One with neither status nor state is running.
  */
 export function summariseChecks(rollup) {
   const counts = { passed: 0, failed: 0, running: 0 };
@@ -262,9 +262,12 @@ ${prs.length ? `<ul>${prs.map(prItem).join('\n')}</ul>` : '<p>No pull requests a
 </section>`;
 
 /**
- * The page for one slice: {sections, requirements} as readBoard gives them, the slice number, the date shown in the
- * banner, the pull requests gh prints (omit for no panel), whether to wrap it as a whole document, and whether the slice
- * is done, as check-requirements.mjs's `sliceDone` gives it (omit to say nothing of it).
+ * The page for one slice. It takes:
+ * - {sections, requirements} as readBoard gives them;
+ * - the slice number, and the date shown in the banner;
+ * - the pull requests gh prints (omit for no panel);
+ * - whether to wrap it as a whole document;
+ * - whether the slice is done, as check-requirements.mjs's `sliceDone` gives it (omit to say nothing of it).
  */
 export function renderBoard({ sections, requirements, slice, date, prs, standalone = false, done }) {
   const board = { sections, requirements };

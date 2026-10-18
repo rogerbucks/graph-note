@@ -1,8 +1,9 @@
-// The repository's changes to review in the browser editor (editor spec §41, github_review_items): the page as built, in
-// a DOM, against the real server, with GitHub read by a stand-in the test hands the store. "Review a change from
-// GitHub…" reads nothing until pressed; the change picked is shown in levels, from a summary by section, workstream and
-// requirement, through each graph drawn in the changes view, down to every line, each marked by a sign; and a
-// repository that cannot be read says why.
+// The repository's changes to review in the browser editor (editor spec §41, github_review_items). The page runs as
+// built, in a DOM, against the real server. GitHub is read by a stand-in the test hands the store.
+// - "Review a change from GitHub…" reads nothing until pressed.
+// - The change picked is shown in levels. The top is a summary by section, workstream and requirement. Next is each
+//   graph drawn in the changes view. Last is every line, each marked by a sign.
+// - A repository that cannot be read says why.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { until } from '../../obsidian/test/host/load-plugin.js';

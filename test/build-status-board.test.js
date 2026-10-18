@@ -1,6 +1,8 @@
-// The Build status field of the project, read and written for the build status: each requirement’s item and issue, its
-// current value, the value set by the id of its option, and every trouble that is the board’s own (no project, no field,
-// no option). The issues are read with the workflow’s token and only the project with the project token. Every case runs
+// The Build status field of the project, read and written for the build status. It covers:
+// - each requirement’s item and issue, and its current value.
+// - the value set by the id of its option.
+// - every trouble that is the board’s own (no project, no field, no option).
+// The issues are read with the workflow’s token and only the project with the project token. Every case runs
 // against in-memory stand-ins for gh, so no network is touched. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

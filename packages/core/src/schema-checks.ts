@@ -1,6 +1,7 @@
-// What a graph's schema leaves undeclared (graph spec model §5): types its GraphMeta does not DECLARE, as in a graph locked
-// by an earlier build, and, in a locked graph, kinds and link types its blocks use that the schema does not declare.
-// Warnings, each on the line where the block first says it, with a fix where one can be written.
+// What a graph's schema leaves undeclared (graph spec model §5). These are types its GraphMeta does not DECLARE, as in
+// a graph locked by an earlier build. In a locked graph, they are also kinds and link types its blocks use that the
+// schema does not declare. Warnings, each on the line where the block first says it, with a fix where one can be
+// written.
 import gs from '@thoughtknot/graph-spec';
 import type { World } from '@thoughtknot/graph-spec';
 import { blankText } from './block-items.ts';
@@ -17,9 +18,9 @@ const THING = new RegExp(`\\(${S}*([A-Za-z_]\\w*)${S}*((?::${S}*[A-Za-z_]\\w*${S
 const listed = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 
 /**
- * A schema whose types its GraphMeta does not declare (graph spec model §5: each ElementType is linked from the GraphMeta
- * by DECLARES) — as a graph locked by an earlier build is. One warning for each block that writes such types, on the
- * first, whose fix adds every DECLARES missing from that block, and a GraphMeta when the graph has none.
+ * A schema whose types its GraphMeta does not declare, as a graph locked by an earlier build is. In graph spec model
+ * §5, each ElementType is linked from the GraphMeta by DECLARES. One warning for each block that writes such types, on
+ * the first. Its fix adds every DECLARES missing from that block, and a GraphMeta when the graph has none.
  */
 export function undeclared(whole: World, texts: string[]): Problem[] {
   const out: Problem[] = [];
@@ -70,8 +71,8 @@ export function undeclared(whole: World, texts: string[]): Problem[] {
 }
 
 /**
- * In a locked graph, each kind and link type a block uses that the graph's schema does not declare (§5): a warning on the
- * line where the block first uses it — unless it is already drawn as an estimate of one the schema does declare.
+ * In a locked graph, each kind and link type a block uses that the graph's schema does not declare (§5). A warning on
+ * the line where the block first uses it, unless it is already drawn as an estimate of one the schema does declare.
  */
 export function undeclaredUse(whole: World, texts: string[], problems: Problem[]): Problem[] {
   const out: Problem[] = [];

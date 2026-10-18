@@ -1,8 +1,8 @@
 // How fast this machine is (spec §12, quality_ratchet): the time a fixed piece of plain work takes, in ms, the least of
 // seven runs. The quality metrics record it as `speed_index`, and scale their timings by it when machines differ
-// (scripts/quality-check.mjs). It is a loop with no branches, so it says how fast the machine runs plain work, and
-// nothing of how coverage slows the core's code; no test scales a time by it, as a test asserts the work done, never the
-// time taken (12 Oct 2026).
+// (scripts/quality-check.mjs). It is a loop with no branches. So it says how fast the machine runs plain work, and
+// nothing of how coverage slows the core's code. No test scales a time by it, as a test asserts the work done, never
+// the time taken (12 Oct 2026).
 
 // what the plain work gives, kept where the module can see it, so the work is never dropped as unused
 let sink = 0;

@@ -1,9 +1,10 @@
-// The editors open in place (spec §4, typing_keeps_focus; the review of #91, 11 Oct 2026): an editor whose card's block
-// is cut never goes to the block that comes to sit on its line, and comes back to its own block when it is pasted and
-// saved, even when the block that comes is another of the same graph; an editor is released, its typing written, when
-// its note is closed, whether its card was on the page or scrolled away, and an editor with nothing to open is never
-// kept, each leaving no listener behind, as after Done; and Edit here pressed again while the editor opens moves it into
-// the newer card only once it is made.
+// The editors open in place (spec §4, typing_keeps_focus; the review of #91, 11 Oct 2026).
+// - An editor whose card's block is cut never goes to the block that comes to sit on its line. It comes back to its
+//   own block when it is pasted and saved, even when the block that comes is another of the same graph.
+// - An editor is released, its typing written, when its note is closed. This holds whether its card was on the page
+//   or scrolled away.
+// - An editor with nothing to open is never kept. Each case leaves no listener behind, as after Done.
+// - Edit here pressed again while the editor opens moves it into the newer card only once it is made.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -14,8 +15,8 @@ import { cardsOf, openNote, place } from './host/editing-view.js';
 before(() => build());
 
 /**
- * Closes every editor in place, as Done does, so that a field left off the page stops waiting to be given the focus
- * again before the test's page is taken down, whether the test passed or not.
+ * Closes every editor in place, as Done does. Then a field left off the page stops waiting to be given the focus again
+ * before the test's page is taken down. This holds whether the test passed or not.
  */
 async function closeAll(env) {
   for (const e of [...env.plugin.inline.open.keys()]) await e.done();
@@ -133,7 +134,7 @@ describe('an editor in place that outlives its note is released', () => {
     }
   });
 
-  // the third review of #91, 11 Oct 2026: an opening whose read failed was never released, and every later press waited
+  // the third review of #91, 11 Oct 2026: an opening whose read failed was never released. Every later press waited
   // on it, so Edit here on the block did nothing until Obsidian was reloaded
   test('Edit here when the note cannot be read: it says so, keeps no editor, and a later press opens one', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
@@ -161,7 +162,7 @@ describe('an editor in place that outlives its note is released', () => {
   });
 
   // the fourth review of #91, 11 Oct 2026: an error after the opening had its session, as from the shared schemas, was
-  // swallowed, and the editor kept, half open; and no error was ever logged
+  // swallowed. The editor was kept, half open. No error was ever logged
   test('an opening that fails after it has read the note: logged, said, and no editor kept', async () => {
     const uses = fence("// graph: view · schema seeing@1\n(a:Thing {name: 'A'})");
     const env = await load({ files: { 'View.md': uses } });

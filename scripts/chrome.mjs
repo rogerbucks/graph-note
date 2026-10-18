@@ -1,6 +1,6 @@
-// A headless Chrome driven over the DevTools protocol with Node's own WebSocket, so no browser library is installed:
-// the user guide's screenshots (wiki-screens.mjs) and the checks run in a real browser (spec §41: a11y_targets_reflow_auto)
-// share it. Chrome is the one given, or the first of the usual names on the PATH.
+// A headless Chrome driven over the DevTools protocol with Node's own WebSocket, so no browser library is installed.
+// The user guide's screenshots (wiki-screens.mjs) and the checks run in a real browser (spec §41:
+// a11y_targets_reflow_auto) share it. Chrome is the one given, or the first of the usual names on the PATH.
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -56,8 +56,11 @@ export async function run(send, expression) {
 }
 
 /**
- * Starts a headless Chrome on a fresh profile, its page `width` by `height` CSS pixels at `scale`: send speaks the
- * DevTools protocol, run runs a line of script in the page, resize sets a new width, and stop ends it all.
+ * Starts a headless Chrome on a fresh profile, its page `width` by `height` CSS pixels at `scale`.
+ * - send speaks the DevTools protocol.
+ * - run runs a line of script in the page.
+ * - resize sets a new width.
+ * - stop ends it all.
  */
 export async function startChrome({ chrome, width = 1400, height = 1000, scale = 2 } = {}) {
   const port = 9300 + Math.floor(Math.random() * 500);

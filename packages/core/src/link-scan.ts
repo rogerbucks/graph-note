@@ -1,8 +1,8 @@
-// Finding links in text (editor spec §18, links_shown, safe_to_click): a wikilink, an embed, a Markdown link or image, and
-// a bare web or mail address, each with where it is written, what it names and what kind it is. Each line is read once
-// through: every search for a closing mark goes on from where the last one stopped, so text full of openers that never
-// close costs no more than its length (spec §9). Only notes and files in the vault and web and mail addresses may be
-// opened; any other scheme, however it is disguised, is refused and shown as text.
+// Finding links in text (editor spec §18, links_shown, safe_to_click). A link is a wikilink, an embed, a Markdown link
+// or image, or a bare web or mail address. Each comes with where it is written, what it names and what kind it is. Each
+// line is read once through. Every search for a closing mark goes on from where the last one stopped. So text full of
+// openers that never close costs no more than its length (spec §9). Only notes and files in the vault and web and mail
+// addresses may be opened. Any other scheme, however it is disguised, is refused and shown as text.
 
 /** What a link is: a note or a file in the vault, a web or a mail address, or anything else, which is never opened. */
 export type LinkKind = 'note' | 'file' | 'web' | 'mail' | 'refused';
@@ -55,8 +55,9 @@ const SCHEME = /^([A-Za-z][A-Za-z0-9+.-]{0,30}):/;
 const ENTITY_WORDS: Record<string, string> = { colon: ':', tab: '', newline: '' };
 
 /**
- * The start of a link as a browser would read it: leading spaces and every control character dropped, and the HTML
- * entities that could spell a colon decoded, so `java\tscript:` and `javascript&#58;` are both seen for what they are.
+ * The start of a link as a browser would read it. Leading spaces and every control character are dropped. The HTML
+ * entities that could spell a colon are decoded. So `java\tscript:` and `javascript&#58;` are both seen for what they
+ * are.
  */
 function unmasked(target: string): string {
   let out = '';
@@ -104,8 +105,8 @@ function decoded(raw: string): string {
 }
 
 /**
- * Whether a Markdown destination may never be opened (safe_to_click): refused as written, or, for one that reads as a
- * note or a file, refused once percent-decoded as a host decodes it, so an encoded scheme is never let through.
+ * Whether a Markdown destination may never be opened (safe_to_click). It may be refused as written. One that reads as a
+ * note or a file is also refused once percent-decoded as a host decodes it. So an encoded scheme is never let through.
  */
 export function destinationRefused(raw: string): boolean {
   const kind = linkKind(raw);
@@ -113,8 +114,8 @@ export function destinationRefused(raw: string): boolean {
 }
 
 /**
- * A search for `s` in `line` that goes on from where it last stopped: asked from places that only move forward, each
- * character is looked at once. The line's length when there is none.
+ * A search for `s` in `line` that goes on from where it last stopped. Asked from places that only move forward, it
+ * looks at each character once. The line's length when there is none.
  */
 function seeker(line: string, s: string): (from: number) => number {
   let asked = Infinity,
@@ -279,8 +280,8 @@ export function linksIn(text: string): FoundLink[] {
 }
 
 /**
- * The link a host's own rendered link names by its address (`href`): an address, or a note or file with its heading,
- * judged as a written one is, so a rendered link is opened, previewed and refused by the same rules.
+ * The link a host's own rendered link names by its address (`href`). It is an address, or a note or file with its
+ * heading. It is judged as a written one is. So a rendered link is opened, previewed and refused by the same rules.
  */
 export function linkTo(href: string): FoundLink {
   const first = linkKind(href),

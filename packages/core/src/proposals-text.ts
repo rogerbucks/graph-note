@@ -1,13 +1,14 @@
-// A proposal as text (editor spec §17): graph-spec's change set (§24) — a block whose first line is
-// `// graph: G · CHANGE SET id · against <state> · by <author>`, then the things and links it adds as a block writes them,
-// then a statement for each of its other changes: a `SET thing.key = value`, or a `DELETE` of one thing or link. So every
+// A proposal as text (editor spec §17). It is graph-spec's change set (§24), a block whose first line is
+// `// graph: G · CHANGE SET id · against <state> · by <author>`. Then come the things and links it adds as a block
+// writes them. Then comes a statement for each of its other changes: a `SET thing.key = value`, or a `DELETE` of one
+// thing or link. So every
 // tool that reads GQL reads it, and graph-spec's own check (`checkChangeset`) reads it as the change set it is. The header
 // alone says what it was made against and who made it. A change's id is derived from its statement by the graph library
-// and never written; an optional `//@ reason:` line directly above a change gives the source's reason, and a `//@ group:`
-// line the group it is reviewed in when that is not the one its kind gives. When it was proposed and what it read are
-// comments (`// proposed:`, `// read:`) the check passes over. What a person decided is not here: an accepted change is
-// in the graph and a rejected one is nowhere, and both are kept as decisions in the judgement graph
-// (`proposals-judgement.ts`), so the block holds only what still waits.
+// and never written. An optional `//@ reason:` line directly above a change gives the source's reason. A `//@ group:`
+// line gives the group it is reviewed in, when that is not the one its kind gives. When it was proposed and what it
+// read are comments (`// proposed:`, `// read:`) the check passes over. What a person decided is not here. An accepted
+// change is in the graph and a rejected one is nowhere. Both are kept as decisions in the judgement graph
+// (`proposals-judgement.ts`). So the block holds only what still waits.
 //
 //   // graph: reader · CHANGE SET cs1 · against 05d75fdcbdb1d37b · by ada
 //   // proposed: 2026-10-13T09:00:00Z
@@ -34,9 +35,9 @@ export function changeSetId(block: string): { graph: string; id: string } | null
 export const oneWord = (s: string): string => s.replace(/[\s,]+/g, '_');
 
 /**
- * The change set for a proposal: the header, the facts a comment holds, the things and links it adds (the items of a run
- * parted by commas), then each other change as the statement it is. Each change has its group above it when that is not
- * the one its kind gives, and its reason, directly above.
+ * The change set for a proposal. It holds the header, the facts a comment holds, and the things and links it adds (the
+ * items of a run parted by commas). Then each other change as the statement it is. Each change has its group above it
+ * when that is not the one its kind gives, and its reason, directly above.
  */
 export function changeSetText(p: Proposal): string {
   const { by, at, read, basis } = p.provenance;
@@ -78,7 +79,7 @@ const metaOf = (lines: readonly string[], re: RegExp): string | undefined =>
   lines.map((l) => re.exec(trim(l))?.[1]).find((m) => m !== undefined);
 
 /**
- * A change set read back; or why it cannot be. It is read as the graph library's check reads it: the statements are the
+ * A change set read back; or why it cannot be. It is read as the graph library's check reads it. The statements are the
  * DELETEs and SETs it finds, each naming one target, and the rest are additions. A change set in the old form — removals,
  * ids and decisions as comments, which other tools skip — is refused, saying so.
  */

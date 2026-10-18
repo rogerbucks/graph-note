@@ -1,5 +1,7 @@
-// The community files (spec §13, community_files): a code of conduct that says how to report in private, a note that
-// the licence gives no right to the name, and the rule that every commit in a pull request is signed off.
+// The community files (spec §13, community_files). They are:
+// - a code of conduct that says how to report in private.
+// - a note that the licence gives no right to the name.
+// - the rule that every commit in a pull request is signed off.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { read } from './repository/repo.js';
@@ -17,4 +19,16 @@ test('the community files are present: a code of conduct, a trademark note and t
   assert.match(contributing, /Signed-off-by:/);
   assert.match(contributing, /https:\/\/developercertificate\.org/);
   assert.match(read('.github/pull_request_template.md'), /- \[ \] Every commit is signed off/);
+});
+
+// The security policy (spec §13, security_policy): which versions get fixes, a private way to report, and a reply time.
+test('the security policy names the supported versions, a private way to report and a reply time (Roger, 18 Oct 2026)', () => {
+  const policy = read('SECURITY.md');
+  assert.match(policy, /^# Security policy/m);
+  assert.match(policy, /^## Supported versions$/m);
+  assert.match(policy, /^## How to report a problem$/m);
+  assert.match(policy, /https:\/\/github\.com\/rogerbucks\/thoughtknot\/security\/advisories\/new/);
+  assert.match(policy, /not .*public issue/i);
+  assert.match(policy, /^## What happens next$/m);
+  assert.match(policy, /\d+ (working )?days/);
 });

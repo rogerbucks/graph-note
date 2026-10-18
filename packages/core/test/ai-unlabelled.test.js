@@ -1,8 +1,8 @@
-// A note with no classification (editor spec §19, unclassified_strictest; Roger, 14 Oct 2026): it counts as the most
-// sensitive level, so it goes only to a model cleared for everything, unless the user sets another default for
-// unlabelled notes. Nothing at the highest level goes to any model (never_credential), so by default an unlabelled note
-// goes to none, and the editor says why and what to change. The setting on Obsidian's page and its use there are tested
-// in packages/obsidian/test/ai-unlabelled.test.js.
+// A note with no classification (editor spec §19, unclassified_strictest; Roger, 14 Oct 2026). It counts as the most
+// sensitive level, so it goes only to a model cleared for everything. That holds unless the user sets another default
+// for unlabelled notes. Nothing at the highest level goes to any model (never_credential). So by default an unlabelled
+// note goes to none, and the editor says why and what to change. The setting on Obsidian's page and its use there are
+// tested in packages/obsidian/test/ai-unlabelled.test.js.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepareSend } from '../src/ai.ts';

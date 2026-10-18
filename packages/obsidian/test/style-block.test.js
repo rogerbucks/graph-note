@@ -1,6 +1,6 @@
 // The style graph in a note (editor spec §2, style_block_in_note, broken_style_block, style_graph_checked; §6,
-// four_nudge_words): a style block is shown folded away until opened, never drawn as a graph; the graph it styles is
-// drawn with its nudges; what is wrong in the style is listed with the graph's problems, and a style block that cannot be
+// four_nudge_words). A style block is shown folded away until opened, never drawn as a graph. The graph it styles is
+// drawn with its nudges. What is wrong in the style is listed with the graph's problems. A style block that cannot be
 // read never stops the drawing.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';

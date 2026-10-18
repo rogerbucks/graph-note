@@ -1,5 +1,5 @@
-// The rename from Graph Note to ThoughtKnot: the product's names, the repository's address and the GitHub Project's
-// title change, the kind of note keeps its name, and running it again changes nothing.
+// The rename from Graph Note to ThoughtKnot. The product's names, the repository's address and the GitHub Project's
+// title change. The kind of note keeps its name. Running it again changes nothing.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { renameText, renamePath } from '../scripts/rename-to-thoughtknot.mjs';

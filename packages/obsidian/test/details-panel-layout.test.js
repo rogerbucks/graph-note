@@ -1,7 +1,9 @@
-// How a thing's details read (editor spec §25, details_said, details_ins_outs, details_properties_table): a sentence at
-// the top saying what is going on; then its links in two labelled parts, in before out, each with its count, a group
-// headed by its reading and its things one to a row; then its properties as a table of name and value. The built
-// plugin, against the stand-ins.
+// How a thing's details read (editor spec §25, details_said, details_ins_outs, details_properties_table):
+// - A sentence at the top says what is going on.
+// - Then its links come in two labelled parts, in before out, each with its count.
+//   A group is headed by its reading, with its things one to a row.
+// - Then its properties come as a table of name and value.
+// The built plugin, against the stand-ins.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';

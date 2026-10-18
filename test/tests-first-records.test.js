@@ -1,8 +1,10 @@
-// The records of the tests-first replay (spec §12, tests_first), kept so that two branches never conflict in them: one
-// file for each replayed commit in test/tests-first/, over the frozen baseline.json. Proved here on small repositories
-// made for the purpose. The reasons a test passed before its code are tests-first-records-reasons.test.js; two branches
-// merged, and the old single files moved over, tests-first-records-merged.test.js; this repository's own records,
-// tests-first-records-history.test.js. Split on 11 Oct 2026, so the suite runs them side by side.
+// The records of the tests-first replay (spec §12, tests_first), kept so that two branches never conflict in them.
+// There is one file for each replayed commit in test/tests-first/, over the frozen baseline.json. Proved here on small
+// repositories made for the purpose. The rest is in other files:
+// - the reasons a test passed before its code: tests-first-records-reasons.test.js;
+// - two branches merged, and the old single files moved over: tests-first-records-merged.test.js;
+// - this repository's own records: tests-first-records-history.test.js.
+// Split on 11 Oct 2026, so the suite runs them side by side.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

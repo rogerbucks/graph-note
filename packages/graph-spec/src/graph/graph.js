@@ -36,8 +36,8 @@ class Graph {
     return (this._in.get(i) || []).filter((e) => t === undefined || e[1] === t);
   }
 }
-/** The world of a store: each graph by its name, in a table holding nothing but its graphs, so a graph called
- * `constructor` or `toString` is found as any other, and a name no graph has finds nothing. */
+/** The world of a store: each graph by its name, in a table holding nothing but its graphs. So a graph called
+ * `constructor` or `toString` is found as any other. A name no graph has finds nothing. */
 function worldFromStore(store) {
   const out = Object.create(null);
   for (const [g, stored] of Object.entries(store.graphs)) {
@@ -66,8 +66,8 @@ const schemaFor = (w, g) => {
   const name = own(w.__named, g);
   return [name, name ? own(w.__schemas, name) : undefined];
 };
-/** sha-256 of the RFC 8785 JSON of the graph: nodes by id, relationships by their own canonical text, a null
- * property left out and an instant with its +00:00, so the hash is the same in every language. */
+/** sha-256 of the RFC 8785 JSON of the graph. Nodes go by id, and relationships by their own canonical text. A null
+ * property is left out, and an instant keeps its +00:00. So the hash is the same in every language. */
 function canon(g) {
   const pr = (p) => {
     const o = {};

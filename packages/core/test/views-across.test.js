@@ -1,6 +1,6 @@
-// A view saved as shown (editor spec §7, view_saved_as_shown): when the user asks, a view's zoom, position, the area it
-// framed and what was selected are written in the style graph, never in the data; read back, they show the view as it
-// was. (The other parts of test_views_across, views drawn across notes, are slice 3.)
+// A view saved as shown (editor spec §7, view_saved_as_shown). When the user asks, a view's zoom, position, the area it
+// framed and what was selected are written in the style graph. They are never written in the data. Read back, they show
+// the view as it was. (The other parts of test_views_across, views drawn across notes, are slice 3.)
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';

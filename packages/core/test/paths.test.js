@@ -1,5 +1,6 @@
-// Walked paths (editor spec §7; graph spec §22): a path recorded from boxes tapped in order is stored as a Path node with
-// ordered STEP edges, plays step by step, and is reported when it steps through something removed or has no steps.
+// Walked paths (editor spec §7; graph spec §22). A path recorded from boxes tapped in order is stored as a Path node
+// with ordered STEP edges. It plays step by step. It is reported when it steps through something removed or has no
+// steps.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';

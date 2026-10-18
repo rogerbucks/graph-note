@@ -1,9 +1,10 @@
-// The drawing itself (spec §3, §11): the SVG the engine drew, put in the viewport, with each box and each link — written
-// or estimated — made reachable from the keyboard and named for screen readers, and the drawing told as sentences. A
-// drawing folded by the View menu (§25) has a stub for each busy hub and a box for each group folded, each a button
-// that opens it; a link merged into a trunk is tapped and named as itself by either of its lines. Words holding a link to
-// a note, a file or an address are drawn as a link, and a thing's attachments counted (§18, links/link-marks.ts). Laid
-// out again, the drawing is put in the same SVG element (`swapSvg`), so everything that holds it holds the new drawing.
+// The drawing itself (spec §3, §11): the SVG the engine drew, put in the viewport. Each box and each link, written or
+// estimated, is made reachable from the keyboard and named for screen readers. The drawing is told as sentences. A
+// drawing folded by the View menu (§25) has a stub for each busy hub and a box for each group folded. Each is a button
+// that opens it. A link merged into a trunk is tapped and named as itself by either of its lines. Words holding a link
+// to a note, a file or an address are drawn as a link. A thing's attachments are counted (§18, links/link-marks.ts).
+// Laid out again, the drawing is put in the same SVG element (`swapSvg`), so everything that holds it holds the new
+// drawing.
 import { textVersion, withoutColorMix } from '@thoughtknot/core';
 import type { Drawn, Folding, GraphDrawing } from '@thoughtknot/core';
 import { boxLabel } from './suggested-name';
@@ -20,8 +21,9 @@ function parsed(drawn: Drawn): SVGSVGElement {
   // CSS color-mix arrived in iOS 16.2, and Obsidian runs on iOS 15: without it a blend would draw black, so use the plain hue
   const mixes = typeof CSS === 'undefined' || CSS.supports('color', 'color-mix(in srgb, red 50%, blue)');
   const text = mixes ? drawn.svg : withoutColorMix(drawn.svg);
-  // where inline styles are forbidden (host.ts), no style attribute may be parsed from markup, not even in a parser's own
-  // document, which keeps the page's policy: each is renamed in the text, and its declarations set through the CSSOM
+  // where inline styles are forbidden (host.ts), no style attribute may be parsed from markup. That holds even in a
+  // parser's own document, which keeps the page's policy. Each is renamed in the text, and its declarations set through
+  // the CSSOM
   const inert = noInlineStyle();
   const svg = new DOMParser().parseFromString(inert ? liftStyles(text) : text, 'image/svg+xml').documentElement;
   const imported = activeDocument.importNode(svg, true) as unknown as SVGSVGElement;
@@ -51,8 +53,8 @@ function setLifted(root: SVGSVGElement): void {
 }
 
 /**
- * The drawing, parsed from its SVG text into the viewport, each box and link made reachable from the keyboard and named;
- * given the card's options, its links shown as links and its attachments counted (§18).
+ * The drawing, parsed from its SVG text into the viewport, each box and link made reachable from the keyboard and
+ * named. Given the card's options, its links are shown as links and its attachments counted (§18).
  */
 export function insertSvg(
   viewport: HTMLElement,

@@ -20,8 +20,6 @@
 
 **Checklist line:**
 
-> **H-07** Rename a note that a graph block links to, in the file explorer: the link inside the block changes to the
-> new name at once, its alias kept. With the note open in Live Preview while renaming, Command-Z takes the change
-> back.
+> **H-07** Rename a note that a graph block links to, in the file explorer. The link inside the block changes to the new name at once, its alias kept. With the note open in Live Preview while renaming, Command-Z takes the change back.
 
 **Back to the checklist:** [H-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-07 in its list.

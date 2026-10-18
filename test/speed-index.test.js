@@ -1,5 +1,5 @@
-// How fast the machine is, the one measure the quality metrics scale their timings by (spec §12, quality_ratchet): one
-// fixed piece of plain work, the least of seven runs.
+// How fast the machine is: the one measure the quality metrics scale their timings by (spec §12, quality_ratchet). It
+// is one fixed piece of plain work, the least of seven runs.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { plainWork, speedIndex } from '../scripts/speed-index.mjs';

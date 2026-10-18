@@ -1,10 +1,13 @@
-// The thin layer between the build status and GitHub (spec §12, requirements_checked_in_ci): it reads a pull request, the
-// requirements file at a ref, CI's run for a commit and the releases, and leaves the pull request's one comment. All the
-// thinking is in build-status.mjs; this layer only asks and tells, through runners handed in — run(args, input) gives
-// gh's output — so a test can hand in stand-ins and no network is touched. Two runners, each with its own token: the
-// workflow's own token for the repository (reads and the comment), and PROJECT_TOKEN for the project board alone (the
-// board is build-status-board.mjs). A pull request is only ever read as data through the API: no file of it is checked
-// out and none of its code is run.
+// The thin layer between the build status and GitHub (spec §12, requirements_checked_in_ci). It reads a pull request,
+// the requirements file at a ref, CI's run for a commit and the releases. It leaves the pull request's one comment.
+//
+// All the thinking is in build-status.mjs. This layer only asks and tells, through runners handed in: run(args, input)
+// gives gh's output. So a test can hand in stand-ins and no network is touched. There are two runners, each with its
+// own token:
+// - the workflow's own token for the repository (reads and the comment);
+// - PROJECT_TOKEN for the project board alone (the board is build-status-board.mjs).
+//
+// A pull request is only ever read as data through the API. No file of it is checked out and none of its code is run.
 import { spawnSync } from 'node:child_process';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { COMMENT_MARKER, requestedIds } from './build-status.mjs';
@@ -43,10 +46,10 @@ const json = (run, repo, path, extra = []) => JSON.parse(run(['api', `repos/${re
 
 /**
  * A pull request as {number, state ('open' or 'closed'), merged, draft, mergeSha, headSha, baseRef, headRepo, baseRepo,
- * requested, createdAt}. The repositories are `owner/name`, headRepo null where the head's fork has gone; `requested` is
- * the ids its description names in the Requirements line (requestedIds), and the description is kept no further than
- * that; `createdAt` is the day it was opened (YYYY-MM-DD, UTC), or null where GitHub gives none. Throws for a
- * number that is not a whole number, and for a head commit or base branch the API gives in a form git would not use.
+ * requested, createdAt}. The repositories are `owner/name`, headRepo null where the head's fork has gone. `requested`
+ * is the ids its description names in the Requirements line (requestedIds); the description is kept no further than
+ * that. `createdAt` is the day it was opened (YYYY-MM-DD, UTC), or null where GitHub gives none. Throws for a number
+ * that is not a whole number. Also throws for a head commit or base branch the API gives in a form git would not use.
  */
 export function readPullRequest(run, repo, number) {
   const data = json(run, repo, `pulls/${wholeNumber(number)}`);
@@ -71,10 +74,10 @@ export function readPullRequest(run, repo, number) {
 const ownPull = (p, repo) => p.head?.repo?.full_name === repo && p.base?.repo?.full_name === repo;
 
 /**
- * Pages through a list of pull requests (newest first, a hundred to the page, at most MAX_PAGES), keeping those of this
- * repository, whose head and base are both it, that `keep` accepts. The forks' are left out before anything is counted, so
- * no crowd of them can hide one of ours. Stops once `limit` are kept. Gives {found, cut}: cut is true when the pages ran out
- * before the list did.
+ * Pages through a list of pull requests (newest first, a hundred to the page, at most MAX_PAGES). It keeps those of
+ * this repository, whose head and base are both it, that `keep` accepts. The forks' are left out before anything is
+ * counted, so no crowd of them can hide one of ours. Stops once `limit` are kept. Gives {found, cut}: cut is true when
+ * the pages ran out before the list did.
  */
 function ownPulls(run, repo, path, keep, limit) {
   const found = [];
@@ -111,8 +114,8 @@ export function parentOf(run, repo, sha) {
 }
 
 /**
- * The text of the requirements file at a ref (a branch, a tag or a commit), read through the API as data, or null when
- * there is no such file or ref. Its size is asked for first and the file is only downloaded if it is no larger than
+ * The text of the requirements file at a ref (a branch, a tag or a commit), read through the API as data. It is null
+ * when there is no such file or ref. Its size is asked for first. The file is only downloaded if it is no larger than
  * MAX_FILE_BYTES. Throws Unreadable for a file over that, and the failure itself for any other.
  */
 export function readRequirementsAt(run, repo, ref) {
@@ -136,10 +139,10 @@ export function readRequirementsAt(run, repo, ref) {
 
 /**
  * CI's own run for a commit as a status check rollup, the shape the slice board counts: [{status, conclusion}], upper
- * case, one entry for the newest run of the workflow at CI_WORKFLOW (it is known by its path, which a pull request cannot
- * choose by naming a workflow), or none while CI has not started. The other workflows of a pull request (code scanning,
- * the dependency review, the lock, the trigger) are not the build's checks. Throws when the list is as long as the page
- * asked for, since it may be only a part.
+ * case. It holds one entry for the newest run of the workflow at CI_WORKFLOW, or none while CI has not started. The
+ * workflow is known by its path, which a pull request cannot choose by naming a workflow. The other workflows of a pull
+ * request (code scanning, the dependency review, the lock, the trigger) are not the build's checks. Throws when the
+ * list is as long as the page asked for, since it may be only a part.
  */
 export function checkRollup(run, repo, sha) {
   const found = json(run, repo, `actions/runs?head_sha=${commit(sha)}&event=pull_request&per_page=${PAGE}`);
@@ -181,10 +184,10 @@ const timeOf = (text) => {
 };
 
 /**
- * The numbers of the pull requests of this repository (a fork's are left out first) merged into main after the time
- * `since` and up to the time `until` (either may be null, for no bound), as {numbers (sorted, the most recent fifty at
- * most), truncated}: truncated is true when there were more than that, or the pages ran out before the list did, so some
- * may be missing. Throws for a time that is not a time.
+ * The numbers of the pull requests of this repository merged into main after the time `since` and up to the time
+ * `until`. Either may be null, for no bound. A fork's pull requests are left out first. Gives {numbers (sorted, the
+ * most recent fifty at most), truncated}. truncated is true when there were more than that, or the pages ran out
+ * before the list did, so some may be missing. Throws for a time that is not a time.
  */
 export function mergedPullNumbers(run, repo, since, until) {
   const [from, to] = [timeOf(since), timeOf(until)];
@@ -208,8 +211,9 @@ const commentOf = (run, repo, number) =>
     .find((c) => c.user?.login === COMMENTER && c.user?.type === 'Bot' && String(c.body).startsWith(COMMENT_MARKER));
 
 /**
- * Leaves the pull request's one comment: found by its marker among the comments the workflow's bot wrote (a person who
- * writes the marker in their own is not it), then updated, or made when there is none, unless `create` is false. It is
+ * Leaves the pull request's one comment. It is found by its marker among the comments the workflow's bot wrote (a
+ * person who writes the marker in their own is not it). It is then updated, or made when there is none, unless `create`
+ * is false. It is
  * looked for again just before it is made, since another run of the workflow may have made it meanwhile. Gives
  * 'created', 'updated', 'unchanged' (the text is the same, so nothing is written) or 'absent' (none, and none made). The
  * text goes on the input, never in the arguments.
@@ -237,14 +241,14 @@ const lockOf = (run, repo, number, method) => run(['api', `repos/${repo}/issues/
 const isLocked = (run, repo, number) => json(run, repo, `pulls/${wholeNumber(number)}`).locked === true;
 
 /**
- * Leaves the pull request's one comment as upsertComment does, even where the conversation is locked, as a closed pull
- * request's is (the lock workflow locks each as it opens). The comment is tried first; only if it fails and the pull
- * request's own `locked` field, read from the API, is true (a word in GitHub's refusal is never taken for it) is the
- * conversation unlocked, the comment left and the conversation locked again, in the one step. The lock is taken up again
- * even if the comment then fails, and with the repository's retry for a short failure of GitHub (`opts.sleep` may give
- * another wait). Gives {outcome (upsertComment's, or 'failed'), unlocked, relockFailed (GitHub's words, or null), failure
- * (GitHub's words, or null)}. It throws nothing for a failure of GitHub: the caller says so in a warning. An unlock that is
- * refused leaves the comment unmade and nothing to lock again.
+ * Leaves the pull request's one comment as upsertComment does, even where the conversation is locked. A closed pull
+ * request's is locked (the lock workflow locks each as it opens). The comment is tried first. It may fail while the
+ * pull request's own `locked` field, read from the API, is true. A word in GitHub's refusal is never taken for it.
+ * Only then is the conversation unlocked, the comment left and the conversation locked again, in the one step. The
+ * lock is taken up again even if the comment then fails. It uses the repository's retry for a short failure of GitHub
+ * (`opts.sleep` may give another wait). Gives {outcome (upsertComment's, or 'failed'), unlocked, relockFailed (GitHub's
+ * words, or null), failure (GitHub's words, or null)}. It throws nothing for a failure of GitHub: the caller says so in
+ * a warning. An unlock that is refused leaves the comment unmade and nothing to lock again.
  */
 export function leaveComment(run, repo, number, body, opts = {}) {
   const done = { outcome: 'failed', unlocked: false, relockFailed: null, failure: null };

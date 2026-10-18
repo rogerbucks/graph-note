@@ -1,6 +1,8 @@
-// What a plug-in is held to (editor spec §43, plugin_manifest_limits): its manifest is checked before anything it adds,
-// it is given only the extension points its manifest names, a plug-in refused leaves nothing behind, and an export that
-// throws or gives no text is caught and named, never let through.
+// What a plug-in is held to (editor spec §43, plugin_manifest_limits):
+// - its manifest is checked before anything it adds;
+// - it is given only the extension points its manifest names;
+// - a plug-in refused leaves nothing behind;
+// - an export that throws or gives no text is caught and named, never let through.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { PLUGIN_API, pluginRegistry } from '../src/plugins.ts';

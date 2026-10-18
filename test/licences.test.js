@@ -1,8 +1,9 @@
-// Licences through the whole build chain. Spec §13, Licence: the plugin is MPL-2.0;
-// every library bundled into a release, and everything compiled inside one,
-// carries a licence on the allow-list; the notices name them all and ship with
-// every release; build tools should be on the allow-list too, and a GPL tool is
-// allowed only where it runs in CI alone and is never shipped (build_tool_licences).
+// Licences through the whole build chain. Spec §13, Licence:
+// - The plugin is MPL-2.0.
+// - Every library bundled into a release, and everything compiled inside one, carries a licence on the allow-list.
+// - The notices name them all and ship with every release.
+// - Build tools should be on the allow-list too. A GPL tool is allowed only where it runs in CI alone and is never
+//   shipped (build_tool_licences).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

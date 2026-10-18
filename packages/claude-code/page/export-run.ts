@@ -1,9 +1,12 @@
-// Export on the page (spec §16, §26; cc_export_same): what the shared Export form asks for, carried out as the Obsidian
-// plugin carries it out, with the same core: the scope read from the note as it is, the plan (nothing to export, a question
-// to ask first for a classified note, or go), the image drawn in fixed colours with its frame, or the data as a GQL block,
-// CSV or GraphML, a PNG drawn by the page on pages when one cannot be sharp. The files are then handed to the server, which
-// writes them only as new files in the export folder (cc_exports_new_only); a companion note, when set, follows the image
-// under the name it was saved as. Each outcome is said once. The page has no vault images, so a picture on a box is a frame.
+// Export on the page (spec §16, §26; cc_export_same). It carries out what the shared Export form asks for. It does so
+// as the Obsidian plugin does, with the same core:
+// - the scope, read from the note as it is;
+// - the plan: nothing to export, a question to ask first for a classified note, or go;
+// - the image drawn in fixed colours with its frame, or the data as a GQL block, CSV or GraphML;
+// - a PNG the page draws on pages when one cannot be sharp.
+// The files are then handed to the server. It writes them only as new files in the export folder (cc_exports_new_only).
+// A companion note, when set, follows the image under the name it was saved as. Each outcome is said once. The page has
+// no vault images, so a picture on a box is a frame.
 import { gqlBlocks } from '../../core/src/blocks.ts';
 import { classificationOf } from '../../core/src/claude-gate.ts';
 import { readNote } from '../../core/src/drawing.ts';

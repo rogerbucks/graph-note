@@ -1,8 +1,8 @@
-// Reading a block as far as it can be read (spec §3) never holds the page (spec §9, layout_contained), and reads exactly
-// as before: a failed block is read again on its own, not after every block before it; each line is found from an index
-// of the block's lines; and a part that cannot be read is left out as it always was — proved against the old reading,
-// kept here as the oracle, on random and adversarial notes. Only past a budget of reading again, which the Python reader
-// keeps alike, is the rest of a badly broken block left out at once.
+// Reading a block as far as it can be read (spec §3) never holds the page (spec §9, layout_contained). It reads exactly
+// as before. A failed block is read again on its own, not after every block before it. Each line is found from an
+// index of the block's lines. A part that cannot be read is left out as it always was. This is proved against the old
+// reading, kept here as the oracle, on random and adversarial notes. Only past a budget of reading again, which the
+// Python reader keeps alike, is the rest of a badly broken block left out at once.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';
@@ -183,8 +183,8 @@ describe('the same reading as before, only faster', () => {
   const same = (texts, shared = []) => {
     const now = readBlocks(texts, shared, Infinity),
       then = oracle(texts, shared);
-    // the old reading named no departure from standard GQL, added after it for strictness (spec §21), and gave no
-    // problem's code, added after it too (editor spec §42, problem_codes)
+    // the old reading named no departure from standard GQL, added after it for strictness (spec §21). It gave no
+    // problem's code either, added after it too (editor spec §42, problem_codes)
     const unnamed = (problems) => problems.map(({ departure: _, code: _code, ...p }) => p);
     assert.deepEqual(unnamed(now.problems), unnamed(then.problems), texts.join('\n---\n'));
     assert.equal(held(now.store), held(then.store), texts.join('\n---\n'));
@@ -227,15 +227,15 @@ const block = (n, broken, text = (i) => `Thing number ${i}`) =>
   `// graph: g\n(ok:Thing {name: 'Readable'}),\n${Array.from({ length: n }, (_, i) => `(n${i}:Thing {name${broken(i) ? '' : ':'} '${text(i)}'}),`).join('\n')}`;
 
 /**
- * Reads a broken block, and asserts it kept to the budget of reading again (spec §9, reading_contained). By the work,
- * which is what the budget holds: the reader handed the block once as written, then at most the budget's units again,
- * each read again and each trial charged its length, then once more, so no more than the budget and two of the block's
- * length; counted, so the same on every machine, under any load and under coverage. With controls, so a reader the
- * counter cannot see fails rather than passes: the broken block was seen read at least twice, once whole, and the
- * `mended` block is seen read whole. That nothing else grows unseen, the whole read costing under twice as many whole
- * reads of `mended` as the budget allows, is counted in instructions by the reading_limits benchmark
- * (scripts/benchmarks/reading-limits.mjs): a test asserts the work done, never the time taken (spec §12,
- * quality_ratchet, 12 Oct 2026).
+ * Reads a broken block, and asserts it kept to the budget of reading again (spec §9, reading_contained). It goes by
+ * the work, which is what the budget holds. The reader is handed the block once as written, then at most the budget's
+ * units again, then once more. Each read again and each trial is charged its length. So it is no more than the budget
+ * and two of the block's length. It is counted, so the same on every machine, under any load and under coverage. It
+ * has controls, so a reader the counter cannot see fails rather than passes. The broken block was seen read at least
+ * twice, once whole, and the `mended` block is seen read whole. The reading_limits benchmark checks that nothing else
+ * grows unseen (scripts/benchmarks/reading-limits.mjs). It counts in instructions that the whole read costs under
+ * twice as many whole reads of `mended` as the budget allows. A test asserts the work done, never the time taken
+ * (spec §12, quality_ratchet, 12 Oct 2026).
  */
 function inBudget(text, mended) {
   const work = readerWork(() => readNote([text]));
@@ -261,10 +261,10 @@ describe('the worst cases under the size limits are read in time (spec §9: abou
     assert.ok(r.graphs.get('g').boxes.length > 1000);
   });
 
-  // 9,000 things written without a name, each named in work linear in them, never in their square, and what the editor
-  // reads back as each key is typed costing less than reading the note: both counted in instructions by the benchmarks
-  // (scripts/benchmarks/naming.mjs and keystroke.mjs), on every release, as a test asserts the work done, never the
-  // time taken (spec §12, quality_ratchet, 12 Oct 2026)
+  // 9,000 things written without a name, each named in work linear in them, never in their square. And what the
+  // editor reads back as each key is typed costs less than reading the note. Both are counted in instructions by the
+  // benchmarks (scripts/benchmarks/naming.mjs and keystroke.mjs), on every release. A test asserts the work done,
+  // never the time taken (spec §12, quality_ratchet, 12 Oct 2026)
 
   test('6,000 things on one line, the last broken: the part at fault is looked for within the budget', () => {
     const line = Array.from({ length: 6000 }, (_, i) => `(n${i}:T {name${i === 5999 ? '' : ':'} 'x'})`).join(', ');

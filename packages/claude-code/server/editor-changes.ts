@@ -1,7 +1,8 @@
-// The editor server's routes for changes (editor spec §41): a note's earlier versions for the changes view, read from its
-// git repository (changes_view), and the pull requests, merges and commits of that repository read from GitHub for a
-// review (github_review_items). Each is read only when the page asks; a version or an item is opened only once it was
-// listed for the note, so the page never names a commit or an address; and every text is held to the gate first.
+// The editor server's routes for changes (editor spec §41):
+// - a note's earlier versions for the changes view, read from its git repository (changes_view);
+// - the pull requests, merges and commits of that repository, read from GitHub for a review (github_review_items).
+// Each is read only when the page asks. A version or an item is opened only once it was listed for the note. So the
+// page never names a commit or an address. And every text is held to the gate first.
 //   GET notes/<id>/versions                  {versions: [{commit, kind, label}]}, or 404 {why}
 //   GET notes/<id>/at/<commit>               {text} at a commit just listed for it
 //   GET notes/<id>/reviews                   {items: [{kind, id, title, author, when, url}]}, or 404 {why}

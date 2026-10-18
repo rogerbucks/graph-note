@@ -1,7 +1,8 @@
-// Drafts (spec §26, cc_drafts_outside, cc_write_if_unchanged): what was typed and not written, kept outside the vault
-// in the mod's own data folder, one file for each note, named by a digest of the vault and the note's path in it, so a
-// name says nothing of the note and no draft is ever a file the vault's app would show. Each is written as a note is,
-// by way of a new file renamed into place, readable by its owner alone, and offered again when the note is next opened.
+// Drafts (spec §26, cc_drafts_outside, cc_write_if_unchanged): what was typed and not written. They are kept outside
+// the vault, in the mod's own data folder, one file for each note. A file is named by a digest of the vault and the
+// note's path in it. So a name says nothing of the note, and no draft is ever a file the vault's app would show. Each
+// is written as a note is, by way of a new file renamed into place. It is readable by its owner alone. It is offered
+// again when the note is next opened.
 import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -10,8 +11,8 @@ import { BODY_LIMIT } from './request-body.ts';
 import { NODE_FILES, writeAtomically, type NoteFiles } from './note-file.ts';
 
 /**
- * The most characters a draft's file may hold: a note's worth of control characters, each written by JSON as six
- * (`\u0001`), and room for the rest of the record.
+ * The most characters a draft's file may hold. That is a note's worth of control characters, each written by JSON as
+ * six (`\u0001`), and room for the rest of the record.
  */
 const DRAFT_MOST = 6 * BODY_LIMIT + 1024;
 

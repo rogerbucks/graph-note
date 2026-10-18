@@ -1,7 +1,7 @@
-// The table, a diagram type the host draws as a plain table rather than Graphviz (editor spec §15, diagram_type_set):
-// each thing a row, with its kind and properties, and each link a row, in the order drawn; the way in to a graph too
-// large for one drawing — the table, or a view (large_way_in); and the types that, wide on a phone, scroll one way only
-// (wide_types_phone). Host-free.
+// The table, a diagram type the host draws as a plain table rather than Graphviz (editor spec §15, diagram_type_set).
+// Each thing is a row, with its kind and properties, and each link a row, in the order drawn. It also holds the way in
+// to a graph too large for one drawing: the table, or a view (large_way_in). And it holds the types that, wide on a
+// phone, scroll one way only (wide_types_phone). Host-free.
 import type { Graph } from '@thoughtknot/graph-spec';
 import { valueText } from './inline-properties.ts';
 import type { GraphDrawing } from './note-reading.ts';
@@ -54,8 +54,8 @@ export function tableOf(drawing: Pick<GraphDrawing, 'boxes' | 'links'>, g?: Grap
 }
 
 /**
- * The way in to a graph of more than `LARGE_GRAPH` things (§15, large_way_in): one drawing of them all would be crowded,
- * so the table and a view are offered, in words; null for a smaller graph.
+ * The way in to a graph of more than `LARGE_GRAPH` things (§15, large_way_in). One drawing of them all would be
+ * crowded, so the table and a view are offered, in words. Null for a smaller graph.
  */
 export function wayIn(things: number): { count: number; say: string } | null {
   if (things <= LARGE_GRAPH) return null;
@@ -70,8 +70,9 @@ export const ONE_WAY_TYPES: readonly DiagramType[] = ['tree', 'flow', 'timeline'
 
 /**
  * Whether a drawing of `type`, `width` wide at natural size, scrolls one way only in a card `room` wide (§15,
- * wide_types_phone): on a phone, a tree, a flow or a timeline wider than its card — fitted to its height and scrolled
- * across (zoom.ts, `Zoom`'s `across`), rather than shrunk to the card's width until it cannot be read.
+ * wide_types_phone). That is on a phone, for a tree, a flow or a timeline wider than its card. It is fitted to its
+ * height and scrolled across (zoom.ts, `Zoom`'s `across`), rather than shrunk to the card's width until it cannot be
+ * read.
  */
 export function scrollsOneWay(type: DiagramType, phone: boolean, width: number, room: number): boolean {
   return phone && ONE_WAY_TYPES.includes(type) && width > room;

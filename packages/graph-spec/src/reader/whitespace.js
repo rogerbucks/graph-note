@@ -3,7 +3,7 @@
 // its fragments (the published grammar, not the paywalled text of ISO/IEC 39075): 29 code points, neither U+0085 nor
 // U+FEFF. JavaScript's \s and trim() take in U+FEFF, Python's isspace() takes in U+0085, and each leaves out what GQL
 // counts. A line ends at LF only. The same code points are in packages/core/src/whitespace.ts and
-// python/graph_spec/src/graphspec/reader/whitespace.py, and test/whitespace.test.js holds the three copies to them
+// python/graph_spec/src/graphspec/reader/whitespace.py. test/whitespace.test.js holds the three copies to them
 // (decided 10 Oct 2026).
 'use strict';
 

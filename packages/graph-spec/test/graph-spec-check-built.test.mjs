@@ -1,6 +1,6 @@
-// The built file, dist/graph-spec-check.js: the library's modules bundled into the one plain file the release archive
-// ships at src/graph-spec-check.js, for the vault to vendor. Loaded as a page's script it sets the global
-// GraphSpecCheck; required in Node it is the module, with no global; either way it answers as the source modules do.
+// The built file, dist/graph-spec-check.js: the library's modules bundled into one plain file. The release archive
+// ships it at src/graph-spec-check.js, for the vault to vendor. Loaded as a page's script it sets the global
+// GraphSpecCheck. Required in Node it is the module, with no global. Either way it answers as the source modules do.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

@@ -1,7 +1,8 @@
-// What an image's own bytes say of it (editor spec §18, animated_image_shown, animated_image_limited): its format, whether
-// it moves, how many frames it has and how large each is, read from the header and chunks each format writes — a GIF's
-// image descriptors, an APNG's animation control chunk, an animated WebP's flag and frames, an AVIF sequence's brand, an
-// SVG's animate elements or CSS keyframes. Nothing is decoded and no library is used: the host's own image decoding draws it (no new dependency).
+// What an image's own bytes say of it (editor spec §18, animated_image_shown, animated_image_limited). It gives its
+// format, whether it moves, how many frames it has and how large each is. They are read from the header and chunks each
+// format writes. Those are a GIF's image descriptors, an APNG's animation control chunk, and an animated WebP's flag
+// and frames. They are also an AVIF sequence's brand, and an SVG's animate elements or CSS keyframes. Nothing is
+// decoded and no library is used: the host's own image decoding draws it (no new dependency).
 // Every read is held to the bytes there, so a file cut short or written wrongly is read as far as it goes.
 
 /** The formats an image's bytes are known as: a PNG that moves is an APNG, and is still `png` here. */
@@ -122,10 +123,11 @@ const SPACE = /\s/;
 const BOM = 'ï»¿';
 
 /**
- * Where an SVG starts: past a byte order mark, white space, an XML declaration, comments and a doctype, in any order,
- * each found by searching on from where the last ended, so every character is looked at once and a comment ends at its
- * first `-->` (review of #443: a pattern that went back over itself took seconds on 200 bytes); then its root's start
- * tag, to its first `>`. No pattern runs over the text but those that look at each character once.
+ * Where an SVG starts. It is past a byte order mark, white space, an XML declaration, comments and a doctype, in any
+ * order. Each is found by searching on from where the last ended. So every character is looked at once, and a comment
+ * ends at its first `-->`. This follows the review of #443: a pattern that went back over itself took seconds on 200
+ * bytes. Then comes its root's start tag, to its first `>`. No pattern runs over the text but those that look at each
+ * character once.
  */
 export function svgScan(text: string): SvgScan {
   let at = text.startsWith(BOM) ? BOM.length : 0,
@@ -202,9 +204,9 @@ export function imageFacts(bytes: Uint8Array): ImageFacts {
 }
 
 /**
- * Bytes read as text a byte to a character: an SVG's markup, which is all it is looked at for, is ASCII whatever the file's
- * encoding, so no decoder is needed (the core runs where there is none). Read in runs, so a large file never overflows
- * the call's arguments.
+ * Bytes read as text a byte to a character. An SVG's markup, which is all it is looked at for, is ASCII whatever the
+ * file's encoding. So no decoder is needed (the core runs where there is none). Read in runs, so a large file never
+ * overflows the call's arguments.
  */
 function text(b: Uint8Array): string {
   let out = '';

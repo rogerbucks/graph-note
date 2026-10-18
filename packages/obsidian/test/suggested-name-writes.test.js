@@ -1,8 +1,9 @@
 // A thing drawn under a suggested name is never written by that name unasked (editor spec §4, unnamed_drawn_suggested:
-// "nothing is written until its fix is accepted"). In a card being edited, each way of writing the name into the note —
-// recording a path through the box, making a view of it, parking it, changing its properties, making a list of it or
-// adding to one, saving a view as shown with it selected — is refused in words ("accept its name first"), writes nothing,
-// and leaves the box's own fix, Add the name, where it was; once the name is written, the same edit goes through.
+// "nothing is written until its fix is accepted"). In a card being edited, each way of writing the name into the note
+// is refused in words ("accept its name first"). Each writes nothing, and leaves the box's own fix, Add the name, where
+// it was. The ways are recording a path through the box, making a view of it, parking it, and changing its properties.
+// So are making a list of it or adding to one, and saving a view as shown with it selected. Once the name is written,
+// the same edit goes through.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -189,8 +190,8 @@ describe('the details of a box drawn under a suggested name, while the card is e
   });
 });
 
-// Review, 11 Oct 2026: a card's drawing can be older than the note, as when another block of its graph is changed and the
-// card is not drawn again. An edit written into the block is checked against the note as it is now, with what is typed.
+// Review, 11 Oct 2026: a card's drawing can be older than the note. That happens when another block of its graph is
+// changed and the card is not drawn again. An edit written into the block is checked against the note as it is now, with what is typed.
 describe('a card drawn before another block of its graph was changed', () => {
   // B writes small_reader, so A's thing was drawn as small_reader_2; once B's thing is renamed, A's is small_reader
   const B = "// graph: reader\n(small_reader:Option {name: 'Other'}),\n(small_reader)-[:HAS_TAG]->(light:Tag)";

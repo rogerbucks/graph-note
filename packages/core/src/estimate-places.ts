@@ -1,7 +1,7 @@
-// Where an estimated name is written in its block (spec §3), so its fix changes it there and nowhere else: at the link's
-// own reference to it, never the same word in a text or a comment on its line, nor in another link on the same line.
-// Each place is a 0-based line of the block and the characters the word spans on it, as a problem's `span` gives one.
-// Host-free.
+// Where an estimated name is written in its block (spec §3), so its fix changes it there and nowhere else. That is at
+// the link's own reference to it. It is never the same word in a text or a comment on its line, nor in another link on
+// the same line. Each place is a 0-based line of the block and the characters the word spans on it, as a problem's
+// `span` gives one. Host-free.
 import { blankText, items, lineIndex } from './block-items.ts';
 import type { Item } from './block-items.ts';
 import { S } from './whitespace.ts';
@@ -53,9 +53,10 @@ export class BlockPlaces {
   }
 
   /**
-   * For the path left out as `dropped`, read on 1-based `line`, naming `missing`, which is not in the graph: the place of
-   * its reference to `missing`, and of each other reference it makes to a name in `words`, with what to write there. Each
-   * item is taken once, so two paths written alike on one line are found in turn. Null when the path is not found whole.
+   * For the path left out as `dropped`, read on 1-based `line`, naming `missing`, which is not in the graph. It gives
+   * the place of its reference to `missing`. It also gives each other reference it makes to a name in `words`, with
+   * what to write there. Each item is taken once, so two paths written alike on one line are found in turn. Null when
+   * the path is not found whole.
    */
   names(
     line: number,

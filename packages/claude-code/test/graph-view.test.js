@@ -1,5 +1,6 @@
-// What the Claude Code pane shows for a note (spec §10, a Claude Code host): its first graph drawn by the core in the
-// host's palette, and always the same graph as lines of text, which stand in, with the reason, wherever no drawing can be.
+// What the Claude Code pane shows for a note (spec §10, a Claude Code host):
+// - its first graph, drawn by the core in the host's palette;
+// - always the same graph as lines of text. They stand in, with the reason, wherever no drawing can be.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -97,8 +98,8 @@ describe('never a blank pane', () => {
 
 describe('the host around it', () => {
   test("the pane's drawing follows the app's own light or dark, never a guess: the system entry", async () => {
-    // the mod API says nothing of the desktop app's appearance, and Claude Code's theme setting is the terminal's, which
-    // draws no picture: so the drawing carries both palettes and the scheme picks one, with nothing assumed when unknown
+    // the mod API says nothing of the desktop app's appearance. Claude Code's theme setting is the terminal's, which
+    // draws no picture. So the drawing carries both palettes and the scheme picks one, with nothing assumed when unknown
     assert.equal(PANE_PALETTE, PALETTES.system);
     const view = await viewOf(NOTE, graphviz, PANE_PALETTE);
     assert.match(view.svg ?? '', /<style>[^<]*@media \(prefers-color-scheme: dark\)/);

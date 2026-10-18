@@ -1,5 +1,5 @@
 // A gql block shown as code (spec §4, "colour"): a query is coloured text with a copy button. In Live Preview Obsidian
-// puts its own "Edit this block" button at the block's top right, and the copy button must sit beside it, never on it
+// puts its own "Edit this block" button at the block's top right. The copy button must sit beside it, never on it
 // (device check V-03, 11 Oct 2026: the two icons were stacked at the top right).
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';

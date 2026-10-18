@@ -1,5 +1,5 @@
-// The note the tests of editing in place draw and edit (editor spec §4, "In place"), and how Obsidian draws its block:
-// on the page, or, as Live Preview does, into a card that goes on the page only once the drawing is done.
+// The note the tests of editing in place draw and edit (editor spec §4, "In place"). Also how Obsidian draws its block.
+// It goes on the page, or, as Live Preview does, into a card that goes on the page only once the drawing is done.
 import { fakeContext } from './fake-obsidian.js';
 import { fence } from './notes.js';
 
@@ -26,9 +26,9 @@ export async function show(env) {
 }
 
 /**
- * Draws the block into a card that goes on the page only `ms` later, as Live Preview places a card below the part of
- * the note in view only once it is scrolled to, and as cards wait while the layout engine starts. Returns the card's
- * holder at once, and the promise of its placing.
+ * Draws the block into a card that goes on the page only `ms` later. Live Preview does this for a card below the part
+ * of the note in view, placing it only once it is scrolled to. Cards also wait while the layout engine starts. Returns
+ * the card's holder at once, and the promise of its placing.
  */
 export async function showLate(env, ms) {
   const note = env.state.files.get(PATH),
@@ -44,8 +44,8 @@ export async function showLate(env, ms) {
 
 /**
  * Draws the note's first graph block where Obsidian's reading view would put it (`view` 'reading'), or where the editing
- * view would ('live'); on the page, or put there only after it is drawn (`offPage`). `note` is the note's text, the file
- * by default; the card's components are pushed onto `children`, so a test can reach the card itself.
+ * view would ('live'). It goes on the page, or there only after it is drawn (`offPage`). `note` is the note's text, the
+ * file by default. The card's components are pushed onto `children`, so a test can reach the card itself.
  */
 export async function showIn(env, view, { offPage = false, note, children } = {}) {
   const text = note ?? env.state.files.get(PATH),

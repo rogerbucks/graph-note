@@ -1,10 +1,10 @@
 // Readings guessed for a relationship type with none declared, from the type's own words (graph_rules.guess_readings).
 'use strict';
 
-// undeclared (a draft): the type's own words
+// undeclared (a draft): the type's own words.
 // ── Readings guessed for a type with none declared ──────────────────────────────────────────────────────────────
-// Forward and reverse, from the type's own words, as the lock writes them for checking (vault task of 6 Oct 2026;
-// the same rules as graph_rules.guess_readings, held to one table: test/reading-cases.json).
+// Forward and reverse. They come from the type's own words, as the lock writes them for checking (vault task of 6 Oct
+// 2026). The rules are those of graph_rules.guess_readings, held to one table: test/reading-cases.json.
 const IRREGULAR = {
   chose: 'was chosen by',
   made: 'was made by',

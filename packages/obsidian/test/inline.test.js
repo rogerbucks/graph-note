@@ -1,6 +1,6 @@
-// Editing in place (editor spec §4, "In place"; decided 7 Oct 2026): the text of a graph block can be edited inside the
+// Editing in place (editor spec §4, "In place"; decided 7 Oct 2026). The text of a graph block can be edited inside the
 // drawing's own card in the note, with the same help as the pane. Each write redraws the block, as Obsidian redraws any
-// block whose text changed, so the editor moves into each new card with its text, its caret and its focus.
+// block whose text changed. So the editor moves into each new card with its text, its caret and its focus.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -110,8 +110,8 @@ describe('edit here, in the card', () => {
   });
 
   // typing_keeps_focus (spec §4, 8 Oct 2026; Roger's try-out of d601110: "when I add a character, focus is lost with the
-  // redraw"): Obsidian takes the old card off the page before it builds the new one, so the field is off the page, and has
-  // lost the focus and its scroll, by the time the new card asks for the editor
+  // redraw"). Obsidian takes the old card off the page before it builds the new one. So by the time the new card asks for
+  // the editor, the field is off the page, and has lost the focus and its scroll
   test('typing in the card keeps the same box through each redraw: focused, with its caret, selection and scroll', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
@@ -168,7 +168,7 @@ describe('edit here, in the card', () => {
     }
   });
 
-  // Chromium empties a field's own undo history when the field leaves the page (seen in the browser on 8 Oct 2026), so
+  // Chromium empties a field's own undo history when the field leaves the page (seen in the browser on 8 Oct 2026). So
   // undo and redo come from the editor's own history, by key, by the Edit menu and by a phone's undo gesture
   test('undo and redo still work after each redraw: a run of typing at a time, by key or by the platform’s undo', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
@@ -207,8 +207,8 @@ describe('edit here, in the card', () => {
   });
 
   // Roger's try-out, 8 Oct 2026: "if I type a comma on the last line then the image refresh loses focus again". In Live
-  // Preview Obsidian draws a block into a card that is not on the page yet, and puts it there after; a block that cannot
-  // be drawn, or an empty one, took the editor at once, while its card was still off the page, where nothing takes focus
+  // Preview Obsidian draws a block into a card that is not on the page yet, and puts it there after. A block that cannot
+  // be drawn, or an empty one, took the editor at once. Its card was still off the page, where nothing takes focus
   test('in Live Preview, where the new card goes on the page only after it is drawn, the box still keeps the focus', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
@@ -263,9 +263,9 @@ describe('edit here, in the card', () => {
     }
   });
 
-  // Roger's Mac, 9 Oct 2026, traced in the app: after a write, reading view draws the block, then takes that same card off
-  // the page and puts it back some 20 ms later, with nothing drawn in between and so no hand-over: the box lost its focus
-  // the second time and never had it back
+  // Roger's Mac, 9 Oct 2026, traced in the app: after a write, reading view draws the block. Then it takes that same card
+  // off the page and puts it back some 20 ms later. Nothing is drawn in between, and so there is no hand-over. The box
+  // lost its focus the second time and never had it back
   test('a card taken off the page and put back as it was, any number of times, still gives the box its focus back', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
@@ -337,8 +337,8 @@ describe('edit here, in the card', () => {
     }
   });
 
-  // edit_button_toggles (spec §4, 8 Oct 2026): while the card is being edited its edit button shows a view icon, and
-  // pressing it closes the edit box exactly as Done does
+  // edit_button_toggles (spec §4, 8 Oct 2026): while the card is being edited its edit button shows a view icon.
+  // Pressing it closes the edit box exactly as Done does
   test('while the card is edited, its edit button shows a view icon; pressing it writes and closes, as Done does', async () => {
     const env = await load({ files: { [PATH]: NOTE } });
     try {
@@ -424,7 +424,7 @@ describe('edit here, in the card', () => {
 
 describe('selecting in the drawing moves the text to it', () => {
   // select_moves_text (spec §4, slice 2; Roger, 7 Oct 2026: "selecting an item in the graph should move the editor to
-  // the item in the text edit box if editing"): a box or a link chosen in the drawing selects where it is written
+  // the item in the text edit box if editing"). A box or a link chosen in the drawing selects where it is written
   const choose = (el, selector, which) => el.querySelectorAll(selector)[which].dispatch('keydown', { key: 'Enter' });
 
   test('in the card, choosing a box selects its pattern in the box being edited', async () => {

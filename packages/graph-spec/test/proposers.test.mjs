@@ -1,6 +1,6 @@
-// A proposal's proposer is read through WAS_ATTRIBUTED_TO (graph spec §23 rule 6); the old form, through ASSOCIATED_WITH on
-// its activity, is accepted for one release with a warning naming the fix. The cases are proposer-cases.json, the table
-// python/graph_spec/tests/test_proposers.py runs too.
+// A proposal's proposer is read through WAS_ATTRIBUTED_TO (graph spec §23 rule 6). The old form, through
+// ASSOCIATED_WITH on its activity, is accepted for one release with a warning naming the fix. The cases are
+// proposer-cases.json, the table python/graph_spec/tests/test_proposers.py runs too.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

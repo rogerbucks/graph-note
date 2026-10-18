@@ -1,8 +1,10 @@
-// Notes shown in the editor (editor spec §24, note_shown, note_callouts): a thing's or link's `///` note shows in its
-// details, rendered as Markdown through the one renderer the details use, raw HTML never rendered; and a setting, off by
-// default, draws each note on the drawing as a callout joined to its thing by a dashed line, after the layout, so the
-// layout itself is the same with it on or off. The tooltip (quick_info) shows the same note's first paragraph, through the
-// same renderer, so this file proves the details, the tooltip and the callouts.
+// Notes shown in the editor (editor spec §24, note_shown, note_callouts).
+// - A thing's or link's `///` note shows in its details. It is rendered as Markdown by the one renderer the details use.
+//   Raw HTML is never rendered.
+// - A setting, off by default, draws each note on the drawing as a callout. A dashed line joins it to its thing. It is
+//   drawn after the layout, so the layout is the same with it on or off.
+// The tooltip (quick_info) shows the same note's first paragraph, with the same renderer. So this file proves the
+// details, the tooltip and the callouts.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

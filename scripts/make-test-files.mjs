@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-// Makes every file the tests and the device checks need, so none is supplied by hand (editor spec §12, tests_self_contained,
-// test_files_generated): the animated GIF, APNG, WebP and SVG images, a still PNG, a PDF, and a GIF over the size limit, in
-// the folders of the device-check notes that name them. The pictures are synthetic: a small square moving across a plain
-// ground, in colours chosen by a number, nothing taken from anywhere. Run it again at any time; a file is written only
-// when its bytes differ, so Obsidian Sync sees no change.
+// Makes every file the tests and the device checks need, so none is supplied by hand (editor spec §12,
+// tests_self_contained, test_files_generated). They are the animated GIF, APNG, WebP and SVG images, a still PNG, a
+// PDF, and a GIF over the size limit. Each goes in the folders of the device-check notes that name it. The pictures are
+// synthetic: a small square moving across a plain ground, in colours chosen by a number, nothing taken from anywhere.
+// Run it again at any time; a file is written only when its bytes differ, so Obsidian Sync sees no change.
 //
 // Usage:
-//   node scripts/make-test-files.mjs              make the files in test-vault/ of this repository
-//   node scripts/make-test-files.mjs --root DIR   the same, in the repository at DIR
-//   node scripts/make-test-files.mjs --no-large   leave out the GIF over the size limit
+//   node scripts/make-test-files.mjs              make the files in test-vault/ of this repository.
+//   node scripts/make-test-files.mjs --root DIR   the same, in the repository at DIR.
+//   node scripts/make-test-files.mjs --no-large   leave out the GIF over the size limit.
 //
-// The small files are committed, and test/test-files.test.js holds them to what this makes; the large one (big.gif, over
-// 5 MB) is ignored by git and made here, by scripts/reset-test-vault.mjs, when a check is set up.
+// The small files are committed, and test/test-files.test.js holds them to what this makes. The large one (big.gif,
+// over 5 MB) is ignored by git and made here, by scripts/reset-test-vault.mjs, when a check is set up.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -88,7 +88,8 @@ function indices(entry, i) {
 }
 
 /**
- * Frame `i` of a picture as the format holds it: a GIF's list of palette indices, or the RGBA bytes of a PNG or a WebP.
+ * Frame `i` of a picture as the format holds it. That is a GIF's list of palette indices, or the RGBA bytes of a PNG or
+ * a WebP.
  * The tests read the files back and compare them with this.
  */
 export function pixelsOf(entry, i) {

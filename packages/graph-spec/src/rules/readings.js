@@ -1,8 +1,8 @@
 // A relationship type's declared readings, forward and reverse.
 'use strict';
 
-// Each declared edge type's words (§5) as a Map {type: [reading, reverse reading]}; the shared schema is read only
-// when the graph declares no ElementType of its own, so a graph's schema replaces the shared one, never mixes with it
+// Each declared edge type's words (§5) as a Map {type: [reading, reverse reading]}. The shared schema is read only
+// when the graph declares no ElementType of its own. So a graph's schema replaces the shared one, never mixes with it
 function readings(g, shared) {
   // §5: {type: [reading, reverse reading]}, from the graph's own schema, else the shared one it names
   let elementTypes = g.labelled('ElementType').map((i) => g.p(i));

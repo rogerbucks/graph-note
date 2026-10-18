@@ -1,8 +1,8 @@
-// Leaving the build status comment on a conversation that may be locked: the comment is tried first, and only if the pull
-// request is locked (its own `locked` field, read from the API, and not a word in GitHub’s refusal) is it unlocked,
-// commented and locked again in the one step. The lock is taken up again with the repository’s retry for a short failure
-// of GitHub. Every case runs against an in-memory stand-in for gh, so no network is touched. Editor spec §12,
-// requirements_checked_in_ci.
+// Leaving the build status comment on a conversation that may be locked. The comment is tried first. Only if the pull
+// request is locked is it unlocked, commented and locked again in the one step. Locked means its own `locked` field,
+// read from the API, and not a word in GitHub’s refusal. The lock is taken up again with the repository’s retry for a
+// short failure of GitHub. Every case runs against an in-memory stand-in for gh, so no network is touched. Editor spec
+// §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { leaveComment } from '../scripts/build-status-gh.mjs';

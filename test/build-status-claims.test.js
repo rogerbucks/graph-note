@@ -1,8 +1,10 @@
-// What a pull request holds on the board besides the requirements its copy proves: the project’s built-in Status field
-// (Todo, In Progress, Done) that follows the build, an item two pull requests hold, and the Requirements line with which a
-// draft pull request takes items on before its copy proves them. The pull request’s description is untrusted: only that
-// line is read, and only ids that are plain and are in main’s requirements file are kept. Each case runs the whole of
-// scripts/build-status-run.mjs against in-memory stand-ins for gh. Editor spec §12, requirements_checked_in_ci.
+// What a pull request holds on the board besides the requirements its copy proves:
+// - the project’s built-in Status field (Todo, In Progress, Done) that follows the build.
+// - an item two pull requests hold.
+// - the Requirements line, with which a draft pull request takes items on before its copy proves them.
+// The pull request’s description is untrusted: only that line is read, and only ids that are plain and are in main’s
+// requirements file are kept. Each case runs the whole of scripts/build-status-run.mjs against in-memory stand-ins for
+// gh. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURE } from './repository/github-project-fixture.js';

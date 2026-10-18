@@ -1,7 +1,8 @@
-// A graph drawn from a .gql file (editor spec §20, gql_file_source, gql_file_missing): a block whose graph line says FROM
-// and a file draws the graph written in that file, read through the vault where it is written and never copied into
-// the note, drawn again when the file changes; a file that is missing, moved or unreadable is named with why, never a
-// blank drawing; and a file too large to read is shown under the same banner as a note's own blocks.
+// A graph drawn from a .gql file (editor spec §20, gql_file_source, gql_file_missing).
+// - A block whose graph line says FROM and a file draws the graph written in that file. It is read through the vault
+//   where it is written, and never copied into the note. It is drawn again when the file changes.
+// - A file that is missing, moved or unreadable is named with why, never a blank drawing.
+// - A file too large to read is shown under the same banner as a note's own blocks.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

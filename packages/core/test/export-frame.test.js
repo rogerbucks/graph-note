@@ -1,6 +1,6 @@
-// The frame round an exported image (editor spec §16): its own background, a title, the legend and a footer saying which
-// note it came from and when, in the locked style's font and sizes, all in fixed colours. The drawing is put inside,
-// untouched, at its natural size.
+// The frame round an exported image (editor spec §16). It has its own background, a title, the legend and a footer
+// saying which note it came from and when. All are in the locked style's font and sizes, in fixed colours. The drawing
+// is put inside, untouched, at its natural size.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { FRAME_MIN_WIDTH, framed, saidDate } from '../src/export-frame.ts';

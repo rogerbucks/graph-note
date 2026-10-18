@@ -1,7 +1,11 @@
-// What a proposal from Claude may not do to the note or the session (editor spec §26, cc_claude_proposes; the security
-// review of #483): it cannot grow the note without limit (the size it may reach, the length of a value or a reason, how
-// many proposals wait), its key is passed on standard input and never in the environment, its own text never carries the
-// user's yes to the note, and what it says it read is one line of plain text. Tried over real server processes.
+// What a proposal from Claude may not do to the note or the session (editor spec §26, cc_claude_proposes). From the
+// security review of #483:
+// - It cannot grow the note without limit: the size it may reach, the length of a value or a reason, how many
+//   proposals wait.
+// - Its key is passed on standard input and never in the environment.
+// - Its own text never carries the user's yes to the note.
+// - What it says it read is one line of plain text.
+// Tried over real server processes.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';

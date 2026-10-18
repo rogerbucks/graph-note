@@ -7,9 +7,9 @@
 //     at file:line                 (the first stack frame in the repository's own code)
 //
 // and a last line, `FAIL 2 of 693 tests`. A suite is never reported for its tests' failures. Whatever the tests write to
-// stdout or stderr is dropped, whether they pass or fail: a failure is described by what it threw, not by what it
-// logged. The one exception is a test file that cannot run at all (a syntax error, a missing import): it throws nothing
-// the reporter can see, so its first error line and location are read from what it wrote to stderr.
+// stdout or stderr is dropped, whether they pass or fail. A failure is described by what it threw, not by what it
+// logged. The one exception is a test file that cannot run at all (a syntax error, a missing import). It throws nothing
+// the reporter can see. So its first error line and location are read from what it wrote to stderr.
 //
 // Usage:  node --test --test-reporter=./scripts/quiet-reporter.mjs        (npm run test:ai)
 import { realpathSync } from 'node:fs';
@@ -45,9 +45,9 @@ export function cutAround(a, b, max = CUT) {
   return [cut(a), cut(b)];
 }
 /**
- * A value as text. A failure the test runner could not copy from the process that ran it, as when an assertion's values
- * hold a function or a DOM node, arrives as an empty object with no prototype, which String cannot make text: it is said
- * in words, so the run goes on to report the rest.
+ * A value as text. Some failures the test runner cannot copy from the process that ran them, as when an assertion's
+ * values hold a function or a DOM node. Such a failure arrives as an empty object with no prototype, which String
+ * cannot make text. It is said in words, so the run goes on to report the rest.
  */
 const asText = (value) => {
   try {

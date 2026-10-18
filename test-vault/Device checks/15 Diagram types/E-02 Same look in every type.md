@@ -27,6 +27,6 @@
 
 **Checklist line:**
 
-> **E-02** Press each type in turn, in light and dark: every box keeps its kind's colour and every link its reading's, the words are the same sizes, and all read as clearly as in the network; a table's rows read the same way.
+> **E-02** Press each type in turn, in light and dark: every box keeps its kind's colour, and every link its reading's. The words are the same sizes, and all read as clearly as in the network. A table's rows read the same way.
 
 **Back to the checklist:** [E-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-02 in its list.

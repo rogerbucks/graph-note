@@ -1,5 +1,6 @@
-// Names in the reader's store (graph spec §3): a graph, a shared schema or a thing may be called anything a name may be,
-// a word JavaScript gives every object among them (constructor, toString, __proto__ …), and is read as any other name.
+// Names in the reader's store (graph spec §3). A graph, a shared schema or a thing may be called anything a name may
+// be. That includes a word JavaScript gives every object (constructor, toString, __proto__ …). It is read as any other
+// name.
 // The Python reader reads them so already: its graphs and names are dicts.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -53,7 +54,8 @@ describe('a name JavaScript gives every object', () => {
   });
 
   test('after a block that cannot be read is undone, a graph called toString is still read as any other', () => {
-    // the undoing copies the store's tables: a copy that is a plain object again would find toString before it is written
+    // the undoing copies the store's tables: a copy that is a plain object again would find toString before it is
+    // written
     const store = new gs.Store();
     store.apply("// graph: g\n(a:T {name: 'A'})");
     assert.throws(() => store.apply('// graph: g\n(nobody)-[:R]->(a)'), gs.ProfileError);

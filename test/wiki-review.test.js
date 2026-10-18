@@ -1,5 +1,5 @@
-// The review of the wiki pages people write or edit (spec §41, wiki_reviewed): such a page is checked and never
-// changed, a person's edit to a page the wiki makes is reported, and the issue's text can ping no one. Pure: the wiki
+// The review of the wiki pages people write or edit (spec §41, wiki_reviewed). Such a page is checked and never
+// changed. A person's edit to a page the wiki makes is reported. The issue's text can ping no one. Pure: the wiki
 // is given as text, with no clone and no network.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';

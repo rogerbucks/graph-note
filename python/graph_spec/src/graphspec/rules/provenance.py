@@ -84,8 +84,8 @@ def prov_rules(w: World, name: str) -> list[tuple[str, bool, str]]:
     """The provenance rules that apply to graph `name` of world `w`, as [(label, ok, detail)]."""
     g = w[name]
     out = []
-    # HAD_PLAN is the only marker of a derivation; its target is the rule's own node (a Rule, whose
-    # id names the engine function and version, §6), or a Ref that resolves to one
+    # HAD_PLAN is the only marker of a derivation. Its target is the rule's own node, or a Ref that
+    # resolves to one. A Rule's id names the engine function and version (§6)
     plans = [e for e in g.edges if e[1] == "HAD_PLAN"]
     if plans:
         bad = [(e[0], e[2]) for e in plans if "Rule" not in labels_of(w, g, e[2])]

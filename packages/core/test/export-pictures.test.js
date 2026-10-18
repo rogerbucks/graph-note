@@ -1,8 +1,11 @@
-// What an export does with each animated image (editor spec §16, export_animation_stated; §18; §11): the pictures on boxes
-// are embedded in the file itself, so the SVG stays self-contained and loads nothing; an SVG keeps an animated image
-// moving where the limits allow, with its first frame shown instead under reduced motion by the image's own style sheet,
-// scoped under its class (motion_reduced_respected); a PNG, which cannot move, reduces each to its first frame; one past
-// a limit is reduced too; and the export says, for each animated image, which it did.
+// What an export does with each animated image (editor spec §16, export_animation_stated; §18; §11):
+// - the pictures on boxes are embedded in the file itself, so the SVG stays self-contained and loads nothing;
+// - an SVG keeps an animated image moving where the limits allow;
+// - under reduced motion its first frame is shown instead, by the image's own style sheet, scoped under its class
+//   (motion_reduced_respected);
+// - a PNG, which cannot move, reduces each to its first frame;
+// - one past a limit is reduced too;
+// - the export says, for each animated image, which it did.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -48,7 +51,7 @@ const FILES = {
 const STILL = base64(png({ width: 1, height: 1 }));
 
 /**
- * A host's loader: each image's bytes, facts and size, and its first frame drawn as a PNG; one over the size limit
+ * A host's loader: each image's bytes, facts and size, and its first frame drawn as a PNG. One over the size limit is
  * never read, only named and its size given.
  */
 async function load(value) {

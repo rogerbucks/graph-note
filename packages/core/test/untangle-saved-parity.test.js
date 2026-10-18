@@ -1,8 +1,8 @@
-// untangle_legend (editor spec §25), read alike by both libraries (§12): the legend's choices a view was saved as shown
-// with are read the same by the Python library as by the core — the same problems reading each style, the same choices
-// for the view, and the same things and links brought forward and hidden in the drawing. The cases are shared with
-// python/graph_spec/tests/test_legend.py, whose Python answer (python_answer: read_style, and legend_layers over the
-// parts graph_svg draws) is run here.
+// untangle_legend (editor spec §25), read alike by both libraries (§12). The legend's choices a view was saved as shown
+// with are read the same by the Python library as by the core. That means the same problems reading each style, and the
+// same choices for the view. It also means the same things and links brought forward and hidden in the drawing. The
+// cases are shared with python/graph_spec/tests/test_legend.py. Its Python answer is run here (python_answer:
+// read_style, and legend_layers over the parts graph_svg draws).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';

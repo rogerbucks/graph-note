@@ -160,9 +160,9 @@ class Parity(unittest.TestCase):
 
 CORE = os.path.join(ROOT, "packages", "core", "src", "partial-read.ts")
 
-# A broken block, read with a small budget of reading again (10 Oct 2026): past it, both readers
-# leave the rest out at once, from the failing line, each read again and each trial charged its
-# length in UTF-16 units — an emoji is two.
+# A broken block, read with a small budget of reading again (10 Oct 2026). Past it, both readers
+# leave the rest out at once, from the failing line. Each read again and each trial is charged its
+# length in UTF-16 units. An emoji is two.
 CUT_BLOCKS = [
     "// graph: trip\n(home:Place {name: 'Home 🏠'}),\n(walk:Leg {name: 'Walk'}),\n"
     "(bus:Leg {name 'Bus'}),\n(train:Leg {name 'Train'}),\n(tram:Leg {name 'Tram'}),\n"
@@ -222,8 +222,8 @@ class ReadingCut(unittest.TestCase):
         self.assertFalse(any(CUT_SAID in p["message"] for p in whole))
 
 
-# A line neither reader can read is quoted cut at 20 UTF-16 units, never inside an emoji, by both
-# readers (review of PR #28): the cases are shared with packages/core/test/layout-parity.test.js.
+# Both readers quote a line neither can read cut at 20 UTF-16 units, never inside an emoji (review
+# of PR #28). The cases are shared with packages/core/test/layout-parity.test.js.
 with open(os.path.join(JS_TEST, "cannot-read-cases.json"), encoding="utf-8") as f:
     CANNOT_READ = json.load(f)["cases"]
 
@@ -310,8 +310,8 @@ class IdOnce(unittest.TestCase):
 
     def test_parse_refuses_what_the_core_refuses_before_grafeo_is_given_it(self):
         # req:3.engine-reads-first: parse() under Grafeo's parser, which a host asks for, reads
-        # the block with the reader first, so it refuses each block the core refuses, at the
-        # same line
+        # the block with the reader first. So it refuses each block the core refuses, at the
+        # same line.
         names = list(ENGINE_BLOCKS)
         core = core_refusals([ENGINE_BLOCKS[n] for n in names])
         # a plain loop, never subTest: the tests-first replay counts a test by its own result
@@ -331,8 +331,8 @@ class IdOnce(unittest.TestCase):
             self.assertEqual(ours, [theirs[0][1], refusal_kind(theirs[0][2])], name)
 
 
-# Spec §3, req:3.bare-link-type and req:3.engine-gets-corrected: a link type written without its
-# colon, which the graph already has once, is read as that type, and no parser refuses the block.
+# Spec §3, req:3.bare-link-type and req:3.engine-gets-corrected. Take a link type written without
+# its colon, which the graph already has once. It is read as that type. No parser refuses it.
 # The JavaScript reader (the core's), the profile parser and the Grafeo parser all take it, and
 # give the same things and the same link types.
 BARE_BLOCK = (
@@ -390,8 +390,8 @@ class BareLinkType(unittest.TestCase):
         self.assertEqual(parsed_bare(BARE_BLOCK, "grafeo"), want)
 
 
-# req:3.engine-gets-commas: a comma missing before the spaces that end a line, after a property map
-# written over two lines, and on the line of a link type written without its colon
+# req:3.engine-gets-commas. A comma missing before the spaces that end a line. One missing after a
+# property map written over two lines. One on the line of a link type written without its colon.
 COMMA_HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
 MISSING_COMMA_BLOCKS = [
     f"{COMMA_HEAD}\n(r:Reason {{id: 'r', title: 'Sun'}})   \n(o:Option {{id: 'o',\n"
@@ -448,8 +448,8 @@ class MissingComma(unittest.TestCase):
             self.assertEqual(parsed_bare(block, "profile"), want, block)
 
 
-# Blocks the readers refuse, each in a document parse() can read the header of: the two halves of
-# req:3.id-once, and a block that is not one data statement, which Grafeo would take whole.
+# Blocks the readers refuse, each in a document parse() can read the header of. They are the two
+# halves of req:3.id-once, and a block that is not one data statement. Grafeo would take it whole.
 DOC_HEAD = "// graph: g · document doc:one · schema s1 · as of 2026-10-01"
 ENGINE_BLOCKS = {
     "a variable written twice in one block": f"{DOC_HEAD}\n(x:T {{n:1}}),\n(x:T {{m:2}})",
@@ -505,8 +505,8 @@ def both_refuse_alike(test, notes, kind):
         test.assertEqual(ours, theirs, name)
 
 
-# req:3.set-keeps-id: a SET of id to a used id, a fresh id and the node's own id, in the same
-# block and in a later one, and a SET of another key, which both read
+# req:3.set-keeps-id. A SET of id to a used id, a fresh id and the node's own id. Each is in the
+# same block and in a later one. And a SET of another key, which both read.
 TWO_NODES = "// graph: g\n(a:T {id: 'a'}),\n(b:T {id: 'b'})"
 SET_ID_NOTES = {
     **{
@@ -571,8 +571,8 @@ class IdIsText(unittest.TestCase):
         self.assertEqual([p for p in gp.read_for_drawing(note)[1] if p["severity"] == "error"], [])
 
 
-# review of #49: a missing comma before a pattern hides neither id refusal — the comma's retry
-# keeps the refusal it meets, so both readers give it, not "unexpected '('"
+# Review of #49. A missing comma before a pattern hides neither id refusal. The comma's retry
+# keeps the refusal it meets. So both readers give it, not "unexpected '('".
 COMMA_ID_NOTES = {
     "id: 1 after a missing comma": ["// graph: g\n(a:T {id: 'a'})\n(b:T {id: 1})"],
     "id: TRUE in a path after a missing comma": [

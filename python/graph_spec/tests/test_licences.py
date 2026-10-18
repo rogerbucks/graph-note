@@ -57,8 +57,8 @@ def licences(name):
     return found
 
 
-# every locked package, the engine and the dev tools among them: what a dev install has, as CI's
-# python job runs it; a plain install leaves them out
+# Every locked package, the engine and the dev tools among them. That is what a dev install has,
+# as CI's python job runs it. A plain install leaves them out.
 @needs_engine
 class Licences(unittest.TestCase):
     def test_there_are_packages_to_check(self):

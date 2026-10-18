@@ -13,9 +13,10 @@ export const LABELS = ['You should see', 'Test diagram', 'Do this', 'Checklist l
 const NUMBER = /^\*\*([A-Z]-\d\d)\*\*/;
 
 /**
- * What a device pass adds to an item, from a device's name and its tick to the end of the item ("Mac ✓ 0.3.0, 9 Oct 2026
- * ..."): left out when an item is compared, so ticking one off on a device never breaks its note. An item that ran on to
- * its mark with a colon ("each card standing out: Mac ✓ …") ends on a full stop instead, so it ends cleanly.
+ * What a device pass adds to an item, from a device's name and its tick to the end of the item. For example, "Mac ✓
+ * 0.3.0, 9 Oct 2026 ...". It is left out when an item is compared, so ticking one off on a device never breaks its
+ * note. An item that ran on to its mark with a colon ("each card standing out: Mac ✓ …") ends on a full stop instead,
+ * so it ends cleanly.
  */
 export const withoutMarks = (text) =>
   text
@@ -24,8 +25,8 @@ export const withoutMarks = (text) =>
     .replace(/[:;,]$/, '.');
 
 /**
- * The ids of the requirements an item names in a bracket at its end ("(slice 2, park_for_later, deferred_drawn)"): left
- * out when an item is compared, because a note stands on its own and its reader has no use for them.
+ * The ids of the requirements an item names in a bracket at its end ("(slice 2, park_for_later, deferred_drawn)"). They
+ * are left out when an item is compared, because a note stands on its own and its reader has no use for them.
  */
 export const withoutIds = (text) =>
   text.replace(/\s*\((?:slice \d+|(?:slice \d+, )?[a-z]+(?:_[a-z]+)+(?:, [a-z]+(?:_[a-z]+)+)*)\)/g, '');
@@ -40,8 +41,9 @@ export const words = (text) => text.replace(/\s+/g, ' ').trim();
 export const unescaped = (text) => text.replace(/\\</g, '<');
 
 /**
- * The checklist's sections, each with its heading and its items. An item is `{ number, checked, text, line }`: its
- * number ('' when it has none), its tick, its words with the wrapped lines joined (and no tick), and its 1-based line.
+ * The checklist's sections, each with its heading and its items. An item is `{ number, checked, text, line }`. That is
+ * its number ('' when it has none), its tick, its words and its 1-based line. The words are its wrapped lines and its
+ * indented sub-items joined, with no tick; a sub-item keeps its dash.
  */
 export function checklistSections(text = read(CHECKLIST)) {
   const sections = [];
@@ -55,7 +57,7 @@ export function checklistSections(text = read(CHECKLIST)) {
     } else if (start && sections.length) {
       item = { number: NUMBER.exec(start[2])?.[1] ?? '', checked: start[1] === 'x', text: start[2], line: i + 1 };
       sections.at(-1).items.push(item);
-    } else if (item && /^ {6}\S/.test(line)) item.text += ` ${line.trim()}`;
+    } else if (item && /^ {2,}\S/.test(line)) item.text += ` ${line.trim()}`;
     else item = null;
   });
   return sections.map((s) => ({ ...s, items: s.items.map((it) => ({ ...it, text: words(it.text) })) }));

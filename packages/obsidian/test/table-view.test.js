@@ -1,6 +1,6 @@
-// A graph drawn as a table (editor spec §15, diagram_type_set, type_one_way_to_work): a plain table the plugin draws, not
-// Graphviz — a row for each thing, with its kind and properties, and one for each link — worked as a drawing is: a row
-// tapped, or opened from the keyboard, shows its details, the one shown marked; and the bar's zoom scales it.
+// A graph drawn as a table (editor spec §15, diagram_type_set, type_one_way_to_work). The plugin draws a plain table, not
+// Graphviz. It has a row for each thing, with its kind and properties, and one for each link. It is worked as a drawing is.
+// A row tapped, or opened from the keyboard, shows its details, and the one shown is marked. The bar's zoom scales it.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load } from './host/load-plugin.js';
@@ -111,9 +111,10 @@ describe('a graph drawn as a table', () => {
   });
 });
 
-// The selection of §25 on a table: what it can do there it does, as in a drawing — Find opens a thing and gives its row the
-// focus, Escape clears it — and what needs a drawing (the fade, the kept outline, walking the links by arrow key, filtering
-// by kind, a neighbourhood alone, a path) is neither done nor offered, and never fails for want of the drawing's SVG.
+// The selection of §25 on a table. What it can do there it does, as in a drawing. Find opens a thing and gives its row the
+// focus, and Escape clears it. Some things need a drawing: the fade, the kept outline, walking the links by arrow key,
+// filtering by kind, a neighbourhood alone, a path. Those are neither done nor offered. They never fail for want of the
+// drawing's SVG.
 describe('the selection on a graph drawn as a table', () => {
   const rowOf = (el, key) => el.querySelectorAll('tr[data-key]').find((r) => r.getAttribute('data-key') === key);
   const marked = (el) =>

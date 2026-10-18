@@ -1,6 +1,6 @@
-// The workflows of the build status: what wakes them, what each may do, and that the project secret is only ever given to
-// the copy of the script that is on main. Read as text, by indentation, as policy.test.js reads the others. Editor spec
-// §12, requirements_checked_in_ci.
+// The workflows of the build status. It checks what wakes them and what each may do. It checks that the project secret
+// is only ever given to the copy of the script that is on main. Read as text, by indentation, as policy.test.js reads
+// the others. Editor spec §12, requirements_checked_in_ci.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { dirname, join, normalize } from 'node:path';

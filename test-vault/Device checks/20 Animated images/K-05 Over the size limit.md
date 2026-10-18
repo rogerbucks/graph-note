@@ -31,8 +31,9 @@ The style block: a picture on every clip's box.
 
 **Checklist line:**
 
-> **K-05** A thing whose image is the GIF of more than 5 MB: it is never read, so its box shows only its Play control
-> where the picture would be, and its image in the details shows nothing, each saying it is over the 5 MB an animated image may be, and the limits
-> in a sentence; pressing Play leaves it so and says why again. The drawing is drawn at once, without waiting for it.
+> **K-05** A thing whose image is the GIF of more than 5 MB: it is never read. Its box shows only its Play control where the picture would be, and its image in the details shows nothing.
+>
+> - Each says it is over the 5 MB an animated image may be, and gives the limits in a sentence. Pressing Play leaves it so and says why again.
+> - The drawing is drawn at once, without waiting for it.
 
 **Back to the checklist:** [K-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for K-05 in its list.

@@ -1,8 +1,8 @@
-// Where the block an edit session holds is in a note changed since (spec §9, block_followed_not_its_copy): found by the
-// lines that did not change around it, never by its text alone, so a copy pasted elsewhere is never taken for it; and
-// when the change could as well have made either of two blocks the one held, it is not told apart, and the session stops.
-// Linear in the blocks: each is looked at a few times at most, never against every other (the re-review of #465).
-// Host-free: the session hands in the note as it last saw it and the note as it is now.
+// Where the block an edit session holds is in a note changed since (spec §9, block_followed_not_its_copy). It is found
+// by the lines that did not change around it, never by its text alone. So a copy pasted elsewhere is never taken for
+// it. When the change could as well have made either of two blocks the one held, it is not told apart, and the session
+// stops. Linear in the blocks: each is looked at a few times at most, never against every other (the re-review of
+// #465). Host-free: the session hands in the note as it last saw it and the note as it is now.
 import { gqlSpans, graphOfBlock } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { trim } from './whitespace.ts';
@@ -28,18 +28,21 @@ interface Context {
 }
 
 /**
- * The block whose fence opened on `line` in `before`, found in `after`, read two ways: with the lines the notes share at
- * their start taken first, and with those at their end. A reading that leaves the block whole among the unchanged lines
- * puts it where they do; one whose change runs through it puts it where its unchanged opening (or closing) fence is.
+ * The block whose fence opened on `line` in `before`, found in `after`. It is read two ways: with the lines the notes
+ * share at their start taken first, and with those at their end. A reading that leaves the block whole among the
+ * unchanged lines puts it where they do. A reading whose change runs through it puts it where its unchanged opening (or
+ * closing) fence is.
  * - Two readings leaving it whole in two places: a copy pasted beside it, the two not told apart (`twin`).
- * - One leaving it whole, the other finding a new block in its place: a block pasted beside it, unless that block
- *   reads as the held one edited (`readsAsEdited`), when either could be it (`twin`).
- * - Only a new block of its graph in its place: the held block edited, unless a copy of its old text is elsewhere and
- *   the new text keeps too little of it to know it by (`twin`): never the copy (the re-review of #465).
- * - Neither reading placing it, the change running through the whole block: by its text, and a twin when two blocks
- *   hold it, or when a new block of its graph sits on its line and could be it rewritten; else by its line.
- * Whatever found it, a block followed with a new block of its graph directly beside it, on either side, is followed
- * `wary` (`newBeside`): the session clears its history, so Undo never reverts what may be a copy.
+ * - One leaving it whole, the other finding a new block in its place: a block pasted beside it. The exception is when
+ *   that block reads as the held one edited (`readsAsEdited`); then either could be it (`twin`).
+ * - Only a new block of its graph in its place: the held block edited. The exception is when a copy of its old text is
+ *   elsewhere. Then, if the new text keeps too little of it to know it by, it is a `twin`. Never the copy (the
+ *   re-review of #465).
+ * - Neither reading placing it, the change running through the whole block: found by its text. A twin when two blocks
+ *   hold it, or when a new block of its graph sits on its line and could be it rewritten. Else found by its line.
+ *
+ * Whatever found it, a block with a new block of its graph directly beside it, on either side, is followed `wary`
+ * (`newBeside`). The session clears its history, so Undo never reverts what may be a copy.
  */
 export function followBlock(before: string, after: string, line: number, work: FollowWork = { looked: 0 }): Followed {
   const now = gqlSpans(after),
@@ -65,8 +68,8 @@ export function followBlock(before: string, after: string, line: number, work: F
 
 /**
  * Whether a new block of the held block's graph sits directly beside the block followed, on either side, only blank
- * lines between: no reading tells that from the original rewritten beside a copy of it ([Q][MINE] is a block pasted
- * above, or a copy pasted below; [MINE][Q] a block pasted below, or a copy pasted above), so the block is followed
+ * lines between. No reading tells that from the original rewritten beside a copy of it. [Q][MINE] is a block pasted
+ * above, or a copy pasted below. [MINE][Q] is a block pasted below, or a copy pasted above. So the block is followed
  * `wary` (the coordinator and the third review of #465, 15 Oct 2026).
  */
 function newBeside(c: Context, at: number): boolean {
@@ -119,9 +122,10 @@ function decide(c: Context, readings: Reading[]): Span | 'twin' | null {
 }
 
 /**
- * The block by its text when the change runs through the whole of it: two holding it are a twin; one holding it is the
- * block, unless a new block of its graph sits on its line, before or after the lines the change added, and could be it
- * rewritten while the other is a copy: a twin then, unless that block was only pasted beside it, the note gaining it.
+ * The block by its text when the change runs through the whole of it. Two holding it are a twin. One holding it is the
+ * block, with one exception. A new block of its graph may sit on its line, before or after the lines the change added.
+ * It could be it rewritten while the other is a copy. That is a twin, unless that block was only pasted beside it, the
+ * note gaining it.
  */
 function byText(c: Context, line: number): Followed {
   const { now, old, was } = c;
@@ -147,9 +151,9 @@ function byLine(now: Span[], line: number, c: Context | null, work: FollowWork):
 }
 
 /**
- * Whether `s` reads as the held block edited: a new block of its graph whose text after the graph line keeps, at its
- * start and end, at least half of the held block's text after its graph line. A block sharing less, such as a small
- * new block, is another block.
+ * Whether `s` reads as the held block edited. That is a new block of its graph whose text after the graph line keeps
+ * enough of the held block. It must keep, at its start and end, at least half of the held block's text after its graph
+ * line. A block sharing less, such as a small new block, is another block.
  */
 function readsAsEdited(c: Context, s: Span): boolean {
   if (!isNewOfGraph(c, s)) return false;

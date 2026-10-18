@@ -1,5 +1,6 @@
 // The form that asks, when List is chosen for a property, for the kind and the relationship (spec §14,
-// list_as_linked_things): two fields, offered the kinds and relationships the graph already uses, and Make list or Cancel.
+// list_as_linked_things). It has two fields, offered the kinds and relationships the graph already uses. Then Make list
+// or Cancel.
 import type { ListShape } from '@thoughtknot/core';
 
 /** What the form offers: the kinds and relationships the graph uses, and the suggestions to start from. */

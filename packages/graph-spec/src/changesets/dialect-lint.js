@@ -9,8 +9,9 @@ const blank = (text) =>
   text
     .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length))
     .replace(/'(?:[^'\\]|\\.)*'/g, (m) => "'" + ' '.repeat(m.length - 2) + "'");
-// Each [ that opens a list rather than a relationship or an index — not straight after a word, -, ], >, ) or ' — with the
-// whitespace before it, as graph_spec.lint finds them; written without a regex lookbehind, which iOS before 16.4 cannot run.
+// Each [ that opens a list rather than a relationship or an index, with the whitespace before it. Such a [ is not
+// straight after a word, -, ], >, ) or '. It is found as graph_spec.lint finds them. It is written without a regex
+// lookbehind, which iOS before 16.4 cannot run.
 function listStarts(src) {
   const out = [],
     after = new Set(['-', ']', '>', ')', "'"]),
@@ -39,7 +40,7 @@ function closeAt(src, i) {
 }
 // The traps in a GQL text written by a model, as findings {trap, line} sorted by line, as graph_spec.lint finds them.
 // Some return a wrong answer with no error, so they are caught before the text runs. Comments and string contents are
-// blanked first, so nothing in them is a trap; a text that opens as a graph block is also checked against the profile.
+// blanked first, so nothing in them is a trap. A text that opens as a graph block is also checked against the profile.
 function lint(text) {
   const src = blank(text),
     out = [],

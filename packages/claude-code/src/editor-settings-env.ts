@@ -1,8 +1,9 @@
-// The settings the mod hands the editor server in its environment (spec §26, cc_settings_shared). The gate's, as the
-// launcher makes them (`settingsForServer`: classifications, the level for unlabelled notes, each model's name and
-// ceiling or matrix row, never its address or key), and now the ones the page shows with: how it indents, draws, folds
-// and what the viewer's aids are. The server reads them back with the core's `settingsFrom`, so a missing one is its
-// default, and answers them to the page read only.
+// The settings the mod hands the editor server in its environment (spec §26, cc_settings_shared).
+// - The gate's, as the launcher makes them (`settingsForServer`). Those are classifications and the level for
+//   unlabelled notes. Also each model's name and ceiling or matrix row, never its address or key.
+// - Now also the ones the page shows with: how it indents, draws and folds, and what the viewer's aids are.
+// The server reads them back with the core's `settingsFrom`, so a missing one is its default. It answers them to the
+// page read only.
 import type { GateSettings, Settings } from '@thoughtknot/core';
 
 /** What the mod reads from its settings file: the gate's, and any of the editor's own that were saved. */

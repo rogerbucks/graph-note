@@ -1,7 +1,7 @@
-// Making a view by tapping (spec §7, views_by_tapping, five_view_kinds): while the card is edited, Make a view offers the
-// kinds of view; the boxes tapped choose what it shows — picked by hand, the thing it is near, where a route starts and
-// ends, the kinds — and its reading is said in plain English as it is built; Write the view writes its query as a view
-// block of its own after the graph's last block. The strip is built once; only its words change as it goes.
+// Making a view by tapping (spec §7, views_by_tapping, five_view_kinds). While the card is edited, Make a view offers
+// the kinds of view. The boxes tapped choose what it shows: picked by hand, the thing it is near, where a route starts
+// and ends, or the kinds. Its reading is said in plain language as it is built. Write the view writes its query as a
+// view block of its own after the graph's last block. The strip is built once; only its words change as it goes.
 import { makeView, pathsOf, readingOf, word } from '@thoughtknot/core';
 import type { WordKey } from '@thoughtknot/core';
 import type { ViewKind, ViewSpec } from '@thoughtknot/core';

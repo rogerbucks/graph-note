@@ -37,6 +37,6 @@
 
 **Checklist line:**
 
-> **M-04** Turn Groups folded on: each group is one box with its name and how many things it holds, and the links to its things run to the box. Tap a box, or press Enter on it: that group opens and the other stays folded. Find a thing inside a folded group: its group opens and it is selected.
+> **M-04** Turn Groups folded on: each group is one box with its name and how many things it holds. The links to its things run to the box. Tap a box, or press Enter on it: that group opens and the other stays folded. Find a thing inside a folded group: its group opens and it is selected.
 
 **Back to the checklist:** [M-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for M-04 in its list.

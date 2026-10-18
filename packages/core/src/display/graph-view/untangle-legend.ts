@@ -1,7 +1,7 @@
-// The legend that untangles (editor spec §25, untangle_legend): every kind of thing and relationship type of the drawing
-// as a button; choosing one brings it forward and fades the rest, choosing it again hides it, and once more puts it back.
-// Each says where it stands in words as well as by its look. Nothing here writes to the note: a view's Save as shown
-// writes the choices (§25, untangle_legend), and a view saved so opens with them.
+// The legend that untangles (editor spec §25, untangle_legend). Every kind of thing and relationship type of the
+// drawing is a button. Choosing one brings it forward and fades the rest, choosing it again hides it, and once more
+// puts it back. Each says where it stands in words as well as by its look. Nothing here writes to the note. A view's
+// Save as shown writes the choices (§25, untangle_legend), and a view saved so opens with them.
 import { word } from '@thoughtknot/core';
 import type { LegendFilter, LegendItem, LegendState } from '@thoughtknot/core';
 

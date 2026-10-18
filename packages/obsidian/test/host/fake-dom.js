@@ -1,5 +1,5 @@
-// A small stand-in for the browser DOM and Obsidian's element helpers, enough to load the built plugin in Node and see
-// what it puts on the page. Not a browser: layout sizes are fixed, and the SVG parser reads only tags and attributes.
+// A small stand-in for the browser DOM and Obsidian's element helpers. It is enough to load the built plugin in Node and
+// see what it puts on the page. Not a browser: layout sizes are fixed, and the SVG parser reads only tags and attributes.
 
 export class FakeElement {
   constructor(tag, doc) {
@@ -147,8 +147,8 @@ export class FakeElement {
     this.append(...cs);
   }
   remove() {
-    // as in Chromium (seen 9 Oct 2026): an element taken off the page loses the focus, saying so while still on it, and
-    // does not have it back when put back
+    // as in Chromium (seen 9 Oct 2026): an element taken off the page loses the focus, saying so while still on it.
+    // It does not have it back when put back
     const lost = this.ownerDocument.activeElement;
     if (this.contains(lost)) {
       this.ownerDocument.activeElement = null;
@@ -231,8 +231,8 @@ export class FakeElement {
     return this.dispatch('click');
   }
   focus(options) {
-    // as in a browser: an element that is not on the page cannot take the focus; one that does says so, as does the one
-    // that had it; and, unless told preventScroll, the page scrolls to show it (counted, as the fake has no layout)
+    // as in a browser: an element that is not on the page cannot take the focus. One that does says so, as does the one
+    // that had it. Unless told preventScroll, the page scrolls to show it (counted, as the fake has no layout)
     const doc = this.ownerDocument,
       had = doc.activeElement;
     if (!this.isConnected || had === this) return;
@@ -387,8 +387,8 @@ function parseXml(text, doc) {
 }
 
 /**
- * A child was put into `parent`: as a browser does, each MutationObserver watching the document hears of it once, on a
- * microtask, however many children were put in meanwhile. Only what is on the page counts, as with observing the
+ * A child was put into `parent`. As a browser does, each MutationObserver watching the document hears of it once. It
+ * hears on a microtask, however many children were put in meanwhile. Only what is on the page counts, as with observing the
  * document's root with subtree.
  */
 function childAdded(parent) {

@@ -1,6 +1,6 @@
 // The plugin's build: `npm run build` once, `npm run dev` on every save. Both write the files the
-// plugin is installed from — main.js, manifest.json and styles.css at the repository root — which the
-// vault's install script copies into .obsidian/plugins/thoughtknot/ for desktop and phone (spec §13).
+// plugin is installed from: main.js, manifest.json and styles.css at the repository root. The vault's
+// install script copies them into .obsidian/plugins/thoughtknot/ for desktop and phone (spec §13).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
@@ -35,10 +35,10 @@ test('the files the plugin is installed from are at the repository root', () => 
   assert.equal(pkg('manifest.json').id, 'thoughtknot', 'installed as .obsidian/plugins/thoughtknot');
 });
 
-// Tests across the plugin rebuild main.js in parallel, and Obsidian reads it while `npm run dev` writes: a reader must
-// see the old build or the new one, never half of one. A file swapped in whole by a rename is a new file: a new inode,
-// or, when the file system hands a freed inode number straight back (ext4 does, under parallel builds), a newer
-// creation time. One rewritten in place keeps both.
+// Tests across the plugin rebuild main.js in parallel. Obsidian reads it while `npm run dev` writes.
+// A reader must see the old build or the new one, never half of one. A file swapped in whole by a rename is a new file.
+// It has a new inode. Or the file system may hand a freed inode number straight back (ext4 does, under parallel builds).
+// Then it has a newer creation time. One rewritten in place keeps both.
 const identity = (file) => {
   if (!existsSync(file)) return null;
   const s = statSync(file);

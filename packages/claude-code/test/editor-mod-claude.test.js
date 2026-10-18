@@ -1,8 +1,8 @@
-// Proposals from Claude (editor spec §26, slice 4; workstream C7; test_cc_mod, with editor-mod.test.js): Claude is the
-// only AI the browser editor offers (cc_claude_only), and what Claude changes in the note open in the pane reaches it
-// through the mod as a proposal, a checked change set the user accepts or rejects on the card, never through the
-// server's write (cc_claude_proposes). Tried over real server processes started as the host starts them; the page's own
-// review is run on the note as the server wrote it. A test asserts the work done, never the time taken.
+// Proposals from Claude (editor spec §26, slice 4; workstream C7; test_cc_mod, with editor-mod.test.js). Claude is the
+// only AI the browser editor offers (cc_claude_only). What Claude changes in the note open in the pane reaches it
+// through the mod as a proposal. That is a checked change set the user accepts or rejects on the card. It never comes
+// through the server's write (cc_claude_proposes). Tried over real server processes, started as the host starts them.
+// The page's own review is run on the note as the server wrote it. A test asserts the work done, never the time taken.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';

@@ -1,6 +1,6 @@
 // The one colour mapping (spec §10, one_colour_map): each host writes the style's colours through one table. Obsidian's
-// entry names its theme variables, so the drawing follows the theme; a host whose drawing is an isolated image, such as
-// a Claude Code pane, takes fixed colours with the page painted in, and still meets the locked style's contrast (§11).
+// entry names its theme variables, so the drawing follows the theme. A host whose drawing is an isolated image, such as
+// a Claude Code pane, takes fixed colours with the page painted in. It still meets the locked style's contrast (§11).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { instance } from '@viz-js/viz';

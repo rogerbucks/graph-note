@@ -1,6 +1,7 @@
-// A gql block that is not a graph to draw — a query, a schema, an excerpt, or a graph that cannot be read — shown as
-// code, coloured by the same tokenizer as the gql-highlight plugin (spec §4, "colour"), with a copy button. A very long
-// one is shown plain (spec §9, layout_contained): coloured, it would be hundreds of thousands of elements on the page.
+// A gql block that is not a graph to draw is shown as code, with a copy button. Such a block is a query, a schema, an
+// excerpt, or a graph that cannot be read. It is coloured by the same tokenizer as the gql-highlight plugin (spec §4,
+// "colour"). A very long one is shown plain (spec §9, layout_contained): coloured, it would be hundreds of thousands of
+// elements on the page.
 import { tokenize, word } from '@thoughtknot/core';
 import { notice, setIcon } from './host';
 

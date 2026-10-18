@@ -1,8 +1,11 @@
 // Every control's name, role and state, and the text version against the drawing (editor spec §41, a11y_semantics_auto).
-// Each view of each host, the same views test/wcag.test.js checks, is read as a screen reader reads it: every control
-// a person can operate must have an accessible name, be read as a control, and say its state where its role has one
-// (checked, selected, expanded). Each drawing's text version must count the things drawn and name each of them. The
-// check itself is tried first, on planted faults, so a pass means it looked. Test support: test/repository/a11y-tree.js.
+// Each view of each host is read as a screen reader reads it. These are the same views test/wcag.test.js checks. Every
+// control a person can operate must:
+// - have an accessible name.
+// - be read as a control.
+// - say its state where its role has one (checked, selected, expanded).
+// Each drawing's text version must count the things drawn and name each of them. The check itself is tried first, on
+// planted faults, so a pass means it looked. Test support: test/repository/a11y-tree.js.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from '../packages/obsidian/test/host/load-plugin.js';

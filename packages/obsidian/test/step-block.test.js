@@ -1,8 +1,10 @@
 // A graph step in a note (editor spec §20, graph_step_io, step_inputs_checked, run_declared_only, step_output_proposal):
-// its card names the step and each point it takes a graph at, with what the point takes and a choice of the note's
-// graphs and views to give it; nothing runs when it is drawn, only when Run is pressed; inputs that do not fit are
-// refused, saying why, with nothing written; and what it gives is written as a proposal beside the graph, the graph
-// untouched. Reading view offers no Run.
+// - Its card names the step and each point it takes a graph at. It says what the point takes, with a choice of the
+//   note's graphs and views to give it.
+// - Nothing runs when it is drawn, only when Run is pressed.
+// - Inputs that do not fit are refused, saying why, with nothing written.
+// - What it gives is written as a proposal beside the graph, the graph untouched.
+// Reading view offers no Run.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

@@ -1,8 +1,9 @@
-// The mini-map (editor spec §24, mini_map, mini_map_setting): a small copy of the whole drawing in a corner of its view,
-// with the part in view outlined, which moves the view when it is tapped or dragged. It shows by the setting: never, only
-// when the drawing is bigger than its view (the default), or always. It is drawn from the same areas a tap reaches, as a box
-// for each thing and a line for each link, so it is a copy of the layout and never lays anything out; its look is the style
-// sheet's alone (`thoughtknot-mini-*`). Pointer only: the drawing is moved from the keyboard by its own keys.
+// The mini-map (editor spec §24, mini_map, mini_map_setting): a small copy of the whole drawing in a corner of its
+// view. The part in view is outlined, and moves the view when it is tapped or dragged. It shows by the setting: never,
+// only when the drawing is bigger than its view (the default), or always. It is drawn from the same areas a tap
+// reaches, as a box for each thing and a line for each link. So it is a copy of the layout and never lays anything out.
+// Its look is the style sheet's alone (`thoughtknot-mini-*`). Pointer only: the drawing is moved from the keyboard by
+// its own keys.
 import { hitAreas, word } from '@thoughtknot/core';
 import type { Drawn, HitAreas, MiniMapSetting, Size, View, Zoom } from '@thoughtknot/core';
 import type { Lifecycle } from '../lifecycle';

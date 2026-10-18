@@ -1,8 +1,10 @@
 // The wiki's pages for developers (spec §41, developer_wiki): the architecture, writing a plug-in, adding a host and the
-// reference, each list made from the file that defines it, so the pages change when the code does. The architecture is a
-// graph note of its own, requirements/architecture.gql, drawn as ThoughtKnot draws a graph: a box for each thing, its kind
-// under its name, and a dashed box for one not built yet. Each requirement is shown with where it stands: in the latest
-// release, on main only (the nightly build), being built, or planned. scripts/wiki.mjs fills the pages' markers from here.
+// reference. Each list is made from the file that defines it, so the pages change when the code does.
+//
+// The architecture is a graph note of its own, requirements/architecture.gql. It is drawn as ThoughtKnot draws a graph.
+// There is a box for each thing, its kind under its name, and a dashed box for one not built yet. Each requirement is
+// shown with where it stands: in the latest release, on main only (the nightly build), being built, or planned.
+// scripts/wiki.mjs fills the pages' markers from here.
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,9 +31,9 @@ export const STATES = {
 };
 
 /**
- * Each requirement's state, by id. `requirements` are as readBoard gives them, today on main; `released` the same for
- * the latest stable release, or null when there is none to compare with, and then every proved requirement counts as
- * released.
+ * Each requirement's state, by id. `requirements` are as readBoard gives them, today on main. `released` is the same
+ * for the latest stable release. It is null when there is none to compare with, and then every proved requirement
+ * counts as released.
  */
 export function requirementStates(requirements, released) {
   const then = released ? new Map(released.map((r) => [r.id, r.status])) : null;
@@ -72,8 +74,8 @@ export function interfacesTable(arch, states) {
 }
 
 /**
- * One section of the requirements, shown as ThoughtKnot shows a graph: a drawing, each requirement a box joined to its
- * section and grouped by where it stands, then the same as a table, with its rule in full.
+ * One section of the requirements, shown as ThoughtKnot shows a graph. First a drawing: each requirement a box joined
+ * to its section and grouped by where it stands. Then the same as a table, with its rule in full.
  */
 export function sectionView(num, board, states) {
   const section = board.sections.find((s) => s.num === num);
@@ -167,9 +169,9 @@ export function editionNote(latest) {
 }
 
 /**
- * The markers the developer pages use, filled from `dev`: the architecture text and the facts read from the code
- * ({points, pluginApi, exporterChecks, tokenChecks, builtIns, hostSource, hostChecks, hostVersion, tokens}), with the
- * board and states of the requirements and the latest release's tag.
+ * The markers the developer pages use, filled from `dev`. It gives the architecture text and the facts read from the
+ * code: {points, pluginApi, exporterChecks, tokenChecks, builtIns, hostSource, hostChecks, hostVersion, tokens}. It
+ * also gives the board and states of the requirements and the latest release's tag.
  */
 export function developerFills(dev, board, states, latest) {
   const arch = readArchitecture(dev.architectureText);
@@ -231,7 +233,7 @@ export function referencePage(dev, latest) {
 }
 
 /**
- * The architecture graph and what the developer pages show of the code, read from the files that define it; throws,
+ * The architecture graph and what the developer pages show of the code, read from the files that define it. It throws,
  * naming each fault, when the architecture graph names a path or a requirement that is not there.
  */
 export async function developerFacts() {

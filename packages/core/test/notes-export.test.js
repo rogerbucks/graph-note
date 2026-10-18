@@ -1,7 +1,8 @@
-// Notes in the data exports (editor spec §24, note_standard; graph spec req:26.plain): an export keeps each thing's
+// Notes in the data exports (editor spec §24, note_standard; graph spec req:26.plain). An export keeps each thing's
 // and link's `///` note where its format has comments, and leaves it out where it has none. A GQL block keeps it as
-// the `///` lines above its thing or link; GraphML as an XML comment directly before its node or edge, written so XML
-// reads it back as written and its text can never end the comment; CSV, which has no comments, leaves it out. Each is
+// the `///` lines above its thing or link. GraphML keeps it as an XML comment directly before its node or edge. It is
+// written so XML reads it back as written, and its text can never end the comment. CSV, which has no comments, leaves
+// it out. Each is
 // proved by reading the export back with the strict readers of export-data-readers.js.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -145,7 +146,7 @@ ${hostile.map((l) => `/// ${l}`).join('\n')}
     assert.deepEqual(data.notes, want, 'the reader reads the notes as written');
     const text = dataText(data, 'graphml', INFO);
     // the strict reader refuses -- inside a comment, a - at its end, a raw control character and anything outside a
-    // comment that is not GraphML, so a note that escaped its comment would fail here
+    // comment that is not GraphML. So a note that escaped its comment would fail here
     assert.deepEqual(readNotes('graphml', text), want);
     assert.deepEqual(readBack('graphml', text), dataOf(readNote([block]).world.team));
     const graph = xmlTree(text).children.find((c) => c.name === 'graph');

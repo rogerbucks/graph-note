@@ -1,12 +1,14 @@
-// What a person decided about a proposal's changes, kept in the note (editor spec §17, rejecting_recorded, decider_named; the
-// graph spec's §23 and §24, cs-rejected-out). An accepted change is in the graph and a rejected one is nowhere in it, and
-// neither stays in the change set, where any tool that applied the set would apply it again. Each decision is a `Decision`
-// in the note's judgement graph, a gql block whose graph is `judgements` (or ends `_judgements`): reused when the note has
-// one, else added after the change set. It holds the change's statement, so a decided change is still shown and a
-// rejected one can be read again, who proposed it (the change set's `by`) and who decided and when. The decider is plain
-// text, kept exactly as typed in the settings, or "you" when none is set. Each Decision is also WAS_ATTRIBUTED_TO the
-// proposer and the decider (W3C PROV, the graph spec's req:24.prov-attributed), agents of this judgement graph only: the
-// decider is never a link to a Person of the data graph.
+// What a person decided about a proposal's changes, kept in the note. See editor spec §17 (rejecting_recorded,
+// decider_named) and the graph spec's §23 and §24 (cs-rejected-out). An accepted change is in the graph. A rejected one
+// is nowhere in it. Neither stays in the change set, where any tool that applied the set would apply it again.
+//
+// Each decision is a `Decision` in the note's judgement graph. That is a gql block whose graph is `judgements` (or ends
+// `_judgements`). It is reused when the note has one, else added after the change set. It holds the change's statement.
+// So a decided change is still shown and a rejected one can be read again. It also holds who proposed it (the change
+// set's `by`) and who decided and when. The decider is plain text, kept exactly as typed in the settings. It is "you"
+// when none is set. Each Decision is also WAS_ATTRIBUTED_TO the proposer and the decider (W3C PROV). This is the graph
+// spec's req:24.prov-attributed. They are agents of this judgement graph only. The decider is never a link to a Person
+// of the data graph.
 import { items } from './block-items.ts';
 import { appended } from './linked-list.ts';
 import { dataKind, gqlSpans, graphOf } from './blocks.ts';
@@ -61,9 +63,9 @@ export const judgementSpan = (note: string): Span | undefined => gqlSpans(note).
 const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
 
 /**
- * The decisions the note's judgement block records for one proposal: each change as its statement was kept (a SET, a
- * DELETE or an addition's item), with its group and reason, the decision and the place it had among the proposal's
- * changes. A record that cannot be read back as a change is left out.
+ * The decisions the note's judgement block records for one proposal. Each is a change as its statement was kept (a
+ * SET, a DELETE or an addition's item). It comes with its group and reason, the decision and the place it had among the
+ * proposal's changes. A record that cannot be read back as a change is left out.
  */
 export function decidedIn(note: string, graph: string, proposal: string): Decided[] {
   const span = judgementSpan(note);
@@ -91,9 +93,9 @@ export function decidedIn(note: string, graph: string, proposal: string): Decide
 }
 
 /**
- * The changes a change set holds still waiting and those the note's judgement graph says were decided, in the order they
- * were proposed: each decided one at the place it had, the waiting ones filling the rest. `at` says which places hold
- * a decided change, and what was decided of it.
+ * The changes a change set holds still waiting, and those the note's judgement graph says were decided. They come in
+ * the order they were proposed. Each decided one is at the place it had, and the waiting ones fill the rest. `at` says
+ * which places hold a decided change, and what was decided of it.
  */
 export function inOrder(
   decided: readonly Decided[],
@@ -137,7 +139,10 @@ function itemOf(r: ToRecord, graph: string, proposal: string, proposedBy: string
   return `(${nameOf(graph, proposal, c.id)}:Decision {${props.join(', ')}})`;
 }
 
-/** An agent's label in the judgement graph: a Model for a model, a Person for a person or a graph step, none when the kind is unknown. */
+/**
+ * An agent's label in the judgement graph. A Model for a model, a Person for a person or a graph step, none when the
+ * kind is unknown.
+ */
 const agentLabel = (kind: ProposerKind): string | null =>
   kind === 'model' ? 'Model' : kind === 'unknown' ? null : 'Person';
 
@@ -149,9 +154,9 @@ function shortHash(text: string): string {
 }
 
 /**
- * The agent a name is, as an item of the judgement block (the graph spec's req:24.prov-attributed): its node name and the
- * item to write, or null when the block already holds exactly that item. The name is kept exactly as typed; a node name
- * the block holds for something else is never reused.
+ * The agent a name is, as an item of the judgement block (the graph spec's req:24.prov-attributed). Gives its node name
+ * and the item to write, or null when the block already holds exactly that item. The name is kept exactly as typed. A
+ * node name the block holds for something else is never reused.
  */
 function agentNode(block: string, label: string, name: string, added: readonly string[]) {
   const held = [...(block ? items(block).map((it) => block.slice(it.from, it.to)) : []), ...added];
@@ -171,8 +176,9 @@ export interface Written {
 }
 
 /**
- * The note with these decisions in its judgement block: appended to the one it has, else a new block after `after` (the
- * change set, or the last gql block). Nothing else is touched. Null when the note has nowhere to write one.
+ * The note with these decisions in its judgement block. They are appended to the one it has. Else they go in a new
+ * block after `after` (the change set, or the last gql block). Nothing else is touched. Null when the note has nowhere
+ * to write one.
  */
 export function withDecisions(
   note: string,

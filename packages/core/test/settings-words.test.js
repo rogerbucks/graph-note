@@ -1,6 +1,6 @@
-// The settings page's words, in the person's language (editor spec §42, words_catalogue): every word of every option is in
-// the catalogue, as the option says it in UK English, so a translation reaches the whole page; each is said in the
-// language set, and a word the catalogue lacks is said as the option has it.
+// The settings page's words, in the person's language (editor spec §42, words_catalogue). Every word of every option is
+// in the catalogue, as the option says it in UK English. So a translation reaches the whole page. Each is said in the
+// language set. A word the catalogue lacks is said as the option has it.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { OPTIONS } from '../src/settings.ts';

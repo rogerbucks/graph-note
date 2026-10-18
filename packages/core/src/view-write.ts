@@ -1,6 +1,6 @@
-// Writing a view (editor spec §7: views_by_tapping, §2: views_in_the_note): the query for a view built by tapping, and the
-// whole block it is stored as in the note. What is written is always a query that `parseView` (view-profile.ts) reads back
-// to the same view.
+// Writing a view (editor spec §7: views_by_tapping, §2: views_in_the_note). It gives the query for a view built by
+// tapping, and the whole block it is stored as in the note. What is written is always a query that `parseView`
+// (view-profile.ts) reads back to the same view.
 import { gqlSpans, graphOfBlock } from './blocks.ts';
 import { isRefusedKind, kindRefusal } from './reserved-words.ts';
 import { insertBlockAfter } from './store.ts';
@@ -11,7 +11,10 @@ import type { ViewArgs, ViewKind, ViewSpec } from './view-profile.ts';
 
 const ESCAPED: Record<string, string> = { '\\': '\\\\', "'": "\\'", '\n': '\\n', '\r': '\\r', '\t': '\\t' };
 
-/** A string in single quotes as GQL reads it back: the quote and backslash led by a backslash, and so is anything that breaks a line. */
+/**
+ * A string in single quotes as GQL reads it back. The quote and backslash are led by a backslash, and so is anything
+ * that breaks a line.
+ */
 function literal(s: string): string {
   let out = '';
   for (const c of s) {
@@ -44,8 +47,8 @@ function picks(ids: string[]): string {
 /**
  * The query written for a view built by tapping (views_by_tapping): always one `parseView` reads back to the same view.
  * Steps are held to what the profile allows (near 1 to 3, reaches 1 to 6). Throws a RangeError, saying why, only for
- * what no query can say: no kind at all, a kind that is not a GQL name, or one a view may not ask for (reserved-words.ts).
- * The names it gives things (n, m, p, a, b) are none that GQL keeps.
+ * what no query can say. That is no kind at all, a kind that is not a GQL name, or one a view may not ask for
+ * (reserved-words.ts). The names it gives things (n, m, p, a, b) are none that GQL keeps.
  */
 export function viewQuery<K extends ViewKind>(kind: K, args: ViewArgs[K]): string {
   switch (kind) {
@@ -77,9 +80,9 @@ export function viewQuery<K extends ViewKind>(kind: K, args: ViewArgs[K]): strin
 }
 
 /**
- * The whole block for a view (views_in_the_note, view_is_query): the graph line that names the graph and the view, then
- * the query. A view's name is one word, letters, digits and underscores, and so is its graph's; a RangeError says so
- * otherwise.
+ * The whole block for a view (views_in_the_note, view_is_query). It is the graph line that names the graph and the
+ * view, then the query. A view's name is one word, letters, digits and underscores, and so is its graph's. A RangeError
+ * says so otherwise.
  */
 export function viewBlock(graph: string, name: string, query: string): string {
   for (const [what, word] of [
@@ -108,8 +111,8 @@ function named(spec: ViewSpec): string[] {
 }
 
 /**
- * The block for a view of `spec` in `graph`, or why it cannot be made: what no query can say is refused in words ("This
- * view cannot be written: …"). It is written into a note by `addView`, which checks it against that note.
+ * The block for a view of `spec` in `graph`, or why it cannot be made. What no query can say is refused in words
+ * ("This view cannot be written: …"). It is written into a note by `addView`, which checks it against that note.
  */
 export function makeView(graph: string, name: string, spec: ViewSpec): { block: string } | { refused: string } {
   try {
@@ -121,12 +124,15 @@ export function makeView(graph: string, name: string, spec: ViewSpec): { block: 
 }
 
 /**
- * The note with a view block of `graph` written after the graph's last block, every other byte kept: the one way a host
- * writes a view into a note, against the note as it is when written, so none can leave a check out. Refused, with the
- * reason and nothing written, for a block that is not a view of the graph, a view named as another of the graph's is,
- * a graph the note no longer holds — and a view naming a thing the note writes only without a name, which its query
- * would name without the thing's fix (§4): accept its name first. That is found in this note, as the reader reads it,
- * never in a drawing, which can be older. A view of kinds names no thing.
+ * The note with a view block of `graph` written after the graph's last block, every other byte kept. It is the one way
+ * a host writes a view into a note. It writes against the note as it is when written, so none can leave a check out.
+ * It is refused, with the reason and nothing written, for:
+ * - a block that is not a view of the graph;
+ * - a view named as another of the graph's is;
+ * - a graph the note no longer holds;
+ * - a view naming a thing the note writes only without a name. Its query would name it without the thing's fix (§4):
+ *   accept its name first. That is found in this note, as the reader reads it, never in a drawing, which can be older.
+ * A view of kinds names no thing.
  */
 export function addView(note: string, graph: string, block: string): { note: string } | { refused: string } {
   const view = viewsOf([block])[0];

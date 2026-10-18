@@ -1,5 +1,5 @@
 // The paths `.ignore` lists (the file ripgrep reads to keep generated and bulky files out of code searches), and which of
-// them are missing. An entry that git ignores is build output, so a fresh checkout need not hold it; every other entry
+// them are missing. An entry that git ignores is build output, so a fresh checkout need not hold it. Every other entry
 // that names a file must exist, so a misspelt path is caught. Used by test/cheap-checks.test.js.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';

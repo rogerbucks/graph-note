@@ -1,8 +1,11 @@
-// The changes view on the page (editor spec §41, changes_view): "Compare with…" asks the server for the note's earlier
-// versions, the commits that changed it and the branches, only when pressed; the one picked is drawn with the note as
-// it now is by the core's changes view, each thing and link added, removed or changed marked by its line as well as its
-// hue in the scheme's own colours, and the same changes listed in words beside it. The repository's commit subjects are
-// shown as text, never as markup.
+// The changes view on the page (editor spec §41, changes_view).
+// - "Compare with…" asks the server for the note's earlier versions, the commits that changed it and the branches. It
+//   asks only when pressed.
+// - The core's changes view draws the one picked with the note as it now is.
+// - Each thing and link added, removed or changed is marked by its line as well as its hue, in the scheme's own
+//   colours.
+// - The same changes are listed in words beside it.
+// The repository's commit subjects are shown as text, never as markup.
 import { changesView, markedChanges, NO_CHANGES } from '../../core/src/changes-view.ts';
 import type { ChangesShown } from '../../core/src/changes-view.ts';
 import type { GraphDrawing } from '../../core/src/note-reading.ts';
@@ -31,9 +34,10 @@ export interface ChangesDeps {
 export const CHANGES_LIST_ID = 'gn-changes-list';
 
 /**
- * The changes of `shown` in graph `graph`, as parts to place: a drawing with every change marked by its line as well as
- * its hue, named `named` in its description, and the same changes listed in words under the id `listId`. `drawn` settles
- * once the drawing is made; each image's address is handed to `keep`, which revokes what it no longer shows.
+ * The changes of `shown` in graph `graph`, as parts to place. One is a drawing with every change marked by its line as
+ * well as its hue, named `named` in its description. The other lists the same changes in words under the id `listId`.
+ * `drawn` settles once the drawing is made; each image's address is handed to `keep`, which revokes what it no longer
+ * shows.
  */
 export function changesFigure(
   win: Window & typeof globalThis,

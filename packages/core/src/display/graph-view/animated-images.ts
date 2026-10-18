@@ -1,13 +1,14 @@
-// Animated images on a card (editor spec §18, §11): a thing's image — a GIF, APNG, animated WebP or animated SVG
-// attached in the vault — shown in its details and, where its style asks (a Picture), on its box (animated_image_shown);
-// each with a pause and play control, reached from the keyboard and by touch (animation_pause_play); still, its first
-// frame, under reduced motion until the user plays it (motion_reduced_respected); and past the core's stated limits of
-// size and count, its first frame, saying why, Play refused with the reason (animated_image_limited). The core decides
-// how each starts and whether it may play (`startOf`, `playRefusal`); the browser's own decoding draws it, from the
-// file's bytes read through the vault, and the first frame is drawn by the plugin (`stillFrame`). A file over the size
-// limit is never read: by its size on disk alone it is not shown, saying why, or, a photograph, shown from the vault's
-// own address. An image is only ever shown by an image element, never put inline: an SVG attachment put in the page
-// would run as part of it. Each card counts what moves on it, its details among it, and lets every image go with it.
+// Animated images on a card (editor spec §18, §11). A thing's image is a GIF, APNG, animated WebP or animated SVG
+// attached in the vault. It is shown in its details and, where its style asks (a Picture), on its box
+// (animated_image_shown). Each has a pause and play control, reached from the keyboard and by touch
+// (animation_pause_play). It is still, its first frame, under reduced motion until the user plays it
+// (motion_reduced_respected). Past the core's stated limits of size and count, it is its first frame, saying why. Play
+// is refused with the reason (animated_image_limited). The core decides how each starts and whether it may play
+// (`startOf`, `playRefusal`). The browser's own decoding draws it, from the file's bytes read through the vault, and
+// the plugin draws the first frame (`stillFrame`). A file over the size limit is never read. By its size on disk alone
+// it is not shown, saying why; or, a photograph, it is shown from the vault's own address. An image is only ever shown
+// by an image element, never put inline. An SVG attachment put in the page would run as part of it. Each card counts
+// what moves on it, its details among it, and lets every image go with it.
 import { IMAGE_LIMITS, LIMITS_SAID, imageFacts, imagesOf, neverMoves, playRefusal, startOf } from '@thoughtknot/core';
 import type { ImageFacts, PictureBox, Start } from '@thoughtknot/core';
 import type { FoundImage, ImageSource } from '../images/image-source';
@@ -186,8 +187,8 @@ async function startAll(card: MovingImages, where: string, made: [ImageView, Fou
 }
 
 /**
- * The pictures on the boxes of `svg` (§18): each box a Picture draws on gets its image in the square kept for it, with
- * its control; a value that names no image in the vault, a dashed frame saying why.
+ * The pictures on the boxes of `svg` (§18). Each box a Picture draws on gets its image in the square kept for it, with
+ * its control. A value that names no image in the vault gets a dashed frame saying why.
  */
 export function placePictures(svg: Element, card: MovingImages): void {
   const images = card.images;
@@ -206,7 +207,7 @@ export function placePictures(svg: Element, card: MovingImages): void {
 
 /**
  * The images a thing's properties name, in its details (§18): a heading, then a figure for each, in the order of the
- * properties' names; those shown before in the details let go first. Nothing when it names none.
+ * properties' names. Those shown before in the details let go first. Nothing when it names none.
  */
 export function renderImages(el: HTMLElement, props: Record<string, unknown>, card: MovingImages): void {
   card.release('details');

@@ -38,8 +38,8 @@ def prov_rules(db: GrafeoDB, g: str, graphs: Iterable[str] = ()) -> list[tuple[s
             return set()
         return resolve_ref(db, g, {"ref": r["ref"], "graph": r["graph"]})[1]
 
-    # HAD_PLAN is the only marker of a derivation; its target is the rule's own node (a Rule, whose
-    # id names the engine function and version, §6), or a Ref that resolves to one
+    # HAD_PLAN is the only marker of a derivation. Its target is the rule's own node, or a Ref that
+    # resolves to one. A Rule's id names the engine function and version (§6)
     plans = Q(
         db,
         "MATCH (a)-[:HAD_PLAN]->(t) RETURN a.id AS x, t.id AS t, labels(t) AS l, t.ref AS ref, t.graph AS graph",  # noqa: E501  # one literal: embedded_queries reads it whole

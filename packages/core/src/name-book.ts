@@ -1,7 +1,7 @@
-// The names of a graph, kept up to date as names are added, for naming many things written without one (editor spec §4)
-// without freezing the page (spec §9, layout_contained): its style, and the names taken, are kept as each name is added,
-// rather than counted again from every name for each new one. Each name it gives is the one nameFromText gives for the
-// same names; test/name-book.test.js holds the two to each other.
+// The names of a graph, kept up to date as names are added, for naming many things written without one (editor spec
+// §4). It names them without freezing the page (spec §9, layout_contained). Its style, and the names taken, are kept as
+// each name is added, rather than counted again from every name for each new one. Each name it gives is the one
+// nameFromText gives for the same names; test/name-book.test.js holds the two to each other.
 import { composeName, emptyTally, styleOfTally, tallyName } from './name-suggestions.ts';
 import type { NameStyle, NameTally } from './name-suggestions.ts';
 

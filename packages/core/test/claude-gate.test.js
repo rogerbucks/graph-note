@@ -1,6 +1,8 @@
-// What the browser editor may show Claude (editor spec §26, cc_classified_asks, cc_credential_never): a note above the
-// level set for Claude is asked about first, the highest classification never opens, a note with none counts as the
-// level set for unlabelled notes, and a credential never reaches Claude.
+// What the browser editor may show Claude (editor spec §26, cc_classified_asks, cc_credential_never):
+// - a note above the level set for Claude is asked about first;
+// - the highest classification never opens;
+// - a note with none counts as the level set for unlabelled notes;
+// - a credential never reaches Claude.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as gateModule from '../src/claude-gate.ts';
@@ -191,8 +193,8 @@ test('a label’s case is the settings’ own in what is said', () => {
   assert.ok(!claudeGate(note('cOnFiDeNtIaL'), settings()).ask.includes('cOnFiDeNtIaL'));
 });
 
-// Claude's level from the matrix row picked for the model named Claude (model_ceiling), with the same fail-closed rules;
-// with no row picked, the ceiling above stands.
+// Claude's level from the matrix row picked for the model named Claude (model_ceiling), with the same fail-closed
+// rules. With no row picked, the ceiling above stands.
 const cell = (name, mark, condition) => ({ class: name, mark, ...(condition ? { condition } : {}) });
 const ROWS = [
   {

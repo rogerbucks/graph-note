@@ -1,9 +1,12 @@
-// The plain-English check of every message the user reads (editor spec §41, ux_copy_auto). Every view of every host, the
-// same views test/wcag.test.js checks, gives up its messages: its words, and the names, hints and titles on its
-// controls, with the notices and menu items the host shows; the person's own words (the drawing, the text being edited)
-// are left out. Each message must read at grade 9 or lower, keep its sentences to 25 words, and use none of the listed
-// jargon ("GQL" is allowed where the graph's own text is the subject: the edit pane, the export form and the settings).
-// A message that misses for a reason is recorded in quality/copy.json with its scores; it may get better, never worse,
+// The plain-language check of every message the user reads (editor spec §41, ux_copy_auto). Every view of every host
+// gives up its messages. These are the same views test/wcag.test.js checks. A message is its words, and the names,
+// hints and titles on its controls, with the notices and menu items the host shows. The person's own words (the
+// drawing, the text being edited) are left out. Each message must:
+// - read at grade 9 or lower;
+// - keep its sentences to 25 words;
+// - use none of the listed jargon. "GQL" is allowed where the graph's own text is the subject: the edit pane, the
+//   export form and the settings.
+// A message that misses for a reason is recorded in quality/copy.json with its scores. It may get better, never worse,
 // without the record raised. The check itself is tried first. Scoring: scripts/plain-english.mjs.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';

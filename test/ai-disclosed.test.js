@@ -1,5 +1,5 @@
-// The AI use disclosed (spec §19, ai_disclosed): the README says, under its privacy heading, that the plugin sends
-// content only to models the user sets up and only when the user sends it, and states that one exception to no network
+// The AI use disclosed (spec §19, ai_disclosed). The README says so under its privacy heading. It says the plugin sends
+// content only to models the user sets up, and only when the user sends it. It states that one exception to no network
 // use precisely. Moved here from test/policy.test.js, its names kept, to keep that file within its size.
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';

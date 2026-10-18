@@ -1,19 +1,22 @@
 #!/usr/bin/env node
-// Makes the huge graph of device check V-10 (spec §9, layout_contained): a real graph past the drawing limit on things,
-// not a list of numbered fillers. It has two halves, joined where they meet:
-// - graph theory: its people, ideas, theorems, algorithms, problems and the bridges of Königsberg, written by hand in
-//   scripts/graph-theory.gql, and some of its famous graphs made here vertex by vertex (the Petersen graph, a hypercube).
-//   Names, dates and statements are common mathematical knowledge, in our own words; nothing is copied from any source,
-//   so nothing needs a licence.
-// - this project: the sections, requirements, tests and questions of requirements/editor-requirements.gql, the waves and
-//   workstreams of requirements/waves.json and workstreams.json, and every tracked source file with what it imports.
-// The project half is read from the repository as it is when this runs, so the graph is a snapshot: run it again to
+// Makes the huge graph of device check V-10 (spec §9, layout_contained). It is a real graph past the drawing limit on
+// things, not a list of numbered fillers. It has two halves, joined where they meet:
+// - graph theory: its people, ideas, theorems, algorithms, problems and the bridges of Königsberg. They are written by
+//   hand in scripts/graph-theory.gql. Some of its famous graphs are made here vertex by vertex (the Petersen graph, a
+//   hypercube). Names, dates and statements are common mathematical knowledge, in our own words. Nothing is copied from
+//   any source, so nothing needs a licence.
+// - this project: the sections, requirements, tests and questions of requirements/editor-requirements.gql. Also the
+//   waves and workstreams of requirements/waves.json and workstreams.json, and every tracked source file with what it
+//   imports.
+//
+// The project half is read from the repository as it is when this runs, so the graph is a snapshot. Run it again to
 // bring it up to date. test/device-check-quotes.test.js holds the note's graph over the limit on things and under the
 // read limits.
 //
 // Usage:
-//   node scripts/make-huge-graph.mjs            print the graph block (one thing or link to a line) on stdout
-//   node scripts/make-huge-graph.mjs --write    put it in the V-10 note, in place of the block that starts `// graph: huge`
+//   node scripts/make-huge-graph.mjs            print the graph block (one thing or link to a line) on stdout.
+//   node scripts/make-huge-graph.mjs --write    put it in the V-10 note, in place of the block that starts
+//                                               `// graph: huge`.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, normalize, resolve } from 'node:path';
@@ -106,8 +109,8 @@ class Graph {
 }
 
 /**
- * Graph theory, from scripts/graph-theory.gql, written by hand; then its famous graphs, vertex by vertex, each linked to
- * the idea it shows and to who described it.
+ * Graph theory, from scripts/graph-theory.gql, written by hand. Then its famous graphs, vertex by vertex, each linked
+ * to the idea it shows and to who described it.
  */
 function graphTheory(g) {
   const p = (id) => `gt_${id}`;

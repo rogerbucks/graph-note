@@ -33,9 +33,10 @@ import graph_svg  # noqa: E402
 with open(os.path.join(HERE, "nudge_cases.json"), encoding="utf-8") as f:
     CASES = json.load(f)["cases"]
 
-# The core's answer for each note: as the plugin draws a graph (packages/obsidian/src/block.ts),
-# the style read for it, its direction set on the drawing and its nudges written into the source of
-# each direction laid out (render.ts, directions).
+# The core's answer for each note, as the plugin draws a graph (packages/obsidian/src/block.ts).
+# It holds:
+# - the style read for it, and its direction set on the drawing.
+# - its nudges written into the source of each direction laid out (render.ts, directions).
 CORE_SCRIPT = """
 const [src, notes] = [process.argv[1], JSON.parse(process.argv[2])];
 const { readNote } = await import(`${src}/drawing.ts`);
@@ -144,14 +145,14 @@ class Nudges(unittest.TestCase):
         cls.core = core_answers()
 
     def test_python_nudges(self):
-        # python_honours_nudges: every graph drawn, in every direction laid out, byte for byte
-        # (a plain loop, never subTest: the tests-first replay counts a test by its own result)
+        # python_honours_nudges: every graph drawn, in every direction laid out, byte for byte.
+        # A plain loop, never subTest. The tests-first replay counts a test by its own result.
         for case, theirs in zip(CASES, self.core, strict=True):
             self.assertEqual(python_answer(texts_of(case))["drawn"], theirs["drawn"], case["name"])
 
     def test_a_nudge_naming_a_box_not_drawn_is_left_out_as_the_core_leaves_it_out(self):
-        # as in a view that leaves a box out: a nudge naming a key not among those drawn adds
-        # nothing, in the core and in graph_svg alike, each box of each graph left out in turn
+        # As in a view that leaves a box out. A nudge naming a key not among those drawn adds
+        # nothing, in the core and in graph_svg alike. Each box of each graph is left out in turn.
         dot = graph_svg.dot_source([("a", "Place", "A")], [], "LR")[0]
         lone = [{"word": "beside", "thing": "a", "other": "zz"}]
         self.assertEqual(graph_svg.nudged_source(dot, lone, ["a"]), dot)
@@ -181,8 +182,8 @@ class Nudges(unittest.TestCase):
             self.assertEqual(ours["reading"], theirs["reading"], case["name"])
 
     def test_the_cases_nudge_with_every_word_and_some_change_nothing(self):
-        # the table proves what it says: each of the four words is written and drawn, and a style
-        # that cannot be used leaves the source exactly the layout source
+        # The table proves what it says. Each of the four words is written and drawn. A style
+        # that cannot be used leaves the source exactly the layout source.
         written = {
             line.split("word: '")[1].split("'")[0]
             for case in CASES

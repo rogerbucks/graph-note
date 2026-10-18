@@ -19,9 +19,6 @@
 
 **Checklist line:**
 
-> **H-06** A link to a note the vault does not hold is dashed in its box and marked "names nothing" in the details,
-> and the problems badge lists that it names no note or file, with its fix. Change it to the note it most likely
-> meant: the block is written with the right name. Create the note: the note is made, and the link is no longer
-> broken.
+> **H-06** A link to a note the vault does not hold is dashed in its box, and marked "names nothing" in the details. The problems badge lists that it names no note or file, with its fix. Change it to the note it most likely meant: the block is written with the right name. Create the note: the note is made, and the link is no longer broken.
 
 **Back to the checklist:** [H-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for H-06 in its list.

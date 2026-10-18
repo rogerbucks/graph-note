@@ -1,11 +1,11 @@
 // The export's part of the editor's API (spec §26, workstream C6; cc_exports_new_only). The page makes the files of an
-// export (the Export form of §16, the image drawn, the PNG rasterised) and hands them over; this writes them, and only as
-// new files in the export folder (export-files.ts). The page never names a place: a note is reached by the id the store
-// gave it, and the folder is the one the settings name, else the note's own, as the plugin's plan has it.
-//   GET export/<id>   {note, folder}: the note's path in the vault, and the folder the files will be put in
-//   PUT export/<id>   {files: [{name, text} | {name, base64}]} gives {written: [name…]}; a PNG is base64, all else text
-// The call carries the token and the server's own origin like any change, and its body its own, larger limit, as an image
-// is larger than a note; any other path keeps the note's limit.
+// export (the Export form of §16, the image drawn, the PNG rasterised) and hands them over. This writes them, and only
+// as new files in the export folder (export-files.ts). The page never names a place. A note is reached by the id the
+// store gave it. The folder is the one the settings name, else the note's own, as the plugin's plan has it.
+//   GET export/<id>   {note, folder}: the note's path in the vault, and the folder the files will be put in.
+//   PUT export/<id>   {files: [{name, text} | {name, base64}]} gives {written: [name…]}. A PNG is base64, all else text.
+// The call carries the token and the server's own origin like any change. Its body has its own, larger limit, as an
+// image is larger than a note. Any other path keeps the note's limit.
 import { posix } from 'node:path';
 import { vaultFolder } from '@thoughtknot/core/hosts/vault-folder';
 import type { ApiAnswer, ApiHandler, ApiRequest } from './start-server.ts';

@@ -1,5 +1,5 @@
-// What the tests of the inspector do by hand: open a box's details while editing in place, find a property's row and a
-// field by its label, set a field and let it go, pick from a type menu — and the same for a list's chips.
+// What the tests of the inspector do by hand. Open a box's details while editing in place. Find a property's row and a
+// field by its label. Set a field and let it go. Pick from a type menu. And the same for a list's chips.
 import assert from 'node:assert/strict';
 import { until } from './load-plugin.js';
 import { labelled } from './notes.js';

@@ -1,8 +1,9 @@
-// The same edit writes the same bytes on the browser editor's page and in Obsidian's pane (editor spec §26, cc_same_bytes), C9:
-// shared cases, one for each kind of edit the pane makes. Each case is a note and what is done to the pane, said once, through
-// a few verbs both hosts answer (`type`, `click`, `external`, ...), and runs twice: in Obsidian's own pane (the plugin as built,
-// over its stand-in vault) and on the page as built (its script in a DOM, over the real server and a real vault on disk). What
-// each leaves in the note is compared, byte for byte, and with what the case says it must be. Registered by
+// The same edit writes the same bytes on the browser editor's page and in Obsidian's pane (editor spec §26,
+// cc_same_bytes), C9. These are shared cases, one for each kind of edit the pane makes. Each case is a note and what is
+// done to the pane. It is said once, through a few verbs both hosts answer (`type`, `click`, `external`, ...). It runs twice:
+// - in Obsidian's own pane (the plugin as built, over its stand-in vault);
+// - on the page as built (its script in a DOM, over the real server and a real vault on disk).
+// What each leaves in the note is compared, byte for byte, and with what the case says it must be. Registered by
 // editor-parity.test.js, which is test_cc_parity's file, within the repository's size baseline. Test code only.
 import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -27,8 +28,8 @@ const MINE = READER + ",\n(mine:Reason {title: 'Mine'})";
 const swap = (block, now) => NOTE.replace(block, now);
 
 /**
- * The cases: a name, the note, what is done (`run`, given the host's verbs), and what the note must be after it: a string,
- * or a test of it. Every case's two outcomes must also be the same bytes as each other.
+ * The cases. Each has a name, the note, what is done (`run`, given the host's verbs), and what the note must be after
+ * it. That is a string, or a test of it. Every case's two outcomes must also be the same bytes as each other.
  */
 const CASES = [
   ['a thing added, typed', NOTE, (h) => h.type(MINE), swap(READER, MINE)],
@@ -222,7 +223,7 @@ async function onPage(note0, pages) {
       page.write(text);
       await until(() => /The note changed/.test(page.doc.getElementById('gn-notices').textContent), 8000);
     },
-    // the page is not told, as a change made between two of its checks: its next write is made over a version it has not seen
+    // the page is not told, as a change made between two of its checks. Its next write is made over a version it has not seen
     stale: (text) => page.write(text, { tell: false }),
     async kept() {
       await until(() => /kept as a draft/.test(page.doc.querySelector('.thoughtknot-draft').textContent), 8000);

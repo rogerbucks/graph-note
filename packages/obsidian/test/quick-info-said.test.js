@@ -1,6 +1,6 @@
 // What the quick-info tooltip says of how a thing is linked, and who hears it (editor spec §24, quick_info_links,
-// quick_info_read_aloud): a thing's tooltip leads with the sentence its details open with, so the two never disagree;
-// and a thing or link that has the keyboard focus is described by its tooltip, so a screen reader reads
+// quick_info_read_aloud). A thing's tooltip leads with the sentence its details open with, so the two never disagree.
+// A thing or link that has the keyboard focus is described by its tooltip. So a screen reader reads
 // it, and no longer once the tooltip closes.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';

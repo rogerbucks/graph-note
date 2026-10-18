@@ -37,6 +37,6 @@
 
 **Checklist line:**
 
-> **F-04** Without a pointer: on the phone, a tap that selects a box gives it the same glow and underline, and they stay until something else is chosen; on a keyboard, Tab to a box or a link gives them too.
+> **F-04** Without a pointer: on the phone, a tap that selects a box gives it the same glow and underline. They stay until something else is chosen. On a keyboard, Tab to a box or a link gives them too.
 
 **Back to the checklist:** [F-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-04 in its list.

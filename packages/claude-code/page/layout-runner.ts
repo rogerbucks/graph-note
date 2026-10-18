@@ -1,8 +1,9 @@
-// The page's layouts (spec §9, layout_contained; §26, cc_worker_same_origin): one worker, started from the file the server
-// serves at `/layout-worker.js` from its own origin, never from text made in the page or another site, under the limits
-// the core's LayoutRunner keeps. The page itself carries no Graphviz engine, so where no worker can start a layout is
-// refused in words (`NO_WORKER`), never run on the page's thread and never left blank.
-// (the core's module by its own path, not its entry: the entry also names the engine, which the page never carries)
+// The page's layouts (spec §9, layout_contained; §26, cc_worker_same_origin). They run in one worker, under the limits
+// the core's LayoutRunner keeps. It starts from the file the server serves at `/layout-worker.js` from its own origin.
+// It never starts from text made in the page or another site. The page itself carries no Graphviz engine. So where no
+// worker can start, a layout is refused in words (`NO_WORKER`). It is never run on the page's thread and never left
+// blank. (the core's module by its own path, not its entry: the entry also names the engine, which the page never
+// carries)
 import { inThreadPort, LayoutRunner, serveLayouts } from '../../core/src/layout-worker.ts';
 import type { LayoutPort, LayoutReply } from '../../core/src/layout-worker.ts';
 

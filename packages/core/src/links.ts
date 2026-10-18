@@ -1,9 +1,12 @@
-// Links and attachments (editor spec §18): the links a thing or a relationship holds in its properties (links_shown), a
-// thing's attachments by name and type (attachments_at_a_glance), a thing that stands for a note (node_is_a_note), and
-// each link to a note or file the vault does not hold, reported where it is written with its fix: create the note, or
-// pick the one it most likely meant (broken_links_problems). The core decides; the host says which files the vault holds
-// and opens, previews and renders through its own handlers (host_opens_links). The scan, the safe Markdown and renames
-// live in their own modules and are re-exported here, so a host imports §18 from one place.
+// Links and attachments (editor spec §18). This covers:
+// - the links a thing or a relationship holds in its properties (links_shown);
+// - a thing's attachments by name and type (attachments_at_a_glance);
+// - a thing that stands for a note (node_is_a_note);
+// - each link to a note or file the vault does not hold, reported where it is written with its fix
+//   (broken_links_problems). The fix is to create the note, or pick the one it most likely meant.
+// The core decides. The host says which files the vault holds. It opens, previews and renders through its own handlers
+// (host_opens_links). The scan, the safe Markdown and renames live in their own modules and are re-exported here. So a
+// host imports §18 from one place.
 import { dataKind, graphOf } from './blocks.ts';
 import { distance } from './estimates.ts';
 import { propertiesOf } from './inspector.ts';
@@ -53,9 +56,9 @@ export function attachmentsOf(reading: NoteReading, graph: string, key: string):
 const NOTE_ID = 'note:';
 
 /**
- * The note a thing stands for (node_is_a_note): its id, when the id is a global note id, `note:` and the note's name,
- * as `(m:Doc {id: 'note:Graph spec model'})` writes it (graph spec §10); or, as well, when the id is a link to a note and
- * nothing else, `{id: '[[Trip plan]]'}`. Null for any other thing, a file named after `note:` among them.
+ * The note a thing stands for (node_is_a_note). It is its id, when the id is a global note id: `note:` and the note's
+ * name. `(m:Doc {id: 'note:Graph spec model'})` writes it so (graph spec §10). It is also its id when the id is a link
+ * to a note and nothing else, `{id: '[[Trip plan]]'}`. Null for any other thing, a file named after `note:` among them.
  */
 export function noteOf(_reading: NoteReading, _graph: string, key: string): FoundLink | null {
   if (key.startsWith(NOTE_ID)) {
@@ -96,8 +99,9 @@ const nameOf = (target: string) => target.slice(target.lastIndexOf('/') + 1);
 const stemOf = (name: string) => (attachmentType(name) ? name.slice(0, name.lastIndexOf('.')) : name).toLowerCase();
 
 /**
- * What a broken link most likely meant: a file of the same name with another extension, else the names nearest in
- * spelling, within a quarter of the name's letters (two at least), of the same kind (a note for a note, a file for a file).
+ * What a broken link most likely meant. First, a file of the same name with another extension. Else the names nearest
+ * in spelling, within a quarter of the name's letters (two at least). They are of the same kind (a note for a note, a
+ * file for a file).
  */
 function likelyMeant(link: FoundLink, names: readonly string[]): string[] {
   const name = nameOf(link.target),
@@ -128,9 +132,10 @@ const asWritten = (link: FoundLink, name: string) =>
     : name;
 
 /**
- * Every link of a graph to a note or file the vault does not hold (broken_links_problems): a warning, as it is drawn
- * broken and nothing is left out, on the line it is written, with its fix in words — create the note (or put the file
- * in the vault), or change it to what it most likely meant — and, where it is found as written, the place to change.
+ * Every link of a graph to a note or file the vault does not hold (broken_links_problems). Each is a warning, as it is
+ * drawn broken and nothing is left out. It is on the line it is written, with its fix in words. The fix is to create
+ * the note (or put the file in the vault), or change it to what it most likely meant. Where it is found as written, it
+ * gives the place to change.
  */
 export function brokenLinks(reading: NoteReading, graph: string, vault: LinkVault): BrokenLink[] {
   const d = reading.graphs.get(graph);
@@ -148,7 +153,7 @@ export function brokenLinks(reading: NoteReading, graph: string, vault: LinkVaul
     const t = reading.texts[i] ?? '';
     return graphOf(t) === graph && dataKind(t) === 'data';
   });
-  // where each written link was last found, so the next of the same is looked for only after it; and what each target
+  // where each written link was last found, so the next of the same is looked for only after it. Also what each target
   // most likely meant, worked out once
   const cursors = new Map<string, { o: number; l: number; at: number }>();
   const meanings = new Map<string, string[]>();
@@ -194,8 +199,8 @@ export function brokenLinks(reading: NoteReading, graph: string, vault: LinkVaul
 }
 
 /**
- * The block's text with a broken link changed to `meant`, one of what it most likely meant, at the place its problem
- * gives, and nothing else; null when the block no longer holds the link there.
+ * The block's text with a broken link changed to `meant`, one of what it most likely meant. The change is at the place
+ * its problem gives, and nothing else. Null when the block no longer holds the link there.
  */
 export function withMeant(block: string, broken: BrokenLink, meant: string): string | null {
   const { span, replace } = broken.problem;

@@ -37,6 +37,6 @@
 
 **Checklist line:**
 
-> **F-02** Tap a link: it and the two boxes it joins stay at full strength and the rest fade. Settings › ThoughtKnot › Focus reaches › Two steps: tap a box and the boxes two links away stay at full strength too.
+> **F-02** Tap a link: it and the two boxes it joins stay at full strength and the rest fade. Set Settings › ThoughtKnot › Focus reaches to Two steps. Tap a box: the boxes two links away stay at full strength too.
 
 **Back to the checklist:** [F-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-02 in its list.

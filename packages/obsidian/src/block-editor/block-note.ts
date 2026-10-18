@@ -1,8 +1,11 @@
-// The note behind a block editor (spec §4, §9): its text as last read or written, the session on the block being edited,
-// and every change made to it — what is typed, Undo and Redo, Lock the graph — made safely (note-writing.ts), with what a
-// refused write held kept as a draft in the plugin's data, never lost. The note is watched while it is edited: changed,
-// it is read again; renamed or moved, it is followed; deleted, what is typed is kept as a draft. Each editor keeps its own
-// draft, known by its id, so the pane and the card typed in at once never overwrite or forget each other's.
+// The note behind a block editor (spec §4, §9). It holds its text as last read or written, and the session on the block
+// being edited. Every change made to it is made safely (note-writing.ts): what is typed, Undo and Redo, Lock the graph.
+// What a refused write held is kept as a draft in the plugin's data, never lost. The note is watched while it is edited.
+// - Changed, it is read again.
+// - Renamed or moved, it is followed.
+// - Deleted, what is typed is kept as a draft.
+// Each editor keeps its own draft, known by its id. So the pane and the card typed in at once never overwrite or forget
+// each other's.
 import { Notice, TFile } from 'obsidian';
 import {
   PaneSession,
@@ -53,7 +56,7 @@ export class BlockNote implements EditorNote {
     return `${this.path}#${this.session?.graph ?? ''}`;
   }
 
-  /** Reads the note at `path` and opens its block whose fence is on `line` (0-based), or its first graph block; false when there is no such note. */
+  /** Reads the note at `path` and opens its block whose fence is on `line` (0-based), or its first graph block. False when there is no such note. */
   async open(path: string, line: number): Promise<boolean> {
     const file = this.file(path);
     if (!file) return false;
@@ -78,9 +81,9 @@ export class BlockNote implements EditorNote {
   /**
    * Writes what is typed, when it changed, through the note's editor when it is open, else the vault; returns a refusal.
    * A note deleted meanwhile is refused too, so what is typed is kept as a draft, never dropped (nothing_typed_lost).
-   * With `hold`, as typing rests, a session stopped by a copy whose stop was said already writes nothing to the note and
-   * says nothing again: what is typed is saved quietly as this editor's own draft, so it is never held in memory alone
-   * and nothing is lost if Obsidian closes or crashes (the review of #465).
+   * With `hold`, as typing rests, take a session stopped by a copy whose stop was said already. It writes nothing to the
+   * note and says nothing again. What is typed is saved quietly as this editor's own draft. So it is never held in memory
+   * alone, and nothing is lost if Obsidian closes or crashes (the review of #465).
    */
   async write(hold = false): Promise<Refused | null> {
     const s = this.session,
@@ -119,9 +122,9 @@ export class BlockNote implements EditorNote {
   }
 
   /**
-   * Park for later's fix (spec §5): Deferred and DEFERS declared in the schema of the graph being edited. When the schema
-   * is written in the block being edited, the text to park into holds the declarations; when it is in another block, they
-   * are written into the note through the vault, atomically against the note as it is now. Rejects with why it cannot.
+   * Park for later's fix (spec §5): Deferred and DEFERS declared in the schema of the graph being edited. The schema may
+   * be written in the block being edited. Then the text to park into holds the declarations. When it is in another block,
+   * they are written into the note through the vault, atomically against the note as it is now. Rejects with why it cannot.
    */
   async declareDeferred(indent: string): Promise<DeclaredDeferred> {
     const s = this.session,
@@ -135,7 +138,7 @@ export class BlockNote implements EditorNote {
     return { text: s.text, whole: s.reading(this.text).whole[s.graph] };
   }
 
-  /** The note's new text after `f` changed: what the session made of it, or null when `f` is another note or its text is the same. */
+  /** The note's new text after `f` changed: what the session made of it. Null when `f` is another note or its text is the same. */
   async reread(f: TFile): Promise<Reread | null> {
     if (f.path !== this.path || !this.session) return null;
     const text = await this.plugin.app.vault.read(f);
@@ -145,10 +148,10 @@ export class BlockNote implements EditorNote {
   }
 
   /**
-   * Watches the vault for the note changing under the editor, until the returned function is called: changed,
-   * `on.changed` is told what the session made of it; renamed or moved, alone or with its folder, the note is followed to
-   * its new path, so what is typed keeps reaching it; deleted, `on.deleted` is told, with a notice when typing is not yet
-   * written.
+   * Watches the vault for the note changing under the editor, until the returned function is called.
+   * - Changed: `on.changed` is told what the session made of it.
+   * - Renamed or moved, alone or with its folder: the note is followed to its new path. So what is typed keeps reaching it.
+   * - Deleted: `on.deleted` is told, with a notice when typing is not yet written.
    */
   watch(on: { changed: (outcome: Reread) => void; deleted: () => void }): () => void {
     const vault = this.plugin.app.vault;
@@ -175,7 +178,7 @@ export class BlockNote implements EditorNote {
 
   /**
    * The note, or its folder, renamed or moved from `old` to `now`: followed there. Its drafts are moved by the plugin
-   * itself, whether or not the note is being edited, their ids unchanged (drafts.ts), so this editor's own is still its.
+   * itself, whether or not the note is being edited. Their ids are unchanged (drafts.ts). So this editor's own is still its.
    */
   private renamed(now: string, old: string): void {
     if (!this.isOrHolds(old)) return;
@@ -183,8 +186,8 @@ export class BlockNote implements EditorNote {
   }
 
   /**
-   * The id of this editor's own draft, once it has kept one: never another editor's, even one with the same text, and
-   * the same under whatever key a rename moves it to.
+   * The id of this editor's own draft, once it has kept one. It is never another editor's, even one with the same text.
+   * It stays the same under whatever key a rename moves it to.
    */
   private own: string | null = null;
 
@@ -205,8 +208,8 @@ export class BlockNote implements EditorNote {
   }
 
   /**
-   * Keeps what was typed as this editor's own draft of its block: its own draft changed in place, so no stale copy is
-   * left beside it; else a new draft, with a new id, beside, never over, any other kept for the block.
+   * Keeps what was typed as this editor's own draft of its block. Its own draft is changed in place, so no stale copy is
+   * left beside it. Else it keeps a new draft, with a new id, beside, never over, any other kept for the block.
    */
   async keepDraft(text: string): Promise<void> {
     const data = this.plugin.drafts(),

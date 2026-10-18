@@ -1,6 +1,7 @@
-// The edit pane's session (spec §4, §9): the block being edited, chosen from the note's graph blocks; what is typed, written
-// back to the note; a write refused when the block changed meanwhile, with what was typed kept as a draft; the pane reloaded
-// when the note changes under a clean pane; and undo and redo of what was written.
+// The edit pane's session (spec §4, §9). It holds the block being edited, chosen from the note's graph blocks. What is
+// typed is written back to the note. A write is refused when the block changed meanwhile, and what was typed is kept as
+// a draft. The pane is reloaded when the note changes under a clean pane. It also holds undo and redo of what was
+// written.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { PaneSession } from '../src/pane.ts';
@@ -191,7 +192,7 @@ describe('the note as it is now', () => {
   });
 });
 
-// Review, 11 Oct 2026: the check made before an edit can be against a note older than the one written into; so an edit
+// Review, 11 Oct 2026: the check made before an edit can be against a note older than the one written into. So an edit
 // made for the person is checked again as it is written, against that note, for the names it newly writes
 describe('an edit made for the person, as it is written', () => {
   const other = (id) => `// graph: alpha\n(${id}:T {name: 'Other'})`;
