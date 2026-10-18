@@ -135,9 +135,16 @@
       "workstreams": ["X1"]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 20 · Held: project home page",
       "start": "2027-06-07",
       "end": "2027-06-20",
+      "estimate": true,
+      "workstreams": ["D2"]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-06-21",
+      "end": "2027-07-04",
       "estimate": true,
       "workstreams": []
     }
