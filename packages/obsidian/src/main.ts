@@ -13,6 +13,7 @@ import {
   toStandard,
   VIEW_SWITCHES,
   ViewState,
+  withStandardSchemas,
 } from '@graph-note/core';
 import type {
   Converted,
@@ -117,7 +118,7 @@ export default class GraphNotePlugin extends Plugin {
     }
   }
 
-  /** Every shared schema block in the vault (§5), for graphs that name one. */
+  /** Every shared schema block in the vault (§5), then each standard one the vault has none of its name of (§27). */
   async sharedSchemas(): Promise<string[]> {
     if (!this.schemas) {
       const found = new Map<string, string[]>();
@@ -136,7 +137,7 @@ export default class GraphNotePlugin extends Plugin {
         }),
       );
     }
-    return [...this.schemas.values()].flat();
+    return withStandardSchemas([...this.schemas.values()].flat());
   }
 
   /** Every option the editor offers (spec §21), as set on the settings page. */

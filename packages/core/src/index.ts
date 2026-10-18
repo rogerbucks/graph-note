@@ -114,6 +114,7 @@ export { inlineCompletion, stepOver } from './autocomplete.ts';
 export type { Inline, InlineKind } from './autocomplete.ts';
 export { isDraft, lockBlock, reverseGuess } from './lock.ts';
 export { schemaPicture } from './schema-picture.ts';
+export { withStandardSchemas } from './standard-schemas.ts';
 export type { SchemaPicture } from './schema-picture.ts';
 export { PaneSession } from './pane.ts';
 export { PathPlayer, PathRecorder, mergePathProblems, pathBlock, pathProblems, pathsOf } from './paths.ts';

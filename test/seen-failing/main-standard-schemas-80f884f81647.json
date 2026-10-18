@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/main-standard-schemas.test.js",
+  "test": "a standard schema named by a graph > types it with nothing else in the vault: its links are read in the schema’s words, and nothing is wrong",
+  "seen_failing_first": false,
+  "evidence": "a guard on the plugin's wiring: a FAVOURS link reads 'favours' by the guessed reading too, so it passes at the parent; the core's standard-schemas tests, seen failing first, prove the schema types it"
+}

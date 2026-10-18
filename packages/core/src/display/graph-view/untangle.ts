@@ -3,7 +3,7 @@
 // it in a banner; the card marks the drawing from `layers`. Nothing here reaches the note (untangle_data_untouched), so none
 // of it is gated for reading view: it changes the picture, never the data. Only the legend's choices are ever written, by
 // a view's Save as shown (view-strip.ts), which is gated; a view saved so starts with them (untangle_legend).
-import { Untangle, find, kindLegend, neighbourhoodWords, pathWords } from '@graph-note/core';
+import { Untangle, find, kindLegend, neighbourhoodWords, pathWords, word } from '@graph-note/core';
 import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, LegendChoice, NoteReading } from '@graph-note/core';
 import { Banner } from './untangle-banner';
 import type { BannerRow } from './untangle-banner';
@@ -173,14 +173,14 @@ export class UntangleView {
         words: neighbourhoodWords(this.text(only.key), only.steps),
         actions: [
           {
-            label: 'Show the whole graph',
+            label: word('untangle.show-all'),
             run: () => {
               this.core.showAll();
               this.changed();
             },
           },
           {
-            label: wider ? 'Widen to two steps' : 'Narrow to one step',
+            label: wider ? word('untangle.widen') : word('untangle.narrow'),
             run: () => {
               this.core.showOnly(only.key, wider ? 2 : 1);
               this.changed();
@@ -194,7 +194,7 @@ export class UntangleView {
         words: pathWords((k) => this.text(k), routed.from, routed.to, routed.found),
         actions: [
           {
-            label: 'Clear the path',
+            label: word('untangle.clear-path'),
             run: () => {
               this.core.clearRoute();
               this.changed();
@@ -204,8 +204,8 @@ export class UntangleView {
       });
     if (this.asking !== null)
       rows.push({
-        words: `Choose a second thing to find the shortest path from ${this.text(this.asking)}.`,
-        actions: [{ label: 'Cancel', run: () => void this.cancel() }],
+        words: word('untangle.choose-second', { name: this.text(this.asking) }),
+        actions: [{ label: word('untangle.cancel'), run: () => void this.cancel() }],
       });
     return rows;
   }

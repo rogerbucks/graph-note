@@ -19,7 +19,7 @@ card in a component Obsidian owns (`graphCard`). The layer's types for what the 
 `ImageSource`) are in the layer, and `link-host.ts`, `export.ts` and `vault-images.ts` implement them.
 
 - `main.ts` — the plugin: registers the block processor, the pane, the editor extension, the settings page and the
-  command that converts a note to standard GQL; keeps the settings, drafts and shared schemas; opens the editors.
+  command that converts a note to standard GQL; keeps the settings, drafts and shared schemas, the standard ones after the vault's (§27); opens the editors.
 - `inline-editors.ts` — the editors open in place: each found by its block's identity, never by another block that comes
   to its line, even one of the same graph; one to a block, however often Edit here is pressed; released, its typing
   written, when it is off the page and its note is closed, whether a card left or the editing view closed; never kept
