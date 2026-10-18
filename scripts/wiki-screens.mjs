@@ -10,7 +10,8 @@
 //   node scripts/wiki-screens.mjs --out DIR [--chrome PATH]
 // DIR gets one PNG for each shot, and labels.json: the name of every button the card shows, which the wiki holds
 // against the guide so a new control is never left unexplained.
-import { spawn, execFileSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
+import { findChrome, run, startChrome } from './chrome.mjs';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -19,6 +20,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ICONS = join(ROOT, 'packages/claude-code/page/icons');
+
+export { findChrome };
 
 // the first card of the sample note: the graph "reader" with its question and three options
 const CARD = '#note .block-language-gql';
@@ -64,19 +67,6 @@ const flag = (args, name) => {
   return at === -1 ? undefined : args[at + 1];
 };
 
-/** The Chrome to run: the one given, or the first of the usual names found on the PATH. */
-export function findChrome(given, which = (n) => execFileSync('which', [n], { encoding: 'utf8' }).trim()) {
-  if (given) return given;
-  for (const name of ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser'])
-    try {
-      const found = which(name);
-      if (found) return found;
-    } catch {
-      // not this one
-    }
-  throw new Error('no Chrome found: give one with --chrome PATH');
-}
-
 /**
  * The files the page may ask for, by the path it asks with: each file of the built harness, and each icon under
  * /icons/. Only these are served, so no path a request names ever reaches the file system.
@@ -89,7 +79,7 @@ export function servedFiles(dir, icons = ICONS) {
 }
 
 /** Serves the built harness, and the icons under /icons/, on a free port of this machine only. */
-function serve(dir) {
+export function serve(dir) {
   const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
   const files = servedFiles(dir);
   const server = createServer((req, res) => {
@@ -98,42 +88,6 @@ function serve(dir) {
     res.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' }).end(readFileSync(file));
   });
   return new Promise((done) => server.listen(0, '127.0.0.1', () => done(server)));
-}
-
-/** A DevTools session on Chrome's first page: send(method, params) resolves with the result, or throws its error. */
-async function devtools(port) {
-  let pages;
-  for (let i = 0; i < 100 && !pages; i++)
-    pages = await fetch(`http://127.0.0.1:${port}/json/list`)
-      .then((r) => r.json())
-      .catch(() => new Promise((r) => setTimeout(r, 100)));
-  const page = (pages ?? []).find((p) => p.type === 'page');
-  if (!page) throw new Error('Chrome opened no page');
-  const ws = new WebSocket(page.webSocketDebuggerUrl);
-  await new Promise((done, fail) => ((ws.onopen = done), (ws.onerror = fail)));
-  let id = 0;
-  const waiting = new Map();
-  ws.onmessage = (e) => {
-    const m = JSON.parse(e.data);
-    if (!waiting.has(m.id)) return;
-    const [done, fail] = waiting.get(m.id);
-    waiting.delete(m.id);
-    if (m.error) fail(new Error(m.error.message));
-    else done(m.result);
-  };
-  const send = (method, params = {}) =>
-    new Promise((done, fail) => {
-      waiting.set(++id, [done, fail]);
-      ws.send(JSON.stringify({ id, method, params }));
-    });
-  return { send, close: () => ws.close() };
-}
-
-/** Runs a line of script in the page and gives back its value. */
-async function run(send, expression) {
-  const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
-  if (r.exceptionDetails) throw new Error(`${expression}: ${r.exceptionDetails.exception?.description ?? 'failed'}`);
-  return r.result.value;
 }
 
 // the harness's icon names, each swapped for its picture; a name with no picture stays as it was
@@ -146,7 +100,7 @@ const ICONS_IN = `Promise.all([...document.querySelectorAll('[data-icon] > .harn
 }))`;
 
 /** Opens the harness afresh and waits until it says it is ready, and the drawing has settled. */
-async function open(send, url) {
+export async function open(send, url) {
   await send('Page.navigate', { url });
   for (let i = 0; i < 150; i++) {
     if ((await run(send, 'document.body?.dataset.ready ?? ""')) === 'yes') break;
@@ -163,31 +117,9 @@ export async function takeShots(out, { chrome } = {}) {
   execFileSync(process.execPath, [join(ROOT, 'packages/obsidian/harness/build.mjs'), built], { stdio: 'inherit' });
   const server = await serve(built);
   const url = `http://127.0.0.1:${server.address().port}/index.html`;
-  const port = 9300 + Math.floor(Math.random() * 500);
-  const profile = mkdtempSync(join(tmpdir(), 'wiki-chrome-'));
-  const browser = spawn(
-    findChrome(chrome),
-    [
-      '--headless=new',
-      '--no-sandbox',
-      '--disable-gpu',
-      '--no-proxy-server',
-      '--hide-scrollbars',
-      `--user-data-dir=${profile}`,
-      `--remote-debugging-port=${port}`,
-      'about:blank',
-    ],
-    { stdio: 'ignore' },
-  );
+  const browser = await startChrome({ chrome });
+  const { send } = browser;
   try {
-    const { send, close } = await devtools(port);
-    await send('Page.enable');
-    await send('Emulation.setDeviceMetricsOverride', {
-      width: 1400,
-      height: 1000,
-      deviceScaleFactor: 2,
-      mobile: false,
-    });
     for (const shot of SHOTS) {
       await open(send, url);
       for (const step of shot.steps) {
@@ -214,9 +146,8 @@ export async function takeShots(out, { chrome } = {}) {
       `[...new Set([...document.querySelectorAll('${CARD} button[aria-label]')].map((b) => b.getAttribute('aria-label')))]`,
     );
     writeFileSync(join(out, 'labels.json'), JSON.stringify(labels, null, 2) + '\n');
-    close();
   } finally {
-    browser.kill();
+    await browser.stop();
     server.close();
   }
 }

@@ -7,9 +7,10 @@
 // A view a later workstream adds gets its case in test/repository/views-obsidian.js or views-page.js, with the same
 // commit as the view.
 //
-// Not done here, because jsdom has no layout or paint: the contrast of lines and controls (SC 1.4.11), target size
-// (SC 2.5.8; the details sheet's 44-point cases hold it), reflow and text spacing (SC 1.4.10, 1.4.12). The release
-// walk-through (RELEASING.md, "Accessibility walk-through") covers those by hand, with the keyboard and a screen reader.
+// Not done here, because jsdom has no layout or paint: the contrast of lines and controls (SC 1.4.11) and text
+// spacing (SC 1.4.12); target size and reflow (SC 2.5.8, 1.4.10) are held in a real Chrome, by
+// test/a11y-targets-reflow.test.js. The release walk-through (RELEASING.md, "Accessibility walk-through") covers those
+// by hand, with the keyboard and a screen reader.
 // Obsidian draws its own settings page from the plugin's definitions; the stand-in for it labels each control by its row's
 // name, which is how a screen reader reads a settings row, and the plugin's part (every row named, no two alike) is held
 // directly. Obsidian draws its own menus too, from the items the plugin gives it: the stand-in for one lists them as a
