@@ -31,6 +31,7 @@
 (r_licence:Rule {text: 'The licence (MPL-2.0) lets anyone use, fork and change the code and send a pull request, and keeps changed files open.', requirements: 'mpl_licence'}),
 (r_name:Rule {text: 'The name ThoughtKnot marks the original. A fork goes by its own name (TRADEMARKS.md).', requirements: 'community_files'}),
 (r_conduct:Rule {text: 'Everyone who takes part is treated with respect, and a problem can be reported in private (CODE_OF_CONDUCT.md).', requirements: 'community_files'}),
+(r_security:Rule {text: 'A security problem is reported in private and fixed before it is made public (SECURITY.md).', requirements: 'security_policy'}),
 (r_signed_off:Rule {text: 'Every commit in a pull request is signed off, saying its author may send it under the licence.', check: 'person', how: 'A box on the pull request template; an automatic check on each commit is the next step.'}),
 // ── Links ──
 (everyone)-[:HAS_RULE]->(r_wcag),
@@ -54,4 +55,5 @@
 (open)-[:HAS_RULE]->(r_licence),
 (open)-[:HAS_RULE]->(r_name),
 (open)-[:HAS_RULE]->(r_conduct),
-(open)-[:HAS_RULE]->(r_signed_off)
+(open)-[:HAS_RULE]->(r_signed_off),
+(open)-[:HAS_RULE]->(r_security)
