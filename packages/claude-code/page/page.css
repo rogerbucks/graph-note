@@ -355,3 +355,10 @@ textarea:focus-visible,
   border: 2px solid var(--gn-text-normal);
   border-radius: var(--gn-radius-m);
 }
+
+/* The buttons that open the changes and the review choosers under a graph: 44-point targets, as the bar's are (spec §5),
+   never under the 24 by 24 every pointer target needs (spec §41, a11y_targets_reflow_auto). */
+.gn-changes > button,
+.gn-review > button {
+  min-height: 44px;
+}

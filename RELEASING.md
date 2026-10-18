@@ -61,7 +61,8 @@ VoiceOver on macOS and on iOS; NVDA on Windows where one is at hand. Turn the di
       are 3 to 1 or better against their background in both themes, checked with a colour picker (SC 1.4.11).
 - [ ] **AX-14** On a phone every target is 24 by 24 CSS pixels at least, and the details sheet's buttons are 44 points (SC 2.5.8).
 - [ ] **AX-15** At a window 320 CSS pixels wide, or at 400% zoom, nothing is lost and nothing needs scrolling in two directions,
-      except the drawing itself (SC 1.4.10).
+      except the drawing itself (SC 1.4.10). CI holds AX-14 and AX-15 on the harness and the browser page
+      (test/a11y-targets-reflow.test.js); this is Obsidian itself, on a phone.
 - [ ] **AX-16** With text spacing raised (line height 1.5, paragraph spacing 2, letter spacing 0.12, word spacing 0.16, all times
       the font size) and the text size at 200%, nothing is cut off or overlaps (SC 1.4.12, 1.4.4).
 - [ ] **AX-17** With the system set to reduce motion, no movement plays, and nothing flashes more than three times a second
