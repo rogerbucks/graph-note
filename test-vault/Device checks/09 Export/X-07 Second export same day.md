@@ -25,4 +25,4 @@
 
 > **X-07** Export the same graph twice on one day: the second is saved as `…-2.svg`, the first kept, and the notice says so.
 
-**Back to the checklist:** [X-07 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-07 in its list.
+**Back to the checklist:** [X-07 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for X-07 in its list.

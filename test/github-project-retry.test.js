@@ -14,7 +14,7 @@ import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 
 const desired = desiredState(readBoard(FIXTURE), WORKSTREAMS, [3, 4]);
-const REPO = 'rogerbucks/graph-note';
+const REPO = 'rogerbucks/thoughtknot';
 const DELAYS = [5000, 15000, 45000];
 const BAD_GATEWAY = 'gh label create failed: non-200 OK status code: 502 Bad Gateway';
 const TIMEOUT = 'gh failed: Post "https://api.github.com/graphql": dial tcp 140.82.113.6:443: i/o timeout';

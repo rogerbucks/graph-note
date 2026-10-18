@@ -31,4 +31,4 @@
 > **G-04** Select a box, then zoom in until it is out of sight: a round arrow at the edge of the drawing points to it.
 > Tap the arrow: the box comes back into view and the arrow goes.
 
-**Back to the checklist:** [G-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-04 in its list.
+**Back to the checklist:** [G-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-04 in its list.

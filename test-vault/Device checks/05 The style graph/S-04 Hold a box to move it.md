@@ -28,4 +28,4 @@
 
 > **S-04** Phone: hold a finger on a box for a moment. It lifts (a shadow) and its tooltip opens. Drag it to just below another box: the page does not scroll, the line says "Put … beside …", and letting go writes the nudge. A swipe begun at once still scrolls the note, and a hold lifted without moving opens no details.
 
-**Back to the checklist:** [S-04 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-04 in its list.
+**Back to the checklist:** [S-04 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for S-04 in its list.

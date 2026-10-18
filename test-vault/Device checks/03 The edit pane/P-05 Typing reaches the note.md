@@ -26,4 +26,4 @@
 
 > **P-05** What is typed reaches the note within about a third of a second, and the drawing follows. Renaming or moving the note while typing changes nothing: what is typed next still reaches it. Deleting the note while typing keeps what was typed as a draft, and the pane says so; the command Recover kept drafts into a new note writes it into a note.
 
-**Back to the checklist:** [P-05 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-05 in its list.
+**Back to the checklist:** [P-05 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-05 in its list.

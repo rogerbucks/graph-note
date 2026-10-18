@@ -27,4 +27,4 @@
 
 > **P-11** A thing given text but no name, such as `(:Option {name: 'Large reader'})`, is drawn, and shows a ⚠ naming the suggested name, in the style of the names already in the graph and not one of them. Its fix puts the name after the (, and the ⚠ goes. A thing given a name but no text, such as `(large_reader:Option)`, shows an ℹ hint, not counted on the badge, with the text suggested from the name; its fix adds `{name: 'Large reader'}`. Nothing is written until the fix is pressed.
 
-**Back to the checklist:** [P-11 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-11 in its list.
+**Back to the checklist:** [P-11 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for P-11 in its list.

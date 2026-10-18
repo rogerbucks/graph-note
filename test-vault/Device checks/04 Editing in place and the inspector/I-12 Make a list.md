@@ -29,4 +29,4 @@
 
 > **I-12** A text property with several values (`tags: 'quiet, cheap'`): the icon's menu lists List after Text. Choosing it shows two fields, a kind and a relationship, filled in from the property's name and offering the kinds and relationships the graph already uses; Make list turns each value into a thing of that kind, linked from this one, and the property row becomes a row of chips. Cancel puts the field back. Undo (⌘Z, or the phone's gesture) takes the whole change back in one step. A thing with the same name that already exists is linked, not written again.
 
-**Back to the checklist:** [I-12 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-12 in its list.
+**Back to the checklist:** [I-12 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-12 in its list.

@@ -29,4 +29,4 @@
 
 > **E-01** Diagram type on a card lists Network, Tree, Flow, Radial, Lanes, Timeline and Table: each that fits can be pressed, each that does not is greyed with why beside it, and one says "suggested". The card says "Drawn as a network" until a type is pressed. Press Tree: a Diagram is written into the style block, never the data, and the card redraws top to bottom.
 
-**Back to the checklist:** [E-01 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-01 in its list.
+**Back to the checklist:** [E-01 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for E-01 in its list.

@@ -35,4 +35,4 @@
 > settles; press it again and the full details return, scrolling inside the sheet, which never covers more than
 > about half the screen. Minimise it, close it and tap another box, in this card or another: it opens minimised.
 
-**Back to the checklist:** [G-06 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-06 in its list.
+**Back to the checklist:** [G-06 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for G-06 in its list.

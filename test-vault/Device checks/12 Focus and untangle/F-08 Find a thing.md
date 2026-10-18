@@ -39,4 +39,4 @@
 
 > **F-08** Zoom in far, press Find a thing and type part of a name or of a property's value: the matches are listed with their kind. Choose one: its details open and it is brought into view. Escape closes the search and returns to its button.
 
-**Back to the checklist:** [F-08 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-08 in its list.
+**Back to the checklist:** [F-08 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for F-08 in its list.

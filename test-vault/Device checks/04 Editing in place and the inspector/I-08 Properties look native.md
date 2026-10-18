@@ -36,4 +36,4 @@
 
 > **I-08** In edit mode, tapping a box or a link shows its properties, looking as a note's Properties panel looks in this theme: the same rows, icons, spacing, type and colours, in both the light and dark themes.
 
-**Back to the checklist:** [I-08 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-08 in its list.
+**Back to the checklist:** [I-08 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for I-08 in its list.

@@ -43,4 +43,4 @@ Then what each option costs.
 
 > **V-02** Each step of the example draws the graph as built so far.
 
-**Back to the checklist:** [V-02 in the device checklist](https://github.com/rogerbucks/graph-note/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-02 in its list.
+**Back to the checklist:** [V-02 in the device checklist](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md), on GitHub. Look for V-02 in its list.
