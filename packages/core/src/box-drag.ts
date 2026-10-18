@@ -83,7 +83,8 @@ export function landingFor(
     .sort((p, q) => p.d - q.d)[0]?.b;
   if (!near || (hub && distance(at, hub) === 0)) return null;
   if (hub) {
-    const side: Side = turn(middle(hub), middle(near), at) < Math.PI ? 'after' : 'before';
+    // mirrored for a right-to-left language (RL), the things go round the other way
+    const side: Side = turn(middle(hub), middle(near), at) < Math.PI === (rankdir !== 'RL') ? 'after' : 'before';
     return placed(side, dragged, near.key, written);
   }
   const width = near.right - near.left || 1,
