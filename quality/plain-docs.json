@@ -108,7 +108,7 @@
     "packages/core/src/autocomplete.ts": 5,
     "packages/core/src/block-follow.ts": 11,
     "packages/core/src/block-items.ts": 3,
-    "packages/core/src/blocks.ts": 6,
+    "packages/core/src/blocks.ts": 5,
     "packages/core/src/box-drag.ts": 3,
     "packages/core/src/changes-view.ts": 5,
     "packages/core/src/claude-gate.ts": 5,
