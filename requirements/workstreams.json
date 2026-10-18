@@ -619,7 +619,8 @@
       "plugin_interface",
       "plugin_manifest_limits",
       "plugin_contract_suites",
-      "plugin_theme_tokens"
+      "plugin_theme_tokens",
+      "plugin_rtl"
     ]
   },
   "U1": {
