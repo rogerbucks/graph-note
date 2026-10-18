@@ -3,7 +3,7 @@
   "version": "0.6.0",
   "private": true,
   "description": "The host-free core of the graph note editor: what to draw, problems and fixes, zoom, edits and undo. No Obsidian, no VS Code.",
-  "license": "MIT",
+  "license": "MPL-2.0",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

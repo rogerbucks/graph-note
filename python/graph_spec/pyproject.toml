@@ -2,7 +2,7 @@
 name = "graph-spec"
 version = "0.6.0"
 description = "Reads graph blocks in the document profile, checks them against the graph spec's rules, and lays them out with Graphviz."
-license = "MIT"
+license = "MPL-2.0"
 requires-python = ">=3.12"
 # Pinned exactly, as the JavaScript side is; each is needed only by the functions that use it.
 # A plain install reads, checks, joins and fills hashes with no engine (req:14.no-engine-install).

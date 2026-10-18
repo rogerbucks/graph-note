@@ -104,4 +104,4 @@ A host that uses the Python library sets `graph_spec.CLASSIFICATION_NOTE`, `grap
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE). The layout engine, `@viz-js/viz`, compiles Graphviz (Eclipse Public License 2.0) into WebAssembly; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), which ships with every release.
+Mozilla Public License 2.0 (MPL-2.0) — see [LICENSE](LICENSE). Anyone may use, fork and change the code and send a pull request; a changed file stays under the same licence, so its changes stay open, while the code may still sit inside a larger work under other terms. Releases before this change stay MIT. The layout engine, `@viz-js/viz`, compiles Graphviz (Eclipse Public License 2.0) into WebAssembly; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), which ships with every release.

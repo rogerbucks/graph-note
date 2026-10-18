@@ -3,7 +3,7 @@
 // lockfile records them. Test code only.
 import { readJSON } from './repo.js';
 
-// Compatible with distributing the plugin under MIT (spec §13, Licence).
+// Compatible with distributing the plugin under MPL-2.0 (spec §13, Licence).
 const ALLOWED = new Set(['MIT', 'ISC', 'BSD-2-Clause', 'BSD-3-Clause', 'Apache-2.0', '0BSD', 'Zlib']);
 // Weak copyleft at the file level, distributed unmodified with its notice and
 // a link to its source: allowed for this one component and no other.
