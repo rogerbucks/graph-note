@@ -8,6 +8,7 @@ import { changesFigure } from './changes-section.ts';
 import type { ChangesDeps } from './changes-section.ts';
 import { groupSaid, reviewLevels, workstreamsFrom } from '../../core/src/github-review-items.ts';
 import type { ChangedFile, ReviewItem, ReviewLevels, SummaryGroup } from '../../core/src/github-review-items.ts';
+import { word } from '../../core/src/words.ts';
 
 /** One item's files as the server sends them: those the gate let through, those it held and why, and the rest. */
 export interface PageItemFiles {
@@ -25,9 +26,13 @@ export interface ReviewDeps extends Pick<ChangesDeps, 'layout' | 'dark'> {
 
 /** An item named in a line: "Pull request #7: Finish is Done (roger)", "Commit 1a2b3c4: Tidy (Ann)". */
 export function itemSaid(item: ReviewItem): string {
-  const by = item.author ? ` (${item.author})` : '';
-  if (item.kind === 'pull') return `Pull request #${item.id}: ${item.title}${by}`;
-  return `${item.kind === 'merge' ? 'Merge' : 'Commit'} ${item.id.slice(0, 7)}: ${item.title}${by}`;
+  const by = item.author ? word('review.by', { who: item.author }) : '';
+  if (item.kind === 'pull') return word('review.pull', { id: item.id, title: item.title, by });
+  return word(item.kind === 'merge' ? 'review.merge' : 'review.commit', {
+    id: item.id.slice(0, 7),
+    title: item.title,
+    by,
+  });
 }
 
 const SIGNS = { keep: ' ', add: '+', remove: '−' } as const;
@@ -42,8 +47,8 @@ export function reviewSection(win: Window & typeof globalThis, deps: ReviewDeps)
     return e;
   };
   const section = el('section', undefined, 'gn-review');
-  section.setAttribute('aria-label', 'Review a change');
-  const open = el('button', 'Review a change from GitHub…');
+  section.setAttribute('aria-label', word('review.section'));
+  const open = el('button', word('review.open'));
   open.setAttribute('type', 'button');
   const chooser = el('div', undefined, 'gn-review-pick');
   const result = el('div', undefined, 'gn-review-result');
@@ -80,40 +85,39 @@ export function reviewSection(win: Window & typeof globalThis, deps: ReviewDeps)
     const said = (groups: SummaryGroup[]) => groups.map(groupSaid);
     const summary = el('section', undefined, 'gn-review-summary');
     summary.append(
-      el('h3', 'Summary'),
-      list('By section', said(r.summary.sections)),
-      list('By workstream', said(r.summary.workstreams)),
+      el('h3', word('review.summary')),
+      list(word('review.by-section'), said(r.summary.sections)),
+      list(word('review.by-workstream'), said(r.summary.workstreams)),
       list(
-        'Requirements changed',
+        word('review.requirements'),
         r.summary.requirements.map((q) => q.said),
       ),
     );
     const others = r.summary.otherFiles;
-    if (others)
-      summary.append(el('p', `${others} ${others === 1 ? 'other file' : 'other files'} changed, with no graph.`));
+    if (others) summary.append(el('p', word('review.others', { count: others })));
     summary.append(
       list(
-        'Not shown',
+        word('review.not-shown'),
         files.withheld.map((w) => `${w.path}: ${w.why}`),
       ),
     );
-    if (files.unread) summary.append(el('p', `${files.unread} more files changed than were read.`));
+    if (files.unread) summary.append(el('p', word('review.unread', { count: files.unread })));
     const graphs = el('details', undefined, 'gn-review-graphs');
-    graphs.append(el('summary', `Graphs changed (${r.graphs.length})`));
+    graphs.append(el('summary', word('review.graphs', { count: r.graphs.length })));
     r.graphs.forEach((g, i) => {
       const one = el('section');
-      one.append(el('h4', `Graph ${g.graph} in ${g.path}`));
-      const named = `Graph ${g.graph} in ${g.path}, ${itemSaid(item)}`;
+      one.append(el('h4', word('review.graph', { graph: g.graph, path: g.path })));
+      const named = word('review.graph-of', { graph: g.graph, path: g.path, item: itemSaid(item) });
       const figure = changesFigure(win, g.graph, g.shown, named, `gn-review-list-${i}`, deps, (url) => urls.push(url));
       one.append(...figure.parts);
       graphs.append(one);
     });
     const lines = el('details', undefined, 'gn-review-lines');
-    lines.append(el('summary', `Lines changed, file by file (${r.lines.length})`));
+    lines.append(el('summary', word('review.lines', { count: r.lines.length })));
     for (const f of r.lines) {
       lines.append(el('h4', f.path));
       if (!f.lines) {
-        lines.append(el('p', 'Too many lines changed to show line by line.'));
+        lines.append(el('p', word('review.too-many')));
         continue;
       }
       const ol = el('ol', undefined, 'gn-review-diff');
@@ -127,7 +131,7 @@ export function reviewSection(win: Window & typeof globalThis, deps: ReviewDeps)
   };
 
   const review = async (item: ReviewItem) => {
-    say('Reading that change from GitHub…');
+    say(word('review.reading'));
     try {
       const r = await reviewed(item);
       for (const url of urls) win.URL.revokeObjectURL(url);
@@ -140,27 +144,27 @@ export function reviewSection(win: Window & typeof globalThis, deps: ReviewDeps)
 
   open.addEventListener('click', () => {
     void (async () => {
-      say('Reading the repository’s changes from GitHub…');
+      say(word('review.reading-all'));
       let items: ReviewItem[];
       try {
         items = await deps.items();
       } catch (e) {
         return say(e instanceof Error ? e.message : String(e));
       }
-      const label = el('label', 'Change to review');
+      const label = el('label', word('review.pick'));
       const pick = el('select');
       pick.setAttribute('id', 'gn-review-pick');
       label.setAttribute('for', pick.id);
       for (const item of items)
         pick.append(Object.assign(el('option', itemSaid(item)), { value: String(items.indexOf(item)) }));
-      const go = el('button', 'Review');
+      const go = el('button', word('review.go'));
       go.setAttribute('type', 'button');
       go.addEventListener('click', () => {
         const chosen = items[pick.selectedIndex];
         if (chosen) void review(chosen);
       });
       result.replaceChildren();
-      if (!items.length) return say('The repository has no pull requests or commits to review.');
+      if (!items.length) return say(word('review.none'));
       chooser.replaceChildren(label, pick, go);
       pick.focus();
     })();

@@ -2,7 +2,7 @@
 // drawn dashed with a later mark — on the drawing Graphviz drew, so its layout stays the Python library's — and said so
 // to screen readers; the parked things listed behind the badge; and, while the card is edited, Park for later in a
 // box's details, which writes a Deferred saying what is needed and why it waits.
-import { DeferredNotDeclared, indentText, parkForLater } from '@thoughtknot/core';
+import { DeferredNotDeclared, indentText, parkForLater, word } from '@thoughtknot/core';
 import type { Box, Indent, NoteReading, Parked } from '@thoughtknot/core';
 
 /** A graph as the whole note reads it. */
@@ -12,7 +12,7 @@ import { button } from './view-bar';
 
 const SVG = 'http://www.w3.org/2000/svg';
 /** The button that writes Deferred and DEFERS into the schema when Park it was refused for lacking them. */
-const DECLARE = 'Declare Deferred and DEFERS in the schema';
+const DECLARE = () => word('parked.declare');
 
 /** The edges of a box as Graphviz drew it, from the numbers of its outline: where a mark is put on it. */
 export function cornerOf(g: Element): { left: number; right: number; top: number } | null {
@@ -32,7 +32,7 @@ export function markParked(svg: SVGSVGElement, boxes: Box[]): void {
     const overdue = box.deferred.overdue;
     g.classList.add('thoughtknot-parked');
     g.classList.toggle('is-overdue', overdue);
-    const said = overdue ? 'parked for later, overdue' : 'parked for later';
+    const said = overdue ? word('parked.said-overdue') : word('parked.said');
     g.setAttribute('aria-label', `${g.getAttribute('aria-label') ?? box.text}, ${said}: ${box.deferred.what}`);
     const at = cornerOf(g);
     if (!at) continue;
@@ -41,20 +41,25 @@ export function markParked(svg: SVGSVGElement, boxes: Box[]): void {
     mark.setAttribute('x', String(at.right - 4));
     mark.setAttribute('y', String(at.top + 10));
     mark.setAttribute('text-anchor', 'end');
-    mark.textContent = overdue ? '⏳ overdue' : '⏳ later';
+    mark.textContent = overdue ? word('parked.mark-overdue') : word('parked.mark');
   }
 }
 
 /** The parked things behind the badge, each with what is needed, why it waits, and when to look again. */
 export function listParked(el: HTMLElement, parked: Map<string, Parked>, textOf: (key: string) => string): void {
   if (!parked.size) return;
-  el.createEl('h4', { text: 'Parked for later' });
+  el.createEl('h4', { text: word('parked.heading') });
   const ul = el.createEl('ul', { cls: 'thoughtknot-parked-list' });
   for (const [key, p] of parked) {
-    const when = p.revisitBy ? `, revisit by ${p.revisitBy}` : '';
+    const when = p.revisitBy ? word('parked.revisit', { day: p.revisitBy }) : '';
     ul.createEl('li', {
       cls: p.overdue ? 'is-overdue' : '',
-      text: `⏳ ${p.overdue ? 'Overdue' : 'Parked'} — ${textOf(key)}: ${p.what || 'what is needed is not said'}${p.why ? ` (${p.why})` : ''}${when}`,
+      text: word(p.overdue ? 'parked.row-overdue' : 'parked.row', {
+        name: textOf(key),
+        what: p.what || word('parked.what-unsaid'),
+        why: p.why ? word('parked.why', { why: p.why }) : '',
+        when,
+      }),
     });
   }
 }
@@ -64,7 +69,7 @@ export function parkedNote(el: HTMLElement, box: Box | undefined): void {
   if (!box?.deferred) return;
   el.createEl('p', {
     cls: 'thoughtknot-parked-note',
-    text: `⏳ ${box.deferred.overdue ? 'Parked for later, and overdue' : 'Parked for later'}: ${box.deferred.what}`,
+    text: word(box.deferred.overdue ? 'parked.note-overdue' : 'parked.note', { what: box.deferred.what }),
   });
 }
 
@@ -89,14 +94,14 @@ export function parkButton(
   now: () => NoteReading,
 ): void {
   const holder = el.createDiv({ cls: 'thoughtknot-park' });
-  button(holder, 'Park for later', 'clock', () => {
+  button(holder, word('parked.park'), 'clock', () => {
     holder.empty();
     // each field with its words beside it, never a placeholder alone
     const input = (label: string, type = 'text') =>
       holder.createEl('label', { text: label }).createEl('input', { attr: { type, 'aria-label': label } });
-    const what = input('What is needed'),
-      why = input('Why it waits'),
-      by = input('Revisit by', 'date');
+    const what = input(word('parked.what')),
+      why = input(word('parked.why-waits')),
+      by = input(word('parked.revisit-by'), 'date');
     what.focus(); // the button pressed is gone: the focus goes to the first field, never nowhere
     const said = holder.createDiv({ attr: { role: 'alert' } });
     const fix = holder.createDiv();
@@ -107,14 +112,14 @@ export function parkButton(
       return parkForLater(block, key, park, reading, indentText(indent), whole ?? reading.whole[graph]);
     };
     const refused = (e: unknown) => said.setText(String((e as Error).message));
-    const parkIt = button(holder, 'Park it', 'check', () => {
+    const parkIt = button(holder, word('parked.park-it'), 'check', () => {
       fix.empty();
       try {
         replace(parked(text()));
       } catch (e) {
         refused(e);
         if (declare && e instanceof DeferredNotDeclared) {
-          const again = button(fix, DECLARE, 'check', () => void declareAndPark(declare, again), DECLARE);
+          const again = button(fix, DECLARE(), 'check', () => void declareAndPark(declare, again), DECLARE());
         }
       }
     });

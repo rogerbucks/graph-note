@@ -3,7 +3,7 @@
 // suggested said so, and never drawn until chosen (diagram_type_set, type_only_when_fits, suggest_type). A chosen type
 // that has stopped fitting is said, with why, and the nearest type that fits offered (type_stops_fitting); a graph of more
 // than 50 things is offered the table or a view as the way in (large_way_in). The core decides all of it (types.ts).
-import { diagramOffer, tableOf, wayIn } from '@thoughtknot/core';
+import { diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
   DiagramTable,
@@ -27,10 +27,10 @@ export interface DiagramShown extends DiagramOffer {
   choose: (type: DiagramType) => void;
 }
 
-/** A type's name as a sentence says it, with its article: "a tree", "an unknown". */
-const said = (type: string): string => `${/^[aeiou]/.test(type) ? 'an' : 'a'} ${type}`;
+/** A type's name as a sentence says it, with its article: "a tree". */
+const said = (type: DiagramType): string => word(`type.${type}.as`);
 /** A type's name as a button says it. */
-const named = (type: string): string => `${type.charAt(0).toUpperCase()}${type.slice(1)}`;
+const named = (type: DiagramType): string => word(`type.${type}`);
 
 /**
  * What a card shows of the diagram types for `drawing` — a graph, or a view (`view`) as drawn — styled by `style`, its
@@ -54,7 +54,9 @@ export function diagramShown(
       const along = type === 'tree' ? offer.fits.find((f) => f.type === 'tree')?.relationship : undefined;
       write(
         { type, ...(view === undefined ? {} : { view }), ...(along === undefined ? {} : { relationship: along }) },
-        `${view === undefined ? 'The graph' : `View ${view}`} is now drawn as ${said(type)}.`,
+        view === undefined
+          ? word('type.now-graph', { type: said(type) })
+          : word('type.now-view', { view, type: said(type) }),
       );
     },
   };
@@ -72,14 +74,14 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
   const { choice, suggested } = d,
     writes: HTMLElement[] = [];
   const strip = root.createDiv({ cls: 'thoughtknot-type-strip' });
-  strip.createSpan({ cls: 'thoughtknot-type-drawn', text: `Drawn as ${said(choice.drawn)}` });
-  const list = root.createEl('ul', { cls: 'thoughtknot-type-list', attr: { 'aria-label': 'Diagram types' } });
+  strip.createSpan({ cls: 'thoughtknot-type-drawn', text: word('type.drawn', { type: said(choice.drawn) }) });
+  const list = root.createEl('ul', { cls: 'thoughtknot-type-list', attr: { 'aria-label': word('type.list') } });
   list.hidden = true;
   const open = () => {
     list.hidden = !list.hidden;
     toggle.setAttribute('aria-expanded', String(!list.hidden));
   };
-  const toggle = button(strip, 'Diagram type', 'layout-dashboard', open, 'Diagram type');
+  const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
   toggle.setAttribute('aria-expanded', 'false');
   writes.push(toggle, list);
   // each type a tile, its state marked by class for the look and said in words beside it, never by colour alone
@@ -98,7 +100,10 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
     b.disabled = !f.fits;
     b.addEventListener('click', () => d.choose(f.type));
     const why = f.fits
-      ? [f.type === choice.drawn ? 'drawn now' : '', f.type === suggested.type ? `suggested: ${suggested.because}` : '']
+      ? [
+          f.type === choice.drawn ? word('type.drawn-now') : '',
+          f.type === suggested.type ? word('type.suggested', { because: suggested.because }) : '',
+        ]
           .filter(Boolean)
           .join('; ')
       : (f.why ?? '');
@@ -108,15 +113,18 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
   if (stopped) {
     const banner = root.createDiv({ cls: ['thoughtknot-banner', 'thoughtknot-type-stopped'], attr: { role: 'alert' } });
     banner.createSpan({
-      text: `This graph no longer fits ${said(stopped.type)}: ${stopped.why}. It is drawn as a network until another type is chosen.`,
+      text: word('type.stopped', { type: said(stopped.type), why: stopped.why }),
     });
-    const label = stopped.nearest === 'network' ? 'Draw as a network' : `Use ${stopped.nearest}`;
+    const label =
+      stopped.nearest === 'network'
+        ? word('type.as-network')
+        : word('type.use', { type: word(`type.${stopped.nearest}.word`) });
     writes.push(button(banner, label, 'check', () => d.choose(stopped.nearest), label));
   }
   if (d.wayIn && choice.drawn !== 'table') {
     const way = root.createDiv({ cls: 'thoughtknot-way-in', attr: { role: 'note' } });
-    way.createSpan({ text: `${d.wayIn.say} A view is made with Edit here, then Make a view.` });
-    writes.push(button(way, 'Show as table', 'table', () => d.choose('table'), 'Show as table'));
+    way.createSpan({ text: word('type.way-in', { say: d.wayIn.say }) });
+    writes.push(button(way, word('type.as-table'), 'table', () => d.choose('table'), word('type.as-table')));
   }
   return writes;
 }

@@ -63,7 +63,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     cards.setAttribute('class', 'gn-cards');
     const prose = doc.createElement('article');
     prose.setAttribute('class', 'gn-prose');
-    prose.setAttribute('aria-label', 'The note');
+    prose.setAttribute('aria-label', word('page.note'));
     root.replaceChildren(graph, cards, prose);
     const layouts = pageLayouts(win);
     const status = doc.getElementById('gn-notices');

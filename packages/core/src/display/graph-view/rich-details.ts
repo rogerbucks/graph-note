@@ -87,7 +87,7 @@ export class RichDetails {
           ? drawing?.boxes.find((b) => b.key === target.thing)?.note
           : drawing?.links[target.link]?.note;
     if (!note) return;
-    el.createEl('h4', { text: 'Note' });
+    el.createEl('h4', { text: word('details.note') });
     this.render(el, note.text, 'thoughtknot-thing-note');
   }
 

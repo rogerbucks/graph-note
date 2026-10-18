@@ -31,8 +31,10 @@ describe('the text in the card fits its text', () => {
     assert.match(css, /\.thoughtknot-pane\.thoughtknot-inline\s*\{[^}]*height:\s*auto;/);
     assert.match(
       css,
-      /\.thoughtknot-inline \.thoughtknot-editor,\s*\.thoughtknot-inline \.thoughtknot-text\s*\{[^}]*min-height:\s*0;/,
+      /\.thoughtknot-inline \.thoughtknot-editor,\s*\.thoughtknot-inline \.thoughtknot-overlay\s*\{[^}]*min-height:\s*0;/,
     );
+    // the picture sets the height (long_lines_wrap): one more row past its text, to type on
+    assert.match(css, /\.thoughtknot-overlay::after\s*\{[^}]*content:\s*' ';/);
   });
 });
 
@@ -111,4 +113,65 @@ describe('the box in the card, untouched by the theme', () => {
       }
     });
   }
+});
+
+describe('a long line wraps, in the pane and in place', () => {
+  // long_lines_wrap (spec §4, Roger, 18 Oct 2026): a long line ran off the right of the box, cut off, with its
+  // plain-English note after it. The field and its coloured picture wrap alike, the note sits out of the flow so it never
+  // adds a row the field does not have, and the picture, not the field, sets the box's height.
+  const all = rules(readFileSync(new URL('../../../styles.css', import.meta.url), 'utf8'), 'thoughtknot');
+  const inEditor = (tag, cls, inline) => ({
+    tag,
+    classes: [cls],
+    states: [],
+    ancestors: [
+      { tag: 'div', classes: ['thoughtknot-editor'] },
+      { tag: 'div', classes: ['thoughtknot-pane-text'] },
+      { tag: 'div', classes: inline ? ['thoughtknot-pane', 'thoughtknot-inline'] : ['thoughtknot-pane'] },
+    ],
+  });
+  const won = (el, property) => winner(all, el, property)?.value;
+
+  test('the field and its picture wrap alike, each row of the picture over the row of the field it shows', () => {
+    for (const inline of [false, true])
+      for (const [tag, cls] of [
+        ['textarea', 'thoughtknot-text'],
+        ['div', 'thoughtknot-overlay'],
+      ]) {
+        const el = inEditor(tag, cls, inline);
+        assert.equal(won(el, 'white-space'), 'pre-wrap', `${cls} white-space`);
+        assert.equal(won(el, 'overflow-wrap'), 'anywhere', `${cls} overflow-wrap`);
+        assert.equal(won(el, 'overflow'), 'hidden', `${cls} overflow`);
+      }
+  });
+
+  test('the picture sets the box’s height, the field laid over it; the note at a line’s end takes no room', () => {
+    for (const inline of [false, true]) {
+      assert.equal(won(inEditor('div', 'thoughtknot-overlay', inline), 'position'), 'relative');
+      assert.equal(won(inEditor('textarea', 'thoughtknot-text', inline), 'position'), 'absolute');
+      const end = {
+        tag: 'span',
+        classes: ['thoughtknot-line-end'],
+        states: [],
+        ancestors: [inEditor('div', 'thoughtknot-overlay', inline)],
+      };
+      assert.equal(won(end, 'position'), 'absolute');
+      assert.equal(won(end, 'white-space'), 'pre');
+    }
+  });
+
+  test('the field is never told not to wrap, and each line’s note is out of the flow of its text', async () => {
+    const env = await load({ files: { [PATH]: NOTE } });
+    try {
+      const el = await show(env);
+      labelled(el, 'Edit here').click();
+      await until(() => !!el.querySelector('.thoughtknot-readback'));
+      assert.equal(el.querySelector('textarea').getAttribute('wrap'), null);
+      const backs = el.querySelectorAll('.thoughtknot-readback');
+      assert.ok(backs.length > 0);
+      for (const b of backs) assert.ok(b.parentElement.classList.contains('thoughtknot-line-end'), b.textContent);
+    } finally {
+      env.uninstall();
+    }
+  });
 });

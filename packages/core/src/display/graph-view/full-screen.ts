@@ -2,6 +2,7 @@
 // own bar or Escape. The overlay belongs to the card it was opened from, and goes with it. As a dialog does (spec §41,
 // a11y_keyboard_auto), it takes the keyboard when it opens, keeps Tab and Shift+Tab in it, leaves on Escape from any
 // control in it, and gives the keyboard back to what had it.
+import { word } from '@thoughtknot/core';
 import { readInHostDirection } from '../host';
 import type { Child, Lifecycle } from '../lifecycle';
 
@@ -43,7 +44,11 @@ export class FullScreen {
     const overlay = readInHostDirection(
       activeDocument.body.createDiv({
         cls: 'thoughtknot-fullscreen',
-        attr: { role: 'dialog', 'aria-modal': 'true', 'aria-label': `Graph ${this.host.graph}, full screen` },
+        attr: {
+          role: 'dialog',
+          'aria-modal': 'true',
+          'aria-label': word('drawing.full-screen', { graph: this.host.graph }),
+        },
       }),
     );
     overlay.addEventListener('keydown', (e) => this.key(e, overlay));

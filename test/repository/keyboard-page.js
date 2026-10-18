@@ -31,9 +31,22 @@ export const PAGE_PARTS = {
   ],
 };
 
-/** The tests of one part: each state it names walked, operated and left from the keyboard alone, with no problem found. */
-export function keyboardPageTests(part) {
-  describe('the browser editor’s page: every state, from the keyboard alone', () => {
+/** A phone's width in CSS pixels, under the page's phone width, for the run of the page in its phone layout. */
+export const PHONE = 390;
+
+/**
+ * The page's states in its phone layout (keyboard_any_device), split in two by their order, every state in one half: run
+ * by test/a11y-keyboard-devices-page-<half>.test.js.
+ */
+export const phoneHalf = (names, half) => names.filter((_, i) => i % 2 === half - 1);
+
+/**
+ * The tests of one part: each state it names walked, operated and left from the keyboard alone, with no problem found.
+ * With `phone`, the page in a phone's width, with one half of every state.
+ */
+export function keyboardPageTests(part, phone = false) {
+  const where = phone ? ' on a phone with a keyboard' : '';
+  describe(`the browser editor’s page${where}: every state, from the keyboard alone`, () => {
     let dir;
     const opened = [];
     before(async () => {
@@ -45,13 +58,13 @@ export function keyboardPageTests(part) {
     });
 
     const open = (hash, note, draft) => {
-      const page = openEditorPage(dir, hash, note, draft);
+      const page = openEditorPage(dir, hash, note, draft, undefined, phone ? PHONE : undefined);
       opened.push(page);
       return page;
     };
     const STATES = pageStates(open);
 
-    for (const name of PAGE_PARTS[part])
+    for (const name of phone ? phoneHalf(Object.keys(STATES), part) : PAGE_PARTS[part])
       test(`${name}: every action reached and operated, and every focus left`, async () => {
         const problems = await runProblems(
           async () => {

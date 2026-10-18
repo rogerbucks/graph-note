@@ -588,7 +588,9 @@ a GQL block, CSV or GraphML (`DATA_FORMATS`), each read back into the very thing
   translation is checked by `translationProblems` and added by `addTranslation`; `setLanguage`, called by
   `installHost` with the host's `language()`, picks it, or its base language's, else UK English. A word a translation
   lacks is said in UK English, never as its key. Places move their words into `source-words.ts` one at a time.
-  The settings options' words sit apart in `settings-source-words.ts`, spread into `SOURCE_WORDS`.
+  The settings options' words sit apart in `settings-source-words.ts`, and the browser page's own in
+  `page-source-words.ts`, and editing's (properties, adding a thing, Edit, kept drafts) in `edit-source-words.ts`, each spread
+  into `SOURCE_WORDS`.
 - `plugins.ts` — the plug-in interface (editor spec §43, plugin_interface, plugin_manifest_limits): `pluginRegistry`,
   where a `ThoughtknotPlugin` is installed once its manifest (`id`, `version`, `api` of `PLUGIN_API`, the `uses` it names
   of `EXTENSION_POINTS`) is accepted, given only the points it names; a refused plug-in leaves nothing behind, and a
