@@ -194,6 +194,17 @@ describe('counting the benchmarks', () => {
     assert.equal(once.stdout, again.stdout, 'Node takes every flag, and its random numbers start from the one seed');
   });
 
+  test('a drawing counts its WebAssembly compiled by the optimising compiler alone; a cold start, compiled once quickly', async () => {
+    const { nodeFlagsFor } = await import('../scripts/instruction-counts.mjs');
+    const named = (name) => BENCHMARKS.find((b) => b.name === name);
+    for (const name of ['draw_fifty', 'draw_five_hundred']) {
+      assert.deepEqual(nodeFlagsFor(named(name)), [...NODE_FLAGS, '--no-liftoff'], name);
+    }
+    assert.deepEqual(nodeFlagsFor(named('cold_start')), NODE_FLAGS, 'a first draw runs what was compiled quickly');
+    const r = spawnSync(process.execPath, [...nodeFlagsFor(named('draw_fifty')), '-e', '0'], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+  });
+
   test(
     'the command says in one line that nothing was counted here, and gives no number',
     { skip: valgrindVersion() ? 'Valgrind is installed here, so it would count' : false },
