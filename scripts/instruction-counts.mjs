@@ -35,6 +35,10 @@ const CASE_MS = 15 * 60 * 1000;
  * checks its bounds in code instead of by catching faults in reserved memory (`--disable-wasm-trap-handler`), which
  * Valgrind follows plainly. Counted three times under Cachegrind (ARM Linux in Docker, 12 Oct 2026), without
  * `--predictable` a metric moved by up to 8.9% between runs; with it, by at most 1.9% (draw_fifty), the rest 0.001%.
+ * WebAssembly is compiled once, by the optimising compiler, rather than quickly first and again when a function runs
+ * hot (`--no-wasm-dynamic-tiering`): which functions count as hot, and when, moved draw_fifty's whole process by up to
+ * 500 million instructions on the release runner. Counted six times under Cachegrind (x86-64 Linux, 18 Oct 2026),
+ * draw_fifty's process moved by 4.4% without it and by 0.002% with it, and counted a quarter fewer instructions.
  */
 export const NODE_FLAGS = [
   '--single-threaded',
@@ -42,6 +46,7 @@ export const NODE_FLAGS = [
   '--predictable-gc-schedule',
   '--random-seed=1',
   '--disable-wasm-trap-handler',
+  '--no-wasm-dynamic-tiering',
 ];
 
 /**
