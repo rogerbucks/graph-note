@@ -9,9 +9,11 @@ import { addNotes } from './notes.ts';
 import { mergePathProblems } from './paths.ts';
 import { readBlocks, REREAD_BUDGET } from './partial-read.ts';
 import { textTooLarge } from './layout-limits.ts';
-import { dataKind } from './blocks.ts';
+import { dataKind, namesSharedSchema } from './blocks.ts';
+import { withStandardSchemas } from './standard-schemas.ts';
 import { parkedIn } from './deferred.ts';
 import { undeclared, undeclaredUse } from './schema-checks.ts';
+import { missingSchemas } from './schema-names.ts';
 import { suggestedPlaces } from './suggested-names.ts';
 
 /** A thing's text: its name, else its title, text or label, else its id — as graph-spec-draw.py chooses. */
@@ -68,18 +70,22 @@ function drawingOf(
 /**
  * What a note's graph blocks draw, as built by the blocks up to and including block `upTo` (default: all of them).
  * Readings come from each graph's own schema anywhere in the note — a schema is written last — else the shared schema
- * it names, from `shared` (the vault's SCHEMA blocks). Problems are listed for the blocks up to `upTo`. `budget` caps
+ * it names, from `shared` (the vault's SCHEMA blocks) or the standard schemas (standard-schemas.ts), which a vault schema of
+ * the same name stands in for. Given the vault's, a graph naming a schema none of them holds is warned of (schema-names.ts);
+ * not given them, as by a caller that cannot see the vault, it is not. Problems are listed for the blocks up to `upTo`. `budget` caps
  * reading a broken block again (partial-read.ts), as the Python reader's does. `today` (YYYY-MM-DD, default the current
  * day) decides which deferred things are overdue (deferred.ts), as the graph library's completeness check does.
  */
 export function readNote(
   blocks: string[],
   upTo = blocks.length - 1,
-  shared: string[] = [],
+  vault: string[] = [],
   budget = REREAD_BUDGET,
   today = new Date().toISOString().slice(0, 10),
 ): NoteReading {
   const upto = blocks.slice(0, upTo + 1);
+  // the standard schemas only for a note that names a shared schema, so no other note reads them
+  const shared = blocks.some(namesSharedSchema) ? withStandardSchemas(vault) : vault;
   // measured before anything is read, so no block, however large or broken, holds the page while it is read (§9): the
   // graph blocks and the shared schemas, which are read; never a query or an excerpt, which are not. The plugin's own
   // exception to drawing as the Python reader does (drawn_in_part): over the limits it draws nothing at all.
@@ -99,7 +105,11 @@ export function readNote(
     d.estimates = estimate(world[name] as Graph, name, d, shared, problems, upto);
     graphs.set(name, d);
   }
-  problems.push(...undeclared(whole, upto), ...undeclaredUse(whole, upto, problems));
+  problems.push(
+    ...undeclared(whole, upto),
+    ...undeclaredUse(whole, upto, problems),
+    ...(vault.length ? missingSchemas(whole, upto) : []),
+  );
   // each note on the box or link below it, and a note that belongs to none of a line's things said (editor spec §24)
   problems.push(...addNotes(graphs, upto, read));
   // a path's own problems (editor spec §7) say what the reader's reports of a step through nothing left unsaid

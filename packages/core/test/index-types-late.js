@@ -1,6 +1,9 @@
-// The last part of the types src/index.ts exports, from PropType on, sorted: test support only, nothing here ships. It
+// The last part of the types src/index.ts exports, from Position on, sorted: test support only, nothing here ships. It
 // is kept apart from index-names.js, which joins it to the types before it, so neither file passes the test file size.
 export const TYPES_LATE = [
+  'Position',
+  'PreparedSend',
+  'Problem',
   'PropType',
   'Property',
   'PropertyRow',
