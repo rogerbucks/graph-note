@@ -2,6 +2,7 @@
 // back; the button that does it names what it will show next.
 import { setIcon } from '../host';
 import { renderCode } from '../code';
+import { word } from '@graph-note/core';
 
 /** What the toggle asks of its card. */
 export interface SourceHost {
@@ -40,6 +41,6 @@ export class SourceToggle {
     else if (this.host.keptOpen()) details.hidden = false; // kept open, it is back with the drawing (§24)
     b.empty();
     setIcon(b, showing ? 'network' : 'code');
-    b.setAttribute('aria-label', showing ? 'Show drawing' : 'Show source');
+    b.setAttribute('aria-label', word(showing ? 'bar.show-drawing' : 'bar.show-source'));
   }
 }

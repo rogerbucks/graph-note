@@ -4,6 +4,7 @@
 import { until } from '../../packages/obsidian/test/host/load-plugin.js';
 import { browserHost } from '../../packages/claude-code/page/browser-host.ts';
 import { PAGE_NOTE } from './wcag-page.js';
+import { word } from '@graph-note/core';
 
 /**
  * Each state of the page by its name, reached through `open(hash, note, draft)`, which opens the page as the pane opens it
@@ -37,7 +38,7 @@ export function pageStates(open) {
     'the edit pane with the picker of two graph blocks': async () => {
       const page = open(withNote, TWO_BLOCKS);
       await drawn(page);
-      await until(() => !!page.window.document.querySelector('select[aria-label="Graph block"]'));
+      await until(() => !!page.window.document.querySelector(`select[aria-label="${word('editor.block-picker')}"]`));
       return page;
     },
     'the edit pane with a kept draft offered back': async () => {
@@ -67,7 +68,8 @@ export function pageStates(open) {
     'the export form open': async () => {
       const page = open(withNote);
       await drawn(page);
-      const exporter = () => page.window.document.querySelector('.graph-note-bar button[aria-label="Export"]');
+      const exporter = () =>
+        page.window.document.querySelector(`.graph-note-bar button[aria-label="${word('bar.export')}"]`);
       await until(() => !!exporter());
       exporter().click();
       await until(() => !!page.window.document.querySelector('.graph-note-export'));

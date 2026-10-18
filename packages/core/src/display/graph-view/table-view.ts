@@ -2,7 +2,11 @@
 // thing, with its kind and properties, and one for each link — from the core's `tableOf`. Each row is reached and named as
 // a box or a link of a drawing is, so tapping, the details and the inspector work as in every other type
 // (type_one_way_to_work); the card zooms it by the same buttons and gestures, scaling it as a whole.
+import { word } from '@graph-note/core';
 import type { DiagramTable } from '@graph-note/core';
+
+/** The heads of the links' table. */
+const linkHeads = (): string[] => [word('table.from'), word('table.link'), word('table.to'), word('table.properties')];
 
 /** Roughly how wide one character of the table is, and how tall a row, in CSS pixels: its size before it is on the page. */
 const CHAR_PX = 7.5,
@@ -18,7 +22,7 @@ export function tableSize(t: DiagramTable): { width: number; height: number } {
         w + Math.min(WIDEST_CHARS, Math.max(...rows.map((r) => (r[i] ?? '').length))) * CHAR_PX + CELL_PAD_PX,
       0,
     );
-  const links = [['From', 'Link', 'To', 'Properties'], ...t.links.map((l) => [...l.cells, l.properties])];
+  const links = [linkHeads(), ...t.links.map((l) => [...l.cells, l.properties])];
   return {
     width: Math.ceil(Math.max(across([t.columns, ...t.rows.map((r) => r.cells)]), t.links.length ? across(links) : 0)),
     height: (t.rows.length + 2 + (t.links.length ? t.links.length + 2 : 0)) * ROW_PX,
@@ -36,7 +40,7 @@ function openable(tr: HTMLElement, label: string): void {
 /** The table, put in the card's viewport: the things, then the links. */
 export function renderTable(viewport: HTMLElement, t: DiagramTable): HTMLElement {
   const wrap = viewport.createDiv({ cls: 'graph-note-table' });
-  const things = wrap.createEl('table', { attr: { 'aria-label': 'Things' } });
+  const things = wrap.createEl('table', { attr: { 'aria-label': word('table.things') } });
   const head = things.createEl('thead').createEl('tr');
   for (const c of t.columns) head.createEl('th', { text: c, attr: { scope: 'col' } });
   const body = things.createEl('tbody');
@@ -46,13 +50,13 @@ export function renderTable(viewport: HTMLElement, t: DiagramTable): HTMLElement
     for (const c of r.cells) tr.createEl('td', { text: c });
   }
   if (!t.links.length) return wrap;
-  const links = wrap.createEl('table', { attr: { 'aria-label': 'Links' } });
+  const links = wrap.createEl('table', { attr: { 'aria-label': word('table.links') } });
   const top = links.createEl('thead').createEl('tr');
-  for (const c of ['From', 'Link', 'To', 'Properties']) top.createEl('th', { text: c, attr: { scope: 'col' } });
+  for (const c of linkHeads()) top.createEl('th', { text: c, attr: { scope: 'col' } });
   const rows = links.createEl('tbody');
   for (const l of t.links) {
     const tr = rows.createEl('tr', { attr: { 'data-link': String(l.index) } });
-    openable(tr, `Link: ${l.cells.join(' ')}`);
+    openable(tr, word('table.link-row', { cells: l.cells.join(' ') }));
     for (const c of [...l.cells, l.properties]) tr.createEl('td', { text: c });
   }
   return wrap;

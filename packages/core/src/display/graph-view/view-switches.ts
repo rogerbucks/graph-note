@@ -4,7 +4,7 @@
 // by laying the graph out again, which the card puts in place keeping the selection and the focus; a busy hub's stub, a
 // folded group's box and a hub's details open and fold them the same way. Nothing here reaches the note, so the menu is
 // offered and works in reading view too (view_switch_view_only); it says in words when the graph could not be redrawn.
-import { SWITCH_NAMES, VIEW_SWITCHES, edgesOf, foldsHiding, labelsHidden } from '@graph-note/core';
+import { SWITCH_NAMES, VIEW_SWITCHES, edgesOf, foldsHiding, labelsHidden, word } from '@graph-note/core';
 import type { Drawn, GraphDrawing, ViewState, ViewSwitch } from '@graph-note/core';
 import type { SwitchesShown } from './view-options';
 
@@ -25,7 +25,7 @@ export function renderViewMenu(
   state: ViewState,
   turned: (s: ViewSwitch, on: boolean) => void,
 ): ViewMenu {
-  const el = root.createDiv({ cls: 'graph-note-view-menu', attr: { role: 'group', 'aria-label': 'View' } });
+  const el = root.createDiv({ cls: 'graph-note-view-menu', attr: { role: 'group', 'aria-label': word('bar.view') } });
   el.hidden = true;
   const switches: { s: ViewSwitch; b: HTMLButtonElement; says: HTMLElement }[] = [];
   for (const s of VIEW_SWITCHES) {

@@ -1,6 +1,7 @@
 // The block editor's parts on the page (spec §4, §9): the head with its tools, the draft banner, on a phone the
 // Drawing and Text tabs, the text field over its coloured picture, the fix and suggestion bars, the problems list and the
 // announcer for screen readers — built once for each block shown, in the pane or in place in a drawing's card.
+import { word } from '@graph-note/core';
 import type { PaneSession } from '@graph-note/core';
 import { isPhone, notice, readInHostDirection, setIcon } from '../host';
 
@@ -83,8 +84,8 @@ export function buildEditor(
         if (panel === drawingEl) on.showDrawing();
       });
     };
-    tab('Drawing', drawingEl, textEl, false);
-    tab('Text', textEl, drawingEl, true);
+    tab(word('editor.drawing-tab'), drawingEl, textEl, false);
+    tab(word('editor.text-tab'), textEl, drawingEl, true);
     drawingEl.hidden = true;
   } else {
     drawingEl = pane.createDiv({ cls: 'graph-note-pane-drawing' });
@@ -94,7 +95,11 @@ export function buildEditor(
   const editor = textEl.createDiv({ cls: 'graph-note-editor' });
   // a div, not a pre: inside a note, Obsidian's own code-block styles would wrap and pad it out of step with the field
   const overlay = editor.createDiv({ cls: 'graph-note-overlay', attr: { 'aria-hidden': 'true' } });
-  const name = editor.createSpan({ cls: 'graph-note-sr', text: `Text of graph ${s.graph}`, attr: { id: nextId() } });
+  const name = editor.createSpan({
+    cls: 'graph-note-sr',
+    text: word('editor.text-of', { graph: s.graph }),
+    attr: { id: nextId() },
+  });
   const text = editor.createEl('textarea', {
     cls: 'graph-note-text',
     attr: {
@@ -112,13 +117,13 @@ export function buildEditor(
   fixbar.hidden = true;
   const suggest = textEl.createDiv({
     cls: 'graph-note-suggestions',
-    attr: { role: 'toolbar', 'aria-label': 'Suggestions' },
+    attr: { role: 'toolbar', 'aria-label': word('editor.suggestions') },
   });
   suggest.hidden = true;
   const sheetParent = isPhone() && !inline ? pane.createDiv({ cls: 'graph-note-sheet' }) : textEl;
   const list = sheetParent.createDiv({
     cls: 'graph-note-pane-problems',
-    attr: { role: 'region', 'aria-label': 'Problems', 'aria-live': 'polite' },
+    attr: { role: 'region', 'aria-label': word('editor.problems'), 'aria-live': 'polite' },
   });
 
   const announce = pane.createDiv({
@@ -148,18 +153,18 @@ export function showTools(
   },
 ): void {
   tools.empty();
-  if (o.inline) button(tools, 'Done', 'check', () => o.done(), 'Done');
+  if (o.inline) button(tools, word('editor.done'), 'check', () => o.done(), word('editor.done'));
   const again = o.again;
-  if (again) button(tools, 'Open again', 'refresh-cw', () => again(), 'Open again');
+  if (again) button(tools, word('editor.open-again'), 'refresh-cw', () => again(), word('editor.open-again'));
   const step = (label: string, icon: string, why: string | null, onClick: () => void) => {
     const b = button(tools, label, icon, onClick);
     if (!why) return;
     b.setAttribute('aria-disabled', 'true');
     b.setAttribute('aria-description', why);
   };
-  step('Undo', 'undo-2', o.why.undo, () => o.undo());
-  step('Redo', 'redo-2', o.why.redo, () => o.redo());
-  if (o.draft) button(tools, 'Lock the graph', 'lock', () => o.lock(), 'Lock the graph');
+  step(word('editor.undo'), 'undo-2', o.why.undo, () => o.undo());
+  step(word('editor.redo'), 'redo-2', o.why.redo, () => o.redo());
+  if (o.draft) button(tools, word('editor.lock'), 'lock', () => o.lock(), word('editor.lock'));
 }
 
 /** What the tools say of Undo and Redo, to draw them again only when it changes. */

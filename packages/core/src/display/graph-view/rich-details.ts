@@ -5,7 +5,7 @@
 // (links-list.ts). What is rendered is owned by a component
 // of its own, unloaded when the details are drawn again or close, so nothing rendered outlives what it was rendered for.
 import { Lifecycle } from '../lifecycle';
-import { attachmentsOf, linksHeld, noteOf, withMeant } from '@graph-note/core';
+import { attachmentsOf, linksHeld, noteOf, withMeant, word } from '@graph-note/core';
 import type { Target, View } from '@graph-note/core';
 import { noteControls } from './note-controls';
 import { linkAnchor, renderLinks } from '../links/links-list';
@@ -103,7 +103,7 @@ export class RichDetails {
 
   /** Properties to read, each `name:` and its value rendered by Obsidian (spec §3, §14). */
   properties(el: HTMLElement, properties: [string, string][]): void {
-    el.createEl('h4', { text: 'Properties' });
+    el.createEl('h4', { text: word('details.properties') });
     const ul = el.createEl('ul', { cls: 'graph-note-rich-properties' });
     for (const [k, v] of properties) {
       const li = ul.createEl('li');

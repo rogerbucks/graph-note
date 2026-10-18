@@ -20,7 +20,7 @@ import {
   editorInfoField,
   editorLivePreviewField,
 } from '../../packages/obsidian/test/host/fake-obsidian.js';
-import { ProposalReview, basisOf, makeProposal } from '@graph-note/core';
+import { ProposalReview, basisOf, makeProposal, word } from '@graph-note/core';
 import * as cardNotes from '../../packages/obsidian/test/host/card-notes.js';
 import * as paneNotes from '../../packages/obsidian/test/host/pane-notes.js';
 
@@ -153,14 +153,14 @@ export const OBSIDIAN = {
   'a card being edited in place': async () => {
     const env = await load({ files: { [cardNotes.PATH]: cardNotes.NOTE } });
     const el = await cardNotes.show(env);
-    labelled(el, 'Edit here').click();
+    labelled(el, word('bar.edit-here')).click();
     await until(() => !!el.querySelector('textarea'));
     return { env, el };
   },
   'the properties form of a thing, while editing in place': async () => {
     const env = await load({ files: { [cardNotes.PATH]: cardNotes.NOTE } });
     const el = await cardNotes.show(env);
-    labelled(el, 'Edit here').click();
+    labelled(el, word('bar.edit-here')).click();
     await until(() => !!el.querySelector('textarea'));
     tapKey(el, 'large');
     assert.ok(el.querySelector('.metadata-property'), 'the form opens');
@@ -173,13 +173,13 @@ export const OBSIDIAN = {
   },
   'the export form open on a card': async () => {
     const { env, el } = await shownBlock(noteOf(TRIP), 0);
-    labelled(el, 'Export').click();
+    labelled(el, word('bar.export')).click();
     assert.ok(el.querySelector('.graph-note-export'), 'the Export form');
     return { env, el };
   },
   'the export form asking first, for a note above its classification': async () => {
     const { env, el } = await shownBlock(`---\nclassification: Internal\n---\n${noteOf(TRIP)}`, 0);
-    labelled(el, 'Export').click();
+    labelled(el, word('bar.export')).click();
     const form = el.querySelector('.graph-note-export');
     labelled(form, 'Export it').click();
     await until(() => !!labelled(form, 'Export anyway'));
@@ -240,14 +240,14 @@ export const OBSIDIAN = {
   'a card in full screen': async () => {
     const env = await load();
     const { el } = await show(env, `# N\n\n${fence(GRAPH)}\n`);
-    labelled(el, 'Full screen').click();
+    labelled(el, word('bar.full-screen')).click();
     const overlay = env.doc.body.querySelector('.graph-note-fullscreen');
     assert.ok(overlay?.querySelector('g.node'), 'the drawing in full screen');
     return { env, el: overlay };
   },
   'the mini-map, once zoomed in past the fit': async () => {
     const { env, el } = await shownBlock(noteOf(GRAPH), 0, { width: 300 });
-    labelled(el, 'Zoom in').click();
+    labelled(el, word('bar.zoom-in')).click();
     assert.equal(el.querySelector('.graph-note-mini-map')?.hidden, false, 'the mini-map');
     return { env, el };
   },

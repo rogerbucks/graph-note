@@ -4,7 +4,7 @@
 // the configured level, the question asked before anything is written (classified_export). A path that can be played is
 // offered too, as an animated SVG at a pace chosen (path_animation_export). A graph or view too large to draw, shown as
 // text, gets a bar of its own with an Export button for its data alone (`dataExportBar`).
-import { DEFAULT_PACE, PATH_PACES, isDataFormat, paceSaid } from '@graph-note/core';
+import { DEFAULT_PACE, PATH_PACES, isDataFormat, paceSaid, word } from '@graph-note/core';
 import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@graph-note/core';
 import { button } from '../graph-view/view-bar';
 import type { ExportAsk, ExportOutcome } from './export-types';
@@ -59,7 +59,7 @@ export function toggleExportForm(parent: HTMLElement, x: Exporting): void {
  */
 export function openExportForm(parent: HTMLElement, x: Exporting): void {
   shownForm(parent)?.remove();
-  const el = parent.createDiv({ cls: 'graph-note-export', attr: { role: 'group', 'aria-label': 'Export' } });
+  const el = parent.createDiv({ cls: 'graph-note-export', attr: { role: 'group', 'aria-label': word('export.form') } });
   const scopes: [string, string][] = x.view
     ? [
         ['view', `View ${x.view.name}`],
@@ -161,6 +161,9 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
  * alone (export_data_formats), as the data needs no layout.
  */
 export function dataExportBar(parent: HTMLElement, x: Exporting): void {
-  const bar = parent.createDiv({ cls: 'graph-note-bar', attr: { role: 'toolbar', 'aria-label': `Graph ${x.graph}` } });
-  button(bar, 'Export', 'download', () => toggleExportForm(parent, { ...x, dataOnly: true }));
+  const bar = parent.createDiv({
+    cls: 'graph-note-bar',
+    attr: { role: 'toolbar', 'aria-label': word('bar.name', { graph: x.graph }) },
+  });
+  button(bar, word('bar.export'), 'download', () => toggleExportForm(parent, { ...x, dataOnly: true }));
 }

@@ -3,14 +3,36 @@
 // so each is found by the settings search. Each change is saved at once, read back as the core reads settings.
 import { PluginSettingTab } from 'obsidian';
 import type { App, SettingDefinition, SettingDefinitionItem } from 'obsidian';
-import { OPTIONS, classMapFrom, classMapProblems, classMapText, unmatchedClasses } from '@graph-note/core';
-import type { MatrixRow, Option, Settings } from '@graph-note/core';
+import { OPTIONS, classMapFrom, classMapProblems, classMapText, unmatchedClasses, word } from '@graph-note/core';
+import type { MatrixRow, Option, Settings, WordKey } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
 import { knownClass } from '../ai/matrix-known';
 import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
 
 const SECTIONS = ['Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
+
+/** The heading of each section, in the person's language. */
+const SECTION_WORDS = {
+  Strictness: 'settings.section.strictness',
+  'AI models': 'settings.section.ai-models',
+  Proposals: 'settings.section.proposals',
+  Formatting: 'settings.section.formatting',
+  Drawing: 'settings.section.drawing',
+  Export: 'settings.section.export',
+} as const;
+
+/** The options whose names are in the catalogue so far; the others follow as the settings page is brought to it. */
+const OPTION_WORDS: Partial<Record<string, WordKey>> = {
+  strictness: 'settings.option.strictness',
+  aiModels: 'settings.option.ai-models',
+};
+
+/** An option's name, in the person's language where the catalogue has it. */
+const nameOf = (o: Option): string => {
+  const key = OPTION_WORDS[o.key];
+  return key ? word(key) : o.name;
+};
 
 /** The plugin's settings page. */
 export class GraphNoteSettingTab extends PluginSettingTab {
@@ -26,7 +48,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     return SECTIONS.flatMap((heading): SettingDefinitionItem[] => [
       {
         type: 'group',
-        heading,
+        heading: word(SECTION_WORDS[heading]),
         items: OPTIONS.filter((o) => o.section === heading).flatMap((o) => this.definitions(o)),
       },
       // a list stands on its own, after its part of the page
@@ -49,7 +71,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     const s = this.owner.settings;
     if (o.key === 'allowed')
       return [
-        { name: o.name, desc: o.sentence },
+        { name: nameOf(o), desc: o.sentence },
         ...(o.choices ?? []).map((c): SettingDefinition => ({
           name: c.name,
           desc: c.sentence ?? '',
@@ -62,14 +84,14 @@ export class GraphNoteSettingTab extends PluginSettingTab {
         },
       ];
     if (o.key === 'classifications')
-      return [{ name: o.name, desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
-    if (o.key === 'aiModels') return [{ name: o.name, desc: o.sentence }];
+      return [{ name: nameOf(o), desc: o.sentence, control: { type: 'textarea', key: 'classifications' } }];
+    if (o.key === 'aiModels') return [{ name: nameOf(o), desc: o.sentence }];
     if (o.key === 'exportFolder' || o.key === 'aiMatrixNote' || o.key === 'decider')
-      return [{ name: o.name, desc: o.sentence, control: { type: 'text', key: o.key } }];
+      return [{ name: nameOf(o), desc: o.sentence, control: { type: 'text', key: o.key } }];
     if (o.key === 'aiClassMap')
       return [
         {
-          name: o.name,
+          name: nameOf(o),
           // a class of the matrix matched by neither name nor the table here is said, never guessed
           desc: [
             o.sentence,
@@ -86,7 +108,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     if (o.key === 'exportAsksAbove' || o.key === 'aiUnlabelled')
       return [
         {
-          name: o.name,
+          name: nameOf(o),
           desc: o.sentence,
           control: {
             type: 'dropdown',
@@ -98,7 +120,7 @@ export class GraphNoteSettingTab extends PluginSettingTab {
     const chosen = o.choices?.find((c) => c.value === s[o.key]);
     return [
       {
-        name: o.name,
+        name: nameOf(o),
         desc: chosen?.sentence ? `${o.sentence} ${chosen.sentence}` : o.sentence,
         control: {
           type: 'dropdown',

@@ -6,8 +6,8 @@
 // so no card clips it and a full-screen card does not hide it. One tooltip to a card, taken away with the card.
 import { readInHostDirection } from '../host';
 import { Lifecycle } from '../lifecycle';
+import { word } from '@graph-note/core';
 import type { View } from '@graph-note/core';
-import { plural } from './view-bar';
 import { infoOf } from './quick-info-content';
 import { placeTip } from './quick-info-place';
 import type { Box } from './quick-info-place';
@@ -202,7 +202,7 @@ export class QuickInfo {
     }
     el.createDiv({
       cls: 'graph-note-quick-problems',
-      text: info.problems ? plural(info.problems, 'problem') : 'No problems',
+      text: info.problems ? word('bar.problems', { count: info.problems }) : word('bar.no-problems'),
     });
     if (info.note) {
       const box = el.createDiv({ cls: 'graph-note-quick-note' });

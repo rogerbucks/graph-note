@@ -15,6 +15,7 @@ import {
   readNote,
   sendPrepared,
   viewsOf,
+  word,
 } from '@graph-note/core';
 import type { MatrixRow, PreparedSend, ScopeChoice } from '@graph-note/core';
 import type GraphNotePlugin from '../main';
@@ -97,7 +98,7 @@ export class SendDialog extends Modal {
       el.createEl('p', { text: 'This note has no graph with things in it, so there is nothing to send.' });
       return;
     }
-    new Setting(el).setName('Graph').addDropdown((d) => {
+    new Setting(el).setName(word('ai.graph')).addDropdown((d) => {
       for (const g of this.things.keys()) d.addOption(g, g);
       d.setValue(this.graph).onChange((v) => {
         this.graph = v;
@@ -155,7 +156,7 @@ export class SendDialog extends Modal {
       return;
     }
     if (!names.includes(this.view)) this.view = names[0] ?? '';
-    new Setting(el).setName('View').addDropdown((d) => {
+    new Setting(el).setName(word('ai.view')).addDropdown((d) => {
       for (const n of names) d.addOption(n, n);
       d.setValue(this.view).onChange((v) => {
         this.view = v;

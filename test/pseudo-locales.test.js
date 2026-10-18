@@ -11,7 +11,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, speakIn } from '../packages/obsidian/test/host/load-plugin.js';
 import { built, cleanUp } from '../packages/claude-code/test/editor-page-support.js';
-import { isPseudoWord, PSEUDO_LANGUAGES, SOURCE_WORDS } from '@graph-note/core';
+import { isPseudoWord, PSEUDO_LANGUAGES, setLanguage, SOURCE_LANGUAGE, SOURCE_WORDS } from '@graph-note/core';
 import { openWindow, toHtml } from './repository/wcag.js';
 import { openEditorPage } from './repository/wcag-page.js';
 import { OBSIDIAN } from './repository/views-obsidian.js';
@@ -23,8 +23,8 @@ const LANGUAGES = Object.entries(PSEUDO_LANGUAGES);
 /** The views Obsidian draws itself, from what the plugin gives it, in its own direction: the plugin sets none on them. */
 const DRAWN_BY_OBSIDIAN = ['the settings page'];
 
-/** The words the code still says itself in each host's views, not yet from the catalogue: this may only fall. */
-const STILL_SAID_BY_CODE = { obsidian: 201, page: 75 };
+/** The words the code still says itself in each host's views, not yet from the catalogue: lowered as each moves there. */
+const STILL_SAID_BY_CODE = { obsidian: 158, page: 54 };
 
 /** The parts set at a point measured on the screen, by class: these keep a physical side (as in test/rtl.test.js). */
 const PLACED = [
@@ -36,17 +36,25 @@ const PLACED = [
   'gn-menu',
 ];
 
-/** Each catalogue word as a pattern of a whole text, its placeholders standing for anything: in a test language none shows. */
+/**
+ * Each catalogue word as a pattern of a whole text, a count standing for a number and any other placeholder for a name
+ * with no stop or comma in it, so a sentence the code says itself is not taken for one: in a test language none shows. A word that is placeholders
+ * alone says nothing of its own, so has no pattern.
+ */
 const SOURCE_PATTERNS = Object.entries(SOURCE_WORDS).flatMap(([key, entry]) =>
-  (typeof entry === 'string' ? [entry] : Object.values(entry)).map((text) => ({
-    key,
-    pattern: new RegExp(
-      `^${text
-        .split(/\{[a-zA-Z0-9]+\}/)
-        .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-        .join('.*?')}$`,
-    ),
-  })),
+  (typeof entry === 'string' ? [entry] : Object.values(entry))
+    .filter((text) => /[a-zA-Z]/.test(text.replace(/\{[a-zA-Z0-9]+\}/g, '')))
+    .map((text) => ({
+      key,
+      pattern: new RegExp(
+        `^${text
+          .split(/(\{[a-zA-Z0-9]+\})/)
+          .map((p, i) =>
+            i % 2 ? (p === '{count}' ? '\\d[\\d,. ]*' : '[^,.:;]*?') : p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+          )
+          .join('')}$`,
+      ),
+    })),
 );
 
 /** The words the person reads in a document, outside the drawing: each text and each name, title or hint. */
@@ -120,13 +128,18 @@ describe('the check itself', () => {
 
 describe('the Obsidian host: every view, in each test language', () => {
   before(() => build());
-  after(() => speakIn(undefined));
+  after(() => {
+    speakIn(undefined);
+    setLanguage(SOURCE_LANGUAGE);
+  });
   const still = new Set();
 
   for (const [tag, direction] of LANGUAGES)
     for (const [name, open] of Object.entries(OBSIDIAN))
       test(`${name}, in ${tag}`, async () => {
+        // the host speaks the test language, and so do the steps that find its controls by name
         speakIn(tag);
+        setLanguage(tag);
         const { env, el } = await open();
         try {
           const roots = [el, ...env.doc.body.children];
@@ -147,6 +160,7 @@ describe('the Obsidian host: every view, in each test language', () => {
       still.size <= STILL_SAID_BY_CODE.obsidian,
       `${still.size} words, the most is ${STILL_SAID_BY_CODE.obsidian}: say each new one by a key of source-words.ts\n${[...still].sort().join('\n')}`,
     );
+    assert.equal(still.size, STILL_SAID_BY_CODE.obsidian, 'fewer words than before: lower STILL_SAID_BY_CODE to match');
   });
 });
 
@@ -158,6 +172,7 @@ describe('the browser editor’s page: every state, in each test language', () =
     ({ dir } = await built());
   });
   after(async () => {
+    setLanguage(SOURCE_LANGUAGE);
     await Promise.all(opened.map((o) => o.stop()));
     await cleanUp();
   });
@@ -170,6 +185,7 @@ describe('the browser editor’s page: every state, in each test language', () =
     });
     for (const [name, state] of Object.entries(STATES))
       test(`${name}, in ${tag}`, async () => {
+        setLanguage(tag);
         const page = await state();
         const { document } = page.window;
         try {
@@ -188,6 +204,7 @@ describe('the browser editor’s page: every state, in each test language', () =
       still.size <= STILL_SAID_BY_CODE.page,
       `${still.size} words, the most is ${STILL_SAID_BY_CODE.page}: say each new one by a key of source-words.ts\n${[...still].sort().join('\n')}`,
     );
+    assert.equal(still.size, STILL_SAID_BY_CODE.page, 'fewer words than before: lower STILL_SAID_BY_CODE to match');
   });
 });
 

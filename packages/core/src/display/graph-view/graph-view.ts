@@ -4,7 +4,7 @@
 // parts in its folder: the bar, the drawing, taps, the details, and where the card is placed.
 import { Lifecycle } from '../lifecycle';
 import { inHost, isPhone, readInHostDirection, setIcon } from '../host';
-import { AcrossZoom, Zoom, scrollsOneWay } from '@graph-note/core';
+import { AcrossZoom, Zoom, scrollsOneWay, word } from '@graph-note/core';
 import type { Drawn, View } from '@graph-note/core';
 import { SourceToggle } from './source-toggle';
 import { readOnlyHere, whenPlaced } from './placement';
@@ -281,7 +281,7 @@ export class GraphView extends Lifecycle {
     const on = !!this.o.editing?.()?.session;
     b.empty();
     setIcon(b, on ? 'book-open' : 'pencil');
-    b.setAttribute('aria-label', on ? 'Done editing' : 'Edit here');
+    b.setAttribute('aria-label', word(on ? 'bar.done-editing' : 'bar.edit-here'));
   }
 
   override onunload(): void {

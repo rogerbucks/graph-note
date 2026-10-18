@@ -4,7 +4,7 @@
 // changes its properties in the text. What its links reach can be chosen from it, and the walk retraced (§25); in view
 // mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
 import { isPhone } from '../host';
-import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf } from '@graph-note/core';
+import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, word } from '@graph-note/core';
 import type { Estimate, TrailStep } from '@graph-note/core';
 import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
@@ -161,8 +161,8 @@ export class DetailsPanel {
     // each end is a choice, as a linked thing is in a thing's details (§25)
     const ul = el.createEl('ul', { cls: 'graph-note-link-groups' });
     for (const [label, end] of [
-      ['From', d.from],
-      ['To', d.to],
+      [word('details.from'), d.from],
+      [word('details.to'), d.to],
     ] as const) {
       const li = ul.createEl('li', { cls: 'graph-note-link-group' });
       li.appendText(`${label}: `);
@@ -171,7 +171,7 @@ export class DetailsPanel {
     this.readOnlyProperties(el, d.properties);
     this.rich.links(el, { link: index });
     if (d.problems.length) {
-      el.createEl('h4', { text: 'Problems' });
+      el.createEl('h4', { text: word('details.problems') });
       const probs = el.createEl('ul');
       for (const p of d.problems) probs.createEl('li', { text: problemText({ ...p, noteLine: this.o.lineOf(p) }) });
     }
@@ -197,13 +197,13 @@ export class DetailsPanel {
     this.images.release('details'); // the images of the details shown before let go
     el.empty();
     el.hidden = false;
-    el.setAttribute('aria-label', `Details of ${title}`);
+    el.setAttribute('aria-label', word('details.of', { name: title }));
     el.toggleClass('is-sheet', isPhone() && !!this.o.editing?.()?.session); // the inspector, on a phone: a bottom sheet (§14)
     const head = el.createDiv({ cls: 'graph-note-details-head' });
     head.createEl('strong', { text: title });
     if (kind) head.createSpan({ cls: 'graph-note-kind', text: kind });
     this.sheet.head(head);
-    button(head, 'Close details', 'x', () => this.close());
+    button(head, word('details.close'), 'x', () => this.close());
     const body = el.createDiv({ cls: 'graph-note-details-body' });
     this.sheet.opened(body);
     return body;
@@ -217,7 +217,7 @@ export class DetailsPanel {
     this.shown = null;
     this.trail.clear();
     this.select(null);
-    renderSummary(this.panel(`Graph ${this.o.graph}`, 'summary'), this.o.reading, this.o.graph);
+    renderSummary(this.panel(word('bar.name', { graph: this.o.graph }), 'summary'), this.o.reading, this.o.graph);
   }
 
   /** Closes the details and clears what is selected, as the close button does, and tells the card (§25): the focus clears too. */
@@ -288,8 +288,8 @@ export class DetailsPanel {
     // its links by relationship type and direction, in words, each thing and link a choice (§25)
     const groups = linkGroups(this.o.reading, this.o.graph, key);
     for (const [title, way] of [
-      ['Links out', 'out'],
-      ['Links in', 'in'],
+      [word('details.links-out'), 'out'],
+      [word('details.links-in'), 'in'],
     ] as const) {
       const these = groups.filter((g) => g.direction === way);
       if (!these.length) continue;
@@ -301,7 +301,7 @@ export class DetailsPanel {
         (s) => this.choose(s),
       );
     }
-    if (!groups.length) el.createEl('p', { text: 'No links in or out.' });
+    if (!groups.length) el.createEl('p', { text: word('details.no-links') });
     if (!this.o.diagram?.table) untangleOffers(el, key, this.actions);
     this.readOnlyProperties(
       el,
@@ -311,7 +311,7 @@ export class DetailsPanel {
     // the images its properties name, each moving, or still saying why, with its pause and play control (§18)
     renderImages(el, this.o.reading.world[this.o.graph]?.p(key) ?? {}, this.images);
     links(
-      'Problems',
+      word('details.problems'),
       d.problems.map((p) => problemText({ ...p, noteLine: this.o.lineOf(p) })),
     );
     showSuggested(el, this.o.reading, this.o.graph, d, this.o.editing?.());
