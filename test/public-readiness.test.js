@@ -426,7 +426,7 @@ describe('the settings on GitHub', () => {
   });
 
   test('the repository is read from the origin remote', () => {
-    assert.match(repoOf(), /^[\w.-]+\/graph-note$/);
+    assert.match(repoOf(), /^[\w.-]+\/thoughtknot$/);
   });
 });
 
