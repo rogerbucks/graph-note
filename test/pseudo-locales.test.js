@@ -24,7 +24,7 @@ const LANGUAGES = Object.entries(PSEUDO_LANGUAGES);
 const DRAWN_BY_OBSIDIAN = ['the settings page'];
 
 /** The words the code still says itself in each host's views, not yet from the catalogue: lowered as each moves there. */
-const STILL_SAID_BY_CODE = { obsidian: 69, page: 26 };
+const STILL_SAID_BY_CODE = { obsidian: 57, page: 20 };
 
 /** The parts set at a point measured on the screen, by class: these keep a physical side (as in test/rtl.test.js). */
 const PLACED = [
