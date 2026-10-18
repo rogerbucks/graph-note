@@ -64,7 +64,7 @@ describe('the metrics', () => {
     for (const name of COUNTS) {
       assert.equal(METRICS[name].instructions, true, name);
       assert.equal(METRICS[name].better, 'lower');
-      assert.equal(METRICS[name].tolerance, INSTRUCTION_TOLERANCE);
+      assert.ok(METRICS[name].tolerance >= INSTRUCTION_TOLERANCE && METRICS[name].tolerance <= 0.4, name);
       assert.ok(!METRICS[name].scaled, 'a count is never stretched by how fast a machine is');
     }
     assert.ok(INSTRUCTION_TOLERANCE > 0 && INSTRUCTION_TOLERANCE <= 0.05);
@@ -251,12 +251,26 @@ describe('the committed baseline holds the counts', () => {
     assert.match(b.details.instructions.machine.valgrind, /^valgrind-/);
   });
 
-  test('in CI on the same machine its own counts pass, and a count 10% worse fails', () => {
+  test('in CI on the same machine its own counts pass, and a steady count 10% worse fails', () => {
     const b = readJSON('quality/baseline.json');
     assert.deepEqual(compare(b, structuredClone(b), [], { ci: true }).failures, []);
+    const steady = 'instructions_reading_limits';
     const worse = structuredClone(b);
-    worse.metrics[COUNTS[0]] = Math.round(b.metrics[COUNTS[0]] * 1.1);
-    assert.deepEqual(failed(compare(b, worse, [], { ci: true })), [COUNTS[0]]);
+    worse.metrics[steady] = Math.round(b.metrics[steady] * 1.1);
+    assert.deepEqual(failed(compare(b, worse, [], { ci: true })), [steady]);
+  });
+});
+
+describe('how far a count may move', () => {
+  test('a drawing’s count, which moves from run to run on the release runner, has room for that; every other count 5%', async () => {
+    const { METRICS, INSTRUCTION_TOLERANCE, DRAWING_TOLERANCE } = await import('../scripts/quality-spec.mjs');
+    assert.equal(INSTRUCTION_TOLERANCE, 0.05);
+    // four counts on the release runner (18 Oct 2026), the highest over the lowest of each metric: 1.35, 1.05 and 1.23
+    assert.deepEqual(DRAWING_TOLERANCE, { draw_fifty: 0.4, draw_five_hundred: 0.1, cold_start: 0.3 });
+    for (const [name, spec] of Object.entries(METRICS).filter(([, s]) => s.instructions && s.unit === 'instructions')) {
+      const benchmark = name.replace(/^instructions_/, '');
+      assert.equal(spec.tolerance, DRAWING_TOLERANCE[benchmark] ?? INSTRUCTION_TOLERANCE, name);
+    }
   });
 });
 

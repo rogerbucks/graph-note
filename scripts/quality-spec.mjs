@@ -23,6 +23,15 @@ export const BENCHMARK_NAMES = [
  */
 export const INSTRUCTION_TOLERANCE = 0.05;
 
+/**
+ * The drawings' counts move from run to run on the release runner, where the others do not: four counts there (18 Oct
+ * 2026, the "Quality baseline" job) put the highest of each drawing's metric over its lowest at 1.35 (draw_fifty), 1.05
+ * (draw_five_hundred) and 1.23 (cold_start), where every other metric moved by 0.01% or less. So each drawing may grow
+ * by a little more than that with no reason recorded; its speed budget (benchmarks/budgets.mjs) still caps it, whatever
+ * the baseline says. Narrowed again once what moves them is found.
+ */
+export const DRAWING_TOLERANCE = { draw_fifty: 0.4, draw_five_hundred: 0.1, cold_start: 0.3 };
+
 const instructionMetric = {
   better: 'lower',
   tolerance: INSTRUCTION_TOLERANCE,
@@ -50,7 +59,12 @@ export const METRICS = {
   secrets_found: { better: 'lower', tolerance: 0, slack: 0, unit: 'secrets', fast: true, waivable: false },
   bundle_bytes: { better: 'lower', tolerance: 0.03, slack: 0, unit: 'bytes' },
   bundle_bytes_without_viz: { better: 'lower', tolerance: 0.03, slack: 0, unit: 'bytes' },
-  ...Object.fromEntries(BENCHMARK_NAMES.map((name) => [`instructions_${name}`, instructionMetric])),
+  ...Object.fromEntries(
+    BENCHMARK_NAMES.map((name) => [
+      `instructions_${name}`,
+      { ...instructionMetric, tolerance: DRAWING_TOLERANCE[name] ?? INSTRUCTION_TOLERANCE },
+    ]),
+  ),
   // a benchmark's claim, such as linear and not square, that does not hold: never, whatever the baseline says
   instruction_claims_broken: { ...instructionMetric, tolerance: 0, unit: 'claims', most: 0, waivable: false },
   // test duration is reported, never enforced (Roger, 12 Oct 2026): a test asserts the work done, never the time taken

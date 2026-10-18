@@ -1,7 +1,7 @@
 // The speed budgets (editor spec §41, speed_budgets): the most CPU instructions each host may spend drawing 50 things
 // and 500, on a query over a 10 000-thing mesh, and on a cold start. Each is the ceiling of a benchmark's claim, so a
-// count over it breaks the claim and fails the release's quality job whatever the baseline says; the ratchet's own 5%
-// tolerance (quality-spec.mjs) still holds each count to its last. Counts are Cachegrind's, on the release's runner; a budget
+// count over it breaks the claim and fails the release's quality job whatever the baseline says; the ratchet's own
+// tolerance (quality-spec.mjs, wider for the drawings) still holds each count to its last. Counts are Cachegrind's, on the release's runner; a budget
 // set from counts is the highest of them and a fifth more, as the drawings' counts move from run to run there.
 
 /** Each budget: the most instructions, and where the number comes from. */
