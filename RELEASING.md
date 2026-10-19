@@ -56,16 +56,46 @@ Everything a successor would need if Roger could not act. None of the values are
 
 | Key or account | What it does | Where it is made | Expires | If it is lost |
 | --- | --- | --- | --- | --- |
-| `PROJECT_TOKEN` (repository secret) | Lets the project mirror and the build status write the "ThoughtKnot requirements" board. A classic token with the `project` and `public_repo` scopes. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic). | Not written yet: Roger to add the date. | Make a new token with the same scopes, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
-| `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets the Claude review comment on pull requests. | `claude setup-token`, by Roger, on his machine. | Not written yet: Roger to add the date. | Run `claude setup-token` again and set the secret. The review passes with a notice while it is missing. |
+| `PROJECT_TOKEN` (repository secret) | Lets the project mirror and the build status write the "ThoughtKnot requirements" board. A classic token with the `project` and `public_repo` scopes. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic). | 15 Oct 2027. | Make a new token with the same scopes, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
+| `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets the Claude review comment on pull requests. | `claude setup-token`, by Roger, on his machine. | Not known. Rotate it if the review starts failing to authenticate. | Run `claude setup-token` again and set the secret. The review passes with a notice while it is missing. |
 | The `rogerbucks` GitHub account | Owns the repository, its ruleset, its Pages site and its releases. It is the only admin. | GitHub. | Never. | Recovery codes and a second factor, kept by Roger. |
-| The domains `thoughtknot.app` and `thoughtknot.dev` | The home page on GitHub Pages, and the redirect to it. | Not written yet: Roger to add the registrar. | Not written yet: Roger to add the renewal date. | Renew at the registrar. Pages reads the domain from the repository's Pages settings. |
+| The domains `thoughtknot.app` and `thoughtknot.dev` | The home page on GitHub Pages, and the redirect to it. | Cloudflare, in Roger's account. | Every year on 18 October. | Renew at Cloudflare. Pages reads the domain from the repository's Pages settings. |
 
 **The repository's settings are kept in code.** `node scripts/public-readiness.mjs --settings` compares GitHub's
 settings with the wanted ones. `--settings --apply` sets each one that differs. An admin runs it with the GitHub CLI.
 
-**A second admin is not yet named.** Until one is, nobody else can publish a release, change the ruleset or rotate a
-key. Roger decides whether to add one, or move the repository to an organisation with two owners.
+**There is one admin, by choice** (Roger, 19 Oct 2026). Until a second is named, nobody else can publish a release,
+change the ruleset or rotate a key. Roger will add a second admin, or move the repository to an organisation with two
+owners, once the project has traction.
+
+## Known risks, every release
+
+An expert panel reviewed the project on 19 Oct 2026. Its roles: security, operations, code and tests, architecture and
+data, user experience, neurodiversity and data management, workflow and community, the APIs, and AI. What it found is in
+`quality/risks.json`, drawn as [RISKS.md](RISKS.md). Each risk carries the owner's decision: fix now, fix later in a
+named wave, or accept with a reason.
+
+The release and its dry run run `node scripts/risk-register.mjs --release`. It stops the release while:
+
+- a risk marked **fix now** is still open;
+- a **fix later** risk is open past the end of its wave in `requirements/waves.json`;
+- an open risk's files changed (it is **stale**) and no one has looked at it for 30 days;
+- the version starts a new line (0.7 to 0.8) and the full panel has not looked since the last one.
+
+A stale risk younger than 30 days is a warning in the log, with the day it starts to block. It is cleared by looking
+again. Then run `node scripts/risk-register.mjs --reviewed ID`, which stamps today and the commit. A fixed risk gets
+`status: done` and its pull request in `done_in`. A new decision is a pull request that edits the register and runs
+`--write-report`; `test/risk-register.test.js` holds the page to the register.
+
+### When the panel runs
+
+- **Before every stable release**, after the dry run: the **Risk panel** workflow (`risk-panel.yml`), by hand. It reads
+  only what moved since the last stable tag, spends a Claude session only when something did, and writes one issue
+  labelled `risk-panel`. The owner turns the issue into register entries. The nightly never needs it.
+- **Before a release that starts a new version line** (0.8.0, 0.9.0, 1.0.0): the same workflow with "every role" on.
+  All nine roles then read the whole project. Decide its findings, then run `node scripts/risk-register.mjs --full-panel`,
+  which records the date, commit and version. Until then the release fails.
+- **Never on a schedule**: a timer would spend a Claude session on days nothing moved.
 
 ## Accessibility walk-through, every release
 

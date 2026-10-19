@@ -45,7 +45,7 @@ CI runs them all again.
 ## How a change is made
 
 1. **Spec.** Write the requirement in
-   [`requirements/editor-requirements.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql).
+   [`requirements/editor-requirements.md`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.md).
 2. **Test.** Write its test and see it fail. CI checks that each new test failed before its code existed.
 3. **Code.** Write the code that makes it pass.
 4. **Sign off.** Commit with `git commit -s`, and open a pull request.

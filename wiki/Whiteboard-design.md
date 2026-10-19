@@ -5,7 +5,7 @@ become things and links in a graph. Anything in a graph can be put on a board. D
 version 0.5.0, at Roger's request.
 
 The requirements are section 45 of
-[`requirements/editor-requirements.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql),
+[`requirements/editor-requirements.md`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.md),
 slice 10, in workstreams B1 to B4. They are built in Waves 16 and 17 of
 [`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json), after the
 Obsidian community release (R2). Roger's rule is that what he adds now goes after R2.

@@ -58,7 +58,9 @@ jobs:
           tag=$(jq -r '[.[] | select(.tagName | test("-") | not)][0].tagName // empty' "$RUNNER_TEMP/releases.json")
           if [ -n "$tag" ]; then
             git fetch --depth=1 --no-tags origin "refs/tags/$tag"
-            git show FETCH_HEAD:requirements/editor-requirements.gql > "$RUNNER_TEMP/released.gql"
+            # the note since 19 Oct 2026, and the graph file it replaced in a release from before then
+            git show FETCH_HEAD:requirements/editor-requirements.md > "$RUNNER_TEMP/released.gql" ||
+              git show FETCH_HEAD:requirements/editor-requirements.gql > "$RUNNER_TEMP/released.gql"
           fi
       - name: Take the user guide's screenshots
         run: node scripts/wiki-screens.mjs --out wiki-out/images --chrome "$(command -v google-chrome)"

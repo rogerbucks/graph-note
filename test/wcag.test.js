@@ -192,7 +192,7 @@ describe('every host', () => {
   });
 
   test('is named in the spec: every interface, in every host, WCAG 2.2 Level AA', () => {
-    const spec = readFileSync(`${here}requirements/editor-requirements.gql`, 'utf8');
+    const spec = readFileSync(`${here}requirements/editor-requirements.md`, 'utf8');
     for (const id of ['wcag_aa', 'wcag_new_hosts', 'wcag_checked'])
       assert.match(spec, new RegExp(`\\(${id}\\)-\\[:PROVED_BY\\]->\\(test_wcag\\)`), id);
   });

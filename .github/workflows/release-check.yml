@@ -38,6 +38,8 @@ jobs:
         run: node scripts/engine-version.mjs --refresh
       - name: The engine is the version the notices name, and no advisory affects it
         run: node scripts/engine-version.mjs
+      - name: Every known risk is decided, none is overdue, and none went stale since it was looked at
+        run: node scripts/risk-register.mjs --release
       # Valgrind (GPL-3.0) is installed in this job alone and never shipped: licences/bundled.json, ciOnlyTools
       - name: Install Valgrind, whose Cachegrind counts the benchmarks' instructions
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends valgrind
