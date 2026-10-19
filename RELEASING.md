@@ -23,6 +23,50 @@ Both channels attach the JavaScript library as two packages: `thoughtknot-graph-
 checker and layout) and `thoughtknot-core-<version>.tgz`. They are installed from the release's URL, never from npm.
 A stable release's notes open with its changelog, written by `scripts/changelog.mjs`.
 
+## Cutting a release
+
+Roger pushes the tag and publishes the release. Claude can prepare every step before the tag, but cannot push a tag.
+
+1. **Bump the version.** On a new branch from main, run `npm run release:prepare -- X.Y.Z`. It writes the version into
+   `manifest.json`, `versions.json`, every `package.json`, the mod's `plugin.json`, `pyproject.toml` and both lockfiles.
+   Open a pull request with the change.
+2. **Run the dry run.** Run the "Release check (dry run)" workflow on main by hand. It runs every check the release
+   waits on. A failure here costs no version number.
+3. **Merge the bump.** Merge the latest main into the bump's pull request first, then merge it once CI is green.
+4. **Walk the accessibility checks** below, on the build to be released.
+5. **Push the tag** on the merge commit, from an up-to-date main:
+   `cd ~/Dev/thoughtknot && git checkout main && git pull && git tag X.Y.Z && git push origin X.Y.Z`.
+   The release's first job stops in seconds if the commit is not on main, or the tag is not the manifest version.
+6. **Publish the draft.** `release.yml` makes a draft release with the assets and the notes. Read the notes, then
+   publish it. The nightly fails while a draft has waited more than a day, so a forgotten draft is seen.
+
+## Going back
+
+A release is never taken back by rewriting history. A bad release is followed by a patch release with the fix, cut as
+above.
+
+- **Still a draft:** delete the draft and keep the tag. The fix takes the next version number.
+- **Already published:** mark it as a pre-release on GitHub, so Obsidian and BRAT stop offering it. Say why in its
+  notes.
+- **Never move or reuse a tag.** People rely on a version naming one commit.
+
+## Keys and recovery
+
+Everything a successor would need if Roger could not act. None of the values are written here, only where they live.
+
+| Key or account | What it does | Where it is made | Expires | If it is lost |
+| --- | --- | --- | --- | --- |
+| `PROJECT_TOKEN` (repository secret) | Lets the project mirror and the build status write the "ThoughtKnot requirements" board. A classic token with the `project` and `public_repo` scopes. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic). | Not written yet: Roger to add the date. | Make a new token with the same scopes, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
+| `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets the Claude review comment on pull requests. | `claude setup-token`, by Roger, on his machine. | Not written yet: Roger to add the date. | Run `claude setup-token` again and set the secret. The review passes with a notice while it is missing. |
+| The `rogerbucks` GitHub account | Owns the repository, its ruleset, its Pages site and its releases. It is the only admin. | GitHub. | Never. | Recovery codes and a second factor, kept by Roger. |
+| The domains `thoughtknot.app` and `thoughtknot.dev` | The home page on GitHub Pages, and the redirect to it. | Not written yet: Roger to add the registrar. | Not written yet: Roger to add the renewal date. | Renew at the registrar. Pages reads the domain from the repository's Pages settings. |
+
+**The repository's settings are kept in code.** `node scripts/public-readiness.mjs --settings` compares GitHub's
+settings with the wanted ones. `--settings --apply` sets each one that differs. An admin runs it with the GitHub CLI.
+
+**A second admin is not yet named.** Until one is, nobody else can publish a release, change the ruleset or rotate a
+key. Roger decides whether to add one, or move the repository to an organisation with two owners.
+
 ## Known risks, every release
 
 An expert panel reviewed the project on 19 Oct 2026. Its roles: security, operations, code and tests, architecture and

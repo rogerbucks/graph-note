@@ -4,13 +4,15 @@ name: Nightly
 # newest work; everyone else stays on the stable releases release.yml makes from a bare version tag. It runs at 16:00 UTC
 # (2 am in Brisbane), and by hand. A night on which main has not moved since the last nightly publishes nothing.
 #
-# Three jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
+# Four jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
 # nightly. `build` checks out main, installs and runs main's own code with read access only: the full suite, the content
 # check and the build, so a nightly is published only when every test passes. It uploads the same assets a release
 # carries, with the nightly version (scripts/nightly-version.mjs) in their manifest. `publish` may write the
 # repository's contents, which a release needs, and so runs no code of the repository at all: no checkout, no install,
 # no Node. It creates the pre-release with gh alone, and keeps the last seven nightlies. A pre-release never counts as a
 # release: the build status and the wiki are woken only by a stable one (types: [released]) and leave pre-releases out.
+# `drafts` runs every night, moved or not, and fails while a stable release has waited as a draft for over a day, so its
+# owner hears of it (risk OPS-3; RELEASING.md, "Cutting a release").
 on:
   schedule:
     - cron: '0 16 * * *'
@@ -27,6 +29,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       moved: ${{ steps.moved.outputs.moved }}
     steps:
@@ -50,6 +53,7 @@ jobs:
     needs: check
     if: needs.check.outputs.moved == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     outputs:
       version: ${{ steps.version.outputs.version }}
       sha: ${{ steps.version.outputs.sha }}
@@ -103,6 +107,7 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: write
     steps:
@@ -123,3 +128,21 @@ jobs:
           gh release create "$VERSION" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" SHA256SUMS --repo "$GITHUB_REPOSITORY" --prerelease --target "$SHA" --title "Nightly $VERSION" --notes "A nightly build of main at $SHA. Every test passed on it, but it has not been through a stable release's checks. For the newest work only; most people should use the latest stable release."
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease,createdAt --jq '[.[] | select(.isPrerelease and (.tagName | test("-nightly\\.")))] | sort_by(.createdAt) | reverse | .[7:] | .[].tagName' |
             while read -r old; do gh release delete "$old" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes; done
+
+  # GitHub lists draft releases only to a token that may write contents, so this job has that and nothing else. Like
+  # publish, it runs no code of the repository: no checkout, no install, no Node, only gh.
+  drafts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: No stable release has waited as a draft for more than a day
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          waiting=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isDraft,createdAt --jq '[.[] | select(.isDraft and (.createdAt | fromdateiso8601) < now - 86400) | .tagName] | join(" ")')
+          if [ -n "$waiting" ]; then
+            echo "::error::A draft release has waited more than a day: $waiting. Publish it, or delete it, as RELEASING.md says."
+            exit 1
+          fi

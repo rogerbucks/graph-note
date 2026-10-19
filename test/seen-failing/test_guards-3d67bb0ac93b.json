@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_guards.py",
+  "test": "GuardsNeverRun.test_an_unknown_name_is_named",
+  "seen_failing_first": false,
+  "evidence": "It pins what the eval readers already did, so the parser that replaces them (risk SEC-1) keeps it; the refusal tests in the same file failed first."
+}
