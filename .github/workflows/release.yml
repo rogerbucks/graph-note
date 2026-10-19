@@ -93,8 +93,11 @@ jobs:
       # The checker ships as the one file npm run build made, at the path its entry point has in the repository.
       - name: Archive the graph-spec libraries from the tagged commit, for the vault to vendor
         run: git archive --format=tar.gz -o "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" --prefix=packages/graph-spec/src/ --add-file=packages/graph-spec/dist/graph-spec-check.js --prefix=packages/core/dist/ --add-file=packages/core/dist/layout-source-node.cjs --prefix= HEAD LICENSE THIRD_PARTY_NOTICES.md packages/graph-spec/package.json packages/graph-spec/src ':(exclude)packages/graph-spec/src/graph-spec-check.js' packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src
+      # The JavaScript library as two packages, installed from the release and never published to npm (Q-02)
+      - name: Build the library's packages, the reader, checker and layout, and the core
+        run: node scripts/library-release.mjs --out .
       - name: Checksums for every asset
-        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" > SHA256SUMS
+        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" > SHA256SUMS
       # GitHub keeps attestations only for public repositories owned by a person; while private, SHA256SUMS stands in.
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: ${{ !github.event.repository.private }}
@@ -104,9 +107,12 @@ jobs:
             manifest.json
             styles.css
             graph-spec-libraries-*.tar.gz
+            thoughtknot-*.tgz
       - name: The Graphviz version inside the engine, for the release notes
         run: node scripts/engine-version.mjs --notes engine-notes.md
+      - name: The changelog since the last release, at the top of the release notes
+        run: node scripts/changelog.mjs --out release-notes.md && cat engine-notes.md >> release-notes.md
       - name: Draft the release with the store assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" SHA256SUMS --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file engine-notes.md --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$GITHUB_REF_NAME.tar.gz" "thoughtknot-graph-spec-$GITHUB_REF_NAME.tgz" "thoughtknot-core-$GITHUB_REF_NAME.tgz" SHA256SUMS --draft --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md --generate-notes

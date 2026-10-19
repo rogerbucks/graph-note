@@ -19,6 +19,10 @@ leave it out.
 
 **Stable**: a bare version tag on main, through `release.yml`, with every check on this page.
 
+Both channels attach the JavaScript library as two packages: `thoughtknot-graph-spec-<version>.tgz` (the reader,
+checker and layout) and `thoughtknot-core-<version>.tgz`. They are installed from the release's URL, never from npm.
+A stable release's notes open with its changelog, written by `scripts/changelog.mjs`.
+
 ## Accessibility walk-through, every release
 
 The spec (§11) says every interface, in every host, meets WCAG 2.2 Level AA. A new host meets it before its first
