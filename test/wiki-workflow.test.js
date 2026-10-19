@@ -49,6 +49,10 @@ describe('the workflow that makes the wiki', () => {
     const runs = runCommands(jobs(text).make.join('\n')).join('\n');
     assert.match(runs, /select\(\.tagName \| test\("-"\) \| not\)/);
     assert.match(runs, /git fetch --depth=1 --no-tags origin "refs\/tags\/\$tag"/);
+    assert.match(
+      runs,
+      /git show FETCH_HEAD:requirements\/editor-requirements\.md > "\$RUNNER_TEMP\/released\.gql" \|\|/,
+    );
     assert.match(runs, /git show FETCH_HEAD:requirements\/editor-requirements\.gql > "\$RUNNER_TEMP\/released\.gql"/);
     assert.match(runs, /node scripts\/wiki\.mjs .*--released "\$RUNNER_TEMP\/released\.gql"/);
   });

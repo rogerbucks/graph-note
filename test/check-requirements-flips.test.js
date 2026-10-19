@@ -331,7 +331,7 @@ describe('across the move from the graph file to the note', () => {
       commit('flip back');
       const back = run('--base-ref', before);
       assert.equal(back.status, 1, back.stdout + back.stderr);
-      assert.match(back.stdout, /test_abuse/);
+      assert.match(back.stdout, /test_fixture_a/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

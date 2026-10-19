@@ -377,7 +377,7 @@ describe('running only the tests a change touches', () => {
       ['test-vault/Long note.md', ['test/test-vault.test.js']],
       ['test-vault/GUIDE.md', ['test/test-vault.test.js']],
       ['scripts/reset-test-vault.mjs', ['test/test-vault.test.js']],
-      ['requirements/editor-requirements.gql', ['test/requirements.test.js']],
+      ['requirements/editor-requirements.md', ['test/requirements.test.js']],
       ['scripts/check-requirements.mjs', ['test/requirements.test.js']],
       ['requirements/workstreams.json', ['test/github-project.test.js']],
     ])

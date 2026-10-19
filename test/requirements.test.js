@@ -57,10 +57,12 @@ describe('the requirements copy', () => {
 
 describe('a tampered copy fails the check', () => {
   test('an edited banner line', () => {
+    // each named by its line in the note
+    const at = real().split('\n').indexOf(BANNER[0]) + 1;
     const text = replaced(real(), 'edit it here, in a pull request.', 'edited by hand.');
-    assert.deepEqual(kinds(auditRequirements(text, { exists }), 'banner'), ['line 2']);
+    assert.deepEqual(kinds(auditRequirements(text, { exists }), 'banner'), [`line ${at + 1}`]);
     const first = replaced(real(), '// graph: editor_requirements · SOURCE', '// graph: editor_requirements');
-    assert.deepEqual(kinds(auditRequirements(first, { exists }), 'banner'), ['line 1']);
+    assert.deepEqual(kinds(auditRequirements(first, { exists }), 'banner'), [`line ${at}`]);
   });
 
   test('a requirement of a started slice proved by no test', () => {

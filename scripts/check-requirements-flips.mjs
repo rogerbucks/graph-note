@@ -20,7 +20,14 @@ import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { HAS_FILE, REQUIREMENTS, TEST_STATUSES, filesOf, requirementsGraph } from './check-requirements.mjs';
+import {
+  FORMER_REQUIREMENTS,
+  HAS_FILE,
+  REQUIREMENTS,
+  TEST_STATUSES,
+  filesOf,
+  requirementsGraph,
+} from './check-requirements.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
@@ -134,11 +141,15 @@ function main(args) {
       if (flag === '--merge-base-of') ref = git('merge-base', ref, 'HEAD').trim();
       // the commit must resolve; only a commit that holds no copy has nothing to compare
       git('rev-parse', '--verify', '--quiet', `${ref}^{tree}`);
-      if (!git('ls-tree', '--name-only', ref, '--', REQUIREMENTS).trim()) {
+      // a base from before the requirements became a note holds the graph file they were kept in
+      const held = [REQUIREMENTS, FORMER_REQUIREMENTS].find((rel) =>
+        git('ls-tree', '--name-only', ref, '--', rel).trim(),
+      );
+      if (!held) {
         console.log(`${REQUIREMENTS}: not in the base, so nothing to compare`);
         return 0;
       }
-      base = git('show', `${ref}:${REQUIREMENTS}`);
+      base = git('show', `${ref}:${held}`);
     } catch (e) {
       console.error(`cannot read ${REQUIREMENTS} at ${ref}: ${String(e.stderr || e.message).trim()}`);
       return 2;

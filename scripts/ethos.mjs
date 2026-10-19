@@ -58,7 +58,7 @@ export function ethosProblems(ethos, requirements) {
     else if (!r.requirements.length && r.check === undefined)
       problems.push(`${r.id}: the rule names no check: name its requirements, or say check: 'person' or 'not yet'`);
     for (const id of r.requirements)
-      if (!known.has(id)) problems.push(`${r.id}: no requirement ${id} in requirements/editor-requirements.gql`);
+      if (!known.has(id)) problems.push(`${r.id}: no requirement ${id} in requirements/editor-requirements.md`);
   }
   for (const p of ethos.principles) if (!p.rules.length) problems.push(`${p.id}: the principle has no rule`);
   return problems;
@@ -93,7 +93,7 @@ export function ethosPage(ethos, requirements) {
     `# Ethos\n\nWhat ThoughtKnot stands for, and the rules that follow from it. Each rule says how it is checked, ` +
     `so anyone can see whether it holds. ${auto} of ${ethos.rules.length} rules checked automatically.\n\n` +
     `${sections.join('\n\n')}\n\nA name in the last column is a requirement in ` +
-    `[\`requirements/editor-requirements.gql\`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql), ` +
+    `[\`requirements/editor-requirements.md\`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.md), ` +
     `proved by the tests it names.\n`
   );
 }

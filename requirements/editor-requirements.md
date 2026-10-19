@@ -1,3 +1,14 @@
+# Editor requirements
+
+This is the one source of what ThoughtKnot's editor must do. It is a graph note: the requirements graph is the one
+`gql` block below, and the words around it are for people.
+
+- **Change it here**, in a pull request. Add a requirement as soon as it is agreed.
+- **A test only moves forward.** It goes from planned to partial to written, never back.
+- **Every tool reads this note.** The checks, the slice board, the wiki and the GitHub mirror all read the block below.
+  Run `node scripts/check-requirements.mjs` to check it.
+
+```gql
 // graph: editor_requirements · SOURCE
 // The editor's requirements graph, the one source: edit it here, in a pull request. A test only moves forward.
 // ── Sections ──
@@ -926,7 +937,7 @@
 (test_storage_contract:Test {proves: 'the vault, folder and VS Code workspace backends each pass the one storage contract suite', file: 'packages/core/test/storage-contract.test.js', where: 'repo', status: 'planned'}),
 (test_standalone_app:Test {proves: 'the Tauri v2 app opens a folder of notes and draws and edits its graphs offline on each desktop platform', file: 'test/standalone-app.test.js', where: 'repo', status: 'planned'}),
 (test_vscode_plugin:Test {proves: 'the VS Code extension draws and edits the graph blocks of a Markdown file in a webview', file: 'test/vscode-plugin.test.js', where: 'repo', status: 'planned'}),
-(test_requirements_as_graph_note:Test {proves: 'the requirements are read from their graph note and pass the same audit as the graph file did', file: 'test/requirements-note.test.js', where: 'repo', status: 'partial'}),
+(test_requirements_as_graph_note:Test {proves: 'the requirements are read from their graph note and pass the same audit as the graph file did', file: 'test/requirements-note.test.js', where: 'repo', status: 'written'}),
 (test_changes_view:Test {proves: 'between two versions the changes view marks each added, removed and changed thing and link on the drawing and lists them as text, in both themes', file: 'packages/core/test/changes-view.test.js', where: 'repo', status: 'written'}),
 (test_cc_changes_view:Test {proves: 'in the browser editor, Compare with lists the note\'s earlier versions only once pressed and draws the one picked with the note now, every change marked and listed in words', file: 'packages/claude-code/test/changes-section.test.js', where: 'repo', status: 'written'}),
 (test_cc_note_history:Test {proves: 'the editor server reads only the open note\'s history from its git repository, at commits it listed, through the gate, running nothing the repository names and reaching no network', file: 'packages/claude-code/test/note-history.test.js', where: 'repo', status: 'written'}),
@@ -2419,3 +2430,4 @@
 (q_14_roles_auto_apply)-[:BLOCKS]->(type_suggestion_bundle),
 (q_14_roles_auto_apply)-[:BLOCKS]->(ai_write_scoring),
 (q_15_stubbing_revisit)-[:BLOCKS]->(side_effects_stubbed)
+```

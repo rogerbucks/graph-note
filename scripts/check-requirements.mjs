@@ -31,7 +31,10 @@ import { gqlBlocks } from '../packages/core/src/fences.ts';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/graph-spec-check.js');
 
-export const REQUIREMENTS = 'requirements/editor-requirements.gql';
+export const REQUIREMENTS = 'requirements/editor-requirements.md';
+// The graph file the requirements were kept in before they became a graph note (19 Oct 2026). A commit from before the
+// move holds this file instead, so whatever reads the requirements at an older commit falls back to it.
+export const FORMER_REQUIREMENTS = 'requirements/editor-requirements.gql';
 // The slice being built: its requirements, and every earlier slice's, must each be proved by a named test.
 export const CURRENT_SLICE = 3;
 export const BANNER = [
@@ -69,12 +72,22 @@ export const HAS_FILE = ['partial', 'written'];
  * every reader here alike. A note with no such block, or with more than one, is given back as it is, and refused.
  */
 export function requirementsGraph(text) {
-  const own = gqlBlocks(text).filter((b) => b.text.split('\n')[0] === BANNER[0]);
-  return own.length === 1 ? `${own[0].text}\n` : text;
+  return requirementsBlock(text).text;
 }
 
-/** A banner problem, as the audit lists it, for each line of the banner the file opens on that is not as it should be. */
-function bannerProblems(text) {
+/**
+ * The requirements graph's text, and how many lines of the copy come before it. So a line of the graph is named by its
+ * line in the copy. A note whose one block has lost its banner still gives that block, so the banner is what fails.
+ */
+function requirementsBlock(text) {
+  const blocks = gqlBlocks(text);
+  const own = blocks.filter((b) => b.text.split('\n')[0] === BANNER[0]);
+  const block = own.length === 1 ? own[0] : own.length === 0 && blocks.length === 1 ? blocks[0] : null;
+  return block ? { text: `${block.text}\n`, before: block.line } : { text, before: 0 };
+}
+
+/** A banner problem, as the audit lists it, for each line of the banner the graph opens on that is not as it should be. */
+function bannerProblems(text, before) {
   const lines = text.split('\n');
   return BANNER.flatMap((want, i) =>
     lines[i] === want
@@ -82,8 +95,8 @@ function bannerProblems(text) {
       : [
           {
             kind: 'banner',
-            id: `line ${i + 1}`,
-            message: `line ${i + 1} of ${REQUIREMENTS} is not the banner the requirements open on: put it back`,
+            id: `line ${before + i + 1}`,
+            message: `line ${before + i + 1} of ${REQUIREMENTS} is not the banner the requirements open on: put it back`,
           },
         ],
   );
@@ -99,15 +112,15 @@ function bannerProblems(text) {
  * exists(path) says whether the repository holds a repo-relative path.
  */
 export function auditRequirements(copy, { exists = (rel) => existsSync(join(ROOT, rel)), slice = CURRENT_SLICE } = {}) {
-  const text = requirementsGraph(copy);
-  const problems = bannerProblems(text);
+  const { text, before } = requirementsBlock(copy);
+  const problems = bannerProblems(text, before);
 
   let graph;
   try {
     const store = read([text]);
     graph = store.graph(Object.keys(store.graphs)[0]);
   } catch (e) {
-    const id = e.line === undefined ? 'copy' : `line ${e.line}`;
+    const id = e.line === undefined ? 'copy' : `line ${before + e.line}`;
     problems.push({ kind: 'unreadable', id, message: `${REQUIREMENTS} cannot be read: ${e.message}` });
     return problems;
   }

@@ -12,7 +12,7 @@
 //   node scripts/wiki.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--released FILE]
 //     [--labels FILE].
 // --releases is `gh release list --json tagName,name,publishedAt` saved to a file. Without it the versions come from
-// versions.json alone. --released is requirements/editor-requirements.gql as it stood at the latest stable release. So
+// versions.json alone. --released is requirements/editor-requirements.md as it stood at the latest stable release. So
 // the developer pages tell what is released from what is only in the nightly build. --labels is the labels.json
 // scripts/wiki-screens.mjs writes. Each label of the card's buttons the guide does not name is printed as a GitHub
 // warning.
@@ -208,14 +208,14 @@ export function renderWiki({
     `# Status\n\n${fills.now}\n\n## By slice\n\n${fills.slices}\n\n` +
     `A requirement is **proved** when every test it names is written and passing in CI. Each requirement, with its ` +
     `build status, is tracked on the [requirements project](${REPO}/projects).\n` +
-    footer('`requirements/editor-requirements.gql`', sha, today);
+    footer('`requirements/editor-requirements.md`', sha, today);
 
   const answered = questions.filter((q) => q.answer).sort((a, b) => b.answered.localeCompare(a.answered));
   out['Decisions.md'] =
     `# Decisions\n\nEvery question the project has answered, newest first.\n\n| | Question | Decision | Date |\n|---|---|---|---|\n` +
     answered.map((q) => `| ${q.num} | ${cell(q.text)} | ${cell(q.answer)} | ${day(q.answered)} |`).join('\n') +
     '\n' +
-    footer('`requirements/editor-requirements.gql`', sha, today);
+    footer('`requirements/editor-requirements.md`', sha, today);
 
   const slicesOpen = [...new Set(open.map((q) => q.slice))].sort((a, b) => a - b);
   out['Open-questions.md'] =
@@ -233,7 +233,7 @@ export function renderWiki({
           .join('\n\n')
       : 'None: every question has an answer.') +
     '\n' +
-    footer('`requirements/editor-requirements.gql`', sha, today);
+    footer('`requirements/editor-requirements.md`', sha, today);
 
   const m = baseline.metrics;
   const audit = m.audit_critical + m.audit_high + m.audit_moderate + m.audit_low;
@@ -327,7 +327,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const made = renderWiki({
     developer: await developerFacts(),
     releasedText: releasedFile && existsSync(releasedFile) ? readFileSync(releasedFile, 'utf8') : undefined,
-    requirementsText: readFileSync(join(ROOT, 'requirements/editor-requirements.gql'), 'utf8'),
+    requirementsText: readFileSync(join(ROOT, 'requirements/editor-requirements.md'), 'utf8'),
     ethosText: readFileSync(join(ROOT, 'requirements/ethos.gql'), 'utf8'),
     waves: json('requirements/waves.json').waves,
     workstreams: json('requirements/workstreams.json'),

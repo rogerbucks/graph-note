@@ -16,7 +16,8 @@ import { refusedChanges } from '../scripts/check-requirements-flips.mjs';
 import { readBoard } from '../scripts/slice-board.mjs';
 import { readQuestions } from '../scripts/wiki.mjs';
 
-const FILE = readFileSync(new URL(`../${REQUIREMENTS}`, import.meta.url), 'utf8');
+// the graph itself, as the note in the repository holds it
+const FILE = requirementsGraph(readFileSync(new URL(`../${REQUIREMENTS}`, import.meta.url), 'utf8'));
 
 /** The graph file as a note: a heading and prose, the graph as its one block, and prose after. */
 const asNote = (graph) =>
