@@ -56,16 +56,17 @@ Everything a successor would need if Roger could not act. None of the values are
 
 | Key or account | What it does | Where it is made | Expires | If it is lost |
 | --- | --- | --- | --- | --- |
-| `PROJECT_TOKEN` (repository secret) | Lets the project mirror and the build status write the "ThoughtKnot requirements" board. A classic token with the `project` and `public_repo` scopes. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic). | Not written yet: Roger to add the date. | Make a new token with the same scopes, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
-| `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets the Claude review comment on pull requests. | `claude setup-token`, by Roger, on his machine. | Not written yet: Roger to add the date. | Run `claude setup-token` again and set the secret. The review passes with a notice while it is missing. |
+| `PROJECT_TOKEN` (repository secret) | Lets the project mirror and the build status write the "ThoughtKnot requirements" board. A classic token with the `project` and `public_repo` scopes. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic). | 15 Oct 2027. | Make a new token with the same scopes, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
+| `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets the Claude review comment on pull requests. | `claude setup-token`, by Roger, on his machine. | Not known. Rotate it if the review starts failing to authenticate. | Run `claude setup-token` again and set the secret. The review passes with a notice while it is missing. |
 | The `rogerbucks` GitHub account | Owns the repository, its ruleset, its Pages site and its releases. It is the only admin. | GitHub. | Never. | Recovery codes and a second factor, kept by Roger. |
-| The domains `thoughtknot.app` and `thoughtknot.dev` | The home page on GitHub Pages, and the redirect to it. | Not written yet: Roger to add the registrar. | Not written yet: Roger to add the renewal date. | Renew at the registrar. Pages reads the domain from the repository's Pages settings. |
+| The domains `thoughtknot.app` and `thoughtknot.dev` | The home page on GitHub Pages, and the redirect to it. | Cloudflare, in Roger's account. | Every year on 18 October. | Renew at Cloudflare. Pages reads the domain from the repository's Pages settings. |
 
 **The repository's settings are kept in code.** `node scripts/public-readiness.mjs --settings` compares GitHub's
 settings with the wanted ones. `--settings --apply` sets each one that differs. An admin runs it with the GitHub CLI.
 
-**A second admin is not yet named.** Until one is, nobody else can publish a release, change the ruleset or rotate a
-key. Roger decides whether to add one, or move the repository to an organisation with two owners.
+**There is one admin, by choice** (Roger, 19 Oct 2026). Until a second is named, nobody else can publish a release,
+change the ruleset or rotate a key. Roger will add a second admin, or move the repository to an organisation with two
+owners, once the project has traction.
 
 ## Accessibility walk-through, every release
 
