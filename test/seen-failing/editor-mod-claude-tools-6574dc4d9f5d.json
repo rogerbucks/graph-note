@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/editor-mod-claude-tools.test.js",
+  "test": "a note that carries instructions steers no change past the card (risk AI-3) > a proposal that obeys the note waits on the card, and the graph is as it was",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour already there: the proposal route already refused extra fields and kept the graph untouched; risk AI-3 asked for a test with an injected note to prove it."
+}

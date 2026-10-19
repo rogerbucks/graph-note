@@ -127,6 +127,23 @@ It is a guard against a session slipping, not against one set on getting round i
 other half. The `propose` tool and its sender (`bin/propose.mjs`) are the mod's own processes, not Claude's Write, Edit
 or Bash calls. So the guard does not meet them.
 
+### The open note's guard
+
+- `data-guard.ts` — `guardOpenNote` (cc_claude_proposes, risk AI-1). While a note is open in the editor, Claude changes
+  it only by the `propose` tool. So the same `tool.call` hook refuses Claude's own Write, Edit, NotebookEdit and Bash
+  calls that reach that note.
+  - The note is the launcher's `note`: the full path of the note open now, or none. With none open, nothing is refused.
+  - File tools are judged by the real path, as for the data folder: a relative path, a link or a change of case is
+    found.
+  - Bash is refused when it names the note's path, a word resolves to it, or a folder above it is moved or removed. Its
+    file name alone, as a whole word, counts too, so `cd` to its folder then a bare name is caught.
+  - The refusal (`OPEN_NOTE_REFUSAL`) names the propose tool and echoes nothing of the call. A guard that fails refuses
+    (`NOTE_CHECK_FAILED_REFUSAL`).
+  - What it does not stop is the list under Bash limits above, for this note: a path the shell builds, other tools, an
+    MCP server. Other notes in the vault are not guarded.
+
+So a change to the open note is never applied by Claude's own tools while `guardOpenNote` holds: it waits on the card.
+
 ### Proposals, the hooks entry and the page's session
 
 - `editor-propose.ts` — Claude's proposals (workstream C7, cc_claude_only, cc_claude_proposes).

@@ -16,6 +16,7 @@ import {
   DATA_FOLDER_REFUSAL,
   EditorLauncher,
   guardDataFolder,
+  guardOpenNote,
   confirmArgs,
   editArgs,
   layOut,
@@ -148,13 +149,13 @@ async function drawNote($: EngineInterface, path: string): Promise<string> {
 }
 
 export const register: Register = (on) => {
-  // Claude's own writes to the data folder are refused (spec §26): it could loosen its own gate. A guard that fails
-  // refuses too. Reads are not hooked.
+  // Claude's own writes to the data folder are refused (spec §26): it could loosen its own gate. So are its writes to
+  // the note open in the editor (cc_claude_proposes, risk AI-1): it changes that note only by the propose tool, which
+  // the refusal names. A guard that fails refuses too. Reads are not hooked.
   for (const tool of GUARDED_TOOLS) {
     on('tool.call', { tool }, async ($, e, next) => {
       const { data, home } = await dataFolderOf($);
-      const refusal = await guardDataFolder(tool, e as Record<string, unknown>, {
-        data,
+      const ports = {
         ...(home ? { home } : {}),
         cwd: await $.session.cwd(),
         realPath: realPathVia(
@@ -167,7 +168,11 @@ export const register: Register = (on) => {
           ['node', `${$.plugin.root}/bin/real-path.mjs`],
           (ms, fn) => $.clock.after(ms, fn),
         ),
-      });
+      };
+      const input = e as Record<string, unknown>;
+      const refusal =
+        (await guardDataFolder(tool, input, { data, ...ports })) ??
+        (await guardOpenNote(tool, input, { note: launcher?.note ?? null, ...ports }));
       return refusal === null ? next(e) : { deny: refusal };
     }).catch(($, e, next) => (next.called ? next(e) : { deny: DATA_FOLDER_REFUSAL }));
   }

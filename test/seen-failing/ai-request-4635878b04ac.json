@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/ai-request.test.js",
+  "test": "a note that carries instructions is sent as data, and steers nothing past the proposal > an answer that obeys the note is read as changes only: no key, no other field, and nothing applied",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour already there: changesIn already read only the five kinds of change; risk AI-3 asked for an injection case to prove it."
+}
