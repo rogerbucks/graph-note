@@ -8,8 +8,8 @@
 // in both, again after each delay. Only an issue that none of them gives back stops the creating.
 //
 // The apply edits, closes and reopens issues before it makes any, so a stop never holds back a downgrade. A run in the
-// workflow may also make at most MAX_CREATES issues on a board that has its issues. Through a runner handed in, as
-// github-project-gh.mjs.
+// workflow also makes at most MAX_CREATES issues on a board that has its issues. The next run makes the next ones.
+// Through a runner handed in, as github-project-gh.mjs.
 import { BOT_LOGIN, adoptedId } from './github-project-desired.mjs';
 import { whole } from './github-project-read.mjs';
 
@@ -20,8 +20,6 @@ export const MAX_CREATES = 20;
 
 /** The creating stopped: an issue the bot made is not given back by the list by creator, so it would be made again. */
 export class CreatesUnlisted extends Error {}
-/** A run of the workflow would make more issues than MAX_CREATES on a board that has its issues: a person checks it. */
-export class CreatesCapped extends Error {}
 
 /**
  * An issue's author as one login. gh gives a GitHub App's as `app/<name>` (and marks it a bot). Here that is
@@ -137,11 +135,15 @@ export function createGuard(read, repo, plan, { sleep = () => {}, delays = [] } 
 }
 
 /**
- * Why a run of the workflow may not make the issues of `plan`, or null. The reason is that it makes more than `cap` on
- * a board that already has issues of its own. A first mirror, with none yet, makes them all.
+ * The ids of the new issues in `plan` that a run of the workflow leaves for the next run: all but the first `cap`. It
+ * leaves none when the plan makes `cap` or fewer. A first mirror, with no issue of its own yet, makes them all. So a run never makes a flood of issues, and the rest of the board still moves while they are made.
  */
-export function createsProblem(plan, cap = MAX_CREATES) {
-  const n = plan.issues.create.length;
-  if (n <= cap || Object.keys(plan.issues.held ?? {}).length === 0) return null;
-  return `the plan makes ${n} issues, more than ${cap} in one run on a board that has its issues already; nothing was applied, so a person checks it and applies it`;
+export function createsHeld(plan, cap = MAX_CREATES) {
+  const create = plan.issues.create;
+  if (create.length <= cap || Object.keys(plan.issues.held ?? {}).length === 0) return new Set();
+  return new Set(create.slice(cap).map((d) => d.id));
 }
+
+/** The warning for a run that made `cap` new issues and left `held` for the next run. */
+export const heldWarning = (held, cap = MAX_CREATES) =>
+  `made ${cap} new issues and left ${held} for the next push to main, which makes the next ${cap}; everything else was applied`;
