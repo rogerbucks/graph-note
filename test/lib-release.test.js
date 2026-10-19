@@ -196,3 +196,47 @@ describe('the changelog', () => {
     assert.match(readFileSync(out, 'utf8'), /^## /m);
   });
 });
+
+// The version promise, told to users (spec §41, version_promise_told). Before 1.0.0, 0.7 to 0.8 may break the
+// interface. So every release's notes say what changed, and the README and the wiki say the rule.
+describe('the version rule is told to the people who use the library', () => {
+  const RULE = /before 1\.0\.0/i;
+  test('the changelog has a Library changes section that states the rule', () => {
+    const text = changelogText({ version: '0.8.0', from: '0.7.0', pulls: [], repo: 'o/r', before: null, after: {} });
+    assert.match(text, /^### Library changes$/m);
+    assert.match(text.slice(text.indexOf('### Library changes')), RULE);
+  });
+  test('--check refuses release notes without the section, and passes notes with it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'notes-'));
+    try {
+      const run = (body) => {
+        writeFileSync(join(dir, 'notes.md'), body);
+        try {
+          execFileSync(process.execPath, ['scripts/changelog.mjs', '--check', join(dir, 'notes.md')], {
+            stdio: 'pipe',
+          });
+          return 0;
+        } catch (error) {
+          return error.status;
+        }
+      };
+      assert.equal(run('## 0.8.0\n\n### Pull requests\n'), 1);
+      assert.equal(run('## 0.8.0\n\n### Library changes\n\nNothing.\n'), 0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  test('the release checks its notes before it drafts, and the release check tries it first', () => {
+    const release = read('.github/workflows/release.yml');
+    const check = release.indexOf('node scripts/changelog.mjs --check release-notes.md');
+    assert.ok(check !== -1, 'release.yml checks its notes');
+    assert.ok(check < release.indexOf('gh release create'), 'before it drafts the release');
+    assert.match(read('.github/workflows/release-check.yml'), /node scripts\/changelog\.mjs --check release-notes\.md/);
+  });
+  test('the README and the For developers page state the rule', () => {
+    for (const file of ['README.md', 'wiki/For-developers.md']) {
+      assert.match(read(file), /^## Versions$/m, file);
+      assert.match(read(file), RULE, file);
+    }
+  });
+});

@@ -1,5 +1,10 @@
 # Contributing
 
+**Who can contribute.** For now, only collaborators may open pull requests and issues. This holds until the community
+release. Ideas, questions and bug reports are welcome in
+[GitHub Discussions](https://github.com/rogerbucks/thoughtknot/discussions), which anyone may join. To ask to join as a
+collaborator, start a discussion there and say what you would like to work on.
+
 How the code is written here. Every rule a tool can check is checked: by `test/conventions.test.js`, by the linter, or by
 CI. A change that breaks one fails before it is merged.
 
@@ -302,8 +307,13 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `packages/claude-code/test/editor-mod-claude.test.js` — Claude is the only AI the browser editor offers. What it
   changes in the note open in the pane reaches it as a proposal through the mod. That is a checked change set the user
-  accepts or rejects, written by the store whole and in turn, and never applied by Claude. Its key is good for that one
-  route. It is refused for a note above its clearance (editor spec §26; cc_claude_only, cc_claude_proposes).
+  accepts or rejects. The store writes it whole and in turn. It applies only on accept, and its key is good for that
+  one route. It is refused for a note above its clearance (editor spec §26; cc_claude_only,
+  cc_claude_proposes).
+- `packages/claude-code/test/editor-mod-claude-tools.test.js` — `guardOpenNote` refuses Claude's own Write, Edit,
+  NotebookEdit and Bash calls on the note open in the editor. The refusal points to the propose tool. So a change
+  to that note is never applied by Claude's own tools while `guardOpenNote` holds. A note that carries instructions
+  gets a proposal that waits on the card, never a change (cc_claude_proposes; risks AI-1, AI-3).
 - `packages/claude-code/test/editor-mod-claude-limits.test.js` — what the security review of #483 found. A proposal
   cannot grow the note without limit: its size, a value's and a reason's length, and how many wait. The proposer's key
   is passed on standard input and not in the environment. Claude's own text never carries the user's yes, and what it
@@ -470,8 +480,10 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `test/lib-release.test.js` — each release publishes the library on GitHub, never on npm (spec §41, lib_github_release).
   `scripts/library-release.mjs` builds two packages, graph-spec and the core, and the test installs both with no
-  registry and runs a program on them. `scripts/changelog.mjs` writes the release notes: the pull requests merged
-  since the last release, and what the library's interface added or broke.
+  registry and runs a program on them.
+  - `scripts/changelog.mjs` writes the release notes: the pull requests merged since the last release, and a Library
+    changes section. That section says what the interface added or broke, and the version rule (version_promise_told).
+  - `--check` refuses notes without it. The release runs it before it drafts, and the release check tries it first.
 - `test/lib-public-api.test.js` — the library's public interface (spec §41, lib_public_api). It is declared in
   `public-api.json`, which `node scripts/public-api.mjs --update` writes. A break since the last release fails
   unless the package takes a new major version. Before 1.0.0 that is the leftmost part that is not 0, such as 0.8.0.
@@ -589,6 +601,14 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI. It also covers the one
   module that may reach the network, reached only from the send dialog. Nothing in the AI's folder runs on a timer or
   an event.
+- `test/workflow-timeouts.test.js` — every job of every workflow sets a time limit. So a hung step never holds a
+  runner for hours (editor spec §13, ci_jobs_time_limited).
+- `test/releasing.test.js` — RELEASING.md lists the steps of a release in order and how to go back. It names every
+  secret a workflow uses (editor spec §13, release_steps_written).
+- `test/release-prepare.test.js` — one command bumps every file that carries the version, both lockfiles included
+  (editor spec §13, release_steps_written).
+- `test/release-from-main.test.js` — a stable release is built only from a tag on main. The release's first job checks
+  the tag before anything is installed, and every other job waits for it (editor spec §13, release_from_main).
 - `test/ai-disclosed.test.js` — the AI use disclosed in the README. Content goes only to models the user sets up, only
   when the user sends it. The one exception to no network use is stated precisely (spec §19, ai_disclosed).
 - `test/public-readiness.test.js` — fit to be public and kept so. It covers a clean history, and a fresh clone set up
@@ -629,6 +649,9 @@ These test behaviour across modules, or the repository itself, so they are named
   - `check-requirements.mjs --done <slice>` says so or lists what is missing. The slice board's overview says the
     same. Each is tried on tampered copies of the requirements.
   - Every slice before the one under way is done (spec §12, done_means_proved).
+- `test/readme-status.test.js` — the README's status line is made from the requirements graph, never by hand
+  (readme_status_generated). It names how many slices there are, which are done and which is in progress.
+  `node scripts/readme-status.mjs --write` puts it right after a slice is done.
 - `test/slice-board-style.test.js` — the slice board's stylesheet. Its colour tokens agree in light and dark, and the
   altitude switch works by CSS alone. The layout holds at 400px. The source is written one rule and one declaration to
   a line.
@@ -654,6 +677,11 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/wiki-review.test.js` — the review of the wiki pages people write or edit. Each is checked and never changed.
   There is a suggestion for each broken link or picture, old version and long sentence. A person's edit to a made page
   is reported, and an issue text pings no one.
+- `test/plan-actuals.test.js` — the wiki's Plan versus actual page (`scripts/plan-actuals.mjs`).
+  - A requirement is proved on the first day main held all its tests as written. Main's history is read merge by merge,
+    through the move of the requirements file from `.gql` to `.md`.
+  - Each wave shows its plan, its first and last proved days, the first stable release after and its slip.
+  - The page lists what was proved each day, the seven-day rate, and a forecast for each wave left.
 - `test/wiki-workflow.test.js` — the workflow that makes the wiki. It is woken by a push to main or a stable release.
   The pages are made with read access only, and the one job that writes runs no code of the repository.
 

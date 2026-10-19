@@ -50,7 +50,7 @@ describe('the requirements copy', () => {
     assert.deepEqual(
       problems.map((p) => p.message),
       [],
-      'fix each problem in requirements/editor-requirements.gql itself',
+      'fix each problem in requirements/editor-requirements.md itself',
     );
   });
 });

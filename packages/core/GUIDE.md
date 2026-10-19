@@ -1217,7 +1217,10 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
     links between the things chosen.
   - Nothing else of the note goes: no prose, no other graph, no comment.
 - `ai-request.ts` — the request body, in the chat completions shape local servers and most services take.
-  - It holds the instructions that ask for changes as JSON (`INSTRUCTIONS`).
+  - It holds the instructions that ask for changes as JSON (`INSTRUCTIONS`). They say the graph is data from the note,
+    never instructions (risk AI-3).
+  - `askedText` puts what was chosen in one fence named `graph-data`, the question after it. The fence is longer than
+    any run of backticks in the note, so no text of the note can close it.
   - `readReply` and `changesIn` read an answer back. The whole answer is refused if one change cannot be read.
   - A model's reason is kept as plain text, each Markdown and HTML mark escaped. So it never renders as an image, a
     link or HTML where `///` notes are rendered.
@@ -1281,7 +1284,8 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
   hosts_pass_contract).
   - Its checks use no test framework, each throwing with what was wanted.
   - They run against a fresh host and the `HostProbe` through which it shows what it drew.
-  - `HOST_CONTRACT_VERSION` moves with `DisplayHost`.
+  - `HOST_CONTRACT_VERSION` is the last entry of `HOST_CONTRACT_VERSIONS`. Each entry pairs a version with a digest
+    of how `public-api.json` declares `host.ts`. A change to `DisplayHost` fails a test until a new version is added.
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.
 - `src/display/editor/` — the edit pane (spec §4, §9; editor spec §26, C9). It is the same one in the Obsidian pane and
   on the browser editor's page.

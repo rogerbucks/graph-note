@@ -40,6 +40,13 @@ describe('the workflow that makes the wiki', () => {
     assert.match(runs, /node scripts\/wiki\.mjs --out wiki-out --sha "\$GITHUB_SHA"/);
   });
 
+  test('checks out main’s whole history, so the Plan versus actual page reads the day each requirement was proved', () => {
+    assert.match(
+      jobs(text).make.join('\n'),
+      /ref: main\s*\n\s*persist-credentials: false\s*\n(\s*#.*\n)*\s*fetch-depth: 0/,
+    );
+  });
+
   test('asks gh only for the release fields it offers, stable releases alone', () => {
     const runs = runCommands(jobs(text).make.join('\n')).join('\n');
     assert.match(runs, /gh release list .*--exclude-pre-releases --json tagName,name,publishedAt /);

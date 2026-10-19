@@ -47,7 +47,8 @@ export const AI_SOURCE_WORDS = {
   'models.model.sentence': 'The model’s own name at its address, as the service names it.',
   'models.endpoint': 'Endpoint',
   'models.endpoint.sentence':
-    'The address requests go to, such as a chat completions address: http:// for a model on this device, https:// for any other.',
+    'The address requests go to, such as a chat completions address: http:// for a model on this device, https:// for any ' +
+    'other. A model on this device keeps what it is sent here; any other keeps it under its provider’s terms.',
   'models.none': 'No model is set up: nothing is ever sent.',
   'models.page': 'Model {n}',
   'models.said': '{name}: {purpose}, up to {ceiling}',
