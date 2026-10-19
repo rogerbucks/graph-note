@@ -129,8 +129,9 @@ A fresh clone needs only these steps. CI runs them exactly as written here, in a
 
 So setting up never depends on a maintainer's machine.
 
-This is a one-person project and takes no outside contributions. Only collaborators can open pull requests and issues,
-and each pull request's conversation is locked when it opens.
+Only collaborators can open pull requests and issues for now, and each pull request's conversation is locked when it
+opens. Ideas and questions are welcome in [GitHub Discussions](https://github.com/rogerbucks/thoughtknot/discussions).
+[CONTRIBUTING.md](CONTRIBUTING.md) says how to ask to join.
 
 ### Testing in Obsidian, on desktop and phone
 
@@ -185,7 +186,7 @@ read until one is set.
 
 Mozilla Public License 2.0 (MPL-2.0). See [LICENSE](LICENSE).
 
-- Anyone may use, fork and change the code, and send a pull request.
+- Anyone may use, fork and change the code.
 - A changed file stays under the same licence, so its changes stay open.
 - The code may still sit inside a larger work under other terms.
 - Releases before this change stay MIT.

@@ -32,3 +32,19 @@ test('the security policy names the supported versions, a private way to report 
   assert.match(policy, /^## What happens next$/m);
   assert.match(policy, /\d+ (working )?days/);
 });
+
+// Who may contribute (spec §13, contribution_by_invitation). The settings keep pull requests to collaborators, so the
+// docs say so first and never invite a stranger to send one.
+test('the contributing guide says pull requests are by invitation, and no doc invites a stranger to send one (Roger, 19 Oct 2026)', () => {
+  const contributing = read('CONTRIBUTING.md');
+  const top = contributing.slice(0, contributing.indexOf('\n## '));
+  assert.match(top, /collaborators/i, 'the top of CONTRIBUTING.md names the collaborators-only rule');
+  assert.match(top, /https:\/\/github\.com\/rogerbucks\/thoughtknot\/discussions/);
+  assert.match(top, /ask to join/i);
+  const collaboratorsOnly = /repoField\('pull_request_creation_policy', 'collaborators_only'\)/.test(
+    read('scripts/public-readiness.mjs'),
+  );
+  if (collaboratorsOnly)
+    for (const file of ['README.md', 'CONTRIBUTING.md', 'wiki/Home.md', 'wiki/For-developers.md'])
+      assert.doesNotMatch(read(file), /(anyone|everyone)[^.]*\bsend a pull request/i, file);
+});

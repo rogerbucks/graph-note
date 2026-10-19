@@ -1,5 +1,10 @@
 # Contributing
 
+**Who can contribute.** For now, only collaborators may open pull requests and issues. This holds until the community
+release. Ideas, questions and bug reports are welcome in
+[GitHub Discussions](https://github.com/rogerbucks/thoughtknot/discussions), which anyone may join. To ask to join as a
+collaborator, start a discussion there and say what you would like to work on.
+
 How the code is written here. Every rule a tool can check is checked: by `test/conventions.test.js`, by the linter, or by
 CI. A change that breaks one fails before it is merged.
 
