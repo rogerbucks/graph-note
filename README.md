@@ -66,6 +66,10 @@ databases. Graphviz, the one runtime dependency, is bundled and runs on your dev
 content only to AI models you have set up yourself, and only when you send it. AI is off until you turn it on (Use AI
 models, in the plugin's settings) and set up a model.
 
+**Where your text ends up.** A model at a remote address receives the text you are shown. It keeps it under its
+provider’s own terms and retention, so it leaves your control once sent. A model at localhost runs on your device, so the text stays on your
+device.
+
 ### What happens on each send
 
 

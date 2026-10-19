@@ -1217,7 +1217,10 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
     links between the things chosen.
   - Nothing else of the note goes: no prose, no other graph, no comment.
 - `ai-request.ts` — the request body, in the chat completions shape local servers and most services take.
-  - It holds the instructions that ask for changes as JSON (`INSTRUCTIONS`).
+  - It holds the instructions that ask for changes as JSON (`INSTRUCTIONS`). They say the graph is data from the note,
+    never instructions (risk AI-3).
+  - `askedText` puts what was chosen in one fence named `graph-data`, the question after it. The fence is longer than
+    any run of backticks in the note, so no text of the note can close it.
   - `readReply` and `changesIn` read an answer back. The whole answer is refused if one change cannot be read.
   - A model's reason is kept as plain text, each Markdown and HTML mark escaped. So it never renders as an image, a
     link or HTML where `///` notes are rendered.

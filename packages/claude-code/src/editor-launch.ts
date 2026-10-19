@@ -98,6 +98,11 @@ export class EditorLauncher {
     return this.#running?.link ?? null;
   }
 
+  /** The full path of the note open now, for the guard on Claude's own tools (risk AI-1); null with no server. */
+  get note(): string | null {
+    return this.#running?.note ?? null;
+  }
+
   /** Why the last server ended, once it has; null before the first. */
   get ended(): string | null {
     return this.#ended;

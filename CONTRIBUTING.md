@@ -302,8 +302,13 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `packages/claude-code/test/editor-mod-claude.test.js` — Claude is the only AI the browser editor offers. What it
   changes in the note open in the pane reaches it as a proposal through the mod. That is a checked change set the user
-  accepts or rejects, written by the store whole and in turn, and never applied by Claude. Its key is good for that one
-  route. It is refused for a note above its clearance (editor spec §26; cc_claude_only, cc_claude_proposes).
+  accepts or rejects. The store writes it whole and in turn. It applies only on accept, and its key is good for that
+  one route. It is refused for a note above its clearance (editor spec §26; cc_claude_only,
+  cc_claude_proposes).
+- `packages/claude-code/test/editor-mod-claude-tools.test.js` — `guardOpenNote` refuses Claude's own Write, Edit,
+  NotebookEdit and Bash calls on the note open in the editor. The refusal points to the propose tool. So a change
+  to that note is never applied by Claude's own tools while `guardOpenNote` holds. A note that carries instructions
+  gets a proposal that waits on the card, never a change (cc_claude_proposes; risks AI-1, AI-3).
 - `packages/claude-code/test/editor-mod-claude-limits.test.js` — what the security review of #483 found. A proposal
   cannot grow the note without limit: its size, a value's and a reason's length, and how many wait. The proposer's key
   is passed on standard input and not in the environment. Claude's own text never carries the user's yes, and what it
