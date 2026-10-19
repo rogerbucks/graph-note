@@ -115,8 +115,16 @@ the project's licence, as the [Developer Certificate of Origin](https://develope
 Signed-off-by: Your Name <you@example.com>
 ```
 
-`git commit -s` adds it. It is how a fork or a pull request stays clear about who wrote what. It also keeps the project
-free to stay under the [Mozilla Public License 2.0](LICENSE). People who take part follow the
+`git commit -s` adds it.
+
+- **A commit Claude writes carries Roger's sign-off, not Claude's.** An AI cannot certify where code came from. Roger
+  directs that work, so he certifies it (Roger, 19 Oct 2026). Such a commit ends with this line, in place of `-s`:
+  `Signed-off-by: Roger Bucks <264575592+rogerbucks@users.noreply.github.com>`. Add it with `git commit --trailer`.
+- **CI checks it.** `node scripts/public-readiness.mjs --history` refuses a commit from 20 Oct 2026 on with no
+  sign-off, or one that names only a bot or an AI. Merge commits and Dependabot's own updates are left out.
+
+The sign-off is how a fork or a pull request stays clear about who wrote what. It also keeps the project free to stay
+under the [Mozilla Public License 2.0](LICENSE). People who take part follow the
 [code of conduct](CODE_OF_CONDUCT.md), and a fork goes by its own name ([TRADEMARKS.md](TRADEMARKS.md)). A security problem
 is reported in private, as [SECURITY.md](SECURITY.md) says, never in a public issue.
 
