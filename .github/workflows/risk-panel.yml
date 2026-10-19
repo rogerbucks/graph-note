@@ -1,0 +1,154 @@
+name: Risk panel
+
+# An expert panel reads what changed since the last stable release and proposes risks for quality/risks.json (spec
+# §50, risk_panel). It is advice: it opens or updates one issue labelled risk-panel, and nothing else. The owner decides
+# each risk (fix now, fix later, accept) in a pull request that edits the register. The release itself waits on the
+# register alone, through scripts/risk-register.mjs --release, never on this workflow.
+#
+# It costs a Claude session only when there is something to look at. `scope` runs the repository's own script, with
+# no install, to list the risks whose code moved and the roles whose areas changed since the last stable tag. When
+# nothing changed, the run ends there. `panel` gives Claude that list alone, as the roles named, and keeps the token
+# in that one step. `report` writes the issue with gh alone and runs no code of the repository.
+on:
+  workflow_dispatch:
+    inputs:
+      since:
+        description: Look at changes since this tag or commit (empty means the last stable tag)
+        type: string
+        default: ''
+      all_roles:
+        description: Every role looks, not only those whose areas changed
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-panel
+  cancel-in-progress: false
+
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      changed: ${{ steps.scope.outputs.changed }}
+      scope: ${{ steps.scope.outputs.scope }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the full history: the register names the commit each risk was last reviewed at
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Which risks went stale, and which roles' areas moved, since the last stable release
+        id: scope
+        env:
+          SINCE: ${{ inputs.since }}
+        run: |
+          if [ -n "$SINCE" ]; then node scripts/risk-register.mjs --stale --json --since "$SINCE" > scope.json
+          else node scripts/risk-register.mjs --stale --json > scope.json; fi
+          cat scope.json
+          {
+            echo "scope<<EOF"
+            cat scope.json
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          if [ "$(node -p "const s=require('./scope.json'); s.stale.length + Object.keys(s.roles).length")" = "0" ]; then
+            echo "Nothing the panel watches has changed: no session this time."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  panel:
+    needs: scope
+    if: needs.scope.outputs.changed == 'true' || inputs.all_roles
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check the token is set
+        id: token
+        env:
+          TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "set=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::CLAUDE_CODE_OAUTH_TOKEN is not set, so no panel this time"
+          fi
+      - if: steps.token.outputs.set == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - if: steps.token.outputs.set == 'true'
+        uses: anthropics/claude-code-action@6fed3ca145920b639991cb756090506e1bcaf515 # v1.0.245
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          prompt: |
+            You are an expert review panel for this repository, in interrogation mode. Read AGENTS.md first and obey
+            its "Files never to read". Read RELEASING.md, section "Known risks", for how the register works.
+
+            SCOPE (from scripts/risk-register.mjs --stale --json):
+            ${{ needs.scope.outputs.scope }}
+            EVERY ROLE: ${{ inputs.all_roles }}
+
+            The roles: senior security engineer (also privacy), IT administrator and release engineer, senior coder
+            and QA, enterprise, solution and data architect, user experience and accessibility lead, senior user
+            interface designer for neurodiversity and data management, workflow designer and open-source maintainer,
+            API design expert, AI product expert. Take only the roles the scope names, unless EVERY ROLE is true.
+
+            For each stale risk in the scope: read the files that moved and say whether the risk is now fixed, worse,
+            or the same, with path:line proof. For each role named: read the diff since the scope's "since" ref
+            (git diff --stat and the files it names) and interrogate it with that role's hardest questions. Praise is
+            not a finding. Do not report style a linter checks or what quality/risks.json already holds. Read a
+            requirement's proved status from `node scripts/check-requirements.mjs --done N`, never by counting tests.
+
+            Write your findings to panel-out/panel.md as plain language (sentences of 25 words or fewer): first a
+            table of proposed new risks, each as the JSON object quality/risks.json uses (id, role, area, title,
+            risk, evidence, likelihood, impact, decision, fix, check, paths, effort), then one line per stale risk
+            with your verdict. Propose a decision, but say the owner decides. Change nothing else, and push nothing.
+          claude_args: |
+            --allowedTools "Read,Grep,Glob,Write(panel-out/*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(node scripts/risk-register.mjs:*)"
+      - if: steps.token.outputs.set == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: risk-panel
+          path: panel-out
+          if-no-files-found: ignore
+          retention-days: 30
+
+  report:
+    needs: panel
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: risk-panel
+          path: panel-out
+      - name: Keep the risk-panel issue up to date
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          body=panel-out/panel.md
+          number=$(gh issue list --label risk-panel --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ ! -s "$body" ]; then
+            [ -n "$number" ] && gh issue close "$number" --comment "The panel found nothing new to add."
+            exit 0
+          fi
+          gh label create risk-panel --description "What the expert panel proposes for quality/risks.json" --color d93f0b 2>/dev/null || true
+          if [ -z "$number" ]; then
+            gh issue create --title "Risk panel: proposed risks since the last release" --label risk-panel --body-file "$body"
+          elif [ "$(gh issue view "$number" --json body --jq .body)" != "$(cat "$body")" ]; then
+            gh issue edit "$number" --body-file "$body"
+            gh issue comment "$number" --body-file "$body"
+          fi
