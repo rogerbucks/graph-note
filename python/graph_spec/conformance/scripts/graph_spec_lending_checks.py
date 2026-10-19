@@ -2,7 +2,7 @@
 """Checks the lending demo's engine feature by feature — postings, schedules, closes, known answers, statements and provenance — on what the engine rebuilt.
 
 Usage:
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-conformance.py   # the runner calls checks() for the lending-demo case
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_conformance.py   # the runner calls checks() for the lending-demo case
 
 Writes: nothing (read-only).
 

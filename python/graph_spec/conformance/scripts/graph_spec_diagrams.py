@@ -2,8 +2,8 @@
 """Draws the Graph spec model's example diagrams — E3's process, E7's decision graph, E9.1–E9.11's ledger, catalog and schema views — and E4's SCXML export, from the lending demo's GQL, and places them in the spec.
 
 Usage:
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-diagrams.py --check   # regenerate, compare with the spec, write nothing
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-diagrams.py           # regenerate and place them
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_diagrams.py --check   # regenerate, compare with the spec, write nothing
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_diagrams.py           # regenerate and place them
 
 Writes: Standards/Graph spec model.md — only the generated Mermaid blocks inside E3, E7 and E9, the legend line under each, E9's heading counts, and E4's SCXML block — after a backup to ~/zzBackups/notes/; nothing with --check (exit 1 if the spec differs).
 

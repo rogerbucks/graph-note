@@ -2,8 +2,8 @@
 """Locks a draft graph: writes its schema — every kind and relationship type, worked out from the data — as a block at the end of the note.
 
 Usage:
-  python3 zzSupport/_scripts/graph-spec-lock.py "Standards/How to write a graph note.md"           # print the schema it would write; write nothing
-  python3 zzSupport/_scripts/graph-spec-lock.py --write "Standards/How to write a graph note.md"   # add it to the note, under "## Schema"
+  python3 zzSupport/_scripts/graph_spec_lock.py "Standards/How to write a graph note.md"           # print the schema it would write; write nothing
+  python3 zzSupport/_scripts/graph_spec_lock.py --write "Standards/How to write a graph note.md"   # add it to the note, under "## Schema"
 
 Writes: with --write, one "## Schema" section in the named note — added at the end, or just before a closing "## Drawing"
 section so that drawing still sees it — after a backup to ~/zzBackups/notes/; nothing otherwise.
@@ -74,7 +74,7 @@ def main():
     by = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--by=')), f"ea/sara@{HOST}")
     path, text, blocks, locked = lock(args[0], by)
     if not blocks: print("nothing to lock — " + (f"already locked: {', '.join(locked)}" if locked else "no graph in this note")); return 0
-    section = "## Schema\n\n*Written by `zzSupport/_scripts/graph-spec-lock.py` when the graph was locked. From here on, every new kind or relationship type is declared here first.*\n\n" + '\n\n'.join(f"```gql\n{b}\n```" for b in blocks) + '\n'
+    section = "## Schema\n\n*Written by `zzSupport/_scripts/graph_spec_lock.py` when the graph was locked. From here on, every new kind or relationship type is declared here first.*\n\n" + '\n\n'.join(f"```gql\n{b}\n```" for b in blocks) + '\n'
     if '--write' not in sys.argv: print(section); return 0
     m = re.search(r"\n## Drawing\n\n<!-- graph-drawing:start.*?<!-- graph-drawing:end -->\s*\Z", text, re.S)
     new = text[:m.start()].rstrip() + "\n\n" + section + text[m.start():] if m else text.rstrip() + "\n\n" + section

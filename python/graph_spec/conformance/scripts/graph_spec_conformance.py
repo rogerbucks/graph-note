@@ -2,8 +2,8 @@
 """Runs the graph spec's conformance suite — every case's expected answers, the general properties and the safeguards — and writes the report.
 
 Usage:
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-conformance.py            # run the suite, write the report
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-conformance.py --check    # run it, write nothing; exit 1 on any failure
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_conformance.py            # run the suite, write the report
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_conformance.py --check    # run it, write nothing; exit 1 on any failure
 
 Writes: Standards/Graph spec conformance — report.md and Standards/Graph spec requirements — trace report.md (both generated, regenerable); nothing with --check. Exit 1 if any check fails.
 
@@ -15,7 +15,7 @@ suite a condition of conformance. The cases and their expected answers are data 
 holds no expected answers of its own — only the general properties every case must keep, and the
 safeguards it switches off to prove each one is needed.
 Needs Grafeo 0.5.43 and PyYAML in ~/.venvs/graphspec (spec §3 names the dialect).
-6 Oct 2026: also runs graph-spec-trace.py — the spec's meta-schema and requirements graph — and checks both in Grafeo.
+6 Oct 2026: also runs graph_spec_trace.py — the spec's meta-schema and requirements graph — and checks both in Grafeo.
 14 Oct 2026: a third kind of case, `reader` — short blocks read by both portable readers and by the engine route (gs.load), for
 the reading rules of §3, §14, §26 and §27 that graph-spec 0.4.3 made provable: Standards/Reader test — what the readers keep, own and refuse.
 Its second case, Standards/Plain reading test — the library's tools on the reader's reading, runs the process engine, SCXML
@@ -477,12 +477,12 @@ def names_and_drafts():
     clean, planted = verdict(steps), verdict(near)
     out.append(("suite: the guide's graph without its schema is a draft and passes; with FAVORS planted beside FAVOURS it fails as a probable typo — in the profile reader and JavaScript (§5)", clean == (True, True) and planted == (False, False) and near[1] != steps[1], f"clean {clean}, planted {planted}"))
     # 4 — locking writes a schema that declares exactly what the data uses: the strict §5 check then passes, in both
-    sp = importlib.util.spec_from_file_location('lock', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'graph-spec-lock.py')); lk = importlib.util.module_from_spec(sp); sp.loader.exec_module(lk)
+    sp = importlib.util.spec_from_file_location('lock', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'graph_spec_lock.py')); lk = importlib.util.module_from_spec(sp); sp.loader.exec_module(lk)
     locked = steps + [lk.schema_block('reader', gr.World.from_store(built(steps))['reader'], 'suite')]
     strict = "§5: every element has a declared type"
     py_ok = dict((l, ok) for l, ok, _ in gr.check(gr.World.from_store(built(locked)), 'reader')).get(strict)
     js_ok = dict(map(tuple, js(locked)['verdicts']['reader'])).get(strict)
-    out.append(("suite: locking — graph-spec-lock.py writes a schema from the draft's data, and the locked graph passes the strict §5 check in the profile reader and JavaScript (§5)", py_ok is True and js_ok is True, f"profile reader {py_ok}, JavaScript {js_ok}"))
+    out.append(("suite: locking — graph_spec_lock.py writes a schema from the draft's data, and the locked graph passes the strict §5 check in the profile reader and JavaScript (§5)", py_ok is True and js_ok is True, f"profile reader {py_ok}, JavaScript {js_ok}"))
     return out
 
 def completeness_checks():
@@ -524,7 +524,7 @@ def completeness_checks():
     # 4 — a draft carrying completeness rules is still a draft
     out.append(("suite: §25 — a draft that carries completeness rules is still a draft (§5)", gr.is_draft(w, name), ''))
     # 5 — locking carries the rules into the schema unchanged: each declared by the GraphMeta, and the same report
-    sp = importlib.util.spec_from_file_location('lock', os.path.join(here, 'graph-spec-lock.py')); lk = importlib.util.module_from_spec(sp); sp.loader.exec_module(lk)
+    sp = importlib.util.spec_from_file_location('lock', os.path.join(here, 'graph_spec_lock.py')); lk = importlib.util.module_from_spec(sp); sp.loader.exec_module(lk)
     w2 = built(blocks + [lk.schema_block(name, g, 'suite')]); g2 = w2[name]
     rules = set(g.labelled('Cardinality')) | set(g.labelled('Coverage'))
     declared = {d for s_, t, d, _ in g2.edges if t == 'DECLARES'}
@@ -1072,7 +1072,7 @@ def main():
         found += [f"{o.get('case', 'configuration')}: {lint_detail([f])}" for t in strings({k: v for k, v in o.items() if k != 'rounds'} | {'r': [{k: v for k, v in r.items() if k != 'mutations'} for r in o.get('rounds') or []]}) if re.search(r"\bMATCH\b", t) for f in gs.lint(t)]
     results.append((f"suite: every GQL block in the {len(docs)} case documents, and every query in the case data, passes the dialect linter (§24 H1)", not found, '; '.join(found[:3])))
     here = os.path.dirname(os.path.abspath(__file__)); found, n = [], 0
-    for f in sorted(glob.glob(os.path.join(here, 'graph_spec*.py')) + glob.glob(os.path.join(here, 'graph-spec-*.py'))):
+    for f in sorted(glob.glob(os.path.join(here, 'graph_spec*.py'))):
         for line, q in gs.embedded_queries(f):
             n += 1; found += [f"{os.path.basename(f)}:{line} {x['trap']} — {x['fix']}" for x in gs.lint(q)]
     results.append((f"suite: every GQL query written inside the graph spec's scripts ({n}) passes the dialect linter (§24 H1)", n > 0 and not found, '; '.join(found[:3])))
@@ -1086,18 +1086,18 @@ def main():
         results.append((f"suite: a computed value edited by hand is caught — {filled[0]} (§24 H2)", bool(gs.fill_check(edited, STD, VAULT)), ''))
     import subprocess
     # the plugin and the vault lay every graph out from the same Graphviz source (test_layout_parity, 8 Oct 2026)
-    par = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'graph-spec-layout-parity.py'), '--summary'], capture_output=True, text=True)
-    results.append(("suite: every vault graph is laid out byte for byte the same by the plugin's core and by graph-spec-draw.py, both ways round (graph-spec-layout-parity.py)", par.returncode == 0, par.stdout.strip() or par.stderr.strip()[:300]))
+    par = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'graph_spec_layout_parity.py'), '--summary'], capture_output=True, text=True)
+    results.append(("suite: every vault graph is laid out byte for byte the same by the plugin's core and by graph_spec_draw.py, both ways round (graph_spec_layout_parity.py)", par.returncode == 0, par.stdout.strip() or par.stderr.strip()[:300]))
     results.append(("suite: an ni: id equals RFC 6920's own example for \"Hello World!\" (§13, §24 H2)", gs.ni_uri(b'Hello World!') == 'ni:///sha-256;f4OxZX_x_FO5LcGBSKHWXfwtSx-j1ncoSt3SABJtkGk', gs.ni_uri(b'Hello World!')))
     # derivatives in the vault regenerate from vault scripts: the demo's data note from the engine, and the spec's diagrams from that note
     import importlib.util
     def mod(f):
         sp = importlib.util.spec_from_file_location(f.replace('-', '_')[:-3], os.path.join(os.path.dirname(os.path.abspath(__file__)), f)); m = importlib.util.module_from_spec(sp); sp.loader.exec_module(m); return m
-    pub, dia = mod('graph-spec-demo-publish.py'), mod('graph-spec-diagrams.py')
-    bench = mod('graph-spec-ai-bench.py')   # §24 H9: the AI tasks' grader — a right answer passes and a wrong one fails, with no model called
+    pub, dia = mod('graph_spec_demo_publish.py'), mod('graph_spec_diagrams.py')
+    bench = mod('graph_spec_ai_bench.py')   # §24 H9: the AI tasks' grader — a right answer passes and a wrong one fails, with no model called
     for tid, what, right_ok, wrong_fails in bench.self_test():
         results.append((f"suite: AI task {tid} ({what}) — its grader passes the right answer and fails a wrong one (§24 H9)", right_ok and wrong_fails, f"right passes {right_ok}, wrong fails {wrong_fails}"))
-    trace = mod('graph-spec-trace.py')   # the spec describes itself: its meta-schema and its requirements graph (decision of 6 Oct 2026)
+    trace = mod('graph_spec_trace.py')   # the spec describes itself: its meta-schema and its requirements graph (decision of 6 Oct 2026)
     traced = trace.checks(); results += [(f"suite: {l}", ok, d) for l, ok, d in traced]
     import gql_profile as gp
     meta_b, req_b = trace.blocks(trace.META)[0], trace.req_blocks()[1]
@@ -1106,8 +1106,8 @@ def main():
     results.append(("suite: self-description: Grafeo builds the requirements graph exactly as the portable reader does", a == b, f"Grafeo {a[1:]} · reader {b[1:]}"))
     if not check_only: trace.write_report([(l.split(': ', 1)[1], ok, d) for l, ok, d in traced])
     note = open(pub.NOTE, encoding='utf-8').read(); spec = open(dia.SPEC, encoding='utf-8').read()
-    results.append(("suite: Lending demo graph data matches a fresh rebuild by the vault's engine, in its published format (graph-spec-demo-publish.py)", pub.compose(note, *pub.build(note)) == note, ''))
-    results.append(("suite: the spec's 14 example diagrams and E4's SCXML match a fresh drawing from the demo's data (graph-spec-diagrams.py)", dia.place(spec, dia.draw()) == spec, ''))
+    results.append(("suite: Lending demo graph data matches a fresh rebuild by the vault's engine, in its published format (graph_spec_demo_publish.py)", pub.compose(note, *pub.build(note)) == note, ''))
+    results.append(("suite: the spec's 14 example diagrams and E4's SCXML match a fresh drawing from the demo's data (graph_spec_diagrams.py)", dia.place(spec, dia.draw()) == spec, ''))
     # every safeguard is necessary: switched off, at least one case must fail
     necessary = {}
     for sw in SAFEGUARDS:
@@ -1134,11 +1134,11 @@ def write_report(C_, results, necessary):
 uuid: "{REPORT_UUID}"
 created: 2026-10-04T23:30
 modified: {now}
-modified_by: "script/graph-spec-conformance.py@mac14"
+modified_by: "script/graph_spec_conformance.py@mac14"
 status: active
 classification: Public
 regenerable: true
-generated_by: "zzSupport/_scripts/graph-spec-conformance.py"
+generated_by: "zzSupport/_scripts/graph_spec_conformance.py"
 tags: [graph-model, test, generated]
 human_reviewed: false
 ---
@@ -1146,7 +1146,7 @@ human_reviewed: false
 # Graph spec conformance — report
 
 > [!warning] Generated — do not hand-edit
-> Regenerated by `zzSupport/_scripts/graph-spec-conformance.py` from the cases in the test documents and the configurations in [[Graph spec conformance suite]]. §17 of [[Graph spec model]] makes passing this suite a condition of conformance.
+> Regenerated by `zzSupport/_scripts/graph_spec_conformance.py` from the cases in the test documents and the configurations in [[Graph spec conformance suite]]. §17 of [[Graph spec model]] makes passing this suite a condition of conformance.
 
 **{sum(ok for _, ok, _ in results)} of {len(results)} checks passed** · {len(C_)} cases · {len(necessary)} safeguards · run {now.replace('T', ' ')}.
 

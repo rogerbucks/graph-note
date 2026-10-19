@@ -158,7 +158,7 @@ this library, the portable reader and the JavaScript checker, built fresh each r
 
 - `Standards/` holds the spec's prose, its cases and their documents. Each case's expected answers are data, in a yaml
   block that starts `# conformance case`. Each document's `test_class` line is the class the case gives it.
-- `scripts/graph-spec-conformance.py --check` runs it all. It takes about two minutes and needs Grafeo and Node.
+- `scripts/graph_spec_conformance.py --check` runs it all. It takes about two minutes and needs Grafeo and Node.
 - `tests/test_conformance_suite.py` runs it in CI, in the `python` job.
 - The scripts keep the vault's own style, so Ruff leaves them out. The rules file is `requirements/graph-spec.gql`.
 

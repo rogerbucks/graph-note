@@ -2,10 +2,10 @@
 """Runs the graph spec's AI conformance tasks — read, follow, write and judge, from views the view server serves — against named models, grades every reply by code and the checker (never by another AI), and appends the results.
 
 Usage:
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-ai-bench.py --model mac14-local --model claude   # run, append results
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-ai-bench.py --self-test                         # grade canned right and wrong answers; no model called
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-ai-bench.py --model mac14-local --task T4 --retries 2 --repeat 3   # one task, retrying from the checker's fix-its
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-ai-bench.py --show T4                            # print one task's prompt
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_ai_bench.py --model mac14-local --model claude   # run, append results
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_ai_bench.py --self-test                         # grade canned right and wrong answers; no model called
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_ai_bench.py --model mac14-local --task T4 --retries 2 --repeat 3   # one task, retrying from the checker's fix-its
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_ai_bench.py --show T4                            # print one task's prompt
 
 Calls to mac14's own model wait 10 seconds first, and then until macOS reports the thermal state nominal (mac_thermal.py).
 
@@ -151,7 +151,7 @@ human_reviewed: false
 
 # Graph spec AI conformance — results
 
-> [!warning] Appended by `zzSupport/_scripts/graph-spec-ai-bench.py` — do not hand-edit the table
+> [!warning] Appended by `zzSupport/_scripts/graph_spec_ai_bench.py` — do not hand-edit the table
 > One row per model, task and run (§24 rule 8, helper H9 of [[Graph spec model]]). Every reply is graded by code or by the checker, never by another AI. The tasks are built from [[{JT}]], [[{VT}]] and [[{CT}]], served through the view server.
 
 ## Runs

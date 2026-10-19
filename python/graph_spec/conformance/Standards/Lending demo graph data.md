@@ -1,6 +1,6 @@
 ---
 created: 2026-10-04T13:20
-modified: 2026-10-05T18:09
+modified: 2026-10-19T22:11
 status: draft
 tags: [graph-model, data, worked-example]
 human_reviewed: false
@@ -13,7 +13,7 @@ edges:
 # Lending demo graph data
 
 > [!warning] Generated — do not hand-edit
-> Written by `engine:mac14@0.3` on 2026-10-04. To change the world, edit the Source blocks below and rerun `zzSupport/_scripts/graph-spec-demo-publish.py`, which rebuilds with `graph_spec_lending_engine.py`. The specification is in [[Graph spec model]]; this is the data behind its *Examples*.
+> Written by `engine:mac14@0.3` on 2026-10-04. To change the world, edit the Source blocks below and rerun `python/graph_spec/conformance/scripts/graph_spec_demo_publish.py`, which rebuilds with `graph_spec_lending_engine.py`. The specification is in [[Graph spec model]]; this is the data behind its *Examples*.
 
 **Two layers, and the proof that joins them.**
 

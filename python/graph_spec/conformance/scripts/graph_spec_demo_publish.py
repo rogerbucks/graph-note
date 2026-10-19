@@ -2,8 +2,8 @@
 """Rebuilds the lending demo with the vault's engine and writes Standards/Lending demo graph data.md from it — the Source blocks as authored, the Built blocks as the engine makes them.
 
 Usage:
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-demo-publish.py --check   # rebuild, compare with the note, write nothing
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-demo-publish.py           # rebuild and write the note
+  ~/.venvs/graphspec/bin/python python/graph_spec/conformance/scripts/graph_spec_demo_publish.py --check   # rebuild, compare with the note, write nothing
+  ~/.venvs/graphspec/bin/python python/graph_spec/conformance/scripts/graph_spec_demo_publish.py           # rebuild and write the note
 
 Writes: Standards/Lending demo graph data.md (generated; never hand-edit), after a backup to ~/zzBackups/notes/; the engine's statement blobs go to a temporary folder and are discarded. Nothing with --check (exit 1 if the note differs).
 
@@ -95,7 +95,7 @@ def compose(old, src, blt):
 # Lending demo graph data
 
 > [!warning] Generated — do not hand-edit
-> Written by `{eng[0]}` on {eng[1]}. To change the world, edit the Source blocks below and rerun `zzSupport/_scripts/graph-spec-demo-publish.py`, which rebuilds with `graph_spec_lending_engine.py`. The specification is in [[Graph spec model]]; this is the data behind its *Examples*.
+> Written by `{eng[0]}` on {eng[1]}. To change the world, edit the Source blocks below and rerun `python/graph_spec/conformance/scripts/graph_spec_demo_publish.py`, which rebuilds with `graph_spec_lending_engine.py`. The specification is in [[Graph spec model]]; this is the data behind its *Examples*.
 
 **Two layers, and the proof that joins them.**
 

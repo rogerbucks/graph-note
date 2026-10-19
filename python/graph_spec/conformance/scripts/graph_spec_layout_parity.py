@@ -2,8 +2,8 @@
 """Checks that the plugin's layout source equals the vault's Python layout source, byte for byte, for every graph in every live note, both ways round.
 
 Usage:
-  ~/.venvs/arbux/bin/python zzSupport/_scripts/graph-spec-layout-parity.py              # exit status = graphs that differ (0 = all match)
-  ~/.venvs/arbux/bin/python zzSupport/_scripts/graph-spec-layout-parity.py --summary    # one line, for the conformance suite
+  ~/.venvs/arbux/bin/python zzSupport/_scripts/graph_spec_layout_parity.py              # exit status = graphs that differ (0 = all match)
+  ~/.venvs/arbux/bin/python zzSupport/_scripts/graph_spec_layout_parity.py --summary    # one line, for the conformance suite
 
 Writes: nothing (read-only).
 
@@ -13,7 +13,7 @@ WHY (8 Oct 2026): requirement layout_byte_identical in Standards/Graph note edit
 "For every graph in the vault, the layout source from the core must be byte-identical to that from graph_svg.py." One locked style
 means the drawing in Obsidian and the drawing a script puts in a note are laid out from the same Graphviz source, so they cannot
 drift apart unseen. The plugin side is the vendored release's js/layout-source-node.cjs (from 0.2.0); the Python side is
-graph-spec-draw.py's own world() and parts(), so what is compared is exactly what is drawn. Each run also tampers with one
+graph_spec_draw.py's own world() and parts(), so what is compared is exactly what is drawn. Each run also tampers with one
 source and requires the difference to be found, so a check that silently compares nothing cannot pass.
 WHY suggested names (14 Oct 2026, 0.4.3): the plugin marks a box drawn under a suggested name, so the Python side passes them too.
 Nudges are not compared here: the vendored harness lays out without them; graph-note's test_graph_svg_nudges proves the two agree.
@@ -29,7 +29,7 @@ def _load(name, file):
     sp = importlib.util.spec_from_file_location(name, os.path.join(HERE, file)); m = importlib.util.module_from_spec(sp); sp.loader.exec_module(m); return m
 
 def python_sources(draw, path, text, shared):
-    """{graph: {'LR': source, 'TB': source}} for one note, as graph-spec-draw.py lays it out; graphs with nothing to draw left out."""
+    """{graph: {'LR': source, 'TB': source}} for one note, as graph_spec_draw.py lays it out; graphs with nothing to draw left out."""
     w, schema_of, _, extras = draw.world(path, text, shared)
     out = {}
     for name in sorted(w.graphs):
@@ -65,7 +65,7 @@ def differences(py, js):
 
 def main():
     if not os.path.exists(NODE_ENTRY): print('layout parity: not checked — the vendored release has no layout-source-node.cjs (needs graph-spec 0.2.0 or later)'); return 1
-    draw, cd = _load('graph_spec_draw', 'graph-spec-draw.py'), _load('check_docs', 'graph-spec-check-docs.py')
+    draw, cd = _load('graph_spec_draw', 'graph_spec_draw.py'), _load('check_docs', 'graph_spec_check_docs.py')
     docs = list(cd.documents()); shared = cd.schema_blocks(docs)
     notes = {os.path.join(VAULT, rel): open(os.path.join(VAULT, rel), encoding='utf-8').read() for rel, _, _ in docs}
     js = js_sources(notes, shared)

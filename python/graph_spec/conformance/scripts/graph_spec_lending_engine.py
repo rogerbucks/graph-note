@@ -2,7 +2,7 @@
 """Runs the lending demo's engine (v0.3) — rebuilding every derived element of the demo's graphs from their source data, or running the clock forward.
 
 Usage:
-  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph-spec-conformance.py   # runs this engine in rebuild mode, in a temporary folder
+  ~/.venvs/graphspec/bin/python zzSupport/_scripts/graph_spec_conformance.py   # runs this engine in rebuild mode, in a temporary folder
 
 Writes: blobs/sha256/<hash> — the issued statements' bytes — under the current working directory; the conformance runner points that at a temporary folder. Nothing else.
 

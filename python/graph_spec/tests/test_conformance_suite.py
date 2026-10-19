@@ -12,7 +12,7 @@ import unittest
 from engine_support import needs_engine
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RUNNER = os.path.join(HERE, "..", "conformance", "scripts", "graph-spec-conformance.py")
+RUNNER = os.path.join(HERE, "..", "conformance", "scripts", "graph_spec_conformance.py")
 
 
 @needs_engine
