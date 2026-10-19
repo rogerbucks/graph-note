@@ -167,8 +167,8 @@ const daysAfter = (date, days) =>
   new Date(Date.parse(`${date}T00:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
 
 /**
- * What stops a release, if anything. That is an open fix-now risk, an overdue fix-later one, a long stale one, or a
- * new version line the full panel has not looked at. Returns { problems, warnings }. A fresher stale risk warns.
+ * What stops a release, if anything. That is an open fix-now risk, an overdue one, a long stale one, or a version
+ * line the full panel has not seen. Returns { problems, warnings }. A fresher stale risk warns.
  */
 export function releaseProblems(
   register,
