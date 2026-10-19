@@ -64,8 +64,11 @@ const MARKER = /<!-- requirement:([\w.-]+) -->/g;
 // An @name or @org/team, or a #number, that is not already inside a code span or a longer word.
 const MENTION = /(?<![\w`])(@[A-Za-z0-9][\w-]*(?:\/[\w-]+)?|#\d+)/g;
 
+/** The sizes a workstream may carry: S about a day, M about a week, L more or new ground. */
+export const SIZES = ['S', 'M', 'L'];
+
 /**
- * Reads the workstreams file: a map from a workstream id to {title, requirements: [ids]}. Throws, naming the
+ * Reads the workstreams file: a map from a workstream id to {title, size, requirements: [ids]}. Throws, naming the
  * workstream, for any other shape, or for a requirement listed in two workstreams. An id the requirements copy does not
  * hold yet is fine: it waits for a later copy.
  */
@@ -83,6 +86,7 @@ export function readWorkstreams(text) {
     if (w === null || typeof w !== 'object' || typeof w.title !== 'string' || !w.title)
       throw new Error(`workstream ${id} needs a title, as text`);
     if (!Array.isArray(w.requirements)) throw new Error(`workstream ${id}: requirements must be a list of ids`);
+    if (w.size !== undefined && !SIZES.includes(w.size)) throw new Error(`workstream ${id}: size must be S, M or L`);
     for (const req of w.requirements) {
       if (typeof req !== 'string') throw new Error(`workstream ${id}: every requirement id must be text`);
       if (owner.has(req))

@@ -28,6 +28,21 @@ function readDay(wave, key) {
   return at;
 }
 
+/** A wave's earlier plan, kept when its dates were planned again: {start, end, replaced, why}, or null. */
+function readEarlierPlan(wave) {
+  const earlier = wave.earlier_plan;
+  if (earlier === undefined) return null;
+  if (earlier === null || typeof earlier !== 'object')
+    throw new Error(`wave "${wave.title}": earlier_plan must hold start, end, replaced and why`);
+  const named = { ...earlier, title: `${wave.title}" earlier_plan "` };
+  if (readDay(named, 'end') < readDay(named, 'start'))
+    throw new Error(`wave "${wave.title}": earlier_plan ends before it starts`);
+  readDay(named, 'replaced');
+  if (typeof earlier.why !== 'string' || !earlier.why.trim())
+    throw new Error(`wave "${wave.title}": earlier_plan needs a why, as text`);
+  return { start: earlier.start, end: earlier.end, replaced: earlier.replaced, why: earlier.why };
+}
+
 function readWave(wave, workstreams, seen) {
   if (wave === null || typeof wave !== 'object' || typeof wave.title !== 'string' || !wave.title.trim())
     throw new Error('every wave needs a title, as text');
@@ -51,6 +66,7 @@ function readWave(wave, workstreams, seen) {
     end: wave.end,
     estimate: wave.estimate,
     workstreams: [...wave.workstreams],
+    earlierPlan: readEarlierPlan(wave),
     from: start,
     to: end,
   };
@@ -58,6 +74,7 @@ function readWave(wave, workstreams, seen) {
 
 /**
  * Reads the waves file against the workstreams (as readWorkstreams gives them): {waves: [{title, start, end, estimate,
+ * earlierPlan,
  * workstreams}]}, in order. Throws, naming what is wrong, for anything else:
  * - no waves;
  * - a wave with no title, or a title two waves share;

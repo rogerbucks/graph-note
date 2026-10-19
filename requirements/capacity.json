@@ -1,0 +1,10 @@
+{
+  "about": "How much of the Claude Max plan each week used: the one input the repository cannot measure. Write usage_percent by hand at the end of each week (Sunday), from the plan's usage page. A week whose usage ran out before its work sets the next week's capacity. scripts/plan-actuals.mjs shows these weeks on the wiki's Plan versus actual page, beside what each week proved (spec §41, plan_rebaselined).",
+  "weeks": [
+    {
+      "week_ending": "2026-10-18",
+      "usage_percent": null,
+      "note": "First week on record: usage was not written down."
+    }
+  ]
+}
