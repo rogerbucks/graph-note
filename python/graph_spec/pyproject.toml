@@ -37,7 +37,8 @@ line-length = 99
 [tool.ruff.lint]
 # D1xx: every public module, class, method and function has its docstring (CONTRIBUTING.md);
 # magic methods and __init__ are left to their class's
-select = ["E", "W", "F", "N", "D100", "D101", "D102", "D103", "D104", "D106"]
+# S307: no eval, so nothing in a note is ever run as code (§13, the guards-never-run rule)
+select = ["E", "W", "F", "N", "D100", "D101", "D102", "D103", "D104", "D106", "S307"]
 
 [tool.ruff.lint.per-file-ignores]
 # the tests are named for what they prove: their names say it, with no docstrings

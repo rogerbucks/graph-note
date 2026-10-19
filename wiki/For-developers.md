@@ -49,6 +49,13 @@ CI runs them all again.
 3. **Code.** Write the code that makes it pass.
 4. **Sign off.** Commit with `git commit -s`, and open a pull request.
 
+## Versions
+
+ThoughtKnot uses [semantic versions](https://semver.org), with one catch before 1.0.0. Then a step in the leftmost
+part that is not 0 may change or remove what the library exports. So 0.7 to 0.8 may break your code. A patch step, such
+as 0.8.0 to 0.8.1, never does. Each release's notes have a "Library changes" section. It lists what was added, changed
+or removed.
+
 ## How these pages stay current
 
 Every list and drawing on the developer pages is made from the code or the requirements each time main changes. The

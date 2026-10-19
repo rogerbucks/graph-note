@@ -18,6 +18,7 @@ jobs:
     # Dependabot's token cannot lock; the next hourly run does it
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pull-requests: write
     steps:

@@ -109,6 +109,7 @@ function llmsText({ words, url }) {
     `- [Roadmap](${WIKI}/Roadmap): what is done and what comes next`,
     `- [Releases](${REPO}/releases): the plugin's files and both libraries, for each version`,
     `- [Source code](${REPO}): the plugin, the core and the graph format libraries in JavaScript and Python`,
+    `- [Discussions](${REPO}/discussions): help, questions and ideas, open to everyone`,
     '',
     '## Optional',
     '',

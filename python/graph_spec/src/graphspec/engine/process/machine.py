@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from graphspec.engine import guards
 from graphspec.engine.joining.named_rules import nesting_loop
 from graphspec.engine.queries import Q_
 from graphspec.rules.plain_graph import Graph
@@ -100,9 +101,8 @@ class Machine:
 
     @staticmethod
     def holds(g, ctx):
-        """Whether a guard holds in the context: the graph's `=` read as Python's
-        `==`."""
-        return eval(g.replace(" = ", " == "), {}, dict(ctx))
+        """Whether a guard holds in the context, read as data and never run (§13)."""
+        return guards.holds(g, ctx)
 
     def enabled(self, s, e, ctx):
         """The transitions out of s on event e that may fire: those whose guard holds and
