@@ -591,6 +591,10 @@ These test behaviour across modules, or the repository itself, so they are named
   an event.
 - `test/workflow-timeouts.test.js` — every job of every workflow sets a time limit. So a hung step never holds a
   runner for hours (editor spec §13, ci_jobs_time_limited).
+- `test/releasing.test.js` — RELEASING.md lists the steps of a release in order and how to go back. It names every
+  secret a workflow uses (editor spec §13, release_steps_written).
+- `test/release-prepare.test.js` — one command bumps every file that carries the version, both lockfiles included
+  (editor spec §13, release_steps_written).
 - `test/release-from-main.test.js` — a stable release is built only from a tag on main. The release's first job checks
   the tag before anything is installed, and every other job waits for it (editor spec §13, release_from_main).
 - `test/ai-disclosed.test.js` — the AI use disclosed in the README. Content goes only to models the user sets up, only

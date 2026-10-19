@@ -26,9 +26,9 @@ describe('the nightly workflow', () => {
     assert.doesNotMatch(on, /pull_request|push:|workflow_run/);
   });
 
-  test('reads only, but for the publish job, which may write contents alone', () => {
+  test('reads only, but for the publish job and the draft check, which may write contents alone', () => {
     assert.deepEqual(permissionValues(block(lines, 'permissions', 0)), ['read']);
-    assert.deepEqual(Object.keys(jobs(text)), ['check', 'build', 'publish']);
+    assert.deepEqual(Object.keys(jobs(text)), ['check', 'build', 'publish', 'drafts']);
     assert.equal(block(jobs(text).check, 'permissions', 4), null);
     assert.equal(block(jobs(text).build, 'permissions', 4), null);
     assert.deepEqual(given('publish'), ['contents: write']);
@@ -98,6 +98,19 @@ describe('the nightly workflow', () => {
     );
     const runs = jobs(text).publish.map(stripComment).join('\n');
     assert.doesNotMatch(runs, /\b(node|npm|npx)\b|scripts\/|actions\/checkout|\.\/\S+\.sh/);
+  });
+
+  // Risk OPS-3: a draft release tells no one it waits. GitHub lists drafts only to a token that may write contents.
+  test('fails, so its owner hears, while a stable release has waited as a draft for more than a day', () => {
+    const drafts = jobs(text).drafts;
+    assert.deepEqual(given('drafts'), ['contents: write']);
+    assert.equal(block(drafts, 'needs', 4), null, 'it runs every night, whether or not main moved');
+    assert.deepEqual(usesRefs(drafts.join('\n')), [], 'no action, no checkout');
+    const runs = runCommands(drafts.join('\n')).join('\n');
+    assert.doesNotMatch(runs, /\b(node|npm|npx)\b|scripts\//, 'no code of the repository');
+    assert.match(runs, /gh release list --repo "\$GITHUB_REPOSITORY" .*isDraft.*createdAt/);
+    assert.match(runs, /select\(\.isDraft and \(\.createdAt \| fromdateiso8601\) < now - 86400\)/);
+    assert.match(runs, /::error::.*exit 1/s);
   });
 
   test('never matches the bare version tag the stable release is made from', () => {

@@ -24,7 +24,8 @@
     "bench:local": "node scripts/bench-local.mjs",
     "project:plan": "node scripts/github-project.mjs --dry-run",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "release:prepare": "node scripts/release-prepare.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
