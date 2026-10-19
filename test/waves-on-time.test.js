@@ -1,12 +1,10 @@
-// The plan stays true to the work (spec §41, waves_on_time).
-// - A wave left behind too long fails the build, unless requirements/waves.json says why.
-// - The Roadmap page shows the pace: how many requirements were proved in the last fortnight.
-// Pure: the real files are read, nothing is fetched.
+// The plan stays true to the work (spec §41, waves_on_time). A wave left behind too long fails the build, unless
+// requirements/waves.json says why. Pure: the real files are read, nothing is fetched.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readBoard } from '../scripts/slice-board.mjs';
-import { overdueWaves, paceLine } from '../scripts/wiki-pace.mjs';
-import { renderWiki, waveStates } from '../scripts/wiki.mjs';
+import { overdueWaves } from '../scripts/waves-on-time.mjs';
+import { waveStates } from '../scripts/wiki.mjs';
 import { read } from './repository/repo.js';
 
 const json = (rel) => JSON.parse(read(rel));
@@ -53,42 +51,5 @@ describe('the real plan', () => {
     );
     const late = overdueWaves(states, today).map((w) => `${w.title} (ended ${w.end})`);
     assert.deepEqual(late, [], 'move its work into a later wave and shift the dates, or give its late_reason');
-  });
-});
-
-describe('the pace', () => {
-  test('counts the requirements proved in the last fortnight', () => {
-    assert.equal(
-      paceLine({ proved: 400, then: { date: '2026-10-05', proved: 370 } }, '2026-10-19'),
-      '**Pace:** 30 requirements proved in the last fortnight.',
-    );
-  });
-
-  test('counts from the start of the history when it is shorter than a fortnight', () => {
-    assert.equal(
-      paceLine({ proved: 417, then: { date: '2026-10-16', proved: 370 } }, '2026-10-19'),
-      '**Pace:** 47 requirements proved since 16 Oct 2026, when the history begins.',
-    );
-  });
-
-  test('says nothing when there is no history to count from', () => {
-    assert.equal(paceLine({ proved: 417, then: null }, '2026-10-19'), '');
-  });
-
-  test('shows on the Roadmap page', () => {
-    const page = renderWiki({
-      requirementsText: read('requirements/editor-requirements.gql'),
-      waves: json('requirements/waves.json').waves,
-      workstreams: json('requirements/workstreams.json'),
-      baseline: json('quality/baseline.json'),
-      versions: json('versions.json'),
-      releases: [],
-      options: [],
-      pages: {},
-      sha: '0123456789abcdef',
-      today: '2026-10-19',
-      pastProved: { date: '2026-10-05', proved: 300 },
-    })['Roadmap.md'];
-    assert.match(page, /\*\*Pace:\*\* \d+ requirements proved in the last fortnight\./);
   });
 });

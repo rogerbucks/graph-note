@@ -8,6 +8,7 @@
 // Proved on the real repository, on small libraries written for the purpose and on small repositories with tags.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -33,6 +34,8 @@ function library({ core, spec = 'export declare function check(text: string): st
   const files = {
     'packages/core/package.json': JSON.stringify({ version }),
     'packages/core/src/index.ts': core,
+    'packages/core/src/display/host.ts': 'export interface DisplayHost { notice(message: string): void }\n',
+    'packages/core/src/display/host-contract.ts': 'export const HOST_CONTRACT_VERSION = 1;\n',
     'packages/graph-spec/package.json': JSON.stringify({ version }),
     'packages/graph-spec/src/graph-spec.d.ts': spec,
     'packages/graph-spec/src/graph-layout-types.d.ts':
@@ -69,6 +72,25 @@ describe('the declared interface', () => {
     assert.equal(declared[CORE].version, readJSON('packages/core/package.json').version);
     assert.ok(Object.keys(declared[CORE].entries['.']).includes('readNote'), 'the core reads a note');
     assert.ok(declared['@thoughtknot/graph-spec'].entries['./src/graph-layout.js']['export ='].length > 0);
+  });
+
+  // Risk API-3: a host built for one version of DisplayHost must not break silently when it changes.
+  test('the host interface is declared, and its version moves with it', async () => {
+    const { HOST_CONTRACT_VERSION, HOST_CONTRACT_VERSIONS } =
+      await import('../packages/core/src/display/host-contract.ts');
+    const entries = readJSON(DECLARATION)[CORE].entries;
+    assert.ok(entries['./display/host']?.DisplayHost?.length, 'DisplayHost is declared, member by member');
+    assert.ok(entries['./display/host-contract']?.HOST_CONTRACT_VERSION, 'and the contract with its version');
+    const digest = createHash('sha256').update(JSON.stringify(entries['./display/host'])).digest('hex').slice(0, 16);
+    const [version, recorded] = HOST_CONTRACT_VERSIONS.at(-1);
+    assert.equal(
+      digest,
+      recorded,
+      `the host interface changed: add [${version + 1}, '${digest}'] to HOST_CONTRACT_VERSIONS in host-contract.ts`,
+    );
+    assert.equal(HOST_CONTRACT_VERSION, version, 'the version is the last one recorded');
+    HOST_CONTRACT_VERSIONS.forEach(([v], i) => i && assert.equal(v, HOST_CONTRACT_VERSIONS[i - 1][0] + 1, 'by one'));
+    assert.equal(new Set(HOST_CONTRACT_VERSIONS.map(([, d]) => d)).size, HOST_CONTRACT_VERSIONS.length);
   });
 
   test('a function, a type and a class are each written out, wherever they live', () => {

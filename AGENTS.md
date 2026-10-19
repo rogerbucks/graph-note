@@ -4,7 +4,7 @@ Short on purpose. How to check your work cheaply, where things live, and what no
 
 ## Run the tests cheaply
 
-- `npm run test:ai` — the whole JavaScript suite, quietly. One line when all pass (`ok 693 tests`). For each failure:
+- `npm run test:ai` — the whole JavaScript suite, quietly. One line when all pass (`ok N tests`). For each failure:
   `file:line  name`, a short expected and actual (cut at 200 characters), and the first stack frame in our code. Tests'
   own logging is dropped. One file: `npm run test:ai -- path/to/file.test.js`; `npm run -s` hides npm's banner.
 - `npm run test:changed` — only the tests a change reaches: those named after it and every test that imports it, directly
@@ -22,6 +22,16 @@ in `python/graph_spec` also `uv run --locked ruff check`, `ruff format --check` 
 `python -m unittest discover -s tests`. CI runs all of them, and the full suite is never skipped.
 
 On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`. Not the whole run.
+
+## Before you open a pull request
+
+- **Merge commits only**, never squash or rebase: the tests-first records name the branch's own commits.
+- **Sign off** with `git commit -s`. Whose name goes on it: CONTRIBUTING.md, "Signing off your work".
+- **Rewrite what CI checks.** A test: `node scripts/tests-first.mjs --update`, or `node scripts/tests-first.mjs --excuse`
+  for one that passed first. A doc: `node scripts/plain-docs.mjs`. An export: `node scripts/public-api.mjs --update`.
+- **More of the same.** A dependency: `node scripts/notices.mjs`. A slice done: `node scripts/readme-status.mjs --write`.
+  A fixed sleep removed: `node scripts/fixed-sleeps.mjs --tighten`.
+- **Approval.** Roger's comment, such as "all good", is the approval. Only then turn on auto-merge, as a merge commit.
 
 ## Guards
 

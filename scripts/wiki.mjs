@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Writes the project's GitHub wiki from the repository (spec §41, wiki_generated and user_guide_wiki). It writes where
-// the work stands, the roadmap, the decisions and open questions, the quality figures and the releases. Each page is
+// the work stands, the roadmap, the plan set beside what happened, the decisions and open questions, the quality figures and the releases. Each page is
 // made from the file that holds it. So the wiki never drifts from the code and nobody keeps it by hand.
 //
 // The pages a person writes, the user guide among them, live in wiki/. They are copied, with each <!-- wiki:NAME -->
@@ -23,8 +23,8 @@ import { fileURLToPath } from 'node:url';
 import { requirementsGraph } from './check-requirements.mjs';
 import { ethosPage, readEthos } from './ethos.mjs';
 import { readBoard } from './slice-board.mjs';
+import { planActualsPage, repositoryFacts } from './plan-actuals.mjs';
 import { developerFacts, developerFills, referencePage, requirementStates } from './wiki-developers.mjs';
-import { day, paceLine, provedAFortnightAgo } from './wiki-pace.mjs';
 import { roadmapPage } from './wiki-roadmap.mjs';
 import { SHOTS } from './wiki-screens.mjs';
 
@@ -35,6 +35,7 @@ const { read } = createRequire(import.meta.url)('../packages/graph-spec/src/grap
 /** The pages this script makes from the repository's files, beside the ones it copies from wiki/. */
 export const MADE_PAGES = [
   'Roadmap.md',
+  'Plan-vs-actual.md',
   'Status.md',
   'Decisions.md',
   'Open-questions.md',
@@ -92,6 +93,8 @@ export function waveStates(waves, workstreams, requirements, today) {
 }
 
 const STATE_MARK = { done: '✅ Done', now: '🟡 Now', late: '🔴 Behind', later: '⏳ Later' };
+const day = (iso) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 /** The line each generated page ends with: where it came from, and that it is not edited here. */
 const footer = (sources, sha, date) =>
@@ -156,13 +159,14 @@ export function unexplained(labels, guide) {
  * project's ethos graph, adds the Ethos page when given. `developer` is the architecture graph and the facts read from
  * the code (wiki-developers.mjs). It fills the developer pages' markers and adds the Developer reference.
  * `releasedText` is the requirements as they stood at the latest stable release. It tells what is released from what
- * is only on main. `pastProved` is {date, proved} as the requirements stood a fortnight ago, for the Roadmap's pace.
+ * is only on main. `planActual`, the facts of scripts/plan-actuals.mjs, adds the Plan versus actual page when given.
  */
 export function renderWiki({
   requirementsText,
   ethosText,
   developer,
   releasedText,
+  planActual,
   waves,
   workstreams,
   baseline,
@@ -172,7 +176,6 @@ export function renderWiki({
   pages,
   sha,
   today,
-  pastProved = null,
 }) {
   const board = readBoard(requirementsText);
   const { requirements } = board;
@@ -200,17 +203,11 @@ export function renderWiki({
   for (const [name, text] of Object.entries(pages)) out[name] = fillMarkers(text, fills);
 
   out['Roadmap.md'] = roadmapPage(
-    {
-      states: waveList,
-      workstreams,
-      requirements,
-      releases,
-      sha,
-      today,
-      pace: paceLine({ proved: requirements.filter((r) => r.status === 'proved').length, then: pastProved }, today),
-    },
+    { states: waveList, workstreams, requirements, releases, sha, today },
     { counted, day, footer, STATE_MARK },
   );
+
+  if (planActual) out['Plan-vs-actual.md'] = planActualsPage({ ...planActual, today }, { day, footer, sha });
 
   out['Status.md'] =
     `# Status\n\n${fills.now}\n\n## By slice\n\n${fills.slices}\n\n` +
@@ -290,6 +287,7 @@ export function renderWiki({
     ...(ethosText === undefined ? [] : ['- [Ethos](Ethos)']),
     '- [Status](Status)',
     '- [Roadmap](Roadmap)',
+    ...(planActual ? ['- [Plan versus actual](Plan-vs-actual)'] : []),
     '- [Decisions](Decisions)',
     '- [Open questions](Open-questions)',
     '- [Quality](Quality)',
@@ -332,22 +330,23 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   );
   const releasesFile = flag(args, '--releases');
   const releasedFile = flag(args, '--released');
+  const releases = releasesFile ? JSON.parse(readFileSync(releasesFile, 'utf8')) : [];
   const today = flag(args, '--date') ?? new Date().toISOString().slice(0, 10);
   const made = renderWiki({
     developer: await developerFacts(),
     releasedText: releasedFile && existsSync(releasedFile) ? readFileSync(releasedFile, 'utf8') : undefined,
+    planActual: await repositoryFacts({ releases, today }),
     requirementsText: readFileSync(join(ROOT, 'requirements/editor-requirements.gql'), 'utf8'),
     ethosText: readFileSync(join(ROOT, 'requirements/ethos.gql'), 'utf8'),
     waves: json('requirements/waves.json').waves,
     workstreams: json('requirements/workstreams.json'),
     baseline: json('quality/baseline.json'),
     versions: json('versions.json'),
-    releases: releasesFile ? JSON.parse(readFileSync(releasesFile, 'utf8')) : [],
+    releases,
     options: OPTIONS,
     pages,
     sha: flag(args, '--sha') ?? 'main',
     today,
-    pastProved: provedAFortnightAgo(today),
   });
   mkdirSync(out, { recursive: true });
   for (const [name, text] of Object.entries(made)) writeFileSync(join(out, name), text);

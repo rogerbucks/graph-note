@@ -38,5 +38,12 @@ The [Roadmap](Roadmap) shows when each part lands.
 - **Building it, or writing a plug-in?** Start at [For developers](For-developers): the architecture, plug-ins, hosts
   and the reference.
 
+## Get help
+
+Ask a question, share an idea or report a problem in
+[GitHub Discussions](https://github.com/rogerbucks/thoughtknot/discussions). Anyone may post there. Only collaborators
+can open issues for now. A security problem goes in private, as the
+[security policy](https://github.com/rogerbucks/thoughtknot/blob/main/SECURITY.md) says.
+
 Every figure, list and drawing in this wiki is made from the repository each time it changes, so they are always
 current. To change a page, change the repository.

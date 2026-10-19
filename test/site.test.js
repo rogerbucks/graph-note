@@ -240,3 +240,24 @@ describe('the command', () => {
     }
   });
 });
+
+// Where to get help (spec §41, help_route_public). Only collaborators may open issues, so help goes to Discussions.
+describe('a reader who is not a collaborator can find help', () => {
+  const DISCUSSIONS = 'https://github.com/rogerbucks/thoughtknot/discussions';
+  test('the home page links to GitHub Discussions for help, and promises no issues', () => {
+    const page = pageOf(made()['index.html']);
+    const help = [...page.querySelectorAll('a')].find((a) => a.href === DISCUSSIONS);
+    assert.ok(help, 'a link to Discussions');
+    assert.match(help.textContent, /help/i);
+    assert.doesNotMatch(page.body.textContent, /\bissues\b/i);
+  });
+  test('the wiki Home page has a Get help section that links there too', () => {
+    const home = read('wiki/Home.md');
+    assert.match(home, /^## Get help$/m);
+    assert.ok(home.includes(`(${DISCUSSIONS})`));
+  });
+  test('the settings keep Discussions open to anyone, so the link leads somewhere a stranger can post', () => {
+    assert.match(read('scripts/public-readiness.mjs'), /repoField\('has_discussions', true\)/);
+    assert.doesNotMatch(read('.github/workflows/lock-conversations.yml'), /discussions/i);
+  });
+});

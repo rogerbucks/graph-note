@@ -504,7 +504,7 @@ describe('a short guide for AI sessions', () => {
   const guide = () => read('AGENTS.md');
 
   test('AGENTS.md is short and gives the cheap commands and the full ones', () => {
-    assert.ok(guide().split('\n').length <= 60, 'under about 60 lines');
+    assert.ok(guide().split('\n').length <= 70, 'under about 70 lines: 60, and 10 for the pull request rules');
     for (const cmd of [
       'npm run test:ai',
       'npm run test:changed',

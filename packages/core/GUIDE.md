@@ -1281,7 +1281,8 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
   hosts_pass_contract).
   - Its checks use no test framework, each throwing with what was wanted.
   - They run against a fresh host and the `HostProbe` through which it shows what it drew.
-  - `HOST_CONTRACT_VERSION` moves with `DisplayHost`.
+  - `HOST_CONTRACT_VERSION` is the last entry of `HOST_CONTRACT_VERSIONS`. Each entry pairs a version with a digest
+    of how `public-api.json` declares `host.ts`. A change to `DisplayHost` fails a test until a new version is added.
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.
 - `src/display/editor/` — the edit pane (spec §4, §9; editor spec §26, C9). It is the same one in the Obsidian pane and
   on the browser editor's page.
