@@ -475,8 +475,10 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `test/lib-release.test.js` — each release publishes the library on GitHub, never on npm (spec §41, lib_github_release).
   `scripts/library-release.mjs` builds two packages, graph-spec and the core, and the test installs both with no
-  registry and runs a program on them. `scripts/changelog.mjs` writes the release notes: the pull requests merged
-  since the last release, and what the library's interface added or broke.
+  registry and runs a program on them.
+  - `scripts/changelog.mjs` writes the release notes: the pull requests merged since the last release, and a Library
+    changes section. That section says what the interface added or broke, and the version rule (version_promise_told).
+  - `--check` refuses notes without it. The release runs it before it drafts, and the release check tries it first.
 - `test/lib-public-api.test.js` — the library's public interface (spec §41, lib_public_api). It is declared in
   `public-api.json`, which `node scripts/public-api.mjs --update` writes. A break since the last release fails
   unless the package takes a new major version. Before 1.0.0 that is the leftmost part that is not 0, such as 0.8.0.

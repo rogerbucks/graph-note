@@ -182,6 +182,13 @@ read until one is set.
   advisories. The Graphviz inside the engine is checked against them each week.
 - **No test framework.** Tests use the runner built into Node.
 
+## Versions
+
+ThoughtKnot uses [semantic versions](https://semver.org), with one catch before 1.0.0. Then a step in the leftmost
+part that is not 0 may change or remove what the library exports. So 0.7 to 0.8 may break your code. A patch step, such
+as 0.8.0 to 0.8.1, never does. Each release's notes have a "Library changes" section. It lists what was added, changed
+or removed.
+
 ## Licence
 
 Mozilla Public License 2.0 (MPL-2.0). See [LICENSE](LICENSE).

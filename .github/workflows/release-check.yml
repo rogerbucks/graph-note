@@ -2,8 +2,9 @@ name: Release check (dry run)
 
 # Run by hand, on main, before a release is tagged. It runs the checks the release waits on, step for step, as
 # release.yml has them (test/quality-baseline.test.js holds the two the same): the quality metrics measured and held to
-# the committed baseline, the engine's advisories, and the history and a fresh clone fit to be public. So a check that
-# would fail the release fails here first, and never costs a version number. It releases nothing, and only reads.
+# the committed baseline, the engine's advisories, the history and a fresh clone fit to be public, and release notes that
+# tell users what the library changed. So a check that would fail the release fails here first, and never costs a
+# version number. It releases nothing, and only reads.
 on:
   workflow_dispatch:
 
@@ -57,3 +58,20 @@ jobs:
           version: 0.12.17
           enable-cache: false
       - run: node scripts/public-readiness.mjs --history --setup
+  release-notes:
+    # the notes the release writes, tried here first: they must tell users what the library changed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the full history and tags: the changelog starts at the last release
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - name: The changelog since the last release, as the release writes it
+        run: node scripts/changelog.mjs --out release-notes.md
+      - name: The release notes tell users what the library changed, and the version rule
+        run: node scripts/changelog.mjs --check release-notes.md
