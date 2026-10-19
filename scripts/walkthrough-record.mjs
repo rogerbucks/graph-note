@@ -50,43 +50,55 @@ export function template(version, ids, { commit, date }) {
   return [...head, ...parts, ''].join('\n');
 }
 
+/** A check's line, read: its id, whether it is ticked, and what is written after it. Null for any other line. */
+function checkLine(line) {
+  const m = /^- \[([ xX])\] (\S+)(.*)$/.exec(line);
+  return m ? { id: m[2], ticked: m[1] !== ' ', after: m[3].trim() } : null;
+}
+
 /** What is wrong with a record, one line each; nothing when it is whole. */
 export function checkRecord(text, { ids, version }) {
   const out = [];
-  const field = (name) => new RegExp(`^- ${name}:[ \\t]*(.*)$`, 'm').exec(text)?.[1].trim() ?? '';
+  const lines = text.split('\n');
+  // read as text, never made into a pattern: a version or an id is compared as it is written
+  const field = (name) =>
+    lines
+      .find((l) => l.startsWith(`- ${name}:`))
+      ?.slice(name.length + 3)
+      .trim() ?? '';
   const build = field('Build');
-  if (!new RegExp(`^${version.replace(/\./g, '\\.')}(\\s|$)`).test(build))
+  if (build !== version && !build.startsWith(`${version} `))
     out.push(`the build walked is "${build}", not ${version}: walk the build to be released`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(field('Date'))) out.push('give the day it was walked, as YYYY-MM-DD');
   if (!field('By')) out.push('say who walked it, after "- By:"');
 
   const sections = new Map();
   let current = null;
-  for (const line of text.split('\n')) {
-    const heading = /^## (.+)$/.exec(line);
-    if (heading) {
-      current = heading[1].trim();
+  for (const line of lines) {
+    if (line.startsWith('## ')) {
+      current = line.slice(3).trim();
       sections.set(current, []);
-    } else if (current && /^- \[[ xX]\]/.test(line)) sections.get(current).push(line);
+    } else if (current) {
+      const check = checkLine(line);
+      if (check) sections.get(current).push(check);
+    }
   }
   for (const host of HOSTS)
     for (const theme of THEMES) {
       const name = part(host, theme);
-      const lines = sections.get(name);
-      if (!lines) {
+      const checks = sections.get(name);
+      if (!checks) {
         out.push(`${name} is not walked: add its part, with every check`);
         continue;
       }
       for (const id of ids) {
-        const line = lines.find((l) => new RegExp(`^- \\[[ xX]\\] ${id}(\\s|$)`).test(l));
-        if (!line) out.push(`${name}: ${id} is missing`);
-        else if (/^- \[ \]/.test(line) && !/ — \S.{3,}/.test(line))
+        const check = checks.find((c) => c.id === id);
+        if (!check) out.push(`${name}: ${id} is missing`);
+        else if (!check.ticked && !/^— \S.{3,}/.test(check.after))
           out.push(`${name}: ${id} is not ticked, and no reason is written after it`);
       }
-      for (const line of lines) {
-        const id = /^- \[[ xX]\] (\S+)/.exec(line)?.[1];
-        if (id && !ids.includes(id)) out.push(`${name}: ${id} is not a check RELEASING.md holds`);
-      }
+      for (const check of checks)
+        if (!ids.includes(check.id)) out.push(`${name}: ${check.id} is not a check RELEASING.md holds`);
     }
   return out;
 }
