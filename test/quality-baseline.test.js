@@ -127,6 +127,14 @@ describe('a baseline committed worse than its parent’s', () => {
     assert.deepEqual(failed(check(baseline(), lower).result), ['coverage_percent']);
   });
 
+  test('passes for a metric the parent’s baseline did not hold yet: the baseline that adds it is its first record', () => {
+    const parent = baseline();
+    delete parent.metrics.journey_steps_obsidian;
+    assert.deepEqual(check(parent, baseline()).result.failures, []);
+    // and one the parent held that the baseline then drops still fails
+    assert.deepEqual(failed(compare(baseline(), parent, [], { baselines: true })), ['journey_steps_obsidian']);
+  });
+
   test('a secrets count cannot be waived by a reason', () => {
     const from = baseline().metrics.secrets_found;
     const r = check(baseline(), changed({ secrets_found: 1 }), [entry('secrets_found', from, 1)]);

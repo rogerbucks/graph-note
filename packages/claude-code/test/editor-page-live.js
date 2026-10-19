@@ -10,6 +10,7 @@ import { openWindow } from '../../../test/repository/wcag.js';
 import { workerFor } from '../../../test/repository/wcag-page.js';
 import { until } from '../../obsidian/test/host/load-plugin.js';
 import { NoteStore } from '../server/editor-store.ts';
+import { Exporter, withExport } from '../server/export-api.ts';
 import { loadPageAssets } from '../server/page-assets.ts';
 import { withSettings } from '../server/page-settings.ts';
 import { startEditorServer } from '../server/start-server.ts';
@@ -23,8 +24,9 @@ export const NOTE_PATH = 'Reader.md';
  * The page opened on `note` (written to a vault of its own, with `files` beside it): `{ window, doc, file, read, write,
  * type, field, ... }`. `file()` is the note's text on disk now. `write(text)` is another program changing it. It is told
  * to the page as the watcher would tell it. `type(text)` is the person typing `text` into the field, as the page hears it.
+ * With `exports`, the server also writes exports, as the shipped one does, into the folder its settings name.
  */
-export async function livePage(note, { files = {}, settings = '{}', fire = true, before, gate, github } = {}) {
+export async function livePage(note, { files = {}, settings = '{}', fire = true, before, gate, github, exports } = {}) {
   const top = mkdtempSync(join(tmpdir(), 'editor-page-live-'));
   const vault = join(top, 'vault');
   mkdirSync(vault);
@@ -41,7 +43,11 @@ export async function livePage(note, { files = {}, settings = '{}', fire = true,
   const opened = await store.open(NOTE_PATH);
   if (!opened.ok) throw new Error(opened.why);
   const { dir } = await built();
-  const server = await startEditorServer({ page: await loadPageAssets(dir), api: withSettings(settings, store.api) });
+  const exporter = exports
+    ? new Exporter({ vault, exportFolder: JSON.parse(settings).exportFolder ?? '', notePath: (id) => store.pathOf(id) })
+    : null;
+  const api = exporter ? withExport(exporter, store.api) : store.api;
+  const server = await startEditorServer({ page: await loadPageAssets(dir), api: withSettings(settings, api) });
 
   const html = readFileSync(join(dir, 'index.html'), 'utf8');
   const script = readFileSync(join(dir, 'page.js'), 'utf8').replace(/\nexport \{[^}]*\};?\s*$/, '\n');
@@ -126,6 +132,7 @@ export async function livePage(note, { files = {}, settings = '{}', fire = true,
       window.close();
       await stopWorkers();
       await server.stop();
+      await exporter?.stop();
       await store.stop();
       rmSync(top, { recursive: true, force: true });
     },
