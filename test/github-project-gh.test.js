@@ -305,7 +305,7 @@ describe('an apply when a requirement went', () => {
     assert.deepEqual(labelsOf(gone), ['requirement:removed', 'slice-3']);
     assert.equal(gone.comments.length, 1);
     assert.match(gone.comments[0], /old_one/);
-    assert.match(gone.comments[0], /no longer in `requirements\/editor-requirements\.gql`/);
+    assert.match(gone.comments[0], /no longer in `requirements\/editor-requirements\.md`/);
     assert.ok(gh.hub.labels.some((l) => l.name === 'requirement:removed'));
   });
 

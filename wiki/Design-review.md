@@ -7,7 +7,7 @@ It says what is there today, where the code already has a place to fit each one,
 17 October 2026, against version 0.5.0.
 
 The requirements it adds are in
-[`requirements/editor-requirements.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql),
+[`requirements/editor-requirements.md`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.md),
 sections 42 to 44, and the order they are built in is in
 [`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json).
 

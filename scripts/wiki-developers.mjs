@@ -258,7 +258,7 @@ export async function developerFacts() {
   const architectureText = text('requirements/architecture.gql');
   const faults = architectureProblems(
     readArchitecture(architectureText),
-    readBoard(text('requirements/editor-requirements.gql')).requirements,
+    readBoard(text('requirements/editor-requirements.md')).requirements,
     (rel) => existsSync(join(ROOT, rel)),
   );
   if (faults.length) throw new Error(`requirements/architecture.gql:\n${faults.join('\n')}`);

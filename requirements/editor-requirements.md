@@ -1,3 +1,14 @@
+# Editor requirements
+
+This is the one source of what ThoughtKnot's editor must do. It is a graph note: the requirements graph is the one
+`gql` block below, and the words around it are for people.
+
+- **Change it here**, in a pull request. Add a requirement as soon as it is agreed.
+- **A test only moves forward.** It goes from planned to partial to written, never back.
+- **Every tool reads this note.** The checks, the slice board, the wiki and the GitHub mirror all read the block below.
+  Run `node scripts/check-requirements.mjs` to check it.
+
+```gql
 // graph: editor_requirements · SOURCE
 // The editor's requirements graph, the one source: edit it here, in a pull request. A test only moves forward.
 // ── Sections ──
@@ -379,7 +390,7 @@
 (cc_transcript_clean:Requirement {section: '26', slice: 4, level: 'must', rule: 'The mod must put neither the token nor the note\'s text into the conversation.'}),
 (cc_text_not_html:Requirement {section: '26', slice: 4, level: 'must', rule: 'Note text, names and properties must be shown as text, and Markdown notes rendered with raw HTML turned off.'}),
 (cc_claude_only:Requirement {section: '26', slice: 4, level: 'must', rule: 'Claude must be the only AI the browser editor offers.'}),
-(cc_claude_proposes:Requirement {section: '26', slice: 4, level: 'must', rule: 'A change Claude makes to a note open in the pane must reach it through the mod as a proposal, shown as §17 requires and written only when the user accepts it, never through the server\'s write.'}),
+(cc_claude_proposes:Requirement {section: '26', slice: 4, level: 'must', rule: 'A change Claude makes to a note open in the pane must reach it through the mod as a proposal, shown as §17 requires and written only when the user accepts it, never through the server\'s write. Claude\'s own Write, Edit, NotebookEdit and Bash calls that reach that note must be refused, and the refusal must point to the propose tool.'}),
 (cc_one_renderer:Requirement {section: '26', slice: 4, level: 'must', rule: 'The browser host may add one small, permissively licensed Markdown renderer, with raw HTML turned off, and nothing else; its icons must ship as image files, never as a code library.'}),
 (cc_worker_same_origin:Requirement {section: '26', slice: 4, level: 'must', rule: 'Layout must run in a worker loaded from the server\'s own origin, under the core\'s limits.'}),
 (cc_theme_follows:Requirement {section: '26', slice: 4, level: 'must', rule: 'The page must follow the system\'s light or dark scheme with the core\'s palette, at the locked contrast.'}),
@@ -408,10 +419,10 @@
 (user_chooses_what:Requirement {section: '19', slice: 3, level: 'must', rule: 'The user must choose what is sent: the whole graph, a view, or the things selected, and nothing else from the vault.'}),
 (seen_before_sent:Requirement {section: '19', slice: 3, level: 'must', rule: 'Before anything is sent, the user must see exactly what will be sent and to which model, and confirm it.'}),
 (never_in_background:Requirement {section: '19', slice: 3, level: 'must', rule: 'Nothing may be sent to an AI except when the user sends it.'}),
-(answers_are_proposals:Requirement {section: '19', slice: 3, level: 'must', rule: 'An answer must come back as a proposal, shown and accepted or rejected as §17 says; an AI never writes to the graph.'}),
+(answers_are_proposals:Requirement {section: '19', slice: 3, level: 'must', rule: 'An answer must come back as a proposal, shown and accepted or rejected as §17 says; an AI never writes to the graph. What is sent from the note must be fenced and named as data, never instructions, so text in a note cannot steer the model.'}),
 (record_every_send:Requirement {section: '19', slice: 3, level: 'must', rule: 'Every send must be recorded: what was sent, to which model, and when, so research can be traced back to what the model was shown.'}),
 (ai_unreachable:Requirement {section: '19', slice: 3, level: 'must', rule: 'If a model cannot be reached or refuses, the editor must say so plainly and change nothing.'}),
-(ai_disclosed:Requirement {section: '19', slice: 3, level: 'must', rule: 'The README must say that the plugin sends content only to models the user sets up, and only when the user sends it.'}),
+(ai_disclosed:Requirement {section: '19', slice: 3, level: 'must', rule: 'The README must say that the plugin sends content only to models the user sets up, and only when the user sends it. It must say that a model at a remote address keeps what it receives under its provider\'s terms and retention, and that a model at localhost keeps it on the device.'}),
 (zoom_out_to_fit:Requirement {section: '25', slice: 3, level: 'must', rule: 'Zooming out must stop where the whole drawing fits the view, or at natural size when the whole drawing fits at a larger size; from slice 3 this replaces the lower limit of a quarter in §3, and the upper limit of four times stays.'}),
 (gestures_stay_in_drawing:Requirement {section: '25', slice: 3, level: 'must', rule: 'On a phone, a touch the drawing uses (one finger panning a drawing zoomed in or in full screen, a pinch, or a finger moving a box) must not reach the host, so it never slides Obsidian\'s side panels in or moves the window; a swipe on a drawing that is only fitted in a note must still reach it.'}),
 (card_keeps_focus_from_editor:Requirement {section: '25', slice: 3, level: 'must', rule: 'In Live Preview, pressing a button, a link or the drawing in a card must give it the focus without scrolling and never give the focus to the editor around the card, so the page never jumps to the editor\'s cursor; a press in a text box in the card still places its cursor there.'}),
@@ -596,6 +607,7 @@
 (changes_view:Requirement {section: '41', slice: 5, level: 'must', rule: 'The graph view must offer a changes view that draws what changed between two versions of a graph, the current text and one the user picks such as the last commit or a branch, marking every thing and link added, removed or changed on the drawing, not by colour alone, and listing the same changes as text.'}),
 (github_review_items:Requirement {section: '41', slice: 5, level: 'must', rule: 'The graph view must show the pull requests, merges and commits of the repository a note lives in as items, each opening in the changes view, so that the user and Claude can review a change together; a high level must summarise it by section, workstream and requirement, and each level down must show more, to every thing, link and line changed. GitHub must be read only, only when the user asks, with the host\'s own sign-in, never a stored token.'}),
 (wiki_generated:Requirement {section: '41', slice: 5, level: 'must', rule: 'The project\'s GitHub wiki must be made from the repository on every push to main and every release: where the work stands, the roadmap clustered into phases (shipped, now, next, later and held) with each release marked on it and counted under its wave, the decisions, the open questions, the quality figures and the releases, each page saying which file and commit it came from, so it never drifts and nobody keeps it by hand.'}),
+(waves_on_time:Requirement {section: '41', slice: 5, level: 'must', rule: 'The plan must stay true to the work: a wave still behind more than one wave length after its end must fail the build unless requirements/waves.json gives its reason, so its work is moved and later dates are shifted, with the real pace read from the Plan versus actual page.'}),
 (user_guide_wiki:Requirement {section: '41', slice: 5, level: 'must', rule: 'The wiki must hold a guide to using ThoughtKnot in plain words for people who are not technical, with screenshots taken from the current build each time the wiki is made and a list of every setting made from the editor\'s own options, and a button of the drawing that the guide does not explain must be reported when the wiki is made.'}),
 (developer_wiki:Requirement {section: '41', slice: 5, level: 'must', rule: 'The wiki must hold pages for developers, the architecture, writing a plug-in, adding a host and a reference, whose drawings, interfaces, extension points, contract checks, design tokens and problem codes are made from the code and requirements/architecture.gql each time the wiki is made, drawn as ThoughtKnot draws a graph, with each requirement marked as released, on main only (nightly), being built or planned, and a plug-in example on the page that the tests install.'}),
 (plan_vs_actual:Requirement {section: '41', slice: 5, level: 'must', rule: 'The wiki must hold a Plan versus actual page, made from the repository each time the wiki is made. For each wave it shows the planned start and end, the requirements proved out of all, the days the first and last became proved on main, the first stable release after that, and the slip against the planned end in days. Below that it shows the requirements proved each day, the rate over the last seven days, and the day each remaining wave would finish at that rate. So future plans are estimated from real data.'}),
@@ -729,7 +741,7 @@
 (test_completeness_view:Test {proves: 'the completeness report is shown behind the badge in three states', file: 'packages/core/test/completeness.test.js, packages/obsidian/test/graph-view-bar.test.js (help behind the badge)', where: 'repo', status: 'written'}),
 (test_links:Test {proves: 'every kind of link is found, shown, opened by the host and kept safe; renames rewrite links in blocks', file: 'packages/core/test/links.test.js', where: 'repo', status: 'written'}),
 (test_edge_cases:Test {proves: 'empty, broken and oversized inputs each give a stated result, never a blank or a crash', file: 'packages/core/test/edge-cases.test.js', where: 'repo', status: 'written'}),
-(test_ai:Test {proves: 'requests go only where and when the user says, within each model ceiling, and come back as proposals', file: 'packages/core/test/ai.test.js, packages/obsidian/test/ai.test.js', where: 'repo', status: 'written'}),
+(test_ai:Test {proves: 'requests go only where and when the user says, within each model ceiling, and come back as proposals', file: 'packages/core/test/ai.test.js, packages/core/test/ai-request.test.js, packages/obsidian/test/ai.test.js, test/ai-disclosed.test.js', where: 'repo', status: 'written'}),
 (test_vendored_copy:Test {proves: 'the vault copy of each library equals its tagged release, and a hand-edited copy is refused', where: 'outside the repo', status: 'written'}),
 (test_display:Test {proves: 'properties shown inline and styled paths keep the locked sizes, contrast and legend', file: 'packages/core/test/display.test.js', where: 'repo', status: 'written'}),
 (test_core_imports:Test {proves: 'the core imports no host', file: 'packages/core/test/imports.test.js', where: 'repo', status: 'written'}),
@@ -777,7 +789,7 @@
 (test_ai_matrix:Test {proves: 'where the vault keeps a destination matrix, each model\'s ceiling defaults to it', file: 'packages/core/test/ai-matrix.test.js', where: 'repo', status: 'written'}),
 (test_ai_unlabelled:Test {proves: 'a note with no classification is sent only to a model cleared for everything, unless the settings give unlabelled notes another default', file: 'packages/core/test/ai-unlabelled.test.js', where: 'repo', status: 'written'}),
 (test_proposals_checked:Test {proves: 'every proposal runs through the graph spec change-set check with its result shown, the editor\'s removals and decision tags pass it, and the decider is recorded by the set name or as you', file: 'packages/core/test/proposals-checked.test.js', where: 'repo', status: 'written'}),
-(test_cc_mod:Test {proves: '`/graph edit` opens the pane, one server per session, start failure shown, the server stops on every trigger, the classification gate asks or refuses, Claude is the only AI and proposes through the mod, and nothing secret reaches the conversation', file: 'packages/claude-code/test/editor-mod.test.js, packages/claude-code/test/editor-mod-claude.test.js, packages/claude-code/test/editor-mod-claude-limits.test.js', where: 'repo', status: 'written'}),
+(test_cc_mod:Test {proves: '`/graph edit` opens the pane, one server per session, start failure shown, the server stops on every trigger, the classification gate asks or refuses, Claude is the only AI and proposes through the mod, and nothing secret reaches the conversation', file: 'packages/claude-code/test/editor-mod.test.js, packages/claude-code/test/editor-mod-claude.test.js, packages/claude-code/test/editor-mod-claude-limits.test.js, packages/claude-code/test/editor-mod-claude-tools.test.js', where: 'repo', status: 'written'}),
 (test_cc_threats:Test {proves: 'against the running server: loopback only, token required and never kept, wrong Host and Origin refused, the content security policy present, oversized bodies refused, and no outgoing request', file: 'packages/claude-code/test/editor-threats.test.js', where: 'repo', status: 'written'}),
 (test_cc_store:Test {proves: 'notes by id only, path and symlink escapes refused, writes atomic and version-checked with a draft kept on conflict, redraw on change, drafts outside the vault, and undo safe', file: 'packages/claude-code/test/editor-store.test.js', where: 'repo', status: 'written'}),
 (test_cc_page:Test {proves: 'the page uses the core and the shared display layer with no Obsidian code, renders text safely with one Markdown renderer, runs layout in a same-origin worker, follows the theme, works from the keyboard, still under reduced motion, offline, with the text version present', file: 'packages/claude-code/test/editor-page.test.js', where: 'repo', status: 'written'}),
@@ -947,7 +959,7 @@
 (test_storage_contract:Test {proves: 'the vault, folder and VS Code workspace backends each pass the one storage contract suite', file: 'packages/core/test/storage-contract.test.js', where: 'repo', status: 'planned'}),
 (test_standalone_app:Test {proves: 'the Tauri v2 app opens a folder of notes and draws and edits its graphs offline on each desktop platform', file: 'test/standalone-app.test.js', where: 'repo', status: 'planned'}),
 (test_vscode_plugin:Test {proves: 'the VS Code extension draws and edits the graph blocks of a Markdown file in a webview', file: 'test/vscode-plugin.test.js', where: 'repo', status: 'planned'}),
-(test_requirements_as_graph_note:Test {proves: 'the requirements are read from their graph note and pass the same audit as the graph file did', file: 'test/requirements-note.test.js', where: 'repo', status: 'partial'}),
+(test_requirements_as_graph_note:Test {proves: 'the requirements are read from their graph note and pass the same audit as the graph file did', file: 'test/requirements-note.test.js', where: 'repo', status: 'written'}),
 (test_changes_view:Test {proves: 'between two versions the changes view marks each added, removed and changed thing and link on the drawing and lists them as text, in both themes', file: 'packages/core/test/changes-view.test.js', where: 'repo', status: 'written'}),
 (test_cc_changes_view:Test {proves: 'in the browser editor, Compare with lists the note\'s earlier versions only once pressed and draws the one picked with the note now, every change marked and listed in words', file: 'packages/claude-code/test/changes-section.test.js', where: 'repo', status: 'written'}),
 (test_cc_note_history:Test {proves: 'the editor server reads only the open note\'s history from its git repository, at commits it listed, through the gate, running nothing the repository names and reaching no network', file: 'packages/claude-code/test/note-history.test.js', where: 'repo', status: 'written'}),
@@ -955,6 +967,7 @@
 (test_cc_review_items:Test {proves: 'in the browser editor, Review a change from GitHub lists the repository\'s changes only once pressed and shows the one picked in levels, from a summary by section, workstream and requirement through each graph drawn in the changes view down to every line', file: 'packages/claude-code/test/review-section.test.js', where: 'repo', status: 'written'}),
 (test_cc_github_reader:Test {proves: 'the editor server reads the note\'s repository from GitHub only when asked, by the user\'s own gh, for GET alone on github.com and handed no token, opens only changes it listed, and holds every file to the gate', file: 'packages/claude-code/test/github-reader.test.js', where: 'repo', status: 'written'}),
 (test_wiki_generated:Test {proves: 'every wiki page is made from its file, says where and at which commit it came from, and counts what the requirements and waves give; the roadmap groups the waves by phase and places each release in its wave', file: 'test/wiki.test.js, test/wiki-workflow.test.js', where: 'repo', status: 'written'}),
+(test_waves_on_time:Test {proves: 'a wave behind for more than one wave length fails unless waves.json gives its reason, a wave whose work is all proved never does, and the real plan has no such wave today', file: 'test/waves-on-time.test.js', where: 'repo', status: 'written'}),
 (test_user_guide_wiki:Test {proves: 'the guide shows every screenshot taken and no other, lists every setting from the editor\'s options, keeps to plain words, and names a new button it does not explain', file: 'test/wiki-guide.test.js', where: 'repo', status: 'written'}),
 (test_developer_wiki:Test {proves: 'the developer pages draw the architecture graph and fill every list from the code, every path and requirement the architecture names exists, each requirement is marked released, nightly only, being built or planned against the latest release, and the plug-in example installs', file: 'test/wiki-developers.test.js', where: 'repo', status: 'written'}),
 (test_plan_vs_actual:Test {proves: 'a requirement is proved on the first day on main its every test is written, read through the requirements file moving from .gql to .md; each wave shows its plan, its first and last proved days, the first stable release after, and its slip; the page lists the requirements proved each day, the seven-day rate and a forecast for each remaining wave', file: 'test/plan-actuals.test.js', where: 'repo', status: 'written'}),
@@ -1079,6 +1092,8 @@
 // ── Links ──
 (wiki_generated)-[:PART_OF]->(section_41),
 (wiki_generated)-[:PROVED_BY]->(test_wiki_generated),
+(waves_on_time)-[:PART_OF]->(section_41),
+(waves_on_time)-[:PROVED_BY]->(test_waves_on_time),
 (wiki_reviewed)-[:PART_OF]->(section_41),
 (wiki_reviewed)-[:PROVED_BY]->(test_wiki_reviewed),
 (ethos_checked)-[:PART_OF]->(section_41),
@@ -2479,3 +2494,4 @@
 (q_14_roles_auto_apply)-[:BLOCKS]->(type_suggestion_bundle),
 (q_14_roles_auto_apply)-[:BLOCKS]->(ai_write_scoring),
 (q_15_stubbing_revisit)-[:BLOCKS]->(side_effects_stubbed)
+```
