@@ -217,7 +217,7 @@ export function auditRequirements(copy, { exists = (rel) => existsSync(join(ROOT
  * for a copy it cannot read.
  */
 export function sliceDone(copy, slice, { exists = (rel) => existsSync(join(ROOT, rel)) } = {}) {
-  const text = requirementsGraph(copy);
+  const { text, before } = requirementsBlock(copy);
   const store = read([text]);
   const graph = store.graph(Object.keys(store.graphs)[0]);
   const proving = new Map();
@@ -226,7 +226,7 @@ export function sliceDone(copy, slice, { exists = (rel) => existsSync(join(ROOT,
       proving.set(from, [...(proving.get(from) ?? []), graph.nodes.get(to).props]);
   const requirements = [...graph.nodes].filter(([, n]) => n.labels.has('Requirement'));
   const faults = [
-    ...bannerProblems(text).map((p) => ({ id: p.id, why: p.message })),
+    ...bannerProblems(text, before).map((p) => ({ id: p.id, why: p.message })),
     ...requirements
       .filter(([, n]) => !Number.isInteger(n.props.slice))
       .map(([, n]) => ({
