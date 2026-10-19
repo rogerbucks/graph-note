@@ -1,0 +1,6 @@
+{
+  "file": "test/waves-on-time.test.js",
+  "test": "the real plan > has no wave behind for more than one wave length without a reason",
+  "seen_failing_first": false,
+  "evidence": "Only the path changes: #616's test read the old .gql, which this branch replaces with the note. The check itself is unchanged."
+}
