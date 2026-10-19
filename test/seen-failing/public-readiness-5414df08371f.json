@@ -1,0 +1,6 @@
+{
+  "file": "test/public-readiness.test.js",
+  "test": "every commit since the cut-off is signed off by a person > CI runs it, and CONTRIBUTING.md says whose sign-off a commit Claude writes carries",
+  "seen_failing_first": false,
+  "evidence": "Its pattern was corrected to the call public-readiness already made: e254500 ran both history checks in a loop, and the first pattern looked for a direct call."
+}
