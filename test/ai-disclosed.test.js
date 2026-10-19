@@ -25,6 +25,19 @@ describe('the AI use is disclosed', () => {
     assert.match(said, /without the text sent/);
   });
 
+  test('it says a remote model keeps what it receives under its provider’s terms, and a model at localhost keeps it here', () => {
+    const said = privacy();
+    assert.match(said, /remote address[\s\S]{0,80}provider’s\s+(own\s+)?terms\s+and\s+retention/i);
+    assert.match(said, /localhost[^.]*on\s+(your|the)\s+device/i);
+  });
+
+  test('the endpoint’s sentence in the settings says the same, in a few words', async () => {
+    const { AI_SOURCE_WORDS } = await import('../packages/core/src/ai-source-words.ts');
+    const sentence = AI_SOURCE_WORDS['models.endpoint.sentence'];
+    assert.match(sentence, /provider’s terms/);
+    assert.match(sentence, /this device/);
+  });
+
   test('it states the one exception to no network use, never that there are no requests at all', () => {
     const said = privacy();
     assert.doesNotMatch(said, /makes no network requests\./);
