@@ -9,7 +9,7 @@
 //
 // A pull request is only ever read as data through the API. No file of it is checked out and none of its code is run.
 import { spawnSync } from 'node:child_process';
-import { REQUIREMENTS } from './check-requirements.mjs';
+import { FORMER_REQUIREMENTS, REQUIREMENTS } from './check-requirements.mjs';
 import { COMMENT_MARKER, requestedIds } from './build-status.mjs';
 import { dayOf } from './github-project-fields.mjs';
 import { ghRunner } from './github-project-gh.mjs';
@@ -116,13 +116,17 @@ export function parentOf(run, repo, sha) {
 /**
  * The text of the requirements file at a ref (a branch, a tag or a commit), read through the API as data. It is null
  * when there is no such file or ref. Its size is asked for first. The file is only downloaded if it is no larger than
- * MAX_FILE_BYTES. Throws Unreadable for a file over that, and the failure itself for any other.
+ * MAX_FILE_BYTES. Throws Unreadable for a file over that, and the failure itself for any other. A ref from before the
+ * requirements became a note holds the graph file instead. So that file is read when the note is not there.
  */
 export function readRequirementsAt(run, repo, ref) {
+  return readFileAt(run, repo, ref, REQUIREMENTS) ?? readFileAt(run, repo, ref, FORMER_REQUIREMENTS);
+}
+
+function readFileAt(run, repo, ref, path) {
   if (!REF.test(String(ref))) throw new Error(`${ref} is not a ref`);
-  const args = ['api', `repos/${repo}/contents/${REQUIREMENTS}`, '--method', 'GET', '-f', `ref=${ref}`];
-  const tooLarge = (bytes) =>
-    new Unreadable(`${REQUIREMENTS} at ${ref.slice(0, 12)} is too large to read (${bytes} bytes)`);
+  const args = ['api', `repos/${repo}/contents/${path}`, '--method', 'GET', '-f', `ref=${ref}`];
+  const tooLarge = (bytes) => new Unreadable(`${path} at ${ref.slice(0, 12)} is too large to read (${bytes} bytes)`);
   let text;
   try {
     const size = JSON.parse(run(args)).size;

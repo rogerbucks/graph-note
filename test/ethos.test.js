@@ -10,7 +10,7 @@ import { readBoard } from '../scripts/slice-board.mjs';
 import { renderWiki } from '../scripts/wiki.mjs';
 import { read } from './repository/repo.js';
 
-const requirementsText = read('requirements/editor-requirements.gql');
+const requirementsText = read('requirements/editor-requirements.md');
 const ethosText = read('requirements/ethos.gql');
 const { requirements } = readBoard(requirementsText);
 const json = (rel) => JSON.parse(read(rel));

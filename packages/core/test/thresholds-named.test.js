@@ -12,7 +12,7 @@ import { DIFF_LIMIT, lineDiff } from '../src/line-diff.ts';
 import { PathPlayer, pathsOf } from '../src/paths.ts';
 import { readNote } from '../src/drawing.ts';
 
-const REQUIREMENTS = readFileSync(new URL('../../../requirements/editor-requirements.gql', import.meta.url), 'utf8');
+const REQUIREMENTS = readFileSync(new URL('../../../requirements/editor-requirements.md', import.meta.url), 'utf8');
 
 /** A thing linked to `n` others. */
 const star = (n) => ({

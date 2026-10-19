@@ -102,7 +102,8 @@ describe('whether a slice is done', () => {
     assert.deepEqual(r.missing, [], 'every requirement proved');
     assert.deepEqual(
       r.faults.map((f) => f.id),
-      ['line 2'],
+      [`line ${text.split('\n').indexOf(requirements.BANNER[0]) + 2}`],
+      "the banner's second line, named by its line in the note",
     );
     assert.match(r.faults[0].why, /not the banner the requirements open on/);
     assert.match(r.said, /slice 3 is not done: 0 of \d+ requirements are still to prove, and the copy has 1 fault/);

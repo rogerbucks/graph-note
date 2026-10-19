@@ -239,7 +239,7 @@ describe('the desired issues for chosen slices', () => {
       .body.split('\n')
       .find((l) => l.startsWith(BANNER_START));
     assert.match(banner, /do not edit/i);
-    assert.match(banner, /requirements\/editor-requirements\.gql/);
+    assert.match(banner, /requirements\/editor-requirements\.md/);
     assert.match(banner, /scripts\/github-project\.mjs/);
   });
 

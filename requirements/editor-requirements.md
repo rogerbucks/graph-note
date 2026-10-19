@@ -1,3 +1,14 @@
+# Editor requirements
+
+This is the one source of what ThoughtKnot's editor must do. It is a graph note: the requirements graph is the one
+`gql` block below, and the words around it are for people.
+
+- **Change it here**, in a pull request. Add a requirement as soon as it is agreed.
+- **A test only moves forward.** It goes from planned to partial to written, never back.
+- **Every tool reads this note.** The checks, the slice board, the wiki and the GitHub mirror all read the block below.
+  Run `node scripts/check-requirements.mjs` to check it.
+
+```gql
 // graph: editor_requirements · SOURCE
 // The editor's requirements graph, the one source: edit it here, in a pull request. A test only moves forward.
 // ── Sections ──
@@ -596,6 +607,7 @@
 (changes_view:Requirement {section: '41', slice: 5, level: 'must', rule: 'The graph view must offer a changes view that draws what changed between two versions of a graph, the current text and one the user picks such as the last commit or a branch, marking every thing and link added, removed or changed on the drawing, not by colour alone, and listing the same changes as text.'}),
 (github_review_items:Requirement {section: '41', slice: 5, level: 'must', rule: 'The graph view must show the pull requests, merges and commits of the repository a note lives in as items, each opening in the changes view, so that the user and Claude can review a change together; a high level must summarise it by section, workstream and requirement, and each level down must show more, to every thing, link and line changed. GitHub must be read only, only when the user asks, with the host\'s own sign-in, never a stored token.'}),
 (wiki_generated:Requirement {section: '41', slice: 5, level: 'must', rule: 'The project\'s GitHub wiki must be made from the repository on every push to main and every release: where the work stands, the roadmap clustered into phases (shipped, now, next, later and held) with each release marked on it and counted under its wave, the decisions, the open questions, the quality figures and the releases, each page saying which file and commit it came from, so it never drifts and nobody keeps it by hand.'}),
+(waves_on_time:Requirement {section: '41', slice: 5, level: 'must', rule: 'The plan must stay true to the work: a wave still behind more than one wave length after its end must fail the build unless requirements/waves.json gives its reason, so its work is moved and later dates are shifted, with the real pace read from the Plan versus actual page.'}),
 (user_guide_wiki:Requirement {section: '41', slice: 5, level: 'must', rule: 'The wiki must hold a guide to using ThoughtKnot in plain words for people who are not technical, with screenshots taken from the current build each time the wiki is made and a list of every setting made from the editor\'s own options, and a button of the drawing that the guide does not explain must be reported when the wiki is made.'}),
 (developer_wiki:Requirement {section: '41', slice: 5, level: 'must', rule: 'The wiki must hold pages for developers, the architecture, writing a plug-in, adding a host and a reference, whose drawings, interfaces, extension points, contract checks, design tokens and problem codes are made from the code and requirements/architecture.gql each time the wiki is made, drawn as ThoughtKnot draws a graph, with each requirement marked as released, on main only (nightly), being built or planned, and a plug-in example on the page that the tests install.'}),
 (plan_vs_actual:Requirement {section: '41', slice: 5, level: 'must', rule: 'The wiki must hold a Plan versus actual page, made from the repository each time the wiki is made. For each wave it shows the planned start and end, the requirements proved out of all, the days the first and last became proved on main, the first stable release after that, and the slip against the planned end in days. Below that it shows the requirements proved each day, the rate over the last seven days, and the day each remaining wave would finish at that rate. So future plans are estimated from real data.'}),
@@ -942,7 +954,7 @@
 (test_storage_contract:Test {proves: 'the vault, folder and VS Code workspace backends each pass the one storage contract suite', file: 'packages/core/test/storage-contract.test.js', where: 'repo', status: 'planned'}),
 (test_standalone_app:Test {proves: 'the Tauri v2 app opens a folder of notes and draws and edits its graphs offline on each desktop platform', file: 'test/standalone-app.test.js', where: 'repo', status: 'planned'}),
 (test_vscode_plugin:Test {proves: 'the VS Code extension draws and edits the graph blocks of a Markdown file in a webview', file: 'test/vscode-plugin.test.js', where: 'repo', status: 'planned'}),
-(test_requirements_as_graph_note:Test {proves: 'the requirements are read from their graph note and pass the same audit as the graph file did', file: 'test/requirements-note.test.js', where: 'repo', status: 'partial'}),
+(test_requirements_as_graph_note:Test {proves: 'the requirements are read from their graph note and pass the same audit as the graph file did', file: 'test/requirements-note.test.js', where: 'repo', status: 'written'}),
 (test_changes_view:Test {proves: 'between two versions the changes view marks each added, removed and changed thing and link on the drawing and lists them as text, in both themes', file: 'packages/core/test/changes-view.test.js', where: 'repo', status: 'written'}),
 (test_cc_changes_view:Test {proves: 'in the browser editor, Compare with lists the note\'s earlier versions only once pressed and draws the one picked with the note now, every change marked and listed in words', file: 'packages/claude-code/test/changes-section.test.js', where: 'repo', status: 'written'}),
 (test_cc_note_history:Test {proves: 'the editor server reads only the open note\'s history from its git repository, at commits it listed, through the gate, running nothing the repository names and reaching no network', file: 'packages/claude-code/test/note-history.test.js', where: 'repo', status: 'written'}),
@@ -950,6 +962,7 @@
 (test_cc_review_items:Test {proves: 'in the browser editor, Review a change from GitHub lists the repository\'s changes only once pressed and shows the one picked in levels, from a summary by section, workstream and requirement through each graph drawn in the changes view down to every line', file: 'packages/claude-code/test/review-section.test.js', where: 'repo', status: 'written'}),
 (test_cc_github_reader:Test {proves: 'the editor server reads the note\'s repository from GitHub only when asked, by the user\'s own gh, for GET alone on github.com and handed no token, opens only changes it listed, and holds every file to the gate', file: 'packages/claude-code/test/github-reader.test.js', where: 'repo', status: 'written'}),
 (test_wiki_generated:Test {proves: 'every wiki page is made from its file, says where and at which commit it came from, and counts what the requirements and waves give; the roadmap groups the waves by phase and places each release in its wave', file: 'test/wiki.test.js, test/wiki-workflow.test.js', where: 'repo', status: 'written'}),
+(test_waves_on_time:Test {proves: 'a wave behind for more than one wave length fails unless waves.json gives its reason, a wave whose work is all proved never does, and the real plan has no such wave today', file: 'test/waves-on-time.test.js', where: 'repo', status: 'written'}),
 (test_user_guide_wiki:Test {proves: 'the guide shows every screenshot taken and no other, lists every setting from the editor\'s options, keeps to plain words, and names a new button it does not explain', file: 'test/wiki-guide.test.js', where: 'repo', status: 'written'}),
 (test_developer_wiki:Test {proves: 'the developer pages draw the architecture graph and fill every list from the code, every path and requirement the architecture names exists, each requirement is marked released, nightly only, being built or planned against the latest release, and the plug-in example installs', file: 'test/wiki-developers.test.js', where: 'repo', status: 'written'}),
 (test_plan_vs_actual:Test {proves: 'a requirement is proved on the first day on main its every test is written, read through the requirements file moving from .gql to .md; each wave shows its plan, its first and last proved days, the first stable release after, and its slip; the page lists the requirements proved each day, the seven-day rate and a forecast for each remaining wave', file: 'test/plan-actuals.test.js', where: 'repo', status: 'written'}),
@@ -1073,6 +1086,8 @@
 // ── Links ──
 (wiki_generated)-[:PART_OF]->(section_41),
 (wiki_generated)-[:PROVED_BY]->(test_wiki_generated),
+(waves_on_time)-[:PART_OF]->(section_41),
+(waves_on_time)-[:PROVED_BY]->(test_waves_on_time),
 (wiki_reviewed)-[:PART_OF]->(section_41),
 (wiki_reviewed)-[:PROVED_BY]->(test_wiki_reviewed),
 (ethos_checked)-[:PART_OF]->(section_41),
@@ -2465,3 +2480,4 @@
 (q_14_roles_auto_apply)-[:BLOCKS]->(type_suggestion_bundle),
 (q_14_roles_auto_apply)-[:BLOCKS]->(ai_write_scoring),
 (q_15_stubbing_revisit)-[:BLOCKS]->(side_effects_stubbed)
+```

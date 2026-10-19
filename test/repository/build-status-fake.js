@@ -147,9 +147,12 @@ export function fakeRepoSide({ repo = 'rogerbucks/thoughtknot', pageSize = 100, 
     }
     if (rest.startsWith('contents/')) {
       const ref = flag(args, '-f').replace(/^ref=/, '');
-      if (!(ref in hub.files)) throw notFound();
+      // a ref holds one text for whichever file is asked for, or a text for each file by its path
+      const held = hub.files[ref];
+      const text = typeof held === 'object' && held !== null ? held[rest.slice('contents/'.length)] : held;
+      if (text === undefined) throw notFound();
       // without the raw media type GitHub describes the file; with it, gives the file
-      return args.includes('-H') ? hub.files[ref] : json({ type: 'file', size: Buffer.byteLength(hub.files[ref]) });
+      return args.includes('-H') ? text : json({ type: 'file', size: Buffer.byteLength(text) });
     }
     if (rest === 'releases?per_page=100') return json(hub.releases);
     if (rest.startsWith('issues?')) return restIssueList(issues(), rest.slice('issues?'.length));

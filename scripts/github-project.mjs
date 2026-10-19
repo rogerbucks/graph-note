@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Mirrors the editor's requirements into a GitHub Project, one issue for each requirement and one for each open
-// question (spec §12, requirements_checked_in_ci). It works one way only. requirements/editor-requirements.gql stays
+// question (spec §12, requirements_checked_in_ci). It works one way only. requirements/editor-requirements.md stays
 // the only source. The issues and project items made from it are derivatives, regenerated and never edited by hand. A
 // requirement's status (proved, part or open) is the one the slice board reads from the same file. Its workstream is
 // the one in requirements/workstreams.json. A question's issue is labelled kind:question. It lists the requirements it

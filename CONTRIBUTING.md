@@ -12,7 +12,7 @@ CI. A change that breaks one fails before it is merged.
 
 - **Spec, then test, then code.** Each behaviour is a requirement in the spec first. Its test is written next and seen
   to fail, and only then is the code written. A commit message says which tests were seen failing first.
-- **The requirements are edited here.** `requirements/editor-requirements.gql` is the one source of the requirements,
+- **The requirements are edited here.** `requirements/editor-requirements.md` is the one source of the requirements,
   changed in a pull request like any file; no vault holds them (Roger, 16 Oct 2026). Once graph notes can hold it, the
   graph moves into one.
 
@@ -668,6 +668,8 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ### The wiki and its pages
 
+- `test/waves-on-time.test.js` — the plan stays true to the work. A wave behind for more than its own length fails,
+  unless `requirements/waves.json` gives its reason.
 - `test/wiki.test.js` — the project wiki. Every page is made from its file in the repository, ending with the file and
   commit it came from. The proved counts are as the slice board gives them. Every answered question is a decision and
   every other open. The roadmap's chart is free of the characters it reads as syntax. The releases come from GitHub or
@@ -858,7 +860,7 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ### What the mirror makes
 
-- **One way only.** `requirements/editor-requirements.gql` stays the only source. `scripts/github-project.mjs` mirrors it
+- **One way only.** `requirements/editor-requirements.md` stays the only source. `scripts/github-project.mjs` mirrors it
   into a GitHub Project titled "ThoughtKnot requirements", one issue for each requirement of the chosen slices
   (`--slices 3,4` by default). The issues and project items are derivatives: regenerated, never edited by hand, and each
   opens on its rule, then a do-not-edit banner. Its title is the requirement's section, a dot and the id's words.
@@ -1007,7 +1009,7 @@ These test behaviour across modules, or the repository itself, so they are named
   (see above). `scripts/build-status-run.mjs` sets them from what happens to a pull request, in the workflow
   `.github/workflows/build-status.yml`.
 - **No hand-linking.** A pull request's items are the requirements whose tests its
-  `requirements/editor-requirements.gql` newly marks written, against the base branch's.
+  `requirements/editor-requirements.md` newly marks written, against the base branch's.
   - For a merged pull request, that is its merge commit against that commit's first parent.
   - For a release, it is the tag against the release before it.
   - Both files are read through the API as data. A file of over 3 MB is a warning and not read.

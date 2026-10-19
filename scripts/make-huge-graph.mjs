@@ -5,7 +5,7 @@
 //   hand in scripts/graph-theory.gql. Some of its famous graphs are made here vertex by vertex (the Petersen graph, a
 //   hypercube). Names, dates and statements are common mathematical knowledge, in our own words. Nothing is copied from
 //   any source, so nothing needs a licence.
-// - this project: the sections, requirements, tests and questions of requirements/editor-requirements.gql. Also the
+// - this project: the sections, requirements, tests and questions of requirements/editor-requirements.md. Also the
 //   waves and workstreams of requirements/waves.json and workstreams.json, and every tracked source file with what it
 //   imports.
 //
@@ -141,10 +141,10 @@ function graphTheory(g) {
   g.link(p('kuratowski_theorem'), 'NAMES', p('k33'));
 }
 
-/** The things and links of requirements/editor-requirements.gql, each thing with its id as its name. */
+/** The things and links of requirements/editor-requirements.md, each thing with its id as its name. */
 function requirements(g) {
   g.things.push('// ── This project: its requirements, tests and questions ──');
-  const text = readFileSync(join(ROOT, 'requirements/editor-requirements.gql'), 'utf8');
+  const text = readFileSync(join(ROOT, 'requirements/editor-requirements.md'), 'utf8');
   const ids = new Map();
   for (const m of text.matchAll(/^\((\w+):(\w+) \{(.*)\}\),?$/gm)) {
     const [, id, label, body] = m;
@@ -227,7 +227,7 @@ function code(g, reqs) {
       else if (t.replace(/^.*\/|\.\w+$/g, '') === test) g.link(fileId(f), 'TESTS', fileId(t));
   }
   // a requirement's test that names a file is proved in that file
-  const text = readFileSync(join(ROOT, 'requirements/editor-requirements.gql'), 'utf8');
+  const text = readFileSync(join(ROOT, 'requirements/editor-requirements.md'), 'utf8');
   for (const m of text.matchAll(/^\((test_\w+):Test \{.*?\bfile: '([^']+)'/gm))
     if (reqs.has(m[1]) && known.has(m[2])) g.link(reqs.get(m[1]), 'WRITTEN_IN', fileId(m[2]));
   return fileId;

@@ -23,7 +23,7 @@ import {
   runnersFrom,
   upsertComment,
 } from '../scripts/build-status-gh.mjs';
-import { REQUIREMENTS } from '../scripts/check-requirements.mjs';
+import { FORMER_REQUIREMENTS, REQUIREMENTS } from '../scripts/check-requirements.mjs';
 import { fakeRepoSide, pull } from './repository/build-status-fake.js';
 
 const REPO = 'rogerbucks/thoughtknot';
@@ -117,6 +117,14 @@ describe('the requirements file at a ref', () => {
     const where = ['api', `repos/${REPO}/contents/${REQUIREMENTS}`, '--method', 'GET', '-f', 'ref=main'];
     assert.deepEqual(ask.args, where, 'its size is asked for first');
     assert.deepEqual(get.args, [...where, '-H', 'Accept: application/vnd.github.raw+json']);
+  });
+
+  test('is the former graph file at a ref from before the requirements became a note', () => {
+    const side = fakeRepoSide();
+    side.hub.files.old = { [FORMER_REQUIREMENTS]: 'the graph file' };
+    assert.equal(readRequirementsAt(side.run, REPO, 'old'), 'the graph file');
+    side.hub.files.both = { [FORMER_REQUIREMENTS]: 'the graph file', [REQUIREMENTS]: 'the note' };
+    assert.equal(readRequirementsAt(side.run, REPO, 'both'), 'the note', 'the note wins where both are');
   });
 
   test('is nothing when there is no such file at the ref', () => {

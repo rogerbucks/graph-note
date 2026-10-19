@@ -4,7 +4,7 @@ Claude shows you a graph, walks you through it, and asks you to choose. Your cho
 Designed on 19 October 2026, against version 0.5.0, at Roger's request. Not built yet.
 
 The requirements are section 49 of
-[`requirements/editor-requirements.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.gql),
+[`requirements/editor-requirements.md`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.md),
 slice 10, in workstreams Y1 and Y2. They are built in Waves 23 and 24 of
 [`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json), after the
 Obsidian community release (R2). Roger's rule is that what he adds now goes after R2.
