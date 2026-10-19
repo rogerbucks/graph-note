@@ -151,6 +151,17 @@ holds the core to. Each view's query, run in Grafeo as written, returns the thin
 (views_agree_with_grafeo). The test also keeps a fixed list of GQL's and Cypher's words (never the lists it tests). Of
 those words, Grafeo refuses as a name and as a kind exactly the words the core keeps from them.
 
+### The conformance suite, in `conformance/`
+
+The graph spec's own test suite came from the owner's vault (GS1, spec_conformance_in_repo). It runs on the code here:
+this library, the portable reader and the JavaScript checker, built fresh each run.
+
+- `Standards/` holds the spec's prose, its cases and their documents. Each case's expected answers are data, in a yaml
+  block that starts `# conformance case`. Each document's `test_class` line is the class the case gives it.
+- `scripts/graph-spec-conformance.py --check` runs it all. It takes about two minutes and needs Grafeo and Node.
+- `tests/test_conformance_suite.py` runs it in CI, in the `python` job.
+- The scripts keep the vault's own style, so Ruff leaves them out. The rules file is `requirements/graph-spec.gql`.
+
 ### Parity with the core's drawing
 
 `test_graph_svg_nudges.py` holds graph_svg and `read_style` to the core, run live by Node, on `tests/nudge_cases.json`

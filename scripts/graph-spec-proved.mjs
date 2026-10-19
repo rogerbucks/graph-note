@@ -4,6 +4,9 @@
 // req:3.first-line. A rule counts as proved when a test file here cites that id. A proof the spec only names, such as
 // 'general' or a case kept in the owner's vault, counts for nothing, as CI cannot run it.
 //
+// A rule is also proved by the conformance suite kept here, in python/graph_spec/conformance (spec_conformance_in_repo).
+// Its proof must name a test that is in that case's data, and must not be partial. CI runs the suite.
+//
 // quality/graph-spec-unproved.json lists the rules no test proves yet, and the list only shrinks. A new unproved rule
 // fails. So does a listed rule that a test now proves, until it comes off the list.
 //
@@ -20,6 +23,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const SPEC = 'requirements/graph-spec.gql';
 export const LIST = 'quality/graph-spec-unproved.json';
+/** The conformance suite's documents: each case's data is a yaml block that starts `# conformance case`. */
+export const SUITE = 'python/graph_spec/conformance/Standards';
 /** The folders that hold tests, and the kinds of file a test or its cases is written in. */
 const TEST_DIRS = ['test', 'packages', 'python'];
 const TEST_FILE = /(^|\/)(test|tests)\/.+\.(m?js|ts|py|json)$/;
@@ -50,6 +55,45 @@ export function citedIds(files = TEST_DIRS.flatMap(testFiles).map((f) => [f, rea
   const cited = new Set();
   for (const [, text] of files) for (const m of text.matchAll(ID)) cited.add(m[0]);
   return cited;
+}
+
+/** {case name: case data} from the suite's documents. `files` is a list of [path, text]; by default the suite here. */
+export function suiteCases(files = suiteFiles()) {
+  const cases = new Map();
+  for (const [, text] of files)
+    for (const m of text.matchAll(/```yaml\n(# conformance case[\s\S]*?)\n```/g)) {
+      const name = /^case:\s*(.+)$/m.exec(m[1]);
+      if (name) cases.set(name[1].trim(), m[1]);
+    }
+  return cases;
+}
+
+function suiteFiles() {
+  const dir = join(ROOT, SUITE);
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => [`${SUITE}/${f}`, readFileSync(join(dir, f), 'utf8')]);
+}
+
+/** The rule ids the suite's cases prove: a full proof naming a test that is in its case's data. */
+export function suiteProved(text, cases = suiteCases()) {
+  const ids = new Map(
+    [...text.matchAll(/\((\w+):(?:Requirement|ConformanceCase) \{id: '([^']+)'/g)].map((m) => [m[1], m[2]]),
+  );
+  const proved = new Set();
+  for (const m of text.matchAll(/\((\w+)\)-\[:PROVED_BY \{test: '([^']+)'(, partial: TRUE)?\}\]->\((\w+)\)/g)) {
+    const [, rule, code, partial, kase] = m;
+    const data = cases.get((ids.get(kase) ?? '').replace(/^case:/, ''));
+    const named = new RegExp(`(?<![A-Za-z0-9])${code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![0-9a-z])`);
+    if (code !== 'general' && !partial && data && named.test(data)) proved.add(ids.get(rule));
+  }
+  return proved;
+}
+
+/** Every rule proved here: cited by a test, or proved by the suite. */
+export function provedIds() {
+  return new Set([...citedIds(), ...suiteProved(readFileSync(join(ROOT, SPEC), 'utf8'))]);
 }
 
 /** The spec's rules that no test cites, in the spec's order. */
@@ -96,7 +140,7 @@ export function indexProblems(text, { cited, exists = (rel) => existsSync(join(R
 
 function main(args) {
   const text = readFileSync(join(ROOT, SPEC), 'utf8');
-  const cited = citedIds();
+  const cited = provedIds();
   const now = unproved(text, cited);
   if (args[0] === '--update') {
     const list = {
