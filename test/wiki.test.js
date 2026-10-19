@@ -6,7 +6,7 @@ import { readBoard } from '../scripts/slice-board.mjs';
 import { bar, cell, fillMarkers, readQuestions, renderWiki, settingsTables, waveStates } from '../scripts/wiki.mjs';
 import { read } from './repository/repo.js';
 
-const requirementsText = read('requirements/editor-requirements.gql');
+const requirementsText = read('requirements/editor-requirements.md');
 const json = (rel) => JSON.parse(read(rel));
 const PAGES = {
   'Home.md': '# Home\n\n<!-- wiki:now -->\n',

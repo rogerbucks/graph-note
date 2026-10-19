@@ -2,6 +2,7 @@
 // requirements/waves.json says why. Pure: the real files are read, nothing is fetched.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { REQUIREMENTS } from '../scripts/check-requirements.mjs';
 import { readBoard } from '../scripts/slice-board.mjs';
 import { overdueWaves } from '../scripts/waves-on-time.mjs';
 import { waveStates } from '../scripts/wiki.mjs';
@@ -42,7 +43,7 @@ describe('a wave behind its dates', () => {
 
 describe('the real plan', () => {
   test('has no wave behind for more than one wave length without a reason', () => {
-    const { requirements } = readBoard(read('requirements/editor-requirements.gql'));
+    const { requirements } = readBoard(read(REQUIREMENTS));
     const states = waveStates(
       json('requirements/waves.json').waves,
       json('requirements/workstreams.json'),

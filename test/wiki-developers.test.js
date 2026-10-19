@@ -18,7 +18,7 @@ import {
 import { checkPage } from '../scripts/wiki-review.mjs';
 import { exists, read, readJSON } from './repository/repo.js';
 
-const requirementsText = read('requirements/editor-requirements.gql');
+const requirementsText = read('requirements/editor-requirements.md');
 const { requirements } = readBoard(requirementsText);
 const architectureText = read('requirements/architecture.gql');
 const DEVELOPER_PAGES = ['For-developers.md', 'Architecture.md', 'Writing-a-plug-in.md', 'Adding-a-host.md'];
