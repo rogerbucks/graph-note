@@ -1,0 +1,3149 @@
+{
+  "@thoughtknot/core": {
+    "version": "0.7.1",
+    "entries": {
+      ".": {
+        "acceptNameFirst": [
+          "value: (reading: SuggestedReading, graph: string, keys: readonly string[]) => string | null"
+        ],
+        "AcrossZoom": [
+          "class",
+          "static new (content: Size, viewport: Size, mode: Mode): AcrossZoom",
+          "aim: (box: { x: number; y: number; width: number; height: number; }, minScale?: number) => Place | null",
+          "fit: () => void",
+          "fitScale: () => number",
+          "handle: (e: ZoomEvent) => boolean",
+          "isFitted: () => boolean",
+          "keepClear: (bottom: number) => void",
+          "onChange?: ((view: View) => void) | undefined",
+          "onExit?: (() => void) | undefined",
+          "outLimit: () => number",
+          "panBy: (dx: number, dy: number) => void",
+          "resize: (viewport: Size, content?: Size) => void",
+          "restore: (scale: number, x: number, y: number) => void",
+          "reveal: (box: { x: number; y: number; width: number; height: number; }) => void",
+          "setMode: (mode: Mode) => void",
+          "touchAction: () => 'pan-x pan-y' | 'pan-y' | 'none'",
+          "view: () => View",
+          "zoomAt: (factor: number, px: number, py: number) => void",
+          "zoomedIn: () => boolean",
+          "zoomIn: () => void",
+          "zoomOut: () => void"
+        ],
+        "addThing": [
+          "value: (reading: NoteReading, graph: string, block: string, thing: NewThing) => ThingAdded"
+        ],
+        "addToList": [
+          "value: (block: string, reading: NoteReading, graph: string, thing: string, shape: ListShape, value: string) => ListEdit"
+        ],
+        "addTranslation": [
+          "value: (tag: string, translation: Catalogue) => void"
+        ],
+        "addView": [
+          "value: (note: string, graph: string, block: string) => { note: string; } | { refused: string; }"
+        ],
+        "AI_PURPOSES": [
+          "value: Array<string>"
+        ],
+        "aiModel": [
+          "value: (given: Partial<AiModel> & Record<string, unknown>, classifications?: string[]) => AiModel"
+        ],
+        "AiModel": [
+          "interface",
+          "ceiling: string",
+          "endpoint: string",
+          "keyName: string",
+          "matrixOn?: Array<MatrixSwitch> | undefined",
+          "matrixRow?: string | undefined",
+          "model: string",
+          "name: string",
+          "purpose: string"
+        ],
+        "aiReady": [
+          "value: (s: Settings) => { ready: AiModel[]; } | { off: string; }"
+        ],
+        "AiUse": [
+          "type = 'off' | 'on'"
+        ],
+        "ANIMATION_LIMITS": [
+          "value: Record<Device, { steps: number; bytes: number; }>"
+        ],
+        "animationFits": [
+          "value: (x: { steps: number; things: number; links: number; }, device: Device) => TooLargeToAnimate | null"
+        ],
+        "animationSaid": [
+          "value: (said: readonly string[]) => string"
+        ],
+        "applyChanges": [
+          "value: (text: string, changes: TextChange[]) => string"
+        ],
+        "ARROWHEADS": [
+          "value: readonly ['show', 'hide']"
+        ],
+        "ArrowheadsChoice": [
+          "type = 'show' | 'hide'"
+        ],
+        "Arrows": [
+          "interface",
+          "arrowheads: 'show' | 'hide'",
+          "at: StyleAt",
+          "type?: string | undefined",
+          "view?: string | undefined"
+        ],
+        "arrowsShown": [
+          "value: (style: Pick<StyleGraph, 'arrows'>, view: string | undefined, type: string) => boolean"
+        ],
+        "ArrowsWrite": [
+          "interface",
+          "arrowheads: string",
+          "type?: string | undefined",
+          "view?: string | undefined"
+        ],
+        "asNote": [
+          "value: (path: string, text: string) => string"
+        ],
+        "Attachment": [
+          "interface",
+          "name: string",
+          "target: string",
+          "type: string"
+        ],
+        "attachmentsOf": [
+          "value: (reading: NoteReading, graph: string, key: string) => Attachment[]"
+        ],
+        "attachmentType": [
+          "value: (target: string) => string | null"
+        ],
+        "basisOf": [
+          "value: (note: string, graph: string, shared?: string[]) => string"
+        ],
+        "BIG_PROPOSAL": [
+          "value: 8"
+        ],
+        "Block": [
+          "interface",
+          "line: number",
+          "text: string"
+        ],
+        "blockItems": [
+          "value: (text: string) => { text: string; line: number; end: number; }[]"
+        ],
+        "BlockRef": [
+          "interface",
+          "line: number",
+          "text: string"
+        ],
+        "Bounds": [
+          "interface",
+          "height: number",
+          "width: number",
+          "x: number",
+          "y: number"
+        ],
+        "boundsOf": [
+          "value: (areas: HitAreas, id: string) => Bounds | null"
+        ],
+        "Box": [
+          "interface",
+          "deferred?: { overdue: boolean; what: string; } | undefined",
+          "key: string",
+          "kind: string",
+          "note?: ThingNote | undefined",
+          "suggested?: { block: number; line: number; character: number; } | undefined",
+          "text: string"
+        ],
+        "BrokenLink": [
+          "interface",
+          "at: Target",
+          "link: FoundLink",
+          "meant: Array<string>",
+          "problem: Problem",
+          "property: string"
+        ],
+        "brokenLinks": [
+          "value: (reading: NoteReading, graph: string, vault: LinkVault) => BrokenLink[]"
+        ],
+        "BUSY_HUB": [
+          "value: number"
+        ],
+        "Catalogue": [
+          "type = { [x: string]: Words; }"
+        ],
+        "centres": [
+          "value: (areas: HitAreas) => Map<string, { x: number; y: number; }>"
+        ],
+        "Change": [
+          "type = 'other' | 'typing'"
+        ],
+        "CHANGE_LOOKS": [
+          "value: Record<MarkKind, ThingLook>"
+        ],
+        "ChangedFile": [
+          "interface",
+          "after: string | null",
+          "before: string | null",
+          "path: string"
+        ],
+        "ChangeGroup": [
+          "interface",
+          "accepted: number",
+          "ids: Array<string>",
+          "name: string",
+          "pending: number",
+          "rejected: number"
+        ],
+        "ChangeInput": [
+          "type = ChangeOp & { group?: string; reason?: string; }"
+        ],
+        "ChangeLine": [
+          "interface",
+          "details: Array<string>",
+          "id: string",
+          "mark: MarkKind",
+          "on: 'thing' | 'link'",
+          "said: string"
+        ],
+        "ChangeMark": [
+          "interface",
+          "ids: Array<string>",
+          "kind: MarkKind"
+        ],
+        "ChangeOp": [
+          "type = { op: 'add'; gql: string; } | { op: 'set'; thing: string; key: string; value: string; labels?: string[]; } | { op: 'remove-thing'; thing: string; detach?: false; labels?: string[]; } | { op: 'remove-link'; from: string; type: string; to: string; ends?: [string[], string[]]; }"
+        ],
+        "ChangeRow": [
+          "interface",
+          "blocked: string | null",
+          "decision?: Decision | undefined",
+          "group: string",
+          "id: string",
+          "mark: MarkKind",
+          "reason?: string | undefined",
+          "said: string",
+          "state: 'pending' | 'accepted' | 'rejected'",
+          "text: string"
+        ],
+        "changeSetId": [
+          "value: (block: string) => { graph: string; id: string; } | null"
+        ],
+        "changesIn": [
+          "value: (content: string) => ChangeInput[] | { unread: string; }"
+        ],
+        "ChangesShown": [
+          "interface",
+          "changes: Array<ChangeLine>",
+          "graph: string",
+          "marks: Marks",
+          "reading: NoteReading"
+        ],
+        "changesText": [
+          "value: (shown: ChangesShown) => string"
+        ],
+        "changesView": [
+          "value: (before: string, after: string, graph: string, shared?: string[]) => ChangesShown"
+        ],
+        "Choice": [
+          "interface",
+          "graph: string",
+          "label: string",
+          "line: number"
+        ],
+        "choose": [
+          "value: <T extends Laid>(laid: T[]) => T"
+        ],
+        "chosen": [
+          "value: (laidOut: Direction[], svgs: string[], palette?: Palette) => Drawn"
+        ],
+        "ClassGrant": [
+          "interface",
+          "allowed: boolean",
+          "changed: boolean",
+          "condition?: string | undefined",
+          "level: string | null",
+          "mark: Mark",
+          "name: string",
+          "on: boolean"
+        ],
+        "classificationOf": [
+          "value: (text: string) => NoteClassification"
+        ],
+        "classMapFrom": [
+          "value: (text: string) => Record<string, string>"
+        ],
+        "classMapProblems": [
+          "value: (classifications: string[], classMap: Record<string, string>) => string[]"
+        ],
+        "classMapText": [
+          "value: (map: Record<string, string>) => string"
+        ],
+        "CLAUDE": [
+          "value: 'Claude'"
+        ],
+        "claudeGate": [
+          "value: (text: string, settings: GateSettings, confirmed?: string | null) => Gate"
+        ],
+        "Clock": [
+          "interface",
+          "clearTimeout: (timer: unknown) => void",
+          "setTimeout: (run: () => void, ms: number) => unknown"
+        ],
+        "CodeAction": [
+          "interface",
+          "edit: { changes: Record<string, TextEdit[]>; }",
+          "isPreferred?: boolean | undefined",
+          "kind: 'quickfix'",
+          "title: string"
+        ],
+        "colonFor": [
+          "value: (text: string, caret: number, earlier?: string[]) => TextChange | null"
+        ],
+        "colonInNote": [
+          "value: (note: string, caret: number) => TextChange | null"
+        ],
+        "commaFor": [
+          "value: (text: string, caret: number) => number | null"
+        ],
+        "commaInNote": [
+          "value: (note: string, caret: number) => number | null"
+        ],
+        "CompanionInfo": [
+          "interface",
+          "data?: { things: number; links: number; faded?: { things: number; links: number; }; } | undefined",
+          "date: string",
+          "image: string",
+          "note: string",
+          "pages?: Array<string> | undefined",
+          "scope: ExportScope"
+        ],
+        "companionNote": [
+          "value: (info: CompanionInfo) => string"
+        ],
+        "CompanionSetting": [
+          "type = 'off' | 'on'"
+        ],
+        "completenessReport": [
+          "value: (reading: NoteReading, graph: string, today: string) => CompletenessReport"
+        ],
+        "CompletenessReport": [
+          "interface",
+          "gaps: number",
+          "rules: Array<RuleReport>"
+        ],
+        "CompletionItem": [
+          "interface",
+          "detail?: string | undefined",
+          "from?: number | undefined",
+          "insertText?: string | undefined",
+          "kind: 8 | 6 | 7",
+          "label: string"
+        ],
+        "completions": [
+          "value: (reading: NoteReading, graph: string, text: string, offset: number) => { from: number; items: CompletionItem[]; }"
+        ],
+        "Confirmation": [
+          "interface",
+          "readonly of: string"
+        ],
+        "confirmSend": [
+          "value: (p: PreparedSend) => Confirmation"
+        ],
+        "Converted": [
+          "type = { ok: true; note: string; changed: number; } | { ok: false; reason: string; }"
+        ],
+        "CORE_EXPORTS": [
+          "value: ThoughtKnotPlugin"
+        ],
+        "coverOf": [
+          "value: (viewport: { top: number; bottom: number; }, sheetTop: number) => number"
+        ],
+        "currentDirection": [
+          "value: () => 'ltr' | 'rtl'"
+        ],
+        "currentLanguage": [
+          "value: () => string"
+        ],
+        "currentLocale": [
+          "value: () => string"
+        ],
+        "DATA_FORMATS": [
+          "value: readonly ['gql', 'csv', 'graphml']"
+        ],
+        "DataExporter": [
+          "interface",
+          "extension: string",
+          "format: string",
+          "mime: string",
+          "title: string",
+          "write: (data: ExportedData, info: DataInfo) => string"
+        ],
+        "DataFormat": [
+          "type = 'gql' | 'csv' | 'graphml'"
+        ],
+        "DataInfo": [
+          "interface",
+          "date: string",
+          "note: string"
+        ],
+        "dataText": [
+          "value: (data: ExportedData, format: DataFormat, info: DataInfo) => string"
+        ],
+        "DecideOptions": [
+          "interface",
+          "at?: string | undefined",
+          "staleSeen?: boolean | undefined"
+        ],
+        "DECIDER_DEFAULT": [
+          "value: 'you'"
+        ],
+        "deciderName": [
+          "value: (setting: string | null | undefined) => string"
+        ],
+        "Decision": [
+          "interface",
+          "at: string",
+          "by: string",
+          "state: 'accepted' | 'rejected'"
+        ],
+        "declareDeferred": [
+          "value: (note: string, graph: string, indent?: string) => string"
+        ],
+        "declareDeferredBlock": [
+          "value: (blocks: string[], graph: string, indent?: string) => DeferredDeclared"
+        ],
+        "DEFAULT_LOCALE": [
+          "value: 'en-GB'"
+        ],
+        "DEFAULT_PACE": [
+          "value: number"
+        ],
+        "DEFAULT_SETTINGS": [
+          "value: Settings"
+        ],
+        "DeferredDeclared": [
+          "interface",
+          "block: number",
+          "text: string"
+        ],
+        "DeferredNotDeclared": [
+          "class",
+          "static new (graph: string, lacking: string[]): DeferredNotDeclared",
+          "cause?: unknown",
+          "readonly code: 'deferred-not-declared'",
+          "readonly graph: string",
+          "readonly lacking: Array<string>",
+          "message: string",
+          "name: string",
+          "stack?: string | undefined"
+        ],
+        "Departure": [
+          "type = 'missing-comma' | 'trailing-comma' | 'bare-type'"
+        ],
+        "DEPARTURES": [
+          "value: Array<{ id: Departure; name: string; sentence: string; }>"
+        ],
+        "depthOf": [
+          "value: (setting: string) => FocusDepth"
+        ],
+        "details": [
+          "value: (reading: NoteReading, graph: string, key: string) => Details | null"
+        ],
+        "Details": [
+          "interface",
+          "in: Array<LinkDetail>",
+          "key: string",
+          "kind: string",
+          "out: Array<LinkDetail>",
+          "problems: Array<Problem>",
+          "suggested?: Problem | undefined",
+          "text: string"
+        ],
+        "Device": [
+          "type = 'phone' | 'desktop'"
+        ],
+        "Diagnostic": [
+          "interface",
+          "code?: string | undefined",
+          "data: { fix: string; fixes: CodeAction[]; }",
+          "message: string",
+          "range: Range",
+          "severity: 3 | 2 | 1 | 4",
+          "source: 'thoughtknot'"
+        ],
+        "diagnostics": [
+          "value: (reading: NoteReading, graph: string, block: number, text: string, uri: string) => Diagnostic[]"
+        ],
+        "Diagram": [
+          "interface",
+          "at: StyleAt",
+          "relationship?: string | undefined",
+          "type: 'network' | 'tree' | 'flow' | 'radial' | 'lanes' | 'timeline' | 'table'",
+          "view?: string | undefined"
+        ],
+        "DIAGRAM_TYPES": [
+          "value: readonly ['network', 'tree', 'flow', 'radial', 'lanes', 'timeline', 'table']"
+        ],
+        "DiagramChoice": [
+          "interface",
+          "chosen?: 'network' | 'tree' | 'flow' | 'radial' | 'lanes' | 'timeline' | 'table' | undefined",
+          "drawn: 'network' | 'tree' | 'flow' | 'radial' | 'lanes' | 'timeline' | 'table'",
+          "plan?: DiagramPlan | undefined",
+          "stopped?: { type: DiagramType; why: string; nearest: DiagramType; } | undefined"
+        ],
+        "diagramFor": [
+          "value: (drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>, style: TypeStyle, g?: Graph, view?: string) => DiagramChoice"
+        ],
+        "diagramOffer": [
+          "value: (drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>, style: TypeStyle, g?: Graph, view?: string) => DiagramOffer"
+        ],
+        "DiagramOffer": [
+          "interface",
+          "choice: DiagramChoice",
+          "fits: Array<TypeFit>",
+          "suggested: Suggestion"
+        ],
+        "DiagramPlan": [
+          "type = { type: 'tree'; tree: number[]; } | { type: 'flow'; } | { type: 'radial'; centre: string; } | { type: 'lanes'; lanes: [string, string[]][]; groups?: [string, string[]][]; } | { type: 'timeline'; dates: string[][]; }"
+        ],
+        "DiagramTable": [
+          "interface",
+          "columns: Array<string>",
+          "links: Array<{ index: number; cells: [string, string, string]; properties: string; }>",
+          "rows: Array<{ key: string; cells: string[]; }>"
+        ],
+        "DiagramType": [
+          "type = 'network' | 'tree' | 'flow' | 'radial' | 'lanes' | 'timeline' | 'table'"
+        ],
+        "DiagramWrite": [
+          "interface",
+          "relationship?: string | undefined",
+          "type: string",
+          "view?: string | undefined"
+        ],
+        "DIFF_LIMIT": [
+          "value: number"
+        ],
+        "DiffLine": [
+          "interface",
+          "kind: 'add' | 'remove' | 'keep'",
+          "new?: number | undefined",
+          "old?: number | undefined",
+          "text: string"
+        ],
+        "Direction": [
+          "interface",
+          "dot: string",
+          "rankdir: string",
+          "src: LayoutSource"
+        ],
+        "directionOf": [
+          "value: (tag: string) => 'ltr' | 'rtl'"
+        ],
+        "directions": [
+          "value: (drawing: GraphDrawing) => Direction[]"
+        ],
+        "distance": [
+          "value: (a: string, b: string) => number"
+        ],
+        "draw": [
+          "value: (drawing: GraphDrawing, engine: Engine) => Drawn"
+        ],
+        "DrawingHeightSetting": [
+          "type = 'none' | 'half' | 'most'"
+        ],
+        "drawingSource": [
+          "value: (d: GraphDrawing, rankdir: 'LR' | 'TB') => string"
+        ],
+        "Drawn": [
+          "interface",
+          "height: number",
+          "rankdir: string",
+          "svg: string",
+          "width: number"
+        ],
+        "edgesOf": [
+          "value: (d: GraphDrawing) => FocusEdge[]"
+        ],
+        "Edit": [
+          "type = { ok: true; text: string; } | { ok: false; reason: string; }"
+        ],
+        "embeddedMarkdown": [
+          "value: (note: string, heading?: string) => string"
+        ],
+        "EmbedPart": [
+          "type = { text: string; } | { embed: FoundLink; }"
+        ],
+        "embedParts": [
+          "value: (markdown: string) => EmbedPart[]"
+        ],
+        "emphasis": [
+          "value: (layers: { focus: Kept | null; forward: Kept | null; route: Kept | null; }) => Kept | null"
+        ],
+        "endpointProblem": [
+          "value: (endpoint: string) => string | null"
+        ],
+        "Engine": [
+          "interface",
+          "render: (source: string) => string",
+          "version: string"
+        ],
+        "Estimate": [
+          "interface",
+          "block: number",
+          "explain: string",
+          "from: string",
+          "index?: number | undefined",
+          "kind: 'name' | 'type'",
+          "line: number",
+          "reading: string",
+          "span?: Place | undefined",
+          "taken: string",
+          "to: string",
+          "type: string",
+          "written: string"
+        ],
+        "estimateEdge": [
+          "value: (d: GraphDrawing, n: number) => number"
+        ],
+        "estimateFix": [
+          "value: (reading: NoteReading, graph: string, index: number, text: string, uri: string) => EstimateFix | null"
+        ],
+        "EstimateFix": [
+          "interface",
+          "block: number",
+          "fix: CodeAction",
+          "range: Range"
+        ],
+        "evaluate": [
+          "value: (view: ViewSpec, reading: PathReading, graph: string) => ViewResult"
+        ],
+        "explain": [
+          "value: (kind: 'name' | 'type', graph: string, fixes: Correction[], line: number) => string"
+        ],
+        "EXPORT_FORMATS": [
+          "value: readonly ['svg', 'png']"
+        ],
+        "ExportDecision": [
+          "type = { nothing: string; } | { ask: string; } | { go: ExportGo; }"
+        ],
+        "exportedData": [
+          "value: (reading: NoteReading, scope: ExportScope) => ExportedData"
+        ],
+        "ExportedData": [
+          "interface",
+          "faded?: { things: string[]; links: number[]; } | undefined",
+          "graph: string",
+          "links: Array<DataLink>",
+          "notes?: { things: [id: string, text: string][]; links: [at: number, text: string][]; } | undefined",
+          "things: Array<DataThing>",
+          "view?: string | undefined"
+        ],
+        "exporterContract": [
+          "value: (e: DataExporter) => PluginCheck[]"
+        ],
+        "ExportFormat": [
+          "type = 'svg' | 'png'"
+        ],
+        "ExportGo": [
+          "interface",
+          "companion: { fileName: string; path: string; } | null",
+          "fileName: string",
+          "folder: string",
+          "format: 'gql' | 'csv' | 'graphml' | 'svg' | 'png'",
+          "pages?: Array<{ fileName: string; path: string; }> | undefined",
+          "path: string"
+        ],
+        "ExportImage": [
+          "interface",
+          "animation?: Array<string> | undefined",
+          "height: number",
+          "svg: string",
+          "width: number"
+        ],
+        "ExportInfo": [
+          "type = { note: string; date: string; theme: ExportTheme; motion?: boolean; walk?: ExportWalk; device?: Device; pictures?: PictureLoad; } & ({ style?: undefined; data?: undefined; } | { style: StyleGraph; data: Graph; })"
+        ],
+        "ExportLayout": [
+          "type = (drawing: GraphDrawing, theme: ExportTheme) => Promise<Drawn | Refusal | null>"
+        ],
+        "exportPlan": [
+          "value: (input: ExportPlanInput) => ExportDecision"
+        ],
+        "ExportPlanInput": [
+          "interface",
+          "confirmed?: boolean | undefined",
+          "date: string",
+          "format: 'gql' | 'csv' | 'graphml' | 'svg' | 'png'",
+          "note: string",
+          "noteClassification: string | null",
+          "pages?: number | undefined",
+          "scope: ExportScope",
+          "settings: Pick<Settings, 'classifications' | 'exportAsksAbove' | 'exportFolder' | 'companionNote'>",
+          "toVault?: boolean | undefined"
+        ],
+        "ExportRequest": [
+          "interface",
+          "context?: boolean | undefined",
+          "graph: string",
+          "view?: { name: string; spec: ViewSpec; } | undefined"
+        ],
+        "exportScope": [
+          "value: (reading: NoteReading, request: ExportRequest) => ExportScope"
+        ],
+        "ExportScope": [
+          "interface",
+          "context: boolean",
+          "drawing: GraphDrawing",
+          "empty: boolean",
+          "faded: { things: string[]; links: number[]; }",
+          "graph: string",
+          "kind: 'diagram' | 'view'",
+          "linksAt?: Array<number> | undefined",
+          "reading?: string | undefined",
+          "view?: string | undefined",
+          "why?: string | undefined"
+        ],
+        "exportSvg": [
+          "value: (scope: ExportScope, engine: Engine, info: ExportInfo) => ExportImage"
+        ],
+        "ExportTheme": [
+          "type = 'light' | 'dark'"
+        ],
+        "ExportWalk": [
+          "interface",
+          "pace: number",
+          "path: WalkedPath"
+        ],
+        "exportWithLayout": [
+          "value: (scope: ExportScope, layout: ExportLayout, info: ExportInfo) => Promise<ExportImage | Refusal | TooLargeToAnimate | null>"
+        ],
+        "EXTENSION_POINTS": [
+          "value: readonly ['exports', 'theme']"
+        ],
+        "ExtensionPoint": [
+          "type = 'exports' | 'theme'"
+        ],
+        "ExtensionPoints": [
+          "interface",
+          "exports?: { add: (exporter: DataExporter) => void; } | undefined",
+          "theme?: { core: readonly string[]; add: (token: ThemeToken) => void; } | undefined"
+        ],
+        "FADE": [
+          "value: { readonly fill: 0; readonly width: 1; readonly text: 0.95; }"
+        ],
+        "FileLines": [
+          "interface",
+          "lines: Array<DiffLine> | null",
+          "path: string"
+        ],
+        "find": [
+          "value: (reading: NoteReading, graph: string, query: string, limit?: number) => Found[]"
+        ],
+        "FIND_LIMIT": [
+          "value: 20"
+        ],
+        "fixed": [
+          "value: (x: number, digits: number) => string"
+        ],
+        "fixedPalette": [
+          "value: (t: ThemeColours) => Palette"
+        ],
+        "Flow": [
+          "interface",
+          "at: StyleAt",
+          "means?: string | undefined",
+          "motion: 'dashes' | 'dot' | 'still'",
+          "type?: string | undefined",
+          "view?: string | undefined"
+        ],
+        "FLOW_ICONS": [
+          "value: Record<Moving, string>"
+        ],
+        "FLOW_MOTIONS": [
+          "value: readonly ['dashes', 'dot', 'still']"
+        ],
+        "flowFor": [
+          "value: (style: Pick<StyleGraph, 'flows'>, view: string | undefined, type: string) => { motion: Moving; means: string; } | null"
+        ],
+        "flowLegend": [
+          "value: (flow: readonly FlowLink[]) => FlowLegendEntry[]"
+        ],
+        "FlowLegendEntry": [
+          "interface",
+          "icon: string",
+          "means: string",
+          "motion: Moving",
+          "words: string"
+        ],
+        "FlowLink": [
+          "interface",
+          "index: number",
+          "means: string",
+          "motion: Moving"
+        ],
+        "FlowMotion": [
+          "type = 'dashes' | 'dot' | 'still'"
+        ],
+        "flowSaid": [
+          "value: (f: Pick<FlowLink, 'motion' | 'means'>) => string"
+        ],
+        "FocusDepth": [
+          "type = 2 | 1"
+        ],
+        "FocusDepthSetting": [
+          "type = 'one' | 'two'"
+        ],
+        "FocusEdge": [
+          "interface",
+          "from: string",
+          "to: string",
+          "type?: string | undefined"
+        ],
+        "focusOf": [
+          "value: (edges: readonly FocusEdge[], target: FocusTarget, depth?: FocusDepth) => Kept | null"
+        ],
+        "FocusState": [
+          "class",
+          "static new (): FocusState",
+          "clear: () => boolean",
+          "kept: (edges: readonly FocusEdge[], depth: FocusDepth) => Kept | null",
+          "select: (target: FocusTarget) => void",
+          "target: FocusTarget | null"
+        ],
+        "FocusTarget": [
+          "type = { thing: string; } | { edge: number; }"
+        ],
+        "Fold": [
+          "type = { hub: string; } | { group: string; }"
+        ],
+        "Folding": [
+          "interface",
+          "folded: Array<number>",
+          "groups: Array<[string, Array<string>, boolean]>",
+          "hidden: Array<string>",
+          "hubs: Array<[string, number]>",
+          "merge: boolean"
+        ],
+        "foldsHiding": [
+          "value: (plan: Folding | undefined, edges: readonly FocusEdge[], key: string) => { hubs: string[]; group?: string; }"
+        ],
+        "formatCount": [
+          "value: (n: number) => string"
+        ],
+        "formatDay": [
+          "value: (iso: string) => string"
+        ],
+        "formatInstant": [
+          "value: (at: Date) => string"
+        ],
+        "formatList": [
+          "value: (words: string[], type?: 'conjunction' | 'disjunction') => string"
+        ],
+        "FORMATS": [
+          "value: readonly ['plain', 'bold', 'italic']"
+        ],
+        "formatSize": [
+          "value: (bytes: number) => string"
+        ],
+        "Found": [
+          "interface",
+          "key: string",
+          "kind: string",
+          "text: string",
+          "via: string"
+        ],
+        "FoundLink": [
+          "interface",
+          "embed: boolean",
+          "end: number",
+          "kind: LinkKind",
+          "label: string",
+          "markdown: boolean",
+          "opens: string",
+          "start: number",
+          "target: string",
+          "targetAt: { start: number; end: number; }",
+          "written: string"
+        ],
+        "Frame": [
+          "interface",
+          "height: number",
+          "width: number",
+          "x: number",
+          "y: number"
+        ],
+        "Gate": [
+          "type = { open: true; } | { ask: string; } | { refuse: string; }"
+        ],
+        "GateSettings": [
+          "type = Pick<Settings, 'classifications' | 'aiUnlabelled'> & { aiModels: readonly AiModel[]; matrix?: MatrixRow[]; aiClassMap?: Record<string, string>; aiMatrixNote?: string; matrixProblem?: string; }"
+        ],
+        "givenLabel": [
+          "value: (g: StepGiven) => string"
+        ],
+        "glideAt": [
+          "value: (from: Place, to: Place, t: number) => Place"
+        ],
+        "gqlBlocks": [
+          "value: (note: string) => Block[]"
+        ],
+        "gqlSpans": [
+          "value: (note: string) => Span[]"
+        ],
+        "GraphChanges": [
+          "interface",
+          "graph: string",
+          "path: string",
+          "shown: ChangesShown"
+        ],
+        "GraphDrawing": [
+          "interface",
+          "arrowless?: Array<number> | undefined",
+          "boxes: Array<Box>",
+          "diagram?: DiagramPlan | undefined",
+          "direction?: string | undefined",
+          "estimates: Array<Estimate>",
+          "flow?: Array<FlowLink> | undefined",
+          "folding?: Folding | undefined",
+          "graph: string",
+          "inline?: InlineProperties | undefined",
+          "links: Array<Link>",
+          "nudges?: Array<Nudge> | undefined",
+          "pictures?: Array<PictureBox> | undefined",
+          "routing?: 'straight' | 'right-angled' | undefined"
+        ],
+        "GraphNames": [
+          "type = Iterable<string> | ReadonlyMap<string, string>"
+        ],
+        "graphOfBlock": [
+          "value: (text: string) => string | null"
+        ],
+        "GraphShape": [
+          "interface",
+          "groups?: Array<[string, Array<string>]> | undefined",
+          "links: Array<ShapeLink>",
+          "things: Array<ShapeThing>"
+        ],
+        "GraphSource": [
+          "interface",
+          "block: number",
+          "graph: string",
+          "kind: 'note' | 'file'",
+          "target: string"
+        ],
+        "GraphStep": [
+          "interface",
+          "block: number",
+          "graph: string",
+          "name: string",
+          "points: Array<StepPoint>",
+          "rule: StepRule"
+        ],
+        "groupSaid": [
+          "value: (g: SummaryGroup) => string"
+        ],
+        "highlightOf": [
+          "value: (edges: readonly FocusEdge[], target: FocusTarget) => Kept | null"
+        ],
+        "History": [
+          "class",
+          "static new (): History",
+          "canRedo: () => boolean",
+          "canUndo: () => boolean",
+          "clear: () => void",
+          "record: (before: string, after: string) => void",
+          "redo: () => string | null",
+          "undo: () => string | null"
+        ],
+        "hitAreas": [
+          "value: (svg: string) => HitAreas"
+        ],
+        "HitAreas": [
+          "interface",
+          "shapes: Array<Shape>",
+          "viewBox: { x: number; y: number; width: number; height: number; }"
+        ],
+        "hops": [
+          "value: (text: string) => [string, string, string][]"
+        ],
+        "HostAi": [
+          "interface",
+          "name: string"
+        ],
+        "hueColour": [
+          "value: (hue: string, part: 'fill' | 'line' | 'label', p?: Palette) => string"
+        ],
+        "IMAGE_EXTENSIONS": [
+          "value: ReadonlySet<string>"
+        ],
+        "IMAGE_LIMITS": [
+          "value: { readonly bytes: number; readonly pixels: 2000000; readonly frames: 500; readonly moving: 6; }"
+        ],
+        "ImageAt": [
+          "interface",
+          "facts: ImageFacts | null",
+          "neverMoves?: boolean | undefined",
+          "size: number"
+        ],
+        "imageFacts": [
+          "value: (bytes: Uint8Array) => ImageFacts"
+        ],
+        "ImageFacts": [
+          "interface",
+          "animated: boolean",
+          "format: ImageFormat | null",
+          "frames: number",
+          "height: number",
+          "width: number"
+        ],
+        "ImageFormat": [
+          "type = 'svg' | 'png' | 'gif' | 'webp' | 'jpeg' | 'avif'"
+        ],
+        "imageLink": [
+          "value: (value: unknown) => ImageLink | null"
+        ],
+        "ImageLink": [
+          "type = { link: string; } | { refused: string; }"
+        ],
+        "imagesOf": [
+          "value: (props: Record<string, unknown>) => NamedImage[]"
+        ],
+        "Indent": [
+          "type = 'two' | 'four' | 'tab'"
+        ],
+        "indentText": [
+          "value: (indent: Indent) => string"
+        ],
+        "Inline": [
+          "interface",
+          "add: string",
+          "caretAfter: number",
+          "kind: InlineKind"
+        ],
+        "INLINE": [
+          "value: readonly ['on', 'off']"
+        ],
+        "INLINE_ROWS": [
+          "value: 4"
+        ],
+        "inlineCompletion": [
+          "value: (reading: NoteReading, graph: string, text: string, caret: number) => Inline | null"
+        ],
+        "InlineKind": [
+          "type = 'type' | 'closer' | 'keyword' | 'kind' | 'property' | 'value'"
+        ],
+        "InlineProperties": [
+          "interface",
+          "boxes: Array<[string, Array<PropertyRow>]>",
+          "links: Array<[number, Array<PropertyRow>]>"
+        ],
+        "InlineSwitch": [
+          "type = 'off' | 'on'"
+        ],
+        "insertBlockAfter": [
+          "value: (note: string, ref: BlockRef, text: string) => WriteResult"
+        ],
+        "inThreadPort": [
+          "value: (serve: (scope: LayoutScope) => void) => LayoutPort"
+        ],
+        "isDataFormat": [
+          "value: (format: string) => format is DataFormat"
+        ],
+        "isDraft": [
+          "value: (reading: NoteReading, graph: string) => boolean"
+        ],
+        "isPseudoWord": [
+          "value: (text: string) => boolean"
+        ],
+        "isSharedSchema": [
+          "value: (text: string) => boolean"
+        ],
+        "isSourceBlock": [
+          "value: (text: string) => boolean"
+        ],
+        "isStepBlock": [
+          "value: (text: string) => boolean"
+        ],
+        "Kept": [
+          "interface",
+          "edges: Set<number>",
+          "things: Set<string>"
+        ],
+        "KEPT": [
+          "value: { readonly width: 2; }"
+        ],
+        "KIND": [
+          "value: { readonly Variable: 6; readonly Class: 7; readonly Interface: 8; }"
+        ],
+        "kindLegend": [
+          "value: (d: GraphDrawing) => LegendItem[]"
+        ],
+        "LABEL_SCALE": [
+          "value: number"
+        ],
+        "labelsHidden": [
+          "value: (switches: Pick<ViewSwitches, 'labels'>, scale: number) => boolean"
+        ],
+        "Landing": [
+          "interface",
+          "nudge: NudgeWrite",
+          "other: string",
+          "side: Side"
+        ],
+        "landingFor": [
+          "value: (dragged: string, at: { x: number; y: number; }, boxes: readonly PlacedBox[], rankdir: string, written?: readonly WrittenNudge[], centre?: string) => Landing | null"
+        ],
+        "landingSaid": [
+          "value: (l: Landing, dragged: string, textOf: (key: string) => string) => string"
+        ],
+        "LARGE_GRAPH": [
+          "value: 50"
+        ],
+        "Layers": [
+          "interface",
+          "hidden: Kept",
+          "kept: Kept | null"
+        ],
+        "LAYOUT_LIMITS": [
+          "value: LayoutLimits"
+        ],
+        "LayoutLimits": [
+          "interface",
+          "links: number",
+          "ms: number",
+          "sourceBytes: number",
+          "startMs: number",
+          "things: number",
+          "word: number"
+        ],
+        "LayoutPort": [
+          "interface",
+          "onerror: ((event: unknown) => void) | null",
+          "onmessage: ((event: { data: LayoutReply; }) => void) | null",
+          "postMessage: (request: LayoutRequest) => void",
+          "terminate: () => void"
+        ],
+        "LayoutReply": [
+          "type = { ready: true; } | { ready: false; error: string; } | { id: number; drawn: Drawn; } | { id: number; refusal: Refusal; } | { id: number; error: string; }"
+        ],
+        "LayoutRequest": [
+          "interface",
+          "drawing: GraphDrawing",
+          "id: number",
+          "sourceBytes: number",
+          "theme?: ExportTheme | undefined"
+        ],
+        "LayoutRunner": [
+          "class",
+          "static new (options: RunnerOptions): LayoutRunner",
+          "close: () => void",
+          "draw: (drawing: GraphDrawing, owner?: object, theme?: ExportTheme) => Promise<Drawn | Refusal | null>"
+        ],
+        "LayoutScope": [
+          "interface",
+          "onmessage: ((event: { data: LayoutRequest; }) => void) | null",
+          "postMessage: (reply: LayoutReply) => void"
+        ],
+        "layoutSource": [
+          "value: (d: GraphDrawing, rankdir: 'LR' | 'TB') => LayoutSource"
+        ],
+        "leavingWords": [
+          "value: (link: FoundLink) => string | null"
+        ],
+        "LEGEND_CHOICES": [
+          "value: readonly ['forward', 'hidden']"
+        ],
+        "LegendChoice": [
+          "interface",
+          "id: string",
+          "state: 'forward' | 'hidden'"
+        ],
+        "LegendChoiceState": [
+          "type = 'forward' | 'hidden'"
+        ],
+        "LegendEntry": [
+          "interface",
+          "colour: string",
+          "means: string"
+        ],
+        "LegendFilter": [
+          "class",
+          "static new (): LegendFilter",
+          "any: () => boolean",
+          "apply: (d: GraphDrawing, edges: readonly FocusEdge[]) => { forward: Kept | null; hidden: Kept; }",
+          "choices: () => LegendChoice[]",
+          "choose: (id: string) => LegendState",
+          "reset: () => void",
+          "restore: (choices: readonly LegendChoice[]) => void",
+          "state: (id: string) => LegendState"
+        ],
+        "LegendItem": [
+          "interface",
+          "count: number",
+          "id: string",
+          "label: string",
+          "name: string",
+          "what: 'type' | 'kind'"
+        ],
+        "legendOf": [
+          "value: (style: StyleGraph, scope: StyleScope) => LegendEntry[]"
+        ],
+        "LegendState": [
+          "type = 'forward' | 'hidden' | 'normal'"
+        ],
+        "LIMITS_SAID": [
+          "value: string"
+        ],
+        "lineDiff": [
+          "value: (before: string, after: string, limit?: number) => DiffLine[] | null"
+        ],
+        "lineInSource": [
+          "value: (read: SourceRead, p: Pick<Problem, 'block' | 'line'>) => number"
+        ],
+        "LINES": [
+          "value: readonly ['solid', 'dashed', 'dotted', 'bold']"
+        ],
+        "LineStyle": [
+          "type = 'bold' | 'solid' | 'dashed' | 'dotted'"
+        ],
+        "Link": [
+          "interface",
+          "edge?: number | undefined",
+          "from: string",
+          "note?: ThingNote | undefined",
+          "reading: string",
+          "to: string",
+          "type: string"
+        ],
+        "linkChange": [
+          "value: (from: string, type: string, to: string, properties?: Record<string, string | number | boolean>, extra?: { group?: string; reason?: string; }) => ChangeInput"
+        ],
+        "LinkDetail": [
+          "interface",
+          "key: string",
+          "reading: string",
+          "text: string"
+        ],
+        "linkDetails": [
+          "value: (reading: NoteReading, graph: string, index: number) => LinkDetails | null"
+        ],
+        "LinkDetails": [
+          "interface",
+          "from: { key: string; text: string; }",
+          "index: number",
+          "problems: Array<Problem>",
+          "properties: Array<[string, string]>",
+          "reading: string",
+          "to: { key: string; text: string; }",
+          "type: string"
+        ],
+        "linkedValues": [
+          "value: (reading: NoteReading, graph: string, thing: string, shape: ListShape) => ListValue[]"
+        ],
+        "LinkGroup": [
+          "interface",
+          "after: string",
+          "before: string",
+          "count: number",
+          "direction: 'out' | 'in'",
+          "reading: string",
+          "things: Array<{ key: string; text: string; link: number; links: number[]; }>",
+          "type: string",
+          "words: string"
+        ],
+        "linkGroups": [
+          "value: (reading: NoteReading, graph: string, key: string) => LinkGroup[]"
+        ],
+        "linkInBlock": [
+          "value: (reading: NoteReading, graph: string, index: number, block: string) => number"
+        ],
+        "linkKind": [
+          "value: (target: string) => LinkKind"
+        ],
+        "LinkKind": [
+          "type = 'note' | 'file' | 'web' | 'mail' | 'refused'"
+        ],
+        "Links": [
+          "interface",
+          "at: StyleAt",
+          "merge?: 'off' | 'on' | undefined",
+          "routing?: 'straight' | 'right-angled' | 'curved' | undefined",
+          "view?: string | undefined"
+        ],
+        "linksHeld": [
+          "value: (reading: NoteReading, graph: string, t: Target) => PlacedLink[]"
+        ],
+        "linksIn": [
+          "value: (text: string) => FoundLink[]"
+        ],
+        "linksOf": [
+          "value: (style: Pick<StyleGraph, 'links'>, view?: string) => { routing: Routing; merge: boolean; }"
+        ],
+        "linksSaid": [
+          "value: (reading: NoteReading, graph: string, key: string) => string"
+        ],
+        "LinkTarget": [
+          "interface",
+          "from: string",
+          "to: string",
+          "type: string"
+        ],
+        "linkTo": [
+          "value: (href: string) => FoundLink"
+        ],
+        "LinkVault": [
+          "interface",
+          "found: (target: string) => boolean",
+          "names: ReadonlyArray<string>"
+        ],
+        "ListEdit": [
+          "type = { ok: true; text: string; said: string; things: ListValue[]; } | { ok: false; reason: string; }"
+        ],
+        "ListShape": [
+          "interface",
+          "kind: string",
+          "rel: string"
+        ],
+        "listsOf": [
+          "value: (reading: NoteReading, graph: string, thing: string) => ListShape[]"
+        ],
+        "ListValue": [
+          "interface",
+          "text: string",
+          "thing: string"
+        ],
+        "listValues": [
+          "value: (words: string) => string[]"
+        ],
+        "LoadedImage": [
+          "interface",
+          "base64: string",
+          "facts: ImageFacts | null",
+          "mime: string",
+          "name: string",
+          "size: number",
+          "still?: string | undefined"
+        ],
+        "loadEngine": [
+          "value: () => Promise<Engine>"
+        ],
+        "lockBlock": [
+          "value: (reading: NoteReading, graph: string, today: string, indent?: string) => string"
+        ],
+        "Look": [
+          "interface",
+          "at: StyleAt",
+          "colour?: string | undefined",
+          "format?: 'plain' | 'bold' | 'italic' | undefined",
+          "kind?: string | undefined",
+          "line?: 'bold' | 'solid' | 'dashed' | 'dotted' | undefined",
+          "link?: LinkTarget | undefined",
+          "means?: string | undefined",
+          "path?: string | undefined",
+          "thing?: string | undefined",
+          "view?: string | undefined"
+        ],
+        "lookOf": [
+          "value: (style: StyleGraph, scope: StyleScope, target: StyleTarget) => ThingLook"
+        ],
+        "LookWrite": [
+          "interface",
+          "colour?: string | undefined",
+          "format?: string | undefined",
+          "kind?: string | undefined",
+          "line?: string | undefined",
+          "link?: LinkTarget | undefined",
+          "means?: string | undefined",
+          "path?: string | undefined",
+          "thing?: string | undefined",
+          "view?: string | undefined"
+        ],
+        "makeList": [
+          "value: (block: string, reading: NoteReading, graph: string, thing: string, key: string | null, shape: ListShape) => ListEdit"
+        ],
+        "makeProposal": [
+          "value: (input: ProposalInput) => Proposal | { refused: string; }"
+        ],
+        "makeView": [
+          "value: (graph: string, name: string, spec: ViewSpec) => { block: string; } | { refused: string; }"
+        ],
+        "Mark": [
+          "type = 'yes' | 'conditional' | 'no' | 'unknown'"
+        ],
+        "MARK_WORDS": [
+          "value: Record<MarkKind, string>"
+        ],
+        "markedChanges": [
+          "value: (svg: string, shown: ChangesShown, palette: Palette) => string"
+        ],
+        "MarkKind": [
+          "type = 'add' | 'change' | 'remove'"
+        ],
+        "Marks": [
+          "interface",
+          "boxes: Map<string, ChangeMark>",
+          "links: Map<number, ChangeMark>"
+        ],
+        "matchClass": [
+          "value: (name: string, classifications: string[], classMap: Record<string, string>) => string | null"
+        ],
+        "MatrixCell": [
+          "interface",
+          "class: string",
+          "condition?: string | undefined",
+          "mark: Mark"
+        ],
+        "matrixGrants": [
+          "value: (model: Pick<AiModel, 'matrixRow' | 'matrixOn'>, rows: MatrixRow[], classifications: string[], classMap: Record<string, string>) => ClassGrant[]"
+        ],
+        "MatrixInput": [
+          "interface",
+          "classMap: Record<string, string>",
+          "rows: Array<MatrixRow>"
+        ],
+        "matrixProblems": [
+          "value: (rows: MatrixRow[], classifications: string[], classMap: Record<string, string>) => string[]"
+        ],
+        "MatrixRow": [
+          "interface",
+          "cells: Array<MatrixCell>",
+          "name: string"
+        ],
+        "MatrixSwitch": [
+          "interface",
+          "class: string",
+          "condition: string"
+        ],
+        "MAX_SCALE": [
+          "value: 4"
+        ],
+        "mergePathProblems": [
+          "value: (reading: PathReading) => Problem[]"
+        ],
+        "MiniMapSetting": [
+          "type = 'off' | 'auto' | 'always'"
+        ],
+        "Mode": [
+          "type = 'note' | 'full' | 'pane'"
+        ],
+        "ModelChoice": [
+          "interface",
+          "forPurpose: boolean",
+          "model?: AiModel | undefined",
+          "name: string",
+          "source: 'host' | 'settings'"
+        ],
+        "modelChoices": [
+          "value: (s: Settings, purpose: string, hostAi?: HostAi | null) => ModelChoice[]"
+        ],
+        "MOVE_MS": [
+          "value: 240"
+        ],
+        "Moving": [
+          "type = 'dashes' | 'dot'"
+        ],
+        "NamedImage": [
+          "interface",
+          "image: ImageLink",
+          "property: string",
+          "value: string"
+        ],
+        "NamedView": [
+          "interface",
+          "block: number",
+          "fault?: string | undefined",
+          "graph: string",
+          "name: string",
+          "query: string"
+        ],
+        "nameFromText": [
+          "value: (text: string, names: GraphNames, kind?: string, given?: NameStyle) => string"
+        ],
+        "nameSlug": [
+          "value: (text: string, kind?: string) => string"
+        ],
+        "namesSharedSchema": [
+          "value: (text: string) => boolean"
+        ],
+        "NameStyle": [
+          "interface",
+          "casing: 'snake' | 'camel' | 'pascal'",
+          "prefix: 'none' | 'kind' | 'initial'",
+          "words: number"
+        ],
+        "nameStyleOf": [
+          "value: (names: GraphNames) => NameStyle"
+        ],
+        "nameWords": [
+          "value: (text: string) => string[]"
+        ],
+        "nearby": [
+          "value: (areas: HitAreas, x: number, y: number, radius: number) => string[]"
+        ],
+        "nearestType": [
+          "value: (type: DiagramType, fits: readonly Pick<TypeFit, 'type' | 'fits'>[]) => DiagramType"
+        ],
+        "neighbourhood": [
+          "value: (edges: readonly FocusEdge[], key: string, steps: FocusDepth) => Kept"
+        ],
+        "neighbourhoodWords": [
+          "value: (text: string, reach: number) => string"
+        ],
+        "neverMoves": [
+          "value: (name: string) => boolean"
+        ],
+        "NewThing": [
+          "interface",
+          "kind?: string | undefined",
+          "name?: string | undefined",
+          "text: string"
+        ],
+        "nextAlong": [
+          "value: (edges: readonly FocusEdge[], places: ReadonlyMap<string, { x: number; y: number; }>, from: string, arrow: string) => string | null"
+        ],
+        "NO_BASIS": [
+          "value: '0000000000000000'"
+        ],
+        "NO_CHANGES": [
+          "value: 'No changes between these versions.'"
+        ],
+        "noteClassification": [
+          "value: (text: string) => string | null"
+        ],
+        "NoteClassification": [
+          "type = { kind: 'none'; } | { kind: 'given'; level: string; } | { kind: 'unknown'; }"
+        ],
+        "noteOf": [
+          "value: (_reading: NoteReading, _graph: string, key: string) => FoundLink | null"
+        ],
+        "NoteReading": [
+          "interface",
+          "graphs: Map<string, GraphDrawing>",
+          "problems: Array<Problem>",
+          "texts: Array<string>",
+          "tooLarge?: Refusal | undefined",
+          "whole: World",
+          "world: World"
+        ],
+        "noteWithProposal": [
+          "value: (note: string, given: Proposal) => string | { refused: string; }"
+        ],
+        "Nudge": [
+          "interface",
+          "at: StyleAt",
+          "direction?: string | undefined",
+          "group?: string | undefined",
+          "other?: string | undefined",
+          "thing?: string | undefined",
+          "word: 'beside' | 'before' | 'group' | 'direction'"
+        ],
+        "NUDGE_WORDS": [
+          "value: readonly ['beside', 'before', 'group', 'direction']"
+        ],
+        "nudgedDrawing": [
+          "value: (drawing: GraphDrawing, style: Pick<StyleGraph, 'direction'>) => GraphDrawing"
+        ],
+        "nudgedSource": [
+          "value: (dot: string, nudges: readonly Nudge[], keys: Iterable<string>, diagram?: { type: string; }) => string"
+        ],
+        "NudgeWord": [
+          "type = 'beside' | 'before' | 'group' | 'direction'"
+        ],
+        "NudgeWrite": [
+          "interface",
+          "direction?: string | undefined",
+          "group?: string | undefined",
+          "other?: string | undefined",
+          "thing?: string | undefined",
+          "word: string"
+        ],
+        "OBSIDIAN_TOKEN_MAP": [
+          "value: Readonly<Record<string, string>>"
+        ],
+        "OnOff": [
+          "type = 'off' | 'on'"
+        ],
+        "Option": [
+          "interface",
+          "choices?: Array<Choice> | undefined",
+          "key: keyof Settings",
+          "name: string",
+          "section: 'Strictness' | 'AI models' | 'Proposals' | 'Formatting' | 'Drawing' | 'Export'",
+          "sentence: string"
+        ],
+        "OptionChoice": [
+          "interface",
+          "name: string",
+          "sentence?: string | undefined",
+          "value: string"
+        ],
+        "OPTIONS": [
+          "value: Array<Option>"
+        ],
+        "optionSaid": [
+          "value: (o: Option) => Option"
+        ],
+        "Outside": [
+          "type = 'hide' | 'fade'"
+        ],
+        "OUTSIDE": [
+          "value: readonly ['fade', 'hide']"
+        ],
+        "outsideOf": [
+          "value: (style: StyleGraph, view: string) => Outside"
+        ],
+        "paceSaid": [
+          "value: (ms: number) => string"
+        ],
+        "PAGE_LIMITS": [
+          "value: LayoutLimits"
+        ],
+        "pageSvg": [
+          "value: (svg: string, page: PngPage) => string"
+        ],
+        "Palette": [
+          "interface",
+          "blend: (hue: string, pct: number) => string",
+          "edge: string",
+          "fill: (hue: string) => string",
+          "muted: string",
+          "page?: string | undefined",
+          "style?: string | undefined",
+          "text: string"
+        ],
+        "PALETTES": [
+          "value: { obsidian: Palette; light: Palette; dark: Palette; system: Palette; }"
+        ],
+        "PaneSession": [
+          "class",
+          "static new (note: string, line: number): PaneSession",
+          "blockText: (line: number) => string | undefined",
+          "canRedo: () => boolean",
+          "canUndo: () => boolean",
+          "choices: () => Choice[]",
+          "current: () => NoteReading",
+          "dirty: boolean",
+          "edit: (text: string) => void",
+          "graph: string",
+          "noteChanged: (note: string) => 'unchanged' | 'reloaded' | 'conflict'",
+          "reading: (note: string) => NoteReading",
+          "redo: (note: string) => PaneWrite",
+          "ref: BlockRef",
+          "select: (line: number) => boolean",
+          "shared: Array<string>",
+          "stepRefusal: (which: 'undo' | 'redo') => string | null",
+          "stopped: boolean",
+          "strictness: () => StrictnessSettings",
+          "text: string",
+          "texts: (note: string) => { texts: string[]; index: number; }",
+          "type: (text: string) => void",
+          "undo: (note: string) => PaneWrite",
+          "write: (note: string, step?: 'undo' | 'redo') => PaneWrite"
+        ],
+        "PaneWrite": [
+          "type = { ok: true; note: string; unchanged?: true; } | { ok: false; reason: string; draft: string; edit?: true; history?: true; stopped?: true; }"
+        ],
+        "Park": [
+          "interface",
+          "revisitBy?: string | undefined",
+          "rule?: string | undefined",
+          "what: string",
+          "why: string"
+        ],
+        "parked": [
+          "value: (reading: NoteReading, graph: string, today: string) => Map<string, Parked>"
+        ],
+        "Parked": [
+          "interface",
+          "by: Array<string>",
+          "overdue: boolean",
+          "revisitBy: string | null",
+          "what: string",
+          "why: string"
+        ],
+        "parkedCount": [
+          "value: (things: Map<string, Parked>) => ParkedCount"
+        ],
+        "ParkedCount": [
+          "interface",
+          "overdue: number",
+          "parked: number"
+        ],
+        "parkForLater": [
+          "value: (block: string, thing: string, park: Park, reading: SuggestedReading, indent?: string, whole?: Graph) => string"
+        ],
+        "Parsed": [
+          "type = { ok: true; gql: string; } | { ok: false; error: string; }"
+        ],
+        "parseValue": [
+          "value: (type: PropType | 'list', input: string) => Parsed"
+        ],
+        "parseView": [
+          "value: (query: string) => ViewSpec | ViewRefusal"
+        ],
+        "pastLimit": [
+          "value: ({ facts, size }: ImageAt) => string | null"
+        ],
+        "PATH_PACES": [
+          "value: readonly [500, 1000, 2000, 4000]"
+        ],
+        "PathAutoplay": [
+          "class",
+          "static new (player: PathPlayer, scheduler: Scheduler, pace?: number): PathAutoplay",
+          "next: () => boolean",
+          "onStep: (() => void) | null",
+          "pace: number",
+          "pause: () => void",
+          "play: () => void",
+          "readonly player: PathPlayer",
+          "playing: boolean",
+          "previous: () => boolean",
+          "setPace: (ms: number) => void",
+          "stop: () => void",
+          "stopped: boolean"
+        ],
+        "pathBlock": [
+          "value: (reading: PathReading, graph: string, block: string, title: string, steps: string[], indent?: string) => PathBlock"
+        ],
+        "PathBlock": [
+          "type = { text: string; id: string; } | { refused: string; }"
+        ],
+        "PathFound": [
+          "interface",
+          "edges: Array<number>",
+          "things: Array<string>"
+        ],
+        "PathPlayer": [
+          "class",
+          "static new (path: WalkedPath): PathPlayer",
+          "static refusal: (path: WalkedPath) => string | null",
+          "atEnd: boolean",
+          "atStart: boolean",
+          "current: PathStep",
+          "index: number",
+          "next: () => boolean",
+          "readonly path: WalkedPath",
+          "previous: () => boolean",
+          "restart: () => void",
+          "sentence: string",
+          "sentences: Array<string>"
+        ],
+        "pathProblems": [
+          "value: (reading: PathReading, graph?: string) => Problem[]"
+        ],
+        "PathReading": [
+          "type = { graphs: Map<string, GraphDrawing>; problems: Problem[]; world: World; whole: World; texts: string[]; }"
+        ],
+        "PathRecorder": [
+          "class",
+          "static new (): PathRecorder",
+          "clear: () => void",
+          "steps: ReadonlyArray<string>",
+          "tap: (key: string) => boolean",
+          "undo: () => string | undefined"
+        ],
+        "pathsOf": [
+          "value: (reading: PathReading, graph: string) => WalkedPath[]"
+        ],
+        "PathStep": [
+          "interface",
+          "key: string",
+          "missing: boolean",
+          "seq: number",
+          "text: string"
+        ],
+        "pathWords": [
+          "value: (text: (key: string) => string, from: string, to: string, found: PathFound | null) => string"
+        ],
+        "Person": [
+          "interface",
+          "name: string"
+        ],
+        "Picture": [
+          "interface",
+          "at: StyleAt",
+          "kind?: string | undefined",
+          "property: string",
+          "thing?: string | undefined",
+          "view?: string | undefined"
+        ],
+        "PICTURE_MARK": [
+          "value: '#0005fe'"
+        ],
+        "PICTURE_SIZE": [
+          "value: 48"
+        ],
+        "PictureBox": [
+          "interface",
+          "index: number",
+          "key: string",
+          "property: string",
+          "value: string"
+        ],
+        "pictureFor": [
+          "value: (pictures: readonly Picture[], view: string | undefined, key: string, kinds: readonly string[]) => Picture | undefined"
+        ],
+        "PictureLoad": [
+          "type = (value: string) => Promise<LoadedImage | UnreadImage | { why: string; }>"
+        ],
+        "picturesFor": [
+          "value: (drawing: Pick<GraphDrawing, 'boxes'>, g: Graph, style: Pick<StyleGraph, 'pictures'>, view?: string) => PictureBox[]"
+        ],
+        "Place": [
+          "interface",
+          "scale: number",
+          "x: number",
+          "y: number"
+        ],
+        "PlacedBox": [
+          "interface",
+          "bottom: number",
+          "key: string",
+          "left: number",
+          "right: number",
+          "top: number"
+        ],
+        "PlacedLink": [
+          "interface",
+          "link: FoundLink",
+          "property: string"
+        ],
+        "placeholdersOf": [
+          "value: (entry: Words) => string[]"
+        ],
+        "placesFor": [
+          "value: (dragged: string, boxes: readonly PlacedBox[], written?: readonly WrittenNudge[], centre?: string) => Landing[]"
+        ],
+        "playRefusal": [
+          "value: (start: Start, moving: number) => string | null"
+        ],
+        "PLUGIN_API": [
+          "value: '1'"
+        ],
+        "PluginCheck": [
+          "interface",
+          "name: string",
+          "run: () => void"
+        ],
+        "pluginRegistry": [
+          "value: () => PluginRegistry"
+        ],
+        "PluginRegistry": [
+          "interface",
+          "exporter: (format: string) => DataExporter | undefined",
+          "exporters: () => DataExporter[]",
+          "plugins: () => string[]",
+          "register: (plugin: ThoughtKnotPlugin) => void",
+          "themeTokens: () => ThemeToken[]",
+          "writeData: (format: string, data: ExportedData, info: DataInfo) => PluginResult<string>"
+        ],
+        "PluginResult": [
+          "type = { ok: true; value: T; } | { ok: false; plugin: string; message: string; }"
+        ],
+        "PluralWords": [
+          "type = Partial<Record<Intl.LDMLPluralRule, string>> & { other: string; }"
+        ],
+        "PNG_MIN_SCALE": [
+          "value: 2"
+        ],
+        "PngPage": [
+          "interface",
+          "height: number",
+          "width: number",
+          "x: number",
+          "y: number"
+        ],
+        "pngPages": [
+          "value: (width: number, height: number, most: number, scale?: number) => PngPage[] | null"
+        ],
+        "pngSize": [
+          "value: (width: number, height: number, scale?: number) => PngSize"
+        ],
+        "PngSize": [
+          "interface",
+          "height: number",
+          "scale: number",
+          "width: number"
+        ],
+        "pointerTo": [
+          "value: (box: Bounds, view: View, viewport: Size, clear?: number) => Pointing | null"
+        ],
+        "Pointing": [
+          "interface",
+          "angle: number",
+          "x: number",
+          "y: number"
+        ],
+        "Position": [
+          "interface",
+          "character: number",
+          "line: number"
+        ],
+        "PreparedSend": [
+          "interface",
+          "basis: string",
+          "body: string",
+          "graph: string",
+          "headersShown: Record<string, string>",
+          "level: string | null",
+          "model: AiModel",
+          "note: string",
+          "said: string",
+          "scope: SendScope",
+          "summary: Array<string>",
+          "to: string"
+        ],
+        "prepareSend": [
+          "value: (ask: SendAsk) => PreparedSend | SendRefused"
+        ],
+        "Problem": [
+          "interface",
+          "also?: Array<{ span: { line: number; character: number; end: number; }; text: string; }> | undefined",
+          "block: number",
+          "code?: string | undefined",
+          "departure?: Departure | undefined",
+          "dropped?: string | undefined",
+          "fix: string",
+          "fixTitle?: string | undefined",
+          "graph: string | null",
+          "insert?: { line: number; character: number; text: string; } | undefined",
+          "line: number",
+          "message: string",
+          "replace?: { written: string; with: string[]; } | undefined",
+          "severity: 'error' | 'warning' | 'hint'",
+          "span?: { line: number; character: number; end: number; } | undefined",
+          "suggested?: string | undefined"
+        ],
+        "propertiesOf": [
+          "value: (reading: NoteReading, graph: string, t: Target) => Property[]"
+        ],
+        "Property": [
+          "interface",
+          "key: string",
+          "type: PropType",
+          "value: string"
+        ],
+        "propertyNames": [
+          "value: (reading: NoteReading, graph: string, kind: string) => string[]"
+        ],
+        "PropertyRow": [
+          "type = [string, string]"
+        ],
+        "Proposal": [
+          "interface",
+          "changes: Array<ProposedChange>",
+          "graph: string",
+          "id: string",
+          "provenance: Provenance"
+        ],
+        "ProposalCheck": [
+          "interface",
+          "passed: boolean",
+          "results: Array<{ label: string; ok: boolean; }>"
+        ],
+        "ProposalInput": [
+          "interface",
+          "at?: string | null | undefined",
+          "basis: string",
+          "by: Proposer",
+          "changes: ReadonlyArray<ChangeInput>",
+          "graph: string",
+          "id: string",
+          "read?: ReadonlyArray<string> | undefined"
+        ],
+        "ProposalReview": [
+          "class",
+          "static new (proposal: Proposal, decisions?: ReadonlyMap<string, Decision>): ProposalReview",
+          "static fromChangeSet: (block: string, note?: string) => ProposalReview | { refused: string; }",
+          "accept: (note: string, which: Which, by: Person, options?: DecideOptions) => Reviewed",
+          "canUndo: () => boolean",
+          "changeSetText: () => string",
+          "decision: (id: string) => Decision | undefined",
+          "decisions: () => [string, Decision][]",
+          "expected: () => string",
+          "pending: () => string[]",
+          "proposal: Proposal",
+          "reject: (note: string, which: Which, by: Person, options?: DecideOptions) => Reviewed",
+          "shared: Array<string>",
+          "show: (note: string) => ProposalShown",
+          "staleness: (note: string) => Stale | null",
+          "state: (id: string) => 'pending' | 'accepted' | 'rejected'",
+          "undo: (note: string) => Reviewed"
+        ],
+        "ProposalShown": [
+          "interface",
+          "checked: ProposalCheck",
+          "grouped: boolean",
+          "groups: Array<ChangeGroup>",
+          "marks: Marks",
+          "provenance: Array<string>",
+          "reading: NoteReading",
+          "rows: Array<ChangeRow>",
+          "stale: Stale | null"
+        ],
+        "ProposedChange": [
+          "type = ChangeOp & { id: string; group: string; reason?: string; }"
+        ],
+        "Proposer": [
+          "interface",
+          "kind: ProposerKind",
+          "name: string"
+        ],
+        "ProposerKind": [
+          "type = 'unknown' | 'model' | 'person' | 'step'"
+        ],
+        "PropType": [
+          "type = 'number' | 'boolean' | 'text' | 'date' | 'datetime'"
+        ],
+        "Provenance": [
+          "interface",
+          "at: string | null",
+          "basis: string",
+          "by: Proposer",
+          "read: Array<string>"
+        ],
+        "provenanceLines": [
+          "value: (p: Proposal) => string[]"
+        ],
+        "PSEUDO_LANGUAGES": [
+          "value: { readonly 'en-XA': 'ltr'; readonly 'ar-XB': 'rtl'; }"
+        ],
+        "pseudoWords": [
+          "value: (source: Catalogue, tag: keyof typeof PSEUDO_LANGUAGES) => Catalogue"
+        ],
+        "Range": [
+          "interface",
+          "end: Position",
+          "start: Position"
+        ],
+        "READ_LIMITS": [
+          "value: ReadLimits"
+        ],
+        "READABLE_SCALE": [
+          "value: number"
+        ],
+        "readBack": [
+          "value: (reading: NoteReading, graph: string, text: string) => Map<number, string>"
+        ],
+        "readingOf": [
+          "value: (view: ViewSpec, textOf: (id: string) => string) => string"
+        ],
+        "ReadLimits": [
+          "interface",
+          "bytes: number",
+          "lines: number"
+        ],
+        "readNote": [
+          "value: (blocks: string[], upTo?: number, vault?: string[], budget?: number, today?: string) => NoteReading"
+        ],
+        "readSource": [
+          "value: (source: Source, fetched: Fetched, shared?: string[]) => SourceRead | SourceRefusal"
+        ],
+        "readStyle": [
+          "value: (texts: string[], graph: string, reading: StyleReading) => { style: StyleGraph; problems: Problem[]; }"
+        ],
+        "REDUCED_WORDS": [
+          "value: 'Still, as the system asks for reduced motion. Press Play to move it.'"
+        ],
+        "Refusal": [
+          "type = { reason: 'too-large'; limit: 'things' | 'links' | 'word' | 'source' | 'text-bytes' | 'text-lines'; count: number; most: number; atLeast?: true; page?: true; } | { reason: 'timed-out'; ms: number; } | { reason: 'stopped'; failures: number; }"
+        ],
+        "refusedWords": [
+          "value: (link: FoundLink) => string"
+        ],
+        "removeFromList": [
+          "value: (block: string, reading: NoteReading, graph: string, thing: string, shape: ListShape, value: string) => ListEdit"
+        ],
+        "renamedLinks": [
+          "value: (note: string, from: string, to: string, stillFound?: (target: string) => boolean) => TextChange[]"
+        ],
+        "renameProperty": [
+          "value: (block: string, graph: string, t: Target, from: string, to: string) => Edit"
+        ],
+        "replaceBlock": [
+          "value: (note: string, ref: BlockRef, next: string) => WriteResult"
+        ],
+        "reversedLinks": [
+          "value: (drawing: GraphDrawing, rankdir: string) => number[]"
+        ],
+        "reverseGuess": [
+          "value: (reading: string) => string"
+        ],
+        "REVIEW_LEVELS": [
+          "value: readonly ['summary', 'graphs', 'lines']"
+        ],
+        "Reviewed": [
+          "type = { ok: true; note: string; ids: string[]; } | { ok: false; reason: string; stale?: Stale; }"
+        ],
+        "ReviewItem": [
+          "interface",
+          "author?: string | undefined",
+          "id: string",
+          "kind: 'merge' | 'pull' | 'commit'",
+          "title: string",
+          "url?: string | undefined",
+          "when?: string | undefined"
+        ],
+        "ReviewItems": [
+          "class",
+          "static new (source: ReviewSource, workstreams?: Workstreams): ReviewItems",
+          "list: () => Promise<ReviewItem[]>",
+          "review: (item: ReviewItem) => Promise<ReviewLevels>"
+        ],
+        "reviewLevels": [
+          "value: (files: readonly ChangedFile[], workstreams?: Workstreams) => ReviewLevels"
+        ],
+        "ReviewLevels": [
+          "interface",
+          "graphs: Array<GraphChanges>",
+          "lines: Array<FileLines>",
+          "summary: { sections: SummaryGroup[]; workstreams: SummaryGroup[]; requirements: { key: string; mark: MarkKind; said: string; }[]; otherFiles: number; }"
+        ],
+        "ReviewSource": [
+          "interface",
+          "files: (item: ReviewItem) => Promise<ChangedFile[]>",
+          "items: () => Promise<ReviewItem[]>"
+        ],
+        "Routing": [
+          "type = 'straight' | 'right-angled' | 'curved'"
+        ],
+        "RuleReport": [
+          "interface",
+          "counted: number",
+          "covered: number",
+          "deferred: Array<string>",
+          "malformed: string",
+          "missing: Array<{ at: string; fix: string; }>",
+          "overdue: Array<string>",
+          "rule: string",
+          "says: string",
+          "summary: string"
+        ],
+        "RunnerOptions": [
+          "interface",
+          "clock: Clock",
+          "limits?: (() => LayoutLimits) | undefined",
+          "page: () => LayoutPort",
+          "pageLimits?: (() => LayoutLimits) | undefined",
+          "told?: ((what: Told, why?: unknown) => void) | undefined",
+          "worker?: (() => LayoutPort) | undefined"
+        ],
+        "runStep": [
+          "value: (note: string, step: Step | StepFault, given: Readonly<Record<string, StepGiven>>, options: { at: string; shared?: string[]; }) => StepRun"
+        ],
+        "safeMarkdown": [
+          "value: (markdown: string) => string"
+        ],
+        "SafeWrite": [
+          "type = { ok: true; path: string; } | { ok: false; why: string; left?: string; }"
+        ],
+        "saidDate": [
+          "value: (iso: string) => string"
+        ],
+        "sampleExports": [
+          "value: () => Record<string, ExportedData>"
+        ],
+        "sayWords": [
+          "value: (entry: Words, values?: WordValues, language?: string) => string"
+        ],
+        "Scheduler": [
+          "interface",
+          "after: (ms: number, run: () => void) => unknown",
+          "cancel: (handle: unknown) => void"
+        ],
+        "schemaPicture": [
+          "value: (texts: string[], index: number, shared?: string[]) => SchemaPicture | null"
+        ],
+        "SchemaPicture": [
+          "interface",
+          "graph: string",
+          "reading: NoteReading"
+        ],
+        "ScopeChoice": [
+          "type = { graph: string; what: 'graph'; } | { graph: string; what: 'view'; view: string; } | { graph: string; what: 'things'; things: string[]; }"
+        ],
+        "scrollsOneWay": [
+          "value: (type: DiagramType, phone: boolean, width: number, room: number) => boolean"
+        ],
+        "SendAsk": [
+          "interface",
+          "choice: ScopeChoice",
+          "level: string | null",
+          "matrix?: Array<MatrixRow> | undefined",
+          "model: string",
+          "note: string",
+          "notePath: string",
+          "question: string",
+          "secrets?: ReadonlyArray<string> | undefined",
+          "settings: Settings",
+          "shared?: Array<string> | undefined"
+        ],
+        "SendDeps": [
+          "interface",
+          "key: string | null",
+          "now?: (() => Date) | undefined",
+          "transport: Transport"
+        ],
+        "sendPrepared": [
+          "value: (p: PreparedSend, yes: Confirmation | undefined, deps: SendDeps) => Promise<SendResult>"
+        ],
+        "SendRecord": [
+          "interface",
+          "at: string",
+          "digest: string",
+          "id: string",
+          "model: string",
+          "outcome: 'answered' | 'failed'",
+          "scope: SendScope",
+          "size: number",
+          "to: string",
+          "why?: string | undefined"
+        ],
+        "SendRefused": [
+          "interface",
+          "cleared?: Array<string> | undefined",
+          "refused: string"
+        ],
+        "SendResult": [
+          "type = { record: SendRecord; proposal: Proposal; } | { record: SendRecord; failed: string; } | { refused: string; }"
+        ],
+        "serveLayouts": [
+          "value: (scope: LayoutScope, load: () => Promise<Engine>) => void"
+        ],
+        "setDirection": [
+          "value: (to: 'ltr' | 'rtl') => void"
+        ],
+        "setLanguage": [
+          "value: (tag: string) => string"
+        ],
+        "setLocale": [
+          "value: (tag: string, zone?: string) => string"
+        ],
+        "setNote": [
+          "value: (block: string, t: Target, text: string | null) => Edit"
+        ],
+        "setProperty": [
+          "value: (block: string, graph: string, t: Target, key: string, gql: string | null) => Edit"
+        ],
+        "Settings": [
+          "interface",
+          "aiClassMap: Record<string, string>",
+          "aiMatrixNote: string",
+          "aiModels: Array<AiModel>",
+          "aiUnlabelled: string",
+          "aiUse: AiUse",
+          "allowed: Array<Departure>",
+          "classifications: Array<string>",
+          "companionNote: CompanionSetting",
+          "decider: string",
+          "detailsOpen: SwitchSetting",
+          "direction: string",
+          "drawingHeight: DrawingHeightSetting",
+          "exportAsksAbove: string",
+          "exportFolder: string",
+          "exportTheme: ExportTheme",
+          "focusDepth: FocusDepthSetting",
+          "foldGroups: SwitchSetting",
+          "foldHubs: SwitchSetting",
+          "indent: Indent",
+          "labelsByZoom: SwitchSetting",
+          "mergeLinks: SwitchSetting",
+          "miniMap: MiniMapSetting",
+          "noteCallouts: SwitchSetting",
+          "strictness: Strictness"
+        ],
+        "settingsFrom": [
+          "value: (saved: unknown) => Settings"
+        ],
+        "SEVERITY": [
+          "value: { readonly Error: 1; readonly Warning: 2; readonly Information: 3; readonly Hint: 4; }"
+        ],
+        "sha256": [
+          "value: (text: string) => string"
+        ],
+        "Shape": [
+          "interface",
+          "id: string",
+          "kind: 'node' | 'edge'",
+          "lines: Array<Array<[number, number]>>",
+          "polygons: Array<Array<[number, number]>>"
+        ],
+        "shapeOf": [
+          "value: (drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>, g?: Graph, nudges?: readonly Nudge[]) => GraphShape"
+        ],
+        "sheetLimit": [
+          "value: (screen: number) => number"
+        ],
+        "shortestPath": [
+          "value: (edges: readonly FocusEdge[], from: string, to: string) => PathFound | null"
+        ],
+        "Show": [
+          "interface",
+          "at: StyleAt",
+          "inline: 'off' | 'on'",
+          "kind?: string | undefined",
+          "property: string",
+          "thing?: string | undefined",
+          "type?: string | undefined",
+          "view?: string | undefined"
+        ],
+        "Shown": [
+          "interface",
+          "frame?: Frame | undefined",
+          "groups?: 'off' | 'on' | undefined",
+          "hubs?: 'off' | 'on' | undefined",
+          "labels?: 'off' | 'on' | undefined",
+          "legend?: Array<LegendChoice> | undefined",
+          "merge?: 'off' | 'on' | undefined",
+          "selected?: string | undefined",
+          "x?: number | undefined",
+          "y?: number | undefined",
+          "zoom?: number | undefined"
+        ],
+        "ShownWrite": [
+          "interface",
+          "frame?: Frame | undefined",
+          "legend?: ReadonlyArray<LegendChoice> | undefined",
+          "selected?: string | undefined",
+          "switches?: Partial<Record<'labels' | 'hubs' | 'groups' | 'merge', string>> | undefined",
+          "view: string",
+          "x: number",
+          "y: number",
+          "zoom: number"
+        ],
+        "ShowWrite": [
+          "interface",
+          "inline: string",
+          "kind?: string | undefined",
+          "property: string",
+          "thing?: string | undefined",
+          "type?: string | undefined",
+          "view?: string | undefined"
+        ],
+        "Side": [
+          "type = 'beside' | 'before' | 'after'"
+        ],
+        "Size": [
+          "interface",
+          "height: number",
+          "width: number"
+        ],
+        "sizeOf": [
+          "value: (svg: string) => { width: number; height: number; }"
+        ],
+        "sortedForReader": [
+          "value: (texts: string[]) => string[]"
+        ],
+        "SOURCE_LANGUAGE": [
+          "value: 'en-GB'"
+        ],
+        "SOURCE_WORDS": [
+          "value: { readonly 'settings.strictness.name': 'Strictness'; readonly 'settings.strictness.sentence': 'How strictly a graph is read against standard GQL.'; readonly 'settings.strictness.standard': 'Standard'; readonly 'settings.strictness.standard.sentence': 'Every departure from standard GQL is an error.'; readonly 'settings.strictness.forgiving': 'Forgiving'; readonly 'settings.strictness.forgiving.sentence': 'A slip is read as meant, reported as a warning, and offered its fix.'; readonly 'settings.strictness.simplified': 'Simplified'; readonly 'settings.strictness.simplified.sentence': 'The departures chosen below are allowed as written.'; readonly 'settings.allowed.name': 'Allowed in Simplified'; readonly 'settings.allowed.sentence': 'The ways Simplified lets a graph leave standard GQL as written. An engine or an export still gets standard GQL.'; readonly 'settings.allowed.missing-comma': 'A missing comma'; readonly 'settings.allowed.missing-comma.sentence': 'A pattern may end its line without the comma standard GQL needs before the next one.'; readonly 'settings.allowed.trailing-comma': 'A comma with nothing after it'; readonly 'settings.allowed.trailing-comma.sentence': 'The last pattern of a block may end with a comma, as while the next one is being typed.'; readonly 'settings.allowed.bare-type': 'A link type without its colon'; readonly 'settings.allowed.bare-type.sentence': 'A link may name its type without the colon, such as [KNOWS], when the graph has one type of that name.'; readonly 'settings.ai-use.name': 'Use AI models'; readonly 'settings.ai-use.sentence': 'Whether the editor may send anything to an AI model. Even when on, nothing is sent until you send it. It goes only to a model set up below, once you have seen exactly what it will send.'; readonly 'settings.ai-use.off': 'Off: nothing is ever sent'; readonly 'settings.ai-use.on': 'On: send only when I say'; readonly 'settings.classifications.name': 'Classifications'; readonly 'settings.classifications.sentence': 'The classifications a note may carry, lowest first, one per line.'; readonly 'settings.ai-unlabelled.name': 'Unlabelled notes count as'; readonly 'settings.ai-unlabelled.sentence': 'The classification a note with no classification counts as when it would be sent to an AI model. The most sensitive until you choose: nothing at it is ever sent, so an unlabelled note goes to no model.'; readonly 'settings.ai-models.name': 'AI models'; readonly 'settings.ai-models.sentence': 'Each AI model the editor may ask, and its purpose. Each has a ceiling: the highest classification of note it may be sent, or a row of the destination matrix.'; readonly 'settings.ai-matrix-note.name': 'Destination matrix note'; readonly 'settings.ai-matrix-note.sentence': 'The note that holds the vault’s destination matrix, by its path. A model can then take a row of it in place of a ceiling.'; readonly 'settings.ai-class-map.name': 'Matrix classes'; readonly 'settings.ai-class-map.sentence': 'Classes of the matrix that go by another name than a classification, one per line as matrix name: classification. A class matched by neither is flagged and never sent.'; readonly 'settings.indent.name': 'Indent'; readonly 'settings.indent.sentence': 'How the editor indents the later lines of a thing it writes.'; readonly 'settings.indent.two': 'Two spaces'; readonly 'settings.indent.four': 'Four spaces'; readonly 'settings.indent.tab': 'A tab'; readonly 'settings.direction.name': 'Direction'; readonly 'settings.direction.sentence': 'Which way a drawing runs: the best fit, or always one of the directions the locked style allows.'; readonly 'settings.direction.best': 'Best fit'; readonly 'settings.direction.lr': 'Left to right'; readonly 'settings.direction.tb': 'Top to bottom'; readonly 'settings.focus-depth.name': 'Focus reaches'; readonly 'settings.focus-depth.sentence': 'How far focus reaches from a selected thing: its own links, or those of the things at their other ends too.'; readonly 'settings.focus-depth.one': 'One step'; readonly 'settings.focus-depth.two': 'Two steps'; readonly 'settings.labels-by-zoom.name': 'Labels by zoom'; readonly 'settings.labels-by-zoom.sentence': 'Whether a link’s label shows only when zoomed in far enough to read it; a graph’s View menu can change it.'; readonly 'settings.labels-by-zoom.on': 'On'; readonly 'settings.labels-by-zoom.off': 'Off'; readonly 'settings.fold-hubs.name': 'Busy hubs folded'; readonly 'settings.fold-hubs.sentence': 'Whether a thing with many links draws them folded into one stub marked with their count; a graph’s View menu can change it.'; readonly 'settings.fold-hubs.on': 'On'; readonly 'settings.fold-hubs.off': 'Off'; readonly 'settings.fold-groups.name': 'Groups folded'; readonly 'settings.fold-groups.sentence': 'Whether each group draws as one box showing how many things it holds; a graph’s View menu can change it.'; readonly 'settings.fold-groups.on': 'On'; readonly 'settings.fold-groups.off': 'Off'; readonly 'settings.merge-links.name': 'Parallel links merged'; readonly 'settings.merge-links.sentence': 'Whether links running between the same two groups share one trunk; a graph’s View menu can change it.'; readonly 'settings.merge-links.on': 'On'; readonly 'settings.merge-links.off': 'Off'; readonly 'settings.note-callouts.name': 'Draw notes as callouts'; readonly 'settings.note-callouts.sentence': 'Whether each note written above a thing or link is drawn on the drawing as a callout, joined to its thing by a dashed line. Off unless you turn it on; a note always shows in its thing’s details.'; readonly 'settings.note-callouts.on': 'On'; readonly 'settings.note-callouts.off': 'Off'; readonly 'settings.mini-map.name': 'Mini-map'; readonly 'settings.mini-map.sentence': 'A small copy of the whole drawing with the part in view outlined; tap or drag it to move the view. Shown never, only when the drawing is bigger than its view, or always.'; readonly 'settings.mini-map.off': 'Off'; readonly 'settings.mini-map.auto': 'When the drawing does not fit'; readonly 'settings.mini-map.always': 'Always'; readonly 'settings.details-open.name': 'Keep the details open'; readonly 'settings.details-open.sentence': 'Whether the details panel stays open beside the drawing, or below it where the card is narrow. While nothing is chosen, it shows a summary of the graph. Off unless you turn it on.'; readonly 'settings.details-open.on': 'On'; readonly 'settings.details-open.off': 'Off'; readonly 'settings.drawing-height.name': 'Tallest drawing in a note'; readonly 'settings.drawing-height.sentence': 'How much of the window a drawing in a note may take. A taller one is fitted inside, so the rest of the note stays in reach.'; readonly 'settings.drawing-height.half': 'Half the window'; readonly 'settings.drawing-height.most': 'Three quarters of the window'; readonly 'settings.drawing-height.none': 'No limit'; readonly 'settings.export-theme.name': 'Export theme'; readonly 'settings.export-theme.sentence': 'The colours an exported image is drawn in, fixed so it reads the same outside Obsidian.'; readonly 'settings.export-theme.light': 'Light'; readonly 'settings.export-theme.dark': 'Dark'; readonly 'settings.companion-note.name': 'Companion note'; readonly 'settings.companion-note.sentence': 'Whether an export saved into the vault also gets a short note linking the image to its source.'; readonly 'settings.companion-note.off': 'No companion note'; readonly 'settings.companion-note.on': 'Write a companion note'; readonly 'settings.export-folder.name': 'Export folder'; readonly 'settings.export-folder.sentence': 'The vault folder exports are saved in; left empty, an export is saved next to its note.'; readonly 'settings.export-asks-above.name': 'Ask before exporting above'; readonly 'settings.export-asks-above.sentence': 'Exports of a note above this classification ask you first. Choose one of the classifications set above.'; readonly 'settings.decider.name': 'Your name on decisions'; readonly 'settings.decider.sentence': 'The name recorded when you accept or reject a change in a proposal. It is kept exactly as you type it. Left empty, it is recorded as “you”.'; readonly 'changes.not-drawn': 'The changes are listed as text only: not drawn here.'; readonly 'changes.alt': { readonly one: '{name}: {count} change, added drawn heavy, changed dashed, removed dotted'; readonly other: '{name}: {count} changes, added drawn heavy, changed dashed, removed dotted'; }; readonly 'changes.section': 'Changes'; readonly 'changes.compare': 'Compare with…'; readonly 'changes.reading': 'Reading that version…'; readonly 'changes.heading': 'Changes in graph {graph} since {label}'; readonly 'changes.figure': 'Graph {graph} since {label}'; readonly 'changes.reading-versions': 'Reading the earlier versions…'; readonly 'changes.version': 'Version to compare with'; readonly 'changes.show': 'Show changes'; readonly 'review.pull': 'Pull request #{id}: {title}{by}'; readonly 'review.merge': 'Merge {id}: {title}{by}'; readonly 'review.commit': 'Commit {id}: {title}{by}'; readonly 'review.by': ' ({who})'; readonly 'review.section': 'Review a change'; readonly 'review.open': 'Review a change from GitHub…'; readonly 'review.summary': 'Summary'; readonly 'review.by-section': 'By section'; readonly 'review.by-workstream': 'By workstream'; readonly 'review.requirements': 'Requirements changed'; readonly 'review.others': { readonly one: '{count} other file changed, with no graph.'; readonly other: '{count} other files changed, with no graph.'; }; readonly 'review.not-shown': 'Not shown'; readonly 'review.unread': '{count} more files changed than were read.'; readonly 'review.graphs': 'Graphs changed ({count})'; readonly 'review.graph': 'Graph {graph} in {path}'; readonly 'review.graph-of': 'Graph {graph} in {path}, {item}'; readonly 'review.lines': 'Lines changed, file by file ({count})'; readonly 'review.too-many': 'Too many lines changed to show line by line.'; readonly 'review.reading': 'Reading that change from GitHub…'; readonly 'review.reading-all': 'Reading the repository’s changes from GitHub…'; readonly 'review.pick': 'Change to review'; readonly 'review.go': 'Review'; readonly 'review.none': 'The repository has no pull requests or commits to review.'; readonly 'page.menu': 'Menu'; readonly 'page.note': 'The note'; readonly 'properties.type.text': 'Text'; readonly 'properties.type.number': 'Number'; readonly 'properties.type.boolean': 'Checkbox'; readonly 'properties.type.date': 'Date'; readonly 'properties.type.datetime': 'Date & time'; readonly 'properties.type.list': 'List'; readonly 'properties.type-of': 'Type of {name}: {type}'; readonly 'properties.new': 'new property'; readonly 'properties.remove': 'Remove'; readonly 'properties.name': 'Property name'; readonly 'properties.value-of': 'Value of {name}'; readonly 'properties.value-new': 'Value of new property'; readonly 'properties.name-of': 'Name of {name}'; readonly 'properties.name-new': 'New property name'; readonly 'properties.refused': '{name}: {why}.'; readonly 'properties.new-one': 'new property'; readonly 'properties.name-first': 'name it first'; readonly 'properties.taken': 'it already has a property called {name}'; readonly 'properties.add': 'Add property'; readonly 'add.group': 'Add a thing'; readonly 'add.thing': 'Add a thing'; readonly 'add.text': 'Text of the new thing'; readonly 'add.name': 'Name of the new thing'; readonly 'add.kind': 'Kind of the new thing'; readonly 'add.named': 'Name: {name}.'; readonly 'add.suggested': 'Suggested name: {name}. Nothing is written until you press Add the thing.'; readonly 'add.not-editing': 'The block is no longer being edited, so nothing was written.'; readonly 'add.added': 'Added {text} as {name}.'; readonly 'add.it': 'Add the thing'; readonly 'add.cancel': 'Cancel adding'; readonly 'editor.edit': 'Edit'; readonly 'editor.empty-graph': 'Graph {graph} has nothing in it yet. Start with a thing: write (name:Kind {name: \\'Its text\\'}) below the graph line, or press Edit.'; readonly 'editor.edit-kept': 'The edit was not written: {reason}. The block is as the note has it, and the edit is kept as a draft.'; readonly 'editor.stopped-kept': '{reason} What you typed is kept as a draft.'; readonly 'editor.changed-kept': 'The block changed in the note while you were typing ({reason}), so it was reloaded. What you typed is kept as a draft.'; readonly 'editor.draft-kept': 'A draft of this block, kept on {when}, can be restored.'; readonly 'editor.restore': 'Restore draft'; readonly 'editor.discard': 'Discard draft'; readonly 'ai.view': 'View'; readonly 'ai.graph': 'Graph'; readonly 'ai.title': 'Ask an AI model to propose changes'; readonly 'ai.question': 'Propose the changes that would make this graph more complete and correct.'; readonly 'ai.nothing': 'This note has no graph with things in it, so there is nothing to send.'; readonly 'ai.what': 'What to send'; readonly 'ai.what.sentence': 'Only this is sent, with your question: nothing else of the note or the vault.'; readonly 'ai.what.graph': 'The whole graph'; readonly 'ai.what.view': 'A view of it'; readonly 'ai.what.things': 'Only the things ticked'; readonly 'ai.your-question': 'Your question'; readonly 'ai.your-question.sentence': 'What you ask the model; it is sent with what you chose.'; readonly 'ai.show': 'Show what will be sent'; readonly 'ai.send': 'Send'; readonly 'ai.cancel': 'Cancel'; readonly 'ai.no-view': 'Graph {graph} has no view in this note: choose the whole graph or tick things.'; readonly 'ai.model': 'Model'; readonly 'ai.model.no-purpose': 'No purpose given'; readonly 'ai.model.matrix': '{purpose}; held to the matrix row {row}.'; readonly 'ai.model.ceiling': '{purpose}; sent notes up to {ceiling}.'; readonly 'ai.model.for-proposing': '{name}, for proposing changes'; readonly 'ai.matrix-unread': 'The matrix note could not be read, so nothing is sent: check the note named in the settings, then press Show what will be sent again.'; readonly 'ai.exactly': 'Exactly this is sent, with these headers, and only once you choose to send it:'; readonly 'ai.level-changed': 'The note’s classification has changed since what will be sent was shown (it was {was}, it is now {is}). Nothing was sent: press Show what will be sent again.'; readonly 'ai.not-written-error': '{model} answered, but its proposal could not be written into {path} ({error}).'; readonly 'ai.not-written': '{model} answered, but its proposal was not written into the note: {why}'; readonly 'ai.proposed': { readonly one: '{model} proposed {count} change: it is in the note as a change set beside the graph, waiting for you to accept or reject it.'; readonly other: '{model} proposed {count} changes: they are in the note as a change set beside the graph, each waiting for you to accept or reject it.'; }; readonly 'leave.title': 'Leave Obsidian?'; readonly 'leave.open': 'Open'; readonly 'leave.cancel': 'Cancel'; readonly 'models.name': 'Name'; readonly 'models.purpose': 'Purpose'; readonly 'models.purpose.sentence': 'What it is for: {purposes}, or your own words. A send for that purpose offers this model first.'; readonly 'models.model': 'Model'; readonly 'models.model.sentence': 'The model’s own name at its address, as the service names it.'; readonly 'models.endpoint': 'Endpoint'; readonly 'models.endpoint.sentence': 'The address requests go to, such as a chat completions address: http:// for a model on this device, https:// for any other.'; readonly 'models.none': 'No model is set up: nothing is ever sent.'; readonly 'models.page': 'Model {n}'; readonly 'models.said': '{name}: {purpose}, up to {ceiling}'; readonly 'models.no-purpose': 'no purpose given'; readonly 'models.unnamed': 'Not named yet'; readonly 'models.ceiling-gone': '{ceiling} is no longer a classification: choose again'; readonly 'models.held': 'held to the matrix row {row}'; readonly 'models.ceiling': 'Ceiling'; readonly 'models.ceiling.sentence': 'The highest classification of note this model may be sent.'; readonly 'models.key': 'Key'; readonly 'models.key.sentence': 'Kept in the app’s own secret store, never in the vault.'; readonly 'models.add': 'Add a model'; readonly 'models.no-row': 'None: use the ceiling'; readonly 'models.unmatched': ' (flagged: matches no classification)'; readonly 'models.row-gone': '{row} is not in the matrix note now, or is there more than once: nothing is sent to this model until a row is chosen again.'; readonly 'models.choose-row': 'Choose a row of the destination matrix to hold this model to it, in place of its ceiling.'; readonly 'models.row': 'Matrix row'; readonly 'models.flagged': 'Flagged in the matrix: {classes}.'; readonly 'models.send-level': 'Send {level} notes'; readonly 'models.condition': 'The row’s condition: {condition}. Off until you switch it on for this model.'; readonly 'models.condition-changed': ' The condition has changed since you switched it on: read it, then switch it on again.'; readonly 'code.copy': 'Copy'; readonly 'code.copied': 'Copied'; readonly 'code.copy-refused': 'Could not copy: the device did not allow it. Select the text and copy it instead.'; readonly 'editor.block-gone': 'That graph block is no longer in the note: choose again from the blocks it has now.'; readonly 'editor.draft-gone': 'That draft is no longer kept: it was restored or discarded elsewhere, so nothing was changed. Any other draft is offered when the block is opened again.'; readonly 'find.none': 'No thing matches.'; readonly 'find.found': { readonly one: '{count} thing found.'; readonly other: '{count} things found.'; }; readonly 'move.beside': 'Put {thing} beside {other}'; readonly 'move.before': 'Put {thing} before {other}'; readonly 'move.after': 'Put {thing} after {other}'; readonly 'move.nowhere': 'Let go next to a box to place {thing} by it'; readonly 'move.done': 'Moved: {said}'; readonly 'move.step': '{said} ({at} of {all}). The arrow keys choose another place, Enter moves it, Escape leaves it.'; readonly 'move.none': 'There is nowhere else to place {thing}. Escape leaves it.'; readonly 'bar.name': 'Graph {graph}'; readonly 'bar.problems': { readonly one: '{count} problem'; readonly other: '{count} problems'; }; readonly 'bar.gaps': { readonly one: '{count} gap'; readonly other: '{count} gaps'; }; readonly 'bar.parked': '{count} parked'; readonly 'bar.overdue': '{count} overdue'; readonly 'bar.no-problems': 'No problems'; readonly 'bar.fit': 'Fit'; readonly 'bar.zoom-out': 'Zoom out'; readonly 'bar.zoom-in': 'Zoom in'; readonly 'bar.find': 'Find a thing'; readonly 'bar.filter': 'Filter by kind or link'; readonly 'bar.view': 'View'; readonly 'bar.full-screen': 'Full screen'; readonly 'bar.close-full-screen': 'Close full screen'; readonly 'bar.export': 'Export'; readonly 'bar.edit-here': 'Edit here'; readonly 'bar.done-editing': 'Done editing'; readonly 'bar.edit-in-pane': 'Edit in pane'; readonly 'bar.show-source': 'Show source'; readonly 'bar.show-drawing': 'Show drawing'; readonly 'details.of': 'Details of {name}'; readonly 'details.close': 'Close details'; readonly 'details.minimise': 'Minimise details'; readonly 'details.restore': 'Restore details'; readonly 'details.from': 'From'; readonly 'details.to': 'To'; readonly 'details.problems': 'Problems'; readonly 'details.links-out': 'Links out'; readonly 'details.links-in': 'Links in'; readonly 'details.said-this': 'This {kind}'; readonly 'details.said-it': 'It'; readonly 'details.said-name': '‘{name}’'; readonly 'details.said-links': '{subject} {links}.'; readonly 'details.said-alone': '{subject} has no links yet.'; readonly 'details.said-has': 'It has {properties} and {problems}.'; readonly 'details.said-properties': { readonly one: '{count} property'; readonly other: '{count} properties'; }; readonly 'details.said-no-properties': 'no properties'; readonly 'details.said-no-problems': 'no problems'; readonly 'details.none-in': 'Nothing links here.'; readonly 'details.none-out': 'Links to nothing.'; readonly 'details.trail': 'Trail'; readonly 'details.back': 'Back'; readonly 'details.back-to': 'Back to {name}'; readonly 'details.forward': 'Forward'; readonly 'details.forward-to': 'Forward to {name}'; readonly 'details.link': 'Link'; readonly 'details.link-said': 'Link: {from} {reading} {to}'; readonly 'details.step-link': 'the link {from} {reading} {to}'; readonly 'details.step-link-unknown': 'the link'; readonly 'details.estimated-link': 'the estimated link'; readonly 'details.note': 'Note'; readonly 'details.not-declared': 'The block is no longer being edited, so nothing was declared.'; readonly 'details.show-only': 'Show only this and its neighbours'; readonly 'details.move': 'Move…'; readonly 'details.shortest-path': 'Shortest path to another thing'; readonly 'details.open-hub': 'Open its {count} links'; readonly 'details.fold-hub': 'Fold its {count} links'; readonly 'details.edit-link': 'Edit the link'; readonly 'details.not-as-drawn': 'The text being edited is not as drawn, so nothing was written. Try again once the drawing is redrawn.'; readonly 'details.edit-block': 'Edit the block to fix it: nothing was written.'; readonly 'summary.counts': '{things}, {links}'; readonly 'summary.things': { readonly one: '{count} thing'; readonly other: '{count} things'; }; readonly 'summary.links': { readonly one: '{count} link'; readonly other: '{count} links'; }; readonly 'summary.kinds': 'Kinds'; readonly 'editor.drawing-tab': 'Drawing'; readonly 'editor.text-tab': 'Text'; readonly 'editor.text-of': 'Text of graph {graph}'; readonly 'editor.suggestions': 'Suggestions'; readonly 'editor.problems': 'Problems'; readonly 'editor.done': 'Done'; readonly 'editor.open-again': 'Open again'; readonly 'editor.undo': 'Undo'; readonly 'editor.redo': 'Redo'; readonly 'editor.lock': 'Lock the graph'; readonly 'editor.block-picker': 'Graph block'; readonly 'editor.pane-title': 'Graph'; readonly 'export.form': 'Export'; readonly 'export.data-gql': 'Data as a GQL block'; readonly 'export.data-csv': 'Data as CSV'; readonly 'export.data-graphml': 'Data as GraphML'; readonly 'export.view': 'View {name}'; readonly 'export.view-in-context': 'View {name}, with the rest faded'; readonly 'export.whole': 'The whole diagram'; readonly 'export.path': 'Path {title}, played as an animated SVG'; readonly 'export.what': 'What to export'; readonly 'export.format': 'Format'; readonly 'export.pace': 'Pace'; readonly 'export.pace-half': 'Half a second a step'; readonly 'export.pace-seconds': { readonly one: '{count} second a step'; readonly other: '{count} seconds a step'; }; readonly 'export.theme': 'Theme'; readonly 'export.anyway': 'Export anyway'; readonly 'export.do-not': 'Do not export'; readonly 'export.ready': '{name} is ready.'; readonly 'export.share': 'Share'; readonly 'export.it': 'Export it'; readonly 'path.pause': 'Pause'; readonly 'path.play-on': 'Play on'; readonly 'path.previous': 'Previous step'; readonly 'path.next': 'Next step'; readonly 'path.stop': 'Stop playing'; readonly 'path.export': 'Export as an animated SVG'; readonly 'walk.group': 'Walked paths'; readonly 'walk.ended': 'The recording ended with the editing: nothing was written.'; readonly 'walk.title': 'Path title'; readonly 'walk.undo': 'Undo step'; readonly 'walk.save': 'Save path'; readonly 'walk.cancel': 'Cancel recording'; readonly 'walk.cancelled': 'The recording was cancelled: nothing was written.'; readonly 'walk.play': 'Play {title}'; readonly 'walk.record': 'Record a path'; readonly 'walk.recording': { readonly one: 'Recording: {count} step. Tap the boxes of the walk in order.'; readonly other: 'Recording: {count} steps. Tap the boxes of the walk in order.'; }; readonly 'walk.recording-last': { readonly one: 'Recording: {count} step, the last {name}. Tap the boxes of the walk in order.'; readonly other: 'Recording: {count} steps, the last {name}. Tap the boxes of the walk in order.'; }; readonly 'walk.not-editing': 'The block is no longer being edited, so the path cannot be written.'; readonly 'walk.written': { readonly one: 'The path {title} was written, with {count} step.'; readonly other: 'The path {title} was written, with {count} steps.'; }; readonly 'maker.picked': 'Picked by hand'; readonly 'maker.near': 'Near a thing'; readonly 'maker.reaches': 'How one reaches another'; readonly 'maker.kinds': 'Only some kinds'; readonly 'maker.path': 'A walked path'; readonly 'maker.group': 'Make a view'; readonly 'maker.start': 'Make a view'; readonly 'maker.kind': 'Kind of view'; readonly 'maker.steps': 'Steps'; readonly 'maker.name': 'View name'; readonly 'maker.write': 'Write the view'; readonly 'maker.stop': 'Stop making the view'; readonly 'maker.hint-picked': 'Tap the things to show.'; readonly 'maker.hint-near': 'Tap the thing at the middle.'; readonly 'maker.hint-reaches-end': 'Tap where it ends.'; readonly 'maker.hint-reaches-start': 'Tap where it starts.'; readonly 'maker.hint-kinds': 'Tap a thing of each kind to show.'; readonly 'maker.hint-path': 'Tap the walked path.'; readonly 'maker.the-view': 'The view: {reading}.'; readonly 'maker.none-yet': 'Tap the things the view shows first.'; readonly 'maker.bad-name': 'Give the view a name of one word: letters, digits and _.'; readonly 'strip.reading': 'View {name}: {reading}'; readonly 'strip.hide': 'Hide others'; readonly 'strip.fade': 'Fade others'; readonly 'strip.save': 'Save as shown'; readonly 'strip.legend': 'Legend'; readonly 'table.things': 'Things'; readonly 'table.links': 'Links'; readonly 'table.from': 'From'; readonly 'table.link': 'Link'; readonly 'table.thing': 'Thing'; readonly 'table.kind': 'Kind'; readonly 'table.to': 'To'; readonly 'table.properties': 'Properties'; readonly 'table.link-row': 'Link: {cells}'; readonly 'settings.section.strictness': 'Strictness'; readonly 'settings.section.ai-models': 'AI models'; readonly 'settings.section.proposals': 'Proposals'; readonly 'settings.section.formatting': 'Formatting'; readonly 'settings.section.drawing': 'Drawing'; readonly 'settings.section.export': 'Export'; readonly 'view.on': 'on'; readonly 'view.off': 'off'; readonly 'drawing.of': { readonly one: 'Drawing of graph {graph}: {count} thing. Plus, minus and zero zoom; Escape leaves full screen.'; readonly other: 'Drawing of graph {graph}: {count} things. Plus, minus and zero zoom; Escape leaves full screen.'; }; readonly 'drawing.mini-map': 'Mini-map of the whole drawing. Tap or drag it to move the view.'; readonly 'untangle.find': 'Find a thing by name or property'; readonly 'untangle.show-all': 'Show the whole graph'; readonly 'untangle.widen': 'Widen to two steps'; readonly 'untangle.narrow': 'Narrow to one step'; readonly 'untangle.clear-path': 'Clear the path'; readonly 'untangle.choose-second': 'Choose a second thing to find the shortest path from {name}.'; readonly 'untangle.cancel': 'Cancel'; readonly 'untangle.legend': 'Kinds and relationship types'; readonly 'untangle.nothing-to-filter': 'Nothing to filter.'; readonly 'untangle.in-front': ' — in front'; readonly 'untangle.hidden': ' — hidden'; readonly 'proposal.region': 'Proposal {id} for graph {graph}'; readonly 'proposal.name': 'Proposal {id}'; readonly 'proposal.not-yet-written': 'nothing is written until you accept'; readonly 'proposal.check-fails': 'The graph spec’s check of this change set fails {failed} of {count}:'; readonly 'proposal.check-passes': 'The graph spec’s check of this change set passes all {count}.'; readonly 'proposal.decide': '{label}: {said}'; readonly 'proposal.read-this': 'I have read this'; readonly 'proposal.accept-all': 'Accept all ({count})'; readonly 'proposal.accept-all.said': { readonly one: 'every change that can be accepted now, {count} change'; readonly other: 'every change that can be accepted now, {count} changes'; }; readonly 'proposal.reject-all': 'Reject all ({count})'; readonly 'proposal.reject-all.said': { readonly one: 'every change still waiting, {count} change'; readonly other: 'every change still waiting, {count} changes'; }; readonly 'proposal.all-decided': 'Every change has been decided.'; readonly 'proposal.undo': 'Undo'; readonly 'proposal.undo.said': 'Undo the last decision'; readonly 'proposal.blocked': 'Cannot be accepted yet: {why}'; readonly 'proposal.accepted-by': 'Accepted by {who} on {day}'; readonly 'proposal.rejected-by': 'Rejected by {who} on {day}'; readonly 'proposal.accept': 'Accept'; readonly 'proposal.reject': 'Reject'; readonly 'proposal.group': { readonly one: '{group} — {count} change, {waiting} waiting'; readonly other: '{group} — {count} changes, {waiting} waiting'; }; readonly 'proposal.accept-group': 'Accept {group}'; readonly 'proposal.accept-group.said': { readonly one: 'the {count} change in {group} that can be accepted now'; readonly other: 'the {count} changes in {group} that can be accepted now'; }; readonly 'proposal.reject-group': 'Reject {group}'; readonly 'proposal.reject-group.said': 'the {count} waiting in {group}'; readonly 'proposal.waiting': 'Waiting for your decision'; readonly 'proposal.accepted': 'Accepted'; readonly 'proposal.rejected': 'Rejected'; readonly 'proposal.by': 'Proposed by {who}'; readonly 'proposal.read-moved': 'I have read that the graph has moved since this was proposed'; readonly 'proposal.warning': 'Warning: {message}'; readonly 'proposal.check-failed': 'Check failed: {failed}. It cannot be accepted.'; readonly 'proposal.decided-by': ' by {who}'; readonly 'proposal.reason': 'Reason: {reason}'; readonly 'proposal.accept-change': 'Accept this change, {change}'; readonly 'proposal.reject-change': 'Reject this change, {change}'; readonly 'proposal.accept-all-by': 'Accept all'; readonly 'proposal.accept-all-by.said': 'Accept all changes waiting in the proposal by {who}'; readonly 'proposal.reject-all-by': 'Reject all'; readonly 'proposal.reject-all-by.said': 'Reject all changes waiting in the proposal by {who}'; readonly 'proposal.page-group': 'group {group}'; readonly 'proposal.accept-of': 'Accept {group} of the proposal by {who}'; readonly 'proposal.reject-of': 'Reject {group} of the proposal by {who}'; readonly 'step.gone': 'The note is not there any more.'; readonly 'step.did-not-run': 'Step {name} did not run:'; readonly 'step.did-not-run-why': 'Step {name} did not run: {why}'; readonly 'step.proposed': { readonly one: 'Step {name} proposed {count} change to {graph}: accept or reject each below the graph.'; readonly other: 'Step {name} proposed {count} changes to {graph}: accept or reject each below the graph.'; }; readonly 'step.not-written': 'Step {name} gave a proposal that was not written: {why}'; readonly 'step.cannot-run': 'This step cannot run: {why}'; readonly 'step.about': 'Step {name} proposes links into {graph}. It runs only when you press Run, and what it gives is proposed for you to accept or reject.'; readonly 'step.takes': '{name} takes {what}'; readonly 'step.any-graph': 'any graph'; readonly 'step.give': 'Give {name}'; readonly 'step.run': 'Run'; readonly 'step.run.said': 'Run step {name}'; readonly 'step.could-not-run': 'Step {name} could not run, and nothing was written.'; readonly 'details.properties': 'Properties'; readonly 'style.nudges': { readonly one: '{count} nudge'; readonly other: '{count} nudges'; }; readonly 'style.looks': { readonly one: '{count} look'; readonly other: '{count} looks'; }; readonly 'style.shown': { readonly one: '{count} shown property'; readonly other: '{count} shown properties'; }; readonly 'style.view-settings': { readonly one: '{count} view setting'; readonly other: '{count} view settings'; }; readonly 'style.saved-views': { readonly one: '{count} saved view'; readonly other: '{count} saved views'; }; readonly 'style.arrowheads': { readonly one: '{count} arrowhead setting'; readonly other: '{count} arrowhead settings'; }; readonly 'style.types': { readonly one: '{count} diagram type'; readonly other: '{count} diagram types'; }; readonly 'style.nothing': 'nothing yet'; readonly 'style.summary': 'Style of graph {graph}: {held}'; readonly 'style.summary-problems': { readonly one: 'Style of graph {graph}: {held} — ⚠ {count} problem'; readonly other: 'Style of graph {graph}: {held} — ⚠ {count} problems'; }; readonly 'page.title': 'ThoughtKnot editor'; readonly 'settings.convert': 'Convert to standard GQL'; readonly 'settings.convert.sentence': 'Writes the note in front back as standard GQL, once the standard checker passes it.'; readonly 'settings.flagged': 'Flagged now: {classes}.'; readonly 'type.network': 'Network'; readonly 'type.network.word': 'network'; readonly 'type.network.as': 'a network'; readonly 'type.tree': 'Tree'; readonly 'type.tree.word': 'tree'; readonly 'type.tree.as': 'a tree'; readonly 'type.flow': 'Flow'; readonly 'type.flow.word': 'flow'; readonly 'type.flow.as': 'a flow'; readonly 'type.radial': 'Radial'; readonly 'type.radial.word': 'radial'; readonly 'type.radial.as': 'a radial'; readonly 'type.lanes': 'Lanes'; readonly 'type.lanes.word': 'lanes'; readonly 'type.lanes.as': 'a lanes'; readonly 'type.timeline': 'Timeline'; readonly 'type.timeline.word': 'timeline'; readonly 'type.timeline.as': 'a timeline'; readonly 'type.table': 'Table'; readonly 'type.table.word': 'table'; readonly 'type.table.as': 'a table'; readonly 'type.now-graph': 'The graph is now drawn as {type}.'; readonly 'type.now-view': 'View {view} is now drawn as {type}.'; readonly 'type.drawn': 'Drawn as {type}'; readonly 'type.list': 'Diagram types'; readonly 'type.choose': 'Diagram type'; readonly 'type.drawn-now': 'drawn now'; readonly 'type.suggested': 'suggested: {because}'; readonly 'type.stopped': 'This graph no longer fits {type}: {why}. It is drawn as a network until another type is chosen.'; readonly 'type.as-network': 'Draw as a network'; readonly 'type.use': 'Use {type}'; readonly 'type.way-in': '{say} A view is made with Edit here, then Make a view.'; readonly 'type.as-table': 'Show as table'; readonly 'drawing.full-screen': 'Graph {graph}, full screen'; readonly 'note.not-here': 'This is not written in the block being edited, so its note cannot be written here.'; readonly 'note.change': 'Change the note'; readonly 'note.add': 'Add a note'; readonly 'note.remove': 'Remove the note'; readonly 'note.field': 'Note'; readonly 'note.save': 'Save note'; readonly 'note.cancel': 'Cancel'; readonly 'parked.declare': 'Declare Deferred and DEFERS in the schema'; readonly 'parked.said': 'parked for later'; readonly 'parked.said-overdue': 'parked for later, overdue'; readonly 'parked.mark': '⏳ later'; readonly 'parked.mark-overdue': '⏳ overdue'; readonly 'parked.heading': 'Parked for later'; readonly 'parked.revisit': ', revisit by {day}'; readonly 'parked.row': '⏳ Parked — {name}: {what}{why}{when}'; readonly 'parked.row-overdue': '⏳ Overdue — {name}: {what}{why}{when}'; readonly 'parked.what-unsaid': 'what is needed is not said'; readonly 'parked.why': ' ({why})'; readonly 'parked.note': '⏳ Parked for later: {what}'; readonly 'parked.note-overdue': '⏳ Parked for later, and overdue: {what}'; readonly 'parked.park': 'Park for later'; readonly 'parked.what': 'What is needed'; readonly 'parked.why-waits': 'Why it waits'; readonly 'parked.revisit-by': 'Revisit by'; readonly 'parked.park-it': 'Park it'; }"
+        ],
+        "SourceFault": [
+          "interface",
+          "block: number",
+          "fault: string",
+          "graph: string | null"
+        ],
+        "SourceFetched": [
+          "type = { found: string; text: string; } | { found: string; unreadable: string; } | { found: string; tooLarge: number; } | { missing: true; elsewhere?: readonly string[]; }"
+        ],
+        "sourceFor": [
+          "value: (texts: readonly string[], graph: string) => Source | SourceFault | null"
+        ],
+        "sourceOf": [
+          "value: (text: string, block?: number) => Source | SourceFault | null"
+        ],
+        "SourceRead": [
+          "interface",
+          "from: string",
+          "lines: Array<number>",
+          "reading: NoteReading",
+          "source: Source",
+          "texts: Array<string>"
+        ],
+        "SourceRefusal": [
+          "interface",
+          "reading?: undefined",
+          "refused: string",
+          "source: Source",
+          "why: 'missing' | 'moved' | 'unreadable' | 'no-graph'"
+        ],
+        "Span": [
+          "interface",
+          "close: number",
+          "open: number",
+          "text: string"
+        ],
+        "spanOf": [
+          "value: (block: string, t: Target, unnamed?: { line: number; character: number; }) => { from: number; to: number; } | null"
+        ],
+        "Stale": [
+          "interface",
+          "message: string",
+          "now: string",
+          "was: string"
+        ],
+        "standardBlocks": [
+          "value: (blocks: string[]) => { blocks: string[]; left: number[]; }"
+        ],
+        "Start": [
+          "type = { moving: true; } | { moving: false; playable: boolean; why: string; plain?: true; }"
+        ],
+        "startingSwitches": [
+          "value: (settings: Pick<Settings, typeof SWITCH_SETTINGS[ViewSwitch]>, style?: Pick<StyleGraph, 'links' | 'shown'>, view?: string) => ViewSwitches"
+        ],
+        "startOf": [
+          "value: (x: ImageAt & { reduced: boolean; moving: number; }) => Start"
+        ],
+        "STEP": [
+          "value: 1.25"
+        ],
+        "StepFault": [
+          "interface",
+          "block: number",
+          "fault: string",
+          "graph: string",
+          "name: string"
+        ],
+        "StepGiven": [
+          "interface",
+          "graph: string",
+          "view?: string | undefined"
+        ],
+        "stepOf": [
+          "value: (text: string, block?: number) => Step | StepFault | null"
+        ],
+        "StepOutput": [
+          "interface",
+          "links: Array<[string, string, string]>",
+          "things: Array<string>"
+        ],
+        "stepOver": [
+          "value: (before: string, text: string, caret: number) => TextChange | null"
+        ],
+        "StepPoint": [
+          "interface",
+          "kinds: Array<string>",
+          "name: string",
+          "types: Array<string>"
+        ],
+        "StepRun": [
+          "type = { refused: string[]; } | { nothing: string; output: StepOutput; } | { proposal: Proposal; output: StepOutput; }"
+        ],
+        "Strictness": [
+          "type = 'standard' | 'forgiving' | 'simplified'"
+        ],
+        "StrictnessSettings": [
+          "interface",
+          "allowed: Array<Departure>",
+          "strictness: Strictness"
+        ],
+        "STYLE": [
+          "value: { $schema: string; _locked: string; _about: string; _readability: string; font: string; font_size: number; kind_font_size: number; edge_font_size: number; line_height: number; caption_gap: number; caption_letter_spacing: number; box_padding: string; wrap_chars: number; ranksep: number; nodesep: number; kind_hues: Array<string>; kind_colours: {}; fill_opacity: number; label_mix: number; line_mix: number; text: string; muted: string; edge: string; edge_hues: Array<string>; edge_colours: { favours: string; supports: string; confirms: string; \"counts against\": string; contradicts: string; weakens: string; refutes: string; }; _suggested: string; suggested_label: string; suggested_style: string; page_width: number; directions: Array<string>; max_height_ratio: number; }"
+        ],
+        "STYLE_HUES": [
+          "value: ReadonlyArray<string>"
+        ],
+        "StyleAt": [
+          "interface",
+          "block: number",
+          "id: string",
+          "line: number"
+        ],
+        "StyleChange": [
+          "type = { nudge: NudgeWrite; } | { look: LookWrite; } | { outside: { view: string; outside: string; }; } | { shown: ShownWrite; } | { show: ShowWrite; } | { arrows: ArrowsWrite; } | { diagram: DiagramWrite; }"
+        ],
+        "styledDrawing": [
+          "value: (drawing: GraphDrawing, style: StyleGraph, g?: Graph, view?: string) => GraphDrawing"
+        ],
+        "styleEdit": [
+          "value: (note: string, graph: string, change: StyleChange) => StyleEdit"
+        ],
+        "StyleEdit": [
+          "type = { note: string; } | { refused: string; }"
+        ],
+        "StyleGraph": [
+          "interface",
+          "arrows: Array<Arrows>",
+          "diagrams: Array<Diagram>",
+          "direction?: string | undefined",
+          "flows: Array<Flow>",
+          "links: Array<Links>",
+          "looks: Array<Look>",
+          "nudges: Array<Nudge>",
+          "pictures: Array<Picture>",
+          "shown: Map<string, Shown>",
+          "shows: Array<Show>",
+          "views: Map<string, ViewStyle>"
+        ],
+        "styleOf": [
+          "value: (text: string) => string | null"
+        ],
+        "StyleReading": [
+          "type = { world: World; whole: World; tooLarge?: Refusal | undefined; }"
+        ],
+        "StyleScope": [
+          "interface",
+          "path?: string | undefined",
+          "view?: string | undefined"
+        ],
+        "StyleTarget": [
+          "type = { thing: string; kind?: string; } | { link: LinkTarget; }"
+        ],
+        "Suggestion": [
+          "interface",
+          "because: string",
+          "type: 'network' | 'tree' | 'flow' | 'radial' | 'lanes' | 'timeline' | 'table'"
+        ],
+        "suggestName": [
+          "value: (reading: NoteReading, graph: string, text: string, kind?: string, block?: string) => string"
+        ],
+        "suggestType": [
+          "value: (fits: readonly TypeFit[], shape: GraphShape) => Suggestion"
+        ],
+        "SummaryGroup": [
+          "interface",
+          "add: number",
+          "change: number",
+          "keys: Array<string>",
+          "name: string",
+          "remove: number"
+        ],
+        "SWITCH_NAMES": [
+          "value: Record<'labels' | 'hubs' | 'groups' | 'merge', string>"
+        ],
+        "SWITCH_SETTINGS": [
+          "value: { readonly labels: 'labelsByZoom'; readonly hubs: 'foldHubs'; readonly groups: 'foldGroups'; readonly merge: 'mergeLinks'; }"
+        ],
+        "SwitchSetting": [
+          "type = 'off' | 'on'"
+        ],
+        "tableOf": [
+          "value: (drawing: Pick<GraphDrawing, 'boxes' | 'links'>, g?: Graph) => DiagramTable"
+        ],
+        "tallestOf": [
+          "value: (s: DrawingHeightSetting) => number | null"
+        ],
+        "TapCycle": [
+          "class",
+          "static new (same: number): TapCycle",
+          "tap: (x: number, y: number, ids: string[]) => string | null"
+        ],
+        "Target": [
+          "type = { thing: string; } | { link: number; }"
+        ],
+        "TextChange": [
+          "interface",
+          "from: number",
+          "text: string",
+          "to: number"
+        ],
+        "TextEdit": [
+          "interface",
+          "newText: string",
+          "range: Range"
+        ],
+        "TextFormat": [
+          "type = 'plain' | 'bold' | 'italic'"
+        ],
+        "textFromName": [
+          "value: (name: string) => string"
+        ],
+        "TextHistory": [
+          "class",
+          "static new (initial: TextState): TextHistory",
+          "record: (state: TextState, change: Change) => void",
+          "redo: () => TextState | null",
+          "reset: (state: TextState) => void",
+          "undo: () => TextState | null"
+        ],
+        "TextState": [
+          "interface",
+          "end: number",
+          "start: number",
+          "text: string"
+        ],
+        "textTooLarge": [
+          "value: (texts: string[], limits?: ReadLimits) => Refusal | null"
+        ],
+        "textVersion": [
+          "value: (d: GraphDrawing) => string[]"
+        ],
+        "THEME_COLOURS": [
+          "value: { light: ThemeColours; dark: ThemeColours; }"
+        ],
+        "THEME_TOKENS": [
+          "value: Readonly<Record<string, ThemeTokenUse>>"
+        ],
+        "ThemeColours": [
+          "interface",
+          "index [key: string]: string",
+          "muted: string",
+          "page: string",
+          "text: string"
+        ],
+        "themed": [
+          "value: (svg: string, kinds: string[], readings: string[], palette?: Palette) => string"
+        ],
+        "ThemeToken": [
+          "interface",
+          "dark: string",
+          "light: string",
+          "name: string",
+          "on?: '--gn-bg' | '--gn-bg-alt' | undefined",
+          "part?: 'line' | 'text' | undefined"
+        ],
+        "themeTokenContract": [
+          "value: (t: ThemeToken, pluginId: string) => PluginCheck[]"
+        ],
+        "themeTokenCss": [
+          "value: (tokens: readonly ThemeToken[]) => string"
+        ],
+        "ThemeTokenUse": [
+          "interface",
+          "kind: ThemeTokenKind",
+          "says: string"
+        ],
+        "ThingAdded": [
+          "type = { text: string; name: string; } | { refused: string; }"
+        ],
+        "thingChange": [
+          "value: (name: string, kind: string, properties?: Record<string, string | number | boolean>, extra?: { group?: string; reason?: string; }) => ChangeInput"
+        ],
+        "ThingLook": [
+          "interface",
+          "format?: 'plain' | 'bold' | 'italic' | undefined",
+          "hue?: string | undefined",
+          "line?: 'bold' | 'solid' | 'dashed' | 'dotted' | undefined"
+        ],
+        "ThingNote": [
+          "interface",
+          "block: number",
+          "lines: Array<number>",
+          "summary: string",
+          "text: string"
+        ],
+        "thingSaid": [
+          "value: (reading: NoteReading, graph: string, key: string) => string"
+        ],
+        "ThoughtKnotPlugin": [
+          "interface",
+          "api: string",
+          "id: string",
+          "register: (points: ExtensionPoints) => void",
+          "uses: Array<'exports' | 'theme'>",
+          "version: string"
+        ],
+        "Threshold": [
+          "interface",
+          "least: number",
+          "most: number",
+          "requirement: string",
+          "said: string",
+          "unit: string",
+          "value: number"
+        ],
+        "ThresholdName": [
+          "type = 'busy_hub' | 'path_pace' | 'reread_budget' | 'diff_limit'"
+        ],
+        "THRESHOLDS": [
+          "value: { busy_hub: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; path_pace: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; reread_budget: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; diff_limit: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; }"
+        ],
+        "thresholdValue": [
+          "value: (name: ThresholdName, given?: unknown) => number"
+        ],
+        "TIMEOUTS_BEFORE_STOPPING": [
+          "value: 3"
+        ],
+        "Token": [
+          "interface",
+          "c: 'string' | 'type' | 'label' | 'value' | 'edge' | 'kw' | 'prop' | 'comment' | 'fn' | 'param' | 'var' | 'arrow' | 'op' | 'punct' | null",
+          "s: string"
+        ],
+        "TOKEN_CLASSES": [
+          "value: readonly ['kw', 'type', 'label', 'edge', 'prop', 'string', 'value', 'comment', 'fn', 'param', 'var', 'arrow', 'op', 'punct']"
+        ],
+        "TokenClass": [
+          "type = 'string' | 'type' | 'label' | 'value' | 'edge' | 'kw' | 'prop' | 'comment' | 'fn' | 'param' | 'var' | 'arrow' | 'op' | 'punct'"
+        ],
+        "tokenize": [
+          "value: (src: string) => Token[]"
+        ],
+        "Told": [
+          "type = 'stopped' | 'on-the-page'"
+        ],
+        "tooLarge": [
+          "value: (drawing: GraphDrawing, limits: LayoutLimits) => Refusal | null"
+        ],
+        "TooLargeToAnimate": [
+          "interface",
+          "fix: string",
+          "why: string"
+        ],
+        "toStandard": [
+          "value: (note: string) => Converted"
+        ],
+        "Trail": [
+          "class",
+          "static new (): Trail",
+          "back: () => TrailStep | null",
+          "canBack: () => boolean",
+          "canForward: () => boolean",
+          "clear: () => void",
+          "current: () => TrailStep | null",
+          "forward: () => TrailStep | null",
+          "go: (step: TrailStep) => TrailStep | null",
+          "next: () => TrailStep | null",
+          "previous: () => TrailStep | null",
+          "start: (step: TrailStep) => void"
+        ],
+        "TrailStep": [
+          "type = { key: string; } | { link: number; }"
+        ],
+        "translationProblems": [
+          "value: (source: Catalogue, translation: Catalogue, tag: string) => string[]"
+        ],
+        "Transport": [
+          "type = (request: TransportRequest) => Promise<TransportReply>"
+        ],
+        "TransportReply": [
+          "interface",
+          "status: number",
+          "text: string"
+        ],
+        "TransportRequest": [
+          "interface",
+          "body: string",
+          "headers: Record<string, string>",
+          "method: 'POST'",
+          "url: string"
+        ],
+        "TypeFit": [
+          "interface",
+          "fits: boolean",
+          "relationship?: string | undefined",
+          "type: 'network' | 'tree' | 'flow' | 'radial' | 'lanes' | 'timeline' | 'table'",
+          "why?: string | undefined"
+        ],
+        "typeFits": [
+          "value: (shape: GraphShape, relationship?: string) => TypeFit[]"
+        ],
+        "underStrictness": [
+          "value: (problems: Problem[], settings: StrictnessSettings) => Problem[]"
+        ],
+        "unmatchedClasses": [
+          "value: (rows: MatrixRow[], classifications: string[], classMap: Record<string, string>) => string[]"
+        ],
+        "UnreadImage": [
+          "interface",
+          "name: string",
+          "size: number",
+          "unread: true"
+        ],
+        "Untangle": [
+          "class",
+          "static new (d: GraphDrawing, legend?: readonly LegendChoice[]): Untangle",
+          "active: () => boolean",
+          "clearRoute: () => void",
+          "readonly edges: Array<FocusEdge>",
+          "layers: (focus: Kept | null) => Layers",
+          "readonly legend: LegendFilter",
+          "only: { key: string; steps: FocusDepth; } | null",
+          "route: (from: string, to: string) => PathFound | null",
+          "routed: { from: string; to: string; found: PathFound | null; } | null",
+          "showAll: () => void",
+          "showOnly: (key: string, steps: FocusDepth) => void"
+        ],
+        "valueGql": [
+          "value: (value: string | number | boolean) => string"
+        ],
+        "View": [
+          "interface",
+          "height: number",
+          "scale: number",
+          "width: number",
+          "x: number",
+          "y: number"
+        ],
+        "VIEW_FORMS": [
+          "value: Record<'picked' | 'near' | 'reaches' | 'kinds' | 'path', string>"
+        ],
+        "VIEW_KINDS": [
+          "value: readonly ['picked', 'near', 'reaches', 'kinds', 'path']"
+        ],
+        "VIEW_LIMITS": [
+          "value: { readonly near: 3; readonly steps: 6; }"
+        ],
+        "VIEW_NAMES": [
+          "value: Record<'picked' | 'near' | 'reaches' | 'kinds' | 'path', string>"
+        ],
+        "VIEW_SWITCHES": [
+          "value: readonly ['labels', 'hubs', 'groups', 'merge']"
+        ],
+        "ViewArgs": [
+          "interface",
+          "kinds: { kinds: string[]; }",
+          "near: { id: string; depth: number; }",
+          "path: { path: string; }",
+          "picked: { ids: string[]; }",
+          "reaches: { from: string; to: string; steps: number; directed?: boolean; }"
+        ],
+        "ViewKind": [
+          "type = 'picked' | 'near' | 'reaches' | 'kinds' | 'path'"
+        ],
+        "ViewRefusal": [
+          "interface",
+          "refused: string"
+        ],
+        "ViewResult": [
+          "interface",
+          "empty: boolean",
+          "links: Array<number>",
+          "missing?: Array<string> | undefined",
+          "things: Array<string>",
+          "walk?: Array<string> | undefined",
+          "why?: string | undefined"
+        ],
+        "viewsOf": [
+          "value: (texts: string[]) => NamedView[]"
+        ],
+        "ViewSpec": [
+          "type = { kind: 'picked'; ids: string[]; } | { kind: 'near'; id: string; depth: number; } | { kind: 'reaches'; from: string; to: string; steps: number; directed: boolean; } | { kind: 'kinds'; kinds: string[]; } | { kind: 'path'; path: string; }"
+        ],
+        "ViewState": [
+          "class",
+          "static new (start: ViewSwitches): ViewState",
+          "fold: (fold: Fold) => void",
+          "folded: (d: GraphDrawing) => GraphDrawing",
+          "hub: (d: GraphDrawing, key: string) => { links: number; folded: boolean; } | null",
+          "open: (fold: Fold) => void",
+          "plan: Folding | undefined",
+          "saved: () => Record<ViewSwitch, OnOff>",
+          "readonly switches: ViewSwitches",
+          "turn: (s: ViewSwitch, on: boolean) => boolean"
+        ],
+        "ViewStyle": [
+          "interface",
+          "outside: 'hide' | 'fade'"
+        ],
+        "ViewSwitch": [
+          "type = 'labels' | 'hubs' | 'groups' | 'merge'"
+        ],
+        "ViewSwitches": [
+          "type = { labels: boolean; hubs: boolean; groups: boolean; merge: boolean; }"
+        ],
+        "WalkedPath": [
+          "interface",
+          "empty: boolean",
+          "id: string",
+          "steps: Array<PathStep>",
+          "title: string"
+        ],
+        "wayIn": [
+          "value: (things: number) => { count: number; say: string; } | null"
+        ],
+        "Which": [
+          "type = ReadonlyArray<string> | { all: true; } | { group: string; }"
+        ],
+        "withMeant": [
+          "value: (block: string, broken: BrokenLink, meant: string) => string | null"
+        ],
+        "withoutColorMix": [
+          "value: (svg: string) => string"
+        ],
+        "withStandardSchemas": [
+          "value: (vault: readonly string[]) => string[]"
+        ],
+        "word": [
+          "value: (key: WordKey, values?: WordValues) => string"
+        ],
+        "WordKey": [
+          "type = 'settings.strictness.name' | 'settings.strictness.sentence' | 'settings.strictness.standard' | 'settings.strictness.standard.sentence' | 'settings.strictness.forgiving' | 'settings.strictness.forgiving.sentence' | 'settings.strictness.simplified' | 'settings.strictness.simplified.sentence' | 'settings.allowed.name' | 'settings.allowed.sentence' | 'settings.allowed.missing-comma' | 'settings.allowed.missing-comma.sentence' | 'settings.allowed.trailing-comma' | 'settings.allowed.trailing-comma.sentence' | 'settings.allowed.bare-type' | 'settings.allowed.bare-type.sentence' | 'settings.ai-use.name' | 'settings.ai-use.sentence' | 'settings.ai-use.off' | 'settings.ai-use.on' | 'settings.classifications.name' | 'settings.classifications.sentence' | 'settings.ai-unlabelled.name' | 'settings.ai-unlabelled.sentence' | 'settings.ai-models.name' | 'settings.ai-models.sentence' | 'settings.ai-matrix-note.name' | 'settings.ai-matrix-note.sentence' | 'settings.ai-class-map.name' | 'settings.ai-class-map.sentence' | 'settings.indent.name' | 'settings.indent.sentence' | 'settings.indent.two' | 'settings.indent.four' | 'settings.indent.tab' | 'settings.direction.name' | 'settings.direction.sentence' | 'settings.direction.best' | 'settings.direction.lr' | 'settings.direction.tb' | 'settings.focus-depth.name' | 'settings.focus-depth.sentence' | 'settings.focus-depth.one' | 'settings.focus-depth.two' | 'settings.labels-by-zoom.name' | 'settings.labels-by-zoom.sentence' | 'settings.labels-by-zoom.on' | 'settings.labels-by-zoom.off' | 'settings.fold-hubs.name' | 'settings.fold-hubs.sentence' | 'settings.fold-hubs.on' | 'settings.fold-hubs.off' | 'settings.fold-groups.name' | 'settings.fold-groups.sentence' | 'settings.fold-groups.on' | 'settings.fold-groups.off' | 'settings.merge-links.name' | 'settings.merge-links.sentence' | 'settings.merge-links.on' | 'settings.merge-links.off' | 'settings.note-callouts.name' | 'settings.note-callouts.sentence' | 'settings.note-callouts.on' | 'settings.note-callouts.off' | 'settings.mini-map.name' | 'settings.mini-map.sentence' | 'settings.mini-map.off' | 'settings.mini-map.auto' | 'settings.mini-map.always' | 'settings.details-open.name' | 'settings.details-open.sentence' | 'settings.details-open.on' | 'settings.details-open.off' | 'settings.drawing-height.name' | 'settings.drawing-height.sentence' | 'settings.drawing-height.half' | 'settings.drawing-height.most' | 'settings.drawing-height.none' | 'settings.export-theme.name' | 'settings.export-theme.sentence' | 'settings.export-theme.light' | 'settings.export-theme.dark' | 'settings.companion-note.name' | 'settings.companion-note.sentence' | 'settings.companion-note.off' | 'settings.companion-note.on' | 'settings.export-folder.name' | 'settings.export-folder.sentence' | 'settings.export-asks-above.name' | 'settings.export-asks-above.sentence' | 'settings.decider.name' | 'settings.decider.sentence' | 'changes.not-drawn' | 'changes.alt' | 'changes.section' | 'changes.compare' | 'changes.reading' | 'changes.heading' | 'changes.figure' | 'changes.reading-versions' | 'changes.version' | 'changes.show' | 'review.pull' | 'review.merge' | 'review.commit' | 'review.by' | 'review.section' | 'review.open' | 'review.summary' | 'review.by-section' | 'review.by-workstream' | 'review.requirements' | 'review.others' | 'review.not-shown' | 'review.unread' | 'review.graphs' | 'review.graph' | 'review.graph-of' | 'review.lines' | 'review.too-many' | 'review.reading' | 'review.reading-all' | 'review.pick' | 'review.go' | 'review.none' | 'page.menu' | 'page.note' | 'properties.type.text' | 'properties.type.number' | 'properties.type.boolean' | 'properties.type.date' | 'properties.type.datetime' | 'properties.type.list' | 'properties.type-of' | 'properties.new' | 'properties.remove' | 'properties.name' | 'properties.value-of' | 'properties.value-new' | 'properties.name-of' | 'properties.name-new' | 'properties.refused' | 'properties.new-one' | 'properties.name-first' | 'properties.taken' | 'properties.add' | 'add.group' | 'add.thing' | 'add.text' | 'add.name' | 'add.kind' | 'add.named' | 'add.suggested' | 'add.not-editing' | 'add.added' | 'add.it' | 'add.cancel' | 'editor.edit' | 'editor.empty-graph' | 'editor.edit-kept' | 'editor.stopped-kept' | 'editor.changed-kept' | 'editor.draft-kept' | 'editor.restore' | 'editor.discard' | 'ai.view' | 'ai.graph' | 'ai.title' | 'ai.question' | 'ai.nothing' | 'ai.what' | 'ai.what.sentence' | 'ai.what.graph' | 'ai.what.view' | 'ai.what.things' | 'ai.your-question' | 'ai.your-question.sentence' | 'ai.show' | 'ai.send' | 'ai.cancel' | 'ai.no-view' | 'ai.model' | 'ai.model.no-purpose' | 'ai.model.matrix' | 'ai.model.ceiling' | 'ai.model.for-proposing' | 'ai.matrix-unread' | 'ai.exactly' | 'ai.level-changed' | 'ai.not-written-error' | 'ai.not-written' | 'ai.proposed' | 'leave.title' | 'leave.open' | 'leave.cancel' | 'models.name' | 'models.purpose' | 'models.purpose.sentence' | 'models.model' | 'models.model.sentence' | 'models.endpoint' | 'models.endpoint.sentence' | 'models.none' | 'models.page' | 'models.said' | 'models.no-purpose' | 'models.unnamed' | 'models.ceiling-gone' | 'models.held' | 'models.ceiling' | 'models.ceiling.sentence' | 'models.key' | 'models.key.sentence' | 'models.add' | 'models.no-row' | 'models.unmatched' | 'models.row-gone' | 'models.choose-row' | 'models.row' | 'models.flagged' | 'models.send-level' | 'models.condition' | 'models.condition-changed' | 'code.copy' | 'code.copied' | 'code.copy-refused' | 'editor.block-gone' | 'editor.draft-gone' | 'find.none' | 'find.found' | 'move.beside' | 'move.before' | 'move.after' | 'move.nowhere' | 'move.done' | 'move.step' | 'move.none' | 'bar.name' | 'bar.problems' | 'bar.gaps' | 'bar.parked' | 'bar.overdue' | 'bar.no-problems' | 'bar.fit' | 'bar.zoom-out' | 'bar.zoom-in' | 'bar.find' | 'bar.filter' | 'bar.view' | 'bar.full-screen' | 'bar.close-full-screen' | 'bar.export' | 'bar.edit-here' | 'bar.done-editing' | 'bar.edit-in-pane' | 'bar.show-source' | 'bar.show-drawing' | 'details.of' | 'details.close' | 'details.minimise' | 'details.restore' | 'details.from' | 'details.to' | 'details.problems' | 'details.links-out' | 'details.links-in' | 'details.said-this' | 'details.said-it' | 'details.said-name' | 'details.said-links' | 'details.said-alone' | 'details.said-has' | 'details.said-properties' | 'details.said-no-properties' | 'details.said-no-problems' | 'details.none-in' | 'details.none-out' | 'details.trail' | 'details.back' | 'details.back-to' | 'details.forward' | 'details.forward-to' | 'details.link' | 'details.link-said' | 'details.step-link' | 'details.step-link-unknown' | 'details.estimated-link' | 'details.note' | 'details.not-declared' | 'details.show-only' | 'details.move' | 'details.shortest-path' | 'details.open-hub' | 'details.fold-hub' | 'details.edit-link' | 'details.not-as-drawn' | 'details.edit-block' | 'summary.counts' | 'summary.things' | 'summary.links' | 'summary.kinds' | 'editor.drawing-tab' | 'editor.text-tab' | 'editor.text-of' | 'editor.suggestions' | 'editor.problems' | 'editor.done' | 'editor.open-again' | 'editor.undo' | 'editor.redo' | 'editor.lock' | 'editor.block-picker' | 'editor.pane-title' | 'export.form' | 'export.data-gql' | 'export.data-csv' | 'export.data-graphml' | 'export.view' | 'export.view-in-context' | 'export.whole' | 'export.path' | 'export.what' | 'export.format' | 'export.pace' | 'export.pace-half' | 'export.pace-seconds' | 'export.theme' | 'export.anyway' | 'export.do-not' | 'export.ready' | 'export.share' | 'export.it' | 'path.pause' | 'path.play-on' | 'path.previous' | 'path.next' | 'path.stop' | 'path.export' | 'walk.group' | 'walk.ended' | 'walk.title' | 'walk.undo' | 'walk.save' | 'walk.cancel' | 'walk.cancelled' | 'walk.play' | 'walk.record' | 'walk.recording' | 'walk.recording-last' | 'walk.not-editing' | 'walk.written' | 'maker.picked' | 'maker.near' | 'maker.reaches' | 'maker.kinds' | 'maker.path' | 'maker.group' | 'maker.start' | 'maker.kind' | 'maker.steps' | 'maker.name' | 'maker.write' | 'maker.stop' | 'maker.hint-picked' | 'maker.hint-near' | 'maker.hint-reaches-end' | 'maker.hint-reaches-start' | 'maker.hint-kinds' | 'maker.hint-path' | 'maker.the-view' | 'maker.none-yet' | 'maker.bad-name' | 'strip.reading' | 'strip.hide' | 'strip.fade' | 'strip.save' | 'strip.legend' | 'table.things' | 'table.links' | 'table.from' | 'table.link' | 'table.thing' | 'table.kind' | 'table.to' | 'table.properties' | 'table.link-row' | 'settings.section.strictness' | 'settings.section.ai-models' | 'settings.section.proposals' | 'settings.section.formatting' | 'settings.section.drawing' | 'settings.section.export' | 'view.on' | 'view.off' | 'drawing.of' | 'drawing.mini-map' | 'untangle.find' | 'untangle.show-all' | 'untangle.widen' | 'untangle.narrow' | 'untangle.clear-path' | 'untangle.choose-second' | 'untangle.cancel' | 'untangle.legend' | 'untangle.nothing-to-filter' | 'untangle.in-front' | 'untangle.hidden' | 'proposal.region' | 'proposal.name' | 'proposal.not-yet-written' | 'proposal.check-fails' | 'proposal.check-passes' | 'proposal.decide' | 'proposal.read-this' | 'proposal.accept-all' | 'proposal.accept-all.said' | 'proposal.reject-all' | 'proposal.reject-all.said' | 'proposal.all-decided' | 'proposal.undo' | 'proposal.undo.said' | 'proposal.blocked' | 'proposal.accepted-by' | 'proposal.rejected-by' | 'proposal.accept' | 'proposal.reject' | 'proposal.group' | 'proposal.accept-group' | 'proposal.accept-group.said' | 'proposal.reject-group' | 'proposal.reject-group.said' | 'proposal.waiting' | 'proposal.accepted' | 'proposal.rejected' | 'proposal.by' | 'proposal.read-moved' | 'proposal.warning' | 'proposal.check-failed' | 'proposal.decided-by' | 'proposal.reason' | 'proposal.accept-change' | 'proposal.reject-change' | 'proposal.accept-all-by' | 'proposal.accept-all-by.said' | 'proposal.reject-all-by' | 'proposal.reject-all-by.said' | 'proposal.page-group' | 'proposal.accept-of' | 'proposal.reject-of' | 'step.gone' | 'step.did-not-run' | 'step.did-not-run-why' | 'step.proposed' | 'step.not-written' | 'step.cannot-run' | 'step.about' | 'step.takes' | 'step.any-graph' | 'step.give' | 'step.run' | 'step.run.said' | 'step.could-not-run' | 'details.properties' | 'style.nudges' | 'style.looks' | 'style.shown' | 'style.view-settings' | 'style.saved-views' | 'style.arrowheads' | 'style.types' | 'style.nothing' | 'style.summary' | 'style.summary-problems' | 'page.title' | 'settings.convert' | 'settings.convert.sentence' | 'settings.flagged' | 'type.network' | 'type.network.word' | 'type.network.as' | 'type.tree' | 'type.tree.word' | 'type.tree.as' | 'type.flow' | 'type.flow.word' | 'type.flow.as' | 'type.radial' | 'type.radial.word' | 'type.radial.as' | 'type.lanes' | 'type.lanes.word' | 'type.lanes.as' | 'type.timeline' | 'type.timeline.word' | 'type.timeline.as' | 'type.table' | 'type.table.word' | 'type.table.as' | 'type.now-graph' | 'type.now-view' | 'type.drawn' | 'type.list' | 'type.choose' | 'type.drawn-now' | 'type.suggested' | 'type.stopped' | 'type.as-network' | 'type.use' | 'type.way-in' | 'type.as-table' | 'drawing.full-screen' | 'note.not-here' | 'note.change' | 'note.add' | 'note.remove' | 'note.field' | 'note.save' | 'note.cancel' | 'parked.declare' | 'parked.said' | 'parked.said-overdue' | 'parked.mark' | 'parked.mark-overdue' | 'parked.heading' | 'parked.revisit' | 'parked.row' | 'parked.row-overdue' | 'parked.what-unsaid' | 'parked.why' | 'parked.note' | 'parked.note-overdue' | 'parked.park' | 'parked.what' | 'parked.why-waits' | 'parked.revisit-by' | 'parked.park-it'"
+        ],
+        "Words": [
+          "type = string | PluralWords"
+        ],
+        "WordValues": [
+          "type = Record<string, string | number> & { count?: number; }"
+        ],
+        "Workstreams": [
+          "type = Map<string, { title: string; members: Set<string>; }>"
+        ],
+        "workstreamsFrom": [
+          "value: (json: string) => Workstreams"
+        ],
+        "WriteOps": [
+          "interface",
+          "remove: (path: string) => Promise<void>",
+          "rename: (from: string, to: string) => Promise<void>",
+          "write: (path: string, bytes: Uint8Array | string) => Promise<void>"
+        ],
+        "WriteResult": [
+          "type = { ok: true; note: string; ref: BlockRef; } | { ok: false; reason: string; current: Block | null; }"
+        ],
+        "writeSafely": [
+          "value: (path: string, bytes: Uint8Array | string, ops: WriteOps, temp?: string) => Promise<SafeWrite>"
+        ],
+        "WrittenNudge": [
+          "interface",
+          "other?: string | undefined",
+          "thing?: string | undefined",
+          "word: string"
+        ],
+        "Zoom": [
+          "class",
+          "static new (content: Size, viewport: Size, mode: Mode): Zoom",
+          "aim: (box: { x: number; y: number; width: number; height: number; }, minScale?: number) => Place | null",
+          "fit: () => void",
+          "fitScale: () => number",
+          "handle: (e: ZoomEvent) => boolean",
+          "isFitted: () => boolean",
+          "keepClear: (bottom: number) => void",
+          "onChange?: ((view: View) => void) | undefined",
+          "onExit?: (() => void) | undefined",
+          "outLimit: () => number",
+          "panBy: (dx: number, dy: number) => void",
+          "resize: (viewport: Size, content?: Size) => void",
+          "restore: (scale: number, x: number, y: number) => void",
+          "reveal: (box: { x: number; y: number; width: number; height: number; }) => void",
+          "setMode: (mode: Mode) => void",
+          "touchAction: () => 'pan-x pan-y' | 'pan-y' | 'none'",
+          "view: () => View",
+          "zoomAt: (factor: number, px: number, py: number) => void",
+          "zoomedIn: () => boolean",
+          "zoomIn: () => void",
+          "zoomOut: () => void"
+        ],
+        "ZoomEvent": [
+          "type = ({ kind: 'key'; key: string; } & Mods) | ({ kind: 'wheel'; x: number; y: number; dy: number; } & Mods) | { kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number; onBox?: boolean; near?: boolean; } | { kind: 'move'; id: number; x: number; y: number; } | { kind: 'up'; id: number; x: number; y: number; time: number; } | { kind: 'cancel'; id: number; } | { kind: 'dblclick'; x: number; y: number; onBox?: boolean; near?: boolean; }"
+        ]
+      }
+    }
+  },
+  "@thoughtknot/graph-spec": {
+    "version": "0.7.1",
+    "entries": {
+      ".": {
+        "export =": [
+          "canon: (g: GraphSpecCheck.Graph) => string",
+          "changeId: (change: GraphSpecCheck.ReadChange) => string",
+          "changesetHeader: (block: string) => { graph: string; id: string; against: string; by: string; } | null",
+          "check: (world: GraphSpecCheck.World, graph: string, matrix?: unknown, switches?: Set<string>) => [string, boolean][]",
+          "checkChangeset: (base: string[], block: string, matrix?: unknown, switches?: Set<string>) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }",
+          "checkSyntax: (block: string) => GraphSpecCheck.ProfileError | null",
+          "COMMENT_FIX: string",
+          "COMMENT_RULE: string",
+          "completeness: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }",
+          "Graph: typeof GraphSpecCheck.Graph",
+          "GTime: typeof GraphSpecCheck.GTime",
+          "guessReadings: (type: string) => [string, string]",
+          "hash16: (value: unknown) => string",
+          "header: (block: string) => [string | null, GraphSpecCheck.BlockKind]",
+          "lint: (text: string) => { trap: string; line: number; }[]",
+          "notes: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }",
+          "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
+          "ProfileError: typeof GraphSpecCheck.ProfileError",
+          "proposerWarnings: (world: GraphSpecCheck.World, judgementGraph: string) => string[]",
+          "quote: (s: string) => string",
+          "readChange: (text: string) => GraphSpecCheck.ReadChange",
+          "readings: (g: GraphSpecCheck.Graph, shared?: GraphSpecCheck.Graph) => Map<string, [string | undefined, string | undefined]>",
+          "reverseReading: (reading: string) => string",
+          "SCHEMA_LABELS: Array<string>",
+          "schemaFor: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]",
+          "SPEC_NODES: Array<string>",
+          "splitChangeset: (block: string) => { additions: string; changes: { line: number; lines: number[]; text: string; reason: string | null; }[]; basisOk: boolean; }",
+          "Store: typeof GraphSpecCheck.Store",
+          "tokens: (text: string) => [string, string, number, string, number][]",
+          "word: (readings: Map<string, [string | undefined, string | undefined]>, type: string) => string",
+          "worldFromStore: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
+        ],
+        "BlockKind": [
+          "type = 'data' | 'schema' | 'query' | 'excerpt' | 'changeset'"
+        ],
+        "canon": [
+          "value: (g: GraphSpecCheck.Graph) => string"
+        ],
+        "changeId": [
+          "value: (change: GraphSpecCheck.ReadChange) => string"
+        ],
+        "changesetHeader": [
+          "value: (block: string) => { graph: string; id: string; against: string; by: string; } | null"
+        ],
+        "check": [
+          "value: (world: GraphSpecCheck.World, graph: string, matrix?: unknown, switches?: Set<string>) => [string, boolean][]"
+        ],
+        "checkChangeset": [
+          "value: (base: string[], block: string, matrix?: unknown, switches?: Set<string>) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }"
+        ],
+        "checkSyntax": [
+          "value: (block: string) => GraphSpecCheck.ProfileError | null"
+        ],
+        "COMMENT_FIX": [
+          "value: string"
+        ],
+        "COMMENT_RULE": [
+          "value: string"
+        ],
+        "completeness": [
+          "value: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }"
+        ],
+        "CompletenessRule": [
+          "interface",
+          "counted: number",
+          "deferred: Array<string>",
+          "excused: number",
+          "kind: 'cardinality' | 'coverage'",
+          "malformed: string",
+          "met: number",
+          "missing: Array<{ at: string; found: number; fix: string; }>",
+          "overdue: Array<string>",
+          "rule: string",
+          "says: string"
+        ],
+        "Edge": [
+          "type = [string, string, string, Record<string, GraphSpecCheck.Value>]"
+        ],
+        "ElementNote": [
+          "interface",
+          "element: { thing: string; } | { link: [string, string, string]; }",
+          "line: number",
+          "lines: Array<number>",
+          "summary: string",
+          "text: string"
+        ],
+        "Graph": [
+          "class",
+          "static new (): GraphSpecCheck.Graph",
+          "edges: Array<GraphSpecCheck.Edge>",
+          "has: (id: string, label: string) => boolean",
+          "inc: (id: string, type?: string) => GraphSpecCheck.Edge[]",
+          "labelled: (label: string) => string[]",
+          "nodes: Map<string, [Set<string>, Record<string, GraphSpecCheck.Value>]>",
+          "out: (id: string, type?: string) => GraphSpecCheck.Edge[]",
+          "p: (id: string) => Record<string, GraphSpecCheck.Value>"
+        ],
+        "GTime": [
+          "class",
+          "static new (kind: 'date' | 'datetime', s: string): GraphSpecCheck.GTime",
+          "kind: 'date' | 'datetime'",
+          "s: string"
+        ],
+        "guessReadings": [
+          "value: (type: string) => [string, string]"
+        ],
+        "hash16": [
+          "value: (value: unknown) => string"
+        ],
+        "header": [
+          "value: (block: string) => [string | null, GraphSpecCheck.BlockKind]"
+        ],
+        "lint": [
+          "value: (text: string) => { trap: string; line: number; }[]"
+        ],
+        "notes": [
+          "value: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }"
+        ],
+        "OwnedComment": [
+          "interface",
+          "element: { thing: string; } | { link: [string, string, string]; }",
+          "line: number",
+          "note: Array<string>",
+          "summary: string",
+          "tags: Array<[string, string]>"
+        ],
+        "ownedComments": [
+          "value: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }"
+        ],
+        "ProfileError": [
+          "class",
+          "static new (line: number, message: string, fix: string, at?: number, code?: string): GraphSpecCheck.ProfileError",
+          "at?: number | undefined",
+          "cause?: unknown",
+          "code?: string | undefined",
+          "fix: string",
+          "line: number",
+          "message: string",
+          "msg: string",
+          "name: string",
+          "stack?: string | undefined"
+        ],
+        "proposerWarnings": [
+          "value: (world: GraphSpecCheck.World, judgementGraph: string) => string[]"
+        ],
+        "quote": [
+          "value: (s: string) => string"
+        ],
+        "readChange": [
+          "value: (text: string) => GraphSpecCheck.ReadChange"
+        ],
+        "ReadChange": [
+          "interface",
+          "ends?: Array<Array<string>> | undefined",
+          "from?: string | undefined",
+          "kind: 'thing' | 'link'",
+          "labels?: Array<string> | undefined",
+          "op: 'delete-thing' | 'detach-delete-thing' | 'delete-link' | 'set-thing' | 'set-link'",
+          "set?: Record<string, GraphSpecCheck.Value> | undefined",
+          "thing?: string | undefined",
+          "to?: string | undefined",
+          "type?: string | undefined"
+        ],
+        "readings": [
+          "value: (g: GraphSpecCheck.Graph, shared?: GraphSpecCheck.Graph) => Map<string, [string | undefined, string | undefined]>"
+        ],
+        "reverseReading": [
+          "value: (reading: string) => string"
+        ],
+        "SCHEMA_LABELS": [
+          "value: Array<string>"
+        ],
+        "schemaFor": [
+          "value: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]"
+        ],
+        "SPEC_NODES": [
+          "value: Array<string>"
+        ],
+        "splitChangeset": [
+          "value: (block: string) => { additions: string; changes: { line: number; lines: number[]; text: string; reason: string | null; }[]; basisOk: boolean; }"
+        ],
+        "Store": [
+          "class",
+          "static new (): GraphSpecCheck.Store",
+          "apply: (block: string) => string",
+          "bares: Array<{ graph: string; line: number; written: string; type: string; }>",
+          "commas: Array<{ graph: string; line: number; }>",
+          "corrected: (block: string) => string",
+          "graphs: Record<string, unknown>",
+          "named: Record<string, string>",
+          "schemas: Record<string, string>"
+        ],
+        "tokens": [
+          "value: (text: string) => [string, string, number, string, number][]"
+        ],
+        "Value": [
+          "type = string | number | boolean | GraphSpecCheck.GTime | Array<GraphSpecCheck.Value> | null"
+        ],
+        "word": [
+          "value: (readings: Map<string, [string | undefined, string | undefined]>, type: string) => string"
+        ],
+        "World": [
+          "type = { [x: string]: GraphSpecCheck.Graph; }"
+        ],
+        "worldFromStore": [
+          "value: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
+        ]
+      },
+      "./src/graph-layout.js": {
+        "export =": [
+          "dotSource: (nodes: Row[], edges: Row[], rankdir: string, style: object, suggested?: Iterable<string>) => [string, string[], string[]]",
+          "escape: (s: string) => string",
+          "pick: (names: string[], palette: string[], pinned: Record<string, string>) => Record<string, string>",
+          "typeDirection: (plan: { type: string; }) => string",
+          "typedSource: (dot: string, plan: object | undefined, style: object) => string",
+          "wrap: (text: string, width: number) => string[]"
+        ]
+      }
+    }
+  }
+}

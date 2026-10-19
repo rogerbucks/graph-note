@@ -86,6 +86,8 @@ jobs:
       - run: npm run build
       - name: The tag matches the manifest version
         run: test "$GITHUB_REF_NAME" = "$(node -p "require('./manifest.json').version")"
+      - name: The library breaks nothing since the last release without a new major version
+        run: node scripts/public-api.mjs --release
       - name: Bundle the core's layout source into one file, for the vault's layout parity check
         run: npm run build:layout
       # The checker ships as the one file npm run build made, at the path its entry point has in the repository.

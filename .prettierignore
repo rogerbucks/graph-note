@@ -16,6 +16,8 @@ test-vault/.obsidian/
 # the files the test generator makes (scripts/make-test-files.mjs), byte for byte as it writes them
 test-vault/Graph files/
 test/seen-failing/
+# the library's declared interface, written by scripts/public-api.mjs
+public-api.json
 # the Claude Code mod's build (packages/claude-code/esbuild.config.mjs), and the API types Claude Code lays beside it
 packages/claude-code/mod/hooks/graph.js
 packages/claude-code/mod/bin/
