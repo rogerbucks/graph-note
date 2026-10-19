@@ -173,7 +173,8 @@ export function lastStableTag() {
 }
 
 const mark = { high: '●●●', medium: '●●○', low: '●○○' };
-const cell = (s) => String(s).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+/** Text safe in one table cell: a backslash and a pipe are escaped, and a line break becomes a space. */
+const cell = (s) => String(s).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
 
 /** The register as a page: one table of the open risks, then the done and accepted ones. */
 export function report(register) {
