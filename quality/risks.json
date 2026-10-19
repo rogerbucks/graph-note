@@ -3063,7 +3063,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#618"
     },
     {
       "id": "AI-2",
@@ -3124,7 +3125,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#618"
     },
     {
       "id": "AI-4",
@@ -3368,7 +3370,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#618"
     }
   ]
 }
