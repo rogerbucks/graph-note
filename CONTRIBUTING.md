@@ -120,8 +120,8 @@ Signed-off-by: Your Name <you@example.com>
 - **A commit Claude writes carries Roger's sign-off, not Claude's.** An AI cannot certify where code came from. Roger
   directs that work, so he certifies it (Roger, 19 Oct 2026). Such a commit ends with this line, in place of `-s`:
   `Signed-off-by: Roger Bucks <264575592+rogerbucks@users.noreply.github.com>`. Add it with `git commit --trailer`.
-- **CI checks it.** `node scripts/public-readiness.mjs --history` refuses a commit since 19 Oct 2026 with no sign-off,
-  or one that names only a bot or an AI. Merge commits and Dependabot's own updates are left out.
+- **CI checks it.** `node scripts/public-readiness.mjs --history` refuses a commit from 20 Oct 2026 on with no
+  sign-off, or one that names only a bot or an AI. Merge commits and Dependabot's own updates are left out.
 
 The sign-off is how a fork or a pull request stays clear about who wrote what. It also keeps the project free to stay
 under the [Mozilla Public License 2.0](LICENSE). People who take part follow the

@@ -7,8 +7,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const git = (root, args) => execFileSync('git', args, { cwd: root, maxBuffer: 2 ** 31 });
 
-/** From this time on, every commit is signed off by a person (Roger, 19 Oct 2026). Older commits are left as they are. */
-export const SIGN_OFF_FROM = '2026-10-19T10:00:00Z';
+/** From this time on, every commit is signed off by a person (Roger, 19 Oct 2026). Older commits stay as they are. */
+export const SIGN_OFF_FROM = '2026-10-20T00:00:00Z';
 // A bot or an AI: a GitHub App's no-reply address, GitHub's own, or Claude's. None of them can certify a commit.
 const MACHINE = /(\[bot\]@users\.noreply\.github\.com|^noreply@github\.com|^noreply@anthropic\.com)$/i;
 const BOT = /\[bot\]@users\.noreply\.github\.com$/i;

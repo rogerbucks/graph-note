@@ -563,7 +563,7 @@ describe('every commit since the cut-off is signed off by a person', () => {
   });
 
   test('CI runs it, and CONTRIBUTING.md says whose sign-off a commit Claude writes carries', () => {
-    assert.match(read('scripts/public-readiness.mjs'), /signOffProblems\(ROOT/);
+    assert.match(read('scripts/public-readiness.mjs'), /\[historyProblems, signOffProblems\]/);
     const roger = 'Signed-off-by: Roger Bucks <264575592+rogerbucks@users.noreply.github.com>';
     assert.ok(read('CONTRIBUTING.md').includes(roger));
   });
