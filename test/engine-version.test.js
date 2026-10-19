@@ -535,7 +535,10 @@ describe('the workflows', () => {
     const create = rel.findIndex((r) => /gh release create/.test(r));
     assert.ok(notes >= 0 && notes < create, 'the notes are written before the release is made');
     const file = /--notes ([\w./-]+)$/.exec(rel[notes])[1];
-    assert.match(rel[create], new RegExp(`--notes-file ${file.replace('.', '\\.')}`));
+    // The notes go in as they are, or added to the end of the file the release takes (after the changelog).
+    const added = rel.map((r) => new RegExp(`cat ${file.replace('.', '\\.')} >> ([\\w./-]+)$`).exec(r)).find(Boolean);
+    const attached = added ? added[1] : file;
+    assert.match(rel[create], new RegExp(`--notes-file ${attached.replace('.', '\\.')}`));
     assert.match(rel[create], /--generate-notes/, 'the generated notes stay');
   });
 
