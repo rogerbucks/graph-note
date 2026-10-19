@@ -921,7 +921,7 @@
 (test_lib_public_api:Test {proves: 'a change to the declared public interface without a major version fails', file: 'test/lib-public-api.test.js', where: 'repo', status: 'written'}),
 (test_nightly_prerelease:Test {proves: 'the nightly workflow publishes a pre-release only from a passing main that moved, with no code of the repository in the job that writes, and pre-releases are left out of the build status and the wiki', file: 'test/nightly-workflow.test.js', where: 'repo', status: 'written'}),
 (test_community_listing:Test {proves: 'the plugin passes the community review checklist', file: 'test/community-listing.test.js', where: 'repo', status: 'planned'}),
-(test_readme_status_generated:Test {proves: 'the README status line equals the one generated from the requirements graph', file: 'test/readme-status.test.js', where: 'repo', status: 'planned'}),
+(test_readme_status_generated:Test {proves: 'the README status line equals the one generated from the requirements graph', file: 'test/readme-status.test.js', where: 'repo', status: 'written'}),
 (test_host_contract_published:Test {proves: 'a test host built from the published interface alone passes the shared host tests', file: 'packages/core/test/host-contract.test.js', where: 'repo', status: 'partial'}),
 (test_storage_contract:Test {proves: 'the vault, folder and VS Code workspace backends each pass the one storage contract suite', file: 'packages/core/test/storage-contract.test.js', where: 'repo', status: 'planned'}),
 (test_standalone_app:Test {proves: 'the Tauri v2 app opens a folder of notes and draws and edits its graphs offline on each desktop platform', file: 'test/standalone-app.test.js', where: 'repo', status: 'planned'}),

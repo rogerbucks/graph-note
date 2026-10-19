@@ -6,8 +6,9 @@ as plain text, and it draws them. You can edit a graph by typing or by dragging 
 It is one product with several ways in. The Obsidian plugin works now, on desktop and phone, offline. A standalone app,
 a VS Code plugin and a JavaScript library come next.
 
-**Status: in development.** It is not in the community plugin directory yet. It is built in nine slices. Slices 1 to 3
-are done, and slice 4 is in progress.
+<!-- readme:status -->
+**Status: in development.** It is not in the community plugin directory yet. It is built in ten slices. Slices 1 to 4 are done, and slice 5 is in progress.
+<!-- /readme:status -->
 
 ## At a glance
 

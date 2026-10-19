@@ -629,6 +629,9 @@ These test behaviour across modules, or the repository itself, so they are named
   - `check-requirements.mjs --done <slice>` says so or lists what is missing. The slice board's overview says the
     same. Each is tried on tampered copies of the requirements.
   - Every slice before the one under way is done (spec §12, done_means_proved).
+- `test/readme-status.test.js` — the README's status line is made from the requirements graph, never by hand
+  (readme_status_generated). It names how many slices there are, which are done and which is in progress.
+  `node scripts/readme-status.mjs --write` puts it right after a slice is done.
 - `test/slice-board-style.test.js` — the slice board's stylesheet. Its colour tokens agree in light and dark, and the
   altitude switch works by CSS alone. The layout holds at 400px. The source is written one rule and one declaration to
   a line.

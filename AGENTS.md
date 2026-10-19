@@ -4,7 +4,7 @@ Short on purpose. How to check your work cheaply, where things live, and what no
 
 ## Run the tests cheaply
 
-- `npm run test:ai` — the whole JavaScript suite, quietly. One line when all pass (`ok 693 tests`). For each failure:
+- `npm run test:ai` — the whole JavaScript suite, quietly. One line when all pass (`ok N tests`). For each failure:
   `file:line  name`, a short expected and actual (cut at 200 characters), and the first stack frame in our code. Tests'
   own logging is dropped. One file: `npm run test:ai -- path/to/file.test.js`; `npm run -s` hides npm's banner.
 - `npm run test:changed` — only the tests a change reaches: those named after it and every test that imports it, directly
