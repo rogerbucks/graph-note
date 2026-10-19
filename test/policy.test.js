@@ -239,7 +239,7 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only nine jobs may write: the release, the nightly, the lock, the build status comment, the mirror’s issues, the review, the wiki, its review issue and the home page', () => {
+  test('only ten jobs may write: the release, the nightly, the lock, the build status comment, the mirror’s issues, the review, the wiki, its review issue, the risk panel’s issue and the home page', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
@@ -268,8 +268,10 @@ describe('GitHub Actions', () => {
         // repository (test/wiki-workflow.test.js, nightly-workflow.test.js and site-workflow.test.js)
         const wiki = only('/wiki.yml', 'publish', 'contents: write') || only('/wiki.yml', 'report', 'issues: write');
         const nightly = only('/nightly.yml', 'publish', 'contents: write');
+        // one keeps the risk panel's issue up to date (test/risk-panel-workflow.test.js)
+        const panel = only('/risk-panel.yml', 'report', 'issues: write');
         const pages = only('/pages.yml', 'publish', 'id-token: write,pages: write');
-        assert.ok(release || lock || comment || mirror || review || wiki || nightly || pages, `${f} ${name}`);
+        assert.ok(release || lock || comment || mirror || review || wiki || nightly || panel || pages, `${f} ${name}`);
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }

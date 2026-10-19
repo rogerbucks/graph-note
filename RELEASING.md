@@ -19,6 +19,27 @@ leave it out.
 
 **Stable**: a bare version tag on main, through `release.yml`, with every check on this page.
 
+## Known risks, every release
+
+An expert panel reviewed the project on 19 Oct 2026. Its roles: security, operations, code and tests, architecture and
+data, user experience, neurodiversity and data management, workflow and community, the APIs, and AI. What it found is in
+`quality/risks.json`, drawn as [RISKS.md](RISKS.md). Each risk carries the owner's decision: fix now, fix later in a
+named wave, or accept with a reason.
+
+The release and its dry run run `node scripts/risk-register.mjs --release`. It stops the release while:
+
+- a risk marked **fix now** is still open;
+- a **fix later** risk is open past the end of its wave in `requirements/waves.json`;
+- an open risk's files changed since it was last looked at (it is **stale**).
+
+A stale risk is cleared by looking again. Then run `node scripts/risk-register.mjs --reviewed ID`, which stamps today
+and the commit. A fixed risk gets `status: done` and its pull request in `done_in`. A new decision is a pull request
+that edits the register and runs `--write-report`; `test/risk-register.test.js` holds the page to the register.
+
+The panel itself runs by hand: the **Risk panel** workflow (`risk-panel.yml`). It reads only what moved since the last
+stable tag, spends a Claude session only when something did, and writes one issue labelled `risk-panel`. The owner
+turns the issue into register entries. Run it before a stable release, after the dry run; the nightly never needs it.
+
 ## Accessibility walk-through, every release
 
 The spec (§11) says every interface, in every host, meets WCAG 2.2 Level AA. A new host meets it before its first

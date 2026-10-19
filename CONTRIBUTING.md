@@ -599,6 +599,10 @@ These test behaviour across modules, or the repository itself, so they are named
   - It is not measured where Valgrind cannot run, which fails only on Linux. The counts are recorded and printed until
     the baseline holds them.
   - A claim that does not hold always fails. Test duration only warns.
+- `test/risk-register.test.js` — the register of known risks is well formed. The release is stopped by an open fix-now
+  risk, an overdue one or a stale one. RISKS.md is what the script writes from the register.
+- `test/risk-panel-workflow.test.js` — the risk panel workflow runs by hand and spends a Claude session only when
+  something moved. It keeps its token to one step, and its one writing job keeps an issue up to date with gh alone.
 - `test/quiet-reporter.test.js` — the quiet test run when a failure's details cannot be passed on, as when an assertion
   holds a function. Every failure is still reported, and the run failed, never crashed.
 - `test/run-ceiling.test.js` — every run of the npm test commands, in CI too, is stopped with one line at a memory or
