@@ -1,7 +1,8 @@
-// graph: requirements · SOURCE · schema spec-requirements@1 · 167 requirements, 10 wordings
+// graph: requirements · SOURCE · schema spec-requirements@1 · 209 requirements, 10 wordings
 // The graph spec, frozen as it stood before the requirements moved to GitHub (Roger's vault, 19 Oct 2026).
 // Each Section is a § the code cites. Each Requirement's quote is the rule's own words. Do not edit by hand.
 // It came by a paste, which dropped some escapes and underscores. Those were put back so the reader reads it.
+// Kept true by scripts/graph-spec-proved.mjs: the counts above, the paths named, and pending only while unproved.
 INSERT
 (s1:Section {id: 'spec:§1', num: '1', title: 'Purpose and scope'}),
 (s3:Section {id: 'spec:§3', num: '3', title: 'Notation — GQL'}),
@@ -121,7 +122,7 @@ INSERT
 (r3_id_once)-[:DECIDED_IN]->(d2026_10_05_Knowledge_graphs_are_checked),
 (r3_match_finds:Requirement {id: 'req:3.match-finds', level: 'must', statement: 'MATCH finds a node by its id alone, and must find it', quote: '`MATCH` finds a node by its `id` alone, and must find it'}), (r3_match_finds)-[:PART_OF]->(s3),
 (r3_match_finds)-[:DECIDED_IN]->(d2026_10_05_Knowledge_graphs_are_checked),
-(r3_profile_reader:Requirement {id: 'req:3.profile-reader', level: 'must', statement: 'A reader with no database builds exactly the graphs Grafeo builds, on every case', quote: 'a reader with no database (`zzSupport/_scripts/gql_profile.py`) builds exactly the graphs Grafeo builds'}), (r3_profile_reader)-[:PART_OF]->(s3),
+(r3_profile_reader:Requirement {id: 'req:3.profile-reader', level: 'must', statement: 'A reader with no database builds exactly the graphs Grafeo builds, on every case', quote: 'a reader with no database (`python/graph_spec/src/gql_profile.py`) builds exactly the graphs Grafeo builds'}), (r3_profile_reader)-[:PART_OF]->(s3),
 (r3_profile_reader)-[:DECIDED_IN]->(d2026_10_05_Knowledge_graphs_are_checked),
 (r3_profile_reader)-[:PROVED_BY {test: 'general'}]->(cevery_case),
 (r3_word_quotes:Requirement {id: 'req:3.word-quotes', level: 'must', statement: 'A block in Word is read from a content control tagged spec:gql, smart quotes normalised', quote: 'smart quotes are normalised when the block is extracted'}), (r3_word_quotes)-[:PART_OF]->(s3),
@@ -213,11 +214,11 @@ INSERT
 (r12_archive_unchanged:Requirement {id: 'req:12.archive-unchanged', level: 'must', statement: 'Archived content is unchanged, proved by its hash', quote: 'archived content is unchanged (proved by its hash)'}), (r12_archive_unchanged)-[:PART_OF]->(s12),
 (r12_archive_unchanged)-[:PROVED_BY {test: 'D10'}]->(clending_demo),
 (dProv:Decision {id: 'note:2026-10-16 The graph spec adopts W3C PROV as normative for provenance.decision'}),
-(r11_had_plan:Requirement {id: 'req:11.had-plan', level: 'must', pending: TRUE, expected_by: '2027-01-31', statement: 'An activity that derives an element by a rule links to that rule with HAD_PLAN', quote: 'An activity that derives an element by a rule must link to that rule with `HAD_PLAN`'}), (r11_had_plan)-[:PART_OF]->(s11),
+(r11_had_plan:Requirement {id: 'req:11.had-plan', level: 'must', statement: 'An activity that derives an element by a rule links to that rule with HAD_PLAN', quote: 'An activity that derives an element by a rule must link to that rule with `HAD_PLAN`'}), (r11_had_plan)-[:PART_OF]->(s11),
 (r11_had_plan)-[:DECIDED_IN]->(dProv),
-(r12_prov_revision:Requirement {id: 'req:12.prov-revision', level: 'must', pending: TRUE, expected_by: '2027-01-31', statement: 'A supersession satisfies the PROV-CONSTRAINTS ordering for a revision', quote: 'a supersession must satisfy PROV-CONSTRAINTS'}), (r12_prov_revision)-[:PART_OF]->(s12),
+(r12_prov_revision:Requirement {id: 'req:12.prov-revision', level: 'must', statement: 'A supersession satisfies the PROV-CONSTRAINTS ordering for a revision', quote: 'a supersession must satisfy PROV-CONSTRAINTS'}), (r12_prov_revision)-[:PART_OF]->(s12),
 (r12_prov_revision)-[:DECIDED_IN]->(dProv),
-(r24_prov_attributed:Requirement {id: 'req:24.prov-attributed', level: 'must', pending: TRUE, expected_by: '2027-01-31', statement: 'Who proposed, decided or wrote a thing is recorded with WAS_ATTRIBUTED_TO a typed agent', quote: 'Who proposed, decided or wrote a thing must be recorded with `WAS_ATTRIBUTED_TO`'}), (r24_prov_attributed)-[:PART_OF]->(s24),
+(r24_prov_attributed:Requirement {id: 'req:24.prov-attributed', level: 'must', statement: 'Who proposed, decided or wrote a thing is recorded with WAS_ATTRIBUTED_TO a typed agent', quote: 'Who proposed, decided or wrote a thing must be recorded with `WAS_ATTRIBUTED_TO`'}), (r24_prov_attributed)-[:PART_OF]->(s24),
 (r24_prov_attributed)-[:DECIDED_IN]->(dProv),
 (r13_embed_small:Requirement {id: 'req:13.embed-small', level: 'must', statement: 'A file is embedded only when the graph must travel alone, and only small text files', quote: 'Embed only when the graph must travel alone'}), (r13_embed_small)-[:PART_OF]->(s13),
 (r13_embed_small)-[:DECIDED_IN]->(d2026_10_04_Issued_documents_keep_a_paylo),
@@ -549,7 +550,7 @@ INSERT
 (r24_cs_adds)-[:DECIDED_IN]->(dCsRemovals),
 (r24_cs_statements:Requirement {id: 'req:24.cs-statements', level: 'must', pending: TRUE, expected_by: '2027-01-31', statement: 'A change set writes a removal as GQL DELETE and a value change as GQL SET, never in a comment', quote: 'A change set must write a removal as a GQL `DELETE` and a value change as a GQL `SET`'}), (r24_cs_statements)-[:PART_OF]->(s24),
 (r24_cs_statements)-[:DECIDED_IN]->(dCsRemovals),
-(r24_cs_two_readers:Requirement {id: 'req:24.cs-two-readers', level: 'must', pending: TRUE, expected_by: '2027-01-31', statement: 'Both readers read the same removals and changes, and the checker dry-runs them like additions', quote: 'Both readers must read the same removals and changes from the same change set'}), (r24_cs_two_readers)-[:PART_OF]->(s24),
+(r24_cs_two_readers:Requirement {id: 'req:24.cs-two-readers', level: 'must', statement: 'Both readers read the same removals and changes, and the checker dry-runs them like additions', quote: 'Both readers must read the same removals and changes from the same change set'}), (r24_cs_two_readers)-[:PART_OF]->(s24),
 (r24_cs_two_readers)-[:DECIDED_IN]->(dCsRemovals),
 (r24_cs_rejected_out:Requirement {id: 'req:24.cs-rejected-out', level: 'must', pending: TRUE, expected_by: '2027-01-31', statement: 'A rejected addition leaves the live graph, and the rejection is recorded as a decision in the judgement graph', quote: 'A rejected addition must never stay as live GQL.'}), (r24_cs_rejected_out)-[:PART_OF]->(s24),
 (r24_cs_rejected_out)-[:DECIDED_IN]->(dCsRemovals),
