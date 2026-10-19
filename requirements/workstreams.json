@@ -794,5 +794,15 @@
   "GS7": {
     "title": "Smaller graph-spec gaps",
     "requirements": ["spec_process_versions", "spec_engine_catalogue", "spec_zoned_time", "spec_conserved", "spec_text_licence"]
+  },
+  "E1": {
+    "title": "Data tables and cubes",
+    "requirements": [
+      "data_tables_design",
+      "data_set_reference",
+      "data_set_linked_or_kept",
+      "data_set_cache",
+      "data_set_access"
+    ]
   }
 }

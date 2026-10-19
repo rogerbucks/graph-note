@@ -191,9 +191,16 @@
       "workstreams": ["GS6", "GS7"]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 28 · Held: data tables and cubes",
       "start": "2027-09-27",
       "end": "2027-10-10",
+      "estimate": true,
+      "workstreams": ["E1"]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-10-11",
+      "end": "2027-10-24",
       "estimate": true,
       "workstreams": []
     }
