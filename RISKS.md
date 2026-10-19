@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (96)
+## Open (90)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -55,7 +55,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming and the standalone app) | days |
 | UX-4 | No busy state while a layout runs, and a silent stop after failures | ●●○ | ●●● | fix-later (Wave 7 · Language, theming and the standalone app) | days |
 | UX-5 | A drag on the card writes outside the note's editor undo path | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| UX-6 | The site points to issues that outside users cannot open | ●●● | ●●○ | fix-now | hours |
 | UX-7 | Landing page and guide state no system requirements or AI data flow | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | UX-8 | First-run syntax help is only in the wiki, not in the app | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming and the standalone app) | days |
 | UX-9 | Focus on a drawing box is a thicker stroke, measured by nobody | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
@@ -71,14 +70,10 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-9 | No reading options: letter spacing, line height or font | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming and the standalone app) | days |
 | NEURO-10 | Renaming a thing does not follow to other notes | ●●○ | ●●○ | fix-later (Wave 9 · Slice 6 the mesh) | days |
 | NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming and the standalone app) | hours |
-| FLOW-1 | Docs invite outside pull requests; the settings forbid them | ●●● | ●●○ | fix-now | hours |
-| FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | ●●● | ●●○ | fix-now | hours |
 | FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | ●●● | ●●○ | fix-now | hours |
 | FLOW-4 | A one-line fix pays eleven gates and may touch four records | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | FLOW-5 | A requirement's text can be rewritten to fit the code | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
-| FLOW-7 | README status line is hand-written and already wrong | ●●● | ●○○ | fix-now | hours |
-| FLOW-8 | AI sessions lack the merge and record rules they need | ●●● | ●●○ | fix-now | hours |
 | FLOW-9 | No per-file MPL notice, and no test holds that choice | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-10 | Issue templates and conduct contact point at closed doors | ●●○ | ●○○ | fix-later (Wave 15 · Obsidian community release) | hours |
 | FLOW-11 | Decisions live in two places with different forms | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
@@ -86,7 +81,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-1 | Half the shipped graph-spec exports sit outside the break check | ●●○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-2 | Core is guarded as a library but never shipped as one | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-4 | Local server has two error formats and no shared schema | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| API-5 | Version promise and API changes are never told to users | ●●● | ●●○ | fix-now | hours |
 | API-6 | Python library is loose files, not an installable package | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-7 | Python public surface is everything, private names included | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-8 | graph-spec is CommonJS-only with a partial d.ts and mixed errors | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
@@ -568,16 +562,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A host test drags a box with the note open in the editing view and asserts one undoable transaction. Add a device checklist line under P.
 
-### UX-6 The site points to issues that outside users cannot open
-
-**Who found it:** User experience lead and accessibility specialist. **Where:** `site/words.json`, `site/index.html`, `wiki/Home.md`, `README.md`.
-
-**Risk:** The landing page says help is in 'the issues and the discussions on GitHub'. But the README says only collaborators can open issues and pull requests. Conversations are locked. A user who hits an accessibility failure has no stated way to report it.
-
-**Fix:** Add a 'Get help' line to site/words.json and wiki/Home.md naming the real route (GitHub Discussions if open, or an email). Reword more.source so it does not promise issues.
-
-**Check:** test/site.test.js asserts a help key exists and its link resolves to a page that accepts posts from non-collaborators.
-
 ### UX-7 Landing page and guide state no system requirements or AI data flow
 
 **Who found it:** User experience lead and accessibility specialist. **Where:** `site/words.json`, `scripts/site.mjs`, `wiki/Home.md`.
@@ -728,26 +712,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test in packages/obsidian/test that opens two graphs and asserts the summary lists both, newest first.
 
-### FLOW-1 Docs invite outside pull requests; the settings forbid them
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `README.md`, `CONTRIBUTING.md`, `scripts/public-readiness.mjs`, `.github/workflows/lock-conversations.yml`.
-
-**Risk:** README and CONTRIBUTING tell a stranger to fork and send a pull request. The repository's own settings allow pull requests from collaborators only. They also lock every conversation and keep issues to collaborators. So the stranger hits a wall and leaves.
-
-**Fix:** Write one honest paragraph at the top of CONTRIBUTING.md. Contributions are by invitation until the community release, ideas go to Discussions, and here is how to ask to join. Remove the fork-and-send sentence from README.md.
-
-**Check:** Extend test/community-files.test.js to assert CONTRIBUTING.md names the collaborators-only policy. It should also fail when README.md says anyone may send a pull request while public-readiness.mjs wants collaborators_only.
-
-### FLOW-2 DCO sign-off is asked for, never checked, and signed by an AI
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `scripts/public-readiness.mjs`, `scripts/history-text-problems.mjs`, `CONTRIBUTING.md`, `.github/workflows/ci.yml`.
-
-**Risk:** Nothing in CI reads Signed-off-by, so 114 of the last 285 non-merge commits carry no sign-off. Every sign-off present names "Claude <noreply@anthropic.com>", which is not a person and cannot certify origin, so the DCO gives the project no cover.
-
-**Fix:** Decide who certifies AI-made commits (Roger, with his own no-reply address) and write that rule in CONTRIBUTING.md. Add a step to public-readiness.mjs --history that fails a commit since a dated cut-off whose sign-off is missing or names no person.
-
-**Check:** public-readiness.mjs --history refuses an unsigned or bot-signed commit after the cut-off; test/public-readiness.test.js holds the rule.
-
 ### FLOW-3 Waves 1 to 3 are past, mostly unproved, and never replanned
 
 **Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `requirements/waves.json`, `scripts/wiki.mjs`, `scripts/wiki-roadmap.mjs`, `scripts/github-project-waves.mjs`.
@@ -787,26 +751,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Submit to obsidian-releases at the next stable release, in Wave 5, as a beta listing is allowed while slices continue. Add a CI step that checks manifest.json fields, the release assets and the plugin guidelines list the store publishes.
 
 **Check:** A test that reads manifest.json, versions.json and the release workflow against the store's documented rules; release.yml fails when they drift.
-
-### FLOW-7 README status line is hand-written and already wrong
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `README.md`, `AGENTS.md`, `scripts/check-requirements.mjs`.
-
-**Risk:** README says slice 4 is in progress. check-requirements says slices 1 to 4 are done. The requirement that generates the line is still planned. AGENTS.md quotes 'ok 693 tests' while the tree holds about 4,780. So a reader and an AI session start with stale numbers.
-
-**Fix:** Generate the README status line from check-requirements now, and drop the test count from AGENTS.md or compute it in the same step.
-
-**Check:** A test compares README's status sentence with check-requirements --done for each slice; plain-docs.test.js keeps it short.
-
-### FLOW-8 AI sessions lack the merge and record rules they need
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `AGENTS.md`, `CONTRIBUTING.md`.
-
-**Risk:** AGENTS.md never says pull requests merge by merge commit only. It also omits that every test-changing commit needs a tests-first record, which generated files to regenerate, and how a change is approved. Each session rediscovers this from a 1,174-line CONTRIBUTING.md or from a failed CI run.
-
-**Fix:** Add a ten-line 'Before you open a pull request' list to AGENTS.md. It should say merge commit only. Run tests-first --update after a test change and plain-docs --update after a doc change. Run public-api --update after an export change and notices.mjs after a dependency change. Add the sign-off rule, and who approves and how.
-
-**Check:** test/community-files.test.js asserts AGENTS.md names each regenerating command that CI enforces.
 
 ### FLOW-9 No per-file MPL notice, and no test holds that choice
 
@@ -877,16 +821,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Put the route reply and error types in one module (packages/claude-code/src/api-types.ts) imported by both page and server. Send every refusal as JSON {why}. Read why on every non-ok status in note-calls.ts.
 
 **Check:** A test that starts the real server and runs serverCalls/noteCalls/exportCalls against it. It asserts each reply satisfies the shared types and each refusal is JSON with why.
-
-### API-5 Version promise and API changes are never told to users
-
-**Who found it:** API design expert. **Where:** `README.md`, `wiki/For-developers.md`, `scripts/public-api.mjs`, `.github/workflows/release.yml`.
-
-**Risk:** That 0.7 to 0.8 is a breaking step is written only in CONTRIBUTING and a script comment. README, the wiki and the release notes say nothing. There is no CHANGELOG. The release notes are GitHub's generated list plus the Graphviz version. So a vault author learns of a removed export when their page breaks, and SECURITY.md then points them to the newest release.
-
-**Fix:** State the pre-1.0 rule in README and wiki/For-developers. Make `public-api.mjs --release --notes` write the list of changed and removed exports since the last tag. It goes into the notes file release.yml already passes to gh.
-
-**Check:** release.yml fails when the notes file has no 'Library changes' section; release-check.yml dry-runs it.
 
 ### API-6 Python library is loose files, not an installable package
 
@@ -1068,7 +1002,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/ai-disclosed.test.js asserts the README names the provider's terms and the localhost case.
 
-## Done or accepted (6)
+## Done or accepted (12)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1077,4 +1011,10 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-2 | A tag on any commit becomes a stable release | done | #614 |
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
+| UX-6 | The site points to issues that outside users cannot open | done | #615 |
+| FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
+| FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
+| FLOW-7 | README status line is hand-written and already wrong | done | #615 |
+| FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |
+| API-5 | Version promise and API changes are never told to users | done | #615 |

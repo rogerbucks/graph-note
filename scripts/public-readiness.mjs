@@ -1,10 +1,8 @@
 #!/usr/bin/env node
-// Fit to be public, and kept so (spec §13, Delivery). Three checks, the same before the repository goes public and
-// after:
-// - --history: no secret, nothing confidential or personal, in this branch's history. Authors use no-reply addresses.
+// Fit to be public, and kept so (spec §13, Delivery). Three checks, the same before and after it goes public:
+// - --history: nothing secret, confidential or personal in this branch's history; no-reply authors; signed off.
 // - --setup: a stranger's fresh clone sets up and builds from the README's steps, which name no one's machine.
 // - --settings: only a collaborator may change the code or open an issue. Anyone may read the plan and discuss it.
-//
 // CI and the release run the first two. An admin runs the third with the GitHub CLI: CI's token cannot read settings.
 //
 // Usage:
@@ -23,6 +21,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { freshCloneProblems, setupInputsChangedSince } from './fresh-clone.mjs';
 import { messageProblems, problemsIn } from './history-text-problems.mjs';
+import { signOffProblems } from './sign-off.mjs';
 import { DESCRIPTION, HOMEPAGE, topicsSetting } from './repo-profile.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -341,7 +340,8 @@ function main(argv) {
   const problems = [];
   // Making the repository public publishes every branch and tag, so that gate reads them all.
   if (flag('--history') || flag('--make-public'))
-    problems.push(...historyProblems(ROOT, { refs: flag('--make-public') ? ['--all'] : ['HEAD'] }));
+    for (const check of [historyProblems, signOffProblems])
+      problems.push(...check(ROOT, { refs: flag('--make-public') ? ['--all'] : ['HEAD'] }));
   // --setup-since <base>, for a pull request: the fresh clone only when a setup input changed
   const since = argv.includes('--setup-since') ? argv[argv.indexOf('--setup-since') + 1] : undefined;
   if (argv.includes('--setup-since') && !since) {
@@ -361,7 +361,7 @@ function main(argv) {
     return 1;
   }
   if (flag('--history'))
-    console.log('history: nothing confidential, personal or secret; every commit from a no-reply address');
+    console.log('history: nothing confidential, personal or secret; each commit no-reply and signed off');
   if (flag('--setup') || changed.length)
     console.log("setup: the README's steps set up a fresh clone, and the documents name no machine");
   else if (since) console.log('setup: the documents name no machine, and no setup input changed');

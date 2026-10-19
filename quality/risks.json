@@ -1757,7 +1757,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "UX-7",
@@ -2277,7 +2278,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "FLOW-2",
@@ -2309,7 +2311,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#621"
     },
     {
       "id": "FLOW-3",
@@ -2483,7 +2486,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "FLOW-8",
@@ -2516,7 +2520,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "FLOW-9",
@@ -2813,7 +2818,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "API-6",
