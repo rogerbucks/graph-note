@@ -270,7 +270,11 @@ function boxMoversFor(
     readOnly: () => !!o.readOnly?.(),
   };
   return {
-    drag: new BoxDrag({ ...shared, view: () => host.zoom.view(), rankdir: () => o.drawn.rankdir }),
+    drag: new BoxDrag({
+      ...shared,
+      view: () => host.zoom.view(),
+      rankdir: () => (o.drawn.mirrored ? 'RL' : o.drawn.rankdir),
+    }),
     keys: new BoxMoveKeys(shared),
   };
 }

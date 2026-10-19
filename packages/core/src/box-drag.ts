@@ -57,7 +57,7 @@ const turn = (c: { x: number; y: number }, from: { x: number; y: number }, to: {
   (Math.atan2(c.y - to.y, to.x - c.x) - Math.atan2(c.y - from.y, from.x - c.x) + 4 * Math.PI) % (2 * Math.PI);
 
 /**
- * Where box `dragged`, let go at `at`, would land among the `boxes` drawn in direction `rankdir` (LR or TB). It goes by
+ * Where box `dragged`, let go at `at`, would land among the `boxes` drawn in direction `rankdir` (LR, RL or TB). It goes by
  * the nearest other box within its reach. It lands beside it when dropped across the ranks, or before or after it along
  * them. Which applies is whichever way the point lies further from its middle for the box's size.
  *
@@ -83,14 +83,15 @@ export function landingFor(
     .sort((p, q) => p.d - q.d)[0]?.b;
   if (!near || (hub && distance(at, hub) === 0)) return null;
   if (hub) {
-    const side: Side = turn(middle(hub), middle(near), at) < Math.PI ? 'after' : 'before';
+    // mirrored for a right-to-left language (RL), the things go round the other way
+    const side: Side = turn(middle(hub), middle(near), at) < Math.PI === (rankdir !== 'RL') ? 'after' : 'before';
     return placed(side, dragged, near.key, written);
   }
   const width = near.right - near.left || 1,
     height = near.bottom - near.top || 1;
   const dx = (at.x - (near.left + near.right) / 2) / width,
     dy = (at.y - (near.top + near.bottom) / 2) / height;
-  const [along, across] = rankdir === 'TB' ? [dy, dx] : [dx, dy];
+  const [along, across] = rankdir === 'TB' ? [dy, dx] : [rankdir === 'RL' ? -dx : dx, dy];
   const side: Side = Math.abs(along) <= Math.abs(across) ? 'beside' : along < 0 ? 'before' : 'after';
   return placed(side, dragged, near.key, written);
 }

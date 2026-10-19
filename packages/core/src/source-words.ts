@@ -197,6 +197,7 @@ export const SOURCE_WORDS = {
     other: 'Drawing of graph {graph}: {count} things. Plus, minus and zero zoom; Escape leaves full screen.',
   },
   'drawing.mini-map': 'Mini-map of the whole drawing. Tap or drag it to move the view.',
+  'drawing.bring-into-view': 'Bring {name} into view',
   'untangle.find': 'Find a thing by name or property',
   'untangle.show-all': 'Show the whole graph',
   'untangle.widen': 'Widen to two steps',

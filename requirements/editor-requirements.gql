@@ -939,7 +939,7 @@
 (test_locale_sorting:Test {proves: 'lists are sorted for the reader\'s locale and written in one order', file: 'packages/core/test/locale-formats-sorting.test.js', where: 'repo', status: 'partial'}),
 (test_rtl_mirrors:Test {proves: 'the interface mirrors in a right-to-left language, and the style sheets use logical properties only', file: 'test/rtl.test.js', where: 'repo', status: 'written'}),
 (test_bidi_labels:Test {proves: 'right-to-left and mixed-script text shows in its own direction and fits its box everywhere', file: 'packages/core/test/bidi-labels.test.js', where: 'repo', status: 'partial'}),
-(test_rtl_drawing_direction:Test {proves: 'a left-to-right drawing is offered right to left in a right-to-left language', file: 'packages/core/test/bidi-labels-direction.test.js', where: 'repo', status: 'planned'}),
+(test_rtl_drawing_direction:Test {proves: 'a left-to-right drawing is offered right to left in a right-to-left language', file: 'packages/core/test/drawing-direction.test.js', where: 'repo', status: 'written'}),
 (test_pseudo_locales_checked:Test {proves: 'every view in every host passes in the long and the right-to-left pseudo-locales', file: 'test/pseudo-locales.test.js', where: 'repo', status: 'partial'}),
 (test_translations_as_files:Test {proves: 'each translation file holds the source\'s keys and placeholders', file: 'packages/core/test/words-files.test.js', where: 'repo', status: 'partial'}),
 (test_plugin_interface:Test {proves: 'every extension point is reached through the plug-in interface, the built-ins too', file: 'packages/core/test/plugins.test.js', where: 'repo', status: 'partial'}),

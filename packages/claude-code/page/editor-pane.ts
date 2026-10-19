@@ -8,6 +8,7 @@
 // These are the page's: the note behind it (page-note.ts), the settings it reads by, and the layout worker.
 // The drawing is laid out in that worker, in the host's own colours. The page's theme names them (theme-css.ts). So the
 // drawing follows the system's scheme with no redraw.
+import { shownAsRead } from '@thoughtknot/core';
 import type { Settings } from '@thoughtknot/core';
 import { BlockEditor } from '@thoughtknot/core/display/editor/block-editor';
 import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
@@ -19,7 +20,7 @@ import type { PageNote } from './page-note.ts';
 export function paneHost(settings: Settings, layouts: LayoutRunner): PaneHost {
   return {
     settings: () => settings,
-    layout: (drawing, owner) => layouts.draw(directed(drawing, settings.direction), owner),
+    layout: (drawing, owner) => layouts.draw(directed(drawing, settings.direction), owner).then(shownAsRead),
   };
 }
 

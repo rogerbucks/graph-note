@@ -26,6 +26,8 @@ export interface Drawn {
   rankdir: string;
   width: number;
   height: number;
+  /** Shown right to left: laid out across and mirrored after, for a right-to-left language (drawing-direction.ts). */
+  mirrored?: boolean;
 }
 
 /** One direction to lay a drawing out in: the source handed to Graphviz, and the kinds and readings to theme it by. */

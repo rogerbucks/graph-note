@@ -20,6 +20,8 @@ export type Mode = 'note' | 'full' | 'pane';
 export interface Size {
   width: number;
   height: number;
+  /** A drawing read right to left (§42): it starts at its right end. */
+  fromRight?: boolean;
 }
 
 /** `v` held between `lo` and `hi`. */

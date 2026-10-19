@@ -14,6 +14,7 @@ export { estimateFix } from './estimate-fix.ts';
 export type { EstimateFix } from './estimate-fix.ts';
 export { themed, choose, sizeOf, fixed, withoutColorMix, hueColour } from './theme.ts';
 export { draw, directions, chosen, details, linkDetails } from './render.ts';
+export { mirrored, inReadingDirection, shownAsRead } from './drawing-direction.ts';
 export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';
 export type { Palette, ThemeColours } from './palette.ts';
 export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';

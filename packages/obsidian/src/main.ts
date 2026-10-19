@@ -7,6 +7,7 @@ import {
   isSharedSchema,
   LAYOUT_LIMITS,
   settingsFrom,
+  shownAsRead,
   standardBlocks,
   startingSwitches,
   SWITCH_SETTINGS,
@@ -297,14 +298,13 @@ export default class ThoughtKnotPlugin extends Plugin {
   private unloaded = false;
 
   /**
-   * A graph laid out and themed apart from the interface, in one worker reused for every block (spec §9,
-   * layout_contained). Or why it is shown as text. Or null when it is no longer wanted. That is when a newer drawing for
-   * the same `owner` (a card, an editor) was asked for before it started, or the plugin unloaded. Rejects when the engine cannot start.
+   * A graph laid out and themed in one worker reused for every block, apart from the interface (§9, layout_contained).
+   * Or why it is text only, or null once a newer drawing for its `owner` is asked. Rejects if the engine can't start.
    */
   layout(drawing: GraphDrawing, owner?: object): Promise<Drawn | Refusal | null> {
-    // the direction set on the settings page, one the locked style allows (spec §21). Else the best fit.
-    // a direction the graph's own style sets (§6), or its diagram type's (§15), comes before the settings' default
-    return this.layoutsOf()?.draw(directed(drawing, this.settings.direction), owner) ?? Promise.resolve(null);
+    // the graph's own direction (§6) or its type's (§15), else the settings' (§21), else the best fit; then as read (§42)
+    const laid = this.layoutsOf()?.draw(directed(drawing, this.settings.direction), owner);
+    return laid?.then(shownAsRead) ?? Promise.resolve(null);
   }
 
   /**
