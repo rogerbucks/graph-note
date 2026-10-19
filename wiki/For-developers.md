@@ -23,6 +23,7 @@ More on each layer is on the [Architecture](Architecture) page.
 | Add an export, colours or, later, a diagram type | [Writing a plug-in](Writing-a-plug-in) |
 | Put the editor inside another app | [Adding a host](Adding-a-host) |
 | Look up a problem code, a version or a schema | [Developer reference](Developer-reference) |
+| Read the graph format's rules, the § numbers the code cites | [`requirements/graph-spec.gql`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/graph-spec.gql) |
 | Change ThoughtKnot itself | [CONTRIBUTING](https://github.com/rogerbucks/thoughtknot/blob/main/CONTRIBUTING.md) |
 
 ## Getting set up

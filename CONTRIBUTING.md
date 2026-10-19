@@ -487,6 +487,8 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
+- `test/graph-spec-text.test.js` — the graph spec's text is in `requirements/graph-spec.gql` (spec §13,
+  graph_spec_in_repo; ARCH-11). Every § either library cites is one of its sections; the editor's own say "editor spec".
 - `test/walkthrough-record.test.js` — each stable release keeps a record of the accessibility walk-through (spec §11,
   walkthrough_recorded; UX-1). `scripts/walkthrough-record.mjs --new` writes an empty one to fill in. The release and
   its dry run fail until every check is ticked, or given its reason, in every host and theme.
