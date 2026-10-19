@@ -15,6 +15,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { isSetupInput, readmeSteps, setupInputsChangedSince } from '../scripts/fresh-clone.mjs';
 import { messageProblems } from '../scripts/history-text-problems.mjs';
+import { SIGN_OFF_FROM, signOffProblems } from '../scripts/sign-off.mjs';
 import {
   historyProblems,
   machineSpecific,
@@ -521,5 +522,49 @@ describe('kept so, in CI and at every release', () => {
     assert.match(readme, /scripts\/public-readiness\.mjs/);
     assert.match(readme, /collaborators only/i);
     assert.match(read('CONTRIBUTING.md'), /test\/public-readiness\.test\.js/);
+  });
+});
+
+// The sign-off (spec §13, dco_checked). A person certifies each commit; a commit Claude writes carries Roger's.
+describe('every commit since the cut-off is signed off by a person', () => {
+  const person = ['1234+someone', 'users.noreply.github.com'].join('@');
+  const claude = ['noreply', 'anthropic.com'].join('@');
+  const bot = ['49699333+dependabot[bot]', 'users.noreply.github.com'].join('@');
+  const signed = (name, email) => `Change\n\nSigned-off-by: ${name} <${email}>`;
+  const late = { GIT_AUTHOR_DATE: '2026-11-01T12:00:00Z', GIT_COMMITTER_DATE: '2026-11-01T12:00:00Z' };
+  const early = { GIT_AUTHOR_DATE: '2026-10-01T12:00:00Z', GIT_COMMITTER_DATE: '2026-10-01T12:00:00Z' };
+
+  test('the cut-off is a date on or after the rule was set', () => {
+    assert.ok(new Date(SIGN_OFF_FROM) >= new Date('2026-10-19T00:00:00Z'));
+  });
+
+  test("a person's sign-off passes; a missing one, or one naming only an AI or a bot, is refused", () => {
+    const { dir, commit } = repository();
+    commit('a.txt', 'a\n', signed('Some One', person), late);
+    assert.deepEqual(signOffProblems(dir, { from: '2026-10-20T00:00:00Z' }), []);
+    commit('b.txt', 'b\n', 'No sign-off', late);
+    commit('c.txt', 'c\n', signed('Claude', claude), late);
+    commit('d.txt', 'd\n', signed('dependabot[bot]', bot), late);
+    const problems = signOffProblems(dir, { from: '2026-10-20T00:00:00Z' });
+    assert.deepEqual(rules(problems), ['sign-off', 'sign-off', 'sign-off']);
+    assert.match(problems[0].where, /^commit [0-9a-f]{8}$/);
+  });
+
+  test('a commit before the cut-off, a merge and a bot-made dependency update are left out', () => {
+    const { dir, commit } = repository();
+    const g = (args, env = {}) => execFileSync('git', args, { cwd: dir, env: { ...process.env, ...env } });
+    commit('a.txt', 'a\n', 'Old, unsigned', early);
+    g(['switch', '-q', '-c', 'side']);
+    commit('b.txt', 'b\n', signed('Some One', person), late);
+    g(['switch', '-q', 'main']);
+    g(['merge', '-q', '--no-ff', '-m', 'Merge pull request #1 from someone/side', 'side'], late);
+    commit('c.txt', 'c\n', signed('dependabot[bot]', bot), { ...late, GIT_AUTHOR_EMAIL: bot });
+    assert.deepEqual(signOffProblems(dir, { from: '2026-10-20T00:00:00Z' }), []);
+  });
+
+  test('CI runs it, and CONTRIBUTING.md says whose sign-off a commit Claude writes carries', () => {
+    assert.match(read('scripts/public-readiness.mjs'), /\[historyProblems, signOffProblems\]/);
+    const roger = 'Signed-off-by: Roger Bucks <264575592+rogerbucks@users.noreply.github.com>';
+    assert.ok(read('CONTRIBUTING.md').includes(roger));
   });
 });
