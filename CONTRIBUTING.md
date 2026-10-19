@@ -660,6 +660,8 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ### The wiki and its pages
 
+- `test/waves-on-time.test.js` — the plan stays true to the work. A wave behind for more than its own length fails,
+  unless `requirements/waves.json` gives its reason.
 - `test/wiki.test.js` — the project wiki. Every page is made from its file in the repository, ending with the file and
   commit it came from. The proved counts are as the slice board gives them. Every answered question is a decision and
   every other open. The roadmap's chart is free of the characters it reads as syntax. The releases come from GitHub or
