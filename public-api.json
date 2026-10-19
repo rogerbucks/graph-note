@@ -2929,6 +2929,88 @@
         "ZoomEvent": [
           "type = ({ kind: 'key'; key: string; } & Mods) | ({ kind: 'wheel'; x: number; y: number; dy: number; } & Mods) | { kind: 'down'; id: number; pointer: 'mouse' | 'touch' | 'pen'; x: number; y: number; onBox?: boolean; near?: boolean; } | { kind: 'move'; id: number; x: number; y: number; } | { kind: 'up'; id: number; x: number; y: number; time: number; } | { kind: 'cancel'; id: number; } | { kind: 'dblclick'; x: number; y: number; onBox?: boolean; near?: boolean; }"
         ]
+      },
+      "./display/host": {
+        "displayHost": [
+          "value: () => DisplayHost"
+        ],
+        "DisplayHost": [
+          "interface",
+          "direction?: (() => 'ltr' | 'rtl') | undefined",
+          "icon: (el: HTMLElement, name: string) => void",
+          "isPhone: () => boolean",
+          "language?: (() => string) | undefined",
+          "menu: (entries: MenuEntry[], at: { x: number; y: number; }, doc: Document) => void",
+          "noInlineStyle?: boolean | undefined",
+          "notice: (message: string) => void"
+        ],
+        "inHost": [
+          "value: <T>(value: T) => T"
+        ],
+        "installHost": [
+          "value: (host: DisplayHost) => void"
+        ],
+        "isPhone": [
+          "value: () => boolean"
+        ],
+        "MenuEntry": [
+          "type = MenuRow | 'separator'"
+        ],
+        "MenuRow": [
+          "interface",
+          "checked?: boolean | undefined",
+          "icon: string",
+          "onClick: () => void",
+          "title: string",
+          "warning?: boolean | undefined"
+        ],
+        "NO_HOST": [
+          "value: 'The display layer has no host: install one with installHost before drawing.'"
+        ],
+        "noInlineStyle": [
+          "value: () => boolean"
+        ],
+        "notice": [
+          "value: (message: string) => void"
+        ],
+        "readInHostDirection": [
+          "value: <T extends HTMLElement>(el: T) => T"
+        ],
+        "setIcon": [
+          "value: (el: HTMLElement, name: string) => void"
+        ]
+      },
+      "./display/host-contract": {
+        "ContractCheck": [
+          "interface",
+          "name: string",
+          "run: () => void | Promise<void>"
+        ],
+        "HOST_CONTRACT_VERSION": [
+          "value: number"
+        ],
+        "HOST_CONTRACT_VERSIONS": [
+          "value: ReadonlyArray<readonly [version: number, digest: string]>"
+        ],
+        "hostContract": [
+          "value: (make: () => HostUnderTest) => ContractCheck[]"
+        ],
+        "HostProbe": [
+          "interface",
+          "choose: (title: string) => void",
+          "doc: Document",
+          "element: () => HTMLElement",
+          "lastMenu: () => MenuRowSeen[] | null",
+          "notices: () => string[]"
+        ],
+        "HostUnderTest": [
+          "interface",
+          "host: DisplayHost",
+          "probe: HostProbe"
+        ],
+        "MenuRowSeen": [
+          "type = 'separator' | { title: string; checked?: boolean; warning?: boolean; }"
+        ]
       }
     }
   },

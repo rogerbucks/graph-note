@@ -2,8 +2,9 @@
 // The library's public interface, declared in one file and checked in CI (lib_public_api).
 //
 // The library is the reader, checker and layout (@thoughtknot/graph-spec) and the core (@thoughtknot/core).
-// Its public interface is what each package's entry points export. The core's `display/*` and `hosts/*`
-// paths are for hosts, not for library users, so they are left out.
+// Its public interface is what each package's entry points export. The core's `hosts/*` paths are for hosts, not for
+// library users, so they are left out. Two `display/*` paths are in: the host interface and its contract. A host
+// built by someone else relies on them. So a change to `DisplayHost` needs a new major version (risk API-3).
 //
 // Each export is written as lines of text: one for a function or a value, one per member for a type or a class.
 // A change is breaking when an export goes or one of its lines goes or changes. A new export or a new line is not.
@@ -29,7 +30,14 @@ export const DECLARATION = 'public-api.json';
 
 // Each package of the library, and the entry points that make up its public interface.
 export const LIBRARY = {
-  '@thoughtknot/core': { folder: 'packages/core', entries: { '.': 'src/index.ts' } },
+  '@thoughtknot/core': {
+    folder: 'packages/core',
+    entries: {
+      '.': 'src/index.ts',
+      './display/host': 'src/display/host.ts',
+      './display/host-contract': 'src/display/host-contract.ts',
+    },
+  },
   '@thoughtknot/graph-spec': {
     folder: 'packages/graph-spec',
     entries: { '.': 'src/graph-spec.d.ts', './src/graph-layout.js': 'src/graph-layout-types.d.ts' },

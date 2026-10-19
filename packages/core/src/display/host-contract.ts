@@ -5,8 +5,17 @@
 // checks see what it showed through a probe, as only it knows where its notices and menus go.
 import type { DisplayHost, MenuEntry } from './host.ts';
 
-/** The version of the host interface these checks hold a host to; it changes with every change to `DisplayHost`. */
-export const HOST_CONTRACT_VERSION = 3;
+/**
+ * Each version of the host interface, with a digest of how `public-api.json` declares it then. The digest is the first
+ * 16 hex characters of the SHA-256 of its `./display/host` entry, as JSON. A change to `DisplayHost` changes the
+ * digest. Then test/lib-public-api.test.js fails until a new version is added here (risk API-3).
+ */
+export const HOST_CONTRACT_VERSIONS: readonly (readonly [version: number, digest: string])[] = [
+  [3, 'efae3cb1b2853709'],
+];
+
+/** The version of the host interface these checks hold a host to: the last one recorded above. */
+export const HOST_CONTRACT_VERSION: number = HOST_CONTRACT_VERSIONS.at(-1)?.[0] ?? 0;
 
 /** A menu row as the person sees it: its title, and whether it is ticked or a warning. */
 export type MenuRowSeen = { title: string; checked?: boolean; warning?: boolean } | 'separator';
