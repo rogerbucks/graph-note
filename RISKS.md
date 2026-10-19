@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (102)
+## Open (101)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -78,7 +78,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming and the standalone app) | hours |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | ●●● | ●●○ | fix-now | hours |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | ●●● | ●●○ | fix-now | hours |
-| FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | ●●● | ●●○ | fix-now | hours |
 | FLOW-4 | A one-line fix pays eleven gates and may touch four records | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | FLOW-5 | A requirement's text can be rewritten to fit the code | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
@@ -804,16 +803,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** public-readiness.mjs --history refuses an unsigned or bot-signed commit after the cut-off; test/public-readiness.test.js holds the rule.
 
-### FLOW-3 Waves 1 to 3 are past, mostly unproved, and never replanned
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `requirements/waves.json`, `scripts/wiki.mjs`, `scripts/wiki-roadmap.mjs`, `scripts/github-project-waves.mjs`.
-
-**Risk:** The plan's first three waves ended by 15 Oct 2026, yet their workstreams hold 3 proved requirements of 37. The 22 later waves keep their dates, so the Aug 2027 end and the Wave 15 store release are not credible, and nobody is told.
-
-**Fix:** Replan: move the unproved workstreams of waves 1 to 3 into dated waves and shift the rest. Add one generated line to the Roadmap page with proved requirements per fortnight, so the rate is visible and dates are set from it.
-
-**Check:** A test that fails when a wave is 'late' in waveStates for more than one wave length, unless waves.json names the reason. The wiki run reports the fortnightly rate.
-
 ### FLOW-4 A one-line fix pays eleven gates and may touch four records
 
 **Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `package.json`, `AGENTS.md`, `.github/workflows/ci.yml`, `.github/workflows/claude-review.yml`, `scripts/**`.
@@ -1134,7 +1123,8 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/ai-disclosed.test.js asserts the README names the provider's terms and the localhost case.
 
-## Done or accepted (0)
+## Done or accepted (1)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
+| FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | done | #616 |
