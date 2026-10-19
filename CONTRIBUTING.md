@@ -651,6 +651,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/wiki-guide.test.js` — the wiki's user guide. Every screenshot taken is shown once, and no other is asked for.
   Every setting is listed from the editor's own options, in plain words. A new button of the drawing is reported when
   the guide does not explain it.
+- `test/wiki-pace.test.js` — the plan stays true to the work. A wave behind for more than its own length fails,
+  unless `requirements/waves.json` gives its reason. The Roadmap page shows the requirements proved in the last fortnight.
 - `test/wiki-review.test.js` — the review of the wiki pages people write or edit. Each is checked and never changed.
   There is a suggestion for each broken link or picture, old version and long sentence. A person's edit to a made page
   is reported, and an issue text pings no one.

@@ -24,6 +24,7 @@ import { requirementsGraph } from './check-requirements.mjs';
 import { ethosPage, readEthos } from './ethos.mjs';
 import { readBoard } from './slice-board.mjs';
 import { developerFacts, developerFills, referencePage, requirementStates } from './wiki-developers.mjs';
+import { day, paceLine, provedAFortnightAgo } from './wiki-pace.mjs';
 import { roadmapPage } from './wiki-roadmap.mjs';
 import { SHOTS } from './wiki-screens.mjs';
 
@@ -91,8 +92,6 @@ export function waveStates(waves, workstreams, requirements, today) {
 }
 
 const STATE_MARK = { done: '✅ Done', now: '🟡 Now', late: '🔴 Behind', later: '⏳ Later' };
-const day = (iso) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 /** The line each generated page ends with: where it came from, and that it is not edited here. */
 const footer = (sources, sha, date) =>
@@ -157,7 +156,7 @@ export function unexplained(labels, guide) {
  * project's ethos graph, adds the Ethos page when given. `developer` is the architecture graph and the facts read from
  * the code (wiki-developers.mjs). It fills the developer pages' markers and adds the Developer reference.
  * `releasedText` is the requirements as they stood at the latest stable release. It tells what is released from what
- * is only on main.
+ * is only on main. `pastProved` is {date, proved} as the requirements stood a fortnight ago, for the Roadmap's pace.
  */
 export function renderWiki({
   requirementsText,
@@ -173,6 +172,7 @@ export function renderWiki({
   pages,
   sha,
   today,
+  pastProved = null,
 }) {
   const board = readBoard(requirementsText);
   const { requirements } = board;
@@ -200,7 +200,15 @@ export function renderWiki({
   for (const [name, text] of Object.entries(pages)) out[name] = fillMarkers(text, fills);
 
   out['Roadmap.md'] = roadmapPage(
-    { states: waveList, workstreams, requirements, releases, sha, today },
+    {
+      states: waveList,
+      workstreams,
+      requirements,
+      releases,
+      sha,
+      today,
+      pace: paceLine({ proved: requirements.filter((r) => r.status === 'proved').length, then: pastProved }, today),
+    },
     { counted, day, footer, STATE_MARK },
   );
 
@@ -324,6 +332,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   );
   const releasesFile = flag(args, '--releases');
   const releasedFile = flag(args, '--released');
+  const today = flag(args, '--date') ?? new Date().toISOString().slice(0, 10);
   const made = renderWiki({
     developer: await developerFacts(),
     releasedText: releasedFile && existsSync(releasedFile) ? readFileSync(releasedFile, 'utf8') : undefined,
@@ -337,7 +346,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     options: OPTIONS,
     pages,
     sha: flag(args, '--sha') ?? 'main',
-    today: flag(args, '--date') ?? new Date().toISOString().slice(0, 10),
+    today,
+    pastProved: provedAFortnightAgo(today),
   });
   mkdirSync(out, { recursive: true });
   for (const [name, text] of Object.entries(made)) writeFileSync(join(out, name), text);

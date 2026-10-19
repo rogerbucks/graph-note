@@ -42,6 +42,8 @@ jobs:
         with:
           ref: main
           persist-credentials: false
+          # The whole history, so the Roadmap page can count the requirements proved in the last fortnight.
+          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24

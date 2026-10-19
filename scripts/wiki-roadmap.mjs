@@ -40,7 +40,7 @@ function minorReleases(dated) {
  * `releases` is GitHub's list (or empty). `counted`, `day`, `footer` and `STATE_MARK` are the helpers of wiki.mjs.
  */
 export function roadmapPage(
-  { states, workstreams, requirements, releases, sha, today },
+  { states, workstreams, requirements, releases, sha, today, pace = '' },
   { counted, day, footer, STATE_MARK },
 ) {
   const phases = wavePhases(states);
@@ -93,7 +93,7 @@ export function roadmapPage(
   return (
     `# Roadmap\n\nThe order the work is planned in, clustered into phases: shipped, now, the next ${NEXT_WAVES} waves, ` +
     `later, and held. Diamonds mark the first release of each minor version. Dates marked as estimates are plans, not ` +
-    `promises.\n\n${gantt}\n\n${wavesTable}\n\n` +
+    `promises.\n\n${pace ? `${pace}\n\n` : ''}${gantt}\n\n${wavesTable}\n\n` +
     present
       .map((p) => {
         const of = states.filter((w, i) => phases[i] === p && w.workstreams.length);
