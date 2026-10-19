@@ -4,7 +4,7 @@
 // - A rule a test in the repository proves is not marked pending.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { indexProblems, citedIds } from '../scripts/graph-spec-proved.mjs';
+import { indexProblems, provedIds } from '../scripts/graph-spec-proved.mjs';
 import { read, exists } from './repository/repo.js';
 
 const head = (r, w) =>
@@ -41,6 +41,6 @@ describe('the spec file, checked against itself', () => {
   });
 
   test('the spec file in the repository is true to itself', () => {
-    assert.deepEqual(indexProblems(read('requirements/graph-spec.gql'), { cited: citedIds(), exists }), []);
+    assert.deepEqual(indexProblems(read('requirements/graph-spec.gql'), { cited: provedIds(), exists }), []);
   });
 });
