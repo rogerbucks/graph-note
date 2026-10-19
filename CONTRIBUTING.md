@@ -654,6 +654,11 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/wiki-review.test.js` — the review of the wiki pages people write or edit. Each is checked and never changed.
   There is a suggestion for each broken link or picture, old version and long sentence. A person's edit to a made page
   is reported, and an issue text pings no one.
+- `test/plan-actuals.test.js` — the wiki's Plan versus actual page (`scripts/plan-actuals.mjs`).
+  - A requirement is proved on the first day main held all its tests as written. Main's history is read merge by merge,
+    through the move of the requirements file from `.gql` to `.md`.
+  - Each wave shows its plan, its first and last proved days, the first stable release after and its slip.
+  - The page lists what was proved each day, the seven-day rate, and a forecast for each wave left.
 - `test/wiki-workflow.test.js` — the workflow that makes the wiki. It is woken by a push to main or a stable release.
   The pages are made with read access only, and the one job that writes runs no code of the repository.
 
