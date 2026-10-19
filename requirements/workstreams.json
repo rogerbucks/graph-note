@@ -766,5 +766,15 @@
   "Y2": {
     "title": "Graphs and decisions in Claude chat",
     "requirements": ["mcp_app", "mcp_app_one_core", "mcp_app_local", "mcp_app_page_bounded", "mcp_app_remote"]
+  },
+  "E1": {
+    "title": "Data tables and cubes",
+    "requirements": [
+      "data_tables_design",
+      "data_set_reference",
+      "data_set_linked_or_kept",
+      "data_set_cache",
+      "data_set_access"
+    ]
   }
 }

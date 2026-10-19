@@ -170,9 +170,16 @@
       "workstreams": ["Y2"]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 25 · Held: data tables and cubes",
       "start": "2027-08-16",
       "end": "2027-08-29",
+      "estimate": true,
+      "workstreams": ["E1"]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-08-30",
+      "end": "2027-09-12",
       "estimate": true,
       "workstreams": []
     }
