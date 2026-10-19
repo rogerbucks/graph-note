@@ -6,7 +6,8 @@
 // The release workflow puts it at the top of the release's notes.
 //
 // Usage:
-//   node scripts/changelog.mjs --out FILE   writes the changelog since the last release, at the manifest's version.
+//   node scripts/changelog.mjs --out FILE     writes the changelog since the last release, at the manifest's version.
+//   node scripts/changelog.mjs --check FILE   exits 1 when release notes have no Library changes section.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -15,6 +16,10 @@ import { breakingChanges, declarationAt, lastRelease, readInterface } from './pu
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const MERGE = /^Merge pull request #(\d+) from /;
+export const LIBRARY = '### Library changes';
+// The version rule, said in every release's notes, so a user knows a minor step may break things before 1.0.0.
+export const RULE =
+  'Before 1.0.0, a step in the leftmost part that is not 0, such as 0.7 to 0.8, may change or remove what the library exports.';
 
 // The pull requests merged into the current branch since `from` (a tag or a commit), oldest first: [{number, title}].
 // GitHub writes a merge commit's subject as "Merge pull request #N from …" and puts the title on its first body line.
@@ -55,14 +60,14 @@ function added(before, after) {
 
 const where = ({ pkg, entry, name }) => `${pkg}${entry === '.' ? '' : `/${entry.replace(/^\.\//, '')}`}: \`${name}\``;
 
-// The changelog's text: a heading, the pull requests, and the library's interface changes.
+// The changelog's text: a heading, the pull requests, and the library's changes with the version rule.
 export function changelogText({ version, from, pulls, repo, before, after }) {
   const lines = [`## ${version}`, ''];
   lines.push(from ? `Changes since ${from}.` : 'The first release.', '', '### Pull requests', '');
   if (pulls.length === 0) lines.push('No pull requests were merged.');
   for (const { number, title } of pulls)
     lines.push(`- [#${number}](https://github.com/${repo}/pull/${number}) ${title}`);
-  lines.push('', "### The library's interface", '');
+  lines.push('', LIBRARY, '', RULE, '');
   if (!before) {
     lines.push(
       'This is the first release with a declared interface (public-api.json), so there is nothing to compare.',
@@ -77,10 +82,19 @@ export function changelogText({ version, from, pulls, repo, before, after }) {
   return `${lines.join('\n').trimEnd()}\n`;
 }
 
+/** Whether release notes hold the Library changes section, as a line of its own. */
+export const hasLibraryChanges = (notes) => notes.split('\n').some((line) => line.trim() === LIBRARY);
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const checking = process.argv.indexOf('--check');
+  if (checking !== -1 && process.argv[checking + 1]) {
+    if (hasLibraryChanges(readFileSync(process.argv[checking + 1], 'utf8'))) process.exit(0);
+    console.error(`changelog: the release notes have no "${LIBRARY}" section, so users would not hear what changed`);
+    process.exit(1);
+  }
   const at = process.argv.indexOf('--out');
   if (at === -1 || !process.argv[at + 1]) {
-    console.error('usage: node scripts/changelog.mjs --out FILE');
+    console.error('usage: node scripts/changelog.mjs --out FILE | --check FILE');
     process.exit(2);
   }
   const { version } = JSON.parse(readFileSync(join(ROOT, 'manifest.json'), 'utf8'));

@@ -6,8 +6,9 @@ as plain text, and it draws them. You can edit a graph by typing or by dragging 
 It is one product with several ways in. The Obsidian plugin works now, on desktop and phone, offline. A standalone app,
 a VS Code plugin and a JavaScript library come next.
 
-**Status: in development.** It is not in the community plugin directory yet. It is built in nine slices. Slices 1 to 3
-are done, and slice 4 is in progress.
+<!-- readme:status -->
+**Status: in development.** It is not in the community plugin directory yet. It is built in ten slices. Slices 1 to 4 are done, and slice 5 is in progress.
+<!-- /readme:status -->
 
 ## At a glance
 
@@ -128,8 +129,9 @@ A fresh clone needs only these steps. CI runs them exactly as written here, in a
 
 So setting up never depends on a maintainer's machine.
 
-This is a one-person project and takes no outside contributions. Only collaborators can open pull requests and issues,
-and each pull request's conversation is locked when it opens.
+Only collaborators can open pull requests and issues for now, and each pull request's conversation is locked when it
+opens. Ideas and questions are welcome in [GitHub Discussions](https://github.com/rogerbucks/thoughtknot/discussions).
+[CONTRIBUTING.md](CONTRIBUTING.md) says how to ask to join.
 
 ### Testing in Obsidian, on desktop and phone
 
@@ -180,11 +182,18 @@ read until one is set.
   advisories. The Graphviz inside the engine is checked against them each week.
 - **No test framework.** Tests use the runner built into Node.
 
+## Versions
+
+ThoughtKnot uses [semantic versions](https://semver.org), with one catch before 1.0.0. Then a step in the leftmost
+part that is not 0 may change or remove what the library exports. So 0.7 to 0.8 may break your code. A patch step, such
+as 0.8.0 to 0.8.1, never does. Each release's notes have a "Library changes" section. It lists what was added, changed
+or removed.
+
 ## Licence
 
 Mozilla Public License 2.0 (MPL-2.0). See [LICENSE](LICENSE).
 
-- Anyone may use, fork and change the code, and send a pull request.
+- Anyone may use, fork and change the code.
 - A changed file stays under the same licence, so its changes stay open.
 - The code may still sit inside a larger work under other terms.
 - Releases before this change stay MIT.

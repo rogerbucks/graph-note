@@ -1,5 +1,10 @@
 # Contributing
 
+**Who can contribute.** For now, only collaborators may open pull requests and issues. This holds until the community
+release. Ideas, questions and bug reports are welcome in
+[GitHub Discussions](https://github.com/rogerbucks/thoughtknot/discussions), which anyone may join. To ask to join as a
+collaborator, start a discussion there and say what you would like to work on.
+
 How the code is written here. Every rule a tool can check is checked: by `test/conventions.test.js`, by the linter, or by
 CI. A change that breaks one fails before it is merged.
 
@@ -470,8 +475,10 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `test/lib-release.test.js` — each release publishes the library on GitHub, never on npm (spec §41, lib_github_release).
   `scripts/library-release.mjs` builds two packages, graph-spec and the core, and the test installs both with no
-  registry and runs a program on them. `scripts/changelog.mjs` writes the release notes: the pull requests merged
-  since the last release, and what the library's interface added or broke.
+  registry and runs a program on them.
+  - `scripts/changelog.mjs` writes the release notes: the pull requests merged since the last release, and a Library
+    changes section. That section says what the interface added or broke, and the version rule (version_promise_told).
+  - `--check` refuses notes without it. The release runs it before it drafts, and the release check tries it first.
 - `test/lib-public-api.test.js` — the library's public interface (spec §41, lib_public_api). It is declared in
   `public-api.json`, which `node scripts/public-api.mjs --update` writes. A break since the last release fails
   unless the package takes a new major version. Before 1.0.0 that is the leftmost part that is not 0, such as 0.8.0.
@@ -637,6 +644,9 @@ These test behaviour across modules, or the repository itself, so they are named
   - `check-requirements.mjs --done <slice>` says so or lists what is missing. The slice board's overview says the
     same. Each is tried on tampered copies of the requirements.
   - Every slice before the one under way is done (spec §12, done_means_proved).
+- `test/readme-status.test.js` — the README's status line is made from the requirements graph, never by hand
+  (readme_status_generated). It names how many slices there are, which are done and which is in progress.
+  `node scripts/readme-status.mjs --write` puts it right after a slice is done.
 - `test/slice-board-style.test.js` — the slice board's stylesheet. Its colour tokens agree in light and dark, and the
   altitude switch works by CSS alone. The layout holds at 400px. The source is written one rule and one declaration to
   a line.

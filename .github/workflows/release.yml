@@ -82,9 +82,26 @@ jobs:
           version: 0.12.17
           enable-cache: false
       - run: node scripts/public-readiness.mjs --history --setup
+  release-notes:
+    # the notes the release writes, checked before anything is built: they must tell users what the library changed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the full history and tags: the changelog starts at the last release
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - name: The changelog since the last release, as the release writes it
+        run: node scripts/changelog.mjs --out release-notes.md
+      - name: The release notes tell users what the library changed, and the version rule
+        run: node scripts/changelog.mjs --check release-notes.md
 
   release:
-    needs: [quality, public-readiness]
+    needs: [quality, public-readiness, release-notes]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -131,6 +148,8 @@ jobs:
         run: node scripts/engine-version.mjs --notes engine-notes.md
       - name: The changelog since the last release, at the top of the release notes
         run: node scripts/changelog.mjs --out release-notes.md && cat engine-notes.md >> release-notes.md
+      - name: The release notes tell users what the library changed, and the version rule
+        run: node scripts/changelog.mjs --check release-notes.md
       - name: Draft the release with the store assets
         env:
           GH_TOKEN: ${{ github.token }}
