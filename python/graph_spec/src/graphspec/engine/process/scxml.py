@@ -8,6 +8,7 @@ from collections import deque
 from collections.abc import Callable, Iterable, Sequence
 from typing import TYPE_CHECKING, Any
 
+from graphspec.engine import guards
 from graphspec.engine.optional_imports import etree
 from graphspec.engine.process.machine import Machine
 from graphspec.engine.queries import Q
@@ -254,10 +255,9 @@ class ScxmlReader:
         return self.conf(self.enter(self.by[self.root_initial]))
 
     def cond(self, c, ctx):
-        """Whether an SCXML `cond` holds: its ECMAScript operators read as Python's."""
-        return eval(
-            c.replace("===", "==").replace("&& !", "and not ").replace("&&", "and"), {}, dict(ctx)
-        )
+        """Whether an SCXML `cond` holds, its ECMAScript operators read as data and never run
+        (§13)."""
+        return guards.holds(c, ctx)
 
     def step(self, conf, ev, ctx):
         """The configuration and actions after event ev: transitions are tried

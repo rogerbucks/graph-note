@@ -240,10 +240,13 @@ describe('the release check, run by hand before a release is tagged', () => {
     const release = jobs(read('.github/workflows/release.yml')),
       dry = jobs(read(f));
     const waited = block(release.release, 'needs', 4).join('\n');
-    const checks = Object.keys(release).filter((name) => name !== 'release');
+    // on-main checks the tag itself (policy.test.js), so the dry run, which has no tag, leaves it out, and the jobs'
+    // wait for it
+    const checks = Object.keys(release).filter((name) => !['release', 'on-main'].includes(name));
+    const ownSteps = (lines) => steps(lines).filter((l) => l !== '    needs: on-main');
     for (const name of checks) assert.match(waited, new RegExp(`\\b${name}\\b`), `the release waits on ${name}`);
     assert.deepEqual(Object.keys(dry), checks);
-    for (const name of checks) assert.deepEqual(steps(dry[name]), steps(release[name]), name);
+    for (const name of checks) assert.deepEqual(ownSteps(dry[name]), ownSteps(release[name]), name);
   });
 
   test('has every workflow-wide setting release.yml has, such as its env, defaults, concurrency and permissions, and no other', () => {

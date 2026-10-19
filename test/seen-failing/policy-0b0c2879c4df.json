@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only ten jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, the wiki, its review issue and the home page",
+  "seen_failing_first": false,
+  "evidence": "Renamed from 'only nine jobs may write' when the nightly's draft check joined the writers (risk OPS-3). The new allowance only widens what passes, so the test passes before it; the draft check's own test in nightly-workflow.test.js failed first."
+}

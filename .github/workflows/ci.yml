@@ -21,6 +21,7 @@ jobs:
   # for them all as one required check.
   suite:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -50,6 +51,7 @@ jobs:
   # Passes when every part of the suite passed: the one check the default branch requires for them.
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: suite
     if: always()
     steps:
@@ -60,6 +62,7 @@ jobs:
   # The quick checks: format, lint, content, quality baseline, types, the requirements' flips and the build.
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -91,6 +94,7 @@ jobs:
 
   python:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: python/graph_spec
@@ -120,6 +124,7 @@ jobs:
   # without it; only the tests that need the engine are skipped.
   python-no-engine:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: python/graph_spec
@@ -147,6 +152,7 @@ jobs:
   # It reads only that folder, never the record in test/tests-first/, so the record cannot weaken it.
   tests-first:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -180,6 +186,7 @@ jobs:
   # for: Node and uv.
   public-readiness:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

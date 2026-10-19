@@ -6,6 +6,8 @@ from __future__ import annotations
 from collections.abc import Collection, Iterable
 from typing import Any
 
+from graphspec.engine import guards
+
 
 # ── rules that a graph must keep: found as breaches ────────────────────────
 def cycles(
@@ -30,9 +32,8 @@ def cycles(
 
 
 def guard_holds(g: str, ctx: dict[str, Any]) -> Any:
-    """Whether a transition's guard holds in a context: the guard evaluated as a Python expression,
-    = read as ==."""
-    return eval(g.replace(" = ", " == ").replace(">==", ">="), {}, dict(ctx))
+    """Whether a transition's guard holds in a context, read as data and never run (§13)."""
+    return guards.holds(g, ctx)
 
 
 def breaches(
