@@ -34,7 +34,7 @@
       "start": "2026-10-30",
       "end": "2026-11-12",
       "estimate": true,
-      "workstreams": ["V1", "D1", "A1", "R1"]
+      "workstreams": ["V1", "D1", "A1", "R1", "GS1"]
     },
     {
       "title": "Wave 6 · Host, storage and plug-in contracts",
@@ -170,9 +170,30 @@
       "workstreams": ["Y2"]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 25 · Held: the graph spec versioned and written down for other programs",
       "start": "2027-08-16",
       "end": "2027-08-29",
+      "estimate": true,
+      "workstreams": ["GS2", "GS3"]
+    },
+    {
+      "title": "Wave 26 · Held: graph format security and AI rules that agree",
+      "start": "2027-08-30",
+      "end": "2027-09-12",
+      "estimate": true,
+      "workstreams": ["GS4", "GS5"]
+    },
+    {
+      "title": "Wave 27 · Held: a graph spec that reads easily, and its smaller gaps",
+      "start": "2027-09-13",
+      "end": "2027-09-26",
+      "estimate": true,
+      "workstreams": ["GS6", "GS7"]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-09-27",
+      "end": "2027-10-10",
       "estimate": true,
       "workstreams": []
     }
