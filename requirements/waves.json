@@ -156,9 +156,23 @@
       "workstreams": ["K1"]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 23 · Held: Claude presents and decides in Claude Code",
       "start": "2027-07-19",
       "end": "2027-08-01",
+      "estimate": true,
+      "workstreams": ["Y1"]
+    },
+    {
+      "title": "Wave 24 · Held: graphs and decisions in Claude chat",
+      "start": "2027-08-02",
+      "end": "2027-08-15",
+      "estimate": true,
+      "workstreams": ["Y2"]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-08-16",
+      "end": "2027-08-29",
       "estimate": true,
       "workstreams": []
     }

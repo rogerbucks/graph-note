@@ -749,5 +749,20 @@
       "github_repo_writes_reviewed",
       "github_repo_access"
     ]
+  },
+  "Y1": {
+    "title": "Claude presents and decides in Claude Code",
+    "requirements": [
+      "claude_shows",
+      "claude_presents",
+      "presentation_kept",
+      "claude_asks_decision",
+      "decision_person_only",
+      "decision_recorded"
+    ]
+  },
+  "Y2": {
+    "title": "Graphs and decisions in Claude chat",
+    "requirements": ["mcp_app", "mcp_app_one_core", "mcp_app_local", "mcp_app_page_bounded", "mcp_app_remote"]
   }
 }
