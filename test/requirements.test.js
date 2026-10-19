@@ -91,6 +91,7 @@ describe('a tampered copy fails the check', () => {
       'test_accessibility',
       'test_layout_bin',
       'test_pane',
+      'test_problem_shown_once',
       'test_problems',
       'test_store_lint',
     ]);
