@@ -271,7 +271,7 @@ def refusal_kind(message):
     """Which half of the rule a refusal is, whatever words each reader quotes it in."""
     if "written twice" in message:
         return "variable twice"
-    if "is already a node" in message:
+    if "is already a thing" in message:
         return "id clash"
     return message
 
@@ -480,7 +480,7 @@ def core_refusals_of(notes):
 
 def id_kind(message):
     """Which id rule a refusal is: the rule, then its section (§3)."""
-    if message.endswith("a node's id never changes (§3)"):
+    if message.endswith("a thing's id never changes"):
         return "id set"
     if message.endswith("is not text"):
         return "id not text"

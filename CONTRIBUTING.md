@@ -500,6 +500,11 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
+- `test/graph-spec-text.test.js` — the graph spec's text is in `requirements/graph-spec.gql` (spec §13,
+  graph_spec_in_repo; ARCH-11). Every § either library cites is one of its sections; the editor's own say "editor spec".
+- `test/walkthrough-record.test.js` — each stable release keeps a record of the accessibility walk-through (spec §11,
+  walkthrough_recorded; UX-1). `scripts/walkthrough-record.mjs --new` writes an empty one to fill in. The release and
+  its dry run fail until every check is ticked, or given its reason, in every host and theme.
 - `test/community-files.test.js` — the code of conduct says how to report a problem in private. `TRADEMARKS.md` keeps
   the name for the original. CONTRIBUTING.md and the pull request template ask for every commit to be signed off
   (editor spec §13, community_files). `SECURITY.md` names the supported versions, a private way to report and a
@@ -972,8 +977,8 @@ These test behaviour across modules, or the repository itself, so they are named
     duplicates", exit 0.
   - So a creator filter that ever failed could not make every push create the issues again.
 - **At most 20 new issues in a run.** A run of the workflow makes at most 20 issues on a board that has its issues
-  already. A first mirror makes them all. A plan with more is refused with a warning and nothing applied, for a person
-  to check, as the removal guard does. Anything else is an `::error::`.
+  already. A first mirror makes them all. With more, it makes the first 20 and warns how many it left. It still applies
+  everything else, so statuses keep moving. Each later push to main makes the next 20. Anything else is an `::error::`.
 - **It runs main's own code only.** Woken by a push to main alone, it checks out main, installs nothing and keeps no
   cache.
 - **One mirror runs at a time** (`concurrency: project-mirror`, `cancel-in-progress: false`). GitHub keeps one run

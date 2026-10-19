@@ -52,7 +52,7 @@
     "whys": [],
     "changesets": [],
     "lint": [],
-    "error": "line 1: the graph name 'reader-choice' is not one word — use letters, digits and underscores only — reader_choice, not reader-choice (§3)"
+    "error": "line 1: the graph name 'reader-choice' is not one word — use letters, digits and underscores only, such as reader_choice, not reader-choice"
   },
   "a-join-of-two-documents-that-disagree": {
     "canon": {},
@@ -95,7 +95,7 @@
     "whys": [],
     "changesets": [],
     "lint": [],
-    "error": "line 2: MATCH finds no A with id 'missing' in graph g — the node must be written earlier — in this document or one loaded before it"
+    "error": "line 2: MATCH finds no A with id 'missing' in graph g — the thing must be written earlier — in this document or one loaded before it"
   },
   "a-name-used-before-it-is-written": {
     "canon": {},
@@ -104,7 +104,7 @@
     "whys": [],
     "changesets": [],
     "lint": [],
-    "error": "line 2: a is used before it is written — write the node before any relationship that uses it — GQL binds a name only once its node is written (§3)"
+    "error": "line 2: a is used before it is written — write the thing before any link that uses it"
   },
   "a-query-block-offered-as-data": {
     "canon": {},
@@ -142,7 +142,7 @@
     "whys": [],
     "changesets": [],
     "lint": [],
-    "error": "line 2: id 'a' is already a node in graph g — an id names one node (§10) — MATCH it to add to it, or supersede it (§12)"
+    "error": "line 2: id 'a' is already a thing in graph g — an id names one thing — MATCH it to add to it, or supersede it"
   },
   "an-instant-with-no-offset": {
     "canon": {},
@@ -151,7 +151,7 @@
     "whys": [],
     "changesets": [],
     "lint": [],
-    "error": "line 2: '2026-10-07T09:30:00' has no offset — an instant carries its offset (§9, principle 11)"
+    "error": "line 2: '2026-10-07T09:30:00' has no offset — add its offset from UTC, such as +10:00"
   },
   "certainty-likelihoods-assessments-and-evidence": {
     "canon": { "forecast": "d1f0e7f1e4b308390bb882405f889af1393e7266eadd664148a340e5013c8b6b" },
@@ -378,7 +378,7 @@
     "whys": [],
     "changesets": [],
     "lint": [],
-    "error": "line 3: cannot read '﻿MATCH (a:T {id: 'a'' — a data block holds only nodes, relationships and simple values"
+    "error": "line 3: cannot read '﻿MATCH (a:T {id: 'a'' — a data block holds only things, links and plain values"
   },
   "u-0085-is-not-whitespace-while-u-001c-is-3": {
     "canon": {},
@@ -387,7 +387,7 @@
     "whys": [],
     "changesets": [],
     "lint": [],
-    "error": "line 2: cannot read '\u0085(c:T {name: 'C'})' — a data block holds only nodes, relationships and simple values"
+    "error": "line 2: cannot read '\u0085(c:T {name: 'C'})' — a data block holds only things, links and plain values"
   },
   "provenance-kept-a-plan-an-agent-and-a-revision-in-order": {
     "canon": {

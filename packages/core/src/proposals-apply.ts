@@ -202,7 +202,7 @@ function targetFault(texts: readonly string[], graph: string, c: ProposedChange)
     if (lacks) return `${id} is not a ${lacks}: the statement's MATCH names a kind it does not have`;
   }
   if (plain && g?.edges.some((e) => e[0] === c.thing || e[2] === c.thing))
-    return `${c.thing} still has links: a DELETE without DETACH leaves none without its end (§24); write DETACH DELETE to take them too`;
+    return `${c.thing} still has links: a DELETE without DETACH leaves none without its end; write DETACH DELETE to take them too`;
   return null;
 }
 

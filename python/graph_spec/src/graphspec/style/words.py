@@ -51,7 +51,8 @@ STYLE_KINDS = (
     "Links",
     "Picture",
 )
-# The keys each kind of style thing may have (§2, style_words_checked); a thing's id is its name.
+# The keys each kind of style thing may have (editor spec §2, style_words_checked); a thing's
+# id is its name.
 STYLE_KEYS = {
     "Nudge": ("word", "thing", "other", "group", "direction"),
     "Show": ("property", "kind", "thing", "type", "view", "inline"),

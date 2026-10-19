@@ -225,7 +225,7 @@ def check_changeset(
                     1,
                     f"the block names graph {named}, but the base gives it as graph {g}",
                     f"give it as graph {named} — a block is loaded into the graph its first line "
-                    "names (§3)",
+                    "names",
                     code="GN416",
                 )
             st.apply(text)

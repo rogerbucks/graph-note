@@ -50,7 +50,7 @@ import { SeedWarnings, buildPlan, formatPlan, guardProblem } from './github-proj
 import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './github-project-gh.mjs';
 import { retrying } from './github-project-retry.mjs';
 import { runInWorkflow } from './github-project-run.mjs';
-import { CreatesCapped, createsProblem } from './github-project-issues.mjs';
+import { createsHeld } from './github-project-issues.mjs';
 import { WAVES_FILE, readWaves, waveLines } from './github-project-waves.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -126,11 +126,13 @@ function originRepo() {
  *
  * `deps.creator`, where given, is the login that makes issues (the workflow's bot). So GitHub is not asked who is
  * signed in. `deps.budget`, where given, is the time the apply may take ({now, until}, see paced in
- * github-project-retry.mjs). After it the apply stops with BudgetSpent. `maxCreates` is the workflow's limit. An apply
- * that would make more issues than that, on a board with issues of its own, stops before anything changes
- * (CreatesCapped). Any apply stops making issues (CreatesUnlisted) when the list by creator does not give back what it
- * made (github-project-issues.mjs). An apply by a login whose issues would not be adopted (neither the owner nor the
- * bot) is refused before anything changes.
+ * github-project-retry.mjs). After it the apply stops with BudgetSpent. `maxCreates` is the workflow's limit. On a
+ * board with issues of its own, an apply makes at most that many new issues. It still does everything else, and the
+ * next run makes the next ones. Any apply stops making issues (CreatesUnlisted) when the list by creator does not give
+ * back what it made (github-project-issues.mjs). An apply by a login whose issues would not be adopted (neither the
+ * owner nor the bot) is refused before anything changes.
+ *
+ * Gives {held}: how many new issues were left for the next run (0 when none were).
  */
 export function mirror(
   { desired: base, mode, allowRemovals, acceptWarnings, seed, project = true, maxCreates },
@@ -146,7 +148,12 @@ export function mirror(
     throw new Error(
       `${remote.login} is signed in, but only issues written by ${remote.adopters.join(' or ')} are adopted, so the issues this apply made would be made again by the next; apply as the owner, or let the workflow apply`,
     );
-  const plan = buildPlan(desired, remote);
+  const whole = buildPlan(desired, remote);
+  // too many new issues: make the first ones now and leave the rest out, so the rest of the board still moves
+  const later = maxCreates === undefined ? new Set() : createsHeld(whole, maxCreates);
+  const plan = later.size
+    ? buildPlan({ ...desired, issues: desired.issues.filter((i) => !later.has(i.id)) }, remote)
+    : whole;
   const slices = desired.fields.Slice.map((option) => Number(option.replace('Slice ', '')));
   const heading =
     mode === 'check' ? 'check — read-only: GitHub is read and nothing is changed' : 'apply — GitHub is changed';
@@ -160,15 +167,14 @@ export function mirror(
     : null;
   if (mode === 'check') {
     for (const stop of [problem, seedProblem]) if (stop) write(`warning: an apply would stop: ${stop}\n`);
-    return;
+    return { held: 0 };
   }
   if (problem && !allowRemovals) throw new Error(problem);
   if (seedProblem && !acceptWarnings) throw new SeedWarnings(seedProblem);
-  const tooMany = maxCreates === undefined ? null : createsProblem(plan, maxCreates);
-  if (tooMany) throw new CreatesCapped(tooMany);
   const { warnings } = executePlan(raw, repo, plan, { ...(sleep ? { sleep } : {}), ...(budget ? { budget } : {}) });
   for (const warning of warnings) write(`warning: ${warning}\n`);
   write('github-project: applied\n');
+  return { held: later.size };
 }
 
 /** The desired state for the chosen slices, from the requirements copy, the workstreams file and the waves plan. */

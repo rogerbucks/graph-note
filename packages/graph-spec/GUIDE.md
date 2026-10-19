@@ -3,6 +3,9 @@
 The graph spec checker in plain JavaScript: it reads GQL blocks in the document profile and runs the spec's rules. It
 follows `python/graph_spec` function for function, and the parity tests hold the two to the same answers.
 
+The spec itself is [`requirements/graph-spec.gql`](../../requirements/graph-spec.gql): every section the code cites as
+§3, §24 and so on, with each rule's own words. A citation of the editor's spec says "editor spec" (ARCH-11).
+
 ## The entry point, and the built file
 
 - **`src/graph-spec-check.js`** is the entry point. It requires the feature modules below and exports the one API
