@@ -87,7 +87,9 @@ jobs:
       - run: node scripts/public-readiness.mjs --history --setup
   release-notes:
     # the notes the release writes, checked before anything is built: they must tell users what the library changed
+    needs: on-main
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
