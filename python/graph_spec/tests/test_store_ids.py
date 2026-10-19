@@ -19,7 +19,7 @@ from graphspec.reader.store import Store  # noqa: E402
 from graphspec.reader.syntax_check import check_syntax  # noqa: E402
 
 TWO = "// graph: g\n(a:T {id: 'a'}),\n(b:T {id: 'b'})"
-SET_ID = "SET would change b's id, and a node's id never changes (§3)"
+SET_ID = "SET would change b's id, and a thing's id never changes"
 
 # SET b.id to an id another node has, to a fresh id, to the node's own id, and to a number
 SETS = ["SET b.id = 'a'", "SET b.id = 'c'", "SET b.id = 'b'", "SET b.id = 1"]
@@ -60,7 +60,7 @@ class SetKeepsId(unittest.TestCase):
         for s in SETS:
             self.assertEqual(
                 refusal(f"{TWO}\n{s}"),
-                (4, SET_ID, "write the right node, then link b to it or supersede it (§12)"),
+                (4, SET_ID, "write the right thing, then link b to it or supersede it"),
                 s,
             )
 
@@ -111,7 +111,7 @@ class IdIsText(unittest.TestCase):
                 (
                     3,
                     f"id {written} is not text",
-                    f"write id: {quoted} — a node's id is always text (§3)",
+                    f"write id: {quoted} — a thing's id is always text",
                 ),
                 written,
             )
@@ -127,7 +127,7 @@ class IdIsText(unittest.TestCase):
                 (
                     2,
                     f"id {written} is not text",
-                    f"write id: {quoted} — a node's id is always text (§3)",
+                    f"write id: {quoted} — a thing's id is always text",
                 ),
                 written,
             )
@@ -145,7 +145,7 @@ class IdIsText(unittest.TestCase):
     def test_a_missing_comma_hides_neither_id_refusal(self):
         # req:3.id-is-text and req:3.set-keeps-id: the missing comma's retry keeps the refusal it
         # meets, so neither is given as "unexpected '('" (review of #49)
-        fix = "write id: '1' — a node's id is always text (§3)"
+        fix = "write id: '1' — a thing's id is always text"
         self.assertEqual(
             refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {id: 1})"), (3, "id 1 is not text", fix)
         )

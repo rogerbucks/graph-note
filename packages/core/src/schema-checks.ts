@@ -50,8 +50,8 @@ export function undeclared(whole: World, texts: string[]): Problem[] {
       line: blanked.slice(0, first.index).split('\n').length,
       severity: 'warning',
       message: metas.length
-        ? `the schema does not declare ${names}: its GraphMeta must DECLARE each type (§5)`
-        : `the schema has no GraphMeta to declare ${names}: each type must be declared (§5)`,
+        ? `the schema does not declare ${names}: its GraphMeta must DECLARE each type`
+        : `the schema has no GraphMeta to declare ${names}: each type must be declared`,
       fix: meta ? `add a DECLARES link from ${meta} to each` : 'link each type from the GraphMeta by DECLARES',
       ...(meta
         ? {

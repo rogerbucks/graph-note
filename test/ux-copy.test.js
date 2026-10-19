@@ -20,6 +20,9 @@ import { messagesOf } from './repository/copy-harvest.js';
 import { LIMITS, covers, jargonIn, missesOf, readingGrade, scoreOf } from '../scripts/plain-english.mjs';
 
 const RECORD = JSON.parse(readFileSync(new URL('../quality/copy.json', import.meta.url), 'utf8'));
+const CODES = JSON.parse(
+  readFileSync(new URL('../packages/graph-spec/src/reader/problem-codes.json', import.meta.url), 'utf8'),
+);
 /** The views whose subject is the graph's own text, where its language may be named. */
 const developer = (view) => /edit pane|export form|settings page/.test(view);
 
@@ -59,6 +62,11 @@ describe('the check itself', () => {
     assert.deepEqual(jargonIn('Data as a GQL block', { developer: true }), []);
     assert.deepEqual(jargonIn('A node of knowledge, its edges'), ['node', 'edges']);
     assert.deepEqual(jargonIn('Nodes are things; nobody minds'), ['nodes']);
+  });
+
+  test('refuses a reference to a section of a spec, and the word profile, saying what to write instead', () => {
+    assert.deepEqual(jargonIn('keep to the document profile (§3)', { developer: true }), ['profile', '§']);
+    assert.match(missesOf(scoreOf('a DELETE names one target (§24)')).join('; '), /“§”: say “what to type”/);
   });
 
   test('a short label has no reading grade to miss; a plain message misses nothing', () => {
@@ -135,6 +143,20 @@ describe('the browser editor’s page: every state’s messages in plain English
         page.window.close();
       }
     });
+});
+
+// NEURO-4 (problem_says_what_to_type): the reader's problems are not in a view until a block is broken. So every one
+// in the table of problem codes is checked here, as the edit pane shows it, each {name} filled with a short word.
+describe('every problem the reader can raise, as the edit pane shows it', () => {
+  const filled = (text) => text.replace(/\{[a-z_]+\}/g, 'x');
+  test('its message and fix say what to type, plainly, and cite no section of a spec', () => {
+    const messages = CODES.codes.flatMap((c) => [
+      { text: filled(c.message), where: `${c.code} message` },
+      { text: filled(c.fix), where: `${c.code} fix` },
+    ]);
+    messages.forEach((m) => seen.add(m.text));
+    assert.deepEqual(problemsOf('edit pane', messages), []);
+  });
 });
 
 test('the record holds only messages still shown: one no view says any more is taken out', () => {

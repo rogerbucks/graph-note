@@ -89,7 +89,7 @@ function splitChangeset(block) {
 const refuse = (p, message, fix, code) => {
   throw new ProfileError(p.line(), message, fix, undefined, code);
 };
-const ONE = 'a DELETE or SET names exactly one target (§24)';
+const ONE = 'a DELETE or SET names exactly one target';
 function endOf(p, n) {
   const keys = Object.keys(n.props);
   if (keys.length !== 1 || keys[0] !== 'id' || typeof n.props.id !== 'string')
@@ -175,8 +175,8 @@ function readChange(text) {
     if (key === 'id')
       refuse(
         p,
-        `SET would change ${v}'s id, and a node's id never changes (§3)`,
-        'write the right node, then supersede it (§12)',
+        `SET would change ${v}'s id, and a thing's id never changes`,
+        'write the right thing, then supersede it',
         'GN413',
       );
     if (['__proto__', 'constructor', 'prototype'].includes(key))

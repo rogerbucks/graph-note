@@ -15,8 +15,7 @@ test('checking refuses a comment after code, naming the rule and its fix', () =>
     (e) =>
       e instanceof gs.ProfileError &&
       e.line === 2 &&
-      e.msg ===
-        'a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)' &&
+      e.msg === 'a comment must be on a line of its own: // also occurs inside values, such as ni:/// hashes' &&
       e.fix === 'put the comment on its own line',
   );
 });

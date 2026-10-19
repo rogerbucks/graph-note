@@ -123,14 +123,14 @@ class TheReaderRefusesARepeat(unittest.TestCase):
     def test_the_reader_refuses_an_id_repeated_across_two_blocks_of_one_graph(self):
         st = gp.Store()
         st.apply("// graph: g\n(a:Person {name: 'A'})")
-        with self.assertRaisesRegex(gp.ProfileError, "id 'a' is already a node in graph g"):
+        with self.assertRaisesRegex(gp.ProfileError, "id 'a' is already a thing in graph g"):
             st.apply("// graph: g\n(b:Person {id: 'a', name: 'B'})")
 
     def test_parse_under_the_profile_setting_refuses_an_id_repeated_in_one_block(self):
         old = settings.PARSER
         settings.PARSER = "profile"
         try:
-            with self.assertRaisesRegex(gp.ProfileError, "id 'x' is already a node"):
+            with self.assertRaisesRegex(gp.ProfileError, "id 'x' is already a thing"):
                 parse_block(ID_TWICE)
         finally:
             settings.PARSER = old
@@ -149,7 +149,7 @@ class EnginePathsSkipTheReader(unittest.TestCase):
     # nodes by id (reading.py:107), so one was silently dropped. PR #36's to_gql refuses this case.
     # So on its base this test passes and its expectedFailure decorator is off.
     def test_parse_by_default_refuses_an_id_repeated_in_one_block(self):
-        with self.assertRaisesRegex(gp.ProfileError, "id 'x' is already a node"):
+        with self.assertRaisesRegex(gp.ProfileError, "id 'x' is already a thing"):
             parse_block(ID_TWICE)
 
     # Was a GAP. The same path with a variable written twice. On main, to_gql wrote id: twice into
@@ -183,7 +183,7 @@ class EnginePathsSkipTheReader(unittest.TestCase):
             "## B\n```gql\n// graph: g\n(b:Person {id: 'a', name: 'B'})\n```\n"
         )
         with self.assertRaisesRegex(
-            gp.ProfileError, "^line 2: id 'a' is already a node in graph g — "
+            gp.ProfileError, "^line 2: id 'a' is already a thing in graph g — "
         ):
             compute({"load": ["#A", "#B"], "state_of": "g"}, text, ".", ".")
 
@@ -196,7 +196,7 @@ class EnginePathsSkipTheReader(unittest.TestCase):
         )
         problems = gs.fill_check(text, ".", ".")
         self.assertTrue(
-            any(n == "*" and "id 'a' is already a node in graph g" in p for n, p in problems),
+            any(n == "*" and "id 'a' is already a thing in graph g" in p for n, p in problems),
             problems,
         )
 

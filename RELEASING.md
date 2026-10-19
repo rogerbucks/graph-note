@@ -105,9 +105,18 @@ release.
 `test/wcag.test.js` checks every view and page in light and dark. It checks axe-core's rules for WCAG 2.0 to 2.2, A and
 AA, and the contrast of all text. It runs in a DOM with no layout and no paint, so it cannot see the items below.
 
-**Walk them by hand on the build to be released, in each host, in the light theme and the dark. Note the build, the
-host, the date and anything that failed.** A failure stops the release until it is fixed or the reason it stays is
-written down here.
+**Walk them by hand on the build to be released, in each host, in the light theme and the dark.** Record it in
+`test/walkthroughs/<version>.md`, and commit it before the tag:
+
+1. Run `node scripts/walkthrough-record.mjs --new`. It writes an empty record for the version in `manifest.json`: the
+   build, the day, and every check under each host and theme.
+2. Walk each check. Tick it (`- [x] AX-05`), or leave it unticked with its reason after a dash
+   (`- [ ] AX-14 — not on a desktop: this check is for a phone`).
+3. Write your name after `- By:`.
+
+The release and its dry run run `node scripts/walkthrough-record.mjs --release` first (UX-1). It fails while the record
+is missing, a host or theme is not walked, or a check is unticked with no reason. A failure stops the release until it is
+fixed or the reason it stays is written down.
 
 The hosts: Obsidian on a desktop, Obsidian on a phone, and the browser editor's page (opened from Claude Code). A host added
 later is added to this list in the pull request that adds the host, and walked before its first release.
