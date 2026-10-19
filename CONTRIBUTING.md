@@ -496,12 +496,20 @@ These test behaviour across modules, or the repository itself, so they are named
   `public-api.json`, which `node scripts/public-api.mjs --update` writes. A break since the last release fails
   unless the package takes a new major version. Before 1.0.0 that is the leftmost part that is not 0, such as 0.8.0.
 
+### The graph spec
+
+- `test/graph-spec-text.test.js` — the graph spec's text is in `requirements/graph-spec.gql` (spec §13,
+  graph_spec_in_repo; ARCH-11). Every § either library cites is one of its sections; the editor's own say "editor spec".
+- `test/graph-spec-index.test.js` — the graph spec file is true to itself (spec §51, spec_index_true; GS1): its counts,
+  the paths it names, and no pending rule that a test proves.
+- `test/graph-spec-proved.test.js` — every graph-spec rule a test here cites by its id counts as proved (spec §51,
+  spec_rules_proved; GS1). A 'general' proof or a case kept outside the repository counts for nothing.
+  `quality/graph-spec-unproved.json` lists the rest, and it only shrinks: `node scripts/graph-spec-proved.mjs --update`.
+
 ### The repository, its community files and device checks
 
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
-- `test/graph-spec-text.test.js` — the graph spec's text is in `requirements/graph-spec.gql` (spec §13,
-  graph_spec_in_repo; ARCH-11). Every § either library cites is one of its sections; the editor's own say "editor spec".
 - `test/walkthrough-record.test.js` — each stable release keeps a record of the accessibility walk-through (spec §11,
   walkthrough_recorded; UX-1). `scripts/walkthrough-record.mjs --new` writes an empty one to fill in. The release and
   its dry run fail until every check is ticked, or given its reason, in every host and theme.
