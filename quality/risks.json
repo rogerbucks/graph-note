@@ -1516,7 +1516,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#619"
     },
     {
       "id": "ARCH-12",
@@ -1580,7 +1581,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#619"
     },
     {
       "id": "UX-2",
@@ -2017,7 +2019,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#619"
     },
     {
       "id": "NEURO-5",
