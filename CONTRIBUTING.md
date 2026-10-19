@@ -589,6 +589,10 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/policy.test.js` — the plugin-store files, supply-chain pins and least-privilege CI. It also covers the one
   module that may reach the network, reached only from the send dialog. Nothing in the AI's folder runs on a timer or
   an event.
+- `test/workflow-timeouts.test.js` — every job of every workflow sets a time limit. So a hung step never holds a
+  runner for hours (editor spec §13, ci_jobs_time_limited).
+- `test/release-from-main.test.js` — a stable release is built only from a tag on main. The release's first job checks
+  the tag before anything is installed, and every other job waits for it (editor spec §13, release_from_main).
 - `test/ai-disclosed.test.js` — the AI use disclosed in the README. Content goes only to models the user sets up, only
   when the user sends it. The one exception to no network use is stated precisely (spec §19, ai_disclosed).
 - `test/public-readiness.test.js` — fit to be public and kept so. It covers a clean history, and a fresh clone set up

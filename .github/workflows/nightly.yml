@@ -27,6 +27,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       moved: ${{ steps.moved.outputs.moved }}
     steps:
@@ -50,6 +51,7 @@ jobs:
     needs: check
     if: needs.check.outputs.moved == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     outputs:
       version: ${{ steps.version.outputs.version }}
       sha: ${{ steps.version.outputs.sha }}
@@ -103,6 +105,7 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: write
     steps:
