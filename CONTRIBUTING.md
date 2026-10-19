@@ -485,6 +485,9 @@ These test behaviour across modules, or the repository itself, so they are named
   note's own graph blocks with the real functions, and matches exactly. The quotes are a read-back, a label, the tap
   text of an estimate and a box's details. They are also an export's footer and file name, and the conversion notice.
   The notes' generator scripts and filler set up the case they describe (editor spec §3).
+- `test/lib-public-api.test.js` — the library's public interface (spec §41, lib_public_api). It is declared in
+  `public-api.json`, which `node scripts/public-api.mjs --update` writes. A break since the last release fails
+  unless the package takes a new major version. Before 1.0.0 that is the leftmost part that is not 0, such as 0.8.0.
 - `test/engine-version.test.js` — the Graphviz version is read from the engine, named in the notices, and checked against published advisories.
 - `test/ethos.test.js` — the project's ethos (`requirements/ethos.gql`). Every rule names the requirements that check
   it, or says a person checks it or nothing does yet, and only requirements that exist. Each fault is named. The wiki's

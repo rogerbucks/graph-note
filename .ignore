@@ -16,6 +16,7 @@ python/graph_spec/uv.lock
 # generated records and copies: made by a script, never edited by hand
 test/tests-first/
 THIRD_PARTY_NOTICES.md
+public-api.json
 licences/texts/
 
 # the test vault's Obsidian settings and plugin copies
