@@ -41,7 +41,7 @@
       "start": "2026-11-13",
       "end": "2026-11-26",
       "estimate": true,
-      "workstreams": ["T1", "L1", "P1"]
+      "workstreams": ["T1", "L1", "P1", "GS4"]
     },
     {
       "title": "Wave 7 · Language, theming and the standalone app",
@@ -177,11 +177,11 @@
       "workstreams": ["GS2", "GS3"]
     },
     {
-      "title": "Wave 26 · Held: graph format security and AI rules that agree",
+      "title": "Wave 26 · Held: AI rules in the graph spec that agree",
       "start": "2027-08-30",
       "end": "2027-09-12",
       "estimate": true,
-      "workstreams": ["GS4", "GS5"]
+      "workstreams": ["GS5"]
     },
     {
       "title": "Wave 27 · Held: a graph spec that reads easily, and its smaller gaps",
