@@ -5,11 +5,10 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (96)
+## Open (90)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
-| SEC-1 | Python library runs note guards through eval | ●●○ | ●●● | fix-now | hours |
 | SEC-2 | SECURITY.md promises rest on settings nothing in CI checks | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | SEC-3 | Claude's data-folder guard admits a bypass by shell paths | ●○○ | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | SEC-4 | Session token drawn in a pane Claude may read | ●○○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -19,10 +18,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-8 | Two personal tokens live in workflows with unverified scope | ●○○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | SEC-9 | Export accepts any text under an .svg name | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | SEC-10 | No advisory audit for the Python dependencies in CI | ●○○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
-| OPS-1 | One person holds every key, with no written recovery | ●●○ | ●●● | fix-now | hours |
-| OPS-2 | A tag on any commit becomes a stable release | ●●○ | ●●● | fix-now | hours |
-| OPS-3 | No written release steps, draft publishing or rollback | ●●● | ●●○ | fix-now | hours |
-| OPS-4 | Every job without a time limit can hold a runner six hours | ●●○ | ●●○ | fix-now | hours |
 | OPS-5 | The release waits on live OSV and NVD, with no retry | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | OPS-6 | Failures of nightly, wiki, Pages and advisories are silent | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | OPS-7 | Timed workflows pause and tokens expire without notice | ●●○ | ●○○ | fix-later (Wave 5 · Automated quality and releases) | hours |
@@ -85,7 +80,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-12 | Third-party notices depend on a hand-kept record | ●○○ | ●●○ | fix-later (Roger’s held changes, after all waves) | hours |
 | API-1 | Half the shipped graph-spec exports sit outside the break check | ●●○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-2 | Core is guarded as a library but never shipped as one | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| API-3 | Host contract version is a hand-typed number | ●●○ | ●●○ | fix-now | hours |
 | API-4 | Local server has two error formats and no shared schema | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-6 | Python library is loose files, not an installable package | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-7 | Python public surface is everything, private names included | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
@@ -107,16 +101,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-11 | Consent is per send, but residency and retention are unsaid | ●○○ | ●●○ | fix-now | hours |
 
 ## Each open risk
-
-### SEC-1 Python library runs note guards through eval
-
-**Who found it:** Senior security engineer. **Where:** `python/graph_spec/src/graphspec/engine/**`.
-
-**Risk:** A guard text in a graph note, such as `__import__('os').system(...)`, runs as Python when the library joins or steps that graph. Anyone who opens a shared note with the Python library runs the note author's code.
-
-**Fix:** Replace the three eval calls with a small parser of comparisons joined by and, or and not. Validate.js:7 already does this in JavaScript. Reject anything else.
-
-**Check:** A unit test feeds a guard that calls __import__ and asserts a refusal. Add ruff rule S307 (eval) to pyproject so a new eval fails lint.
 
 ### SEC-2 SECURITY.md promises rest on settings nothing in CI checks
 
@@ -207,46 +191,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add `uvx pip-audit --locked` (or osv-scanner on uv.lock) to the Python job in ci.yml and release.yml.
 
 **Check:** That CI step.
-
-### OPS-1 One person holds every key, with no written recovery
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `RELEASING.md`, `SECURITY.md`, `.github/workflows/*.yml`.
-
-**Risk:** If the owner is unavailable, nobody can publish a release or change the ruleset. Nobody can rotate PROJECT_TOKEN or CLAUDE_CODE_OAUTH_TOKEN, or renew the thoughtknot.app domain. Nothing in the repository says what those keys are, where they live, or how a successor would recover them.
-
-**Fix:** Add a 'Keys and recovery' section to RELEASING.md. Name each secret, its scope, where it is made and its expiry. Name the Pages domain's registrar and the one command that re-applies settings. Name a second admin on the repository, or move it to an organisation with two owners.
-
-**Check:** manual
-
-### OPS-2 A tag on any commit becomes a stable release
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `.github/workflows/release.yml`, `test/policy.test.js`.
-
-**Risk:** The release workflow runs for a bare version tag pushed on any commit, not only one on main. A tag typed on the wrong branch or a stale checkout ships code that never passed the dry run or the required checks.
-
-**Fix:** Add a first step to the release job: fetch origin/main and fail unless the tagged commit is its head (`git merge-base --is-ancestor` at least). Put the manifest check before `npm test`, so a wrong tag fails in seconds.
-
-**Check:** A case in test/policy.test.js that the release job's first run step compares HEAD with origin/main before any install.
-
-### OPS-3 No written release steps, draft publishing or rollback
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `RELEASING.md`, `.github/workflows/release.yml`, `package.json`.
-
-**Risk:** RELEASING.md holds only the accessibility walk. It never says to bump manifest.json, versions.json and every package.json, run the dry run, push the tag, then publish the draft. A draft left unpublished tells no one, and a bad release has no written way back.
-
-**Fix:** Add a numbered 'Cutting a release' list and a 'Going back' paragraph to RELEASING.md. A bad release is followed by a patch, the draft is deleted, the tag stays. Add an `npm run release:prepare` that bumps the three version files together.
-
-**Check:** A scheduled step in pages.yml or build-status.yml that warns when a draft release is older than one day.
-
-### OPS-4 Every job without a time limit can hold a runner six hours
-
-**Who found it:** IT administrator and release / DevOps engineer. **Where:** `.github/workflows/*.yml`, `test/policy.test.js`.
-
-**Risk:** CI's seven jobs, all three nightly jobs, the release and public-readiness jobs, dependency review, advisories and the lock job set no timeout-minutes. A hung `npm ci`, `gh` call or Chrome blocks runners for six hours each, and a stuck nightly holds the concurrency group until then.
-
-**Fix:** Give every job a timeout-minutes, about twice its usual length (CI 30, nightly build 40, release 60).
-
-**Check:** A case in test/policy.test.js that every job in every workflow has `timeout-minutes`.
 
 ### OPS-5 The release waits on live OSV and NVD, with no retry
 
@@ -868,16 +812,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/lib-public-api.test.js asserts every package in LIBRARY is also a file in the release archive's `git archive` list.
 
-### API-3 Host contract version is a hand-typed number
-
-**Who found it:** API design expert. **Where:** `packages/core/src/display/host.ts`, `packages/core/src/display/host-contract.ts`, `scripts/public-api.mjs`.
-
-**Risk:** HOST_CONTRACT_VERSION is 3 by assertion only; a change to DisplayHost's members with no bump passes CI because display/* is excluded from public-api.mjs. A third-party host built for version 3 would break silently when the plan adds VS Code and Tauri hosts.
-
-**Fix:** Add './display/host' and './display/host-contract' as entries of @thoughtknot/core in LIBRARY, so a DisplayHost change needs a major version. Store the member lines' hash beside HOST_CONTRACT_VERSION.
-
-**Check:** test/lib-public-api.test.js: DisplayHost lines in public-api.json unchanged unless HOST_CONTRACT_VERSION moved in the same diff.
-
 ### API-4 Local server has two error formats and no shared schema
 
 **Who found it:** API design expert. **Where:** `packages/claude-code/server/**`, `packages/claude-code/page/*-calls.ts`.
@@ -1068,13 +1002,19 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/ai-disclosed.test.js asserts the README names the provider's terms and the localhost case.
 
-## Done or accepted (6)
+## Done or accepted (12)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
+| SEC-1 | Python library runs note guards through eval | done | #614 |
+| OPS-1 | One person holds every key, with no written recovery | done | #614, #620 |
+| OPS-2 | A tag on any commit becomes a stable release | done | #614 |
+| OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
+| OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
+| API-3 | Host contract version is a hand-typed number | done | #614 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |
