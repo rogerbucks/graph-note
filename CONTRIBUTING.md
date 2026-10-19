@@ -775,6 +775,14 @@ These test behaviour across modules, or the repository itself, so they are named
   - A message that misses for a reason is recorded in `quality/copy.json`. It may never score worse without the record
     raised.
   - The check is tried first.
+- `test/ux-journey.test.js` — the first-run journey in every host (editor spec §41, ux_journey_auto).
+  - A person opens a note, reads its graph, edits it, fixes a problem and exports it. Each host's journey is in
+    `test/repository/journey-obsidian.js` and `journey-page.js`, and each stage checks what it left.
+  - Every action goes through `scripts/ux-journey.mjs`, which counts it. An interaction is one action. A step is a run
+    of interactions on one control. Each control is found by the name a screen reader says.
+  - The counts are metrics of the quality ratchet, held by `quality/baseline.json` with no room. One more step or
+    interaction fails unless `quality/accepted.json` records why.
+  - The counting and the ratchet's hold are tried first, and a host with no journey fails.
 - `test/plain-docs.test.js` — every document and code comment is plain language for a reader with ADHD (editor spec §41, plain_docs_auto). Sentences keep to 25 words and paragraphs to 80. A heading comes at least every 400 words, and no filler words are used. The reader pages read at grade 9 or lower. `quality/plain-docs.json` counts the misses each file had when the check came in, and a count may only fall.
 
 ### Pointer targets, reflow and whitespace

@@ -1,6 +1,8 @@
 // The quality metrics, declared (spec §12, quality_ratchet). Each has its name, which way is better, and how much noise
 // it tolerates before a worse figure counts. Measured by quality-metrics.mjs, compared by quality-check.mjs.
 
+import { HOSTS as JOURNEY_HOSTS } from './ux-journey.mjs';
+
 /** The instruction-count benchmarks, by name (scripts/benchmarks/index.mjs; a test holds the two lists the same). */
 export const BENCHMARK_NAMES = [
   'draw_fifty',
@@ -41,6 +43,8 @@ const instructionMetric = {
  *   only against a baseline counted on the same machine.
  * - `most` is a figure no metric may pass, baseline or none.
  * - `fast` marks the metrics that are measured in a moment, from the files alone.
+ * - `journey` marks a count of the first-run journey (scripts/ux-journey.mjs). It is measured by running the journey in
+ *   each host, which the suite does too: test/ux-journey.test.js holds it in CI.
  * - `waivable: false` marks one no recorded reason can excuse.
  */
 export const METRICS = {
@@ -61,6 +65,13 @@ export const METRICS = {
   flaky_tests: { better: 'lower', tolerance: 0, slack: 0, unit: 'tests' },
   quiet_run_bytes: { better: 'lower', tolerance: 0, slack: 20, unit: 'bytes' },
   coverage_percent: { better: 'higher', tolerance: 0, slack: 1, unit: '%' },
+  // the first-run journey's steps and interactions in each host (scripts/ux-journey.mjs): one more is a worse journey
+  ...Object.fromEntries(
+    Object.values(JOURNEY_HOSTS).flatMap((h) => [
+      [h.steps, { better: 'lower', tolerance: 0, slack: 0, unit: 'steps', journey: true }],
+      [h.interactions, { better: 'lower', tolerance: 0, slack: 0, unit: 'interactions', journey: true }],
+    ]),
+  ),
   // how long a fixed piece of work took on the machine that measured: what the timings are scaled by, never compared
   speed_index: { better: 'lower', tolerance: 0, slack: 0, unit: 'ms', informational: true },
 };
