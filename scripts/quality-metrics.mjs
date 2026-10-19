@@ -3,6 +3,7 @@
 // - file sizes, a dependency vulnerability scan, a secrets scan, and the plugin's bundle size;
 // - the work a fixed set of benchmarks takes, counted in CPU instructions (scripts/instruction-counts.mjs, on Linux
 //   with Valgrind);
+// - the steps and interactions of the first-run journey in every host (scripts/ux-journey.mjs);
 // - the test suite's duration (reported only), its flaky tests and the size of a passing quiet run, and coverage.
 // The result is the metrics JSON that scripts/quality-check.mjs holds against quality/baseline.json, and that the
 // slice-end review reads.
@@ -138,12 +139,25 @@ async function measureWork(reuse) {
   return counted;
 }
 
+/** The first-run journey's steps and interactions in every host, from running it (test/repository/journeys.js). */
+async function measureJourney() {
+  const { measureJourneys } = await import('../test/repository/journeys.js');
+  return measureJourneys();
+}
+
 /**
- * Everything: the quick metrics, the audit, the bundle, the benchmarks' instructions, the machine's speed, and the
- * suite (twice). The machine's speed is by the wall clock, as the suite's duration is.
+ * Everything: the quick metrics, the audit, the bundle, the benchmarks' instructions, the first-run journey, the
+ * machine's speed, and the suite (twice). The machine's speed is by the wall clock, as the suite's duration is.
  */
 export async function measureAll({ reuse } = {}) {
-  const parts = [measureFast(), measureAudit(), await measureBundle(), await measureWork(reuse), measureSuite(ROOT)];
+  const parts = [
+    measureFast(),
+    measureAudit(),
+    await measureBundle(),
+    await measureWork(reuse),
+    await measureJourney(),
+    measureSuite(ROOT),
+  ];
   const metrics = Object.assign({}, ...parts.map((p) => p.metrics), { speed_index: speedIndex() });
   const details = Object.assign({}, ...parts.map((p) => p.details));
   return { metrics, details };

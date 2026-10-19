@@ -113,7 +113,8 @@ export const CI_RECORDS =
  * A reason covers a change from the baseline's value to the figure it names, or anything no worse than that. For a
  * timing that figure is scaled with the baseline, to the speed of the machine measuring. With `partial`, a metric the
  * run left out is skipped, but one it measured as nothing still fails. With `baselines`, two baselines are compared.
- * Instruction counts neither holds are passed over, and one the earlier held and the later dropped fails.
+ * Instruction counts neither holds are passed over, and one the earlier held and the later dropped fails. A metric new
+ * in the later one, which the earlier did not hold, is its first record and passes.
  *
  * With `ci` (a run in GitHub Actions), counts the baseline cannot hold the run to fail rather than pass. They are none
  * in it yet, or counted on another machine. Every count is still given in `toRecord`, to be printed first.
@@ -153,6 +154,8 @@ export function compare(baseline, current, accepted = [], { partial = false, bas
       if (!baselines) out.toRecord.push({ metric: name, value });
       continue;
     }
+    // a metric the earlier baseline did not hold is new: the baseline that adds it is its first record
+    if (!has(base) && baselines) continue;
     if (!has(base)) {
       out.failures.push({
         metric: name,

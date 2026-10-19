@@ -29,7 +29,11 @@
     "instruction_claims_broken": 0,
     "instructions_cold_start": 2672152969,
     "instructions_draw_five_hundred": 12948347356,
-    "instructions_mesh_query": 233877341
+    "instructions_mesh_query": 233877341,
+    "journey_steps_obsidian": 9,
+    "journey_interactions_obsidian": 9,
+    "journey_steps_claude_code": 6,
+    "journey_interactions_claude_code": 6
   },
   "details": {
     "instructions": {
