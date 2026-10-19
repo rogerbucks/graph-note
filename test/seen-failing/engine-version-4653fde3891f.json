@@ -1,0 +1,6 @@
+{
+  "file": "test/engine-version.test.js",
+  "test": "the workflows > the release names the engine in its notes, and the notes are attached",
+  "seen_failing_first": false,
+  "evidence": "The test follows a workflow change made in 209bdda, which moved the engine notes to the end of the changelog the release attaches. That change broke the old form of this test (seen failing in the full suite at 209bdda), so the new form passes at its parent by design."
+}
