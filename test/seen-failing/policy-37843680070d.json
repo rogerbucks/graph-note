@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only ten jobs may write: the release, the nightly, the lock, the build status comment, the mirror’s issues, the review, the wiki, its review issue, the risk panel’s issue and the home page",
+  "seen_failing_first": false,
+  "evidence": "The test was renamed from nine writers to ten when the risk panel's report job was allowed. It passed against the parent because the parent had no risk-panel.yml; the new allowance is held by test/risk-panel-workflow.test.js, which failed first."
+}
