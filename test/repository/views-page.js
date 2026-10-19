@@ -37,6 +37,12 @@ export function pageStates(open) {
     'the edit pane with a problem listed and marked': async () => {
       const page = open(withNote, SLIPPED);
       await drawn(page);
+      // the caret off the problem's line, so it is listed: on its line it is in the fix bar alone (NEURO-4)
+      const field = () => page.window.document.querySelector('.thoughtknot-editor textarea');
+      await until(() => !!field());
+      const text = field();
+      text.setSelectionRange(0, 0);
+      text.dispatchEvent(new page.window.KeyboardEvent('keyup'));
       await until(() => page.window.document.querySelectorAll('.thoughtknot-pane-problems li').length > 0);
       return page;
     },

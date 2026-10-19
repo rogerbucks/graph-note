@@ -55,7 +55,7 @@ def header(block: str) -> tuple[str | None, str]:
     m = GRAPH.match(first)
     if not m:
         raise ProfileError(
-            1, "the block names no graph", "start it with '// graph: <name>' (§3)", code="GN101"
+            1, "the block names no graph", "start it with '// graph: <name>'", code="GN101"
         )
     rest = m.group(2)
     kind = (
@@ -74,7 +74,7 @@ def header(block: str) -> tuple[str | None, str]:
         raise ProfileError(
             1,
             f"the graph name '{m.group(1)}' is not one word",
-            "use letters, digits and underscores only — reader_choice, not reader-choice (§3)",
+            "use letters, digits and underscores only, such as reader_choice, not reader-choice",
             code="GN102",
         )
     return m.group(1), kind
@@ -83,8 +83,7 @@ def header(block: str) -> tuple[str | None, str]:
 # §3: comments are whole lines; one after code on its line cannot be told from // inside an
 # identifier
 COMMENT_RULE = (
-    "a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// "
-    "hashes (§3)"
+    "a comment must be on a line of its own: // also occurs inside values, such as ni:/// hashes"
 )
 COMMENT_FIX = "put the comment on its own line"
 
@@ -124,7 +123,7 @@ def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
                 raise ProfileError(
                     n,
                     f"cannot read '{_excerpt(strip(raw[pos:]))}'",
-                    "a data block holds only nodes, relationships and simple values",
+                    "a data block holds only things, links and plain values",
                     code="GN104",
                 )
             kind = m.lastgroup

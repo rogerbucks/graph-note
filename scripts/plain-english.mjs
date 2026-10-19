@@ -41,6 +41,8 @@ export const JARGON = [
   { word: 'etc.', instead: 'and so on' },
   { word: 'invalid', instead: 'not right, and why' },
   { word: 'error code', instead: 'what went wrong' },
+  { word: 'profile', instead: 'how a graph is written' },
+  { word: '§', instead: 'what to type' },
 ];
 
 /** The sentences of `text`: split after . ! ? or a line break, with no empty ones. */
@@ -81,7 +83,11 @@ export function jargonIn(text, { developer = false } = {}) {
     .filter((j) => {
       const escaped = j.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const caseless = j.word !== j.word.toUpperCase();
-      return new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, caseless ? 'iu' : 'u').test(text);
+      // a whole word: no letter or digit next to an end that is one, so § is found in §3
+      const edge = (c) => /[\p{L}\p{N}]/u.test(c);
+      const before = edge(j.word[0]) ? '(?<![\\p{L}\\p{N}])' : '',
+        after = edge(j.word.at(-1)) ? '(?![\\p{L}\\p{N}])' : '';
+      return new RegExp(`${before}${escaped}${after}`, caseless ? 'iu' : 'u').test(text);
     })
     .map((j) => j.word);
 }

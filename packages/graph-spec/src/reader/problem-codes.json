@@ -1,24 +1,24 @@
 {
-  "about": "Editor spec §42, problem_codes: the stable code of every problem the document profile reader raises (ProfileError), the same from the JavaScript and the Python libraries, and given as the Language Server Protocol diagnostic's code, so a problem's message and fix can be translated and looked up. A code is GN and three digits, numbered in groups by area: 1xx the header and tokens, 2xx the grammar and its values, 3xx the store, 4xx change sets, 5xx writing standard GQL. A code is never reused and never renumbered: a problem that goes keeps its code retired, and a new one takes the next free number in its group. message and fix are templates, each {name} standing for a part the problem fills in; section is the spec § they cite, or null. libraries says which library raises it: js, py or both. Every raise site passes its code as a literal; packages/graph-spec/test/problem-codes.test.mjs and python/graph_spec/tests/test_problem_codes.py hold each library to this table.",
+  "about": "Editor spec §42, problem_codes: the stable code of every problem the document profile reader raises (ProfileError), the same from the JavaScript and the Python libraries, and given as the Language Server Protocol diagnostic's code, so a problem's message and fix can be translated and looked up. A code is GN and three digits, numbered in groups by area: 1xx the header and tokens, 2xx the grammar and its values, 3xx the store, 4xx change sets, 5xx writing standard GQL. A code is never reused and never renumbered: a problem that goes keeps its code retired, and a new one takes the next free number in its group. message and fix are templates, each {name} standing for a part the problem fills in; section is the spec § the rule comes from, or null; the words themselves never cite it (NEURO-4). libraries says which library raises it: js, py or both. Every raise site passes its code as a literal; packages/graph-spec/test/problem-codes.test.mjs and python/graph_spec/tests/test_problem_codes.py hold each library to this table.",
   "codes": [
     {
       "code": "GN101",
       "section": "3",
       "message": "the block names no graph",
-      "fix": "start it with '// graph: <name>' (§3)",
+      "fix": "start it with '// graph: <name>'",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN102",
       "section": "3",
       "message": "the graph name '{name}' is not one word",
-      "fix": "use letters, digits and underscores only — reader_choice, not reader-choice (§3)",
+      "fix": "use letters, digits and underscores only, such as reader_choice, not reader-choice",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN103",
       "section": "3",
-      "message": "a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)",
+      "message": "a comment must be on a line of its own: // also occurs inside values, such as ni:/// hashes",
       "fix": "put the comment on its own line",
       "libraries": ["js", "py"]
     },
@@ -26,7 +26,7 @@
       "code": "GN104",
       "section": null,
       "message": "cannot read '{text}'",
-      "fix": "a data block holds only nodes, relationships and simple values",
+      "fix": "a data block holds only things, links and plain values",
       "libraries": ["js", "py"]
     },
     {
@@ -40,14 +40,14 @@
       "code": "GN201",
       "section": "3",
       "message": "expected '{expected}', found '{found}'",
-      "fix": "keep to the document profile (§3)",
+      "fix": "write '{expected}' here",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN202",
       "section": "3",
       "message": "expected a name, found '{found}'",
-      "fix": "keep to the document profile (§3)",
+      "fix": "write a name here, in letters, digits and underscores",
       "libraries": ["js", "py"]
     },
     {
@@ -68,7 +68,7 @@
       "code": "GN205",
       "section": "9",
       "message": "'{text}' has no offset",
-      "fix": "an instant carries its offset (§9, principle 11)",
+      "fix": "add its offset from UTC, such as +10:00",
       "libraries": ["js", "py"]
     },
     {
@@ -81,7 +81,7 @@
     {
       "code": "GN207",
       "section": null,
-      "message": "'{token}' is not a value in the profile",
+      "message": "'{token}' is not a value a graph can hold",
       "fix": "use 'text', a number, TRUE, FALSE, DATE '…' or DATETIME '…' — no lists, no expressions",
       "libraries": ["js", "py"]
     },
@@ -89,21 +89,21 @@
       "code": "GN208",
       "section": "3",
       "message": "id {written} is not text",
-      "fix": "write id: {quoted} — a node's id is always text (§3)",
+      "fix": "write id: {quoted} — a thing's id is always text",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN209",
       "section": "3",
-      "message": "SET would change {var}'s id, and a node's id never changes (§3)",
-      "fix": "write the right node, then link {var} to it or supersede it (§12)",
+      "message": "SET would change {var}'s id, and a thing's id never changes",
+      "fix": "write the right thing, then link {var} to it or supersede it",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN210",
       "section": "3",
       "message": "unexpected '{token}'",
-      "fix": "a data block ends after its INSERT and SET (§3)",
+      "fix": "a data block ends after its INSERT and SET",
       "libraries": ["js", "py"]
     },
     {
@@ -137,7 +137,7 @@
     {
       "code": "GN305",
       "section": null,
-      "message": "MATCH must find a node by its id alone",
+      "message": "MATCH must find a thing by its id alone",
       "fix": "write MATCH (v:Label {id: '…'})",
       "libraries": ["js", "py"]
     },
@@ -145,28 +145,28 @@
       "code": "GN306",
       "section": null,
       "message": "MATCH finds no {labels} with id '{id}' in graph {graph}",
-      "fix": "the node must be written earlier — in this document or one loaded before it",
+      "fix": "the thing must be written earlier — in this document or one loaded before it",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN307",
       "section": null,
       "message": "{var} is written twice",
-      "fix": "give each new node its own variable",
+      "fix": "give each new thing its own variable",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN308",
       "section": "10",
-      "message": "id '{id}' is already a node in graph {graph}",
-      "fix": "an id names one node (§10) — MATCH it to add to it, or supersede it (§12)",
+      "message": "id '{id}' is already a thing in graph {graph}",
+      "fix": "an id names one thing — MATCH it to add to it, or supersede it",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN309",
       "section": "3",
       "message": "{var} is used before it is written",
-      "fix": "write the node before any relationship that uses it — GQL binds a name only once its node is written (§3)",
+      "fix": "write the thing before any link that uses it",
       "libraries": ["js", "py"]
     },
     {
@@ -208,14 +208,14 @@
       "code": "GN404",
       "section": "24",
       "message": "this names more than one target",
-      "fix": "a DELETE or SET names exactly one target (§24)",
+      "fix": "a DELETE or SET names exactly one target",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN405",
       "section": "24",
       "message": "{var} is not the one target",
-      "fix": "a DELETE or SET names exactly one target (§24)",
+      "fix": "a DELETE or SET names exactly one target",
       "libraries": ["js", "py"]
     },
     {
@@ -236,7 +236,7 @@
       "code": "GN408",
       "section": "24",
       "message": "this removes more than one target",
-      "fix": "a DELETE or SET names exactly one target (§24)",
+      "fix": "a DELETE or SET names exactly one target",
       "libraries": ["js", "py"]
     },
     {
@@ -264,14 +264,14 @@
       "code": "GN412",
       "section": "24",
       "message": "this changes more than one target",
-      "fix": "a DELETE or SET names exactly one target (§24)",
+      "fix": "a DELETE or SET names exactly one target",
       "libraries": ["js", "py"]
     },
     {
       "code": "GN413",
       "section": "3",
-      "message": "SET would change {var}'s id, and a node's id never changes (§3)",
-      "fix": "write the right node, then supersede it (§12)",
+      "message": "SET would change {var}'s id, and a thing's id never changes",
+      "fix": "write the right thing, then supersede it",
       "libraries": ["js", "py"]
     },
     {
@@ -292,14 +292,14 @@
       "code": "GN416",
       "section": "3",
       "message": "the block names graph {named}, but the base gives it as graph {graph}",
-      "fix": "give it as graph {named} — a block is loaded into the graph its first line names (§3)",
+      "fix": "give it as graph {named} — a block is loaded into the graph its first line names",
       "libraries": ["py"]
     },
     {
       "code": "GN501",
       "section": "10",
-      "message": "id '{id}' is already a node",
-      "fix": "an id names one node (§10) — MATCH it to add to it, or supersede it (§12)",
+      "message": "id '{id}' is already a thing",
+      "fix": "an id names one thing — MATCH it to add to it, or supersede it",
       "libraries": ["py"]
     },
     {

@@ -23,8 +23,7 @@ function header(block) {
   const first = block.split('\n').find((line) => trim(line)) || '';
   if (EXCERPT.test(first)) return [null, 'excerpt']; // an illustration, said to be one (§3)
   const m = GRAPH.exec(first);
-  if (!m)
-    throw new ProfileError(1, 'the block names no graph', "start it with '// graph: <name>' (§3)", undefined, 'GN101');
+  if (!m) throw new ProfileError(1, 'the block names no graph', "start it with '// graph: <name>'", undefined, 'GN101');
   const kind = SCHEMA.test(m[2])
     ? 'schema'
     : EXCERPT_OF.test(m[2])
@@ -39,15 +38,14 @@ function header(block) {
     throw new ProfileError(
       1,
       `the graph name '${m[1]}' is not one word`,
-      'use letters, digits and underscores only — reader_choice, not reader-choice (§3)',
+      'use letters, digits and underscores only, such as reader_choice, not reader-choice',
       undefined,
       'GN102',
     );
   return [m[1], kind];
 }
 // §3: comments are whole lines; one after code on its line cannot be told from // inside an identifier
-const COMMENT_RULE =
-  'a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)';
+const COMMENT_RULE = 'a comment must be on a line of its own: // also occurs inside values, such as ni:/// hashes';
 // The fix COMMENT_RULE's refusal gives, exported with it so a host that warns of the same comment says the same.
 const COMMENT_FIX = 'put the comment on its own line';
 // the start of a text, cut at n UTF-16 units and never inside an emoji, as Python's reader cuts it too
@@ -81,7 +79,7 @@ function tokens(block) {
         throw new ProfileError(
           n,
           `cannot read '${excerpt(trim(raw.slice(pos)))}'`,
-          'a data block holds only nodes, relationships and simple values',
+          'a data block holds only things, links and plain values',
           undefined,
           'GN104',
         );
@@ -170,13 +168,7 @@ function utcNaive(s, line) {
       'GN204',
     );
   if (!m[8])
-    throw new ProfileError(
-      line,
-      `'${s}' has no offset`,
-      'an instant carries its offset (§9, principle 11)',
-      undefined,
-      'GN205',
-    );
+    throw new ProfileError(line, `'${s}' has no offset`, 'add its offset from UTC, such as +10:00', undefined, 'GN205');
   let off = 0;
   if (m[8] !== 'Z') {
     const sg = m[8][0] === '-' ? -1 : 1,

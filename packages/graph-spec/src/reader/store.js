@@ -176,7 +176,7 @@ class Store {
       if (keys.length !== 1 || keys[0] !== 'id')
         throw new ProfileError(
           m.line,
-          'MATCH must find a node by its id alone',
+          'MATCH must find a thing by its id alone',
           "write MATCH (v:Label {id: '…'})",
           undefined,
           'GN305',
@@ -186,7 +186,7 @@ class Store {
         throw new ProfileError(
           m.line,
           `MATCH finds no ${m.labels.join(':')} with id '${m.props.id}' in graph ${g}`,
-          'the node must be written earlier — in this document or one loaded before it',
+          'the thing must be written earlier — in this document or one loaded before it',
           undefined,
           'GN306',
         );
@@ -202,7 +202,7 @@ class Store {
             throw new ProfileError(
               n.line,
               `${n.v} is written twice`,
-              'give each new node its own variable',
+              'give each new thing its own variable',
               undefined,
               'GN307',
             );
@@ -210,8 +210,8 @@ class Store {
           if (found(n.props.id) !== null)
             throw new ProfileError(
               n.line,
-              `id '${n.props.id}' is already a node in graph ${g}`,
-              'an id names one node (§10) — MATCH it to add to it, or supersede it (§12)',
+              `id '${n.props.id}' is already a thing in graph ${g}`,
+              'an id names one thing — MATCH it to add to it, or supersede it',
               undefined,
               'GN308',
             );
@@ -225,7 +225,7 @@ class Store {
             throw new ProfileError(
               n.line,
               `${n.v} is used before it is written`,
-              'write the node before any relationship that uses it — GQL binds a name only once its node is written (§3)',
+              'write the thing before any link that uses it',
               undefined,
               'GN309',
             );

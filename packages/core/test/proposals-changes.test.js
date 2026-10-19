@@ -114,7 +114,7 @@ describe('the value of a change of a property', () => {
       assert.match(refused(value), /gives one value, and nothing else/, value);
   });
 
-  // the document profile holds no list value (the reader: "'[' is not a value in the profile"). So a list literal is no
+  // the document profile holds no list value (the reader: "'[' is not a value a graph can hold"). So a list literal is no
   // value to write. It is refused here, rather than accepted and then refused when the change is written
   test('is never a list literal, which the profile cannot hold, alone or with more', () => {
     for (const value of ['[1, 2]', "['a', 'b']", '[1, 2], extra: 3'])

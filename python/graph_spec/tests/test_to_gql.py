@@ -288,7 +288,7 @@ class ToGqlRefusesWhatTheReaderRefuses(unittest.TestCase):
                 lines("// graph: g", "(x:T {id:'y'}),", "(z:T {id:'y'})"),
             ),
         ]:
-            self.refused(block, "id 'y' is already a node", what)
+            self.refused(block, "id 'y' is already a thing", what)
 
     def test_a_node_written_where_it_cannot_be_found_is_said_not_hidden(self):
         # the parser read a node the text search cannot find: a fault here, never in the block

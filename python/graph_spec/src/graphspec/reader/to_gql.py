@@ -39,7 +39,7 @@ def _refuse_repeats(matches, paths):
                 raise ProfileError(
                     n["line"],
                     f"{n['var']} is written twice",
-                    "give each new node its own variable",
+                    "give each new thing its own variable",
                     code="GN307",
                 )
             bound.add(n["var"])
@@ -47,8 +47,8 @@ def _refuse_repeats(matches, paths):
             if given in ids:
                 raise ProfileError(
                     n["line"],
-                    f"id {given!r} is already a node",
-                    "an id names one node (§10) — MATCH it to add to it, or supersede it (§12)",
+                    f"id {given!r} is already a thing",
+                    "an id names one thing — MATCH it to add to it, or supersede it",
                     code="GN501",
                 )
             ids.add(given)
