@@ -5,7 +5,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { refusedChanges } from '../scripts/check-requirements-flips.mjs';
-import { REQUIREMENTS } from '../scripts/check-requirements.mjs';
+import { FORMER_REQUIREMENTS, REQUIREMENTS, requirementsGraph } from '../scripts/check-requirements.mjs';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -288,5 +288,52 @@ describe('a hand change to the requirements copy', () => {
       problems.map((p) => [p.kind, p.id]),
       [['flip-back', 'test_abuse']],
     );
+  });
+});
+
+describe('across the move from the graph file to the note', () => {
+  test('a base from before the move is read from the former graph file, so a flip back is still refused', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'flips-moved-'));
+    try {
+      const git = (...args) => {
+        const r = spawnSync('git', ['-C', dir, ...args], { encoding: 'utf8', timeout: 30_000 });
+        assert.equal(r.status, 0, r.stderr);
+        return r.stdout.trim();
+      };
+      const run = (...args) =>
+        spawnSync(process.execPath, [path('scripts/check-requirements-flips.mjs'), '--repo', dir, ...args], {
+          encoding: 'utf8',
+          timeout: 30_000,
+        });
+      const write = (rel, text) => {
+        mkdirSync(join(dir, 'requirements'), { recursive: true });
+        writeFileSync(join(dir, rel), text);
+      };
+      const commit = (message) => {
+        git('add', '-A');
+        git('-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '-m', message);
+      };
+      const graph = requirementsGraph(base());
+      const PARTIAL = "file: 'packages/core/test/abuse.test.js', where: 'repo', status: 'partial'";
+      const start = replaced(graph, PLANNED, PARTIAL);
+      git('init', '-q', '-b', 'main');
+      write(FORMER_REQUIREMENTS, start);
+      commit('the graph file');
+      const before = git('rev-parse', 'HEAD');
+      rmSync(join(dir, FORMER_REQUIREMENTS));
+      const note = (text) =>
+        `# Editor requirements\n\nThe one source.\n\n\`\`\`gql\n${text.replace(/\n$/, '')}\n\`\`\`\n`;
+      write(REQUIREMENTS, note(start));
+      commit('the note');
+      const same = run('--base-ref', before);
+      assert.equal(same.status, 0, same.stdout + same.stderr);
+      write(REQUIREMENTS, note(replaced(start, PARTIAL, PARTIAL.replace("'partial'", "'planned'"))));
+      commit('flip back');
+      const back = run('--base-ref', before);
+      assert.equal(back.status, 1, back.stdout + back.stderr);
+      assert.match(back.stdout, /test_abuse/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

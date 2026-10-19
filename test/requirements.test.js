@@ -11,7 +11,14 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { auditRequirements, BANNER, CURRENT_SLICE, REQUIREMENTS } from '../scripts/check-requirements.mjs';
+import {
+  auditRequirements,
+  BANNER,
+  CURRENT_SLICE,
+  FORMER_REQUIREMENTS,
+  REQUIREMENTS,
+  requirementsGraph,
+} from '../scripts/check-requirements.mjs';
 import { readBoard } from '../scripts/slice-board.mjs';
 import { exists, read, path } from './repository/repo.js';
 
@@ -24,10 +31,13 @@ const replaced = (text, from, to) => {
 const without = (text, line) => replaced(text, `${line}\n`, '');
 
 describe('the requirements copy', () => {
-  test('is the one source, at requirements/editor-requirements.gql, opening on its banner', () => {
-    assert.equal(REQUIREMENTS, 'requirements/editor-requirements.gql');
+  test('is the one source, a graph note at requirements/editor-requirements.md whose one block opens on its banner', () => {
+    assert.equal(REQUIREMENTS, 'requirements/editor-requirements.md');
     assert.ok(exists(REQUIREMENTS));
-    assert.deepEqual(real().split('\n').slice(0, 2), BANNER);
+    assert.match(real(), /^# /, 'a note, opening on its heading');
+    assert.deepEqual(requirementsGraph(real()).split('\n').slice(0, 2), BANNER);
+    assert.equal(FORMER_REQUIREMENTS, 'requirements/editor-requirements.gql');
+    assert.ok(!exists(FORMER_REQUIREMENTS), 'the graph file it replaced is gone, so there is one source');
     assert.match(BANNER[1], /the one source: edit it here/);
   });
 
