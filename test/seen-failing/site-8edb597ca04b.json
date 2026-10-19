@@ -1,0 +1,6 @@
+{
+  "file": "test/site.test.js",
+  "test": "a reader who is not a collaborator can find help > the settings keep Discussions open to anyone, so the link leads somewhere a stranger can post",
+  "seen_failing_first": false,
+  "evidence": "It pins settings that were already in place (Discussions on, and the lock workflow touching only pull requests), so the home page's new help link leads somewhere a stranger can post."
+}
