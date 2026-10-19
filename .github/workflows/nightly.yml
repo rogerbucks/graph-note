@@ -79,10 +79,13 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: git archive --format=tar.gz -o "graph-spec-libraries-$VERSION.tar.gz" --prefix=packages/graph-spec/src/ --add-file=packages/graph-spec/dist/graph-spec-check.js --prefix=packages/core/dist/ --add-file=packages/core/dist/layout-source-node.cjs --prefix= HEAD LICENSE THIRD_PARTY_NOTICES.md packages/graph-spec/package.json packages/graph-spec/src ':(exclude)packages/graph-spec/src/graph-spec-check.js' packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src
+      # The JavaScript library as two packages, at the nightly version the manifest now carries; never to npm (Q-02)
+      - name: Build the library's packages, the reader, checker and layout, and the core
+        run: node scripts/library-release.mjs --out .
       - name: Checksums for every asset
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" > SHA256SUMS
+        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" > SHA256SUMS
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nightly
@@ -92,6 +95,7 @@ jobs:
             styles.css
             THIRD_PARTY_NOTICES.md
             graph-spec-libraries-*.tar.gz
+            thoughtknot-*.tgz
             SHA256SUMS
           if-no-files-found: error
           retention-days: 1
@@ -116,6 +120,6 @@ jobs:
           [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::$SHA is not a commit"; exit 1; }
           cd nightly
           gh release delete "$VERSION" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes 2>/dev/null || true
-          gh release create "$VERSION" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" SHA256SUMS --repo "$GITHUB_REPOSITORY" --prerelease --target "$SHA" --title "Nightly $VERSION" --notes "A nightly build of main at $SHA. Every test passed on it, but it has not been through a stable release's checks. For the newest work only; most people should use the latest stable release."
+          gh release create "$VERSION" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" SHA256SUMS --repo "$GITHUB_REPOSITORY" --prerelease --target "$SHA" --title "Nightly $VERSION" --notes "A nightly build of main at $SHA. Every test passed on it, but it has not been through a stable release's checks. For the newest work only; most people should use the latest stable release."
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease,createdAt --jq '[.[] | select(.isPrerelease and (.tagName | test("-nightly\\.")))] | sort_by(.createdAt) | reverse | .[7:] | .[].tagName' |
             while read -r old; do gh release delete "$old" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes; done
