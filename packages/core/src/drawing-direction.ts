@@ -11,15 +11,33 @@ const NUMBER = '-?\\d+(?:\\.\\d+)?';
 const nums = (s: string) => (s.match(new RegExp(NUMBER, 'g')) ?? []).map(Number);
 const ANCHOR: Record<string, string> = { start: 'end', end: 'start' };
 
+// These read by position, not by a pattern. So a long or odd drawing never makes the reading slow.
+/** The text after `start` up to the next `end`, or '' when there is none. */
+function between(text: string, start: string, end: string): string {
+  const from = text.indexOf(start);
+  if (from < 0) return '';
+  const to = text.indexOf(end, from + start.length);
+  return to < 0 ? '' : text.slice(from + start.length, to);
+}
+
+/** The whole tag that holds `mark`, from its `<` to its `>`, or '' when there is none. */
+function tagAt(svg: string, mark: string): string {
+  const at = svg.indexOf(mark);
+  if (at < 0) return '';
+  const from = svg.lastIndexOf('<', at),
+    to = svg.indexOf('>', at);
+  return from < 0 || to < 0 ? '' : svg.slice(from, to + 1);
+}
+
 /**
  * `svg` as Graphviz drew it, mirrored side to side within its own box. Each point's distance from the left edge becomes
  * its distance from the right one. Mirrored twice, it is the drawing it was.
  */
 export function mirrored(svg: string): string {
   const [, , width = 0] = nums(/<svg\b[^>]*\bviewBox="([^"]*)"/.exec(svg)?.[1] ?? '');
-  const transform = /<g\b[^>]*class="graph"[^>]*\btransform="([^"]*)"/.exec(svg)?.[1] ?? '';
-  const [sx = 1] = nums(/scale\(([^)]*)\)/.exec(transform)?.[1] ?? '1');
-  const [tx = 0] = nums(/translate\(([^)]*)\)/.exec(transform)?.[1] ?? '0');
+  const transform = between(tagAt(svg, 'class="graph"'), 'transform="', '"');
+  const [sx = 1] = nums(between(transform, 'scale(', ')') || '1');
+  const [tx = 0] = nums(between(transform, 'translate(', ')') || '0');
   // the graph's own units run from -tx to width / sx - tx: a point x there goes to the same distance from the other end
   const across = width / (sx || 1) - 2 * tx;
   const flip = (x: number, size = 0) => fixed(across - x - size, 2);
