@@ -22,7 +22,7 @@ import { seedOf } from './build-status-seed.mjs';
 import { BOT_LOGIN } from './github-project-desired.mjs';
 import { SeedWarnings } from './github-project-plan.mjs';
 import { BudgetSpent } from './github-project-retry.mjs';
-import { CreatesCapped, CreatesUnlisted, MAX_CREATES } from './github-project-issues.mjs';
+import { CreatesUnlisted, MAX_CREATES, heldWarning } from './github-project-issues.mjs';
 
 const REPO = /^[\w.-]+\/[\w.-]+$/;
 const PROJECT_CALL = /projectv2|projectsv2/i;
@@ -123,17 +123,22 @@ export function runInWorkflow(options, env, io) {
         { desired, mode: 'apply', allowRemovals: false, acceptWarnings: false, project, seed, maxCreates: MAX_CREATES },
         { run, originRepo: env.GITHUB_REPOSITORY, write: print, creator: BOT_LOGIN, sleep, budget },
       );
+    // a run that left new issues for the next one says so, so a slow catch-up is never silent
+    const tell = (result) => {
+      const held = result?.held;
+      if (held) say('warning', `github-project: ${heldWarning(held)}`);
+    };
     if (!runners.project) {
       say('warning', `${describeProblem(null, '').text} The issues were mirrored without it.`);
-      apply(false);
+      tell(apply(false));
       return 0;
     }
     try {
-      apply(true);
+      tell(apply(true));
     } catch (e) {
       if (!e.projectToken || isRateLimited(e)) throw e;
       say('warning', `${projectProblem(e, env.PROJECT_TOKEN)} The issues are mirrored without it.`);
-      apply(false);
+      tell(apply(false));
     }
     return 0;
   } catch (e) {
@@ -145,7 +150,7 @@ export function runInWorkflow(options, env, io) {
       say('warning', `github-project: nothing was applied: ${e.message.replace(/; pass --accept-warnings.*$/, '')}`);
       return 0;
     }
-    const stop = e instanceof CreatesUnlisted || e instanceof CreatesCapped ? e.message : null;
+    const stop = e instanceof CreatesUnlisted ? e.message : null;
     if (stop || isRateLimited(e)) {
       say('warning', `github-project: ${stop ?? `rate limited; the next push continues (${wordsOf(e)})`}`);
       return 0;

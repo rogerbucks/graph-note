@@ -977,8 +977,8 @@ These test behaviour across modules, or the repository itself, so they are named
     duplicates", exit 0.
   - So a creator filter that ever failed could not make every push create the issues again.
 - **At most 20 new issues in a run.** A run of the workflow makes at most 20 issues on a board that has its issues
-  already. A first mirror makes them all. A plan with more is refused with a warning and nothing applied, for a person
-  to check, as the removal guard does. Anything else is an `::error::`.
+  already. A first mirror makes them all. With more, it makes the first 20 and warns how many it left. It still applies
+  everything else, so statuses keep moving. Each later push to main makes the next 20. Anything else is an `::error::`.
 - **It runs main's own code only.** Woken by a push to main alone, it checks out main, installs nothing and keeps no
   cache.
 - **One mirror runs at a time** (`concurrency: project-mirror`, `cancel-in-progress: false`). GitHub keeps one run
