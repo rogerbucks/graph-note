@@ -48,3 +48,28 @@ test('the contributing guide says pull requests are by invitation, and no doc in
     for (const file of ['README.md', 'CONTRIBUTING.md', 'wiki/Home.md', 'wiki/For-developers.md'])
       assert.doesNotMatch(read(file), /(anyone|everyone)[^.]*\bsend a pull request/i, file);
 });
+
+// The rules an AI session needs before a pull request (spec §13, agents_pr_rules). Each command rewrites a file that CI
+// checks, so a session that skips one fails CI.
+const REGENERATING = [
+  'node scripts/tests-first.mjs --update',
+  'node scripts/tests-first.mjs --excuse',
+  'node scripts/plain-docs.mjs',
+  'node scripts/public-api.mjs --update',
+  'node scripts/notices.mjs',
+  'node scripts/readme-status.mjs --write',
+  'node scripts/fixed-sleeps.mjs --tighten',
+];
+
+test('AGENTS.md lists the rules for a pull request: merge commits, the regenerating commands, sign-off and approval', () => {
+  const agents = read('AGENTS.md');
+  const at = agents.indexOf('\n## Before you open a pull request\n');
+  assert.ok(at !== -1, 'AGENTS.md has a "Before you open a pull request" section');
+  const list = agents.slice(at, agents.indexOf('\n## ', at + 1));
+  assert.match(list, /merge commit/i);
+  assert.match(list, /never squash/i);
+  assert.match(list, /git commit -s/);
+  assert.match(list, /all good/);
+  assert.match(list, /auto-merge/);
+  for (const command of REGENERATING) assert.ok(list.includes(command), `names ${command}`);
+});

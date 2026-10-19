@@ -23,6 +23,20 @@ in `python/graph_spec` also `uv run --locked ruff check`, `ruff format --check` 
 
 On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`. Not the whole run.
 
+## Before you open a pull request
+
+- **Merge commits only.** Never squash or rebase: the tests-first records name the branch's own commits.
+- **Sign off every commit** with `git commit -s`. CONTRIBUTING.md, "Signing off your work", says whose name goes on it.
+- **Changed a test?** Run `node scripts/tests-first.mjs --update` and commit the record. A test that passed before its
+  code needs its reason kept: `node scripts/tests-first.mjs --excuse`.
+- **Changed a doc or comment?** `node scripts/plain-docs.mjs` lists what to fix. A file may never get worse.
+- **Changed what a package exports?** `node scripts/public-api.mjs --update`.
+- **Changed a dependency?** `node scripts/notices.mjs` rewrites the notices.
+- **Finished a slice?** `node scripts/readme-status.mjs --write` updates the README's status line.
+- **Removed a fixed sleep from a test?** `node scripts/fixed-sleeps.mjs --tighten` lowers the allowance.
+- **Approval.** Roger is the only maintainer, and GitHub won't let him approve his own pull request. His comment, such
+  as "all good", is the approval. Only then turn on auto-merge, with a merge commit. Never before.
+
 ## Guards
 
 A guard or hook that refuses a command means stop and ask the owner. Never reach the same result by another tool,
