@@ -30,15 +30,23 @@ The release and its dry run run `node scripts/risk-register.mjs --release`. It s
 
 - a risk marked **fix now** is still open;
 - a **fix later** risk is open past the end of its wave in `requirements/waves.json`;
-- an open risk's files changed since it was last looked at (it is **stale**).
+- an open risk's files changed (it is **stale**) and no one has looked at it for 30 days;
+- the version starts a new line (0.7 to 0.8) and the full panel has not looked since the last one.
 
-A stale risk is cleared by looking again. Then run `node scripts/risk-register.mjs --reviewed ID`, which stamps today
-and the commit. A fixed risk gets `status: done` and its pull request in `done_in`. A new decision is a pull request
-that edits the register and runs `--write-report`; `test/risk-register.test.js` holds the page to the register.
+A stale risk younger than 30 days is a warning in the log, with the day it starts to block. It is cleared by looking
+again. Then run `node scripts/risk-register.mjs --reviewed ID`, which stamps today and the commit. A fixed risk gets
+`status: done` and its pull request in `done_in`. A new decision is a pull request that edits the register and runs
+`--write-report`; `test/risk-register.test.js` holds the page to the register.
 
-The panel itself runs by hand: the **Risk panel** workflow (`risk-panel.yml`). It reads only what moved since the last
-stable tag, spends a Claude session only when something did, and writes one issue labelled `risk-panel`. The owner
-turns the issue into register entries. Run it before a stable release, after the dry run; the nightly never needs it.
+### When the panel runs
+
+- **Before every stable release**, after the dry run: the **Risk panel** workflow (`risk-panel.yml`), by hand. It reads
+  only what moved since the last stable tag, spends a Claude session only when something did, and writes one issue
+  labelled `risk-panel`. The owner turns the issue into register entries. The nightly never needs it.
+- **Before a release that starts a new version line** (0.8.0, 0.9.0, 1.0.0): the same workflow with "every role" on.
+  All nine roles then read the whole project. Decide its findings, then run `node scripts/risk-register.mjs --full-panel`,
+  which records the date, commit and version. Until then the release fails.
+- **Never on a schedule**: a timer would spend a Claude session on days nothing moved.
 
 ## Accessibility walk-through, every release
 

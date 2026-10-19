@@ -1,5 +1,24 @@
 {
   "about": "The register of known risks (spec §50, risk_register): what the expert panel found on 19 Oct 2026, and the owner's decision on each. The release waits on it: scripts/risk-register.mjs --release fails on an open fix-now risk, an overdue fix-later one, or one whose files moved since it was reviewed. RELEASING.md, \"Known risks\", says how a risk is cleared.",
+  "panel": {
+    "about": "The last time every role looked at the whole project. A release that starts a new version line (0.7 to 0.8) waits for a new one.",
+    "last_full": {
+      "date": "2026-10-19",
+      "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd",
+      "version": "0.7.1",
+      "roles": [
+        "Senior security engineer",
+        "IT administrator and release / DevOps engineer",
+        "Senior coder and QA / test engineer",
+        "Enterprise, solution and data architect",
+        "User experience and accessibility lead",
+        "Senior UI designer: neurodiversity and data management",
+        "Workflow designer and open-source maintainer",
+        "API design expert",
+        "AI product expert"
+      ]
+    }
+  },
   "risks": [
     {
       "id": "SEC-1",

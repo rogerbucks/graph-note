@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 // The register of known risks (spec §50, risk_register). quality/risks.json holds each risk an expert panel raised,
 // with the owner's decision: fix now, fix later in a named wave, or accept. The release waits on it. Nothing ships
-// with a risk no one has decided on, an overdue one, or one whose code moved since it was last looked at.
+// with a risk no one has decided on, or an overdue one. Nor with one whose code moved and that no one has looked at
+// for STALE_DAYS. One that moved more recently is named as a warning, so the look happens before it blocks.
 //
 // Usage:
 //   node scripts/risk-register.mjs --check             the register is well formed (CI, through its test).
 //   node scripts/risk-register.mjs --release           the release may go: no open fix-now risk, none overdue, none
-//                                                      stale. Exits 1 and names each one that stops it.
+//                                                      long stale. Exits 1 and names each one that stops it.
 //   node scripts/risk-register.mjs --stale [--json]    the risks whose paths changed since they were last reviewed.
 //                                                      Also the roles whose areas changed since the last stable tag.
 //   node scripts/risk-register.mjs --reviewed ID...    stamp these risks as reviewed at HEAD, today.
+//   node scripts/risk-register.mjs --full-panel        record that every role looked at the whole project, at HEAD,
+//                                                      today, for the version in manifest.json.
 //   node scripts/risk-register.mjs --write-report      write RISKS.md from the register; --report prints it.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -20,6 +23,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const REGISTER = 'quality/risks.json';
 export const REPORT = 'RISKS.md';
 const WAVES = 'requirements/waves.json';
+const MANIFEST = 'manifest.json';
 
 /** The values each field of a risk may take. */
 export const CHOICES = {
@@ -48,6 +52,8 @@ export const FIELDS = [
   'reviewed',
   'status',
 ];
+/** How long an open risk may stay unlooked at after its files moved, before it stops a release. */
+export const STALE_DAYS = 30;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const SHA = /^[0-9a-f]{7,40}$/;
 
@@ -78,6 +84,9 @@ export function registerProblems(register, waves = readJSON(WAVES)) {
   const found = [];
   const risks = register?.risks;
   if (!Array.isArray(risks)) return [`${REGISTER}: "risks" must be an array`];
+  const full = register.panel?.last_full;
+  if (!DATE.test(full?.date ?? '') || !SHA.test(full?.commit ?? '') || !/^\d+\.\d+\.\d+$/.test(full?.version ?? ''))
+    found.push(`${REGISTER}: panel.last_full must hold the date, commit and version of the last full panel`);
   const seen = new Set();
   const waveTitles = new Set((waves.waves ?? []).map((w) => w.title));
   for (const r of risks) {
@@ -147,23 +156,51 @@ export function rolesTouched(register, ref, changed = changedSince) {
   return roles;
 }
 
-/** What stops a release, if anything: open fix-now risks, overdue fix-later ones, and stale ones. */
-export function releaseProblems(register, { waves = readJSON(WAVES), date = today(), changed = changedSince } = {}) {
+/** The part of a version a new release of which is a major step before 1.0: its first two numbers. */
+const line = (version) => String(version).split('.').slice(0, 2).join('.');
+
+/** True when `version` starts a new minor line since `since`, which pre-1.0 is a major step (public-api.mjs). */
+export const newLine = (version, since) => line(version) !== line(since);
+
+/** The day `days` after a YYYY-MM-DD date, as YYYY-MM-DD. */
+const daysAfter = (date, days) =>
+  new Date(Date.parse(`${date}T00:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
+
+/**
+ * What stops a release, if anything. That is an open fix-now risk, an overdue fix-later one, a long stale one, or a
+ * new version line the full panel has not looked at. Returns { problems, warnings }. A fresher stale risk warns.
+ */
+export function releaseProblems(
+  register,
+  { waves = readJSON(WAVES), date = today(), changed = changedSince, version = readJSON(MANIFEST).version } = {},
+) {
   const found = registerProblems(register, waves);
+  const warnings = [];
+  const full = register.panel?.last_full;
+  if (full && newLine(version, full.version))
+    found.push(
+      `${version} starts a new line since ${full.version}, which the full panel last looked at on ${full.date}. ` +
+        'Run the Risk panel workflow with every role, decide its findings, then: node scripts/risk-register.mjs --full-panel',
+    );
   for (const r of register.risks.filter((x) => x.status === 'open')) {
     if (r.decision === 'fix-now') found.push(`${r.id}: fix now, still open: ${r.title}`);
     const due = r.decision === 'fix-later' ? dueDate(r, waves) : null;
     if (due && due < date) found.push(`${r.id}: due by ${due} (${r.wave}), still open: ${r.title}`);
   }
-  for (const { risk, files } of staleRisks(register, changed))
-    found.push(
-      files === null
-        ? `${risk.id}: reviewed at ${risk.reviewed.commit}, which this history does not hold`
-        : `${risk.id}: stale, its code moved since ${risk.reviewed.date}: ${files.slice(0, 5).join(', ')}` +
-            (files.length > 5 ? ` and ${files.length - 5} more` : '') +
-            `. Look again, then: node scripts/risk-register.mjs --reviewed ${risk.id}`,
-    );
-  return found;
+  for (const { risk, files } of staleRisks(register, changed)) {
+    if (files === null) {
+      found.push(`${risk.id}: reviewed at ${risk.reviewed.commit}, which this history does not hold`);
+      continue;
+    }
+    const by = daysAfter(risk.reviewed.date, STALE_DAYS);
+    const line =
+      `${risk.id}: stale, its code moved since ${risk.reviewed.date}: ${files.slice(0, 5).join(', ')}` +
+      (files.length > 5 ? ` and ${files.length - 5} more` : '') +
+      `. Look again, then: node scripts/risk-register.mjs --reviewed ${risk.id}`;
+    if (by < date) found.push(`${line} (unlooked at since ${by})`);
+    else warnings.push(`${line} (stops the release from ${by})`);
+  }
+  return { problems: found, warnings };
 }
 
 /** The last stable tag, or the first commit when there is none. */
@@ -233,6 +270,18 @@ export function stampReviewed(ids, { date = today(), commit = git('rev-parse', '
   return register;
 }
 
+/** Record that every role looked at the whole project at HEAD, today, for the version in manifest.json. */
+export function stampFullPanel({
+  date = today(),
+  commit = git('rev-parse', 'HEAD'),
+  version = readJSON(MANIFEST).version,
+} = {}) {
+  const register = readRegister();
+  register.panel = { ...register.panel, last_full: { date, commit, version } };
+  writeFileSync(join(ROOT, REGISTER), `${JSON.stringify(register, null, 2)}\n`);
+  return register;
+}
+
 function main(args) {
   const flag = (f) => args.includes(f);
   const register = readRegister();
@@ -242,7 +291,8 @@ function main(args) {
     return problems.length ? 1 : 0;
   }
   if (flag('--release')) {
-    const problems = releaseProblems(register);
+    const { problems, warnings } = releaseProblems(register);
+    for (const w of warnings) console.error(`warning: ${w}`);
     for (const p of problems) console.error(p);
     console.log(
       problems.length ? `${problems.length} risk(s) stop the release` : 'the risk register lets the release go',
@@ -268,6 +318,11 @@ function main(args) {
     const ids = args.slice(args.indexOf('--reviewed') + 1).filter((a) => !a.startsWith('--'));
     stampReviewed(ids);
     console.log(`reviewed today: ${ids.join(', ')}`);
+    return 0;
+  }
+  if (flag('--full-panel')) {
+    const { panel } = stampFullPanel();
+    console.log(`full panel recorded: ${panel.last_full.version} at ${panel.last_full.commit.slice(0, 7)}`);
     return 0;
   }
   if (flag('--report') || flag('--write-report')) {

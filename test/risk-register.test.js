@@ -8,7 +8,9 @@ import {
   CHOICES,
   REGISTER,
   REPORT,
+  STALE_DAYS,
   globToRegExp,
+  newLine,
   readRegister,
   registerProblems,
   releaseProblems,
@@ -41,7 +43,11 @@ const risk = (over = {}) => ({
   status: 'open',
   ...over,
 });
-const register = (...risks) => ({ about: 'test', risks });
+const register = (...risks) => ({
+  about: 'test',
+  panel: { last_full: { date: '2026-10-19', commit: 'abcdef1', version: '0.7.1' } },
+  risks,
+});
 const unchanged = () => [];
 const moved = () => ['packages/claude-code/server/editor-server.ts', 'README.md'];
 
@@ -76,29 +82,57 @@ describe('the shape of a risk', () => {
 });
 
 describe('what stops a release', () => {
-  const options = (changed, date = '2026-10-20') => ({ waves: WAVES, date, changed });
+  const options = (changed, date = '2026-10-20', version = '0.7.2') => ({ waves: WAVES, date, changed, version });
+  const problems = (...a) => releaseProblems(...a).problems;
+  const warnings = (...a) => releaseProblems(...a).warnings;
 
   test('an open fix-now risk', () => {
-    assert.match(releaseProblems(register(risk()), options(unchanged))[0], /SEC-1: fix now, still open/);
+    assert.match(problems(register(risk()), options(unchanged))[0], /SEC-1: fix now, still open/);
   });
 
   test('a fix-later risk past the end of its wave, and not one before it', () => {
     const later = risk({ decision: 'fix-later', wave: WAVES.waves[0].title });
-    assert.deepEqual(releaseProblems(register(later), options(unchanged, '2026-11-26')), []);
-    assert.match(releaseProblems(register(later), options(unchanged, '2026-11-27'))[0], /due by 2026-11-26/);
+    assert.deepEqual(problems(register(later), options(unchanged, '2026-11-26')), []);
+    assert.match(problems(register(later), options(unchanged, '2026-11-27'))[0], /due by 2026-11-26/);
   });
 
-  test('a risk whose paths moved since it was reviewed, naming the files and the command that clears it', () => {
+  test('a risk whose paths moved since it was reviewed warns, naming the files and the command that clears it', () => {
     const later = risk({ decision: 'fix-later', wave: WAVES.waves[0].title });
-    const [problem] = releaseProblems(register(later), options(moved));
-    assert.match(problem, /SEC-1: stale.*editor-server\.ts/);
-    assert.doesNotMatch(problem, /README/);
-    assert.match(problem, /--reviewed SEC-1/);
+    assert.deepEqual(problems(register(later), options(moved)), []);
+    const [warning] = warnings(register(later), options(moved));
+    assert.match(warning, /SEC-1: stale.*editor-server\.ts/);
+    assert.doesNotMatch(warning, /README/);
+    assert.match(warning, /--reviewed SEC-1/);
+    assert.match(warning, /stops the release from 2026-11-18/);
+  });
+
+  test(`a risk stale for more than ${STALE_DAYS} days stops the release`, () => {
+    const later = risk({ decision: 'fix-later', wave: WAVES.waves[0].title });
+    assert.deepEqual(problems(register(later), options(moved, '2026-11-18')), []);
+    assert.match(
+      problems(register(later), options(moved, '2026-11-19'))[0],
+      /SEC-1: stale.*unlooked at since 2026-11-18/,
+    );
+  });
+
+  test('a version that starts a new line since the full panel last looked, and not a patch', () => {
+    const later = risk({ decision: 'fix-later', wave: WAVES.waves[0].title });
+    assert.deepEqual(problems(register(later), options(unchanged, '2026-10-20', '0.7.9')), []);
+    assert.match(
+      problems(register(later), options(unchanged, '2026-10-20', '0.8.0'))[0],
+      /0\.8\.0 starts a new line since 0\.7\.1.*--full-panel/,
+    );
+    assert.ok(newLine('1.0.0', '0.9.9') && !newLine('0.7.1', '0.7.0'));
+  });
+
+  test('a register with no record of a full panel is refused', () => {
+    const { panel: _p, ...bare } = register(risk());
+    assert.match(registerProblems(bare, WAVES)[0], /panel\.last_full/);
   });
 
   test('a reviewed commit the history does not hold', () => {
     assert.match(
-      releaseProblems(
+      problems(
         register(risk({ decision: 'fix-later', wave: WAVES.waves[0].title })),
         options(() => null),
       )[0],
@@ -115,7 +149,7 @@ describe('what stops a release', () => {
       accepted_by: 'Roger',
       accepted_reason: 'local only',
     });
-    assert.deepEqual(releaseProblems(register(done, accepted), options(moved)), []);
+    assert.deepEqual(problems(register(done, accepted), options(moved)), []);
   });
 });
 
