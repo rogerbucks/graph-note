@@ -363,6 +363,8 @@ These test behaviour across modules, or the repository itself, so they are named
   as the session's.
 - `packages/graph-spec/test/limits.test.mjs` — the reader, the check and a join stop at stated limits. Each limit is on
   size, nesting or join size, with a clear refusal (editor spec §51, spec_read_limits; GS4; `limit-cases.json`).
+- `packages/graph-spec/test/guards.test.mjs` — a guard is read in the guard language, `requirements/guard-language.md`,
+  and anything else is refused (editor spec §51, spec_guard_language; GS4; `guard-cases.json`).
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way, and write it into the same corrected text.
 - `packages/graph-spec/test/escapes.test.mjs` — both readers read quoted text's escapes as GQL does. They refuse one GQL
   does not name, with the fix that doubles the backslash, and quote a text alike (req:3.gql-escapes; one table,
@@ -396,6 +398,8 @@ These test behaviour across modules, or the repository itself, so they are named
   So no id reaches it twice in a graph (req:3.engine-reads-first, req:3.id-once).
 - `python/graph_spec/tests/test_ids_engine.py` — every route to the engine refuses a SET of a node's id. It also
   refuses a node id that is not text, read by the reader first (req:3.set-keeps-id, req:3.id-is-text).
+- `python/graph_spec/tests/test_guard_language.py` — every Python reader of a guard answers `guard-cases.json` as the
+  JavaScript one does (editor spec §51, spec_guard_language).
 - `python/graph_spec/tests/test_limits.py` — the Python library stops at the limits of `limit-cases.json`, as the
   JavaScript one does (editor spec §51, spec_read_limits).
 - `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
