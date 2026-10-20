@@ -3,10 +3,11 @@
 // - it is given only the extension points its manifest names;
 // - a plug-in refused leaves nothing behind;
 // - an export that throws or gives no text is caught and named, never let through;
-// - a call that runs too long is named, its answer dropped and its plug-in stopped.
+// - a call that runs too long is named, its answer dropped and its plug-in stopped;
+// - it is given only the host abilities its manifest names, and one the host does not offer is refused.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { PLUGIN_API, PLUGIN_TIME_LIMIT, pluginRegistry } from '../src/plugins.ts';
+import { HOST_ABILITIES, PLUGIN_API, PLUGIN_TIME_LIMIT, pluginRegistry } from '../src/plugins.ts';
 import { memoryStorage } from '../src/note-storage.ts';
 
 const exporter = (format, write = () => 'ok') => ({
@@ -203,5 +204,69 @@ describe('a plug-in’s manifest and limits', () => {
     registry.register(plugin({ register: (p) => p.exports.add(exporter('quick', () => ((clock += 50), 'on time'))) }));
     assert.deepEqual(registry.writeData('quick', DATA, INFO), { ok: true, value: 'on time' });
     assert.deepEqual(registry.stopped(), []);
+  });
+
+  test('the host abilities are a notice, the plug-in’s own settings, the secrets and the notes', () => {
+    assert.deepEqual(HOST_ABILITIES, ['notice', 'settings', 'secrets', 'files']);
+  });
+
+  test('a plug-in is given only the host abilities its manifest names, with settings kept for it alone', () => {
+    const files = memoryStorage();
+    const kept = {};
+    const host = {
+      notice: () => {},
+      settingsFor: (id) => ({ load: async () => kept[id], save: async (v) => void (kept[id] = v) }),
+      secrets: { get: () => 'shh' },
+      files,
+    };
+    let given;
+    const registry = pluginRegistry({ host });
+    registry.register(plugin({ uses: [], abilities: ['settings', 'files'], register: (p) => (given = p) }));
+    assert.deepEqual(Object.keys(given.host).sort(), ['files', 'settings']);
+    assert.equal(given.host.files, files);
+    assert.equal(given.host.secrets, undefined, 'no secret it did not ask for');
+    assert.ok(Object.isFrozen(given.host));
+    return given.host.settings.save({ on: true }).then(() => assert.deepEqual(kept, { 'acme.one': { on: true } }));
+  });
+
+  test('a plug-in that names no host ability is given none', () => {
+    let given;
+    pluginRegistry({ host: { notice: () => {} } }).register(plugin({ uses: [], register: (p) => (given = p) }));
+    assert.equal(given.host, undefined);
+  });
+
+  for (const [what, abilities, why] of [
+    ['an ability that does not exist', ['camera'], /host abilities that do not exist: camera/],
+    ['an ability the host does not offer', ['notice', 'secrets'], /this host does not offer: secrets/],
+  ])
+    test(`a manifest naming ${what} is refused, and nothing is installed`, () => {
+      const registry = pluginRegistry({ host: { notice: () => {} } });
+      assert.throws(() => registry.register(plugin({ abilities })), why);
+      assert.deepEqual(registry.plugins(), []);
+    });
+
+  test('a panel that is badly named, untitled or draws nothing is refused, and one that throws is named', () => {
+    const render = () => {};
+    for (const [panel, why] of [
+      [{ id: 'other.list', title: 'L', render }, /the panel "other.list" is not named acme\.one\.<word>/],
+      [{ id: 'acme.one.list', title: ' ', render }, /the panel "acme.one.list" has no title/],
+      [{ id: 'acme.one.list', title: 'L' }, /the panel "acme.one.list" draws nothing/],
+    ])
+      assert.throws(
+        () => pluginRegistry().register(plugin({ uses: ['panels'], register: (p) => p.panels.add(panel) })),
+        why,
+      );
+    const registry = pluginRegistry();
+    const boom = () => {
+      throw new Error('no room');
+    };
+    registry.register(
+      plugin({ uses: ['panels'], register: (p) => p.panels.add({ id: 'acme.one.list', title: 'List', render: boom }) }),
+    );
+    assert.deepEqual(registry.showPanel('acme.one.list', { dir: 'rtl' }), {
+      ok: false,
+      plugin: 'acme.one',
+      message: 'The panel List of acme.one failed: no room',
+    });
   });
 });

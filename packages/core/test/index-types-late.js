@@ -3,6 +3,7 @@
 export const TYPES_LATE = [
   'Palette',
   'PaneWrite',
+  'PanelRoot',
   'Park',
   'Parked',
   'ParkedCount',
@@ -20,6 +21,7 @@ export const TYPES_LATE = [
   'PlacedLink',
   'PluginCheck',
   'PluginCommand',
+  'PluginPanel',
   'PluginRegistry',
   'PluginResult',
   'PluralWords',

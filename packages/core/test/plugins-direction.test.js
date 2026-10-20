@@ -1,6 +1,7 @@
 // Every plug-in works in a right-to-left language (editor spec §43, plugin_rtl). The words it adds, the titles of its
-// exports, storage and commands, force no direction of their own. So each reads in the host's direction, and a host
-// shows each isolated, so a name keeps its own direction beside it. Each point's contract suite checks it, and the
+// exports, storage, commands and panels, force no direction of their own. So each reads in the host's direction, and a
+// host shows each isolated, so a name keeps its own direction beside it. A panel drawn right to left keeps that
+// direction, forces none but auto, and styles with logical sides only. Each point's contract suite checks it, and the
 // built-ins pass.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,6 +9,12 @@ import { commandContract, exporterContract, storageBackendContract } from '../sr
 import { pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS } from '../src/export-data.ts';
 import { CORE_STORAGE, memoryStorage } from '../src/note-storage.ts';
+import { JSDOM } from 'jsdom';
+import { panelContract } from '../src/display/panel-contract.ts';
+
+const DOC = new JSDOM('<!doctype html><body></body>').window.document;
+/** A new, empty element in the page, as a host makes one for a panel. */
+const PLACE = () => DOC.body.appendChild(DOC.createElement('div'));
 
 const CHECK = 'its title reads in the host’s direction, forcing none of its own';
 
@@ -28,7 +35,22 @@ const POINTS = {
   export: (title) => exporterContract({ format: 'x', title, extension: 'txt', mime: 'text/plain', write: () => '' }),
   storage: (title) => storageBackendContract({ name: 'x', title, open: () => memoryStorage() }),
   command: (title) => commandContract({ id: 'acme.x.go', title, run: () => {} }, 'acme.x'),
+  panel: (title) => panelContract({ id: 'acme.x.list', title, render: () => {} }, 'acme.x', PLACE),
 };
+
+/** The names of the checks the panel drawn by `render` fails. */
+const panelFails = (render) =>
+  panelContract({ id: 'acme.x.list', title: 'قائمة', render }, 'acme.x', PLACE).flatMap((c) => {
+    try {
+      c.run();
+      return [];
+    } catch {
+      return [c.name];
+    }
+  });
+
+/** A panel's render that draws `html` into its element. */
+const drawing = (html) => (el) => (el.innerHTML = html);
 
 /** A mark of each kind that forces a direction. */
 const FORCING = {
@@ -59,4 +81,30 @@ describe('a plug-in in a right-to-left language', () => {
     for (const e of registry.exporters()) assert.equal(await direction(exporterContract(e)), undefined, e.title);
     for (const b of registry.storages()) assert.equal(await direction(storageBackendContract(b)), undefined, b.title);
   });
+
+  test('a panel drawn right to left, with a name kept in its own direction and logical sides, passes', () => {
+    const html =
+      '<h3>الوسوم</h3><ul><li><bdi dir="auto">Ada Lovelace</bdi></li></ul>' +
+      '<p style="margin-inline-start: 4px; padding-inline-end: 2px; text-align: start">٣ وسوم</p>';
+    assert.deepEqual(panelFails(drawing(html)), []);
+  });
+
+  for (const [what, render, check] of [
+    ['forces left to right on what it draws', drawing('<p dir="ltr">Tags</p>'), 'it forces no direction'],
+    ['forces right to left on what it draws', drawing('<p dir="RTL">Tags</p>'), 'it forces no direction'],
+    ['changes the direction of the element it is given', (el) => (el.dir = 'ltr'), 'it draws into the element'],
+    ['styles with a left margin', drawing('<p style="margin-left: 4px">x</p>'), 'its styles use logical sides'],
+    [
+      'places a box by its right side',
+      drawing('<p style="position: absolute; right: 0">x</p>'),
+      'its styles use logical',
+    ],
+    ['floats to the left', drawing('<p style="float: left">x</p>'), 'its styles use logical sides'],
+    ['aligns its text to the right', drawing('<p style="text-align:right">x</p>'), 'its styles use logical sides'],
+  ])
+    test(`a panel that ${what} fails the check that holds it`, () => {
+      const failed = panelFails(render);
+      assert.equal(failed.length, 1, failed.join('\n'));
+      assert.ok(failed[0].startsWith(check), failed[0]);
+    });
 });

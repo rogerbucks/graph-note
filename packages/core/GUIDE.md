@@ -924,8 +924,12 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - Its third, `storage`, adds a place notes are kept (`StorageBackend`), opened by `openStorage`. The core's own,
     `CORE_STORAGE` in note-storage.ts, keeps notes in memory.
   - Its fourth, `commands`, adds a command (`PluginCommand`), named under the plug-in's id and run by `runCommand`.
+  - Its fifth, `panels`, adds a panel (`PluginPanel`), drawn by `showPanel` into an element the host gives.
+  - A manifest also names the host's abilities it uses (`HOST_ABILITIES`): a notice, its own settings, the secrets and
+    the notes. It is given those alone, as `points.host`. One the host does not offer (`HostOffer`) is refused.
   - A call that runs longer than `PLUGIN_TIME_LIMIT` is named and its answer dropped. Its plug-in is then stopped, and
     `stopped()` lists it. A host may set its own limit and clock (`RegistryOptions`).
+- `plugin-points.ts` — what a plug-in adds through each point, the host's abilities, and why each is refused.
 - `plugins-contract.ts` — the contract suite of each extension point (plugin_contract_suites).
   - `exporterContract`: the checks a data export is held to on `sampleExports`, which the built-ins pass.
   - `themeTokenContract`: those a theme token is held to: its name, its colours and its contrast in each theme.
@@ -1290,7 +1294,7 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
 - It is DOM code, so it has a `tsconfig.json` of its own with the DOM library (`tsc -p packages/core/src/display`). The
   core's own type check leaves it out.
 - It is bundled, never run by Node on its own, so it is not held to erasable TypeScript. `host.ts`, `host-contract.ts`,
-  `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them directly.
+  `panel-contract.ts`, `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them directly.
 - It imports no host. `test/imports.test.js` holds it to the layer, the core by its name and the graph library.
 - The host's part comes in through `host.ts`.
 
@@ -1303,6 +1307,9 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
     text before the parser sees it. It sets the same declarations through the CSSOM, which the policy allows.
   - `installHost` is called once before anything is drawn.
   - `displayHost` is for the layer's own use. It throws `NO_HOST` rather than draw a blank.
+- `panel-contract.ts` — `panelContract`, the checks a plug-in's panel is held to (plugin_contract_suites, plugin_rtl).
+  - It draws the panel into an element set to read right to left, in a page, as a host would.
+  - The panel must keep that direction, force none but `auto`, and style with logical sides only.
 - `host-contract.ts` — `hostContract`, the one contract every host's adapter is held to (editor spec §43,
   hosts_pass_contract).
   - Its checks use no test framework, each throwing with what was wanted.
