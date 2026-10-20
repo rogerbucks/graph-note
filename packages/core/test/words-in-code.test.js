@@ -1,5 +1,5 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). The
-// areas are the display layer and parts of the Obsidian host; each is added as its words move. Each word comes from
+// areas are the display layer and the Obsidian host; each is added as its words move. Each word comes from
 // the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
@@ -15,18 +15,7 @@ const ROOT = new URL('../../../', import.meta.url);
 const AREAS = [
   'packages/core/src/display/',
   'packages/core/src/export-write.ts',
-  'packages/obsidian/src/export/',
-  'packages/obsidian/src/images/',
-  'packages/obsidian/src/links/',
-  'packages/obsidian/src/proposals/',
-  'packages/obsidian/src/sources/',
-  'packages/obsidian/src/block.ts',
-  'packages/obsidian/src/view-block.ts',
-  'packages/obsidian/src/reading-view.ts',
-  'packages/obsidian/src/inline-editors.ts',
-  'packages/obsidian/src/step-block.ts',
-  'packages/obsidian/src/schema-block.ts',
-  'packages/obsidian/src/live-preview.ts',
+  'packages/obsidian/src/',
 ];
 
 /** The files of the areas, as paths from the repository's root. */
