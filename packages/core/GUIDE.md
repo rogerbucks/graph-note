@@ -335,6 +335,8 @@ own handlers. Nothing here reaches the network.
 
 - `link-markdown.ts` — `safeMarkdown`: what a host renders for a thing's details.
   - An image from outside the vault, Markdown or HTML, is made a link showing its address (nothing remote loaded).
+  - `remoteImagesIn` lists those images from the web, each once. `embeddedRemoteImages` lists an embedded note's. A
+    host puts a Load image button by each, and loads one only when it is pressed (remote_images_asked).
   - A Markdown link or reference definition the user may not open is escaped to text. Its address goes on its own line
     or the next.
   - Other raw HTML is escaped, inside maths too.
@@ -632,8 +634,9 @@ own image decoding. The core says what it is and what it may do. No library deco
 - `image-links.ts` — where an image comes from.
   - `imageLink` reads a value as a link (`[[cat.gif]]`, `![[cat.gif|200]]`). Or it reads a path from the vault's root to
     a file of an image type (`IMAGE_EXTENSIONS`).
-  - An address outside the vault (`https:`, `data:`, `//`) is never loaded. Remote images are a later slice
-    (remote_images_asked).
+  - An address outside the vault (`https:`, `data:`, `//`) is never loaded as a thing's image.
+  - In the details, an image from the web is a link. The host offers to load it when asked (remote_images_asked,
+    `remoteImagesIn`).
   - A place that could leave the vault is refused, as a source's is (`sources.ts`, `outsideVault`). A link's target is
     refused as a path's is.
   - `imagesOf` lists a thing's images. `neverMoves` knows a JPEG by its name, for an image too large to read.

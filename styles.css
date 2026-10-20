@@ -1892,6 +1892,14 @@ pre.thoughtknot-code {
 .thoughtknot-link-refused {
   color: var(--gn-text-muted);
 }
+/* An image from outside the vault: its link, then a Load image button, then the image once asked for. */
+.thoughtknot-load-image {
+  margin-inline-start: var(--gn-space-1);
+}
+.thoughtknot-remote-image img {
+  display: block;
+  max-width: 100%;
+}
 .thoughtknot-text-link {
   text-decoration: underline;
 }

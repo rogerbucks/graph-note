@@ -350,6 +350,9 @@ These test behaviour across modules, or the repository itself, so they are named
   and in the pane. It shows the graph's summary while nothing is chosen. It sits beside the drawing, and below it where
   the card is narrow (editor spec §24, details_always_visible, details_narrow).
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
+- `packages/obsidian/test/remote-images.test.js` — an image from outside the vault, in a thing's details or a note
+  embedded there, is a link with a Load image button. Only pressing it loads that image (editor spec §18,
+  remote_images_asked).
 - `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.
 - `packages/obsidian/test/views-many.test.js` — several views of one graph, in one note or in several. Each is drawn
   from the one data set where it is written, and none copies it. A view of a graph written in another note says which

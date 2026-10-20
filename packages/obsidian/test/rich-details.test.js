@@ -2,7 +2,7 @@
 // Markdown. Obsidian renders it with its own MarkdownRenderer, never HTML the plugin writes. Some things show a note,
 // rendered, and open it. They are a thing whose id is a global note id (`note:Trip plan`, graph spec §10), or a link to a
 // note. Nothing remote is loaded, from the details or from a note embedded in them. An image from outside the vault is
-// shown as a link only (§13, offline_and_mobile_apis). Asking to load one is remote_images_asked, slice 5.
+// shown as a link only (§13, offline_and_mobile_apis). Asking to load one is remote_images_asked (remote-images.test.js).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until } from './host/load-plugin.js';

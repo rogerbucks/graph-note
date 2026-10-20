@@ -5,7 +5,13 @@
 // nothing reaches the network (§13).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { embedParts, embeddedMarkdown, safeMarkdown } from '../src/link-markdown.ts';
+import {
+  embedParts,
+  embeddedMarkdown,
+  embeddedRemoteImages,
+  remoteImagesIn,
+  safeMarkdown,
+} from '../src/link-markdown.ts';
 
 describe('raw HTML never reaches the renderer', () => {
   test('inside maths, as anywhere: an image is a link to it, any other tag text', () => {
@@ -44,6 +50,22 @@ describe('a remote image is a link that shows where it is', () => {
   test('an image with no words is a link showing its address, never an empty one', () => {
     assert.equal(safeMarkdown('![](https://x.org/a.png)'), '[https://x.org/a.png](https://x.org/a.png)');
     assert.equal(safeMarkdown('<img src="https://x.org/t.gif">'), '[https://x.org/t.gif](https://x.org/t.gif)');
+  });
+
+  test('the images from the web it made links are listed, for the host to load when asked (remote_images_asked)', () => {
+    const text = [
+      '![a](https://x.org/a.png) [b](https://x.org/b.png) <img src=https://x.org/t.gif>',
+      '![[photo.png]] ![again](https://x.org/a.png) `![code](https://x.org/c.png)`',
+      '```',
+      '![fenced](https://x.org/f.png)',
+      '```',
+    ].join('\n');
+    // each once, in the order written: not a plain link, a vault file, code or a fence
+    assert.deepEqual(remoteImagesIn(text), ['https://x.org/a.png', 'https://x.org/t.gif']);
+    assert.deepEqual(remoteImagesIn('![x](javascript:alert(1)) ![y](mailto:a@b)'), []);
+    const note = ['---', 'cover: x', '---', '![](https://x.org/top.png)', '## Route', '![](https://x.org/r.png)'];
+    assert.deepEqual(embeddedRemoteImages(note.join('\n')), ['https://x.org/top.png', 'https://x.org/r.png']);
+    assert.deepEqual(embeddedRemoteImages(note.join('\n'), 'Route'), ['https://x.org/r.png']);
   });
 });
 

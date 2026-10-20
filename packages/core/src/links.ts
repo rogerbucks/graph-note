@@ -17,7 +17,7 @@ import type { FoundLink } from './link-scan.ts';
 
 export { attachmentType, leavingWords, linkKind, linkTo, linksIn, refusedWords } from './link-scan.ts';
 export type { FoundLink, LinkKind } from './link-scan.ts';
-export { embedParts, embeddedMarkdown, safeMarkdown } from './link-markdown.ts';
+export { embedParts, embeddedMarkdown, embeddedRemoteImages, remoteImagesIn, safeMarkdown } from './link-markdown.ts';
 export type { EmbedPart } from './link-markdown.ts';
 export { applyChanges, renamedLinks } from './link-renames.ts';
 

@@ -65,6 +65,8 @@ export const SOURCE_WORDS = {
   'details.said-no-problems': 'no problems',
   'details.none-in': 'Nothing links here.',
   'details.none-out': 'Links to nothing.',
+  'details.load-image': 'Load image',
+  'details.load-image-from': 'Load the image from {host}',
   'details.trail': 'Trail',
   'details.back': 'Back',
   'details.back-to': 'Back to {name}',
