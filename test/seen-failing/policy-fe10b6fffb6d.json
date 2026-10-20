@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only thirteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes",
+  "seen_failing_first": false,
+  "evidence": "A renamed test: it lets two more writer jobs through. On the parent, security.yml does not exist, so the allowance has nothing to refuse and passes. Its jobs' exact permissions are proved by test/security-workflow.test.js, which failed first."
+}
