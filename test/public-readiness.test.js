@@ -552,6 +552,18 @@ describe('every commit since the cut-off is signed off by a person', () => {
     assert.match(problems[0].where, /^commit [0-9a-f]{8}$/);
   });
 
+  test('a sign-off naming only another AI agent is refused, whatever address it gives (Roger, 20 Oct 2026)', () => {
+    const { dir, commit } = repository();
+    for (const agent of ['Antigravity', 'Gemini', 'Grok', 'graph-note'])
+      commit(`${agent}.txt`, 'a\n', signed(agent, person), late);
+    assert.deepEqual(rules(signOffProblems(dir, { from: '2026-10-20T00:00:00Z' })), [
+      'sign-off',
+      'sign-off',
+      'sign-off',
+      'sign-off',
+    ]);
+  });
+
   test('a commit before the cut-off, a merge and a bot-made dependency update are left out', () => {
     const { dir, commit } = repository();
     const g = (args, env = {}) => execFileSync('git', args, { cwd: dir, env: { ...process.env, ...env } });
