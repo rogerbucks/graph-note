@@ -2,7 +2,7 @@
 // without a name, drawn under the name suggested for it until that is written. Here are where it is written in the
 // block being edited, and what its details say of it. Here too is the one-click fix that writes the name, as an edit
 // one undo takes back.
-import { spanOf } from '@thoughtknot/core';
+import { spanOf, word } from '@thoughtknot/core';
 import type { Details, NoteReading } from '@thoughtknot/core';
 import { button } from './view-bar';
 import type { Editing } from './view-options';
@@ -37,7 +37,11 @@ function nameNow(now: NoteReading, graph: string, place: { line: number; charact
 
 /** What screen readers hear of a box: its kind and text, and that its name is only suggested, when it is. */
 export const boxLabel = (box: { key: string; kind: string; text: string; suggested?: object }): string =>
-  `${box.kind ? `${box.kind}: ${box.text}` : box.text}${box.suggested ? ` (suggested name ${box.key}, not yet written)` : ''}`;
+  box.suggested
+    ? word('suggested.label', { text: box.kind ? `${box.kind}: ${box.text}` : box.text, name: box.key })
+    : box.kind
+      ? `${box.kind}: ${box.text}`
+      : box.text;
 
 /**
  * In a box's details, its suggested name, said by a sign and in words. While its block is edited in place, it also
@@ -58,12 +62,12 @@ export function showSuggested(
   const name =
     ed?.session && place && text !== undefined ? nameNow(ed.session.current(), graph, place, text) : undefined;
   const row = el.createDiv({ cls: 'thoughtknot-suggested' });
-  row.createSpan({ text: `✎ Suggested name: ${name ?? drawn} — not written yet. ` });
+  row.createSpan({ text: word('suggested.says', { name: name ?? drawn }) });
   if (!ed || text === undefined || !place || !name || !spanOf(text, { thing: name }, place)) {
-    row.createSpan({ cls: 'thoughtknot-fix', text: 'Edit the block to add it, or write a name of your own.' });
+    row.createSpan({ cls: 'thoughtknot-fix', text: word('suggested.edit') });
     return;
   }
-  const title = `Add the name ${name}`;
+  const title = word('suggested.add', { name });
   const status = row.createSpan({ cls: 'thoughtknot-fix', attr: { role: 'status' } });
   // the text as it is when pressed: the details are redrawn only once typing stops, so what was typed since is kept
   button(row, title, 'pencil', () => status.setText(writeName(ed, graph, name, place)), title);
@@ -76,19 +80,16 @@ export function showSuggested(
  */
 function writeName(ed: Editing, graph: string, name: string, place: { line: number; character: number }): string {
   const text = ed.session?.text;
-  if (!ed.session || text === undefined) return 'The block is no longer being edited: nothing was written.';
+  if (!ed.session || text === undefined) return word('suggested.not-editing');
   const at =
     text
       .split('\n')
       .slice(0, place.line)
       .reduce((n, l) => n + l.length + 1, 0) + place.character;
-  if (text[at - 1] === '(' && /[A-Za-z_]/.test(text[at] ?? ''))
-    return 'This thing already has a name: nothing was written.';
-  if (!spanOf(text, { thing: name }, place))
-    return 'This thing has moved in the text since: nothing was written. Try again once the drawing is redrawn.';
+  if (text[at - 1] === '(' && /[A-Za-z_]/.test(text[at] ?? '')) return word('suggested.has-name');
+  if (!spanOf(text, { thing: name }, place)) return word('suggested.moved');
   const now = nameNow(ed.session.current(), graph, place, text);
-  if (now !== name)
-    return `The name suggested is ${now ?? 'another'} by now: nothing was written. Open its details again.`;
+  if (now !== name) return word('suggested.renamed', { name: now ?? word('suggested.another') });
   ed.replace(text.slice(0, at) + name + text.slice(at));
   return '';
 }

@@ -5,6 +5,7 @@
 
 import { AI_SOURCE_WORDS } from './ai-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
+import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
 import { FIRST_RUN_SOURCE_WORDS } from './first-run-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
@@ -383,4 +384,6 @@ export const SOURCE_WORDS = {
   ...SHORTCUT_SOURCE_WORDS,
   // a first graph from an example, and its tour (first-run-source-words.ts)
   ...FIRST_RUN_SOURCE_WORDS,
+  // the drawing's card, its details, the editor pane and the property rows (display-source-words.ts)
+  ...DISPLAY_SOURCE_WORDS,
 } as const;

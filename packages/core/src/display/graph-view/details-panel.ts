@@ -267,8 +267,8 @@ export class DetailsPanel {
     this.select(null, null, index);
     this.shown = null;
     this.trail.clear(); // a guess is no step of a walk
-    const el = this.panel('⚠ Estimated link', 'a guess, not written');
-    el.createEl('p', { text: e.explain.replace(/^Line \d+/, `Line ${this.o.lineOf(e)}`) });
+    const el = this.panel(word('estimate.title'), word('estimate.kind'));
+    el.createEl('p', { text: e.explain.replace(/^Line \d+/, word('estimate.at-line', { line: this.o.lineOf(e) })) });
     estimateActions(el, index, this.o);
   }
 

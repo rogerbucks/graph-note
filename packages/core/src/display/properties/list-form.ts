@@ -1,6 +1,7 @@
 // The form that asks, when List is chosen for a property, for the kind and the relationship (spec §14,
 // list_as_linked_things). It has two fields, offered the kinds and relationships the graph already uses. Then Make list
 // or Cancel.
+import { word } from '@thoughtknot/core';
 import type { ListShape } from '@thoughtknot/core';
 
 /** What the form offers: the kinds and relationships the graph uses, and the suggestions to start from. */
@@ -31,37 +32,36 @@ export function suggestShape(key: string): ListShape {
 export function listForm(parent: HTMLElement, o: ListFormOptions, done: (shape: ListShape | null) => boolean): void {
   const form = parent.createDiv({ cls: 'thoughtknot-list-form' });
   const id = ++forms;
-  const of = o.property ? ` of ${o.property}` : '';
   form.createEl('p', {
     cls: 'thoughtknot-list-note',
-    text: `Each value${of} becomes a thing linked by the relationship, and the row is named after it.`,
+    text: o.property ? word('list.explain-of', { property: o.property }) : word('list.explain'),
   });
-  const ask = (label: string, value: string, options: string[], name: string) => {
+  const ask = (label: string, value: string, options: string[], name: string, part: string) => {
     const input = form.createEl('input', {
       cls: 'metadata-input metadata-input-text',
       attr: {
         type: 'text',
         'aria-label': label,
         placeholder: name,
-        list: `thoughtknot-list-${id}-${name}`,
+        list: `thoughtknot-list-${id}-${part}`,
         autocapitalize: 'none',
       },
     });
     input.value = value;
-    const list = form.createEl('datalist', { attr: { id: `thoughtknot-list-${id}-${name}` } });
+    const list = form.createEl('datalist', { attr: { id: `thoughtknot-list-${id}-${part}` } });
     for (const v of options) list.createEl('option', { attr: { value: v } });
     return input;
   };
-  const kind = ask('Kind of the linked things', o.suggested.kind, o.kinds, 'Kind');
-  const rel = ask('Relationship from this thing', o.suggested.rel, o.rels, 'Relationship');
+  const kind = ask(word('list.kind-label'), o.suggested.kind, o.kinds, word('list.kind'), 'kind');
+  const rel = ask(word('list.rel-label'), o.suggested.rel, o.rels, word('list.rel'), 'rel');
   const make = () => void done({ kind: kind.value.trim(), rel: rel.value.trim() });
   const button = (label: string, run: () => void, cls = '') =>
     form
       .createEl('button', { cls, text: label, attr: { type: 'button', 'aria-label': label } })
       .addEventListener('click', run);
   kind.focus();
-  button('Make list', make, 'mod-cta');
-  button('Cancel', () => void done(null));
+  button(word('list.make'), make, 'mod-cta');
+  button(word('list.cancel'), () => void done(null));
   for (const input of [kind, rel])
     input.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Enter') make();
