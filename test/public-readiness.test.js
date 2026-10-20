@@ -46,7 +46,9 @@ function repository() {
     g(['add', '.']);
     g(['commit', '-q', '-m', message], env);
   };
-  commit('README.md', '# Thing\n', 'Begin');
+  // Dated before the sign-off cut-off, so this unsigned first commit is never one the sign-off check reads.
+  const before = { GIT_AUTHOR_DATE: '2026-10-01T12:00:00Z', GIT_COMMITTER_DATE: '2026-10-01T12:00:00Z' };
+  commit('README.md', '# Thing\n', 'Begin', before);
   return { dir, commit };
 }
 const rules = (problems) => problems.map((p) => p.rule).sort();
