@@ -923,9 +923,18 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - Its first point is the data exports (`DataExporter`).
   - Its second, `theme`, hands a plug-in the core's tokens and adds its own (theme-tokens.ts). Each is refused, saying
     why, when it misses its name or the locked contrast. They are listed by `themeTokens()`.
+  - Its third, `storage`, adds a place notes are kept (`StorageBackend`), opened by `openStorage`. The core's own,
+    `CORE_STORAGE` in note-storage.ts, keeps notes in memory.
+  - Its fourth, `commands`, adds a command (`PluginCommand`), named under the plug-in's id and run by `runCommand`.
+  - A call that runs longer than `PLUGIN_TIME_LIMIT` is named and its answer dropped. Its plug-in is then stopped, and
+    `stopped()` lists it. A host may set its own limit and clock (`RegistryOptions`).
 - `plugins-contract.ts` — the contract suite of each extension point (plugin_contract_suites).
   - `exporterContract`: the checks a data export is held to on `sampleExports`, which the built-ins pass.
   - `themeTokenContract`: those a theme token is held to: its name, its colours and its contrast in each theme.
+  - `storageBackendContract`: the note storage contract, run on a store the backend opens afresh for each check.
+  - `commandContract`: a command's id, its title on one line, and that it can be run.
+  - Each title is checked for right-to-left too (plugin_rtl). It must force no direction of its own, so it reads in
+    the host's.
 
 #### The data formats
 
