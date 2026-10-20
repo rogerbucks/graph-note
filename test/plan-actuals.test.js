@@ -1,6 +1,6 @@
-// The wiki's Plan versus actual page (spec §41, plan_vs_actual). Each requirement's proved day is read from the history
-// of the requirements file on main, and each wave's plan is set beside what happened. Small made-up histories and
-// waves, plus one real git history in a temporary folder, so the page's sums are checked by hand.
+// The wiki's Plan versus actual page (spec §41, plan_vs_actual, plan_rebaselined). Each requirement's proved day is
+// read from the history of the requirements file on main, and each wave's plan is set beside what happened. Small
+// made-up histories and waves, plus one real git history in a temporary folder, so the page's sums are checked by hand.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -99,15 +99,22 @@ describe('the day each requirement became proved', () => {
 
 const WAVES = [
   { title: 'Wave 1', start: '2026-10-01', end: '2026-10-05', workstreams: ['A'] },
-  { title: 'Wave 2', start: '2026-10-06', end: '2026-10-10', workstreams: ['B'] },
+  {
+    title: 'Wave 2',
+    start: '2026-10-06',
+    end: '2026-10-10',
+    workstreams: ['B'],
+    earlier_plan: { start: '2026-10-06', end: '2026-10-08', replaced: '2026-10-05', why: 'the measured rate' },
+  },
   { title: 'Wave 3', start: '2026-10-11', end: '2026-10-20', workstreams: ['C'] },
   { title: 'Wave 4', start: '2026-10-21', end: '2026-10-30', workstreams: [] },
 ];
 const WORKSTREAMS = {
-  A: { requirements: ['a1', 'a2'] },
-  B: { requirements: ['b1', 'b2'] },
+  A: { size: 'S', requirements: ['a1', 'a2'] },
+  B: { size: 'M', requirements: ['b1', 'b2'] },
   C: { requirements: ['c1'] },
 };
+const CAPACITY = { weeks: [{ week_ending: '2026-10-11', usage_percent: 60, note: 'a short week' }] };
 const BOARD = [
   req('a1', ['t1', 'written']),
   req('a2', ['t2', 'written']),
@@ -150,6 +157,8 @@ describe('each wave’s plan beside what happened', () => {
         title: 'Wave 1',
         start: '2026-10-01',
         end: '2026-10-05',
+        firstEnd: '2026-10-05',
+        sizes: ['S'],
         proved: 2,
         total: 2,
         first: '2026-10-02',
@@ -157,9 +166,29 @@ describe('each wave’s plan beside what happened', () => {
         release: 'v0.3.0',
         releaseDay: '2026-10-08',
         slip: 2,
+        firstSlip: 2,
         done: true,
       },
     );
+  });
+
+  test('a wave planned again keeps its first planned end and the slip from it, beside the current plan', () => {
+    const [one, two] = facts().waves;
+    assert.equal(one.firstEnd, one.end, 'never planned again: the first plan is the plan');
+    assert.equal(two.firstEnd, '2026-10-08');
+    assert.equal(two.slip, 2, 'two days past the current end, today being the 12th');
+    assert.equal(two.firstSlip, 4, 'four days past the first planned end');
+  });
+
+  test('the capacity file’s weeks are set beside what each week proved, or left out without the file', () => {
+    assert.equal(facts().capacity, null);
+    assert.deepEqual(facts({ capacity: CAPACITY }).capacity, [
+      { weekEnding: '2026-10-11', usage: 60, proved: 2, note: 'a short week' },
+    ]);
+    const blank = { weeks: [{ week_ending: '2026-10-04' }] };
+    assert.deepEqual(facts({ capacity: blank }).capacity, [
+      { weekEnding: '2026-10-04', usage: null, proved: 1, note: '' },
+    ]);
   });
 
   test('an unfinished wave has no last day or release, and a wave past its end counts its slip so far', () => {
@@ -226,7 +255,10 @@ describe('the page', () => {
       text,
       /\| Wave 1 \| 2026-10-01 to 2026-10-05 \| 2 \/ 2 \| 2026-10-02 \| 2026-10-07 \| v0\.3\.0 \(2026-10-08\) \| 2 days late \|/,
     );
-    assert.match(text, /\| Wave 2 \| .* \| 1 \/ 2 \| 2026-10-09 \| — \| — \| 2 days late so far \|/);
+    assert.match(
+      text,
+      /\| Wave 2 \| 2026-10-06 to 2026-10-10 \(first plan to 2026-10-08\) \| 1 \/ 2 \| 2026-10-09 \| — \| — \| 2 days late so far; 4 days late so far from the first plan \|/,
+    );
     assert.match(text, /\| Wave 3 \| .* \| 0 \/ 1 \| — \| — \| — \| — \|/);
   });
 
@@ -234,8 +266,17 @@ describe('the page', () => {
     const text = page();
     assert.match(text, /\| 2026-10-09 \| 1 \| 3 \|/);
     assert.match(text, /0\.29 a day/);
-    assert.match(text, /\| Wave 3 \| 1 \| 2026-10-19 \|/);
+    assert.match(text, /\| Wave 2 \| 1 \| 2026-10-16 \| 1 M \|/, 'each forecast counts the sizes of its workstreams');
+    assert.match(text, /\| Wave 3 \| 1 \| 2026-10-19 \| — \|/, 'a workstream without a size shows none');
     assert.match(text, /_Made from .*requirements.*waves\.json/);
+    assert.doesNotMatch(text, /## Capacity|capacity\.json/);
+  });
+
+  test('shows the capacity weeks when the file is there, and names it as a source', () => {
+    const text = page({ capacity: CAPACITY });
+    assert.match(text, /## Capacity each week/);
+    assert.match(text, /\| 2026-10-11 \| 60% \| 2 \| a short week \|/);
+    assert.match(text, /_Made from .*waves\.json.*capacity\.json/);
   });
 
   test('says the day the history starts, as work proved before it counts from then', () => {

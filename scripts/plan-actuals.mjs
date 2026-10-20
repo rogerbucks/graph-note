@@ -22,6 +22,9 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 /** The names the requirements file has had, oldest first. */
 export const REQUIREMENTS_FILES = ['requirements/editor-requirements.gql', 'requirements/editor-requirements.md'];
 
+/** The weekly usage of the Max plan, written by hand (spec §41, plan_rebaselined). */
+export const CAPACITY_FILE = 'requirements/capacity.json';
+
 const DAY_MS = 86_400_000;
 const RATE_DAYS = 7;
 
@@ -110,7 +113,16 @@ const stable = (releases) =>
  * - forecasts: each unfinished wave in order, with what is left and the day it would finish at that rate.
  * - since: the day the history starts, when given. Work proved before then counts as proved on that day.
  */
-export function planActuals({ waves, workstreams, requirements, days, releases, today, since = null }) {
+export function planActuals({
+  waves,
+  workstreams,
+  requirements,
+  days,
+  releases,
+  today,
+  since = null,
+  capacity = null,
+}) {
   const released = stable(releases);
   const proved = new Set(requirements.filter((r) => r.status === 'proved').map((r) => r.id));
   const rows = waves.map((w) => {
@@ -123,18 +135,23 @@ export function planActuals({ waves, workstreams, requirements, days, releases, 
     const done = known.length > 0 && known.every((id) => proved.has(id));
     const last = done ? (dated.at(-1) ?? null) : null;
     const release = last ? released.find((r) => r.day >= last) : undefined;
-    const slip = last ? daysBetween(w.end, last) : today > w.end && known.length ? daysBetween(w.end, today) : null;
+    const slipFrom = (end) =>
+      last ? daysBetween(end, last) : today > end && known.length ? daysBetween(end, today) : null;
+    const firstEnd = w.earlier_plan?.end ?? w.end;
     return {
       title: w.title,
       start: w.start,
       end: w.end,
+      firstEnd,
+      sizes: w.workstreams.map((k) => workstreams[k]?.size).filter(Boolean),
       proved: known.filter((id) => proved.has(id)).length,
       total: known.length,
       first: dated[0] ?? null,
       last,
       release: release?.tag ?? null,
       releaseDay: release?.day ?? null,
-      slip,
+      slip: slipFrom(w.end),
+      firstSlip: slipFrom(firstEnd),
       done,
     };
   });
@@ -154,24 +171,68 @@ export function planActuals({ waves, workstreams, requirements, days, releases, 
     .filter((w) => w.total && !w.done)
     .map((w) => {
       left += w.total - w.proved;
-      return { title: w.title, remaining: w.total - w.proved, day: rate ? plus(today, Math.ceil(left / rate)) : null };
+      return {
+        title: w.title,
+        remaining: w.total - w.proved,
+        sizes: w.sizes,
+        day: rate ? plus(today, Math.ceil(left / rate)) : null,
+      };
     });
-  return { waves: rows, perDay, rate, forecasts, since };
+  return { waves: rows, perDay, rate, forecasts, since, capacity: capacityWeeks(capacity, days) };
+}
+
+/**
+ * The weeks of requirements/capacity.json beside what each proved: [{weekEnding, usage, proved, note}], or null
+ * without the file. Usage is the Max plan's percent, written by hand; proved counts the seven days up to the week's end.
+ */
+function capacityWeeks(capacity, days) {
+  if (!capacity?.weeks) return null;
+  const proved = [...days.values()];
+  return capacity.weeks.map((w) => {
+    const from = plus(w.week_ending, 1 - RATE_DAYS);
+    return {
+      weekEnding: w.week_ending,
+      usage: w.usage_percent ?? null,
+      proved: proved.filter((d) => d >= from && d <= w.week_ending).length,
+      note: w.note ?? '',
+    };
+  });
 }
 
 /** A slip in words: late, early or on time, with "so far" while the wave is not finished. */
-function slipWords(w) {
-  if (w.slip === null) return '—';
-  const n = Math.abs(w.slip);
-  const words = w.slip === 0 ? 'on time' : `${n} ${n === 1 ? 'day' : 'days'} ${w.slip > 0 ? 'late' : 'early'}`;
+function slipWords(w, slip = w.slip) {
+  if (slip === null) return '—';
+  const n = Math.abs(slip);
+  const words = slip === 0 ? 'on time' : `${n} ${n === 1 ? 'day' : 'days'} ${slip > 0 ? 'late' : 'early'}`;
   return w.done ? words : `${words} so far`;
 }
+
+/** The slip column: against the current plan, then against the first plan when the wave was planned again. */
+const slipCell = (w) =>
+  w.firstEnd === w.end || w.firstSlip === null
+    ? slipWords(w)
+    : `${slipWords(w)}; ${slipWords(w, w.firstSlip)} from the first plan`;
+
+/** The sizes of a wave's workstreams as counts, S then M then L: "8 S, 5 M", or a dash when none is sized. */
+const sizesCell = (sizes) =>
+  ['S', 'M', 'L']
+    .map((size) => [sizes.filter((s) => s === size).length, size])
+    .filter(([n]) => n)
+    .map(([n, size]) => `${n} ${size}`)
+    .join(', ') || '—';
+
+/** The planned column: the dates, and the first planned end when the wave was planned again. */
+const plannedCell = (w, day) =>
+  `${day(w.start)} to ${day(w.end)}${w.firstEnd === w.end ? '' : ` (first plan to ${day(w.firstEnd)})`}`;
 
 /**
  * The page's Markdown. `facts` are planActuals's, with `today`. `day` and `footer` are the helpers of wiki.mjs, so
  * every page dates things and says where it came from the same way. `sha` is the commit it was made at.
  */
-export function planActualsPage({ waves, perDay, rate, forecasts, since, today }, { day, footer, sha = 'main' }) {
+export function planActualsPage(
+  { waves, perDay, rate, forecasts, since, today, capacity = null },
+  { day, footer, sha = 'main' },
+) {
   const or = (iso) => (iso ? day(iso) : '—');
   const finished = waves.filter((w) => w.done && w.slip !== null);
   const meanSlip = finished.length ? finished.reduce((n, w) => n + w.slip, 0) / finished.length : null;
@@ -185,8 +246,8 @@ export function planActualsPage({ waves, perDay, rate, forecasts, since, today }
     '|---|---|---|---|---|---|---|',
     ...waves.map(
       (w) =>
-        `| ${w.title} | ${day(w.start)} to ${day(w.end)} | ${w.total ? `${w.proved} / ${w.total}` : '—'} | ` +
-        `${or(w.first)} | ${or(w.last)} | ${w.release ? `${w.release} (${day(w.releaseDay)})` : '—'} | ${slipWords(w)} |`,
+        `| ${w.title} | ${plannedCell(w, day)} | ${w.total ? `${w.proved} / ${w.total}` : '—'} | ` +
+        `${or(w.first)} | ${or(w.last)} | ${w.release ? `${w.release} (${day(w.releaseDay)})` : '—'} | ${slipCell(w)} |`,
     ),
   ].join('\n');
   const daysTable = [
@@ -196,11 +257,23 @@ export function planActualsPage({ waves, perDay, rate, forecasts, since, today }
   ].join('\n');
   const forecastPart = rate
     ? [
-        '| Wave | Left to prove | Forecast finish |',
-        '|---|---|---|',
-        ...forecasts.map((f) => `| ${f.title} | ${f.remaining} | ${or(f.day)} |`),
+        '| Wave | Left to prove | Forecast finish | Sizes |',
+        '|---|---|---|---|',
+        ...forecasts.map((f) => `| ${f.title} | ${f.remaining} | ${or(f.day)} | ${sizesCell(f.sizes)} |`),
       ].join('\n')
     : 'No forecast: nothing was proved in the last seven days.';
+  const capacityPart = capacity
+    ? `\n\n## Capacity each week\n\nHow much of the Claude Max plan each week used, written by hand in ` +
+      `\`requirements/capacity.json\`, beside what that week proved. It is the one input the repository cannot ` +
+      `measure.\n\n` +
+      [
+        '| Week ending | Max plan used | Proved that week | Note |',
+        '|---|---|---|---|',
+        ...capacity.map(
+          (c) => `| ${day(c.weekEnding)} | ${c.usage === null ? '—' : `${c.usage}%`} | ${c.proved} | ${c.note} |`,
+        ),
+      ].join('\n')
+    : '';
   return (
     `# Plan versus actual\n\nWhen each wave was planned to finish, and when it did. The real dates make later plans ` +
     `better. A requirement counts as proved on the first day main held every test it names as written.` +
@@ -208,10 +281,17 @@ export function planActualsPage({ waves, perDay, rate, forecasts, since, today }
     `\n\n` +
     `${summary.join('\n')}\n\n## Waves\n\n${wavesTable}\n\n` +
     `A release is the first stable one published on or after the wave's last proved day. Slip is the days from the ` +
-    `planned end to the last proved day.\n\n## Forecast\n\n` +
+    `planned end to the last proved day. A wave planned again shows its first planned end too, so the first ` +
+    `estimate is judged as well as the latest.\n\n## Forecast\n\n` +
     `Each remaining wave, in plan order, at the rate of the last seven days. Each forecast counts the work of ` +
-    `the waves before it.\n\n${forecastPart}\n\n## Proved each day\n\n${daysTable}\n` +
-    footer(`the history of the requirements file on main and \`requirements/waves.json\``, sha, today)
+    `the waves before it. Sizes are the wave's workstreams: S about a day, M about a week, L more.\n\n` +
+    `${forecastPart}${capacityPart}\n\n## Proved each day\n\n${daysTable}\n` +
+    footer(
+      `the history of the requirements file on main and \`requirements/waves.json\`` +
+        (capacity ? ', with `requirements/capacity.json`' : ''),
+      sha,
+      today,
+    )
   );
 }
 
@@ -237,6 +317,7 @@ export async function repositoryFacts({ releases = [], today, ref = 'HEAD', root
     releases,
     today,
     since: history[0]?.day ?? null,
+    capacity: existsSync(join(root, CAPACITY_FILE)) ? json(CAPACITY_FILE) : null,
   });
 }
 

@@ -1,6 +1,7 @@
 // The waves plan of the GitHub mirror. requirements/waves.json lists the waves in order. Each wave has its workstreams
 // in order, and planned dates marked as estimates. The mirror derives each requirement's Wave and Order from it. Pure:
-// no network. The real plan is read too, against the real requirements copy and workstreams file.
+// no network. The real plan is read too, against the real requirements copy and workstreams file. A wave planned
+// again keeps its earlier plan, and a workstream its size (spec §41, plan_rebaselined).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { REQUIREMENTS } from '../scripts/check-requirements.mjs';
@@ -64,6 +65,40 @@ describe('reading the waves file', () => {
       [(w) => (w[1].start = '2026-11-02'), /starts before .*Wave 1 · Focus.* ends/],
     ];
     for (const [change, why] of cases) assert.throws(() => planOf(withWaves(change)), why);
+  });
+});
+
+describe('a wave planned again', () => {
+  const earlier = { start: '2026-10-20', end: '2026-11-02', replaced: '2026-10-19', why: 'the measured rate' };
+  const redated = (change = () => {}) =>
+    withWaves((w) => {
+      w[0].end = '2026-10-25';
+      w[0].earlier_plan = { ...earlier };
+      change(w);
+    });
+
+  test('keeps its earlier plan, and a wave never planned again has none', () => {
+    const plan = planOf(redated());
+    assert.deepEqual(plan.waves[0].earlierPlan, earlier);
+    assert.equal(plan.waves[1].earlierPlan, null);
+  });
+
+  test('is refused when the earlier plan is not an object, has a bad day, ends before it starts or has no why', () => {
+    for (const [change, re] of [
+      [(w) => (w[0].earlier_plan = 'old'), /earlier_plan must hold start, end, replaced and why/],
+      [(w) => (w[0].earlier_plan.end = '2026-13-01'), /earlier_plan.*end.*not a day/],
+      [(w) => (w[0].earlier_plan.replaced = 'yesterday'), /earlier_plan.*replaced must be YYYY-MM-DD/],
+      [(w) => (w[0].earlier_plan.end = '2026-10-01'), /earlier_plan ends before it starts/],
+      [(w) => (w[0].earlier_plan.why = ' '), /earlier_plan needs a why/],
+    ])
+      assert.throws(() => planOf(redated(change)), re);
+  });
+
+  test('a workstream’s size is S, M or L, or left out; anything else is refused', () => {
+    const file = (size) => JSON.stringify({ A: { title: 'A', size, requirements: [] } });
+    assert.equal(readWorkstreams(file('L')).A.size, 'L');
+    assert.equal(readWorkstreams(JSON.stringify({ A: { title: 'A', requirements: [] } })).A.size, undefined);
+    assert.throws(() => readWorkstreams(file('XL')), /workstream A: size must be S, M or L/);
   });
 });
 
@@ -220,6 +255,13 @@ describe('the real waves file', () => {
     const held = (w) => w.title.includes('· Held:');
     assert.ok(plan.waves.slice(at + 1, -1).every(held), 'every wave between R2 and the placeholder is held');
     assert.ok(!plan.waves.slice(0, at).some(held), 'no held wave comes before R2');
+  });
+
+  test('keeps the earlier plan of every wave planned again on 19 Oct 2026, and every workstream has a size', () => {
+    const again = plan.waves.filter((w) => w.earlierPlan);
+    assert.ok(again.length >= 20, 'waves 4 onwards were planned again at the measured rate');
+    for (const w of again) assert.equal(w.earlierPlan.replaced, '2026-10-19', w.title);
+    for (const [id, w] of Object.entries(workstreams)) assert.match(w.size ?? '', /^[SML]$/, `${id} has a size`);
   });
 
   test('puts every requirement of slices 3 to 10 that is not proved in a wave', () => {

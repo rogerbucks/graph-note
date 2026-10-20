@@ -1,208 +1,458 @@
 {
-  "about": "The order the remaining work is planned in, the one place that order lives. Each wave lists its workstreams (ids of requirements/workstreams.json) in order. Its start and end are planned dates; estimate: true marks them as estimates, not commitments. scripts/github-project.mjs derives the project's Wave and Order fields from this file. A draft: the coordinator sets the real order and dates.",
+  "about": "The order the remaining work is planned in, the one place that order lives. Each wave lists its workstreams (ids of requirements/workstreams.json) in order. Its start and end are planned dates; estimate: true marks them as estimates, not commitments. scripts/github-project.mjs derives the project's Wave and Order fields from this file. Re-baselined on 2026-10-19 to the measured rate (50 requirements a week, heavy workstreams counted twice); a re-dated wave keeps its earlier plan in earlier_plan, so slips can be read against the first plan too.",
   "waves": [
     {
       "title": "Wave 1 · Slice 3 finish",
       "start": "2026-09-04",
       "end": "2026-09-17",
       "estimate": true,
-      "workstreams": ["W8", "W9"]
+      "workstreams": [
+        "W8",
+        "W9"
+      ]
     },
     {
       "title": "Wave 2 · Slice 4 notes in the editor",
       "start": "2026-09-18",
       "end": "2026-10-01",
       "estimate": true,
-      "workstreams": ["W14"]
+      "workstreams": [
+        "W14"
+      ]
     },
     {
       "title": "Wave 3 · Slice 4 viewer aids",
       "start": "2026-10-02",
       "end": "2026-10-15",
       "estimate": true,
-      "workstreams": ["W15"]
+      "workstreams": [
+        "W15"
+      ]
     },
     {
       "title": "Wave 4 · Slice 4 finish and slice 5",
       "start": "2026-10-16",
-      "end": "2026-10-29",
+      "end": "2026-10-20",
       "estimate": true,
-      "workstreams": ["C0", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "W34", "W35", "W36", "W7", "W10"]
+      "workstreams": [
+        "C0",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "C6",
+        "C7",
+        "C8",
+        "W34",
+        "W35",
+        "W36",
+        "W7",
+        "W10"
+      ],
+      "earlier_plan": {
+        "start": "2026-10-16",
+        "end": "2026-10-29",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 5 · Automated quality and releases",
-      "start": "2026-10-30",
-      "end": "2026-11-12",
+      "start": "2026-10-21",
+      "end": "2026-10-22",
       "estimate": true,
-      "workstreams": ["V1", "D1", "A1", "R1", "GS1"]
+      "workstreams": [
+        "V1",
+        "D1",
+        "A1",
+        "R1",
+        "GS1"
+      ],
+      "earlier_plan": {
+        "start": "2026-10-30",
+        "end": "2026-11-12",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 6 · Host, storage and plug-in contracts",
-      "start": "2026-11-13",
-      "end": "2026-11-26",
+      "start": "2026-10-23",
+      "end": "2026-10-27",
       "estimate": true,
-      "workstreams": ["T1", "L1", "P1", "GS4"]
+      "workstreams": [
+        "T1",
+        "L1",
+        "P1",
+        "GS4"
+      ],
+      "earlier_plan": {
+        "start": "2026-11-13",
+        "end": "2026-11-26",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 7 · Language, theming and the standalone app",
-      "start": "2026-11-27",
-      "end": "2026-12-10",
+      "start": "2026-10-28",
+      "end": "2026-10-30",
       "estimate": true,
-      "workstreams": ["G1", "U1", "H1"]
+      "workstreams": [
+        "G1",
+        "U1",
+        "H1"
+      ],
+      "earlier_plan": {
+        "start": "2026-11-27",
+        "end": "2026-12-10",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 8 · VS Code plugin",
-      "start": "2026-12-11",
-      "end": "2026-12-24",
+      "start": "2026-10-31",
+      "end": "2026-11-02",
       "estimate": true,
-      "workstreams": ["H2"]
+      "workstreams": [
+        "H2"
+      ],
+      "earlier_plan": {
+        "start": "2026-12-11",
+        "end": "2026-12-24",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 9 · Slice 6 the mesh",
-      "start": "2027-01-04",
-      "end": "2027-01-17",
+      "start": "2026-11-03",
+      "end": "2026-11-09",
       "estimate": true,
-      "workstreams": ["W16", "W17", "W18", "W19"]
+      "workstreams": [
+        "W16",
+        "W17",
+        "W18",
+        "W19"
+      ],
+      "earlier_plan": {
+        "start": "2027-01-04",
+        "end": "2027-01-17",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 10 · Slice 7 clusters, lenses and process",
-      "start": "2027-01-18",
-      "end": "2027-01-31",
+      "start": "2026-11-10",
+      "end": "2026-11-13",
       "estimate": true,
-      "workstreams": ["W20", "W22", "W21", "W23"]
+      "workstreams": [
+        "W20",
+        "W22",
+        "W21",
+        "W23"
+      ],
+      "earlier_plan": {
+        "start": "2027-01-18",
+        "end": "2027-01-31",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 11 · Slice 8 permissions, AI and export",
-      "start": "2027-02-01",
-      "end": "2027-02-14",
+      "start": "2026-11-14",
+      "end": "2026-11-17",
       "estimate": true,
-      "workstreams": ["W28", "W26", "W27"]
+      "workstreams": [
+        "W28",
+        "W26",
+        "W27"
+      ],
+      "earlier_plan": {
+        "start": "2027-02-01",
+        "end": "2027-02-14",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 12 · Slice 8 runs, drawing and profiles",
-      "start": "2027-02-15",
-      "end": "2027-02-28",
+      "start": "2026-11-18",
+      "end": "2026-11-23",
       "estimate": true,
-      "workstreams": ["W24", "W25", "W29"]
+      "workstreams": [
+        "W24",
+        "W25",
+        "W29"
+      ],
+      "earlier_plan": {
+        "start": "2027-02-15",
+        "end": "2027-02-28",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 13 · Slice 9 store, sync and network",
-      "start": "2027-03-01",
-      "end": "2027-03-14",
+      "start": "2026-11-24",
+      "end": "2026-11-25",
       "estimate": true,
-      "workstreams": ["W30", "W31"]
+      "workstreams": [
+        "W30",
+        "W31"
+      ],
+      "earlier_plan": {
+        "start": "2027-03-01",
+        "end": "2027-03-14",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 14 · Slice 9 web, corporate and iOS",
-      "start": "2027-03-15",
-      "end": "2027-03-28",
+      "start": "2026-11-26",
+      "end": "2026-11-30",
       "estimate": true,
-      "workstreams": ["W33", "W32"]
+      "workstreams": [
+        "W33",
+        "W32"
+      ],
+      "earlier_plan": {
+        "start": "2027-03-15",
+        "end": "2027-03-28",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 15 · Obsidian community release",
-      "start": "2027-03-29",
-      "end": "2027-04-11",
+      "start": "2026-12-01",
+      "end": "2026-12-02",
       "estimate": true,
-      "workstreams": ["R2"]
+      "workstreams": [
+        "R2"
+      ],
+      "earlier_plan": {
+        "start": "2027-03-29",
+        "end": "2027-04-11",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 16 · Held: whiteboard board and graph",
-      "start": "2027-04-12",
-      "end": "2027-04-25",
+      "start": "2026-12-03",
+      "end": "2026-12-07",
       "estimate": true,
-      "workstreams": ["B1", "B2"]
+      "workstreams": [
+        "B1",
+        "B2"
+      ],
+      "earlier_plan": {
+        "start": "2027-04-12",
+        "end": "2027-04-25",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 17 · Held: whiteboard brainstorming and working together",
-      "start": "2027-04-26",
-      "end": "2027-05-09",
+      "start": "2026-12-08",
+      "end": "2026-12-09",
       "estimate": true,
-      "workstreams": ["B3", "B4"]
+      "workstreams": [
+        "B3",
+        "B4"
+      ],
+      "earlier_plan": {
+        "start": "2027-04-26",
+        "end": "2027-05-09",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 18 · Held: Copilot Cowork skill",
-      "start": "2027-05-10",
-      "end": "2027-05-23",
+      "start": "2026-12-10",
+      "end": "2026-12-11",
       "estimate": true,
-      "workstreams": ["M1"]
+      "workstreams": [
+        "M1"
+      ],
+      "earlier_plan": {
+        "start": "2027-05-10",
+        "end": "2027-05-23",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 19 · Held: text to graph with AI",
-      "start": "2027-05-24",
-      "end": "2027-06-06",
+      "start": "2026-12-12",
+      "end": "2026-12-14",
       "estimate": true,
-      "workstreams": ["X1"]
+      "workstreams": [
+        "X1"
+      ],
+      "earlier_plan": {
+        "start": "2027-05-24",
+        "end": "2027-06-06",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 20 · Held: project home page",
-      "start": "2027-06-07",
-      "end": "2027-06-20",
+      "start": "2026-12-15",
+      "end": "2026-12-16",
       "estimate": true,
-      "workstreams": ["D2"]
+      "workstreams": [
+        "D2"
+      ],
+      "earlier_plan": {
+        "start": "2027-06-07",
+        "end": "2027-06-20",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 21 · Held: developer site",
-      "start": "2027-06-21",
-      "end": "2027-07-04",
+      "start": "2026-12-17",
+      "end": "2026-12-18",
       "estimate": true,
-      "workstreams": ["D3"]
+      "workstreams": [
+        "D3"
+      ],
+      "earlier_plan": {
+        "start": "2027-06-21",
+        "end": "2027-07-04",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 22 · Held: graphs in a GitHub repository",
-      "start": "2027-07-05",
-      "end": "2027-07-18",
+      "start": "2026-12-19",
+      "end": "2026-12-21",
       "estimate": true,
-      "workstreams": ["K1"]
+      "workstreams": [
+        "K1"
+      ],
+      "earlier_plan": {
+        "start": "2027-07-05",
+        "end": "2027-07-18",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 23 · Held: Claude presents and decides in Claude Code",
-      "start": "2027-07-19",
-      "end": "2027-08-01",
+      "start": "2026-12-22",
+      "end": "2026-12-23",
       "estimate": true,
-      "workstreams": ["Y1"]
+      "workstreams": [
+        "Y1"
+      ],
+      "earlier_plan": {
+        "start": "2027-07-19",
+        "end": "2027-08-01",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 24 · Held: graphs and decisions in Claude chat",
-      "start": "2027-08-02",
-      "end": "2027-08-15",
+      "start": "2026-12-24",
+      "end": "2026-12-25",
       "estimate": true,
-      "workstreams": ["Y2"]
+      "workstreams": [
+        "Y2"
+      ],
+      "earlier_plan": {
+        "start": "2027-08-02",
+        "end": "2027-08-15",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 25 · Held: the graph spec versioned and written down for other programs",
-      "start": "2027-08-16",
-      "end": "2027-08-29",
+      "start": "2026-12-26",
+      "end": "2026-12-28",
       "estimate": true,
-      "workstreams": ["GS2", "GS3"]
+      "workstreams": [
+        "GS2",
+        "GS3"
+      ],
+      "earlier_plan": {
+        "start": "2027-08-16",
+        "end": "2027-08-29",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 26 · Held: AI rules in the graph spec that agree",
-      "start": "2027-08-30",
-      "end": "2027-09-12",
+      "start": "2026-12-29",
+      "end": "2026-12-30",
       "estimate": true,
-      "workstreams": ["GS5"]
+      "workstreams": [
+        "GS5"
+      ],
+      "earlier_plan": {
+        "start": "2027-08-30",
+        "end": "2027-09-12",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 27 · Held: a graph spec that reads easily, and its smaller gaps",
-      "start": "2027-09-13",
-      "end": "2027-09-26",
+      "start": "2026-12-31",
+      "end": "2027-01-01",
       "estimate": true,
-      "workstreams": ["GS6", "GS7"]
+      "workstreams": [
+        "GS6",
+        "GS7"
+      ],
+      "earlier_plan": {
+        "start": "2027-09-13",
+        "end": "2027-09-26",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Wave 28 · Held: data tables and cubes",
-      "start": "2027-09-27",
-      "end": "2027-10-10",
+      "start": "2027-01-02",
+      "end": "2027-01-04",
       "estimate": true,
-      "workstreams": ["E1"]
+      "workstreams": [
+        "E1"
+      ],
+      "earlier_plan": {
+        "start": "2027-09-27",
+        "end": "2027-10-10",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     },
     {
       "title": "Roger’s held changes, after all waves",
-      "start": "2027-10-11",
-      "end": "2027-10-24",
+      "start": "2027-01-05",
+      "end": "2027-01-12",
       "estimate": true,
-      "workstreams": []
+      "workstreams": [],
+      "earlier_plan": {
+        "start": "2027-10-11",
+        "end": "2027-10-24",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
     }
   ]
 }

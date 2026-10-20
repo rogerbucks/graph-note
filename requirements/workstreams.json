@@ -1,6 +1,7 @@
 {
   "W0": {
     "title": "Slice switch and zoom",
+    "size": "S",
     "requirements": [
       "zoom_out_to_fit",
       "zoom_fit_recomputed"
@@ -8,6 +9,7 @@
   },
   "W1": {
     "title": "Focus, hover and untangle",
+    "size": "L",
     "requirements": [
       "focus_neighbours",
       "focus_link",
@@ -27,6 +29,7 @@
   },
   "W2": {
     "title": "Details navigation and sheet",
+    "size": "M",
     "requirements": [
       "details_links_listed",
       "details_choose_moves",
@@ -44,6 +47,7 @@
   },
   "W3": {
     "title": "Folding, routing and the View menu",
+    "size": "M",
     "requirements": [
       "untangle_labels",
       "untangle_hubs",
@@ -57,6 +61,7 @@
   },
   "W4": {
     "title": "Arrows and inline properties",
+    "size": "M",
     "requirements": [
       "arrows_switchable",
       "arrows_shown_unless_hidden",
@@ -70,6 +75,7 @@
   },
   "W5": {
     "title": "Diagram types",
+    "size": "M",
     "requirements": [
       "diagram_type_set",
       "type_only_when_fits",
@@ -87,6 +93,7 @@
   },
   "W6": {
     "title": "Data export",
+    "size": "S",
     "requirements": [
       "export_data_formats",
       "export_lossless",
@@ -95,6 +102,7 @@
   },
   "W7": {
     "title": "Links, attachments and rich details",
+    "size": "M",
     "requirements": [
       "links_shown",
       "host_opens_links",
@@ -112,6 +120,7 @@
   },
   "W8": {
     "title": "Proposals",
+    "size": "M",
     "requirements": [
       "proposal_shown_not_applied",
       "proposal_one_by_one",
@@ -128,6 +137,7 @@
   },
   "W9": {
     "title": "AI",
+    "size": "L",
     "requirements": [
       "ai_off_until_chosen",
       "host_ai_first",
@@ -149,6 +159,7 @@
   },
   "W10": {
     "title": "Sources, steps and views across notes",
+    "size": "M",
     "requirements": [
       "many_views_one_data",
       "view_of_another_note",
@@ -164,6 +175,7 @@
   },
   "W11": {
     "title": "Link flow and path play",
+    "size": "M",
     "requirements": [
       "links_show_flow",
       "flow_in_style_graph",
@@ -176,6 +188,7 @@
   },
   "W12": {
     "title": "Animated images",
+    "size": "S",
     "requirements": [
       "animated_image_shown",
       "animation_pause_play",
@@ -185,6 +198,7 @@
   },
   "W13": {
     "title": "Notes reader parity",
+    "size": "M",
     "requirements": [
       "note_comment",
       "note_text",
@@ -196,6 +210,7 @@
   },
   "W14": {
     "title": "Notes in the editor",
+    "size": "S",
     "requirements": [
       "note_shown",
       "note_callouts",
@@ -205,6 +220,7 @@
   },
   "W15": {
     "title": "Viewer aids",
+    "size": "M",
     "requirements": [
       "mini_map",
       "mini_map_setting",
@@ -216,6 +232,7 @@
   },
   "C0": {
     "title": "Editor server and its security",
+    "size": "M",
     "requirements": [
       "cc_loopback_only",
       "cc_one_server",
@@ -232,6 +249,7 @@
   },
   "C1": {
     "title": "Editor note store",
+    "size": "M",
     "requirements": [
       "cc_open_notes_only",
       "cc_no_escape",
@@ -244,6 +262,7 @@
   },
   "C2": {
     "title": "Editor in the Claude Code mod",
+    "size": "S",
     "requirements": [
       "cc_editor_opens",
       "cc_start_failure",
@@ -252,6 +271,7 @@
   },
   "C3": {
     "title": "Classification in the core and the Claude ceiling",
+    "size": "S",
     "requirements": [
       "cc_classified_asks",
       "cc_credential_never"
@@ -259,6 +279,7 @@
   },
   "C4": {
     "title": "Shared display layer",
+    "size": "S",
     "requirements": [
       "cc_core_only",
       "cc_same_bytes"
@@ -266,6 +287,7 @@
   },
   "C5": {
     "title": "Browser host shell",
+    "size": "M",
     "requirements": [
       "cc_text_not_html",
       "cc_one_renderer",
@@ -278,6 +300,7 @@
   },
   "C6": {
     "title": "Editor export",
+    "size": "S",
     "requirements": [
       "cc_exports_new_only",
       "cc_export_same"
@@ -285,6 +308,7 @@
   },
   "C7": {
     "title": "Proposals from Claude",
+    "size": "S",
     "requirements": [
       "cc_claude_only",
       "cc_claude_proposes"
@@ -292,6 +316,7 @@
   },
   "C8": {
     "title": "Editor accessibility and motion",
+    "size": "S",
     "requirements": [
       "cc_keyboard",
       "cc_reduced_motion",
@@ -300,12 +325,14 @@
   },
   "S3": {
     "title": "Slice end",
+    "size": "S",
     "requirements": [
       "done_means_proved"
     ]
   },
   "W16": {
     "title": "Type and instance",
+    "size": "L",
     "requirements": [
       "embedded_backends",
       "type_instance_split",
@@ -321,6 +348,7 @@
   },
   "W17": {
     "title": "Certainty and contested links",
+    "size": "L",
     "requirements": [
       "conflicts_flagged_kept",
       "certainty_in_words",
@@ -333,6 +361,7 @@
   },
   "W18": {
     "title": "Time and provenance",
+    "size": "L",
     "requirements": [
       "history_before_join",
       "two_kinds_of_time",
@@ -341,6 +370,7 @@
   },
   "W19": {
     "title": "Mesh join",
+    "size": "L",
     "requirements": [
       "mesh_join_reports_gaps",
       "state_names_start_doubtful"
@@ -348,6 +378,7 @@
   },
   "W20": {
     "title": "Clusters and centroids",
+    "size": "M",
     "requirements": [
       "recursive_centroids",
       "stored_centroids",
@@ -363,6 +394,7 @@
   },
   "W21": {
     "title": "Altitude and audience profiles",
+    "size": "M",
     "requirements": [
       "altitude_query_parameter",
       "audience_profiles_named",
@@ -377,6 +409,7 @@
   },
   "W22": {
     "title": "Lenses as graph data",
+    "size": "S",
     "requirements": [
       "lens_is_saved_query",
       "lens_library",
@@ -385,6 +418,7 @@
   },
   "W23": {
     "title": "Process core and views",
+    "size": "M",
     "requirements": [
       "transitions_walkable",
       "hybrid_transitions",
@@ -401,6 +435,7 @@
   },
   "W24": {
     "title": "Runs, tests and debugger",
+    "size": "M",
     "requirements": [
       "test_runs_flagged",
       "process_debugger",
@@ -414,6 +449,7 @@
   },
   "W25": {
     "title": "Trust in the drawing and the theme graph",
+    "size": "M",
     "requirements": [
       "drawing_follows_engine",
       "drawing_holds_no_state",
@@ -431,6 +467,7 @@
   },
   "W26": {
     "title": "AI query contract and write scoring",
+    "size": "M",
     "requirements": [
       "ai_systems_query",
       "ai_minimal_contract",
@@ -443,6 +480,7 @@
   },
   "W27": {
     "title": "Export gaps and secrets",
+    "size": "M",
     "requirements": [
       "export_only_way_out",
       "engine_never_sends",
@@ -454,6 +492,7 @@
   },
   "W28": {
     "title": "Permissions",
+    "size": "M",
     "requirements": [
       "default_no_access",
       "inferred_grants_never_open",
@@ -467,6 +506,7 @@
   },
   "W29": {
     "title": "Personal profiles",
+    "size": "M",
     "requirements": [
       "profiles_at_display",
       "profile_settings",
@@ -479,6 +519,7 @@
   },
   "W30": {
     "title": "Encrypted local store and CRDT transport",
+    "size": "L",
     "requirements": [
       "crdt_transport",
       "local_encrypted_store",
@@ -489,18 +530,21 @@
   },
   "W31": {
     "title": "Peer-to-peer network fabric",
+    "size": "L",
     "requirements": [
       "mesh_vpn_sync"
     ]
   },
   "W32": {
     "title": "iOS app",
+    "size": "L",
     "requirements": [
       "ios_app"
     ]
   },
   "W33": {
     "title": "Web layer and corporate boundary",
+    "size": "L",
     "requirements": [
       "web_layer_separate",
       "corporate_personal_split",
@@ -514,6 +558,7 @@
   },
   "W34": {
     "title": "WCAG 2.2 AA for every interface",
+    "size": "S",
     "requirements": [
       "wcag_aa",
       "wcag_new_hosts",
@@ -522,6 +567,7 @@
   },
   "W35": {
     "title": "Tests make their own files",
+    "size": "S",
     "requirements": [
       "tests_self_contained",
       "test_files_generated"
@@ -529,6 +575,7 @@
   },
   "W36": {
     "title": "Moving boxes",
+    "size": "M",
     "requirements": [
       "drag_moves_box",
       "hold_to_drag_touch",
@@ -540,6 +587,7 @@
   },
   "A1": {
     "title": "Automated quality checks",
+    "size": "M",
     "requirements": [
       "a11y_keyboard_auto",
       "keyboard_any_device",
@@ -555,6 +603,7 @@
   },
   "R1": {
     "title": "Library release on GitHub",
+    "size": "S",
     "requirements": [
       "lib_github_release",
       "lib_public_api",
@@ -563,6 +612,7 @@
   },
   "R2": {
     "title": "Obsidian community release",
+    "size": "S",
     "requirements": [
       "community_listing",
       "readme_status_generated"
@@ -570,6 +620,7 @@
   },
   "L1": {
     "title": "Host and storage contracts",
+    "size": "S",
     "requirements": [
       "host_contract_published",
       "storage_contract"
@@ -577,18 +628,21 @@
   },
   "H1": {
     "title": "Standalone app",
+    "size": "L",
     "requirements": [
       "standalone_app"
     ]
   },
   "H2": {
     "title": "VS Code plugin",
+    "size": "L",
     "requirements": [
       "vscode_plugin"
     ]
   },
   "V1": {
     "title": "Changes view and pull request review",
+    "size": "S",
     "requirements": [
       "changes_view",
       "github_review_items"
@@ -596,6 +650,7 @@
   },
   "D1": {
     "title": "Project wiki and user guide",
+    "size": "M",
     "requirements": [
       "wiki_generated",
       "user_guide_wiki",
@@ -608,6 +663,7 @@
   },
   "G1": {
     "title": "Language, culture and direction",
+    "size": "M",
     "requirements": [
       "words_catalogue",
       "language_follows_host",
@@ -624,6 +680,7 @@
   },
   "T1": {
     "title": "Layer and contract tests, and tests picked by imports",
+    "size": "S",
     "requirements": [
       "hosts_pass_contract",
       "layers_checked",
@@ -633,6 +690,7 @@
   },
   "P1": {
     "title": "Plug-in interface",
+    "size": "M",
     "requirements": [
       "plugin_interface",
       "plugin_manifest_limits",
@@ -643,6 +701,7 @@
   },
   "U1": {
     "title": "Theming and the standard interface needs",
+    "size": "M",
     "requirements": [
       "ui_theme_tokens",
       "forced_colours",
@@ -656,10 +715,12 @@
   },
   "Q": {
     "title": "Open questions",
+    "size": "S",
     "requirements": []
   },
   "B1": {
     "title": "Whiteboard: the board",
+    "size": "M",
     "requirements": [
       "board_view",
       "board_is_text",
@@ -675,6 +736,7 @@
   },
   "B2": {
     "title": "Whiteboard: board and graph",
+    "size": "M",
     "requirements": [
       "board_to_graph",
       "board_graph_linked",
@@ -688,6 +750,7 @@
   },
   "B3": {
     "title": "Whiteboard: brainstorming",
+    "size": "M",
     "requirements": [
       "board_quick_capture",
       "board_cluster",
@@ -698,6 +761,7 @@
   },
   "B4": {
     "title": "Whiteboard: working together",
+    "size": "M",
     "requirements": [
       "board_live_together",
       "board_offline_merge",
@@ -709,6 +773,7 @@
   },
   "M1": {
     "title": "Copilot Cowork skill",
+    "size": "M",
     "requirements": [
       "cowork_skill",
       "cowork_core_only",
@@ -721,6 +786,7 @@
   },
   "X1": {
     "title": "Text to graph with AI",
+    "size": "M",
     "requirements": [
       "text_to_graph",
       "text_to_graph_one_contract",
@@ -733,18 +799,21 @@
   },
   "D2": {
     "title": "Project home page",
+    "size": "S",
     "requirements": [
       "landing_page"
     ]
   },
   "D3": {
     "title": "Developer site",
+    "size": "S",
     "requirements": [
       "developer_site"
     ]
   },
   "K1": {
     "title": "Graphs in a GitHub repository",
+    "size": "S",
     "requirements": [
       "github_repo_store",
       "github_repo_extract",
@@ -754,6 +823,7 @@
   },
   "Y1": {
     "title": "Claude presents and decides in Claude Code",
+    "size": "M",
     "requirements": [
       "claude_shows",
       "claude_presents",
@@ -765,38 +835,90 @@
   },
   "Y2": {
     "title": "Graphs and decisions in Claude chat",
-    "requirements": ["mcp_app", "mcp_app_one_core", "mcp_app_local", "mcp_app_page_bounded", "mcp_app_remote"]
+    "size": "M",
+    "requirements": [
+      "mcp_app",
+      "mcp_app_one_core",
+      "mcp_app_local",
+      "mcp_app_page_bounded",
+      "mcp_app_remote"
+    ]
   },
   "GS1": {
     "title": "Every graph-spec rule checked in CI",
-    "requirements": ["spec_rules_proved", "spec_conformance_in_repo", "spec_no_general_proof", "spec_index_true"]
+    "size": "S",
+    "requirements": [
+      "spec_rules_proved",
+      "spec_conformance_in_repo",
+      "spec_no_general_proof",
+      "spec_index_true"
+    ]
   },
   "GS2": {
     "title": "The graph spec versioned and repaired",
-    "requirements": ["spec_versioned", "spec_version_in_files", "spec_version_released", "spec_text_restored", "spec_sections_named"]
+    "size": "M",
+    "requirements": [
+      "spec_versioned",
+      "spec_version_in_files",
+      "spec_version_released",
+      "spec_text_restored",
+      "spec_sections_named"
+    ]
   },
   "GS3": {
     "title": "The graph format written down for other programs",
-    "requirements": ["spec_grammar", "spec_canonical_form", "spec_library_api", "spec_formats_listed", "spec_ai_wire"]
+    "size": "M",
+    "requirements": [
+      "spec_grammar",
+      "spec_canonical_form",
+      "spec_library_api",
+      "spec_formats_listed",
+      "spec_ai_wire"
+    ]
   },
   "GS4": {
     "title": "Graph format security",
-    "requirements": ["spec_author_from_session", "spec_join_trust", "spec_read_limits", "spec_guard_language", "spec_hashes_named", "spec_secrets_and_fences"]
+    "size": "M",
+    "requirements": [
+      "spec_author_from_session",
+      "spec_join_trust",
+      "spec_read_limits",
+      "spec_guard_language",
+      "spec_hashes_named",
+      "spec_secrets_and_fences"
+    ]
   },
   "GS5": {
     "title": "AI rules in the graph spec that agree",
-    "requirements": ["spec_ai_rules_agree"]
+    "size": "S",
+    "requirements": [
+      "spec_ai_rules_agree"
+    ]
   },
   "GS6": {
     "title": "A graph spec that reads easily",
-    "requirements": ["spec_decisions_explained", "spec_glossary", "spec_gentle_words", "spec_display_rules_here"]
+    "size": "S",
+    "requirements": [
+      "spec_decisions_explained",
+      "spec_glossary",
+      "spec_gentle_words",
+      "spec_display_rules_here"
+    ]
   },
   "GS7": {
     "title": "Smaller graph-spec gaps",
-    "requirements": ["spec_process_versions", "spec_engine_catalogue", "spec_zoned_time", "spec_conserved", "spec_text_licence"]
+    "size": "M",
+    "requirements": [
+      "spec_process_versions",
+      "spec_engine_catalogue",
+      "spec_zoned_time",
+      "spec_conserved",
+      "spec_text_licence"
+    ]
   },
   "E1": {
     "title": "Data tables and cubes",
+    "size": "M",
     "requirements": [
       "data_tables_design",
       "data_set_reference",

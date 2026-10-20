@@ -155,9 +155,9 @@ describe('the workstreams file', () => {
     );
   });
 
-  test('is a plain JSON map, so a person or a model can edit it', () => {
+  test('is a plain JSON map, so a person or a model can edit it: a title, a size and the requirements', () => {
     for (const [id, w] of Object.entries(readJSON('requirements/workstreams.json')))
-      assert.deepEqual(Object.keys(w), ['title', 'requirements'], id);
+      assert.deepEqual(Object.keys(w), ['title', 'size', 'requirements'], id);
   });
 
   test('puts every requirement of slices 3 and 4 in exactly one workstream', () => {
