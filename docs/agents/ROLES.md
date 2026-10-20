@@ -30,7 +30,7 @@ Which plan each person pays for is their own business, so it never goes in the r
 
 | Who         | Does                                                                                                 | Branches        | Label               |
 | ----------- | ---------------------------------------------------------------------------------------------------- | --------------- | ------------------- |
-| Roger       | Plans and approves. His comment, such as "all good", is the only approval                            | —               | —                   |
+| Roger       | Plans, and makes the real decisions. Routine pull requests need no approval from him                | —               | —                   |
 | Sara (Claude) | Builds: spec, then test, then code. Drives each pull request to green. Fixes security alerts         | `claude/`       | `agent:claude`      |
 | Charles (Antigravity) | Tests: device and accessibility checks, test-vault journeys in its browser, `npm test` before merge  | `antigravity/`  | `agent:antigravity` |
 | Eve (graph-note) | Advises: turns open questions and requirements into task lists, and reviews pull requests to the spec | none, read-only | `agent:graph-note`  |
@@ -148,7 +148,8 @@ These are the repo's own rules. AGENTS.md and CONTRIBUTING.md hold the detail; t
   refuses a commit whose sign-off names no person.
 - **Always a pull request.** Open it as a draft. No one pushes to `main`.
 - **Merge commits only**, never squash or rebase.
-- **Roger approves.** His comment, such as "all good", is the approval. Only then turn on auto-merge, as a merge commit.
+- **No "all good" needed** (Roger, 20 Oct 2026). Mark a pull request ready. Once its full CI run is green, turn on
+  auto-merge, as a merge commit. Ask Roger only for a real decision.
 - **Security fixes keep their kind out.** Each one has a test that fails on the old code. It has a rule that stops the
   same kind of problem. And it has a risk in `quality/risks.json` that names both in `prevented_by`. `security/`
   branches belong to the Security workflow. An alert's details never go in a public issue: name its key, severity and
