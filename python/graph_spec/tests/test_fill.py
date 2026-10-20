@@ -49,7 +49,9 @@ class FillReadsPlain(unittest.TestCase):
         )
         r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
-        self.assertEqual(r.stdout.strip(), "['BASIS', 'JUDGEMENT', 'STATE'] 9acdc1efaa5f4955 True")
+        self.assertEqual(
+            r.stdout.strip(), "['BASIS', 'JUDGEMENT', 'STATE'] sha-256-64:fb258fdf929976a7 True"
+        )
 
     @needs_engine
     def test_each_recipe_s_value_from_the_reader_s_reading_is_grafeo_s(self):
@@ -62,7 +64,8 @@ class FillReadsPlain(unittest.TestCase):
         finally:
             settings.PARSER = old
         self.assertEqual(values["profile"], values["grafeo"])
-        self.assertEqual(values["profile"]["JUDGEMENT"], "9acdc1efaa5f4955")  # its content_hash
+        # its content_hash
+        self.assertEqual(values["profile"]["JUDGEMENT"], "sha-256-64:fb258fdf929976a7")
 
 
 if __name__ == "__main__":

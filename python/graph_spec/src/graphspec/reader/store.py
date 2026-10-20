@@ -7,6 +7,7 @@ import re
 
 from graphspec.reader.grammar import Parser
 from graphspec.reader.lexer import ProfileError, header, tokens
+from graphspec.reader.limits import within_items
 from graphspec.reader.whitespace import N, S, strip
 
 SHARED = re.compile(rf"·{S}*SCHEMA{S}+({N}+)")
@@ -270,4 +271,5 @@ class Store:
             # never an id: the parser refuses a SET of one (§3, req:3.set-keeps-id), so the index
             # stays good
             graph["nodes"][bound[var]]["props"][key] = val
+        within_items(g, len(graph["nodes"]) + len(graph["edges"]))
         return g

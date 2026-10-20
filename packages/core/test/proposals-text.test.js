@@ -39,7 +39,7 @@ describe('a proposal written as a change set', () => {
   test('is, in full, the comments of its provenance, the additions, then a statement for each other change', () => {
     assert.equal(
       changeSetText(proposalOf()),
-      `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada
+      `// graph: reader · CHANGE SET cs1 · against sha-256-64:${BASIS} · by ada
 // proposed: ${AT}
 // read: reader
 (small_reader:Option {name: 'Small reader'}),
@@ -136,7 +136,7 @@ describe('a change set read back', () => {
   });
 
   test('reads a change set written by something else — plain GQL, with no comments of ours — change by change', () => {
-    const text = `// graph: reader · CHANGE SET from_ada · against ${BASIS} · by ada
+    const text = `// graph: reader · CHANGE SET from_ada · against sha-256-64:${BASIS} · by ada
 (small_reader:Option {name: 'Small reader'}),
 (small_reader)-[:ANSWERS]->(question)
 SET large_reader.price = 4
@@ -166,7 +166,7 @@ MATCH (v {id: 'large_reader'}) SET v.size = 2`;
   });
 
   test('a SET of more than one target, as the editor once wrote one, is refused as the check refuses it', () => {
-    const text = `// graph: reader · CHANGE SET old · against ${BASIS} · by ada
+    const text = `// graph: reader · CHANGE SET old · against sha-256-64:${BASIS} · by ada
 SET large_reader.price = 4,
  alice.name = 'Alicia'`;
     assert.match(readChangeSet(text).refused, /line 2: .*more than one target/);
@@ -181,7 +181,7 @@ SET large_reader.price = 4,
       '// basis now: 05d75fdcbdb1d37b',
       '//@ rejected: roger, 2026-10-13T10:30:00Z',
     ]) {
-      const text = `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada\n${old}\n(small_reader:Option)`;
+      const text = `// graph: reader · CHANGE SET cs1 · against sha-256-64:${BASIS} · by ada\n${old}\n(small_reader:Option)`;
       assert.match(readChangeSet(text).refused, /old form.*comments that other tools skip/, old);
     }
   });

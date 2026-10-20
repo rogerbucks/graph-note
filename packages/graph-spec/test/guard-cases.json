@@ -1,0 +1,166 @@
+{
+  "about": "Editor spec §51, spec_guard_language (GS4): the guard language, its grammar and its cases. A guard holds, is refused, or names something the context does not hold (unknown). The grammar is in requirements/guard-language.md. python/graph_spec/tests/test_guard_language.py and packages/graph-spec/test/guards.test.mjs hold both libraries to this table.",
+  "ctx": {
+    "score": 700,
+    "balance": 0,
+    "status": "open"
+  },
+  "limits": {
+    "chars": 1000,
+    "nesting": 64
+  },
+  "cases": [
+    {
+      "guard": "score > 600",
+      "holds": true
+    },
+    {
+      "guard": "balance = 0",
+      "holds": true
+    },
+    {
+      "guard": "balance == 0",
+      "holds": true
+    },
+    {
+      "guard": "balance != 0",
+      "holds": false
+    },
+    {
+      "guard": "score >= 700 and balance <= 0",
+      "holds": true
+    },
+    {
+      "guard": "score < 600 or balance = 0",
+      "holds": true
+    },
+    {
+      "guard": "score > 600 and not balance = 0",
+      "holds": false
+    },
+    {
+      "guard": "not (score > 600 or balance = 1)",
+      "holds": false
+    },
+    {
+      "guard": "status = 'open'",
+      "holds": true
+    },
+    {
+      "guard": "status = \"closed\"",
+      "holds": false
+    },
+    {
+      "guard": "True",
+      "holds": true
+    },
+    {
+      "guard": "false",
+      "holds": false
+    },
+    {
+      "guard": "score > -1.5",
+      "holds": true
+    },
+    {
+      "guard": "score > 600 && balance === 0",
+      "holds": true
+    },
+    {
+      "guard": "score > 600 && !balance === 0",
+      "holds": false
+    },
+    {
+      "guard": "score < 600 || balance === 0",
+      "holds": true
+    },
+    {
+      "guard": "balance !== 0",
+      "holds": false
+    },
+    {
+      "guard": "((score > 1))",
+      "holds": true
+    },
+    {
+      "guard": "__import__('os').getpid() > 0",
+      "refused": "a call"
+    },
+    {
+      "guard": "score.__class__ = score.__class__",
+      "refused": "an attribute"
+    },
+    {
+      "guard": "[x for x in (1,)] = [1]",
+      "refused": "a list"
+    },
+    {
+      "guard": "score > 600; print(1)",
+      "refused": "a second statement"
+    },
+    {
+      "guard": "lambda: 1",
+      "refused": "a function"
+    },
+    {
+      "guard": "open('/etc/passwd')",
+      "refused": "a call"
+    },
+    {
+      "guard": "now() > 1",
+      "refused": "the clock"
+    },
+    {
+      "guard": "score + 1 > 2",
+      "refused": "arithmetic"
+    },
+    {
+      "guard": "score[0] = 1",
+      "refused": "an index"
+    },
+    {
+      "guard": "score > ",
+      "refused": "too short"
+    },
+    {
+      "guard": "(score > 1",
+      "refused": "an open bracket"
+    },
+    {
+      "guard": "score > 1)",
+      "refused": "a stray bracket"
+    },
+    {
+      "guard": "status = 'a\\'b'",
+      "refused": "a backslash"
+    },
+    {
+      "guard": "score score",
+      "refused": "two values together"
+    },
+    {
+      "guard": "",
+      "refused": "nothing"
+    },
+    {
+      "guard": "constructor",
+      "unknown": true
+    },
+    {
+      "guard": "toString",
+      "unknown": true
+    },
+    {
+      "guard": "__proto__",
+      "unknown": true
+    },
+    {
+      "guard": "hasOwnProperty == 1",
+      "unknown": true
+    },
+    {
+      "guard": "missing > 1",
+      "unknown": true
+    }
+  ]
+}

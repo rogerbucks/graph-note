@@ -44,7 +44,7 @@ NOW = state_of(BASE)
 
 def block_of(case):
     against, by = case.get("against", NOW), case.get("by", "ada")
-    header = f"// graph: library · CHANGE SET cs · against {against} · by {by}"
+    header = f"// graph: library · CHANGE SET cs · against sha-256-64:{against} · by {by}"
     return ("\r\n" if case.get("crlf") else "\n").join([header, *case["body"]])
 
 
@@ -134,7 +134,7 @@ class Changes(unittest.TestCase):
             settings.PARSER = old
 
     def test_a_change_set_with_no_delete_or_set_reads_no_changes(self):
-        header = f"// graph: library · CHANGE SET cs · against {NOW} · by ada"
+        header = f"// graph: library · CHANGE SET cs · against sha-256-64:{NOW} · by ada"
         block = f"{header}\n(late:Book {{title: 'A late book'}})"
         res, h, _ = gr.check_changeset([("library", BASE)], block, {}, gs.lint)
         self.assertEqual(h["changes"], [])

@@ -7,6 +7,7 @@ from collections.abc import Collection
 from typing import TYPE_CHECKING, Any
 
 from graphspec.rules.canonical_json import basis_hash, hash16, jcs, norm
+from graphspec.rules.named_hashes import digits_of
 from graphspec.rules.lens import lens_buckets
 from graphspec.rules.likelihood import band_rank
 from graphspec.rules.paths import below, view_at
@@ -48,20 +49,33 @@ def current_decisions(w: World, jg: str) -> list[str]:
     )
 
 
-def judgement_hash(w: World, jg: str, d: str) -> str:
-    """rule:judgement-hash@1 — decision d's own properties and every edge it states, so an edited
-    pin shows."""
+def seal_hash(w: World, jg: str, i: str, key: str) -> str:
+    """The content hash that seals node i of judgement graph jg: its own properties and every edge
+    it states, under key. rule:judgement-hash@1 seals a Decision under 'decision',
+    rule:serving-hash@1 a Serving under 'serving'."""
     g = w[jg]
-    p = g.p(d)
+    p = g.p(i)
     out = sorted(
-        [[t, x, {k: norm(v) for k, v in sorted(e.items())}] for _, t, x, e in g.out(d)], key=jcs
+        [[t, x, {k: norm(v) for k, v in sorted(e.items())}] for _, t, x, e in g.out(i)], key=jcs
     )
     return hash16(
         {
-            "decision": {k: norm(v) for k, v in p.items() if k not in ("content_hash", "review")},
+            key: {k: norm(v) for k, v in p.items() if k not in ("content_hash", "review")},
             "edges": out,
         }
     )
+
+
+def judgement_hash(w: World, jg: str, d: str) -> str:
+    """rule:judgement-hash@1 — decision d's own properties and every edge it states, so an edited
+    pin shows."""
+    return seal_hash(w, jg, d, "decision")
+
+
+def serving_hash(w: World, jg: str, s: str) -> str:
+    """rule:serving-hash@1 — serving s's own properties and every item it served, so an edited
+    record shows."""
+    return seal_hash(w, jg, s, "serving")
 
 
 def review(w: World, jg: str, switches: Collection[str] = frozenset()) -> dict[str, list[str]]:
@@ -87,7 +101,7 @@ def review(w: World, jg: str, switches: Collection[str] = frozenset()) -> dict[s
                 elif got.get(b["ref"]) != b["e"].get("bucket"):
                     why.add("basis-moved")
             elif b["ty"] == "RESTS_ON" and (
-                sup or basis_hash(p, b["e"]["reads"]) != b["e"]["hash"]
+                sup or basis_hash(p, b["e"]["reads"]) != digits_of(b["e"]["hash"])
             ):
                 why.add("basis-moved")
             if b["ty"] == "ASSUMES" and (

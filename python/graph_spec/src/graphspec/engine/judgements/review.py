@@ -15,6 +15,7 @@ from graphspec.engine.judgements.basis import (
     resolve_ref,
 )
 from graphspec.engine.paths import view_at
+from graphspec.rules.named_hashes import digits_of
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -40,7 +41,7 @@ def review(db: GrafeoDB, jg: str, switches: Collection[str] = frozenset()) -> di
                 ) != b["e"].get("bucket"):
                     why.add("basis-moved")
             elif b["ty"] == "RESTS_ON" and (
-                sup or basis_hash(p, b["e"]["reads"]) != b["e"]["hash"]
+                sup or basis_hash(p, b["e"]["reads"]) != digits_of(b["e"]["hash"])
             ):
                 why.add("basis-moved")
             if b["ty"] == "ASSUMES" and (

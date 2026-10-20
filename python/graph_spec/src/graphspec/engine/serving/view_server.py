@@ -8,9 +8,12 @@ import json
 
 from graphspec.engine.documents.classification import class_order, destination_matrix, may_serve
 from graphspec.engine.judgements.basis import basis_hash, hash16
+from graphspec.rules.canonical_json import jcs
+from graphspec.rules.named_hashes import named
 from graphspec.engine.paths import path_steps, view_at
 from graphspec.engine.projection import iso
 from graphspec.engine.queries import Q
+from graphspec.reader.secrets import secrets_in
 from graphspec.rules.paths import path_steps as plain_path_steps
 from graphspec.rules.paths import view_at as plain_view_at
 from graphspec.rules.plain_graph import World
@@ -33,6 +36,7 @@ class ViewServer:
         conditions_met=False,
         switches=frozenset(),
         matrix=None,
+        granted=None,
     ):
         self.db, self.classes, self.id, self.consumer, self.kind, self.at = (
             db,
@@ -48,6 +52,9 @@ class ViewServer:
             matrix or destination_matrix(),
         )
         self.served, self.visible, self.views = {}, set(), []
+        # the graphs this consumer is granted (editor spec §51, spec_secrets_and_fences): those
+        # named, or, when none are, every graph given a classification
+        self.granted = set(self.classes) if granted is None else set(granted)
 
     def stricter(self, graph, cls):
         """A caller may treat a graph as a higher-risk class than its document says — never a lower
@@ -61,6 +68,10 @@ class ViewServer:
         self.classes[graph] = cls
 
     def _check(self, graph):
+        if graph not in self.granted:
+            raise PermissionError(
+                f"refused: graph {graph} is not granted to {self.consumer}, so it is never served"
+            )
         cls = self.classes.get(graph, "Unmoderated")
         if not may_serve(self.kind, cls, self.conditions_met, self.matrix):
             raise PermissionError(
@@ -172,13 +183,16 @@ class ViewServer:
             "graph": graph,
             "id": nid,
             "reads": reads,
-            "hash": basis_hash(props, reads) if reads else hash16({}),
+            "hash": named(basis_hash(props, reads) if reads else hash16({})),
             "as_of": self.at,
             "classification": cls,
         }
 
     def _render(self, graph, cls, blocks, note):
-        lines = [json.dumps(b, ensure_ascii=False, default=str) for b in blocks]
+        # "<" is written as its JSON escape, so no text of the graph can hold a fence mark
+        lines = [
+            json.dumps(b, ensure_ascii=False, default=str).replace("<", "\\u003c") for b in blocks
+        ]
         if "view-fence" in self.switches:  # safeguard switched off: values written raw, no fence
             body = "\n".join(
                 " · ".join(
@@ -201,6 +215,13 @@ class ViewServer:
 
     def _emit(self, graph, cls, ids, budget, note):
         blocks = [(i,) + self._block(graph, i) for i in ids]
+        for i, _, props in blocks:  # a secret is never served, in any text it is written in
+            held = [w for v in props.values() if isinstance(v, str) for w in secrets_in(v)]
+            if held:
+                raise PermissionError(
+                    f"refused: {i} holds {' and '.join(dict.fromkeys(held))}, "
+                    "and a secret is never served"
+                )
         text = self._render(graph, cls, [b for _, b, _ in blocks], note)
         if budget and -(-len(text) // 4) > budget:
             return None, text
@@ -267,6 +288,31 @@ class ViewServer:
             )
         return out
 
+    def seal(self):
+        """rule:serving-hash@1: the content hash over this serving's own properties and every item
+        it served, as the record holds them, so an edited record shows (editor spec §51)."""
+        own = {
+            "id": self.id,
+            "at": self.at.isoformat(),
+            "consumer": self.consumer,
+            "consumer_kind": self.kind,
+            "conditions_met": bool(self.conditions_met),
+        }
+        edges = [
+            [
+                "SERVED",
+                f"ref:{graph}/{nid}",
+                {
+                    "as_of": s["as_of"].isoformat(),
+                    "classification": s["classification"],
+                    "hash": s["hash"],
+                    "reads": s["reads"],
+                },
+            ]
+            for (graph, nid), s in self.served.items()
+        ]
+        return named(hash16({"serving": own, "edges": sorted(edges, key=jcs)}))
+
     def record_block(self, jg, proposal=None, cited=()):
         """The Serving, its SERVED edges and (optionally) a proposal's USED edge and pins, as one
         GQL statement for the judgement graph."""
@@ -294,7 +340,7 @@ class ViewServer:
             0,
             f" (sv:Serving {{id: '{self.id}', at: {d(self.at)}, consumer: '{self.consumer}', "
             f"consumer_kind: '{self.kind}', conditions_met: "
-            f"{'TRUE' if self.conditions_met else 'FALSE'}}})",
+            f"{'TRUE' if self.conditions_met else 'FALSE'}, content_hash: '{self.seal()}'}})",
         )
         for (graph, nid), s in self.served.items():
             v = ref(graph, nid)

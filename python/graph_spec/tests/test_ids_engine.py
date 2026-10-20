@@ -91,7 +91,8 @@ class RoutesRefuseASetOfId(unittest.TestCase):
     def test_check_changeset_refuses_a_change_set_that_sets_an_id(self):
         # req:3.set-keeps-id: the engine's check_changeset reads the change set on its base
         base = [("g", f"// graph: g\n{TWO}")]
-        block = f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\nSET b.id = 'c'"
+        head = f"// graph: g · CHANGE SET cs1 · against sha-256-64:{state_hash(base)} · by a"
+        block = head + "\nSET b.id = 'c'"
         results = gs.check_changeset(base, block)[0]
         self.assertTrue(refused(results, "a thing's id never changes"), results)
 
@@ -129,9 +130,8 @@ class RoutesRefuseANonTextId(unittest.TestCase):
     def test_check_changeset_refuses_a_change_set_with_a_non_text_id(self):
         # req:3.id-is-text
         base = [("g", f"// graph: g\n{TWO}")]
-        block = (
-            f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\n(c:T {{id: 3}})"
-        )
+        head = f"// graph: g · CHANGE SET cs1 · against sha-256-64:{state_hash(base)} · by a"
+        block = head + "\n(c:T {id: 3})"
         results = gs.check_changeset(base, block)[0]
         self.assertTrue(refused(results, "id 3 is not text"), results)
 

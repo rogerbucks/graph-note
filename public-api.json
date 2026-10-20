@@ -3044,7 +3044,7 @@
           "changeId: (change: GraphSpecCheck.ReadChange) => string",
           "changesetHeader: (block: string) => { graph: string; id: string; against: string; by: string; } | null",
           "check: (world: GraphSpecCheck.World, graph: string, matrix?: unknown, switches?: Set<string>) => [string, boolean][]",
-          "checkChangeset: (base: string[], block: string, matrix?: unknown, switches?: Set<string>) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }",
+          "checkChangeset: (base: string[], block: string, matrix?: unknown, switches?: Set<string>, session?: string | null) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; claimed?: string; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }",
           "checkSyntax: (block: string) => GraphSpecCheck.ProfileError | null",
           "COMMENT_FIX: string",
           "COMMENT_RULE: string",
@@ -3054,7 +3054,10 @@
           "guessReadings: (type: string) => [string, string]",
           "hash16: (value: unknown) => string",
           "header: (block: string) => [string | null, GraphSpecCheck.BlockKind]",
+          "isNamed: (value: unknown) => boolean",
+          "LIMITS: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }",
           "lint: (text: string) => { trap: string; line: number; }[]",
+          "named: (digits: string) => string",
           "notes: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }",
           "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
           "ProfileError: typeof GraphSpecCheck.ProfileError",
@@ -3065,6 +3068,8 @@
           "reverseReading: (reading: string) => string",
           "SCHEMA_LABELS: Array<string>",
           "schemaFor: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]",
+          "secretsIn: (text: string) => string[]",
+          "secretsInGraph: (g: GraphSpecCheck.Graph) => [string, string][]",
           "SPEC_NODES: Array<string>",
           "splitChangeset: (block: string) => { additions: string; changes: { line: number; lines: number[]; text: string; reason: string | null; }[]; basisOk: boolean; }",
           "Store: typeof GraphSpecCheck.Store",
@@ -3088,7 +3093,7 @@
           "value: (world: GraphSpecCheck.World, graph: string, matrix?: unknown, switches?: Set<string>) => [string, boolean][]"
         ],
         "checkChangeset": [
-          "value: (base: string[], block: string, matrix?: unknown, switches?: Set<string>) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }"
+          "value: (base: string[], block: string, matrix?: unknown, switches?: Set<string>, session?: string | null) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; claimed?: string; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }"
         ],
         "checkSyntax": [
           "value: (block: string) => GraphSpecCheck.ProfileError | null"
@@ -3152,8 +3157,17 @@
         "header": [
           "value: (block: string) => [string | null, GraphSpecCheck.BlockKind]"
         ],
+        "isNamed": [
+          "value: (value: unknown) => boolean"
+        ],
+        "LIMITS": [
+          "value: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }"
+        ],
         "lint": [
           "value: (text: string) => { trap: string; line: number; }[]"
+        ],
+        "named": [
+          "value: (digits: string) => string"
         ],
         "notes": [
           "value: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }"
@@ -3214,6 +3228,12 @@
         ],
         "schemaFor": [
           "value: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]"
+        ],
+        "secretsIn": [
+          "value: (text: string) => string[]"
+        ],
+        "secretsInGraph": [
+          "value: (g: GraphSpecCheck.Graph) => [string, string][]"
         ],
         "SPEC_NODES": [
           "value: Array<string>"

@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_guard_language.py",
+  "test": "GuardLanguage.test_every_case_is_answered_as_the_table_says_by_every_reader",
+  "seen_failing_first": false,
+  "evidence": "The Python library already read guards as the language says, and the JavaScript checker did not. This test holds the Python side to the shared table, and its twin in packages/graph-spec/test/guards.test.mjs was seen failing first."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/changesets.test.mjs",
+  "test": "the author of a change set is the session that sent it > with no session given, the check is as it was: the header names the author",
+  "seen_failing_first": false,
+  "evidence": "It pins the check as it stood before a session could be given: with none, the header names the author, so every host that passes no session keeps its answers."
+}

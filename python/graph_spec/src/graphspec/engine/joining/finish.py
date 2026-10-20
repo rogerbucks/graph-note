@@ -11,6 +11,7 @@ from graphspec.engine.joining.breaches import breaches
 from graphspec.engine.joining.claims import add_claim, ident_str, vtext
 from graphspec.engine.joining.merge3 import merge3
 from graphspec.engine.joining.union import union
+from graphspec.reader.limits import within_join_documents, within_join_items
 
 
 def finish(
@@ -248,6 +249,15 @@ def finish(
     return J
 
 
+def within_limits(docs: list[dict[str, Any]]) -> None:
+    """Refuses a join past its limits: too many documents, or too much in all (editor spec §51,
+    spec_read_limits)."""
+    within_join_documents(len(docs))
+    within_join_items(
+        sum(len(d["nodes"]) + len(d.get("raw_edges", d.get("edges", ()))) for d in docs)
+    )
+
+
 def join(
     docs: Iterable[dict[str, Any]],
     C: dict[str, Any],  # noqa: N803  # public signature
@@ -255,6 +265,8 @@ def join(
     checks: Collection[str] = ("cycles", "cardinality", "constraints", "determinism", "flags"),
 ) -> dict[str, Any]:
     """Two or more documents joined (union), then finished: paradox checks, flags and findings."""
+    docs = list(docs)
+    within_limits(docs)
     return finish(union(docs, C), C, findings, checks)
 
 
@@ -269,4 +281,5 @@ def join3(
 ) -> dict[str, Any]:
     """Two revisions of one earlier version merged (merge3), then finished: paradox checks, flags
     and findings."""
+    within_limits([base, a, b])
     return finish(merge3(base, a, b, C, hold), C, findings, checks)

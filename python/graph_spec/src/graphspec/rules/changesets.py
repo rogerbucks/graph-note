@@ -23,6 +23,7 @@ from graphspec.rules.change_apply import (
 from graphspec.rules.changes import read_all, split_changeset
 from graphspec.rules.certainty import claim_status, confidence_from_evidence, latest_assessment
 from graphspec.rules.graph_check import check
+from graphspec.rules.named_hashes import NAMED_STATE, state_named
 from graphspec.rules.plain_graph import World
 from graphspec.rules.projection import canon
 from graphspec.rules.provenance import AGENT_LABELS, activity_warnings
@@ -42,10 +43,25 @@ def changeset_header(block: str) -> dict[str, str] | None:
     # whitespace as GQL names it (S), as the reader reads the header, never the language's \s
     m = re.match(
         rf"{S}*//{S}*graph:{S}*({N}+){S}*·{S}*CHANGE SET{S}+({N}+)"
-        rf"{S}*·{S}*against{S}+([0-9a-f]{{16}}){S}*·{S}*by{S}+({N}+)",
+        rf"{S}*·{S}*against{S}+(?:sha-256-64:)?([0-9a-f]{{16}}){S}*·{S}*by{S}+({N}+)",
         first,
     )
     return dict(zip(("graph", "id", "against", "by"), m.groups())) if m else None
+
+
+SESSION = (
+    "its author is the session that sent it, not a name written in its header (editor spec §51)"
+)
+
+
+def from_session(h: dict[str, Any], session: str) -> bool:
+    """Who wrote a set is the session that sent it, never the name in its header (editor spec §51,
+    spec_author_from_session). The header's author becomes the session's, and the name it wrote is
+    kept as `claimed`. True when they agree."""
+    if h["by"] == session:
+        return True
+    h["claimed"], h["by"] = h["by"], session
+    return False
 
 
 def _state(g):
@@ -87,9 +103,11 @@ def check_changeset(
     matrix: dict[str, dict[str, str]] | None = None,
     lint: Callable[[str], list[dict[str, Any]]] | None = None,
     switches: Collection[str] = frozenset(),
+    session: str | None = None,
 ) -> tuple[list[tuple[str, bool, str]], dict[str, Any] | None, str | None]:
     """A change set dry-run against its base — [(graph, text)] applied in order. Returns (results
-    [(label, ok, fix)], header, the state it would produce)."""
+    [(label, ok, fix)], header, the state it would produce). session is the author id of the
+    session that sent the set, when the host knows it (from_session)."""
     from graphspec.reader.lexer import ProfileError
     from graphspec.reader.store import Store
     from collections import Counter
@@ -105,10 +123,13 @@ def check_changeset(
         "the change set names its graph, its id, the state it was made against, and its author",
         h,
         "start the block with: // graph: <graph> · CHANGE SET <id> · "
-        "against <16-hex state hash> · by <author id>",
+        "against sha-256-64:<16-hex state hash> · by <author id>",
     )
     if not h:
         return res, None, None
+    if session is not None:
+        add(SESSION, from_session(h, session), f"write 'by {session}': the session that sent it")
+    add(NAMED_STATE, state_named(block), f"write 'against sha-256-64:{h['against']}'")
     parts = split_changeset(block)
     if lint:
         found = lint(parts["additions"]) + [x for c in parts["changes"] for x in lint(c["text"])]

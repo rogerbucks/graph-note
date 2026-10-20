@@ -18,7 +18,7 @@ const ids = new Map();
 
 for (const c of table.cases) {
   test(c.name, () => {
-    const header = `// graph: library · CHANGE SET cs · against ${c.against ?? now} · by ${c.by ?? 'ada'}`;
+    const header = `// graph: library · CHANGE SET cs · against sha-256-64:${c.against ?? now} · by ${c.by ?? 'ada'}`;
     const r = C.checkChangeset(base, [header, ...c.body].join(c.crlf ? '\r\n' : '\n'), {});
     assert.deepEqual(
       r.results
@@ -46,7 +46,7 @@ for (const c of table.cases) {
 }
 
 test('a change set with no DELETE or SET reads no changes', () => {
-  const header = `// graph: library · CHANGE SET cs · against ${now} · by ada`;
+  const header = `// graph: library · CHANGE SET cs · against sha-256-64:${now} · by ada`;
   const r = C.checkChangeset(base, [header, "(late:Book {title: 'A late book'})"].join('\n'), {});
   assert.deepEqual(r.header.changes, []);
   assert.deepEqual(

@@ -5,6 +5,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from graphspec.rules.judgements import serving_hash
+from graphspec.rules.named_hashes import digits_of
 from graphspec.rules.proposers import proposers_of
 
 if TYPE_CHECKING:
@@ -87,6 +89,19 @@ def served_rules(
             "it drafted from what it was shown",
             not bad,
             str(sorted(bad)),
+        )
+    )
+    bad = sorted(
+        s
+        for s in g.labelled("Serving")
+        if digits_of(g.p(s).get("content_hash")) != serving_hash(w, jg, s)
+    )
+    out.append(
+        (
+            "§24 H3 rule 5: no serving is edited — each content hash, covering what it served, "
+            "still matches (rule:serving-hash@1)",
+            not bad,
+            str(bad),
         )
     )
     return out
