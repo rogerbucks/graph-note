@@ -79,7 +79,7 @@ async function run(
     const now = gqlBlocks(note)
       .map((b, i) => stepOf(b.text, i))
       .find((s) => s?.graph === step.graph && s.name === step.name);
-    const r = runStep(note, now ?? { ...step, fault: 'it is not in the note any more' }, given, {
+    const r = runStep(note, now ?? { ...step, fault: word('blocks.step-gone') }, given, {
       at: new Date().toISOString(),
       shared,
     });

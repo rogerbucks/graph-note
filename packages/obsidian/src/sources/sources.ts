@@ -14,6 +14,7 @@ import {
   sourceOf,
   styledDrawing,
   underStrictness,
+  word,
 } from '@thoughtknot/core';
 import type { Drawn, Refusal, SourceRead } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
@@ -42,7 +43,7 @@ export async function sourcedView(
 ): Promise<{ read: SourceRead } | { refused: string } | null> {
   const s = sourceFor(texts, graph);
   if (!s) return null;
-  if ('fault' in s) return { refused: `Graph ${graph} cannot be drawn from elsewhere: ${s.fault}.` };
+  if ('fault' in s) return { refused: word('blocks.source-refused', { graph, why: s.fault }) };
   const read = await readFromVault(plugin, s, ctx.sourcePath);
   watchSource(plugin, el, ctx, s, read, redraw);
   return 'refused' in read ? { refused: read.refused } : { read };
@@ -64,7 +65,7 @@ export async function renderSourceBlock(
   const target = info ? { path: ctx.sourcePath, line: info.lineStart, graph: s?.graph ?? '' } : null;
   editInPane(root.createDiv({ cls: 'thoughtknot-card-actions' }), plugin, target);
   if (!s || 'fault' in s) {
-    sourceAlert(root, `This block cannot be drawn: ${s?.fault ?? 'it names no source'}.`);
+    sourceAlert(root, word('blocks.source-block-refused', { why: s?.fault ?? word('blocks.source-none') }));
     renderCode(root, text);
     return;
   }
@@ -92,8 +93,7 @@ export async function renderSourceBlock(
   const plain = reading.graphs.get(graph);
   if (!plain || !plain.boxes.length) {
     if (problems.length) renderProblems(root, problems, false);
-    else
-      root.createDiv({ cls: 'thoughtknot-empty', text: `Graph ${graph} has nothing in it yet where it is written.` });
+    else root.createDiv({ cls: 'thoughtknot-empty', text: word('blocks.source-empty', { graph }) });
     renderCode(root, text);
     return;
   }
@@ -102,7 +102,7 @@ export async function renderSourceBlock(
     drawn = await plugin.layout(styledDrawing(plain, styling.style, reading.world[graph]), owner);
   } catch (e) {
     console.error('ThoughtKnot could not draw', graph, e);
-    sourceAlert(root, 'The drawing engine could not start, so this graph is shown as text.');
+    sourceAlert(root, word('blocks.source-engine-failed'));
     renderCode(root, text);
     return;
   }

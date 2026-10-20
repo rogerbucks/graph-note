@@ -16,6 +16,7 @@ import {
   namesSharedSchema,
   nudgedDrawing,
   readStyle,
+  word,
 } from '@thoughtknot/core';
 import type { Which } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
@@ -39,7 +40,7 @@ function openAt(plugin: ThoughtKnotPlugin, path: string, line: number): void {
   const leaf = plugin.app.workspace.getLeaf(false);
   if (file instanceof TFile && typeof leaf.openFile === 'function')
     void leaf.openFile(file, { eState: { line }, active: true });
-  else new Notice('Read and change the change set in its block in the note.');
+  else new Notice(word('blocks.proposal-edit'));
 }
 
 /** Draws the change set `source` where the note shows it: the proposal over its graph, or why it cannot be shown. */
@@ -64,7 +65,7 @@ export async function renderProposalBlock(
     root.createDiv({
       cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
-      text: `This change set cannot be shown: ${read.refused}`,
+      text: word('blocks.proposal-refused', { why: read.refused }),
     });
     renderCode(root, source);
     return;
@@ -89,14 +90,14 @@ export async function renderProposalBlock(
   // a decision is written into the note against the note as it is then, and said in words
   const write = async (change: (now: string) => Change) => {
     // reading view never changes a note, whatever is called: nothing is decided there
-    if (readOnly()) return 'This note is only being read here, so nothing was decided.';
+    if (readOnly()) return word('blocks.proposal-read-only');
     const file = plugin.app.vault.getAbstractFileByPath(path);
-    if (!(file instanceof TFile)) return 'The note is not there any more, so nothing was decided.';
+    if (!(file instanceof TFile)) return word('blocks.proposal-note-gone');
     let said = '';
     let again: { block: string; note: string } | undefined;
     await plugin.app.vault.process(file, (now) => {
       const r = change(now);
-      said = r.ok ? r.said : `Nothing was decided: ${r.reason}`;
+      said = r.ok ? r.said : word('blocks.proposal-not-decided', { why: r.reason });
       if (!r.ok) again = r.again;
       return r.ok ? r.note : now;
     });
@@ -112,7 +113,7 @@ export async function renderProposalBlock(
     });
     return span ? { block: span.text } : null;
   };
-  const count = (n: number) => `${n} change${n === 1 ? '' : 's'}`;
+  const count = (n: number) => word('blocks.proposal-changes', { count: n });
   const card: ProposalCard = {
     id: review.proposal.id,
     graph,
@@ -122,12 +123,11 @@ export async function renderProposalBlock(
         // the change set is read again from the note: a card drawn from one that was edited since decides nothing
         const held = heldNow(now);
         const current = held && ProposalReview.fromChangeSet(held.block, now);
-        if (!held || !current || 'refused' in current)
-          return { ok: false, reason: 'the change set is no longer in the note as this card was drawn' };
+        if (!held || !current || 'refused' in current) return { ok: false, reason: word('blocks.proposal-gone') };
         if (JSON.stringify(current.proposal) !== JSON.stringify(review.proposal))
           return {
             ok: false,
-            reason: 'the change set has changed since this card was drawn: it is drawn again from the note as it is',
+            reason: word('blocks.proposal-changed'),
             again: { block: held.block, note: now },
           };
         const r = review[kind](now, which, personOf(plugin), { staleSeen });
@@ -136,15 +136,15 @@ export async function renderProposalBlock(
           ...r,
           said:
             kind === 'accept'
-              ? `Accepted ${count(r.ids.length)}: written into the graph. Undo takes them back.`
-              : `Rejected ${count(r.ids.length)}: the graph is unchanged, and the note’s judgement graph records it.`,
+              ? word('blocks.proposal-accepted', { changes: count(r.ids.length) })
+              : word('blocks.proposal-rejected', { changes: count(r.ids.length) }),
         };
       }),
     undo: review.canUndo()
       ? () =>
           write((now) => {
             const r = review.undo(now);
-            return r.ok ? { ...r, said: 'Undone: the note is as it was before the last decision.' } : r;
+            return r.ok ? { ...r, said: word('blocks.proposal-undone') } : r;
           })
       : null,
   };
@@ -158,7 +158,7 @@ export async function renderProposalBlock(
     });
     root.createDiv({
       cls: 'thoughtknot-empty',
-      text: `Graph ${graph} has nothing to draw in this note, so the proposal is listed without a drawing.`,
+      text: word('blocks.proposal-no-graph', { graph }),
     });
     return;
   }
@@ -173,7 +173,7 @@ export async function renderProposalBlock(
     root.createDiv({
       cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
-      text: `Proposal ${review.proposal.id} could not be drawn, so its change set is shown.`,
+      text: word('blocks.proposal-failed', { id: review.proposal.id }),
     });
     renderCode(root, source);
     return;

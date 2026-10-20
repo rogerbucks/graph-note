@@ -89,12 +89,12 @@ async function writeBlock(
   now: string,
 ): Promise<string | null> {
   const file = plugin.app.vault.getAbstractFileByPath(path);
-  if (!(file instanceof TFile)) return 'The note is not there any more, so nothing was written.';
+  if (!(file instanceof TFile)) return word('blocks.note-gone');
   let refused: string | null = null;
   await plugin.app.vault.process(file, (note) => {
     const r = replaceBlock(note, { line: fence - 1, text: was }, now);
     if (r.ok) return r.note;
-    refused = 'The block has changed since it was drawn, so nothing was written.';
+    refused = word('blocks.changed');
     return note;
   });
   return refused;
@@ -265,7 +265,7 @@ export async function renderBlock(
     root.createDiv({
       cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
-      text: 'The drawing engine could not start, so this graph is shown as text. Any drawing generated earlier in this note may be stale.',
+      text: word('blocks.engine-failed'),
     });
     renderCode(root, source);
     return;
@@ -334,8 +334,7 @@ export async function renderBlock(
           void plugin.editHere(target, slot).then(() => {
             if (at) plugin.inlineFor(target.path, target.line)?.reveal(at);
           });
-        else
-          new Notice('This drawing is not on the page yet, so it cannot be edited here; edit it in the pane instead.');
+        else new Notice(word('blocks.not-on-page'));
       },
       onDoneEditing: () => {
         void plugin.inlineFor(target.path, target.line)?.done();

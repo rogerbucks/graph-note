@@ -18,6 +18,15 @@ const AREAS = [
   'packages/obsidian/src/export/',
   'packages/obsidian/src/images/',
   'packages/obsidian/src/links/',
+  'packages/obsidian/src/proposals/',
+  'packages/obsidian/src/sources/',
+  'packages/obsidian/src/block.ts',
+  'packages/obsidian/src/view-block.ts',
+  'packages/obsidian/src/reading-view.ts',
+  'packages/obsidian/src/inline-editors.ts',
+  'packages/obsidian/src/step-block.ts',
+  'packages/obsidian/src/schema-block.ts',
+  'packages/obsidian/src/live-preview.ts',
 ];
 
 /** The files of the areas, as paths from the repository's root. */
@@ -39,6 +48,8 @@ const KEPT = {
   'packages/core/src/display/host.ts': ['The display layer has no host: install one with installHost before drawing.'],
   // a reason kept to compare with, never shown: each host says a deleted note in its own words (kept-draft.ts)
   'packages/core/src/display/editor/editor-note.ts': ['the note was deleted'],
+  // the fields a person types in, as a selector kept in a constant
+  'packages/obsidian/src/live-preview.ts': ['input, textarea, select, [contenteditable="true"]'],
   // said to a developer whose card option cannot be made read-only, in the console
   'packages/core/src/display/graph-view/read-only.ts': '*',
   // a colour the code asks the browser whether it can mix, never shown
@@ -56,6 +67,12 @@ const SHOWN = /^(?:text|title|placeholder|aria-label|say|setText|button)$/;
 /** Whether `text` reads as words: two plain words with a space between, as a sentence or a label has. */
 const readsAsWords = (text) =>
   text.split(/\s+/).filter((w) => /^[(\[⚠✖]?[A-Za-z][a-z]+[,.:;…?!)]?$/.test(w)).length >= 2;
+
+/** Whether `node` is given to the console, which only a developer reads: `console.error('…', e)`. */
+const toConsole = (node) =>
+  ts.isCallExpression(node.parent) &&
+  ts.isPropertyAccessExpression(node.parent.expression) &&
+  node.parent.expression.expression.getText() === 'console';
 
 /** The name of the property or call a string is given to, if any. */
 function givenTo(node) {
@@ -80,7 +97,7 @@ function wordsIn(source) {
     if (text !== null) {
       const to = givenTo(node);
       const imported = ts.isImportDeclaration(node.parent) || ts.isExportDeclaration(node.parent);
-      if (!imported && !PICKS.test(to)) {
+      if (!imported && !PICKS.test(to) && !toConsole(node)) {
         const plain = text.replace(/\{\}/g, ' ');
         if (readsAsWords(plain) || (SHOWN.test(to) && /^[A-Z][a-z]+\b/.test(plain.trim()))) found.push(text);
       }
@@ -93,7 +110,7 @@ function wordsIn(source) {
 }
 
 describe('the words in the code', () => {
-  test('the check finds a sentence, a label and a control’s one word, and passes classes, keys and selectors', () => {
+  test('the check finds a sentence, a label and a control’s one word, and passes classes, keys, selectors and the console', () => {
     const source = [
       "el.createEl('p', { cls: 'thoughtknot-quiet metadata-input', text: 'No problems.' });",
       'say(`Line ${n}: ${message}`);',
@@ -102,6 +119,7 @@ describe('the words in the code', () => {
       "if (e.key === 'Enter') go();",
       "import { word } from '@thoughtknot/core';",
       "el.setText(word('find.none'));",
+      "console.error('ThoughtKnot could not draw', graph, e);",
     ].join('\n');
     assert.deepEqual(wordsIn(source), ['No problems.', 'Line {}: {}', 'Cancel']);
   });
