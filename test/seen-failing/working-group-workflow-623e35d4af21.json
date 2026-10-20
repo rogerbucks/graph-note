@@ -1,0 +1,6 @@
+{
+  "file": "test/working-group-workflow.test.js",
+  "test": "the workflow that keeps Sara up with the working group discussion > pins every action to a full commit and puts no event text in a command line",
+  "seen_failing_first": false,
+  "evidence": "At its own commit the workflow did not exist yet, so the loops had nothing to check and the test passed with no assertion run. A later commit makes it assert the workflow uses actions, so it now fails without the workflow."
+}

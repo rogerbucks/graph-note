@@ -72,6 +72,7 @@ describe('the workflow that keeps Sara up with the working group discussion', ()
   });
 
   test('pins every action to a full commit and puts no event text in a command line', () => {
+    assert.ok(usesRefs(text).length, 'the workflow uses actions');
     for (const ref of usesRefs(text)) assert.match(ref, /@[0-9a-f]{40}$/, ref);
     for (const run of runCommands(text)) assert.doesNotMatch(run, /\$\{\{/);
   });
