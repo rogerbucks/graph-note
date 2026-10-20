@@ -217,7 +217,7 @@ Checked against WCAG 2.2, Apple's and Microsoft's design guidance and common des
 | Progress for long waits | Yes, built 20 Oct 2026 | `progress_shown` |
 | First-run help | Yes, built 20 Oct 2026 | `first_run_help` |
 | Keyboard shortcuts listed | Yes, built 20 Oct 2026 | `shortcuts_listed` |
-| Printing | No | `print_ready` |
+| Printing | Yes, built 20 Oct 2026 | `print_ready` |
 
 ## The build order
 

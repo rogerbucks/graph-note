@@ -2147,3 +2147,46 @@ pre.thoughtknot-code {
 .thoughtknot-quick-note p {
   margin: 0;
 }
+
+/* A printed note (§44, print_ready). Obsidian prints in its light theme. Each card reads the theme's variables, so
+   it is printed in the same light colours, and the drawing too. The card asks for light system colours as well, and for
+   its colours to be printed, not dropped. Each drawing is drawn whole, scaled to the page's width: not cut by its
+   frame, nor moved or zoomed as it was on screen. The card's controls are left out, as paper cannot press them. Its
+   legends stay, so every colour and mark still says what it means. */
+@media print {
+  .thoughtknot {
+    color-scheme: light;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .thoughtknot button,
+  .thoughtknot-bar,
+  .thoughtknot-card-tools,
+  .thoughtknot-details,
+  .thoughtknot-mini-map,
+  .thoughtknot-pointer,
+  .thoughtknot-find,
+  .thoughtknot-filter,
+  .thoughtknot-quick-info,
+  .thoughtknot-edit-slot,
+  .thoughtknot-shortcuts,
+  .thoughtknot-tour {
+    display: none !important;
+  }
+  .thoughtknot-viewport {
+    height: auto !important;
+    overflow: visible;
+    break-inside: avoid;
+  }
+  .thoughtknot-svg {
+    position: static;
+    transform: none;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 100vh;
+  }
+  .thoughtknot-table {
+    position: static;
+    transform: none;
+  }
+}

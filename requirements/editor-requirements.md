@@ -1077,7 +1077,7 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (test_progress_shown:Test {proves: 'a wait past a second shows progress, and past ten seconds can be stopped', file: 'packages/obsidian/test/progress.test.js', where: 'repo', status: 'written'}),
 (test_first_run_help:Test {proves: 'a first graph starts from an example with a tour that can be skipped and reopened', file: 'packages/obsidian/test/first-run.test.js', where: 'repo', status: 'written'}),
 (test_shortcuts_listed:Test {proves: 'every keyboard command is listed in the help and assignable in the host', file: 'packages/obsidian/test/shortcuts.test.js', where: 'repo', status: 'written'}),
-(test_print_ready:Test {proves: 'a printed note draws each graph whole, in print colours, with its legend', file: 'test/print.test.js', where: 'repo', status: 'planned'}),
+(test_print_ready:Test {proves: 'a printed note draws each graph whole, in print colours, with its legend', file: 'test/print.test.js', where: 'repo', status: 'written'}),
 (test_board_view:Test {proves: 'a note opens as a board that pans and zooms by pointer, touch and keyboard, offline', file: 'packages/core/test/board-view.test.js', where: 'repo', status: 'planned'}),
 (test_board_is_text:Test {proves: 'every board edit is a change to the board block, and the board read back from the text is the same board', file: 'packages/core/test/board-text.test.js', where: 'repo', status: 'planned'}),
 (test_board_items:Test {proves: 'each item kind is made, sized, moved, grouped, layered, locked and styled, and written to the board block', file: 'packages/core/test/board-items.test.js', where: 'repo', status: 'planned'}),
