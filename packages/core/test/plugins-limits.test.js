@@ -2,10 +2,12 @@
 // - its manifest is checked before anything it adds;
 // - it is given only the extension points its manifest names;
 // - a plug-in refused leaves nothing behind;
-// - an export that throws or gives no text is caught and named, never let through.
+// - an export that throws or gives no text is caught and named, never let through;
+// - a call that runs too long is named, its answer dropped and its plug-in stopped.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { PLUGIN_API, pluginRegistry } from '../src/plugins.ts';
+import { PLUGIN_API, PLUGIN_TIME_LIMIT, pluginRegistry } from '../src/plugins.ts';
+import { memoryStorage } from '../src/note-storage.ts';
 
 const exporter = (format, write = () => 'ok') => ({
   format,
@@ -108,5 +110,98 @@ describe('a plug-in’s manifest and limits', () => {
       plugin: 'acme.one',
       message: 'The export EMPTY of acme.one gave no text.',
     });
+  });
+
+  test('a storage or command that is badly named, untitled or does nothing is refused', () => {
+    const open = () => memoryStorage();
+    const run = () => {};
+    for (const [uses, add, why] of [
+      ['storage', (p) => p.storage.add({ name: 'My Drive', title: 'D', open }), /"My Drive" is not named by/],
+      ['storage', (p) => p.storage.add({ name: 'drive', title: '', open }), /the storage "drive" has no title/],
+      ['storage', (p) => p.storage.add({ name: 'drive', title: 'D', open: 1 }), /"drive" cannot be opened/],
+      ['commands', (p) => p.commands.add({ id: 'other.go', title: 'Go', run }), /not named acme\.one\.<word>/],
+      ['commands', (p) => p.commands.add({ id: 'acme.one.go', title: ' ', run }), /"acme.one.go" has no title/],
+      ['commands', (p) => p.commands.add({ id: 'acme.one.go', title: 'Go' }), /"acme.one.go" does nothing/],
+    ])
+      assert.throws(() => pluginRegistry().register(plugin({ uses: [uses], register: add })), why);
+  });
+
+  test('a storage name or command another plug-in added is refused', () => {
+    const registry = pluginRegistry();
+    const drive = (p) => p.storage.add({ name: 'drive', title: 'Drive', open: () => memoryStorage() });
+    registry.register(plugin({ uses: ['storage'], register: drive }));
+    assert.throws(
+      () => registry.register(plugin({ id: 'acme.two', uses: ['storage'], register: drive })),
+      /the storage "drive" is already added by acme\.one/,
+    );
+  });
+
+  test('a storage that throws as it opens, or a command that throws, is caught and named', () => {
+    const registry = pluginRegistry();
+    registry.register(
+      plugin({
+        uses: ['storage', 'commands'],
+        register: (p) => {
+          p.storage.add({
+            name: 'drive',
+            title: 'Drive',
+            open: () => {
+              throw new Error('offline');
+            },
+          });
+          p.commands.add({
+            id: 'acme.one.go',
+            title: 'Go',
+            run: () => {
+              throw new Error('no way');
+            },
+          });
+        },
+      }),
+    );
+    assert.deepEqual(registry.openStorage('drive'), {
+      ok: false,
+      plugin: 'acme.one',
+      message: 'The storage Drive of acme.one failed: offline',
+    });
+    assert.deepEqual(registry.runCommand('acme.one.go'), {
+      ok: false,
+      plugin: 'acme.one',
+      message: 'The command Go of acme.one failed: no way',
+    });
+  });
+
+  test('a call that runs too long is named, its answer dropped, and its plug-in stopped', () => {
+    let clock = 0;
+    const registry = pluginRegistry({ now: () => clock });
+    let calls = 0;
+    registry.register(
+      plugin({
+        uses: ['exports', 'commands'],
+        register: (p) => {
+          p.exports.add(exporter('slow', () => ((clock += PLUGIN_TIME_LIMIT + 1), calls++, 'late')));
+          p.commands.add({ id: 'acme.one.go', title: 'Go', run: () => calls++ });
+        },
+      }),
+    );
+    const late = registry.writeData('slow', DATA, INFO);
+    assert.equal(late.ok, false, 'the late answer is dropped');
+    assert.equal(late.plugin, 'acme.one');
+    assert.match(late.message, /The export SLOW of acme\.one ran too long: .*took 2001 ms, over the 2000 ms allowed/);
+    assert.deepEqual(registry.stopped(), [
+      { plugin: 'acme.one', why: late.message.split('ran too long: ')[1].slice(0, -1) },
+    ]);
+    const after = registry.runCommand('acme.one.go');
+    assert.equal(after.ok, false);
+    assert.match(after.message, /The command Go of acme\.one was not run: the plug-in was stopped/);
+    assert.equal(calls, 1, 'nothing of a stopped plug-in is called again');
+  });
+
+  test('a call within the limit is answered, and the limit can be set for a host', () => {
+    let clock = 0;
+    const registry = pluginRegistry({ now: () => clock, timeLimit: 50 });
+    registry.register(plugin({ register: (p) => p.exports.add(exporter('quick', () => ((clock += 50), 'on time'))) }));
+    assert.deepEqual(registry.writeData('quick', DATA, INFO), { ok: true, value: 'on time' });
+    assert.deepEqual(registry.stopped(), []);
   });
 });

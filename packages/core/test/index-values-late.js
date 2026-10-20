@@ -11,6 +11,7 @@ export const VALUES_LATE = [
   'startingSwitches',
   'stepOf',
   'stepOver',
+  'storageBackendContract',
   'storageContract',
   'styleEdit',
   'styleOf',

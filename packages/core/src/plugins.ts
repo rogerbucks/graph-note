@@ -4,9 +4,12 @@
 // is checked as it is added. A call into it that throws is caught and named, never let through to blank a drawing. The
 // first extension point is the data exports, and the second the theme tokens (§44, plugin_theme_tokens). A plug-in
 // inherits the core's design tokens and may add colours of its own, each meeting the locked contrast (theme-tokens.ts).
-// Diagram types, graph steps and sources, storage, AI providers and commands join them one at a time. Each comes with
-// its own contract suite (plugins-contract.ts).
+// The third is note storage (§41, storage_contract), and the fourth the commands a person runs. A call over the time
+// limit is named and its answer dropped. Its plug-in is stopped, so it never holds a drawing up again.
+// Diagram types, graph steps and sources and AI providers join them one at a time. Each comes with its own contract
+// suite (plugins-contract.ts).
 import type { DataInfo, ExportedData } from './export-data-model.ts';
+import type { NoteStorage } from './note-storage.ts';
 import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
 import type { ThemeToken } from './theme-tokens.ts';
 
@@ -14,7 +17,7 @@ import type { ThemeToken } from './theme-tokens.ts';
 export const PLUGIN_API = '1';
 
 /** The extension points a plug-in may use, as its manifest names them. */
-export const EXTENSION_POINTS = ['exports', 'theme'] as const;
+export const EXTENSION_POINTS = ['exports', 'theme', 'storage', 'commands'] as const;
 
 /** One of the extension points. */
 export type ExtensionPoint = (typeof EXTENSION_POINTS)[number];
@@ -33,11 +36,33 @@ export interface DataExporter {
   write: (data: ExportedData, info: DataInfo) => string;
 }
 
+/** A place notes are kept that a plug-in adds, such as a server or a cloud drive (§41, storage_contract). */
+export interface StorageBackend {
+  /** The word it is chosen by, lower case: `webdav`. */
+  name: string;
+  /** What it is called where it is offered: `WebDAV`. */
+  title: string;
+  /** A store of the notes kept there, each read and written as `NoteStorage` promises. */
+  open: () => NoteStorage;
+}
+
+/** A command a plug-in adds, which a host offers in its command list and menus. */
+export interface PluginCommand {
+  /** Its id, under its plug-in's own: `acme.tags.count`. */
+  id: string;
+  /** What it is called where it is offered, in the host's language. */
+  title: string;
+  /** Does what the command does. */
+  run: () => void;
+}
+
 /** What a plug-in is given to add to: only the points its manifest names. */
 export interface ExtensionPoints {
   exports?: { add: (exporter: DataExporter) => void };
   /** The theme: the core's tokens, which a plug-in's styles may name, and a way to add colours of its own. */
   theme?: { core: readonly string[]; add: (token: ThemeToken) => void };
+  storage?: { add: (backend: StorageBackend) => void };
+  commands?: { add: (command: PluginCommand) => void };
 }
 
 /** A plug-in: who it is, what it uses, and what it adds. */
@@ -61,6 +86,23 @@ const ID = /^[a-z0-9]+(?:[.-][a-z0-9]+)+$/;
 const SEMVER = /^\d+\.\d+\.\d+$/;
 const WORD = /^[a-z][a-z0-9-]*$/;
 
+/** How long a call into a plug-in may run, in milliseconds, before the plug-in is stopped. */
+export const PLUGIN_TIME_LIMIT = 2000;
+
+/** What a registry is made with: how long a call may run, and the clock it is timed by. */
+export interface RegistryOptions {
+  /** In milliseconds; `PLUGIN_TIME_LIMIT` unless set. */
+  timeLimit?: number;
+  /** The time now, in milliseconds; `Date.now` unless set. */
+  now?: () => number;
+}
+
+/** A plug-in that was stopped, and why. */
+export interface StoppedPlugin {
+  plugin: string;
+  why: string;
+}
+
 /** The plug-ins installed and what each added; one for each host, made by `pluginRegistry`. */
 export interface PluginRegistry {
   /** Installs `plugin`; throws, saying why, when its manifest or what it adds is refused, and then installs none of it. */
@@ -75,6 +117,16 @@ export interface PluginRegistry {
   themeTokens: () => ThemeToken[];
   /** The data written by the export of `format`, or what went wrong and whose plug-in it was. */
   writeData: (format: string, data: ExportedData, info: DataInfo) => PluginResult<string>;
+  /** Every storage backend added, in the order added. */
+  storages: () => StorageBackend[];
+  /** The notes of the backend `name`, opened, or what went wrong and whose plug-in it was. */
+  openStorage: (name: string) => PluginResult<NoteStorage>;
+  /** Every command added, in the order added. */
+  commands: () => PluginCommand[];
+  /** Runs the command `id`, or says what went wrong and whose plug-in it was. */
+  runCommand: (id: string) => PluginResult<undefined>;
+  /** The plug-ins stopped for running too long, and why; nothing of theirs is called again. */
+  stopped: () => StoppedPlugin[];
 }
 
 /** Why a data export a plug-in adds is refused, or null when it is accepted. */
@@ -88,14 +140,72 @@ function exporterProblem(e: DataExporter, taken: Map<string, string>): string | 
   return null;
 }
 
+/** Why a storage backend a plug-in adds is refused, or null when it is accepted. */
+function backendProblem(b: StorageBackend, taken: Map<string, string>): string | null {
+  if (!WORD.test(b.name)) return `the storage "${b.name}" is not named by a lower-case word`;
+  if (taken.has(b.name)) return `the storage "${b.name}" is already added by ${taken.get(b.name)}`;
+  if (!b.title.trim()) return `the storage "${b.name}" has no title`;
+  if (typeof b.open !== 'function') return `the storage "${b.name}" cannot be opened`;
+  return null;
+}
+
+/** Why a command the plug-in `pluginId` adds is refused, or null when it is accepted. */
+function commandProblem(c: PluginCommand, pluginId: string, taken: Map<string, string>): string | null {
+  const word = c.id.startsWith(`${pluginId}.`) ? c.id.slice(pluginId.length + 1) : '';
+  if (!WORD.test(word)) return `the command "${c.id}" is not named ${pluginId}.<word>`;
+  if (taken.has(c.id)) return `the command "${c.id}" is added already`;
+  if (!c.title.trim()) return `the command "${c.id}" has no title`;
+  if (typeof c.run !== 'function') return `the command "${c.id}" does nothing`;
+  return null;
+}
+
+/** What a plug-in adds to one point, kept aside until all it adds has been accepted. */
+interface Shelf<T> {
+  items: T[];
+  owner: Map<string, string>;
+}
+
+const shelf = <T>(): Shelf<T> => ({ items: [], owner: new Map() });
+
 /** A registry with no plug-ins installed yet. */
-export function pluginRegistry(): PluginRegistry {
+export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
+  const { timeLimit = PLUGIN_TIME_LIMIT, now = Date.now } = options;
   const installed: string[] = [];
   const exporters: DataExporter[] = [];
   const owner = new Map<string, string>();
   const tokens: ThemeToken[] = [];
   const tokenOwner = new Map<string, string>();
+  const backends = shelf<StorageBackend>();
+  const commands = shelf<PluginCommand>();
+  const stopped = new Map<string, string>();
   const core = Object.freeze(Object.keys(THEME_TOKENS));
+  /** The answer of `call`, made by `plugin`'s `what`, timed, caught and named. A call over the limit stops the plug-in. */
+  const guarded = <T>(plugin: string, what: string, call: () => T): PluginResult<T> => {
+    const stop = stopped.get(plugin);
+    if (stop !== undefined) return { ok: false, plugin, message: `${what} of ${plugin} was not run: ${stop}` };
+    const start = now();
+    let value: T;
+    try {
+      value = call();
+    } catch (err) {
+      const why = err instanceof Error ? err.message : String(err);
+      return { ok: false, plugin, message: `${what} of ${plugin} failed: ${why}` };
+    }
+    const took = now() - start;
+    if (took > timeLimit) {
+      const why = `the plug-in was stopped, as ${what} took ${Math.round(took)} ms, over the ${timeLimit} ms allowed`;
+      stopped.set(plugin, why);
+      return { ok: false, plugin, message: `${what} of ${plugin} ran too long: ${why}.` };
+    }
+    return { ok: true, value };
+  };
+  /** Moves what a plug-in added onto the registry's own shelf, once all of it was accepted. */
+  const keep = <T>(from: Shelf<T>, to: Shelf<T>, key: (t: T) => string, plugin: string) => {
+    for (const t of from.items) {
+      to.items.push(t);
+      to.owner.set(key(t), plugin);
+    }
+  };
   return {
     register(plugin) {
       const refuse = (why: string): never => {
@@ -113,6 +223,8 @@ export function pluginRegistry(): PluginRegistry {
       const taken = new Map(owner);
       const addedTokens: ThemeToken[] = [];
       const tokenTaken = new Map(tokenOwner);
+      const addedBackends = shelf<StorageBackend>();
+      const addedCommands = shelf<PluginCommand>();
       const points: ExtensionPoints = {};
       if (plugin.uses.includes('exports'))
         points.exports = {
@@ -135,6 +247,24 @@ export function pluginRegistry(): PluginRegistry {
             addedTokens.push({ ...t });
           },
         });
+      if (plugin.uses.includes('storage'))
+        points.storage = {
+          add: (b) => {
+            const why = backendProblem(b, new Map([...backends.owner, ...addedBackends.owner]));
+            if (why) refuse(why);
+            addedBackends.owner.set(b.name, plugin.id);
+            addedBackends.items.push({ ...b });
+          },
+        };
+      if (plugin.uses.includes('commands'))
+        points.commands = {
+          add: (c) => {
+            const why = commandProblem(c, plugin.id, new Map([...commands.owner, ...addedCommands.owner]));
+            if (why) refuse(why);
+            addedCommands.owner.set(c.id, plugin.id);
+            addedCommands.items.push({ ...c });
+          },
+        };
       try {
         plugin.register(Object.freeze(points));
       } catch (e) {
@@ -150,6 +280,8 @@ export function pluginRegistry(): PluginRegistry {
         tokens.push(t);
         tokenOwner.set(t.name, plugin.id);
       }
+      keep(addedBackends, backends, (b) => b.name, plugin.id);
+      keep(addedCommands, commands, (c) => c.id, plugin.id);
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
@@ -159,15 +291,23 @@ export function pluginRegistry(): PluginRegistry {
       const e = exporters.find((x) => x.format === format);
       if (!e) return { ok: false, plugin: '', message: `No plug-in adds the format "${format}".` };
       const plugin = owner.get(format) ?? '';
-      try {
-        const value = e.write(data, info);
-        if (typeof value !== 'string')
-          return { ok: false, plugin, message: `The export ${e.title} of ${plugin} gave no text.` };
-        return { ok: true, value };
-      } catch (err) {
-        const why = err instanceof Error ? err.message : String(err);
-        return { ok: false, plugin, message: `The export ${e.title} of ${plugin} failed: ${why}` };
-      }
+      const written = guarded(plugin, `The export ${e.title}`, () => e.write(data, info));
+      if (written.ok && typeof written.value !== 'string')
+        return { ok: false, plugin, message: `The export ${e.title} of ${plugin} gave no text.` };
+      return written;
     },
+    storages: () => backends.items.map((b) => ({ ...b })),
+    openStorage(name) {
+      const b = backends.items.find((x) => x.name === name);
+      if (!b) return { ok: false, plugin: '', message: `No plug-in adds the storage "${name}".` };
+      return guarded(backends.owner.get(name) ?? '', `The storage ${b.title}`, () => b.open());
+    },
+    commands: () => commands.items.map((c) => ({ ...c })),
+    runCommand(id) {
+      const c = commands.items.find((x) => x.id === id);
+      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the command "${id}".` };
+      return guarded(commands.owner.get(id) ?? '', `The command ${c.title}`, () => void c.run());
+    },
+    stopped: () => [...stopped].map(([plugin, why]) => ({ plugin, why })),
   };
 }

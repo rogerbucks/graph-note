@@ -310,6 +310,9 @@
         "commaInNote": [
           "value: (note: string, caret: number) => number | null"
         ],
+        "commandContract": [
+          "value: (c: PluginCommand, pluginId: string) => PluginCheck[]"
+        ],
         "CompanionInfo": [
           "interface",
           "data?: { things: number; links: number; faded?: { things: number; links: number; }; } | undefined",
@@ -355,6 +358,9 @@
           "type = { ok: true; note: string; changed: number; } | { ok: false; reason: string; }"
         ],
         "CORE_EXPORTS": [
+          "value: ThoughtKnotPlugin"
+        ],
+        "CORE_STORAGE": [
           "value: ThoughtKnotPlugin"
         ],
         "coverOf": [
@@ -734,14 +740,16 @@
           "value: (scope: ExportScope, layout: ExportLayout, info: ExportInfo) => Promise<ExportImage | Refusal | TooLargeToAnimate | null>"
         ],
         "EXTENSION_POINTS": [
-          "value: readonly ['exports', 'theme']"
+          "value: readonly ['exports', 'theme', 'storage', 'commands']"
         ],
         "ExtensionPoint": [
-          "type = 'exports' | 'theme'"
+          "type = 'exports' | 'theme' | 'storage' | 'commands'"
         ],
         "ExtensionPoints": [
           "interface",
+          "commands?: { add: (command: PluginCommand) => void; } | undefined",
           "exports?: { add: (exporter: DataExporter) => void; } | undefined",
+          "storage?: { add: (backend: StorageBackend) => void; } | undefined",
           "theme?: { core: readonly string[]; add: (token: ThemeToken) => void; } | undefined"
         ],
         "FADE": [
@@ -1876,20 +1884,34 @@
         "PLUGIN_API": [
           "value: '1'"
         ],
+        "PLUGIN_TIME_LIMIT": [
+          "value: 2000"
+        ],
         "PluginCheck": [
           "interface",
           "name: string",
           "run: () => void"
         ],
+        "PluginCommand": [
+          "interface",
+          "id: string",
+          "run: () => void",
+          "title: string"
+        ],
         "pluginRegistry": [
-          "value: () => PluginRegistry"
+          "value: (options?: RegistryOptions) => PluginRegistry"
         ],
         "PluginRegistry": [
           "interface",
+          "commands: () => PluginCommand[]",
           "exporter: (format: string) => DataExporter | undefined",
           "exporters: () => DataExporter[]",
+          "openStorage: (name: string) => PluginResult<NoteStorage>",
           "plugins: () => string[]",
           "register: (plugin: ThoughtKnotPlugin) => void",
+          "runCommand: (id: string) => PluginResult<undefined>",
+          "stopped: () => StoppedPlugin[]",
+          "storages: () => StorageBackend[]",
           "themeTokens: () => ThemeToken[]",
           "writeData: (format: string, data: ExportedData, info: DataInfo) => PluginResult<string>"
         ],
@@ -2112,6 +2134,11 @@
         ],
         "refusedWords": [
           "value: (link: FoundLink) => string"
+        ],
+        "RegistryOptions": [
+          "interface",
+          "now?: (() => number) | undefined",
+          "timeLimit?: number | undefined"
         ],
         "remoteImagesIn": [
           "value: (markdown: string) => string[]"
@@ -2501,6 +2528,20 @@
         "StepRun": [
           "type = { refused: string[]; } | { nothing: string; output: StepOutput; } | { proposal: Proposal; output: StepOutput; }"
         ],
+        "StoppedPlugin": [
+          "interface",
+          "plugin: string",
+          "why: string"
+        ],
+        "StorageBackend": [
+          "interface",
+          "name: string",
+          "open: () => NoteStorage",
+          "title: string"
+        ],
+        "storageBackendContract": [
+          "value: (b: StorageBackend) => StorageCheck[]"
+        ],
         "StorageCheck": [
           "interface",
           "name: string",
@@ -2726,7 +2767,7 @@
           "api: string",
           "id: string",
           "register: (points: ExtensionPoints) => void",
-          "uses: Array<'exports' | 'theme'>",
+          "uses: Array<'exports' | 'theme' | 'storage' | 'commands'>",
           "version: string"
         ],
         "Threshold": [
