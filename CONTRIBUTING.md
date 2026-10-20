@@ -361,6 +361,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/graph-spec/test/changesets.test.mjs` — a change set's author is the session that sent it, never the name in
   its header (editor spec §51, spec_author_from_session; GS4). A header naming anyone else fails, and the set is checked
   as the session's.
+- `packages/graph-spec/test/limits.test.mjs` — the reader, the check and a join stop at stated limits. Each limit is on
+  size, nesting or join size, with a clear refusal (editor spec §51, spec_read_limits; GS4; `limit-cases.json`).
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way, and write it into the same corrected text.
 - `packages/graph-spec/test/escapes.test.mjs` — both readers read quoted text's escapes as GQL does. They refuse one GQL
   does not name, with the fix that doubles the backslash, and quote a text alike (req:3.gql-escapes; one table,
@@ -388,10 +390,14 @@ These test behaviour across modules, or the repository itself, so they are named
   `problem-codes.json` gives it, the same as the JavaScript reader's. The blocks of `problem-code-cases.json` are
   refused with the same codes (editor spec §42, problem_codes).
 - `python/graph_spec/tests/test_escapes.py` — the Python reader answers `escape-cases.json` as the JavaScript one does, and what the engine writes for Grafeo keeps a text's escapes (req:3.gql-escapes).
+### The Python library: ids, limits and layout
+
 - `python/graph_spec/tests/test_id_once_engine.py` — every route to the engine reads the block with the reader first.
   So no id reaches it twice in a graph (req:3.engine-reads-first, req:3.id-once).
 - `python/graph_spec/tests/test_ids_engine.py` — every route to the engine refuses a SET of a node's id. It also
   refuses a node id that is not text, read by the reader first (req:3.set-keeps-id, req:3.id-is-text).
+- `python/graph_spec/tests/test_limits.py` — the Python library stops at the limits of `limit-cases.json`, as the
+  JavaScript one does (editor spec §51, spec_read_limits).
 - `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.

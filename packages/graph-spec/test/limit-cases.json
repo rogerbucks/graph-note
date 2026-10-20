@@ -1,0 +1,17 @@
+{
+  "about": "Editor spec §51, spec_read_limits (GS4): the limits every reader, check and join stops at, and the problem code each refusal gives. packages/graph-spec/test/limits.test.mjs and python/graph_spec/tests/test_limits.py hold both libraries to this table.",
+  "limits": {
+    "block_chars": 1000000,
+    "items": 50000,
+    "nesting": 64,
+    "join_documents": 64,
+    "join_items": 100000
+  },
+  "codes": {
+    "block_chars": "GN601",
+    "items": "GN602",
+    "nesting": "GN603",
+    "join_documents": "GN604",
+    "join_items": "GN605"
+  }
+}
