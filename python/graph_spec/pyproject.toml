@@ -15,7 +15,7 @@ dependencies = [
 [project.optional-dependencies]
 # The engine, for database work only: queries, path search, a graph stored to query later. Grafeo
 # 0.5.43 is the GQL dialect the graph spec names, and the reference the reader is proved against.
-grafeo = ["grafeo==0.5.43"]
+grafeo = ["grafeo==0.5.44"]
 
 [tool.uv]
 # The modules are flat files in src/, imported by path, so there is nothing to build.
@@ -25,10 +25,10 @@ default-groups = ["dev", "reference"]
 
 [dependency-groups]
 # Ruff checks the library against PEP 8 and formats it (CONTRIBUTING.md). Pinned, as every tool is.
-dev = ["ruff==0.16.9"]
+dev = ["ruff==0.17.0"]
 # The reference engine the tests prove the reader against (req:17.engine-agreement), a test
 # dependency only; CI's python-no-engine job runs without it.
-reference = ["grafeo==0.5.43"]
+reference = ["grafeo==0.5.44"]
 
 [tool.ruff]
 # PEP 8 lets a team agree on up to 99 characters.
