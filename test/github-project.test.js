@@ -36,7 +36,7 @@ const command = (...args) =>
   });
 
 describe('the workstreams file', () => {
-  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33, the WCAG workstream W34, the test-files workstream W35, the moving-boxes workstream W36, the roadmap workstreams A1, R1, R2, L1, H1, H2, V1 and D1, the design-review workstreams G1, T1, P1 and U1, the open-questions workstream Q, the whiteboard workstreams B1 to B4, the Copilot Cowork workstream M1, the text-to-graph workstream X1, the home page workstream D2, the developer site workstream D3, the GitHub repository workstream K1 and the Claude presents and decides workstreams Y1 and Y2, and the graph spec workstreams GS1 to GS7 and the data tables workstream E1, with the titles agreed', () => {
+  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33, the WCAG workstream W34, the test-files workstream W35, the moving-boxes workstream W36, the roadmap workstreams A1, R1, R2, L1, H1, H2, V1 and D1, the design-review workstreams G1, T1, P1 and U1, the open-questions workstream Q, the whiteboard workstreams B1 to B4, the Copilot Cowork workstream M1, the text-to-graph workstream X1, the home page workstream D2, the developer site workstream D3, the GitHub repository workstream K1 and the Claude presents and decides workstreams Y1 and Y2, and the graph spec workstreams GS1 to GS7, the data tables workstream E1 and the trust model workstream TM1, with the titles agreed', () => {
     assert.deepEqual(Object.keys(workstreams), [
       ...Array.from({ length: 16 }, (_, n) => `W${n}`),
       ...Array.from({ length: 9 }, (_, n) => `C${n}`),
@@ -68,6 +68,7 @@ describe('the workstreams file', () => {
       'Y2',
       ...Array.from({ length: 7 }, (_, n) => `GS${n + 1}`),
       'E1',
+      'TM1',
     ]);
     assert.deepEqual(
       Object.values(workstreams).map((w) => w.title),
@@ -151,6 +152,7 @@ describe('the workstreams file', () => {
         'A graph spec that reads easily',
         'Smaller graph-spec gaps',
         'Data tables and cubes',
+        'Trust model review',
       ],
     );
   });

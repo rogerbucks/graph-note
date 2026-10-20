@@ -926,5 +926,10 @@
       "data_set_cache",
       "data_set_access"
     ]
+  },
+  "TM1": {
+    "title": "Trust model review",
+    "size": "M",
+    "requirements": ["trust_model_written", "trust_model_reviewed", "trust_model_kept_current"]
   }
 }
