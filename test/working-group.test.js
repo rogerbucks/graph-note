@@ -81,3 +81,9 @@ test('the humour is dry, understated and kind: Terry Pratchett, not a shouting c
   assert.match(flat, /Terry Pratchett/);
   assert.doesNotMatch(flat, /glee|irreverent|crash-test/i, 'no loud or sharp voices');
 });
+
+test('all three speak plainly: little jargon, and a term explained when it is needed (Roger, 20 Oct 2026)', () => {
+  const flat = read(ROLES).replace(/\s+/g, ' ');
+  assert.match(flat, /\*\*All three speak plainly\.\*\*/);
+  assert.match(flat, /explain it in a few everyday words/);
+});
