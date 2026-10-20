@@ -3,6 +3,8 @@
 // for Obsidian's, the browser page's, the standalone app's and VS Code's alike. The checks need no test framework. Each
 // one throws when the host breaks the promise, so a host's tests run them with whatever runner it has. A host lets the
 // checks see what it showed through a probe, as only it knows where its notices and menus go.
+import type { FoundLink } from '@thoughtknot/core';
+import { storageContract } from '@thoughtknot/core';
 import type { DisplayHost, Host, MenuEntry } from './host.ts';
 
 /**
@@ -12,6 +14,7 @@ import type { DisplayHost, Host, MenuEntry } from './host.ts';
  */
 export const HOST_CONTRACT_VERSIONS: readonly (readonly [version: number, digest: string])[] = [
   [3, 'efae3cb1b2853709'],
+  [4, 'd1cb2bc16a374f29'],
 ];
 
 /** The version of the host interface these checks hold a host to: the last one recorded above. */
@@ -176,13 +179,79 @@ export interface ServicesUnderTest {
   probe: ServicesProbe;
 }
 
+/** A link to a note, as the link scan finds `[[target]]`. */
+const linkTo = (target: string): FoundLink => {
+  const written = `[[${target}]]`;
+  return {
+    written,
+    start: 0,
+    end: written.length,
+    target,
+    targetAt: { start: 2, end: 2 + target.length },
+    label: target,
+    embed: false,
+    kind: 'note',
+    opens: target,
+    markdown: false,
+  };
+};
+
 /**
  * Every check of the whole host interface, each run on a fresh host from `make`: the display's, then its links,
  * settings, secrets and notes. The notes are held to the storage contract (storage-contract.ts).
  */
 export function hostServicesContract(make: () => ServicesUnderTest): ContractCheck[] {
-  return hostContract(() => {
+  const display = hostContract(() => {
     const { host, probe } = make();
     return { host: host.display, probe };
   });
+  const notes = storageContract(() => make().host.files).map((check) => ({ ...check, name: `notes: ${check.name}` }));
+  return [
+    ...display,
+    {
+      name: 'settings saved are loaded back as they were saved, and a second save replaces the first',
+      run: async () => {
+        const { host } = make();
+        const first = { language: 'en-GB', models: [{ name: 'a', keyName: 'key-a' }], wrap: 30, on: true };
+        await host.settings.save(first);
+        if (JSON.stringify(await host.settings.load()) !== JSON.stringify(first))
+          fail('settings', JSON.stringify(first), await host.settings.load());
+        await host.settings.save({ wrap: 40 });
+        if (JSON.stringify(await host.settings.load()) !== '{"wrap":40}')
+          fail('settings', '{"wrap":40}', await host.settings.load());
+      },
+    },
+    {
+      name: 'a secret is read by its name, and a name the host holds nothing for reads null',
+      run: async () => {
+        const { host, probe } = make();
+        const none: unknown = await host.secrets.get('no-such-secret-anywhere');
+        if (none !== null) fail('secrets', 'null', none);
+        probe.keepSecret('ai-key', 'sk-test-0001');
+        const kept: unknown = await host.secrets.get('ai-key');
+        if (kept !== 'sk-test-0001') fail('secrets', '"sk-test-0001"', kept);
+      },
+    },
+    {
+      name: 'a card’s links are found from its note, and a note a link creates is found after',
+      run: async () => {
+        const { host } = make();
+        const links = host.links('Plans/Today.md', 'g');
+        if (links.path !== 'Plans/Today.md') fail('links', 'the path of the card’s note', links.path);
+        const before: unknown = links.found('A new idea');
+        if (typeof before !== 'boolean') fail('links', 'found as true or false', before);
+        if ((await links.create('A new idea')) && !links.found('A new idea'))
+          fail('links', 'the note it created found', false);
+      },
+    },
+    {
+      name: 'opening a link opens what it names, once',
+      run: () => {
+        const { host, probe } = make();
+        host.links('Plans/Today.md', 'g').open(linkTo('Budget'));
+        if (JSON.stringify(probe.opened()) !== '["Budget"]') fail('links', '["Budget"]', probe.opened());
+      },
+    },
+    ...notes,
+  ];
 }

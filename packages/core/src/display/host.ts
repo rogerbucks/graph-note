@@ -63,7 +63,7 @@ export interface SettingsStore {
 
 /**
  * A host's secrets, such as an AI provider's key, each read by its name: Obsidian's secret storage, VS Code's, the
- * system keychain for the app. The settings keep only a secret's name, never the secret itself.
+ * system keychain in the standalone app; the settings keep only a secret's name, never the secret itself.
  */
 export interface SecretStore {
   /** The secret named `name`, or null when the host holds none by that name. */

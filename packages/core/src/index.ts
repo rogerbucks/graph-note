@@ -6,15 +6,8 @@ export { hops } from './estimates.ts';
 export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
 export { historyLayer, layered, memoryStorage, notePath, noteVersion, refusal, REFUSED } from './note-storage.ts';
-export type {
-  ChangeLog,
-  NoteStorage,
-  StorageLayer,
-  StoredChange,
-  StoredNote,
-  WriteOptions,
-  WriteOutcome,
-} from './note-storage.ts';
+export type { ChangeLog, NoteStorage, StorageLayer, StoredChange } from './note-storage.ts';
+export type { StoredNote, WriteOptions, WriteOutcome } from './note-storage.ts';
 export { storageContract } from './storage-contract.ts';
 export type { StorageCheck } from './storage-contract.ts';
 export { DIRECTORY, workspaceStorage } from './workspace-storage.ts';

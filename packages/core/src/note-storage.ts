@@ -75,21 +75,37 @@ export function refusal(current: StoredNote | null, options: WriteOptions = {}):
   return current.version === expected ? null : REFUSED.changed;
 }
 
-/** Not built yet. */
-const notBuilt = (): never => {
-  throw new Error('not built yet');
-};
+/** A backend with its layers on: the first layer wraps the backend, and each after wraps the one before. */
+export const layered = (base: NoteStorage, ...layers: StorageLayer[]): NoteStorage =>
+  layers.reduce((storage, layer) => layer(storage), base);
 
-/** A backend with its layers on: not built yet. */
-export const layered = (_base: NoteStorage, ..._layers: StorageLayer[]): NoteStorage => notBuilt();
-
-/** Notes kept in memory: not built yet. */
-export const memoryStorage = (_seed: Record<string, string> = {}): NoteStorage => ({
-  list: async () => notBuilt(),
-  read: async () => notBuilt(),
-  write: async () => notBuilt(),
-  remove: async () => notBuilt(),
-});
+/** Notes kept in memory: for tests, and for a host that has nowhere else to keep them. */
+export function memoryStorage(seed: Record<string, string> = {}): NoteStorage {
+  const notes = new Map<string, string>();
+  for (const [path, text] of Object.entries(seed)) notes.set(notePath(path), text);
+  const at = (path: string): StoredNote | null => {
+    const text = notes.get(path);
+    return text === undefined ? null : { text, version: noteVersion(text) };
+  };
+  return {
+    list: async () => [...notes.keys()].sort(),
+    read: async (path) => at(notePath(path)),
+    write: async (path, text, options) => {
+      const current = at(notePath(path));
+      const reason = refusal(current, options);
+      if (reason) return { ok: false, reason, current };
+      notes.set(path, text);
+      return { ok: true, version: noteVersion(text) };
+    },
+    remove: async (path, options) => {
+      const current = at(notePath(path));
+      const reason = current ? refusal(current, options) : REFUSED.missing;
+      if (reason) return { ok: false, reason, current };
+      notes.delete(path);
+      return { ok: true, version: null };
+    },
+  };
+}
 
 /** One change a history layer keeps: the note before and after (null: not there), who made it, and when. */
 export interface StoredChange {
@@ -105,8 +121,27 @@ export interface ChangeLog {
   record(change: StoredChange): void | Promise<void>;
 }
 
-/** The history layer: not built yet. */
+/**
+ * The history layer (storage_history_layer): each change that is made is kept in `log`, with who made it. A refused
+ * change is not kept. `now` gives the time, as an ISO 8601 text.
+ */
 export const historyLayer =
-  (_log: ChangeLog, _now?: () => string): StorageLayer =>
-  () =>
-    notBuilt();
+  (log: ChangeLog, now: () => string = () => new Date().toISOString()): StorageLayer =>
+  (inner) => ({
+    list: () => inner.list(),
+    read: (path) => inner.read(path),
+    write: async (path, text, options = {}) => {
+      const before = await inner.read(path);
+      const done = await inner.write(path, text, options);
+      if (done.ok) await log.record({ path, before: before?.text ?? null, after: text, at: now(), ...author(options) });
+      return done;
+    },
+    remove: async (path, options = {}) => {
+      const before = await inner.read(path);
+      const done = await inner.remove(path, options);
+      if (done.ok) await log.record({ path, before: before?.text ?? null, after: null, at: now(), ...author(options) });
+      return done;
+    },
+  });
+
+const author = (options: WriteOptions) => (options.author === undefined ? {} : { author: options.author });

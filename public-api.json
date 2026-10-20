@@ -972,7 +972,7 @@
           "undo: () => string | null"
         ],
         "historyLayer": [
-          "value: (_log: ChangeLog, _now?: () => string) => StorageLayer"
+          "value: (log: ChangeLog, now?: () => string) => StorageLayer"
         ],
         "hitAreas": [
           "value: (svg: string) => HitAreas"
@@ -1128,7 +1128,7 @@
           "value: 50"
         ],
         "layered": [
-          "value: (_base: NoteStorage, ..._layers: StorageLayer[]) => NoteStorage"
+          "value: (base: NoteStorage, ...layers: StorageLayer[]) => NoteStorage"
         ],
         "Layers": [
           "interface",
@@ -1449,7 +1449,7 @@
           "value: 4"
         ],
         "memoryStorage": [
-          "value: (_seed?: Record<string, string>) => NoteStorage"
+          "value: (seed?: Record<string, string>) => NoteStorage"
         ],
         "mergePathProblems": [
           "value: (reading: PathReading) => Problem[]"
@@ -2963,11 +2963,11 @@
           "createDirectory: (path: string) => Promise<void>",
           "delete: (path: string) => Promise<void>",
           "readDirectory: (path: string) => Promise<[string, number][]>",
-          "readFile: (path: string) => Promise<Uint8Array>",
-          "writeFile: (path: string, bytes: Uint8Array) => Promise<void>"
+          "readText: (path: string) => Promise<string>",
+          "writeText: (path: string, text: string) => Promise<void>"
         ],
         "workspaceStorage": [
-          "value: (_files: WorkspaceFiles) => NoteStorage"
+          "value: (files: WorkspaceFiles) => NoteStorage"
         ],
         "Workstreams": [
           "type = Map<string, { title: string; members: Set<string>; }>"
