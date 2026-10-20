@@ -53,7 +53,8 @@ describe('the architecture graph', () => {
 
   test('has every package of the repository as a part, so a new one cannot be left off the drawing', () => {
     const paths = new Set(arch.parts.map((p) => p.path));
-    for (const dir of readdirSync('packages')) assert.ok(paths.has(`packages/${dir}`), `packages/${dir}`);
+    for (const dir of readdirSync('packages').filter((p) => !p.startsWith('.')))
+      assert.ok(paths.has(`packages/${dir}`), `packages/${dir}`);
     assert.ok(paths.has('python/graph_spec'));
   });
 

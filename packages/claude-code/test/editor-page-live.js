@@ -44,7 +44,11 @@ export async function livePage(note, { files = {}, settings = '{}', fire = true,
   if (!opened.ok) throw new Error(opened.why);
   const { dir } = await built();
   const exporter = exports
-    ? new Exporter({ vault, exportFolder: JSON.parse(settings).exportFolder ?? '', notePath: (id) => store.pathOf(id) })
+    ? new Exporter({
+        vault: store.vault,
+        exportFolder: JSON.parse(settings).exportFolder ?? '',
+        notePath: (id) => store.pathOf(id),
+      })
     : null;
   const api = exporter ? withExport(exporter, store.api) : store.api;
   const server = await startEditorServer({ page: await loadPageAssets(dir), api: withSettings(settings, api) });
