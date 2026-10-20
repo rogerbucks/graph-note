@@ -28,6 +28,7 @@ import {
   pathsOf,
   readNote,
   readStyle,
+  word,
   writeSafely,
 } from '@thoughtknot/core';
 import type {
@@ -185,6 +186,8 @@ async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<Exp
     files = made.files;
     animation = made.animation ? ` ${made.animation}` : '';
   }
+  // stopped while it was made: nothing is written or shared, and the form has said so (§44, progress_shown)
+  if (ask.signal?.aborted) return { stopped: word('progress.export-stopped') };
   const name = files.length === 1 ? go.fileName : `${go.fileName} on ${files.length} pages`;
   if (sheet) {
     const shared = files.map(

@@ -360,6 +360,13 @@ export const SOURCE_WORDS = {
   'parked.why-waits': 'Why it waits',
   'parked.revisit-by': 'Revisit by',
   'parked.park-it': 'Park it',
+  // a long wait shown (progress.ts)
+  'progress.drawing': 'Drawing the graph',
+  'progress.exporting': 'Exporting',
+  'progress.waited': '{what}… {seconds} s',
+  'progress.stop': 'Stop',
+  'progress.drawing-stopped': 'Drawing stopped, so the graph is shown as its text. Open the note again to draw it.',
+  'progress.export-stopped': 'Export stopped. Nothing was saved.',
   // the AI send dialog, the AI models' settings and leaving the app (ai-source-words.ts)
   ...AI_SOURCE_WORDS,
   // Import from a database (db-source-words.ts)

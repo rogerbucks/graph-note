@@ -18,6 +18,11 @@ const DATA = `// graph: trip
 const NOTE = ['# Trip', '', fence(DATA), ''].join('\n');
 const written = (env, ext) => [...env.state.files.keys()].filter((p) => p.endsWith(ext));
 
+/** Moves the held clock on `ms`, a second at a time, as a real clock would pass. */
+const pass = (ms) => {
+  for (let left = ms; left > 0; left -= 1000) mock.timers.tick(Math.min(1000, left));
+};
+
 /** Lets the promises waiting now run, while the clock is held. */
 const settle = async () => {
   for (let i = 0; i < 20; i++) await Promise.resolve();
@@ -53,7 +58,7 @@ describe('a wait is shown', () => {
       assert.equal(shown.el.getAttribute('role'), 'status', 'said to a screen reader');
       assert.match(shown.words, /Exporting/);
       assert.equal(shown.stop, undefined, 'no Stop yet');
-      mock.timers.tick(9000);
+      pass(9000);
       const long = progressIn(form);
       assert.ok(long.stop, 'Stop, after ten seconds');
       long.stop.click();
@@ -83,7 +88,7 @@ describe('a wait is shown', () => {
       mock.timers.tick(1);
       assert.match(progressIn(el)?.words ?? '', /Drawing/);
       assert.equal(progressIn(el).el.getAttribute('role'), 'status');
-      mock.timers.tick(9000);
+      pass(9000);
       progressIn(el).stop.click();
       await settle();
       assert.equal(progressIn(el), null, 'stopped, the progress goes');

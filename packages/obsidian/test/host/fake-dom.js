@@ -432,8 +432,11 @@ export function fakeDocument(width = 700) {
     tell(type, init = {}) {
       for (const fn of [...(this.listeners.get(type) ?? [])]) fn.call(this, { type, ...init });
     },
-    setTimeout,
-    clearTimeout,
+    // the timers, looked up at each call, so a test's mocked clock (node:test `mock.timers`) runs them too
+    setTimeout: (...a) => setTimeout(...a),
+    clearTimeout: (t) => clearTimeout(t),
+    setInterval: (...a) => setInterval(...a),
+    clearInterval: (t) => clearInterval(t),
     // an address opened outside the page, as Obsidian hands it to the system's browser or mail app: kept, never fetched
     open(url, target) {
       (doc.opened ??= []).push({ url, target });
