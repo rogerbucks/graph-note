@@ -28,6 +28,8 @@ export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';
 export { lookTag, lookTags } from './look-tags.ts';
 export { SHORTCUTS, SHORTCUT_PLACES } from './shortcuts.ts';
 export type { Shortcut, ShortcutPlace } from './shortcuts.ts';
+export { TOUR_STEPS, withExample } from './first-run.ts';
+export type { TourStep } from './first-run.ts';
 export type { StyleReading } from './style.ts';
 export { ARROWHEADS, FLOW_MOTIONS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
 export type {

@@ -96,6 +96,8 @@ export interface ViewOptions {
   callouts?: boolean;
   /** The mini-map's setting and whether the details stay open, as the settings say (§24); off and closed when not given. */
   aids?: ViewerAids;
+  /** Whether the card opens the short tour as it is drawn: the first drawing after an example (§44, first_run_help). */
+  tour?: boolean;
   /** Set when the drawing is a view (spec §7): what it shows, how, and how to write its style. */
   view?: ViewShown;
   /** Set when the drawing is a proposal laid over the graph (spec §17): what it adds, changes and removes, marked, and how a person decides. */

@@ -3,9 +3,9 @@
 // tour. The tour can be skipped, and a command opens it again on the drawing last used.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build } from './host/load-plugin.js';
+import { build, load } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
-import { load, show } from './host/view-notes.js';
+import { show } from './host/view-notes.js';
 
 before(() => build());
 
