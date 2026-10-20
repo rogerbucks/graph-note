@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (97)
+## Open (94)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -92,11 +92,8 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-8 | No MCP server or SKILL.md exposes the graph format | ●●● | ●●○ | fix-later (Wave 23 · Held: Claude presents and decides in Claude Code) | weeks |
 | AI-9 | Planned AI waves are ordered against value and risk | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | AI-10 | Text to graph has no quality measure in its plan | ●●● | ●●○ | fix-later (Wave 19 · Held: text to graph with AI) | days |
-| TRUST-1 | Claude can loosen its own gate by editing vault files | ●●○ | ●●● | fix-now | days |
-| TRUST-2 | MultiEdit and other write tools are not hooked | ●●○ | ●●● | fix-now | hours |
 | TRUST-3 | The stable release builds and publishes in one job | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
 | TRUST-4 | GitHub titles and messages reach Claude's pane unfenced | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | ●●○ | ●●● | fix-now | hours |
 | TRUST-6 | Python fill recipes read outside the folder and inject into the query | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
 | TRUST-7 | Nothing cleans the drawing before it enters the page | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | TRUST-8 | A database import has no size or time limit | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -939,26 +936,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** scripts/quality-check.mjs refuses a release when text-to-graph recall or precision drops below the baseline without a reason in quality/accepted.json.
 
-### TRUST-1 Claude can loosen its own gate by editing vault files
-
-**Who found it:** Trust model review. **Where:** `packages/claude-code/src/data-guard.ts`, `packages/claude-code/src/editor-matrix.ts`, `packages/claude-code/mod/hooks/register.tsx`.
-
-**Risk:** The gate takes Claude's row from the matrix note and each note's class from its front matter. Both are vault files. The write guard covers only the data folder and the open note, so Claude can edit them and lower its own gate.
-
-**Fix:** Guard writes to the matrix note named in the settings, as the data folder is guarded. Refuse a write by Claude that changes or removes a note's classification line, and send it to a proposal card instead.
-
-**Check:** packages/claude-code/test/data-guard.test.js: a Write, Edit or Bash call that changes the matrix note or a classification line is refused.
-
-### TRUST-2 MultiEdit and other write tools are not hooked
-
-**Who found it:** Trust model review. **Where:** `packages/claude-code/src/data-guard.ts`, `packages/claude-code/mod/hooks/register.tsx`.
-
-**Risk:** The guard knows MultiEdit, but the mod hooks only Write, Edit, NotebookEdit and Bash. A tool the guard does not know passes. So MultiEdit, or a file tool from another server, can write the data folder or the open note.
-
-**Fix:** Hook MultiEdit too. Judge any tool whose input holds a file_path, path or notebook_path field, not only the named ones.
-
-**Check:** packages/claude-code/test/data-guard.test.js: MultiEdit and an unknown tool with a file_path into the data folder are refused, and the hooked tools match the guard's list.
-
 ### TRUST-3 The stable release builds and publishes in one job
 
 **Who found it:** Trust model review. **Where:** `.github/workflows/release.yml`.
@@ -978,16 +955,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Scan item text for credentials and mark it as outside data in the pane, inside the fence of spec_secrets_and_fences. Let the settings give repository files with no class a stricter default.
 
 **Check:** packages/claude-code/test/editor-changes.test.js: a title holding a credential is refused and item text is drawn inside the data fence.
-
-### TRUST-5 Any commenter can wake the working-group agent, which writes its own checker
-
-**Who found it:** Trust model review. **Where:** `.github/workflows/working-group.yml`, `scripts/working-group.mjs`.
-
-**Risk:** A discussion comment wakes Claude with its token and the Write tool. The script that checks Claude's answer then runs from the same folder Claude could write. So an injected comment could skip the check and get any text posted.
-
-**Fix:** Wake it only for comments by the owner or members. Run the checker from a clean checkout of main in a later job that Claude's job cannot write, and drop Write from its tools.
-
-**Check:** test/workflows.test.js: working-group.yml filters by author association and runs its checker in a separate job from a fresh checkout.
 
 ### TRUST-6 Python fill recipes read outside the folder and inject into the query
 
@@ -1079,7 +1046,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/plugins.test.js: a plug-in that loops is stopped and named, and one cannot reach the host's file or network calls.
 
-## Done or accepted (19)
+## Done or accepted (22)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1102,3 +1069,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-1 | In Claude Code the proposal route is optional, not mandatory | done | #618 |
 | AI-3 | Note text enters prompts with no data boundary or injection test | done | #618 |
 | AI-11 | Consent is per send, but residency and retention are unsaid | done | #618 |
+| TRUST-1 | Claude can loosen its own gate by editing vault files | done | #836; kept out by `packages/claude-code/test/gate-guard.test.js` |
+| TRUST-2 | MultiEdit and other write tools are not hooked | done | #836; kept out by `packages/claude-code/test/data-guard.test.js` |
+| TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | done | #836; kept out by `test/working-group-workflow.test.js`, `test/claude-workflows.test.js` |
