@@ -202,5 +202,8 @@ Mozilla Public License 2.0 (MPL-2.0). See [LICENSE](LICENSE).
 - The code may still sit inside a larger work under other terms.
 - Releases before this change stay MIT.
 
+The graph spec's own text is under CC-BY-4.0, so anyone may build on the format if they credit it. See
+[LICENSE-SPEC.md](LICENSE-SPEC.md) for the files it covers.
+
 The layout engine, `@viz-js/viz`, compiles Graphviz (Eclipse Public License 2.0) into WebAssembly. See
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), which ships with every release.
