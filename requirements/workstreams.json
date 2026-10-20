@@ -926,5 +926,16 @@
       "data_set_cache",
       "data_set_access"
     ]
+  },
+  "Z1": {
+    "title": "Massive graphs on your own machine",
+    "size": "L",
+    "requirements": [
+      "scale_design",
+      "scale_limits_revisited",
+      "scale_benchmark",
+      "scale_level_of_detail",
+      "scale_in_parts"
+    ]
   }
 }
