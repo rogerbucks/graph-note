@@ -3045,6 +3045,8 @@
           "reverseReading: (reading: string) => string",
           "SCHEMA_LABELS: Array<string>",
           "schemaFor: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]",
+          "secretsIn: (text: string) => string[]",
+          "secretsInGraph: (g: GraphSpecCheck.Graph) => [string, string][]",
           "SPEC_NODES: Array<string>",
           "splitChangeset: (block: string) => { additions: string; changes: { line: number; lines: number[]; text: string; reason: string | null; }[]; basisOk: boolean; }",
           "Store: typeof GraphSpecCheck.Store",
@@ -3197,6 +3199,12 @@
         ],
         "schemaFor": [
           "value: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]"
+        ],
+        "secretsIn": [
+          "value: (text: string) => string[]"
+        ],
+        "secretsInGraph": [
+          "value: (g: GraphSpecCheck.Graph) => [string, string][]"
         ],
         "SPEC_NODES": [
           "value: Array<string>"

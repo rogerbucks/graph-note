@@ -257,6 +257,7 @@ from graphspec.engine.documents.classification import (
     document_class,
     may_serve,
 )
+from graphspec.reader.secrets import secrets_in  # noqa: E402, F401  # editor spec §51
 from graphspec.engine.serving.view_server import (
     ViewServer,
 )

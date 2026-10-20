@@ -22,6 +22,7 @@ const { sha256hex } = require('./hashing/sha256.js');
 const { jcs, hash16, basisHash } = require('./hashing/canonical-json.js');
 const { ProfileError } = require('./reader/profile-error.js');
 const { LIMITS } = require('./reader/limits.js');
+const { secretsIn, secretsInGraph } = require('./reader/secrets.js');
 const { COMMENT_RULE, COMMENT_FIX, header, tokens, quote } = require('./reader/tokens.js');
 const { checkSyntax } = require('./reader/syntax.js');
 const { Store, read } = require('./reader/store.js');
@@ -118,4 +119,6 @@ module.exports = {
   changeId,
   proposerWarnings,
   LIMITS,
+  secretsIn,
+  secretsInGraph,
 };

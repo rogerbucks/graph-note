@@ -74,6 +74,10 @@ declare namespace GraphSpecCheck {
     readonly join_documents: number;
     readonly join_items: number;
   };
+  /** The kinds of secret a text holds, each once and in words, never the text that matched (editor spec §51). */
+  function secretsIn(text: string): string[];
+  /** [id, kind] for each secret any text value of a graph holds. */
+  function secretsInGraph(g: Graph): [string, string][];
   /** A change set's first line (§24 H1): its graph, its id, the state it was made against and its author. Null when it is not one. */
   function changesetHeader(block: string): { graph: string; id: string; against: string; by: string } | null;
   /** A change set checked against its base blocks: each check with whether it passed, its header and the graph's state after it. */
