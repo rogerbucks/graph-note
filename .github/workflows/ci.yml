@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened]
+    # marking a draft ready for review runs everything, as the plan below says
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -16,12 +17,42 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # What runs: a draft pull request runs only the tests its change reaches; anything else runs everything
+  # (scripts/ci-plan.mjs). The safety checks below never wait on it. A job that waits on it still runs when it fails.
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tier: ${{ steps.plan.outputs.tier }}
+      shards: ${{ steps.plan.outputs.shards }}
+      python: ${{ steps.plan.outputs.python }}
+      tests: ${{ steps.plan.outputs.tests }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the change is measured from where the branch left main
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # the plan reads only the repository's files and git, so it needs no install
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+          BASE: ${{ github.event.pull_request.base.sha || github.sha }}
+        run: node scripts/ci-plan.mjs --base "$BASE"
+
   # The suite, its test files split over six machines that run at once, so a run takes about a minute, not five. Each
   # prints only its failures; the full report of a failed one is kept as the run's artifact. The test job below stands
   # for them all as one required check.
   suite:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: plan
+    # runs when the plan failed too: then every shard runs the whole suite
+    if: ${{ !cancelled() }}
     strategy:
       fail-fast: false
       matrix:
@@ -36,14 +67,20 @@ jobs:
         with:
           node-version: 24
       # the lint job verifies the signatures of this same locked install
-      - run: npm ci
+      - if: needs.plan.outputs.tier != 'subset' || matrix.shard <= fromJSON(needs.plan.outputs.shards)
+        run: npm ci
       # six files at once on the runner's four cores, as the files mostly wait on the processes they start
       # A shard that draws in the browser for three files at once peaked at 4.2 GB here (19 Oct 2026), over the
       # default 4 GB ceiling. 6 GB keeps a runaway stopped well inside the runner's 16 GB.
-      - env:
+      # A partial run gives the shards only its own test files, through the environment, never spliced into the command.
+      # Each name is checked to hold only letters, digits and `_ . / @ -`, so the shell splits them and nothing more.
+      - if: needs.plan.outputs.tier != 'subset' || matrix.shard <= fromJSON(needs.plan.outputs.shards)
+        env:
           SHARD: ${{ matrix.shard }}
+          SHARDS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.shards || 6 }}
+          TESTS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.tests || '' }}
           THOUGHTKNOT_TEST_MEMORY_MB: 6144
-        run: npm test -- --test-concurrency=6 --test-shard="$SHARD/6" --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt
+        run: npm test -- --test-concurrency=6 --test-shard="$SHARD/$SHARDS" --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt $TESTS
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -51,16 +88,22 @@ jobs:
           path: test-report.txt
           retention-days: 7
 
-  # Passes when every part of the suite passed: the one check the default branch requires for them.
+  # Passes when every part of the suite passed: the one check the default branch requires for them. A partial run says
+  # so here, and a failed plan is named, though the suite then ran whole.
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: suite
+    needs: [plan, suite]
     if: always()
     steps:
       - env:
+          PLAN: ${{ needs.plan.result }}
+          TIER: ${{ needs.plan.outputs.tier }}
           RESULT: ${{ needs.suite.result }}
-        run: test "$RESULT" = success
+        run: |
+          if [ "$PLAN" != success ]; then echo "::warning::The CI plan failed, so the whole suite ran. Fix scripts/ci-plan.mjs."; fi
+          if [ "$TIER" = subset ]; then echo "::notice::A partial run, as this is a draft. Marking it ready for review runs everything."; fi
+          test "$RESULT" = success
 
   # The quick checks: format, lint, content, quality baseline, types, the requirements' flips and the build.
   lint:
@@ -98,6 +141,9 @@ jobs:
   python:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: plan
+    # skipped only when a draft's plan says nothing the Python tests read changed; runs when the plan failed
+    if: ${{ !cancelled() && needs.plan.outputs.python != 'false' }}
     defaults:
       run:
         working-directory: python/graph_spec
@@ -128,6 +174,9 @@ jobs:
   python-no-engine:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: plan
+    # skipped only when a draft's plan says nothing the Python tests read changed; runs when the plan failed
+    if: ${{ !cancelled() && needs.plan.outputs.python != 'false' }}
     defaults:
       run:
         working-directory: python/graph_spec
@@ -203,7 +252,7 @@ jobs:
           version: 0.12.17
           enable-cache: false
       # The fresh clone runs the same tests, lint and build as the jobs above, so a pull request runs it only when it
-      # changes a setup input (the README's steps, what they install, the hook); a push to main and the release always do.
+      # changes a setup input (the README's steps, the npm scripts they run, the hook); main and the release always do.
       - if: github.event_name == 'pull_request'
         env:
           BASE: ${{ github.event.pull_request.base.sha }}

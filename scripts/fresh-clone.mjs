@@ -17,27 +17,74 @@ export function readmeSteps(text) {
 }
 
 /**
- * What the README's steps read that CI's other jobs do not. Those jobs run the same tests, lint and build from their
- * own fresh checkout. The rest is the steps themselves, what they install, the hook they set, and what decides a
- * clone's files.
+ * What the README's steps read that CI's other jobs do not. Those jobs set up from their own fresh checkout, with
+ * `npm ci` and `uv sync --locked`. So a lock file or a Python project file is theirs to check. The rest is the steps themselves, the npm scripts they run, the hook they set, and what decides a clone's files.
  */
 const SETUP_INPUTS = [
   /^README\.md$/,
-  /(^|\/)package(-lock)?\.json$/,
+  /(^|\/)package\.json$/,
   /^\.npmrc$/,
   /^\.githooks\//,
   /^\.git(ignore|attributes)$/,
-  /^python\/graph_spec\/(pyproject\.toml|uv\.lock|\.python-version)$/,
   /^scripts\/(public-readiness|fresh-clone)\.mjs$/,
 ];
 
 /** Whether a change to the file at `path` (from the repository's root) can change what a fresh clone's setup does. */
 export const isSetupInput = (path) => SETUP_INPUTS.some((re) => re.test(path));
 
+/** The fields of a package.json the other jobs check by installing: a version and what it depends on. */
+const INSTALLED = [
+  'version',
+  'dependencies',
+  'devDependencies',
+  'optionalDependencies',
+  'peerDependencies',
+  'overrides',
+];
+
+/** A package.json without the fields the other jobs check; null when it cannot be read. */
+const setupPart = (text) => {
+  try {
+    const pkg = JSON.parse(text);
+    for (const field of INSTALLED) delete pkg[field];
+    return JSON.stringify(pkg);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Whether a change to the file at `path` changes what a fresh clone's setup does. `before` and `after` are its text,
+ * or null where it does not exist. The README counts only when its steps change; a package.json only when something
+ * other than its version and dependencies changes, such as its scripts. A file added, removed or unreadable counts.
+ */
+export function changesSetup(path, before, after) {
+  if (!isSetupInput(path)) return false;
+  if (before === null || after === null) return true;
+  if (path === 'README.md') return JSON.stringify(readmeSteps(before)) !== JSON.stringify(readmeSteps(after));
+  if (/(^|\/)package\.json$/.test(path)) {
+    const [was, now] = [setupPart(before), setupPart(after)];
+    return was === null || now === null || was !== now;
+  }
+  return true;
+}
+
+/** The text of `path` at commit `ref`, or null where it does not exist there. */
+const textAt = (root, ref, path) => {
+  try {
+    return execFileSync('git', ['show', `${ref}:${path}`], { cwd: root, encoding: 'utf8', stdio: 'pipe' });
+  } catch {
+    return null;
+  }
+};
+
 /** The setup inputs HEAD changed since its merge base with `base`, so a change the base gained later is not counted. */
 export function setupInputsChangedSince(root, base) {
   const from = git(root, ['merge-base', base, 'HEAD']).toString().trim();
-  return git(root, ['diff', '--name-only', from, 'HEAD']).toString().split('\n').filter(isSetupInput);
+  return git(root, ['diff', '--name-only', from, 'HEAD'])
+    .toString()
+    .split('\n')
+    .filter((path) => isSetupInput(path) && changesSetup(path, textAt(root, from, path), textAt(root, 'HEAD', path)));
 }
 
 /**
