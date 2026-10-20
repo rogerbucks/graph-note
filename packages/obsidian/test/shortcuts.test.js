@@ -33,8 +33,14 @@ describe('the keyboard shortcuts are listed in one place', () => {
       assert.equal(panel.getAttribute('role'), 'dialog');
       assert.equal(panel.getAttribute('aria-label'), 'Keyboard shortcuts');
       const rows = rowsOf(el);
-      assert.ok(rows.some(([keys, does]) => keys === '+ or =' && does === 'Zoom in'), JSON.stringify(rows));
-      assert.ok(rows.some(([keys]) => keys === 'Control+Space'), 'the editor’s keys too');
+      assert.ok(
+        rows.some(([keys, does]) => keys === '+ or =' && does === 'Zoom in'),
+        JSON.stringify(rows),
+      );
+      assert.ok(
+        rows.some(([keys]) => keys === 'Control+Space'),
+        'the editor’s keys too',
+      );
       assert.match(panel.textContent, /Hotkeys|hotkey/, 'and where to give a command keys of your own');
       panel.dispatch('keydown', { key: 'Escape' });
       assert.equal(el.querySelector('.thoughtknot-shortcuts'), null, 'closed');

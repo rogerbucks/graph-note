@@ -60,6 +60,8 @@ export const TYPES_LATE = [
   'SendResult',
   'Settings',
   'Shape',
+  'Shortcut',
+  'ShortcutPlace',
   'Show',
   'ShowWrite',
   'Shown',

@@ -213,10 +213,10 @@ Checked against WCAG 2.2, Apple's and Microsoft's design guidance and common des
 | Theme tokens for the interface | Partly (drawing only) | `ui_theme_tokens`, `plugin_theme_tokens` |
 | High contrast and forced colours | No | `forced_colours` |
 | Text enlarged to 200 per cent | No | `text_scaling` |
-| Colour never the only signal | Partly (focus only) | `colour_never_alone` |
-| Progress for long waits | Partly (layout time limit) | `progress_shown` |
+| Colour never the only signal | Yes, built 20 Oct 2026 | `colour_never_alone` |
+| Progress for long waits | Yes, built 20 Oct 2026 | `progress_shown` |
 | First-run help | Measured, not offered | `first_run_help` |
-| Keyboard shortcuts listed | No | `shortcuts_listed` |
+| Keyboard shortcuts listed | Yes, built 20 Oct 2026 | `shortcuts_listed` |
 | Printing | No | `print_ready` |
 
 ## The build order

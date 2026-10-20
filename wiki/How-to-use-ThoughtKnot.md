@@ -111,7 +111,8 @@ changes**. The full details are in the
 - **Sharing a note with other tools?** The command **Convert this note to standard GQL** rewrites the shortcuts Graph
   Note allows into the standard form other tools read.
 - **On a phone,** tap where you would click, and pinch to zoom. Everything works offline.
-- **Using only a keyboard?** Every button can be reached with Tab, and Escape closes whatever is open.
+- **Using only a keyboard?** Every button can be reached with Tab, and Escape closes whatever is open. Press ? on a
+  drawing to see every keyboard shortcut. In Obsidian, give the drawing's commands keys of your own in Settings, Hotkeys.
 
 ## Settings
 

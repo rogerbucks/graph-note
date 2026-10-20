@@ -273,7 +273,9 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - The plugin's `queryDatabase` calls it, so a test can stand in its own.
 - `sql-js.d.ts` — the types of the parts of sql.js the import uses.
 - `../commands.ts` — `addAskCommands` adds the commands that reach outside the vault: Ask an AI model, Clear the record
-  of sends, and Import from a database.
+  of sends, and Import from a database. `addCommands` adds them and the keyboard shortcuts' commands.
+- `../shortcuts.ts` — `addShortcutCommands` adds Show the keyboard shortcuts, and the drawing's own commands: Zoom in,
+  Zoom out, Fit and Full screen. They have no keys until a person gives them some in Hotkeys (§44, shortcuts_listed).
 
 ### `src/settings/` — the settings page (spec §21)
 
