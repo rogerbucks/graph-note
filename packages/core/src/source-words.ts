@@ -10,6 +10,7 @@ import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
 import { EXPORT_SOURCE_WORDS } from './export-source-words.ts';
 import { FIRST_RUN_SOURCE_WORDS } from './first-run-source-words.ts';
+import { HOST_SOURCE_WORDS } from './host-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
 import { SHORTCUT_SOURCE_WORDS } from './shortcut-source-words.ts';
@@ -373,4 +374,6 @@ export const SOURCE_WORDS = {
   ...EXPORT_SOURCE_WORDS,
   // the note's own blocks in the Obsidian host (blocks-source-words.ts)
   ...BLOCKS_SOURCE_WORDS,
+  // the Obsidian host's own commands and notices (host-source-words.ts)
+  ...HOST_SOURCE_WORDS,
 } as const;
