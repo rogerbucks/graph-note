@@ -15,6 +15,7 @@ import {
   pageSvg,
   pngPages,
   pngSize,
+  word,
 } from '@thoughtknot/core';
 import type {
   ExportGo,
@@ -60,7 +61,7 @@ export type ImageAsk = {
 
 /** What an animated SVG too large for the device says (animation_export_fits): why, that nothing was saved, and the fix. */
 export const tooLargeWords = (t: TooLargeToAnimate): string =>
-  `The animated SVG was not made: ${t.why}. Nothing was saved. To make it fit, ${t.fix}.`;
+  word('exporting.too-large-to-animate', { why: t.why, fix: t.fix });
 
 /** The device an export is made on, for the size an animated SVG may be. */
 export const deviceOf = (): 'phone' | 'desktop' => (Platform.isMobile ? 'phone' : 'desktop');
@@ -101,8 +102,7 @@ export async function imageFiles(
   }
   if (!image)
     return {
-      stopped:
-        'The export was stopped: ThoughtKnot was unloaded before the layout finished. Nothing was saved. Try again once ThoughtKnot is enabled again.',
+      stopped: word('exporting.unloaded'),
     };
   if ('reason' in image) return { stopped: exportRefusalWords(image) };
   if ('why' in image) return { stopped: tooLargeWords(image) };
@@ -114,7 +114,7 @@ export async function imageFiles(
   if (!pages) {
     const size = pngSize(image.width, image.height);
     return {
-      stopped: `The drawing is too large to draw as a PNG on this device (${size.width} by ${size.height}), even across pages; export it as SVG.`,
+      stopped: word('exporting.too-large-png', { width: size.width, height: size.height }),
     };
   }
   if (pages.length === 1)
@@ -132,7 +132,7 @@ export async function imageFiles(
   const files: ExportFile[] = [];
   for (const [i, page] of pages.entries()) {
     const at = named[i];
-    if (!at) throw new Error(`page ${i + 1} has no name`);
+    if (!at) throw new Error(word('exporting.page-unnamed', { number: i + 1 }));
     files.push({
       name: at.fileName,
       path: at.path,
@@ -150,7 +150,7 @@ function picturesFrom(plugin: ThoughtKnotPlugin, note: string): PictureLoad {
   const source = vaultImages(plugin.app, note);
   return async (value) => {
     const found = source.find(value);
-    if (!found) return { why: `${value} names no image` };
+    if (!found) return { why: word('images.names-none', { value }) };
     if ('why' in found) return found;
     // over the size limit, its size on disk is all that is known: it is never read (review of #443)
     if (found.size > IMAGE_LIMITS.bytes) return { name: found.name, size: found.size, unread: true };
