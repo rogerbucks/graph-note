@@ -431,6 +431,8 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ### Colours and direction
 
+- `test/print.test.js` — a printed note (editor spec §44, print_ready). Each graph is drawn whole, in the light
+  palette's colours by the core's table, with its legends and without the card's controls.
 - `test/colour-alone.test.js` — no meaning is carried by colour alone (editor spec §44, colour_never_alone). An error
   is told from a warning by its sign and its line as well as its colour. Each colour of a view's looks has a numbered
   tag. It is on its boxes, its links and the legend, on the card and in an export.
