@@ -66,6 +66,14 @@ declare namespace GraphSpecCheck {
   /** A graph's canonical text, hashed: the state a change set is made against is its first sixteen digits. */
   function canon(g: Graph): string;
 
+  /** The limits every reader, check and join stops at, each refusal a ProfileError GN601 to GN605 (editor spec §51). */
+  const LIMITS: {
+    readonly block_chars: number;
+    readonly items: number;
+    readonly nesting: number;
+    readonly join_documents: number;
+    readonly join_items: number;
+  };
   /** A change set's first line (§24 H1): its graph, its id, the state it was made against and its author. Null when it is not one. */
   function changesetHeader(block: string): { graph: string; id: string; against: string; by: string } | null;
   /** A change set checked against its base blocks: each check with whether it passed, its header and the graph's state after it. */

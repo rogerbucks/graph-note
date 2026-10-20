@@ -77,6 +77,8 @@ const NAMES = [
   'changeId',
   // a proposal's proposer is read through WAS_ATTRIBUTED_TO; the old form is warned of (16 Oct 2026)
   'proposerWarnings',
+  // the limits every reader, check and join stops at (editor spec §51, spec_read_limits)
+  'LIMITS',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

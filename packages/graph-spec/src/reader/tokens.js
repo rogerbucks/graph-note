@@ -2,6 +2,7 @@
 'use strict';
 
 const { ProfileError } = require('./profile-error.js');
+const { withinSize } = require('./limits.js');
 const { S, N, isSpace, trim } = require('./whitespace.js');
 
 const KEYWORDS = new Set(['INSERT', 'MATCH', 'SET', 'DATE', 'DATETIME', 'TRUE', 'FALSE']);
@@ -55,6 +56,7 @@ function excerpt(s, n = 20) {
 // [kind, text, line, raw, end] for every token, whole-line comments removed: raw is the token as written, end is where
 // it ends in the block
 function tokens(block) {
+  withinSize(block);
   const out = [];
   // offsets count UTF-16 units, as JavaScript strings index; the Python reader counts code points. Each is used only on
   // the text it was counted in (Store.corrected), so both write the same corrected text

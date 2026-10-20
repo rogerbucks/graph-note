@@ -3033,6 +3033,7 @@
           "guessReadings: (type: string) => [string, string]",
           "hash16: (value: unknown) => string",
           "header: (block: string) => [string | null, GraphSpecCheck.BlockKind]",
+          "LIMITS: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }",
           "lint: (text: string) => { trap: string; line: number; }[]",
           "notes: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }",
           "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
@@ -3130,6 +3131,9 @@
         ],
         "header": [
           "value: (block: string) => [string | null, GraphSpecCheck.BlockKind]"
+        ],
+        "LIMITS": [
+          "value: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }"
         ],
         "lint": [
           "value: (text: string) => { trap: string; line: number; }[]"

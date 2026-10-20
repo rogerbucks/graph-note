@@ -138,6 +138,7 @@ from graphspec.engine.joining.union import (
 from graphspec.engine.joining.merge3 import (
     merge3,
 )
+from graphspec.reader.limits import LIMITS  # noqa: E402, F401  # editor spec §51, spec_read_limits
 from graphspec.engine.joining.finish import (
     finish,
     join,

@@ -11,6 +11,7 @@ const { validate } = require('./validate.js');
 const { union } = require('./union.js');
 const { merge3 } = require('./merge3.js');
 const { finish } = require('./finish.js');
+const { withinJoinDocuments, withinJoinItems } = require('../reader/limits.js');
 
 // A join configuration from the declared data in the suite (spec §17), each part empty when not given. A constraint
 // written in GQL runs as its named twin in RULES, or is null, which the check refuses: there is no engine here.
@@ -49,9 +50,12 @@ function joinDocs(q) {
     if (!sw.has('validate')) validate(d, log, config);
     return d;
   };
+  // a join past its limits is refused: too many documents before any is read, too much in all before the join
+  withinJoinDocuments(q.docs.length + (q.base ? 1 : 0));
   const base = q.base ? one(q.base) : null,
     docs = q.docs.map((b) => one(b, base)),
     checks = q.checks;
+  withinJoinItems([base, ...docs].reduce((n, d) => n + (d ? d.nodes.size + d.raw_edges.length : 0), 0));
   const joined =
     base && !sw.has('base')
       ? finish(merge3(base, docs[0], docs[1], config, q.hold), config, q.findings || [], checks)

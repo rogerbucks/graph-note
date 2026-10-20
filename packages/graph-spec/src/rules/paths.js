@@ -2,6 +2,7 @@
 'use strict';
 
 const { byKey } = require('../values/order.js');
+const { withinNesting } = require('../reader/limits.js');
 
 // §22 paths
 function pathSteps(g, pid) {
@@ -18,13 +19,15 @@ function pathSteps(g, pid) {
     }));
 }
 // A path seen at an altitude: every step that is a path above that level opened, everything at or below kept.
-// `seen` stops a path that contains itself from opening forever; §22 rule 1 is what reports it.
-function viewAt(g, pid, level, seen) {
+// `seen` stops a path that contains itself from opening forever; §22 rule 1 is what reports it. Paths opened deeper
+// than the limit are refused (editor spec §51, spec_read_limits).
+function viewAt(g, pid, level, seen, depth = 0) {
+  withinNesting(depth);
   seen = new Set([...(seen || []), pid]);
   const out = [];
   for (const r of pathSteps(g, pid)) {
     if (r.labels.includes('Path') && (r.altitude || 0) > level && !seen.has(r.id))
-      out.push(...viewAt(g, r.id, level, seen));
+      out.push(...viewAt(g, r.id, level, seen, depth + 1));
     else out.push(r.id);
   }
   return out;
