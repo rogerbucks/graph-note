@@ -30,7 +30,7 @@ Which plan each person pays for is their own business, so it never goes in the r
 
 | Who         | Does                                                                                                 | Branches        | Label               |
 | ----------- | ---------------------------------------------------------------------------------------------------- | --------------- | ------------------- |
-| Roger       | Plans, and makes the real decisions. Routine pull requests need no approval from him                | —               | —                   |
+| Roger       | Plans, and makes the real decisions. A pull request with green CI needs no approval from him           | —               | —                   |
 | Sara (Claude) | Builds: spec, then test, then code. Drives each pull request to green. Fixes security alerts         | `claude/`       | `agent:claude`      |
 | Charles (Antigravity) | Tests: device and accessibility checks, test-vault journeys in its browser, `npm test` before merge  | `antigravity/`  | `agent:antigravity` |
 | Eve (graph-note) | Advises: turns open questions and requirements into task lists, and reviews pull requests to the spec | none, read-only | `agent:graph-note`  |
