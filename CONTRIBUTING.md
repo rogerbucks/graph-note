@@ -117,8 +117,9 @@ Signed-off-by: Your Name <you@example.com>
 
 `git commit -s` adds it.
 
-- **A commit Claude writes carries Roger's sign-off, not Claude's.** An AI cannot certify where code came from. Roger
-  directs that work, so he certifies it (Roger, 19 Oct 2026). Such a commit ends with this line, in place of `-s`:
+- **A commit any AI agent writes carries Roger's sign-off, not the agent's.** Claude, Antigravity and graph-note are
+  such agents. An AI cannot certify where code came from. Roger directs that work, so he certifies it (Roger, 19 Oct
+  2026; widened to every agent 20 Oct 2026). Such a commit ends with this line, in place of `-s`:
   `Signed-off-by: Roger Bucks <264575592+rogerbucks@users.noreply.github.com>`. Add it with `git commit --trailer`.
 - **CI checks it.** `node scripts/public-readiness.mjs --history` refuses a commit from 20 Oct 2026 on with no
   sign-off, or one that names only a bot or an AI. Merge commits and Dependabot's own updates are left out.
@@ -520,6 +521,8 @@ These test behaviour across modules, or the repository itself, so they are named
   the name for the original. CONTRIBUTING.md and the pull request template ask for every commit to be signed off
   (editor spec §13, community_files). `SECURITY.md` names the supported versions, a private way to report and a
   reply time (security_policy).
+- `test/working-group.test.js` — `docs/agents/ROLES.md` gives Roger, Claude, Antigravity and graph-note their work,
+  labels and branches, and repeats the rules each keeps. `AGENTS.md` points to it.
 - `test/device-check-notes.test.js` — the device checklist numbers every item (editor spec §3, tried first in a test
   vault).
   - The test vault holds one note for each item after Before in `Device checks/`. The note's checklist line is the
