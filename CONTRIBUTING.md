@@ -432,7 +432,8 @@ These test behaviour across modules, or the repository itself, so they are named
 ### Colours and direction
 
 - `test/colour-alone.test.js` — no meaning is carried by colour alone (editor spec §44, colour_never_alone). An error
-  is told from a warning by its sign and its line as well as its colour (partial: looks and hidden link labels next).
+  is told from a warning by its sign and its line as well as its colour. Each colour of a view's looks has a numbered
+  tag. It is on its boxes, its links and the legend, on the card and in an export.
 - `test/forced-colours.test.js` — every view in forced colours and with more contrast asked for (editor spec §44,
   forced_colours).
   - Each sheet gives every colour token its system colour (`FORCED_TOKEN_COLOURS`). For more contrast, secondary text

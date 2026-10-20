@@ -18,6 +18,7 @@ export { mirrored, inReadingDirection, shownAsRead } from './drawing-direction.t
 export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';
 export type { Palette, ThemeColours } from './palette.ts';
 export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';
+export { lookTag, lookTags } from './look-tags.ts';
 export type { StyleReading } from './style.ts';
 export { ARROWHEADS, FLOW_MOTIONS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
 export type {
