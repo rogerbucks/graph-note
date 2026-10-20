@@ -64,22 +64,23 @@ function colours(kinds: string[], readings: string[], p: Palette): Map<string, s
  */
 export function themed(svg: string, kinds: string[], readings: string[], palette: Palette = PALETTES.obsidian): string {
   const colour = colours(kinds, readings, palette);
-  const ls = STYLE.caption_letter_spacing * STYLE.kind_font_size;
+  const ls = STYLE.caption_letter_spacing * STYLE.kind_font_size,
+    spacing = `<text letter-spacing="${fixed(ls, 2)}" `;
   // the kind caption is in capitals: tracked out a little, as capitals need, and kept centred
   svg = svg.replace(/(<text[^>]*fill="#0000fe"[^>]*>)([^<]*)<\/text>/g, (_, open: string, caption: string) => {
     let tag = open;
     const n = [...caption].length;
     if (tag.includes('text-anchor="start"'))
       tag = tag.replace(/\sx="([\d.-]+)"/, (_m, x: string) => ` x="${fixed(parseFloat(x) - (n * ls) / 2, 2)}"`);
-    return tag.replace('<text ', `<text letter-spacing="${fixed(ls, 2)}" `) + caption + '</text>';
+    return tag.replace('<text ', spacing) + caption + '</text>';
   });
   svg = svg.replace(/<(?:path|polygon|ellipse|polyline|text)\b[^>]*>/g, (tag) => {
     const style: string[] = [];
-    for (const attr of ['fill', 'stroke']) {
-      const a = new RegExp(`\\s${attr}="(#[0-9a-f]{6})"`).exec(tag);
+    for (const [attr, pattern] of PAINTS) {
+      const a = pattern.exec(tag);
       const c = a ? colour.get(a[1] ?? '') : undefined;
       if (a && c !== undefined) {
-        tag = tag.split(a[0]).join('');
+        tag = tag.replaceAll(a[0], '');
         style.push(`${attr}:${c}`);
       }
     }
@@ -94,13 +95,16 @@ export function themed(svg: string, kinds: string[], readings: string[], palette
     );
   // a palette that carries its own colours puts its style sheet first inside the drawing, where every shape sees it
   if (palette.style) svg = svg.replace(/(<svg\b[^>]*>)/, `$1\n<style>${palette.style}</style>`);
-  // an HTML block in Markdown ends at a blank line, and an indented line can read as code — so neither may appear
-  return svg
-    .split(/\r\n|\r|\n/)
-    .map((l) => l.trim())
-    .filter((l) => l)
-    .join('\n');
+  // an HTML block in Markdown ends at a blank line, and an indented line can read as code — so neither may appear. Each
+  // run of spaces with a line break in it becomes one break: each line trimmed and the blank ones dropped, in one pass
+  return svg.replace(/\s*[\r\n]\s*/g, '\n').trim();
 }
+
+/** The colour attributes a shape is painted by, each with the pattern that finds its placeholder colour. */
+const PAINTS: [string, RegExp][] = [
+  ['fill', /\sfill="(#[0-9a-f]{6})"/],
+  ['stroke', /\sstroke="(#[0-9a-f]{6})"/],
+];
 
 /** One laid-out drawing, as choose() weighs it: its direction and size. */
 export interface Laid {
