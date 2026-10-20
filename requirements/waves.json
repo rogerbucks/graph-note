@@ -452,9 +452,18 @@
       ]
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 30 · Held: storage of your choice",
       "start": "2027-01-09",
-      "end": "2027-01-16",
+      "end": "2027-01-12",
+      "estimate": true,
+      "workstreams": [
+        "ST1"
+      ]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-01-13",
+      "end": "2027-01-20",
       "estimate": true,
       "workstreams": [],
       "earlier_plan": {
