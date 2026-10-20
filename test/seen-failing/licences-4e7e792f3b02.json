@@ -1,0 +1,6 @@
+{
+  "file": "test/licences.test.js",
+  "test": "the allow-list > the public-domain blessing is allowed for SQLite alone",
+  "seen_failing_first": false,
+  "evidence": "The replay runs with this commit's own test support, which adds the blessing for SQLite, so it could not fail first."
+}
