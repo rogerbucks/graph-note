@@ -95,12 +95,13 @@ export function paintText(
       }
       col += p.s.length;
     }
-    // the sign and the note after the line, out of the flow of the text: the line wraps as the field's does (long_lines_wrap)
-    const sign = marks.some((d) => d.severity !== 4);
+    // The sign and the note go after the line, out of the flow of the text. So the line wraps as the field's does
+    // (long_lines_wrap). An error's sign is ✖ and a warning's ⚠: not told apart by colour alone (§44, colour_never_alone).
+    const sign = marks.some((d) => d.severity === 1) ? '✖' : marks.some((d) => d.severity !== 4) ? '⚠' : '';
     const said = parts.some((p) => p.ghost) ? undefined : back.get(n); // the ghost has the end of its line
     if (sign || said) {
       const end = overlay.createSpan({ cls: 'thoughtknot-line-end' });
-      if (sign) end.createSpan({ cls: 'thoughtknot-line-sign', text: ' ⚠' });
+      if (sign) end.createSpan({ cls: `thoughtknot-line-sign${sign === '✖' ? ' is-error' : ''}`, text: ` ${sign}` });
       if (said) end.createSpan({ cls: 'thoughtknot-readback', text: ` — ${said}` });
     }
     overlay.appendText('\n');

@@ -214,6 +214,8 @@ These test behaviour across modules, or the repository itself, so they are named
   labels or values is read from its first strong letter. It is set apart from the words around it
   (`unicode-bidi: plaintext`). Each is an element the layer makes (editor spec §42, bidi_labels; partial until the
   drawing and the exports join it).
+- `packages/core/test/locale-bytes.test.js` — the editor writes the same bytes in every setting. No language, locale
+  or direction changes an edit, an export's data or the layout source (editor spec §42, locale_never_changes_bytes).
 - `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
 - `packages/core/test/view-parity.test.js` — every view of the shared table (`python/graph_spec/tests/view_cases.json`)
   is found in its note, read, and returns the things the table gives. Every query outside the view profile gets the
@@ -429,6 +431,8 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ### Colours and direction
 
+- `test/colour-alone.test.js` — no meaning is carried by colour alone (editor spec §44, colour_never_alone). An error
+  is told from a warning by its sign and its line as well as its colour (partial: looks and hidden link labels next).
 - `test/forced-colours.test.js` — every view in forced colours and with more contrast asked for (editor spec §44,
   forced_colours).
   - Each sheet gives every colour token its system colour (`FORCED_TOKEN_COLOURS`). For more contrast, secondary text
@@ -787,6 +791,8 @@ These test behaviour across modules, or the repository itself, so they are named
   (editor spec §12, tests_self_contained, test_files_generated). The images it makes decode and move: the GIF's
   compressed data, the APNG's frames, the WebP's lossless frames, the SVG and the PDF.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
+- `test/trust-model.test.js` — the trust model (editor spec §54). The wiki page names every actor and boundary. Each gap
+  is a risk in the register, and every file that opens a boundary is on the page.
 - `test/test-status-partial.test.js` — the third test status, `partial`: a test whose file is there but does not yet
   prove every rule its record covers. It needs its file like a written one. It leaves its requirement unproved in
   `--done`, and the reason says partial. It may be flipped to only from planned, and to written; every backward move is

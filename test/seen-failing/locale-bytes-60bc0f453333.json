@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/locale-bytes.test.js",
+  "test": "what the editor writes > is the same for the note when made in UK English: each edit was written, not refused",
+  "seen_failing_first": false,
+  "evidence": "The code already held to the rule when this test was written, so it passed first. It guards the rule from now on: a change that lets a language, locale or direction alter a written byte fails it."
+}

@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (83)
+## Open (97)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -92,6 +92,20 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-8 | No MCP server or SKILL.md exposes the graph format | ●●● | ●●○ | fix-later (Wave 23 · Held: Claude presents and decides in Claude Code) | weeks |
 | AI-9 | Planned AI waves are ordered against value and risk | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | AI-10 | Text to graph has no quality measure in its plan | ●●● | ●●○ | fix-later (Wave 19 · Held: text to graph with AI) | days |
+| TRUST-1 | Claude can loosen its own gate by editing vault files | ●●○ | ●●● | fix-now | days |
+| TRUST-2 | MultiEdit and other write tools are not hooked | ●●○ | ●●● | fix-now | hours |
+| TRUST-3 | The stable release builds and publishes in one job | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
+| TRUST-4 | GitHub titles and messages reach Claude's pane unfenced | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
+| TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | ●●○ | ●●● | fix-now | hours |
+| TRUST-6 | Python fill recipes read outside the folder and inject into the query | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
+| TRUST-7 | Nothing cleans the drawing before it enters the page | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
+| TRUST-8 | A database import has no size or time limit | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
+| TRUST-9 | The Python class reader is looser than the core gate | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
+| TRUST-10 | git log still reads the repository's own settings | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
+| TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| TRUST-14 | Plug-ins run with the host's full powers | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 
 ## Each open risk
 
@@ -924,6 +938,146 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add a requirement text_to_graph_measured. It needs fixtures of prose with an expected graph under test/fixtures/text-to-graph/. It also needs a deterministic scorer (things and links matched by name or alias, source span overlap). Add an optional cheap judge model for property texts. Hold a floor in quality/ai.json.
 
 **Check:** scripts/quality-check.mjs refuses a release when text-to-graph recall or precision drops below the baseline without a reason in quality/accepted.json.
+
+### TRUST-1 Claude can loosen its own gate by editing vault files
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/src/data-guard.ts`, `packages/claude-code/src/editor-matrix.ts`, `packages/claude-code/mod/hooks/register.tsx`.
+
+**Risk:** The gate takes Claude's row from the matrix note and each note's class from its front matter. Both are vault files. The write guard covers only the data folder and the open note, so Claude can edit them and lower its own gate.
+
+**Fix:** Guard writes to the matrix note named in the settings, as the data folder is guarded. Refuse a write by Claude that changes or removes a note's classification line, and send it to a proposal card instead.
+
+**Check:** packages/claude-code/test/data-guard.test.js: a Write, Edit or Bash call that changes the matrix note or a classification line is refused.
+
+### TRUST-2 MultiEdit and other write tools are not hooked
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/src/data-guard.ts`, `packages/claude-code/mod/hooks/register.tsx`.
+
+**Risk:** The guard knows MultiEdit, but the mod hooks only Write, Edit, NotebookEdit and Bash. A tool the guard does not know passes. So MultiEdit, or a file tool from another server, can write the data folder or the open note.
+
+**Fix:** Hook MultiEdit too. Judge any tool whose input holds a file_path, path or notebook_path field, not only the named ones.
+
+**Check:** packages/claude-code/test/data-guard.test.js: MultiEdit and an unknown tool with a file_path into the data folder are refused, and the hooked tools match the guard's list.
+
+### TRUST-3 The stable release builds and publishes in one job
+
+**Who found it:** Trust model review. **Where:** `.github/workflows/release.yml`.
+
+**Risk:** The release job runs npm ci and npm test while it holds contents, id-token and attestations write. An install script or test could ask for a signing token or change main.js before it is attested. The nightly already builds apart from publishing.
+
+**Fix:** Split the release in two. A job with read access builds and uploads the files. A second job with the write permissions attests and publishes them, running no npm.
+
+**Check:** test/workflows.test.js: no job that runs npm ci or npm test holds id-token, attestations or contents write.
+
+### TRUST-4 GitHub titles and messages reach Claude's pane unfenced
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/server/editor-changes.ts`, `packages/claude-code/server/github-reader.ts`, `packages/claude-code/server/editor-gate.ts`.
+
+**Risk:** Pull request titles, authors and commit messages are third-party text. They go to the changes view, which Claude reads, with no credential scan and no data fence. Files with no class count as the lowest, so outside files reach Claude too.
+
+**Fix:** Scan item text for credentials and mark it as outside data in the pane, inside the fence of spec_secrets_and_fences. Let the settings give repository files with no class a stricter default.
+
+**Check:** packages/claude-code/test/editor-changes.test.js: a title holding a credential is refused and item text is drawn inside the data fence.
+
+### TRUST-5 Any commenter can wake the working-group agent, which writes its own checker
+
+**Who found it:** Trust model review. **Where:** `.github/workflows/working-group.yml`, `scripts/working-group.mjs`.
+
+**Risk:** A discussion comment wakes Claude with its token and the Write tool. The script that checks Claude's answer then runs from the same folder Claude could write. So an injected comment could skip the check and get any text posted.
+
+**Fix:** Wake it only for comments by the owner or members. Run the checker from a clean checkout of main in a later job that Claude's job cannot write, and drop Write from its tools.
+
+**Check:** test/workflows.test.js: working-group.yml filters by author association and runs its checker in a separate job from a fresh checkout.
+
+### TRUST-6 Python fill recipes read outside the folder and inject into the query
+
+**Who found it:** Trust model review. **Where:** `python/graph_spec/src/graphspec/engine/documents/fill.py`.
+
+**Risk:** A recipe in a note names files joined onto the vault or the standards folder with no containment check. Its basis id is pasted into the query text. So a note can read or hash any file, and add query syntax.
+
+**Fix:** Resolve each recipe path by real path and refuse one outside its folder. Check the basis id against the id rule, or pass it as a query parameter.
+
+**Check:** python/graph_spec/tests/test_fill.py: a recipe naming ../ or an id with a quote is refused with the reason.
+
+### TRUST-7 Nothing cleans the drawing before it enters the page
+
+**Who found it:** Trust model review. **Where:** `packages/core/src/display/graph-view/drawing-svg.ts`, `packages/claude-code/mod/hooks/register.tsx`.
+
+**Risk:** The engine escapes labels, and that is the only guard. The SVG is put into the live page in Obsidian, which has no content policy, and handed raw to the pane. One escaping bug would run script with full access.
+
+**Fix:** Pass the SVG through an allowlist before it is shown: SVG elements and attributes only, no script, foreignObject, event attributes or links other than in-page.
+
+**Check:** packages/core/test/drawing-svg.test.js: an SVG holding script, an on attribute or a javascript: link is drawn without them.
+
+### TRUST-8 A database import has no size or time limit
+
+**Who found it:** Trust model review. **Where:** `packages/obsidian/src/databases/**`.
+
+**Risk:** The import reads the whole file and runs the query on the main thread with no time limit. It caps rows only once all are in memory. A large file or a looping query hangs Obsidian. Imported values are not held to the note's class.
+
+**Fix:** Refuse a file above the read limit and stop a query after a time limit. Stop reading at the row limit, and scan the values for credentials.
+
+**Check:** packages/obsidian/test/databases.test.js refuses a file over the limit, a looping query and a credential in a value.
+
+### TRUST-9 The Python class reader is looser than the core gate
+
+**Who found it:** Trust model review. **Where:** `python/graph_spec/src/graphspec/engine/documents/classification.py`.
+
+**Risk:** The Python reader takes the first classification line anywhere in the file, not only in front matter, and has no unknown case. So the two readers can give one note different classes.
+
+**Fix:** Read the class only from front matter and refuse an unknown or doubled one, as the core does. Share the fixtures.
+
+**Check:** python/graph_spec/tests/test_classification.py runs the core gate's classification fixtures and agrees on each.
+
+### TRUST-10 git log still reads the repository's own settings
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/server/note-history.ts`.
+
+**Risk:** The server turns off hooks and fsmonitor, but still reads the vault repository's config. A setting such as log.showSignature with gpg.program could start a program when the history is listed. Untested.
+
+**Fix:** Add -c log.showSignature=false and -c gpg.program= to each git call, or set GIT_CONFIG_GLOBAL and pass only the settings needed.
+
+**Check:** packages/claude-code/test/note-history.test.js: a repository whose gpg.program writes a file lists its history. The file is never written.
+
+### TRUST-11 /graph checks the note, then reads it again to draw
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/mod/hooks/register.tsx`.
+
+**Risk:** The gate reads the note, then the drawing reads it a second time. Text that changes in between is drawn without being checked.
+
+**Fix:** Read the note once and pass the same text to the gate and to the drawing.
+
+**Check:** packages/claude-code/test/register.test.js: the text drawn is the text the gate saw.
+
+### TRUST-12 The gate settings and the confirmed digest travel in the environment
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/src/editor-launch.ts`, `packages/claude-code/src/editor-settings-env.ts`.
+
+**Risk:** The server gets its gate settings and the digest of a note the person confirmed through its environment. Another process of the same user can read them, or start the server with its own.
+
+**Fix:** Send the settings and the digest on stdin with the proposer key, and read nothing gate-related from the environment.
+
+**Check:** packages/claude-code/test/editor-launch.test.js: the server's environment holds no gate setting or digest.
+
+### TRUST-13 Shared schemas sent to an AI skip their own class
+
+**Who found it:** Trust model review. **Where:** `packages/core/src/ai-scope.ts`, `packages/obsidian/src/ai/ai.ts`.
+
+**Risk:** The AI scope takes in the vault's shared schemas, but only the class of the note being asked about is checked. A schema kept in a note of a higher class can be sent.
+
+**Fix:** Hold each schema to the class of the note it came from. Leave out one above the ceiling, and show the reason.
+
+**Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
+
+### TRUST-14 Plug-ins run with the host's full powers
+
+**Who found it:** Trust model review. **Where:** `packages/core/src/plugins.ts`.
+
+**Risk:** A plug-in runs in the same process as the host, with all its abilities, and its time limit is not enforced. No host loads outside plug-ins yet, so this matters once one does.
+
+**Fix:** Do this before any host loads a plug-in it did not ship. Run plug-ins in a worker that gets only the extension points, and stop one that runs too long.
+
+**Check:** packages/core/test/plugins.test.js: a plug-in that loops is stopped and named, and one cannot reach the host's file or network calls.
 
 ## Done or accepted (19)
 
