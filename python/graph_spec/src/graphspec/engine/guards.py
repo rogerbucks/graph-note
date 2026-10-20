@@ -27,6 +27,9 @@ _COMPARE = {
     ">=": lambda a, b: a >= b,
 }
 _WORDS = {"and", "or", "not"}
+# A guard's most characters, and how deep its brackets and `not` may go (editor spec §51,
+# spec_guard_language). The JavaScript checker states the same (src/rules/guards.js).
+LIMITS = {"chars": 1000, "nesting": 64}
 _TEXT, _NAME = "text", "name"
 
 
@@ -62,11 +65,13 @@ def _tokens(guard: str) -> list[tuple[str, Any]]:
 def holds(guard: str, ctx: dict[str, Any]) -> bool:
     """Whether a guard holds in a context. A name the context lacks raises NameError, as Python
     did; anything that is not comparisons joined by and, or and not raises ValueError."""
+    if len(guard) > LIMITS["chars"]:
+        raise _refusal(guard[:20] + "…", f"is longer than {LIMITS['chars']} characters")
     toks = _tokens(guard)
     for (kind, v), after in zip(toks, toks[1:]):
         if after == ("op", "(") and (kind != "op" or v == ")"):
             raise _refusal(guard, f"calls {v!r}")
-    i = 0
+    i = depth = 0
 
     def peek() -> tuple[str, Any] | None:
         return toks[i] if i < len(toks) else None
@@ -78,15 +83,29 @@ def holds(guard: str, ctx: dict[str, Any]) -> bool:
         i += 1
         return toks[i - 1]
 
+    def deeper(within: Any) -> Any:
+        """A bracket or `not` read inside, refused past the nesting limit."""
+        nonlocal depth
+        depth += 1
+        if depth > LIMITS["nesting"]:
+            raise _refusal(guard[:20] + "…", f"goes more than {LIMITS['nesting']} deep")
+        try:
+            return within()
+        finally:
+            depth -= 1
+
+    def bracketed() -> Any:
+        out = either()
+        if take() != ("op", ")"):
+            raise _refusal(guard, "has a bracket left open")
+        return out
+
     def atom() -> Any:
         kind, v = take()
         if (kind, v) == ("op", "("):
-            out = either()
-            if take() != ("op", ")"):
-                raise _refusal(guard, "has a bracket left open")
-            return out
+            return deeper(bracketed)
         if (kind, v) == ("op", "not"):
-            return not compare()
+            return deeper(lambda: not compare())
         if kind == _TEXT:
             return v
         if kind == _NAME:

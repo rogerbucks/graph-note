@@ -3,63 +3,8 @@
 
 const { byKey } = require('../values/order.js');
 const { pyrepr, pystr, pyeq, keystr } = require('./python-text.js');
+const { guardHolds } = require('../rules/guards.js');
 
-function guardHolds(g, ctx) {
-  // guards as the spec writes them: comparisons joined by and / or / not
-  const toks = g.match(/\s*(>=|<=|==|!=|=|<|>|\(|\)|[A-Za-z_]\w*|-?\d+(?:\.\d+)?)/g).map((t) => t.trim());
-  let i = 0;
-  const truthy = (v) => !(v === false || v === 0 || v === null || v === undefined || v === '');
-  const atom = () => {
-    const t = toks[i++];
-    if (t === '(') {
-      const v = or();
-      i++;
-      return v;
-    }
-    if (t === 'not') return !truthy(cmp());
-    if (t === 'True' || t === 'true') return true;
-    if (t === 'False' || t === 'false') return false;
-    if (/^-?\d/.test(t)) return Number(t);
-    if (!(t in ctx)) throw new Error(`name '${t}' is not defined`);
-    return ctx[t];
-  };
-  const cmp = () => {
-    let a = atom();
-    while (['=', '==', '!=', '<', '>', '<=', '>='].includes(toks[i])) {
-      const op = toks[i++],
-        b = atom();
-      a = {
-        '=': pyeq(a, b),
-        '==': pyeq(a, b),
-        '!=': !pyeq(a, b),
-        '<': a < b,
-        '>': a > b,
-        '<=': a <= b,
-        '>=': a >= b,
-      }[op];
-    }
-    return a;
-  };
-  const and = () => {
-    let a = cmp();
-    while (toks[i] === 'and') {
-      i++;
-      const b = cmp();
-      a = truthy(a) ? b : a;
-    }
-    return a;
-  };
-  const or = () => {
-    let a = and();
-    while (toks[i] === 'or') {
-      i++;
-      const b = and();
-      a = truthy(a) ? a : b;
-    }
-    return a;
-  };
-  return truthy(or());
-}
 function cycles(edges, types) {
   const found = new Map();
   for (const ty of types) {
