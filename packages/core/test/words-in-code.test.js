@@ -48,6 +48,8 @@ const KEPT = {
   'packages/core/src/display/host.ts': ['The display layer has no host: install one with installHost before drawing.'],
   // a reason kept to compare with, never shown: each host says a deleted note in its own words (kept-draft.ts)
   'packages/core/src/display/editor/editor-note.ts': ['the note was deleted'],
+  // the fields a person types in, as a selector kept in a constant
+  'packages/obsidian/src/live-preview.ts': ['input, textarea, select, [contenteditable="true"]'],
   // said to a developer whose card option cannot be made read-only, in the console
   'packages/core/src/display/graph-view/read-only.ts': '*',
   // a colour the code asks the browser whether it can mix, never shown

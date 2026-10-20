@@ -4,6 +4,7 @@
 // brought to the catalogue; the plain-language check (ux_copy_auto) reads them here.
 
 import { AI_SOURCE_WORDS } from './ai-source-words.ts';
+import { BLOCKS_SOURCE_WORDS } from './blocks-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
@@ -370,4 +371,6 @@ export const SOURCE_WORDS = {
   ...DISPLAY_SOURCE_WORDS,
   // making an export, sharing it and writing it into the vault (export-source-words.ts)
   ...EXPORT_SOURCE_WORDS,
+  // the note's own blocks in the Obsidian host (blocks-source-words.ts)
+  ...BLOCKS_SOURCE_WORDS,
 } as const;

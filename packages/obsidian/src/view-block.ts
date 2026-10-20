@@ -24,6 +24,7 @@ import {
   reversedLinks,
   styledDrawing,
   underStrictness,
+  word,
 } from '@thoughtknot/core';
 import type { GraphDrawing, NamedView, Outside, StyleChange, ThingLook } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
@@ -56,7 +57,7 @@ export async function writeStyle(
     return 'note' in r ? r.note : note;
   });
   // each write is confirmed in words, as is each refusal
-  new Notice(refused ? `The style could not be written: ${refused}` : done);
+  new Notice(refused ? word('blocks.style-failed', { why: refused }) : done);
 }
 
 /**
@@ -70,7 +71,7 @@ export async function writeViewBlock(
   block: string,
 ): Promise<string | null> {
   const file = plugin.app.vault.getAbstractFileByPath(path);
-  if (!(file instanceof TFile)) return 'the note is not there any more';
+  if (!(file instanceof TFile)) return word('blocks.view-note-gone');
   let refused: string | null = null;
   await plugin.app.vault.process(file, (note) => {
     // checked against the note as it is now: a name another view has, or a thing only suggested in it (§4), is refused
@@ -88,7 +89,7 @@ function changeView(plugin: ThoughtKnotPlugin, path: string, line: number): void
   const leaf = plugin.app.workspace.getLeaf(false);
   if (file instanceof TFile && typeof leaf.openFile === 'function')
     void leaf.openFile(file, { eState: { line }, active: true });
-  else new Notice('Change the view in its block in the note: its query picks the things it shows.');
+  else new Notice(word('blocks.view-edit'));
 }
 
 /** Draws the view `v`, written in `source`, where the note shows it. */
@@ -111,7 +112,7 @@ export async function renderViewBlock(
     root.createDiv({
       cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
-      text: `This view cannot be drawn: ${spec.refused}`,
+      text: word('blocks.view-refused', { why: spec.refused }),
     });
     renderCode(root, source);
     return;
@@ -141,10 +142,10 @@ export async function renderViewBlock(
   const textOf = (k: string) => base?.boxes.find((b) => b.key === k)?.text ?? k;
   if (result.empty || !base) {
     const empty = root.createDiv({ cls: 'thoughtknot-empty' });
-    empty.createEl('p', { text: `View ${v.name} matches nothing. ${result.why ?? ''}` });
+    empty.createEl('p', { text: word('blocks.view-empty', { name: v.name, why: result.why ?? '' }) });
     const change = empty.createEl('button', {
-      text: 'Change the view',
-      attr: { 'aria-label': 'Change the view', type: 'button' },
+      text: word('blocks.view-change'),
+      attr: { 'aria-label': word('blocks.view-change'), type: 'button' },
     });
     change.addEventListener('click', () => changeView(plugin, ctx.sourcePath, line));
     return;
@@ -213,7 +214,7 @@ export async function renderViewBlock(
         ctx.sourcePath,
         v.graph,
         { outside: { view: v.name, outside: o } },
-        `View ${v.name} now ${o === 'hide' ? 'hides' : 'fades'} what is outside it.`,
+        word(o === 'hide' ? 'blocks.view-hides' : 'blocks.view-fades', { name: v.name }),
       ),
     // and the legend's choices, only then too (§25, untangle_legend)
     saveShown: (z, selected, legend) =>
@@ -232,7 +233,7 @@ export async function renderViewBlock(
             legend,
           },
         },
-        `Saved how view ${v.name} is shown.`,
+        word('blocks.view-saved', { name: v.name }),
       ),
   };
   // the diagram types for this view (§15): choosing one writes it for the view alone
@@ -252,7 +253,7 @@ export async function renderViewBlock(
     root.createDiv({
       cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
-      text: `View ${v.name} could not be drawn, so its query is shown.`,
+      text: word('blocks.view-failed', { name: v.name }),
     });
     renderCode(root, source);
     return;

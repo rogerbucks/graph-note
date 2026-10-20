@@ -4,6 +4,7 @@
 // - There is one to a block, however often Edit here is pressed.
 // - Each is released, with what was typed written, once its card has left the page and its note is no longer open. So
 //   no editor nobody can see keeps listening to the vault.
+import { word } from '@thoughtknot/core';
 import { Component, Notice } from 'obsidian';
 import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
@@ -13,10 +14,6 @@ import { blocksIn } from './live-preview';
 
 /** How long an editor whose card has left the page is waited for in another card before it is released. */
 const RELEASE_AFTER_MS = 1000;
-
-/** What is said when Edit here is pressed on a card whose note is no longer where the card was drawn from. */
-const GONE_MESSAGE =
-  'This note is not there any more: it was renamed, moved or deleted. Open it again to edit it here.';
 
 /** Where an editor in place was opened: the note's path then, its block's fence line, its card's identity, its opening. */
 interface Placed {
@@ -120,8 +117,8 @@ export class InlineEditors extends Component {
       if (failed.why !== null || !e.session) {
         // nothing to edit, half open or not at all: never kept. The note could not be opened, is not there any more, or
         // has no graph block, as the card then says
-        if (failed.why !== null) new Notice(`This block could not be opened to edit it here: ${failed.why}.`);
-        else if (!e.path) new Notice(GONE_MESSAGE);
+        if (failed.why !== null) new Notice(word('blocks.edit-failed', { why: failed.why }));
+        else if (!e.path) new Notice(word('blocks.edit-gone'));
         e.onDone?.();
         return;
       }
