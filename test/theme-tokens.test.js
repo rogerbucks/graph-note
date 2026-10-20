@@ -1,13 +1,18 @@
 // The interface's design tokens (editor spec §44, ui_theme_tokens). There is one set of named tokens, `--gn-*`, for
-// colour, type, spacing, corners and depth. Every rule of both style sheets reads them, and nothing else of a host's.
+// colour, type, spacing, corners, depth and motion. Every rule of both style sheets reads them, and nothing else of a host's.
 // Each sheet maps its host's theme to the tokens in one block, and nowhere else:
-// - the plugin's sheet reads Obsidian's theme through the core's table (theme-tokens.ts, `OBSIDIAN_TOKEN_MAP`);
+// - the plugin's sheet reads Obsidian's theme through the core's table (theme-tokens.ts, `obsidianTokenValue`);
 // - the browser page's sheet reads the theme it is built with (theme-css.ts).
 // So a theme changes the interface with no code, and the interface looks native in each host.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { THEME_TOKENS, OBSIDIAN_TOKEN_MAP } from '../packages/core/src/theme-tokens.ts';
+import {
+  THEME_TOKENS,
+  OBSIDIAN_TOKEN_MAP,
+  TOKEN_DEFAULTS,
+  obsidianTokenValue,
+} from '../packages/core/src/theme-tokens.ts';
 import { PALETTES } from '../packages/core/src/palette.ts';
 import { themeCss } from '../packages/claude-code/page/theme-css.ts';
 
@@ -69,8 +74,8 @@ describe('the interface is styled through the design tokens alone', () => {
     const { declared } = split('styles.css');
     assert.deepEqual(
       declared,
-      Object.fromEntries(NAMES.map((n) => [n, `var(${OBSIDIAN_TOKEN_MAP[n]})`])),
-      'the block in styles.css is OBSIDIAN_TOKEN_MAP, written out',
+      Object.fromEntries(NAMES.map((n) => [n, obsidianTokenValue(n)])),
+      'the block in styles.css is the core’s table, written out',
     );
   });
 
@@ -80,6 +85,8 @@ describe('the interface is styled through the design tokens alone', () => {
     const light = /:root\{([^}]*)\}/.exec(theme)?.[1] ?? '';
     const defined = new Set(light.split(';').map((d) => d.slice(0, d.indexOf(':'))));
     for (const [name, value] of Object.entries(declared)) {
+      // a token no theme gives, such as how long a dash takes to run, keeps the core's own value
+      if (value === TOKEN_DEFAULTS[name]) continue;
       assert.match(value, /^var\(--[a-z0-9-]+\)$/, `${name} reads the page’s theme`);
       for (const n of reads(value)) assert.ok(defined.has(n), `${name}: the page’s theme defines ${n}`);
     }
@@ -88,15 +95,17 @@ describe('the interface is styled through the design tokens alone', () => {
   });
 
   test('each token says what it is for and what kind of thing it is, and none takes a name the drawing uses', () => {
-    const kinds = new Set(['colour', 'type', 'spacing', 'corners', 'depth', 'pointer']);
+    const kinds = new Set(['colour', 'type', 'spacing', 'corners', 'depth', 'pointer', 'motion']);
     for (const [name, t] of Object.entries(THEME_TOKENS)) {
       assert.match(name, /^--gn-[a-z][a-z0-9-]*$/);
       assert.ok(kinds.has(t.kind), `${name}: ${t.kind}`);
       assert.ok(t.says.length > 10, name);
-      assert.ok(Object.hasOwn(OBSIDIAN_TOKEN_MAP, name), `${name} is mapped from Obsidian’s theme`);
+      assert.ok(
+        Object.hasOwn(OBSIDIAN_TOKEN_MAP, name) || Object.hasOwn(TOKEN_DEFAULTS, name),
+        `${name} is mapped from Obsidian’s theme, or has a value of its own`,
+      );
     }
-    assert.deepEqual(Object.keys(OBSIDIAN_TOKEN_MAP).sort(), [...NAMES].sort());
-    for (const kind of ['colour', 'type', 'spacing', 'corners'])
+    for (const kind of ['colour', 'type', 'spacing', 'corners', 'motion'])
       assert.ok(
         Object.values(THEME_TOKENS).some((t) => t.kind === kind),
         `a token of ${kind}`,
@@ -108,5 +117,30 @@ describe('the interface is styled through the design tokens alone', () => {
       NAMES.filter((n) => drawing.includes(n)),
       [],
     );
+  });
+});
+
+describe('the interface moves by the motion tokens', () => {
+  // proves: ui_theme_tokens
+  test('every animation in styles.css takes its time and its easing from a token', () => {
+    const animations = [...read('styles.css').matchAll(/animation\s*:\s*([^;}]+)/g)].map((m) => m[1].trim());
+    const moving = animations.filter((a) => a !== 'none');
+    assert.ok(moving.length >= 4, JSON.stringify(animations));
+    for (const a of moving) {
+      const bare = a.replace(/var\([^()]*(?:\([^()]*\))?[^()]*\)/g, '');
+      assert.doesNotMatch(bare, /\d(?:\.\d+)?m?s\b/, `${a}: a time of its own`);
+      assert.doesNotMatch(bare, /\b(?:linear|ease(?:-in|-out|-in-out)?|cubic-bezier)\b/, `${a}: an easing of its own`);
+      assert.match(a, /var\(--gn-motion-/, `${a} reads a motion token`);
+    }
+  });
+
+  // proves: ui_theme_tokens
+  test('the times and easings are tokens of motion, and the soft easing follows Obsidian’s', () => {
+    const motion = NAMES.filter((n) => THEME_TOKENS[n].kind === 'motion');
+    assert.ok(motion.some((n) => n.startsWith('--gn-motion-')));
+    assert.ok(motion.some((n) => n.startsWith('--gn-ease-')));
+    assert.equal(obsidianTokenValue('--gn-ease-soft'), 'var(--anim-motion-smooth, ease-in-out)');
+    for (const n of motion.filter((m) => m.startsWith('--gn-motion-')))
+      assert.match(TOKEN_DEFAULTS[n], /^\d+(?:\.\d+)?s$/, `${n} has a time of its own`);
   });
 });
