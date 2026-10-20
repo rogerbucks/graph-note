@@ -789,6 +789,8 @@ These test behaviour across modules, or the repository itself, so they are named
   (editor spec §12, tests_self_contained, test_files_generated). The images it makes decode and move: the GIF's
   compressed data, the APNG's frames, the WebP's lossless frames, the SVG and the PDF.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
+- `test/trust-model.test.js` — the trust model (editor spec §54). The wiki page names every actor and boundary. Each gap
+  is a risk in the register, and every file that opens a boundary is on the page.
 - `test/test-status-partial.test.js` — the third test status, `partial`: a test whose file is there but does not yet
   prove every rule its record covers. It needs its file like a written one. It leaves its requirement unproved in
   `--done`, and the reason says partial. It may be flipped to only from planned, and to written; every backward move is

@@ -61,3 +61,4 @@ flowchart LR
 - Graph notes in Microsoft 365 Copilot Cowork: [Copilot Cowork skill design](Copilot-Cowork-skill-design).
 - An AI breaking prose into a graph shown as a proposal: [text to graph design](Text-to-graph-design).
 - Claude showing a graph, walking you through it and taking your decision: [Claude presents and decides design](Claude-presents-and-decides-design).
+- Who and what each part trusts, where that trust ends, and the gaps found: [trust model](Trust-model).
