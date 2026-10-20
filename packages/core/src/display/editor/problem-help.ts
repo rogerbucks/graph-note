@@ -1,6 +1,7 @@
 // The block editor's help with problems (spec §4, §8). It holds the list of every problem with its line, and the
 // problems on the caret's line with their fixes as buttons. It applies a fix's edits to the text, and says new problems
 // to screen readers.
+import { word } from '@thoughtknot/core';
 import type { Diagnostic } from '@thoughtknot/core';
 import { withFix } from '../fix-changes';
 import type { FixChanges } from '../fix-changes';
@@ -24,12 +25,12 @@ export function listProblems(list: HTMLElement, problems: Diagnostic[], line = -
   list.empty();
   const elsewhere = problems.filter((d) => !onLine(d, line));
   list.hidden = problems.length > 0 && !elsewhere.length;
-  if (!problems.length) list.createEl('p', { cls: 'thoughtknot-quiet', text: 'No problems.' });
+  if (!problems.length) list.createEl('p', { cls: 'thoughtknot-quiet', text: word('problems.none') });
   if (!elsewhere.length) return;
   const ul = list.createEl('ul');
   for (const d of elsewhere) {
     const li = ul.createEl('li', { cls: classOf(d) });
-    li.createSpan({ text: `Line ${d.range.start.line + 1}: ${d.message} ` });
+    li.createSpan({ text: `${word('problems.at-line', { line: d.range.start.line + 1, message: d.message })} ` });
     li.createSpan({ cls: 'thoughtknot-fix', text: d.data.fix });
   }
 }
@@ -64,8 +65,6 @@ export const heardKey = (d: Diagnostic): string => `${d.range.start.line}|${d.me
 export function announce(el: HTMLElement, problems: Diagnostic[], heard: Set<string>): Set<string> {
   const now = problems.filter((d) => d.severity !== HINT).map((d) => ({ key: heardKey(d), d })); // a hint is not a problem
   const fresh = now.filter((x) => !heard.has(x.key));
-  el.setText(
-    fresh.length ? `${fresh.length} new problem${fresh.length === 1 ? '' : 's'}: ${fresh[0]?.d.message ?? ''}` : '',
-  );
+  el.setText(fresh.length ? word('problems.new', { count: fresh.length, message: fresh[0]?.d.message ?? '' }) : '');
   return new Set(now.map((x) => x.key));
 }

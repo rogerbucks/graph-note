@@ -11,7 +11,7 @@ import { declareDeferred, declareDeferredBlock, indentText, lockBlock } from '@t
 import type { PaneSession, Settings } from '@thoughtknot/core';
 import { NOTE_DELETED } from '@thoughtknot/core/display/editor/editor-note';
 import type { EditorNote, KeptDraft, Refused, Reread } from '@thoughtknot/core/display/editor/editor-note';
-import { LOCK_FAILED, lockedNote } from '@thoughtknot/core/display/editor/lock-text';
+import { lockFailed, lockedNote } from '@thoughtknot/core/display/editor/lock-text';
 import type { DeclaredDeferred } from '@thoughtknot/core/display/graph-view/view-options';
 import { notice } from '@thoughtknot/core/display/host';
 import { EditorSession } from '../src/editor-session.ts';
@@ -172,7 +172,7 @@ export class PageNote implements EditorNote {
       const today = new Date().toISOString().slice(0, 10);
       const block = lockBlock(s.reading(this.seen.text), s.graph, today, indentText(this.settings.indent));
       const locked = lockedNote(this.seen.text, s.graph, block);
-      if (locked === null) return notice(LOCK_FAILED);
+      if (locked === null) return notice(lockFailed());
       const w = await this.putWhole(locked);
       if (!w.ok) notice(w.why);
     });

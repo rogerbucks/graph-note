@@ -166,17 +166,17 @@ export class ViewSwitching {
 
   /** Lays the graph out again as the switches now fold it, and has the card put it in place; or says why not. */
   private async redraw(then?: () => void): Promise<void> {
-    this.menu.say('Drawing again…');
+    this.menu.say(word('redraw.drawing'));
     let next: Awaited<ReturnType<SwitchesShown['relayout']>>;
     try {
       next = await this.o.relayout(this.owner);
     } catch {
-      this.menu.say('The drawing engine could not draw it so; it is shown as it was.');
+      this.menu.say(word('redraw.failed'));
       return;
     }
     if (!next) return; // a newer layout for this card was asked for
     if ('reason' in next) {
-      this.menu.say('Drawn so, the graph is over a size or time limit, so it is shown as it was.');
+      this.menu.say(word('redraw.too-big'));
       return;
     }
     this.drawnAs = this.now();

@@ -8,7 +8,7 @@ import type { TFile, Vault } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { PaneSession } from '@thoughtknot/core';
 import type { Refused } from '@thoughtknot/core/display/editor/editor-note';
-import { LOCK_FAILED, lockedNote } from '@thoughtknot/core/display/editor/lock-text';
+import { lockFailed, lockedNote } from '@thoughtknot/core/display/editor/lock-text';
 
 export type { Refused };
 
@@ -102,7 +102,7 @@ export async function lockInNote(vault: Vault, file: TFile, graph: string, block
   await vault.process(file, (data) => {
     const locked = lockedNote(data, graph, block);
     if (locked === null) {
-      new Notice(LOCK_FAILED);
+      new Notice(lockFailed());
       return data;
     }
     keep(locked);

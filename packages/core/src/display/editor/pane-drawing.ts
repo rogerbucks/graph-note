@@ -2,7 +2,7 @@
 // it selects where it is written in the text. Its Edit puts the focus back in the text. In place, in a drawing's card,
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
 // is (spec §9). A graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
-import { ViewState, depthOf, parked, startingSwitches } from '@thoughtknot/core';
+import { depthOf, parked, startingSwitches, ViewState, word } from '@thoughtknot/core';
 import type { Drawn, FocusDepth, GraphDrawing, NoteReading, PaneSession, Refusal, Settings } from '@thoughtknot/core';
 import { Lifecycle } from '../lifecycle';
 import { refusalBanner } from '../refusal-banner';
@@ -37,9 +37,8 @@ interface Choosing {
  * happens only while it is still `was`, as drawn, and the editor is still there. Says why nothing was written, or null.
  */
 function fixInPane(s: PaneSession, on: Choosing, was: string, now: string): string | null {
-  if (s.text !== was)
-    return 'The text being edited is not as drawn, so nothing was written. Try again once the drawing is redrawn.';
-  return on.replace(now) ? null : 'The editor is no longer open, so nothing was written.';
+  if (s.text !== was) return word('pane.fix-not-as-drawn');
+  return on.replace(now) ? null : word('pane.fix-closed');
 }
 
 /** Puts the session's graph, as laid out, into the pane's drawing; returns the view, or null when nothing is drawn. */
@@ -56,7 +55,7 @@ function drawInPane(
 ) {
   host.empty();
   if (!drawn) {
-    host.createEl('p', { cls: 'thoughtknot-quiet', text: 'Nothing to draw yet. Start with a thing.' });
+    host.createEl('p', { cls: 'thoughtknot-quiet', text: word('pane.nothing-yet') });
     return null;
   }
   if ('reason' in drawn) {
@@ -141,7 +140,7 @@ export class PaneDrawing extends Lifecycle {
         host.createDiv({
           cls: 'thoughtknot-banner',
           attr: { role: 'alert' },
-          text: `The drawing engine could not start: ${String(e)}`,
+          text: word('pane.engine-failed', { why: String(e) }),
         });
       });
   }

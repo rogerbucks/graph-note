@@ -2,7 +2,7 @@
 // play button and what it says. On a box it is the image in the room Graphviz kept for it (the core's `PICTURE_MARK`
 // square). Its control is drawn in the corner, an SVG button reached by Tab and pressed by Enter, Space, a click or a
 // tap. Both are worked by animated-images.ts through the one `ImageView`; neither decides anything.
-import { PICTURE_MARK } from '@thoughtknot/core';
+import { PICTURE_MARK, word } from '@thoughtknot/core';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -77,7 +77,11 @@ export function figureView(parent: HTMLElement, caption: string, name: string): 
 export function refusedFigure(parent: HTMLElement, caption: string, why: string): void {
   const fig = parent.createEl('figure', { cls: 'thoughtknot-image', attr: { 'data-ready': 'true' } });
   fig.createEl('figcaption', { text: caption });
-  fig.createEl('p', { cls: 'thoughtknot-image-said', attr: { role: 'status' }, text: `Not shown: ${why}.` });
+  fig.createEl('p', {
+    cls: 'thoughtknot-image-said',
+    attr: { role: 'status' },
+    text: word('images.not-shown', { why }),
+  });
 }
 
 /** The marked square Graphviz drew for a picture in a box's group, if there is one. */
@@ -108,7 +112,7 @@ export function refusedPicture(square: Element, why: string): void {
   const g = square.parentElement;
   if (!g) return;
   const frame = svgEl(g, 'rect', { class: 'thoughtknot-picture-missing', ...placeOf(square) });
-  svgEl(frame, 'title', {}).textContent = `Not shown: ${why}.`;
+  svgEl(frame, 'title', {}).textContent = word('images.not-shown', { why });
   g.insertBefore(frame, square);
   square.remove();
 }

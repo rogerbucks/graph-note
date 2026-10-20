@@ -5,7 +5,7 @@
 // to a note, a file or an address are drawn as a link. A thing's attachments are counted (§18, links/link-marks.ts).
 // Laid out again, the drawing is put in the same SVG element (`swapSvg`), so everything that holds it holds the new
 // drawing.
-import { textVersion, withoutColorMix } from '@thoughtknot/core';
+import { textVersion, withoutColorMix, word } from '@thoughtknot/core';
 import type { Drawn, Folding, GraphDrawing } from '@thoughtknot/core';
 import { boxLabel } from './suggested-name';
 import { markParked } from './parked';
@@ -129,7 +129,10 @@ function decorate(
     g.setAttribute('tabindex', '0');
     g.setAttribute('role', 'button');
     g.setAttribute('aria-pressed', 'false'); // selected as a written link is, when tapped
-    g.setAttribute('aria-label', `Estimated link: ${textOf(e.from)} ${e.reading} ${textOf(e.to)}. Open it for why.`);
+    g.setAttribute(
+      'aria-label',
+      word('estimate.label', { from: textOf(e.from), reading: e.reading, to: textOf(e.to) }),
+    );
   }
   markFolds(svg, plan, textOf);
   markParked(svg, boxes); // things parked for later: dashed, with a later mark (spec §5)
@@ -144,18 +147,10 @@ function markFolds(svg: SVGSVGElement, plan: Folding | undefined, textOf: (k: st
     ...plan.hubs.map(([key, count], j): [string, string, string] => [
       `fold_hub_${j + 1}`,
       `hub:${key}`,
-      `${textOf(key)}: ${count} link${count === 1 ? '' : 's'} folded. Open them.`,
+      word('fold.links', { label: textOf(key), count }),
     ]),
     ...plan.groups.flatMap(([label, things, folded], i): [string, string, string][] =>
-      folded
-        ? [
-            [
-              `fold_group_${i + 1}`,
-              `group:${label}`,
-              `${label}: ${things.length} thing${things.length === 1 ? '' : 's'} folded. Open the group.`,
-            ],
-          ]
-        : [],
+      folded ? [[`fold_group_${i + 1}`, `group:${label}`, word('fold.things', { label, count: things.length })]] : [],
     ),
   ];
   for (const [id, fold, label] of folds) {

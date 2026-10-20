@@ -1,6 +1,7 @@
 // No words the person reads are written in the display layer's code (editor spec §42, words_catalogue). Each comes
 // from the catalogue by key, so a translation reaches it. The check reads every string the layer's code holds. It
-// flags any that reads as words: two plain words with a space, or a word that starts what a control shows as its text, name or hint.
+// flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
+// or hint.
 // The few kept in the code are listed, each with why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -22,6 +23,8 @@ const KEPT = {
   'panel-contract.ts': '*',
   // said to a developer who forgot to install a host, never to a person using the app
   'host.ts': ['The display layer has no host: install one with installHost before drawing.'],
+  // a reason kept to compare with, never shown: each host says a deleted note in its own words (kept-draft.ts)
+  'editor/editor-note.ts': ['the note was deleted'],
   // said to a developer whose card option cannot be made read-only, in the console
   'graph-view/read-only.ts': '*',
   // a colour the code asks the browser whether it can mix, never shown

@@ -1,7 +1,7 @@
 // The block editor (spec §4, §9): one graph block's text, with all that helps write it. That is a plain text field over
 // a coloured picture of it, problems with fixes, suggestions, each line read back, the comma added for you. Behind it
 // are safe writing (the core's session never overwrites a block changed meanwhile), undo, redo and Lock the graph.
-import { indentText, isDraft } from '@thoughtknot/core';
+import { indentText, isDraft, word } from '@thoughtknot/core';
 import type { Change, CompletionItem, NoteReading, PaneSession } from '@thoughtknot/core';
 import { Lifecycle } from '../lifecycle';
 import { buildEditor, sayRefused, showTools, toolsSaid } from './editor-layout';
@@ -170,7 +170,7 @@ export class BlockEditor extends Lifecycle {
     this.drawing.clear();
     const s = this.session;
     if (!s) {
-      if (this.path) container.createEl('p', { text: 'This note has no graph block to edit.' });
+      if (this.path) container.createEl('p', { text: word('pane.no-block') });
       return;
     }
     const el = buildEditor(container, s, this.layout, { showDrawing: () => this.redraw() });

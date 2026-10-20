@@ -125,13 +125,13 @@ export function markView(svg: SVGSVGElement, v: ViewShown): void {
   for (const g of Array.from(svg.querySelectorAll<SVGGElement>('g.node'))) {
     const key = g.getAttribute('data-key') ?? '';
     g.classList.toggle('thoughtknot-faded', faded.has(key));
-    if (faded.has(key)) say(g, 'outside the view');
+    if (faded.has(key)) say(g, word('strip.outside'));
     lookClasses(g, v.looks.things.get(key), means, tags);
   }
   for (const g of Array.from(svg.querySelectorAll<SVGGElement>('g.edge[data-link]'))) {
     const n = g.getAttribute('data-link') ?? '';
     g.classList.toggle('thoughtknot-faded', fadedLinks.has(n));
-    if (fadedLinks.has(n)) say(g, 'outside the view');
+    if (fadedLinks.has(n)) say(g, word('strip.outside'));
     lookClasses(g, v.looks.links.get(Number(n)), means, tags, true);
   }
 }

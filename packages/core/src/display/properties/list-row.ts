@@ -3,7 +3,7 @@
 // place with its x, and a field adds a value in place. Each change is an edit of the block's text, and what it did is
 // said.
 import { setIcon } from '../host';
-import { addToList, removeFromList } from '@thoughtknot/core';
+import { addToList, removeFromList, word } from '@thoughtknot/core';
 import type { ListShape, ListValue, NoteReading } from '@thoughtknot/core';
 
 /** A list the inspector knows of though the graph may hold no value for it yet: whose thing, and its shape. */
@@ -63,18 +63,22 @@ export function listRow(
   const keyEl = el.createDiv({ cls: 'metadata-property-key' });
   const icon = keyEl.createSpan({
     cls: 'metadata-property-icon',
-    attr: { 'aria-label': `List of ${shape.kind}, linked by ${shape.rel}` },
+    attr: { 'aria-label': word('list.icon', { kind: shape.kind, rel: shape.rel }) },
   });
   setIcon(icon, 'list');
   keyEl.createSpan({
     cls: 'metadata-property-key-input thoughtknot-list-key',
     text: label ? `${label} · ${shape.rel}` : shape.rel,
-    attr: { title: `${shape.kind} things linked by ${shape.rel}` },
+    attr: { title: word('list.linked', { kind: shape.kind, rel: shape.rel }) },
   });
   const box = el.createDiv({ cls: 'metadata-property-value' }).createDiv({ cls: 'multi-select-container' });
   const input = box.createEl('input', {
     cls: 'multi-select-input',
-    attr: { type: 'text', 'aria-label': `Add to ${shape.rel}`, placeholder: `Add a ${shape.kind}` },
+    attr: {
+      type: 'text',
+      'aria-label': word('list.add-to', { rel: shape.rel }),
+      placeholder: word('list.add-a', { kind: shape.kind }),
+    },
   });
 
   const changed = (r: { text: string; said: string }) => {
@@ -89,7 +93,7 @@ export function listRow(
       pill.createDiv({ cls: 'multi-select-pill-content', text: v.text });
       const x = pill.createDiv({
         cls: 'multi-select-pill-remove-button',
-        attr: { role: 'button', tabindex: '0', 'aria-label': `Remove ${v.text}` },
+        attr: { role: 'button', tabindex: '0', 'aria-label': word('list.remove', { name: v.text }) },
       });
       setIcon(x, 'x');
       const drop = () => {
