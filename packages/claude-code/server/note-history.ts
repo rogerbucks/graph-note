@@ -7,7 +7,7 @@
 // So nothing runs that the repository names, and nothing leaves the machine. Only the open note is ever read, and only
 // at a commit this module listed for it.
 import { execFile } from 'node:child_process';
-import { dirname, relative, sep } from 'node:path';
+import { basename, dirname } from 'node:path';
 import { BODY_LIMIT } from './request-body.ts';
 
 /** One earlier version a user may compare with: a commit, by its full id, and how it is named in the list. */
@@ -76,9 +76,11 @@ function git(cwd: string, args: string[], limit = BODY_LIMIT): Promise<string | 
 
 /** The repository's top folder, and the note's path in it written with `/`; null when the note is in none. */
 async function placeOf(real: string): Promise<{ top: string; path: string } | null> {
-  const top = (await git(dirname(real), ['rev-parse', '--show-toplevel']))?.replace(/\n$/, '');
+  const answer = await git(dirname(real), ['rev-parse', '--show-toplevel', '--show-prefix']);
+  if (!answer) return null;
+  const [top = '', prefix = ''] = answer.split('\n');
   if (!top) return null;
-  const path = relative(top, real).split(sep).join('/');
+  const path = `${prefix}${basename(real)}`;
   return path && !path.startsWith('../') ? { top, path } : null;
 }
 
