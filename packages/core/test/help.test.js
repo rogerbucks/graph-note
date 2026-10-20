@@ -77,7 +77,7 @@ describe('problems, in plain English, with their place and a fix', () => {
     const [d] = diagnostics(readNote([text]), 'reader', 0, text, URI);
     assert.deepEqual(d.range, { start: at(10, 2), end: at(10, 27) });
     assert.equal(d.severity, SEVERITY.Error);
-    assert.match(d.message, /^'\}' is not a value in the profile\.$/);
+    assert.match(d.message, /^'\}' is not a value a graph can hold\.$/);
     assert.match(d.data.fix, /^Use 'text', a number/);
     assert.deepEqual(d.data.fixes, []);
   });

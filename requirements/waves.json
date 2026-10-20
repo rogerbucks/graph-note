@@ -65,7 +65,8 @@
         "V1",
         "D1",
         "A1",
-        "R1"
+        "R1",
+        "GS1"
       ],
       "earlier_plan": {
         "start": "2026-10-30",
@@ -77,12 +78,13 @@
     {
       "title": "Wave 6 · Host, storage and plug-in contracts",
       "start": "2026-10-23",
-      "end": "2026-10-26",
+      "end": "2026-10-27",
       "estimate": true,
       "workstreams": [
         "T1",
         "L1",
-        "P1"
+        "P1",
+        "GS4"
       ],
       "earlier_plan": {
         "start": "2026-11-13",
@@ -93,8 +95,8 @@
     },
     {
       "title": "Wave 7 · Language, theming and the standalone app",
-      "start": "2026-10-27",
-      "end": "2026-10-29",
+      "start": "2026-10-28",
+      "end": "2026-10-30",
       "estimate": true,
       "workstreams": [
         "G1",
@@ -110,7 +112,7 @@
     },
     {
       "title": "Wave 8 · VS Code plugin",
-      "start": "2026-10-30",
+      "start": "2026-10-31",
       "end": "2026-11-02",
       "estimate": true,
       "workstreams": [
@@ -378,14 +380,76 @@
       }
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 25 · Held: the graph spec versioned and written down for other programs",
       "start": "2026-12-26",
-      "end": "2027-01-01",
+      "end": "2026-12-28",
       "estimate": true,
-      "workstreams": [],
+      "workstreams": [
+        "GS2",
+        "GS3"
+      ],
       "earlier_plan": {
         "start": "2027-08-16",
         "end": "2027-08-29",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
+    },
+    {
+      "title": "Wave 26 · Held: AI rules in the graph spec that agree",
+      "start": "2026-12-29",
+      "end": "2026-12-30",
+      "estimate": true,
+      "workstreams": [
+        "GS5"
+      ],
+      "earlier_plan": {
+        "start": "2027-08-30",
+        "end": "2027-09-12",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
+    },
+    {
+      "title": "Wave 27 · Held: a graph spec that reads easily, and its smaller gaps",
+      "start": "2026-12-31",
+      "end": "2027-01-01",
+      "estimate": true,
+      "workstreams": [
+        "GS6",
+        "GS7"
+      ],
+      "earlier_plan": {
+        "start": "2027-09-13",
+        "end": "2027-09-26",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
+    },
+    {
+      "title": "Wave 28 · Held: data tables and cubes",
+      "start": "2027-01-02",
+      "end": "2027-01-04",
+      "estimate": true,
+      "workstreams": [
+        "E1"
+      ],
+      "earlier_plan": {
+        "start": "2027-09-27",
+        "end": "2027-10-10",
+        "replaced": "2026-10-19",
+        "why": "re-baselined to the measured rate"
+      }
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-01-05",
+      "end": "2027-01-12",
+      "estimate": true,
+      "workstreams": [],
+      "earlier_plan": {
+        "start": "2027-10-11",
+        "end": "2027-10-24",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
       }

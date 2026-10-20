@@ -843,5 +843,88 @@
       "mcp_app_page_bounded",
       "mcp_app_remote"
     ]
+  },
+  "GS1": {
+    "title": "Every graph-spec rule checked in CI",
+    "size": "S",
+    "requirements": [
+      "spec_rules_proved",
+      "spec_conformance_in_repo",
+      "spec_no_general_proof",
+      "spec_index_true"
+    ]
+  },
+  "GS2": {
+    "title": "The graph spec versioned and repaired",
+    "size": "M",
+    "requirements": [
+      "spec_versioned",
+      "spec_version_in_files",
+      "spec_version_released",
+      "spec_text_restored",
+      "spec_sections_named"
+    ]
+  },
+  "GS3": {
+    "title": "The graph format written down for other programs",
+    "size": "M",
+    "requirements": [
+      "spec_grammar",
+      "spec_canonical_form",
+      "spec_library_api",
+      "spec_formats_listed",
+      "spec_ai_wire"
+    ]
+  },
+  "GS4": {
+    "title": "Graph format security",
+    "size": "M",
+    "requirements": [
+      "spec_author_from_session",
+      "spec_join_trust",
+      "spec_read_limits",
+      "spec_guard_language",
+      "spec_hashes_named",
+      "spec_secrets_and_fences"
+    ]
+  },
+  "GS5": {
+    "title": "AI rules in the graph spec that agree",
+    "size": "S",
+    "requirements": [
+      "spec_ai_rules_agree"
+    ]
+  },
+  "GS6": {
+    "title": "A graph spec that reads easily",
+    "size": "S",
+    "requirements": [
+      "spec_decisions_explained",
+      "spec_glossary",
+      "spec_gentle_words",
+      "spec_display_rules_here"
+    ]
+  },
+  "GS7": {
+    "title": "Smaller graph-spec gaps",
+    "size": "M",
+    "requirements": [
+      "spec_process_versions",
+      "spec_engine_catalogue",
+      "spec_zoned_time",
+      "spec_conserved",
+      "spec_text_licence"
+    ]
+  },
+  "E1": {
+    "title": "Data tables and cubes",
+    "size": "M",
+    "requirements": [
+      "data_tables_design",
+      "data_set_reference",
+      "data_set_linked_or_kept",
+      "data_set_cache",
+      "data_set_access"
+    ]
   }
 }

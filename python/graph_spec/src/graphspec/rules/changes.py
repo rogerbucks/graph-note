@@ -17,7 +17,7 @@ WORD = re.compile(rf"{S}*([A-Za-z_]+)", re.ASCII)
 REASON = re.compile(rf"{S}*//@{S}*reason:([^\n]*)$")
 BASIS = re.compile(rf"{S}*//@?{S}*(?:against|by){S}*:", re.I | re.ASCII)  # no long s (U+017F)
 HEADER = re.compile(rf"{S}*//{S}*graph:")
-ONE = "a DELETE or SET names exactly one target (§24)"
+ONE = "a DELETE or SET names exactly one target"
 
 
 def _word_of(line: str) -> str:
@@ -224,8 +224,8 @@ def read_change(text: str) -> dict[str, Any]:
         if key == "id":
             _refuse(
                 p,
-                f"SET would change {v}'s id, and a node's id never changes (§3)",
-                "write the right node, then supersede it (§12)",
+                f"SET would change {v}'s id, and a thing's id never changes",
+                "write the right thing, then supersede it",
                 code="GN413",
             )
         p.take("p", "=")

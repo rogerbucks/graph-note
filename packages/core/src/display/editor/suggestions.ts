@@ -69,15 +69,24 @@ function caretIn(overlay: HTMLElement, at: number): Range | null {
 /**
  * Puts the list under the caret, on the row it is on. It is measured in the coloured picture, which wraps as the field
  * does (long_lines_wrap). Where nothing can be measured, it goes under its line at its column, the field being in a
- * fixed-width font.
+ * fixed-width font. While the fix bar shows (`clearFixbar`), it goes above the caret's row instead, so it never covers
+ * the fix bar under the field (NEURO-4). On the first line there is no room above, so it stays under.
  */
-export function placeSuggestions(list: HTMLElement, t: HTMLTextAreaElement, overlay?: HTMLElement): void {
+export function placeSuggestions(
+  list: HTMLElement,
+  t: HTMLTextAreaElement,
+  overlay?: HTMLElement,
+  clearFixbar = false,
+): void {
   const at = t.selectionStart ?? t.value.length,
     before = t.value.slice(0, at);
   const line = before.split('\n').length - 1,
     column = before.length - before.lastIndexOf('\n') - 1;
+  const above = clearFixbar && line > 0;
+  list.toggleClass('is-above', above);
   const props: Record<string, string> = {
-    '--thoughtknot-caret-line': String(line),
+    // above: the top of the caret's line, which is the bottom of the line before it
+    '--thoughtknot-caret-line': String(above ? line - 1 : line),
     '--thoughtknot-caret-column': String(column),
     '--thoughtknot-caret-scroll': `${t.scrollLeft}px`,
   };
@@ -85,7 +94,7 @@ export function placeSuggestions(list: HTMLElement, t: HTMLTextAreaElement, over
     const box = overlay && caretIn(overlay, at)?.getBoundingClientRect(),
       frame = list.parentElement?.getBoundingClientRect();
     if (box && frame && box.height) {
-      props['--thoughtknot-caret-top'] = `${box.bottom - frame.top}px`;
+      props['--thoughtknot-caret-top'] = `${(above ? box.top : box.bottom) - frame.top}px`;
       props['--thoughtknot-caret-left'] = `${box.left - frame.left}px`;
     }
   } catch {

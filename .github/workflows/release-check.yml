@@ -29,6 +29,9 @@ jobs:
           node-version: 24.20.0
       - run: npm ci
       - run: npm audit signatures
+      # UX-1: a person walked the build by hand, in every host and theme, and recorded it (RELEASING.md)
+      - name: The accessibility walk-through of this version is recorded, every check ticked or given its reason
+        run: node scripts/walkthrough-record.mjs --release
       - name: The baseline is no worse than the commit before, or every change has a reason
         run: node scripts/quality-check.mjs --baseline-since HEAD~1
       - name: Read the published advisories for the Graphviz inside the engine, and for the package that wraps it

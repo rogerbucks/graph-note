@@ -37,8 +37,8 @@ describe('req:3.set-keeps-id: SET never changes a node’s id', () => {
       const r = refusal(`${TWO}\n${set}`);
       assert.ok(r, name);
       assert.equal(r[0], 4, name);
-      assert.equal(r[1], "SET would change b's id, and a node's id never changes (§3)", name);
-      assert.equal(r[2], 'write the right node, then link b to it or supersede it (§12)', name);
+      assert.equal(r[1], "SET would change b's id, and a thing's id never changes", name);
+      assert.equal(r[2], 'write the right thing, then link b to it or supersede it', name);
     }
   });
 
@@ -47,7 +47,7 @@ describe('req:3.set-keeps-id: SET never changes a node’s id', () => {
       const r = refusal(TWO, `// graph: g\n${set}`);
       assert.ok(r, name);
       assert.equal(r[0], 2, name);
-      assert.equal(r[1], "SET would change b's id, and a node's id never changes (§3)", name);
+      assert.equal(r[1], "SET would change b's id, and a thing's id never changes", name);
     }
   });
 
@@ -55,7 +55,7 @@ describe('req:3.set-keeps-id: SET never changes a node’s id', () => {
     assert.equal(refusal(TWO, "// graph: g\nMATCH (x:T {id: 'b'})\nSET x.id = 'c'")[0], 3);
     assert.deepEqual(refusal(TWO, "// graph: g\nSET a.name = 'A',\n  b.id = 'c'").slice(0, 2), [
       3,
-      "SET would change b's id, and a node's id never changes (§3)",
+      "SET would change b's id, and a thing's id never changes",
     ]);
   });
 
@@ -69,7 +69,7 @@ describe('req:3.set-keeps-id: SET never changes a node’s id', () => {
   test('req:3.set-keeps-id: the syntax check refuses a SET of id as the store does', () => {
     const e = gs.checkSyntax("// graph: g\nSET b.id = 'c'");
     assert.ok(e instanceof gs.ProfileError);
-    assert.deepEqual([e.line, e.msg], [2, "SET would change b's id, and a node's id never changes (§3)"]);
+    assert.deepEqual([e.line, e.msg], [2, "SET would change b's id, and a thing's id never changes"]);
   });
 
   test('req:3.set-keeps-id: a SET of any other key is still read, in the same block and in a later one', () => {
@@ -99,7 +99,7 @@ describe('req:3.id-is-text: a node’s id is always text', () => {
   test('req:3.id-is-text: each non-text id written in INSERT is refused, with the fix that quotes it', () => {
     for (const [written, quoted] of FORMS) {
       const r = refusal(`// graph: g\nINSERT (a:T {name: 'A'}),\n(b:T {id: ${written}})`);
-      assert.deepEqual(r, [3, `id ${written} is not text`, `write id: ${quoted} — a node's id is always text (§3)`]);
+      assert.deepEqual(r, [3, `id ${written} is not text`, `write id: ${quoted} — a thing's id is always text`]);
     }
   });
 
@@ -107,7 +107,7 @@ describe('req:3.id-is-text: a node’s id is always text', () => {
     for (const [written, quoted] of FORMS) {
       assert.deepEqual(refusal(`// graph: g\n(b:T {id: ${written}})`).slice(0, 2), [2, `id ${written} is not text`]);
       const r = refusal(TWO, `// graph: g\nMATCH (x:T {id: ${written}})\nINSERT (c:T)`);
-      assert.deepEqual(r, [2, `id ${written} is not text`, `write id: ${quoted} — a node's id is always text (§3)`]);
+      assert.deepEqual(r, [2, `id ${written} is not text`, `write id: ${quoted} — a thing's id is always text`]);
     }
   });
 
@@ -123,7 +123,7 @@ describe('req:3.id-is-text: a node’s id is always text', () => {
 
   test('req:3.id-is-text and req:3.set-keeps-id: a missing comma hides neither id refusal', () => {
     // the missing comma's retry keeps the refusal it meets, so neither is given as "unexpected '('" (review of #49)
-    const fix = "write id: '1' — a node's id is always text (§3)";
+    const fix = "write id: '1' — a thing's id is always text";
     assert.deepEqual(refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {id: 1})"), [3, 'id 1 is not text', fix]);
     assert.deepEqual(refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {name: 'B'})-[:R]->(c:T {id: TRUE})").slice(0, 2), [
       3,
@@ -133,7 +133,7 @@ describe('req:3.id-is-text: a node’s id is always text', () => {
     assert.deepEqual([e.line, e.msg, e.fix], [3, 'id 1 is not text', fix]);
     assert.deepEqual(refusal("// graph: g\n(a:T {id: 'a'})\n(b:T {id: 'b'})\nSET b.id = 'c'").slice(0, 2), [
       4,
-      "SET would change b's id, and a node's id never changes (§3)",
+      "SET would change b's id, and a thing's id never changes",
     ]);
   });
 

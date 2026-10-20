@@ -38,7 +38,6 @@ def bind_order(
                 raise ProfileError(
                     n["line"],
                     f"{n['var']} is used before it is written",
-                    "write the node before any relationship that uses it — "
-                    "GQL binds a name only once its node is written (§3)",
+                    "write the thing before any link that uses it",
                     code="GN309",
                 )

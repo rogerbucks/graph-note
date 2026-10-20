@@ -279,15 +279,30 @@ describe('a run that would make many issues', () => {
   const many = FIXTURE.replace('// ── Tests ──', `${EXTRA}\n// ── Tests ──`);
   const loadMany = (slices) => desiredState(readBoard(many), WORKSTREAMS, slices);
 
-  test('is refused with a warning, exit 0, when the board already has its issues: more than 20 creates', () => {
+  test('makes 20 and leaves the rest for the next push, with a warning, exit 0, when the board has its issues', () => {
     const w = setUp();
     w.go();
-    w.gh.hub.mutations.length = 0;
     w.out.length = 0;
     assert.equal(w.go({}, {}, { load: loadMany }), 0);
-    const warning = annotations(w.text(), 'warning').find((l) => /more than 20/.test(l));
-    assert.match(warning, /the plan makes 21 issues, more than 20 in one run/);
-    assert.deepEqual(w.gh.hub.mutations, [], 'nothing was applied');
+    const warning = annotations(w.text(), 'warning').find((l) => /left 1 for the next push/.test(l));
+    assert.match(warning, /made 20 new issues and left 1 for the next push to main/);
+    assert.equal(w.gh.hub.issues.length, 25, 'the 5 it had, and 20 new');
+    w.out.length = 0;
+    assert.equal(w.go({}, {}, { load: loadMany }), 0);
+    assert.equal(w.gh.hub.issues.length, 26, 'the next push makes the one left');
+    assert.ok(!annotations(w.text(), 'warning').some((l) => /for the next push/.test(l)));
+  });
+
+  test('still moves the issues it has while new ones wait: a status change is applied in the same run', () => {
+    const w = setUp();
+    w.go();
+    const before = w.gh.hub.issues.filter((i) => i.state === 'CLOSED').length;
+    // its first test only planned again, so a proved requirement is open once more
+    const reopened = many.replace("status: 'written'", "status: 'planned'");
+    const loadChanged = (slices) => desiredState(readBoard(reopened), WORKSTREAMS, slices);
+    assert.equal(w.go({}, {}, { load: loadChanged }), 0);
+    const closed = w.gh.hub.issues.filter((i) => i.state === 'CLOSED').length;
+    assert.ok(closed < before, 'an issue was reopened, though new issues were held back');
   });
 
   test('is made in full on a first mirror, with no issue of its own yet', () => {

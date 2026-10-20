@@ -115,8 +115,16 @@ the project's licence, as the [Developer Certificate of Origin](https://develope
 Signed-off-by: Your Name <you@example.com>
 ```
 
-`git commit -s` adds it. It is how a fork or a pull request stays clear about who wrote what. It also keeps the project
-free to stay under the [Mozilla Public License 2.0](LICENSE). People who take part follow the
+`git commit -s` adds it.
+
+- **A commit Claude writes carries Roger's sign-off, not Claude's.** An AI cannot certify where code came from. Roger
+  directs that work, so he certifies it (Roger, 19 Oct 2026). Such a commit ends with this line, in place of `-s`:
+  `Signed-off-by: Roger Bucks <264575592+rogerbucks@users.noreply.github.com>`. Add it with `git commit --trailer`.
+- **CI checks it.** `node scripts/public-readiness.mjs --history` refuses a commit from 20 Oct 2026 on with no
+  sign-off, or one that names only a bot or an AI. Merge commits and Dependabot's own updates are left out.
+
+The sign-off is how a fork or a pull request stays clear about who wrote what. It also keeps the project free to stay
+under the [Mozilla Public License 2.0](LICENSE). People who take part follow the
 [code of conduct](CODE_OF_CONDUCT.md), and a fork goes by its own name ([TRADEMARKS.md](TRADEMARKS.md)). A security problem
 is reported in private, as [SECURITY.md](SECURITY.md) says, never in a public issue.
 
@@ -488,10 +496,26 @@ These test behaviour across modules, or the repository itself, so they are named
   `public-api.json`, which `node scripts/public-api.mjs --update` writes. A break since the last release fails
   unless the package takes a new major version. Before 1.0.0 that is the leftmost part that is not 0, such as 0.8.0.
 
+### The graph spec
+
+- `test/graph-spec-text.test.js` — the graph spec's text is in `requirements/graph-spec.gql` (spec §13,
+  graph_spec_in_repo; ARCH-11). Every § either library cites is one of its sections; the editor's own say "editor spec".
+- `test/graph-spec-index.test.js` — the graph spec file is true to itself (spec §51, spec_index_true; GS1): its counts,
+  the paths it names, and no pending rule that a test proves.
+- `test/graph-spec-proved.test.js` — every graph-spec rule a test here cites by its id counts as proved (spec §51,
+  spec_rules_proved; GS1). A 'general' proof or a case kept outside the repository counts for nothing.
+  `quality/graph-spec-unproved.json` lists the rest, and it only shrinks: `node scripts/graph-spec-proved.mjs --update`.
+  A rule also counts as proved when its proof names a test in a conformance case kept here.
+- `python/graph_spec/tests/test_conformance_suite.py` — the graph spec's conformance suite passes on the code here
+  (spec §51, spec_conformance_in_repo; GS1). The suite is in `python/graph_spec/conformance/`.
+
 ### The repository, its community files and device checks
 
 - `test/classification.test.js` — the content check refuses confidential or personal files.
 - `test/conventions.test.js` — the conventions on this page.
+- `test/walkthrough-record.test.js` — each stable release keeps a record of the accessibility walk-through (spec §11,
+  walkthrough_recorded; UX-1). `scripts/walkthrough-record.mjs --new` writes an empty one to fill in. The release and
+  its dry run fail until every check is ticked, or given its reason, in every host and theme.
 - `test/community-files.test.js` — the code of conduct says how to report a problem in private. `TRADEMARKS.md` keeps
   the name for the original. CONTRIBUTING.md and the pull request template ask for every commit to be signed off
   (editor spec §13, community_files). `SECURITY.md` names the supported versions, a private way to report and a
@@ -964,8 +988,8 @@ These test behaviour across modules, or the repository itself, so they are named
     duplicates", exit 0.
   - So a creator filter that ever failed could not make every push create the issues again.
 - **At most 20 new issues in a run.** A run of the workflow makes at most 20 issues on a board that has its issues
-  already. A first mirror makes them all. A plan with more is refused with a warning and nothing applied, for a person
-  to check, as the removal guard does. Anything else is an `::error::`.
+  already. A first mirror makes them all. With more, it makes the first 20 and warns how many it left. It still applies
+  everything else, so statuses keep moving. Each later push to main makes the next 20. Anything else is an `::error::`.
 - **It runs main's own code only.** Woken by a push to main alone, it checks out main, installs nothing and keeps no
   cache.
 - **One mirror runs at a time** (`concurrency: project-mirror`, `cancel-in-progress: false`). GitHub keeps one run

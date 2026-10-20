@@ -1,0 +1,6 @@
+{
+  "file": "test/public-readiness.test.js",
+  "test": "every commit since the cut-off is signed off by a person > a person's sign-off passes; a missing one, or one naming only an AI or a bot, is refused",
+  "seen_failing_first": false,
+  "evidence": "The test's own helper was fixed, not the code: its first commit is now dated before the cut-off, so it no longer fails after 20 Oct 2026."
+}

@@ -13,15 +13,21 @@ const classOf = (d: Diagnostic) => (d.severity === 1 ? 'is-error' : d.severity =
 export { withFix };
 export type { FixChanges };
 
-/** Lists every problem with its line and its fix, or says there are none. */
-export function listProblems(list: HTMLElement, problems: Diagnostic[]): void {
+/** Whether problem `d` is on line `line`: where the fix bar shows it while the caret is there. */
+const onLine = (d: Diagnostic, line: number) => d.range.start.line <= line && line <= d.range.end.line;
+
+/**
+ * Lists each problem with its line and its fix, or says there are none. A problem on the caret's `line` is left out:
+ * the fix bar shows it there, so it is said once (NEURO-4).
+ */
+export function listProblems(list: HTMLElement, problems: Diagnostic[], line = -1): void {
   list.empty();
-  if (!problems.length) {
-    list.createEl('p', { cls: 'thoughtknot-quiet', text: 'No problems.' });
-    return;
-  }
+  const elsewhere = problems.filter((d) => !onLine(d, line));
+  list.hidden = problems.length > 0 && !elsewhere.length;
+  if (!problems.length) list.createEl('p', { cls: 'thoughtknot-quiet', text: 'No problems.' });
+  if (!elsewhere.length) return;
   const ul = list.createEl('ul');
-  for (const d of problems) {
+  for (const d of elsewhere) {
     const li = ul.createEl('li', { cls: classOf(d) });
     li.createSpan({ text: `Line ${d.range.start.line + 1}: ${d.message} ` });
     li.createSpan({ cls: 'thoughtknot-fix', text: d.data.fix });
@@ -40,7 +46,7 @@ export function showFixes(
   line: number,
   apply: (changes: FixChanges) => void,
 ): void {
-  const here = problems.filter((d) => d.range.start.line <= line && line <= d.range.end.line);
+  const here = problems.filter((d) => onLine(d, line));
   fixbar.empty();
   fixbar.hidden = !here.length;
   for (const d of here) {

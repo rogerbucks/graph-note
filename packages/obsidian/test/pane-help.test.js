@@ -70,7 +70,7 @@ describe('problems, in place', () => {
   test('every problem is listed with its line, and each line marked with a sign as well as a colour', async () => {
     const env = await open();
     try {
-      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(nowhere),\n(x:T {y: })');
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(nowhere),\n(x:T {y: })', 0); // the caret off both lines
       await wait(400);
       const items = env.el.querySelectorAll('.thoughtknot-pane-problems li').map((li) => li.textContent);
       assert.equal(items.length, 2);
@@ -251,6 +251,8 @@ describe('a name only suggested', () => {
       assert.match(here.textContent, /No thing called smal_reader in graph reader/);
       assert.ok(!/small_reader/.test(here.textContent), here.textContent);
       assert.equal(labelled(here, 'Change smal_reader to small_reader'), undefined, 'no fix that writes it');
+      type(env.el, UNNAMED + ',\n(eyes)-[:FAVOURS]->(smal_reader)', 0); // the caret off its line: it is listed
+      await until(() => here.hidden);
       const items = env.el.querySelectorAll('.thoughtknot-pane-problems li').map((li) => li.textContent);
       assert.ok(
         items.some((t) => /smal_reader/.test(t)),
@@ -261,6 +263,44 @@ describe('a name only suggested', () => {
         'the list names no estimate of it: ' + items.join(' | '),
       );
       assert.equal(env.el.querySelectorAll('.thoughtknot-pane-problems li').length, 2, 'it and the unnamed thing');
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
+// NEURO-4 (problem_shown_once): a problem is said once. While the caret is on its line it is in the fix bar, not the
+// list too. The suggestions open above the caret then, so they never cover the fix bar.
+describe('a problem, shown once', () => {
+  const listed = (el) => el.querySelectorAll('.thoughtknot-pane-problems li').map((li) => li.textContent);
+
+  test("on the caret's line it is in the fix bar alone, and back in the list once the caret leaves", async () => {
+    const env = await open();
+    try {
+      const typo = READER + ',\n(eyes)-[:FAVOURS]->(larg)';
+      type(env.el, typo);
+      const here = env.el.querySelector('.thoughtknot-fixbar');
+      await until(() => !here.hidden);
+      assert.match(here.textContent, /larg is not in graph reader/);
+      assert.ok(!listed(env.el).some((t) => /larg/.test(t)), 'not in the list as well: ' + listed(env.el).join(' | '));
+      type(env.el, typo, 0);
+      await until(() => here.hidden); // the caret left its line
+      assert.ok(
+        listed(env.el).some((t) => /larg/.test(t)),
+        'it is listed again: ' + listed(env.el).join(' | '),
+      );
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the suggestions open above the caret while the fix bar shows, so they never cover it', async () => {
+    const env = await open();
+    try {
+      type(env.el, READER + ',\n(eyes)-[:FAVOURS]->(la');
+      await until(() => !env.el.querySelector('.thoughtknot-fixbar').hidden); // a problem on the caret's line
+      assert.ok(offered(env.el).length > 0, 'the suggestions are open');
+      assert.ok(env.el.querySelector('.thoughtknot-suggestions').classList.contains('is-above'));
     } finally {
       env.uninstall();
     }
