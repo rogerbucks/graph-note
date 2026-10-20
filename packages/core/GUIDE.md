@@ -1300,7 +1300,14 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
   - They run against a fresh host and the `HostProbe` through which it shows what it drew.
   - `HOST_CONTRACT_VERSION` is the last entry of `HOST_CONTRACT_VERSIONS`. Each entry pairs a version with a digest
     of how `public-api.json` declares `host.ts`. A change to `DisplayHost` fails a test until a new version is added.
+### Banners and waits
+
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.
+- `progress.ts` — a long wait shown (§44, progress_shown). After a second it shows a bar and the seconds taken. After
+  ten it offers Stop (`waitShown`). A drawing laid out and an export wait through it.
+
+### The edit pane and the rest
+
 - `src/display/editor/` — the edit pane (spec §4, §9; editor spec §26, C9). It is the same one in the Obsidian pane and
   on the browser editor's page.
   - `block-editor.ts` holds `BlockEditor`, a `Lifecycle`. It is the text field over its coloured picture, the problems

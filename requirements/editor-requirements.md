@@ -1074,7 +1074,7 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (test_forced_colours:Test {proves: 'every view works in forced colours and with more contrast asked for', file: 'test/forced-colours.test.js', where: 'repo', status: 'written'}),
 (test_text_scaling:Test {proves: 'every view scales its text to 200 per cent with nothing lost', file: 'test/text-scaling.test.js', where: 'repo', status: 'written'}),
 (test_colour_never_alone:Test {proves: 'every meaning a colour carries is also carried by a shape, a line, a word or an icon', file: 'test/colour-alone.test.js', where: 'repo', status: 'written'}),
-(test_progress_shown:Test {proves: 'a wait past a second shows progress, and past ten seconds can be stopped', file: 'packages/core/test/progress.test.js', where: 'repo', status: 'planned'}),
+(test_progress_shown:Test {proves: 'a wait past a second shows progress, and past ten seconds can be stopped', file: 'packages/obsidian/test/progress.test.js', where: 'repo', status: 'written'}),
 (test_first_run_help:Test {proves: 'a first graph starts from an example with a tour that can be skipped and reopened', file: 'packages/core/test/first-run.test.js', where: 'repo', status: 'planned'}),
 (test_shortcuts_listed:Test {proves: 'every keyboard command is listed in the help and assignable in the host', file: 'packages/core/test/help-shortcuts.test.js', where: 'repo', status: 'planned'}),
 (test_print_ready:Test {proves: 'a printed note draws each graph whole, in print colours, with its legend', file: 'test/print.test.js', where: 'repo', status: 'planned'}),

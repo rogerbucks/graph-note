@@ -16,6 +16,8 @@ export interface ExportAsk {
   confirmed?: boolean;
   /** A path to play into the image, by its id, at its pace in milliseconds a step: an animated SVG (§7). */
   walk?: { id: string; pace: number };
+  /** Aborted when the person stops a long export (§44, progress_shown): then nothing is written. */
+  signal?: AbortSignal;
 }
 
 /**

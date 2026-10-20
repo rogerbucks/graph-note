@@ -20,6 +20,7 @@ import { exportWithLayout, pngSize } from '../../core/src/export.ts';
 import type { ExportInfo, ExportLayout, PngSize } from '../../core/src/export.ts';
 import { exportFailureWords, exportRefusalWords } from '../../core/src/hosts/refusal-words.ts';
 import type { Settings } from '../../core/src/settings.ts';
+import { word } from '../../core/src/words.ts';
 import { readStyle } from '../../core/src/style.ts';
 import type { Exporting } from '../../core/src/display/export/export-form.ts';
 import type { ExportAsk, ExportOutcome } from '../../core/src/display/export/export-types.ts';
@@ -172,6 +173,8 @@ async function exporting(x: PageExport, ask: ExportAsk): Promise<ExportOutcome> 
       }
     }
   }
+  // stopped while it was made: nothing is saved, and the form has said so (§44, progress_shown)
+  if (ask.signal?.aborted) return { stopped: word('progress.export-stopped') };
   const saved = await x.save(files);
   if ('stopped' in saved) return { stopped: saved.stopped };
   const names = saved.written;
