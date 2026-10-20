@@ -69,3 +69,15 @@ test('each tool has a name and a personality suited to its job, and the jokes ke
   assert.match(flat, /never in code, a commit/i);
   assert.match(flat, /never at anyone's expense/i);
 });
+
+test('the humour is dry, understated and kind: Terry Pratchett, not a shouting comic (Roger, 20 Oct 2026)', () => {
+  const roles = read(ROLES);
+  const section = roles.slice(
+    roles.indexOf('## Personalities'),
+    roles.indexOf('\n## ', roles.indexOf('## Personalities') + 1),
+  );
+  const flat = section.replace(/\s+/g, ' ');
+  assert.match(flat, /dry, understated, subtle and kind/i);
+  assert.match(flat, /Terry Pratchett/);
+  assert.doesNotMatch(flat, /glee|irreverent|crash-test/i, 'no loud or sharp voices');
+});
