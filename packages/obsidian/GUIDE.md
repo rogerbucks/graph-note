@@ -276,6 +276,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   of sends, and Import from a database. `addCommands` adds them and the keyboard shortcuts' commands.
 - `../shortcuts.ts` — `addShortcutCommands` adds Show the keyboard shortcuts, and the drawing's own commands: Zoom in,
   Zoom out, Fit and Full screen. They have no keys until a person gives them some in Hotkeys (§44, shortcuts_listed).
+- `../first-run.ts` — an empty graph's card, with Edit and Start from an example (`renderEmpty`). The drawing after
+  an example opens the tour (`takeTour`), and the command Show the tour opens it again (§44, first_run_help).
 
 ### `src/settings/` — the settings page (spec §21)
 

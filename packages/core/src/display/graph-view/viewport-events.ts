@@ -11,6 +11,7 @@ import type { DragHost } from './box-drag-view';
 import { BoxMoveKeys } from './box-move-keys';
 import { trackUse } from './card-in-use';
 import { toggleShortcuts } from '../shortcuts-list';
+import { showTour } from '../tour';
 import type { ViewOptions } from './view-options';
 import type { DetailsPanel } from './details-panel';
 import type { Selection } from './selection';
@@ -65,7 +66,9 @@ export function bindViewportEvents(host: ViewportHost): void {
     fit: () => zoom.fit(),
     fullScreen: () => (host.o?.mode === 'full' ? host.o.onClose?.() : host.full.show()),
     shortcuts,
+    tour: () => showTour(host.root, vp),
   });
+  if (host.o?.tour) showTour(host.root, vp); // the first drawing after an example opens the tour (§44)
   // Move in a box's details picks it up as M does, its box given the focus for the keys that follow (§6)
   if (keys)
     details.onMove = (key) => {

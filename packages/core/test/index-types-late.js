@@ -120,6 +120,7 @@ export const TYPES_LATE = [
   'TokenClass',
   'Told',
   'TooLargeToAnimate',
+  'TourStep',
   'TrailStep',
   'Transport',
   'TransportReply',

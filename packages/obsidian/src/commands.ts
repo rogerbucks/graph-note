@@ -5,6 +5,7 @@
 import { AI_COMMAND, CLEAR_SENDS_COMMAND, askAi, clearAiSends } from './ai/ai';
 import { IMPORT_COMMAND, importFromDatabase } from './databases/import';
 import { addShortcutCommands } from './shortcuts';
+import { addTourCommand } from './first-run';
 import type ThoughtKnotPlugin from './main';
 
 export { SENDS_KEPT } from './ai/ai';
@@ -17,8 +18,9 @@ export function addAskCommands(plugin: ThoughtKnotPlugin): void {
   plugin.addCommand({ ...IMPORT_COMMAND, callback: () => importFromDatabase(plugin) });
 }
 
-/** Adds the plugin's commands: those of the keyboard shortcuts, then those that ask an AI model or read a database. */
+/** Adds the plugin's commands: the keyboard shortcuts', the tour's, then those that ask an AI model or read a database. */
 export function addCommands(plugin: ThoughtKnotPlugin): void {
   addShortcutCommands(plugin);
+  addTourCommand(plugin);
   addAskCommands(plugin);
 }

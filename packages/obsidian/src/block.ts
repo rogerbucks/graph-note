@@ -37,6 +37,7 @@ import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
 import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
+import { renderEmpty, takeTour } from './first-run';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
 import { diagramShown, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
 import { readOnlyHere, settlePlacements, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
@@ -238,20 +239,7 @@ export async function renderBlock(
       renderCode(root, source);
       return;
     }
-    const empty = root.createDiv({ cls: 'thoughtknot-empty' });
-    empty.createEl('p', {
-      text: word('editor.empty-graph', { graph }),
-    });
-    const edit = empty.createEl('button', {
-      text: word('editor.edit'),
-      attr: { 'aria-label': word('editor.edit'), type: 'button' },
-    });
-    edit.addEventListener('click', () => {
-      void plugin.openEditor(target);
-    });
-    whenPlaced(root, () => {
-      if (readOnly(root)) edit.remove(); // reading view is read-only (spec §3)
-    });
+    renderEmpty(plugin, root, target, source, readOnly); // with an example to start from (§44, first_run_help)
     return;
   }
 
@@ -360,6 +348,7 @@ export async function renderBlock(
       editing: () => plugin.inlineFor(target.path, target.line),
       onSelect: (chosen) => plugin.inlineFor(target.path, target.line)?.reveal(chosen),
       writeBlock: (n, was, now) => writeBlock(plugin, target.path, blocks[n]?.line ?? 0, was, now),
+      tour: takeTour(), // the first drawing after an example opens the tour (§44, first_run_help)
       ...(info ? {} : { readOnly: () => true }),
     }),
   );

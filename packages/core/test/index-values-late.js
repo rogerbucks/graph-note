@@ -39,6 +39,7 @@ export const VALUES_LATE = [
   'valueGql',
   'viewsOf',
   'wayIn',
+  'withExample',
   'withImport',
   'withMeant',
   'withStandardSchemas',

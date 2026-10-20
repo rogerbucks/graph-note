@@ -32,6 +32,10 @@ In any note, start a block with three backticks and the word `gql`, then list yo
 
 You do not need to get it perfect. If something is wrong, ThoughtKnot says what, where, and how to fix it (see step 5).
 
+Rather start from something? Write only the `// graph:` line, and press **Start from an example** on the empty drawing.
+A small example is written for you, and a short tour shows what to do next. Skip it whenever you like. The command
+**Show the tour** opens it again.
+
 ## 2. Move around the drawing
 
 The buttons along the top of each drawing:

@@ -1222,6 +1222,22 @@ pre.thoughtknot-code {
   font-family: var(--gn-font-mono);
   font-weight: normal;
 }
+/* The short tour of a first graph (§44, first_run_help): a step's words, then its buttons on one row. */
+.thoughtknot-tour {
+  padding: var(--gn-space-2);
+  background: var(--gn-bg-alt);
+  margin-bottom: var(--gn-space-2);
+}
+.thoughtknot-tour-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-2);
+}
+.thoughtknot-tour button,
+.thoughtknot-empty button {
+  min-width: 44px;
+  min-height: 44px;
+}
 /* A graph over a size or time limit, shown as text: the banner's icon beside its words (spec §9, layout_contained). */
 .thoughtknot-refusal {
   display: flex;

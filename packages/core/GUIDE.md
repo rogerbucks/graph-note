@@ -824,6 +824,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   colour carries the tag, and so does the legend. So no look is told by colour alone (§44, colour_never_alone).
 - `shortcuts.ts` — every keyboard shortcut in one list (`SHORTCUTS`, by `SHORTCUT_PLACES`), with its words in
   `shortcut-source-words.ts`. The drawing's commands are marked, for a host to offer (§44, shortcuts_listed).
+- `first-run.ts` — a first graph from an example (`withExample`), and the steps of its short tour (`TOUR_STEPS`), with
+  their words in `first-run-source-words.ts` (§44, first_run_help).
 - `export-frame.ts` — the frame (`framed`).
   - It holds the image's own background, a title, the reading of a view, and the legend. It also holds a footer with
     the note and the day (`saidDate`, `11 Oct 2026`).
@@ -1325,6 +1327,7 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
   ten it offers Stop (`waitShown`). A drawing laid out and an export wait through it.
 - `shortcuts-list.ts` — the list of every keyboard shortcut (`listShortcuts`), and the card's own copy that ? shows
   (`toggleShortcuts`). `graph-view/card-in-use.ts` keeps the card used last, for a host's commands (`cardInUse`).
+- `tour.ts` — the short tour of a first graph, a step at a time, in the card (`showTour`). It can be skipped.
 
 ### The edit pane and the rest
 
