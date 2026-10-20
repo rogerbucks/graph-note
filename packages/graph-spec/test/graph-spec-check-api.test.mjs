@@ -30,6 +30,8 @@ const NAMES = [
   'jcs',
   'hash16',
   'basisHash',
+  'named',
+  'isNamed',
   'GTime',
   'ProfileError',
   'header',

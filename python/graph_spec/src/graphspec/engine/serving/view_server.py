@@ -8,6 +8,8 @@ import json
 
 from graphspec.engine.documents.classification import class_order, destination_matrix, may_serve
 from graphspec.engine.judgements.basis import basis_hash, hash16
+from graphspec.rules.canonical_json import jcs
+from graphspec.rules.named_hashes import named
 from graphspec.engine.paths import path_steps, view_at
 from graphspec.engine.projection import iso
 from graphspec.engine.queries import Q
@@ -181,7 +183,7 @@ class ViewServer:
             "graph": graph,
             "id": nid,
             "reads": reads,
-            "hash": basis_hash(props, reads) if reads else hash16({}),
+            "hash": named(basis_hash(props, reads) if reads else hash16({})),
             "as_of": self.at,
             "classification": cls,
         }
@@ -286,6 +288,31 @@ class ViewServer:
             )
         return out
 
+    def seal(self):
+        """rule:serving-hash@1: the content hash over this serving's own properties and every item
+        it served, as the record holds them, so an edited record shows (editor spec §51)."""
+        own = {
+            "id": self.id,
+            "at": self.at.isoformat(),
+            "consumer": self.consumer,
+            "consumer_kind": self.kind,
+            "conditions_met": bool(self.conditions_met),
+        }
+        edges = [
+            [
+                "SERVED",
+                f"ref:{graph}/{nid}",
+                {
+                    "as_of": s["as_of"].isoformat(),
+                    "classification": s["classification"],
+                    "hash": s["hash"],
+                    "reads": s["reads"],
+                },
+            ]
+            for (graph, nid), s in self.served.items()
+        ]
+        return named(hash16({"serving": own, "edges": sorted(edges, key=jcs)}))
+
     def record_block(self, jg, proposal=None, cited=()):
         """The Serving, its SERVED edges and (optionally) a proposal's USED edge and pins, as one
         GQL statement for the judgement graph."""
@@ -313,7 +340,7 @@ class ViewServer:
             0,
             f" (sv:Serving {{id: '{self.id}', at: {d(self.at)}, consumer: '{self.consumer}', "
             f"consumer_kind: '{self.kind}', conditions_met: "
-            f"{'TRUE' if self.conditions_met else 'FALSE'}}})",
+            f"{'TRUE' if self.conditions_met else 'FALSE'}, content_hash: '{self.seal()}'}})",
         )
         for (graph, nid), s in self.served.items():
             v = ref(graph, nid)

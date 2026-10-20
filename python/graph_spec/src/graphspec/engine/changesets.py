@@ -45,6 +45,7 @@ from graphspec.rules.change_apply import (
 )
 from graphspec.rules.changes import read_all, split_changeset
 from graphspec.rules.changesets import SESSION, from_session
+from graphspec.rules.named_hashes import NAMED_STATE, state_named
 from graphspec.rules.changesets import check_changeset as plain_check_changeset
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
@@ -64,7 +65,7 @@ def changeset_header(block: str) -> dict[str, str] | None:
     # whitespace as GQL names it (S), as the reader reads the header, never the language's \s
     m = re.match(
         rf"{S}*//{S}*graph:{S}*({N}+){S}*·{S}*CHANGE "
-        rf"SET{S}+({N}+){S}*·{S}*against{S}+([0-9a-f]{{16}}){S}*·{S}*by{S}+({N}+)",
+        rf"SET{S}+({N}+){S}*·{S}*against{S}+(?:sha-256-64:)?([0-9a-f]{{16}}){S}*·{S}*by{S}+({N}+)",
         first,
     )
     return dict(zip(("graph", "id", "against", "by"), m.groups())) if m else None
@@ -190,12 +191,13 @@ def check_changeset(
         "the change set names its graph, its id, the state it was made against, and its author",
         h,
         "start the block with: // graph: <graph> · CHANGE SET <id> · "
-        "against <16-hex state hash> · by <author id>",
+        "against sha-256-64:<16-hex state hash> · by <author id>",
     )
     if not h:
         return res, None, None
     if session is not None:
         add(SESSION, from_session(h, session), f"write 'by {session}': the session that sent it")
+    add(NAMED_STATE, state_named(block), f"write 'against sha-256-64:{h['against']}'")
     parts = split_changeset(block)
     additions = parts["additions"]
     found = lint(additions) + [x for c in parts["changes"] for x in lint(c["text"])]

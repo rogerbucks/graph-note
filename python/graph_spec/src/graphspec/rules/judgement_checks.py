@@ -5,6 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from graphspec.rules.judgements import basis, judgement_hash, resolve, review
+from graphspec.rules.named_hashes import (
+    NAMED_FIX,
+    NAMED_RULE,
+    digits_of,
+    hashes_of,
+    unnamed_hashes,
+)
 from graphspec.rules.proposers import proposer_warnings, proposers_of
 
 if TYPE_CHECKING:
@@ -86,7 +93,9 @@ def judgements_rules(w: World, jg: str) -> list[tuple[str, bool, str]]:
             "; ".join([str(sorted(bad)), *("warning: " + x for x in warnings)]),
         )
     )
-    bad = sorted(d for d, r in ds.items() if r.get("content_hash") != judgement_hash(w, jg, d))
+    bad = sorted(
+        d for d, r in ds.items() if digits_of(r.get("content_hash")) != judgement_hash(w, jg, d)
+    )
     out.append(
         (
             "§23 rule 7: no judgement is edited — each content hash, covering its pins, "
@@ -95,6 +104,8 @@ def judgements_rules(w: World, jg: str) -> list[tuple[str, bool, str]]:
             str(bad),
         )
     )
+    bad = unnamed_hashes(hashes_of(g))
+    out.append((NAMED_RULE, not bad, f"{bad[:2]} — {NAMED_FIX}" if bad else ""))
     return out
 
 

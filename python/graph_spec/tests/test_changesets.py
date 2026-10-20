@@ -43,7 +43,7 @@ def state():
 def sets():
     """A change set made against the base's state, one against an old state, and one adding a
     kind the schema does not declare."""
-    head = "// graph: library · CHANGE SET {} · against {} · by ada\n"
+    head = "// graph: library · CHANGE SET {} · against sha-256-64:{} · by ada\n"
     return [
         head.format("cs1", state())
         + "(more:Book {title: 'A second book'}),\n(ada)-[:WROTE]->(more)",
@@ -116,7 +116,7 @@ def signed(by):
     st = gp.Store()
     st.apply(WITH_MODEL)
     now = gp.canon(st, "library")[0][:16]
-    head = f"// graph: library · CHANGE SET cs · against {now} · by {by}"
+    head = f"// graph: library · CHANGE SET cs · against sha-256-64:{now} · by {by}"
     return head + "\n(more:Book {title: 'More'})"
 
 

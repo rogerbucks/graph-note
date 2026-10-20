@@ -3033,8 +3033,10 @@
           "guessReadings: (type: string) => [string, string]",
           "hash16: (value: unknown) => string",
           "header: (block: string) => [string | null, GraphSpecCheck.BlockKind]",
+          "isNamed: (value: unknown) => boolean",
           "LIMITS: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }",
           "lint: (text: string) => { trap: string; line: number; }[]",
+          "named: (digits: string) => string",
           "notes: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }",
           "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
           "ProfileError: typeof GraphSpecCheck.ProfileError",
@@ -3134,11 +3136,17 @@
         "header": [
           "value: (block: string) => [string | null, GraphSpecCheck.BlockKind]"
         ],
+        "isNamed": [
+          "value: (value: unknown) => boolean"
+        ],
         "LIMITS": [
           "value: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }"
         ],
         "lint": [
           "value: (text: string) => { trap: string; line: number; }[]"
+        ],
+        "named": [
+          "value: (digits: string) => string"
         ],
         "notes": [
           "value: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }"

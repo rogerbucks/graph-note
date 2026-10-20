@@ -199,7 +199,7 @@ def changeset_parts(base_body, change_body):
     with parser("grafeo"):
         db = gs.load("// graph: joined\n" + base_body.replace("[favours]", "[:FAVOURS]"))
     against = gs.canon_graph(db, "joined")[0][:16]
-    block = f"// graph: g · CHANGE SET cs1 · against {against} · by a\n{change_body}"
+    block = f"// graph: g · CHANGE SET cs1 · against sha-256-64:{against} · by a\n{change_body}"
     return base, block
 
 

@@ -15,7 +15,8 @@ const table = JSON.parse(readFileSync(fileURLToPath(new URL('./change-cases.json
 const base = [[...table.head, ...table.base_rest].join('\n')];
 const now = C.canon(C.worldFromStore(C.read(base)).library).slice(0, 16);
 const SESSION = 'its author is the session that sent it, not a name written in its header (editor spec §51)';
-const setBy = (by, ...body) => [`// graph: library · CHANGE SET cs · against ${now} · by ${by}`, ...body].join('\n');
+const setBy = (by, ...body) =>
+  [`// graph: library · CHANGE SET cs · against sha-256-64:${now} · by ${by}`, ...body].join('\n');
 const failed = (r) => r.results.filter(([, ok]) => !ok).map(([label]) => label);
 
 describe('the author of a change set is the session that sent it', () => {

@@ -9,6 +9,7 @@ from graphspec.engine.judgements.basis import basis, judgement_hash, resolve_ref
 from graphspec.engine.judgements.proposers import proposer_warnings, proposers_of
 from graphspec.engine.judgements.review import review
 from graphspec.engine.queries import Q
+from graphspec.rules.named_hashes import NAMED_FIX, NAMED_RULE, digits_of, unnamed_hashes
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -93,7 +94,7 @@ def judgements_rules(db: GrafeoDB, jg: str, graphs: Iterable[str]) -> list[tuple
             "; ".join([str(sorted(bad)), *("warning: " + x for x in proposer_warnings(db, jg))]),
         )
     )
-    bad = sorted(d for d, r in ds.items() if r["h"] != judgement_hash(db, jg, d))
+    bad = sorted(d for d, r in ds.items() if digits_of(r["h"]) != judgement_hash(db, jg, d))
     out.append(
         (
             "§23 rule 7: no judgement is edited — each content hash, covering its pins, "
@@ -102,4 +103,20 @@ def judgements_rules(db: GrafeoDB, jg: str, graphs: Iterable[str]) -> list[tuple
             str(bad),
         )
     )
+    db.set_graph(jg)
+    rows = [
+        (r["i"], r["h"])
+        for r in Q(
+            db, "MATCH (n) WHERE n.content_hash IS NOT NULL RETURN n.id AS i, n.content_hash AS h"
+        )
+    ]
+    rows += [
+        (f"{r['s']} {r['t']} {r['d']}", r["h"])
+        for r in Q(
+            db,
+            "MATCH (s)-[e]->(d) WHERE e.hash IS NOT NULL RETURN s.id AS s, type(e) AS t, d.id AS d, e.hash AS h",  # noqa: E501  # one literal: embedded_queries reads it whole
+        )
+    ]
+    bad = unnamed_hashes(rows)
+    out.append((NAMED_RULE, not bad, f"{bad[:2]} — {NAMED_FIX}" if bad else ""))
     return out

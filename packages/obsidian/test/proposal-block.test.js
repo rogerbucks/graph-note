@@ -554,7 +554,7 @@ describe('in reading view', () => {
 describe('a change set that is no proposal', () => {
   test('one with no change in it says why, and its text is shown', async () => {
     const base = noteOf(GRAPH);
-    const empty = `// graph: reader · CHANGE SET cs9 · against ${basisOf(base, 'reader')} · by ada`;
+    const empty = `// graph: reader · CHANGE SET cs9 · against sha-256-64:${basisOf(base, 'reader')} · by ada`;
     const { env, el } = await card(noteOf(GRAPH, empty));
     try {
       assert.match(el.querySelector('[role="alert"]').textContent, /cannot be shown: this change set holds no change/);

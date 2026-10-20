@@ -20,6 +20,7 @@ on every case and requires the same answers. SHA-256 is computed here, synchrono
 const { GTime } = require('./values/times.js');
 const { sha256hex } = require('./hashing/sha256.js');
 const { jcs, hash16, basisHash } = require('./hashing/canonical-json.js');
+const { named, isNamed } = require('./hashing/named.js');
 const { ProfileError } = require('./reader/profile-error.js');
 const { LIMITS } = require('./reader/limits.js');
 const { secretsIn, secretsInGraph } = require('./reader/secrets.js');
@@ -75,6 +76,8 @@ module.exports = {
   jcs,
   hash16,
   basisHash,
+  named,
+  isNamed,
   GTime,
   ProfileError,
   header,

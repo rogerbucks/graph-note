@@ -10,7 +10,7 @@
 // change is in the graph and a rejected one is nowhere. Both are kept as decisions in the judgement graph
 // (`proposals-judgement.ts`). So the block holds only what still waits.
 //
-//   // graph: reader · CHANGE SET cs1 · against 05d75fdcbdb1d37b · by ada
+//   // graph: reader · CHANGE SET cs1 · against sha-256-64:05d75fdcbdb1d37b · by ada
 //   // proposed: 2026-10-13T09:00:00Z
 //   // read: reader; Notes/Devices
 //   //@ reason: a smaller one for a pocket
@@ -42,7 +42,7 @@ export const oneWord = (s: string): string => s.replace(/[\s,]+/g, '_');
 export function changeSetText(p: Proposal): string {
   const { by, at, read, basis } = p.provenance;
   const out = [
-    `// graph: ${p.graph} · CHANGE SET ${p.id} · against ${basis} · by ${by.name}`,
+    `// graph: ${p.graph} · CHANGE SET ${p.id} · against ${gs.named(basis)} · by ${by.name}`,
     ...(at ? [`// proposed: ${at}`] : []),
     ...(read.length ? [`// read: ${read.join('; ')}`] : []),
   ];

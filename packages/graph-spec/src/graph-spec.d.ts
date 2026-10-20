@@ -121,6 +121,10 @@ declare namespace GraphSpecCheck {
   function tokens(text: string): [string, string, number, string, number][];
   /** The first sixteen hexadecimal digits of the SHA-256 of an object in canonical JSON (RFC 8785). */
   function hash16(value: unknown): string;
+  /** A hash written with its algorithm's name: `sha-256-64:` for 16 digits, `sha-256:` for 64 (editor spec §51). */
+  function named(digits: string): string;
+  /** Whether a value is a hash that names an algorithm the check knows, with the right number of digits for it. */
+  function isNamed(value: unknown): boolean;
   /** One statement of a change set, as the check reads it (§24). */
   interface ReadChange {
     op: 'delete-thing' | 'detach-delete-thing' | 'delete-link' | 'set-thing' | 'set-link';

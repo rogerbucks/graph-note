@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "src"))
 import graph_rules as gr  # noqa: E402
 import graph_spec as gs  # noqa: E402
 
-HEADER = "// graph: g · CHANGE SET cs1 · against 0123456789abcdef · by a"
+HEADER = "// graph: g · CHANGE SET cs1 · against sha-256-64:0123456789abcdef · by a"
 READ = {"graph": "g", "id": "cs1", "against": "0123456789abcdef", "by": "a"}
 
 # built with chr(), so no editor or tool can read the source's own text as a line end

@@ -277,5 +277,5 @@ run_clock(dt.date(2026, 9, 1), dt.date(2027, 1, 31), plan)
 # decisions: caches re-made by their rules
 for d in G("decisions", "MATCH (d:Decision) RETURN d.id AS id, d.title AS title, d.statement AS statement, d.rationale AS rationale"):
     st = 'superseded' if G("decisions", f"MATCH (d:Decision {{id:{q(d['id'])}}})<-[:SUPERSEDES]-() RETURN d.id AS i") else 'current'
-    h = hashlib.sha256('|'.join([d['title'], d['statement'], d['rationale']]).encode()).hexdigest()[:16]
+    h = 'sha-256-64:' + hashlib.sha256('|'.join([d['title'], d['statement'], d['rationale']]).encode()).hexdigest()[:16]   # a hash names its algorithm (editor spec §51)
     G("decisions", f"MATCH (x:Decision {{id:{q(d['id'])}}}) SET x.status = {q(st)}, x.content_hash = {q(h)}")

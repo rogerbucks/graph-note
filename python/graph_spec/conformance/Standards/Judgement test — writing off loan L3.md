@@ -164,20 +164,20 @@ INSERT
  (o_wait:Option {id: 'option:L3/wait', title: 'Wait another month'}),
  (prop)-[:CONSIDERED]->(o_wo), (prop)-[:CONSIDERED]->(o_re), (prop)-[:CONSIDERED]->(o_wait),
 // the write-off — a person's decision, adopting the proposal, with its basis pinned
- (jw:Decision {id: 'decision:L3-write-off', title: 'Write off loan L3', statement: 'Write off the balance of loan L3', rationale: 'No payment since the grace period expired, recovery is likely to fail, and the borrower very likely has no other assets', at: DATE '2026-12-15', content_hash: '27d79974004c79cc'}),
+ (jw:Decision {id: 'decision:L3-write-off', title: 'Write off loan L3', statement: 'Write off the balance of loan L3', rationale: 'No payment since the grace period expired, recovery is likely to fail, and the borrower very likely has no other assets', at: DATE '2026-12-15', content_hash: 'sha-256-64:84ec150bdf8c6f3b'}),
  (jw)-[:ABOUT]->(r_L3), (jw)-[:DECIDED_BY]->(r_alice), (jw)-[:ADOPTS]->(prop), (jw)-[:CHOSE]->(o_wo),
  (jw)-[:REJECTED {why: 'the borrower has no income to restructure against'}]->(o_re),
  (jw)-[:REJECTED {why: 'a further month adds default interest that will not be paid'}]->(o_wait),
- (jw)-[:RESTS_ON {as_of: DATE '2026-12-15', reads: 'balance_cents, days_late', hash: '17eaf358646b81f4'}]->(r_L3),
- (jw)-[:RESTS_ON {as_of: DATE '2026-12-15', reads: 'kind, at', hash: '27d759be8114e7c0'}]->(r_grace),
- (jw)-[:RESTS_ON {as_of: DATE '2026-12-15', reads: 'altitude, name', hash: '3364b414a745aa93'}]->(r_arr3),
+ (jw)-[:RESTS_ON {as_of: DATE '2026-12-15', reads: 'balance_cents, days_late', hash: 'sha-256-64:17eaf358646b81f4'}]->(r_L3),
+ (jw)-[:RESTS_ON {as_of: DATE '2026-12-15', reads: 'kind, at', hash: 'sha-256-64:27d759be8114e7c0'}]->(r_grace),
+ (jw)-[:RESTS_ON {as_of: DATE '2026-12-15', reads: 'altitude, name', hash: 'sha-256-64:3364b414a745aa93'}]->(r_arr3),
  (jw)-[:ASSUMES {as_of: DATE '2026-12-15', likelihood_then: 'likely'}]->(r_norec),
  (jw)-[:ASSUMES {as_of: DATE '2026-12-15', likelihood_then: 'very-likely'}]->(r_noassets),
  (jw)-[:UNDER {as_of: DATE '2026-12-15'}]->(r_proc1),
 // keeping L1 on its schedule — decided by a person alone, no proposal
- (jk:Decision {id: 'decision:L1-keep', title: 'Keep loan L1 on its schedule', statement: 'Loan L1 stays on its normal schedule', rationale: 'The October arrears were cured within five days', at: DATE '2026-10-21', content_hash: '57cae93a496fc3c0'}),
+ (jk:Decision {id: 'decision:L1-keep', title: 'Keep loan L1 on its schedule', statement: 'Loan L1 stays on its normal schedule', rationale: 'The October arrears were cured within five days', at: DATE '2026-10-21', content_hash: 'sha-256-64:2ead7560cfabcb41'}),
  (jk)-[:ABOUT]->(r_L1), (jk)-[:DECIDED_BY]->(r_alice),
- (jk)-[:RESTS_ON {as_of: DATE '2026-10-21', reads: 'kind, at', hash: '772c36eebe16decb'}]->(r_cured),
+ (jk)-[:RESTS_ON {as_of: DATE '2026-10-21', reads: 'kind, at', hash: 'sha-256-64:772c36eebe16decb'}]->(r_cured),
  (jk)-[:RESTS_ON {as_of: DATE '2026-10-21', lens: 'lens:arrears@1', bucket: 'current'}]->(r_L1),
  (jk)-[:UNDER {as_of: DATE '2026-10-21'}]->(r_proc1)
 ```
@@ -203,24 +203,24 @@ MATCH (r6:Ref {id: 'ref:loanbook/ev:L3/grace'})
 MATCH (r7:Ref {id: 'ref:loanbook/loan:L3'})
 MATCH (pp:Proposal {id: 'proposal:L3'})
 INSERT
- (sv:Serving {id: 'serving:L3/draft', at: DATE '2026-12-13', consumer: 'model:drafter', consumer_kind: 'cloud', conditions_met: FALSE}),
+ (sv:Serving {id: 'serving:L3/draft', at: DATE '2026-12-13', consumer: 'model:drafter', consumer_kind: 'cloud', conditions_met: FALSE, content_hash: 'sha-256-64:9c021a8e50460c73'}),
  (r0:Ref {id: 'ref:loanbook/path:L3/life', ref: 'path:L3/life', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'altitude, name, ordered_by', hash: 'a85410534743ead2', as_of: DATE '2026-12-13', classification: 'Own'}]->(r0),
+ (sv)-[:SERVED {reads: 'altitude, name, ordered_by', hash: 'sha-256-64:a85410534743ead2', as_of: DATE '2026-12-13', classification: 'Own'}]->(r0),
  (r1:Ref {id: 'ref:loanbook/ev:L3/request', ref: 'ev:L3/request', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'at, kind', hash: '66bc7375f58fefbe', as_of: DATE '2026-12-13', classification: 'Own'}]->(r1),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:66bc7375f58fefbe', as_of: DATE '2026-12-13', classification: 'Own'}]->(r1),
  (r2:Ref {id: 'ref:loanbook/ev:L3/sign', ref: 'ev:L3/sign', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'at, kind', hash: '724549cbbe271480', as_of: DATE '2026-12-13', classification: 'Own'}]->(r2),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:724549cbbe271480', as_of: DATE '2026-12-13', classification: 'Own'}]->(r2),
  (r3:Ref {id: 'ref:loanbook/ev:L3/drawdown', ref: 'ev:L3/drawdown', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'at, kind', hash: 'b4eea5aff82e5234', as_of: DATE '2026-12-13', classification: 'Own'}]->(r3),
- (sv)-[:SERVED {reads: 'altitude, name, ordered_by', hash: '0da15fb864c28859', as_of: DATE '2026-12-13', classification: 'Own'}]->(r4),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:b4eea5aff82e5234', as_of: DATE '2026-12-13', classification: 'Own'}]->(r3),
+ (sv)-[:SERVED {reads: 'altitude, name, ordered_by', hash: 'sha-256-64:0da15fb864c28859', as_of: DATE '2026-12-13', classification: 'Own'}]->(r4),
  (r5:Ref {id: 'ref:loanbook/ev:L3/missed', ref: 'ev:L3/missed', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'at, kind', hash: 'a1208ca8465660ca', as_of: DATE '2026-12-13', classification: 'Own'}]->(r5),
- (sv)-[:SERVED {reads: 'at, kind', hash: '27d759be8114e7c0', as_of: DATE '2026-12-13', classification: 'Own'}]->(r6),
- (sv)-[:SERVED {reads: 'balance_cents, days_late, servicer', hash: 'aaae1ecfc82d02ce', as_of: DATE '2026-12-13', classification: 'Own'}]->(r7),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:a1208ca8465660ca', as_of: DATE '2026-12-13', classification: 'Own'}]->(r5),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:27d759be8114e7c0', as_of: DATE '2026-12-13', classification: 'Own'}]->(r6),
+ (sv)-[:SERVED {reads: 'balance_cents, days_late, servicer', hash: 'sha-256-64:aaae1ecfc82d02ce', as_of: DATE '2026-12-13', classification: 'Own'}]->(r7),
  (pp)-[:USED]->(sv),
- (pp)-[:RESTS_ON {reads: 'balance_cents, days_late, servicer', hash: 'aaae1ecfc82d02ce', as_of: DATE '2026-12-13'}]->(r7),
- (pp)-[:RESTS_ON {reads: 'at, kind', hash: '27d759be8114e7c0', as_of: DATE '2026-12-13'}]->(r6),
- (pp)-[:RESTS_ON {reads: 'altitude, name, ordered_by', hash: '0da15fb864c28859', as_of: DATE '2026-12-13'}]->(r4)
+ (pp)-[:RESTS_ON {reads: 'balance_cents, days_late, servicer', hash: 'sha-256-64:aaae1ecfc82d02ce', as_of: DATE '2026-12-13'}]->(r7),
+ (pp)-[:RESTS_ON {reads: 'at, kind', hash: 'sha-256-64:27d759be8114e7c0', as_of: DATE '2026-12-13'}]->(r6),
+ (pp)-[:RESTS_ON {reads: 'altitude, name, ordered_by', hash: 'sha-256-64:0da15fb864c28859', as_of: DATE '2026-12-13'}]->(r4)
 ```
 
 ## Later — a part payment arrives
@@ -290,12 +290,12 @@ MATCH (jw:Decision {id: 'decision:L3-write-off'}) MATCH (r_L3:Ref {id: 'ref:loan
 MATCH (r_grace:Ref {id: 'ref:loanbook/ev:L3/grace'}) MATCH (r_arr3:Ref {id: 'ref:loanbook/path:L3/arrears-nov'})
 MATCH (r_norec:Ref {id: 'ref:loanbook/claim:L3/no-recovery'}) MATCH (r_noassets:Ref {id: 'ref:loanbook/claim:L3/no-other-assets'})
 MATCH (r_proc1:Ref {id: 'ref:loanbook/process:arrears@1'}) MATCH (o_wo:Option {id: 'option:L3/write-off'})
-INSERT (jw2:Decision {id: 'decision:L3-write-off-2', title: 'Write off loan L3 — reaffirmed', statement: 'Write off the remaining balance of loan L3', rationale: 'The part payment reduced the balance; nothing else read has changed', at: DATE '2027-01-12', content_hash: '7f0b77f885d79b7c'}),
+INSERT (jw2:Decision {id: 'decision:L3-write-off-2', title: 'Write off loan L3 — reaffirmed', statement: 'Write off the remaining balance of loan L3', rationale: 'The part payment reduced the balance; nothing else read has changed', at: DATE '2027-01-12', content_hash: 'sha-256-64:903cb7464ffc51f3'}),
  (jw2)-[:SUPERSEDES {why: 'reaffirmed — basis moved: a part payment of $2,000 on 10 Jan 2027; the remaining $3,000 is still not expected to be recovered'}]->(jw),
  (jw2)-[:ABOUT]->(r_L3), (jw2)-[:DECIDED_BY]->(r_alice), (jw2)-[:CHOSE]->(o_wo),
- (jw2)-[:RESTS_ON {as_of: DATE '2027-01-12', reads: 'balance_cents, days_late', hash: '633ead328152b4c4'}]->(r_L3),
- (jw2)-[:RESTS_ON {as_of: DATE '2027-01-12', reads: 'kind, at', hash: '27d759be8114e7c0'}]->(r_grace),
- (jw2)-[:RESTS_ON {as_of: DATE '2027-01-12', reads: 'altitude, name', hash: '3364b414a745aa93'}]->(r_arr3),
+ (jw2)-[:RESTS_ON {as_of: DATE '2027-01-12', reads: 'balance_cents, days_late', hash: 'sha-256-64:633ead328152b4c4'}]->(r_L3),
+ (jw2)-[:RESTS_ON {as_of: DATE '2027-01-12', reads: 'kind, at', hash: 'sha-256-64:27d759be8114e7c0'}]->(r_grace),
+ (jw2)-[:RESTS_ON {as_of: DATE '2027-01-12', reads: 'altitude, name', hash: 'sha-256-64:3364b414a745aa93'}]->(r_arr3),
  (jw2)-[:ASSUMES {as_of: DATE '2027-01-12', likelihood_then: 'likely'}]->(r_norec),
  (jw2)-[:ASSUMES {as_of: DATE '2027-01-12', likelihood_then: 'very-likely'}]->(r_noassets),
  (jw2)-[:UNDER {as_of: DATE '2027-01-12'}]->(r_proc1)
@@ -307,14 +307,14 @@ Every hash in this document is computed, never typed (§24 rule 4). Each is a re
 
 ```yaml
 # fill — computed values (§24 H2)
-H_L3: {basis: 'loan:L3', graph: loanbook, reads: 'balance_cents, days_late', load: ['#The data'], value: 17eaf358646b81f4, uses: 2}
-H_GRACE: {basis: 'ev:L3/grace', graph: loanbook, reads: 'kind, at', load: ['#The data'], value: 27d759be8114e7c0, uses: 4}
-H_ARR3: {basis: 'path:L3/arrears-nov', graph: loanbook, reads: 'altitude, name', load: ['#The data'], value: 3364b414a745aa93, uses: 2}
-H_CURED: {basis: 'ev:L1/cured', graph: loanbook, reads: 'kind, at', load: ['#The data'], value: 772c36eebe16decb, uses: 1}
-H_L3_PAID: {basis: 'loan:L3', graph: loanbook, reads: 'balance_cents, days_late', load: ['#The data', '#Later — a part payment arrives'], value: 633ead328152b4c4, uses: 2}
-C_W: {judgement: 'decision:L3-write-off', graph: judgements, load: ['#The data', '#The judgements'], value: 27d79974004c79cc, uses: 1}
-C_K: {judgement: 'decision:L1-keep', graph: judgements, load: ['#The data', '#The judgements'], value: 57cae93a496fc3c0, uses: 1}
-C_W2: {judgement: 'decision:L3-write-off-2', graph: judgements, load: ['#The data', '#The judgements', '#Later — a part payment arrives', '#Later — the write-off is reaffirmed'], value: 7f0b77f885d79b7c, uses: 1}
+H_L3: {basis: 'loan:L3', graph: loanbook, reads: 'balance_cents, days_late', load: ['#The data'], value: 'sha-256-64:17eaf358646b81f4', uses: 2}
+H_GRACE: {basis: 'ev:L3/grace', graph: loanbook, reads: 'kind, at', load: ['#The data'], value: 'sha-256-64:27d759be8114e7c0', uses: 4}
+H_ARR3: {basis: 'path:L3/arrears-nov', graph: loanbook, reads: 'altitude, name', load: ['#The data'], value: 'sha-256-64:3364b414a745aa93', uses: 2}
+H_CURED: {basis: 'ev:L1/cured', graph: loanbook, reads: 'kind, at', load: ['#The data'], value: 'sha-256-64:772c36eebe16decb', uses: 1}
+H_L3_PAID: {basis: 'loan:L3', graph: loanbook, reads: 'balance_cents, days_late', load: ['#The data', '#Later — a part payment arrives'], value: 'sha-256-64:633ead328152b4c4', uses: 2}
+C_W: {judgement: 'decision:L3-write-off', graph: judgements, load: ['#The data', '#The judgements'], value: 'sha-256-64:84ec150bdf8c6f3b', uses: 1}
+C_K: {judgement: 'decision:L1-keep', graph: judgements, load: ['#The data', '#The judgements'], value: 'sha-256-64:2ead7560cfabcb41', uses: 1}
+C_W2: {judgement: 'decision:L3-write-off-2', graph: judgements, load: ['#The data', '#The judgements', '#Later — a part payment arrives', '#Later — the write-off is reaffirmed'], value: 'sha-256-64:903cb7464ffc51f3', uses: 1}
 ```
 
 ## Conformance case
@@ -345,7 +345,7 @@ rounds:
       - {test: G17, name: "a proposal that names no model", document: "Judgement test — writing off loan L3#The judgements", "Judgement test — writing off loan L3#Types for servings", "Judgement test — writing off loan L3#The serving", replace: " (prop)-[:WAS_GENERATED_BY]->(draft), (draft)-[:ASSOCIATED_WITH]->(r_drafter),", with: "", expect_check: "§23 rule 6"}
       - {test: G20, name: "a lens pin that does not say which bucket", document: "Judgement test — writing off loan L3#The judgements", "Judgement test — writing off loan L3#Types for servings", "Judgement test — writing off loan L3#The serving", replace: ", lens: 'lens:arrears@1', bucket: 'current'}", with: ", lens: 'lens:arrears@1'}", expect_check: "§23 rule 2"}
       - {test: G21, name: "a model's proposal that used no serving", document: "Judgement test — writing off loan L3#The serving", replace: " (pp)-[:USED]->(sv),\n", with: "", expect_check: "§24 H3 rule 4"}
-      - {test: G18, name: "a pin edited in place instead of a new decision", document: "Judgement test — writing off loan L3#The judgements", "Judgement test — writing off loan L3#Types for servings", "Judgement test — writing off loan L3#The serving", replace: "hash: '17eaf358646b81f4'", with: "hash: '633ead328152b4c4'", expect_check: "§23 rule 7"}
+      - {test: G18, name: "a pin edited in place instead of a new decision", document: "Judgement test — writing off loan L3#The judgements", "Judgement test — writing off loan L3#Types for servings", "Judgement test — writing off loan L3#The serving", replace: "hash: 'sha-256-64:17eaf358646b81f4'", with: "hash: 'sha-256-64:633ead328152b4c4'", expect_check: "§23 rule 7"}
   - name: a part payment arrives
     documents: ["Judgement test — writing off loan L3", "Judgement test — writing off loan L3#The judgements", "Judgement test — writing off loan L3#Types for servings", "Judgement test — writing off loan L3#The serving", "Judgement test — writing off loan L3#Later — a part payment arrives"]
     rules: [section20, judgements]

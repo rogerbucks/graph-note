@@ -10,10 +10,10 @@ import { BASIS, GRAPH, NOTE, noteOf, noteWithChangeSet } from './proposals-fixtu
 describe('the state of a graph', () => {
   test('is the sixteen digits graph-spec names a change set’s state by, for the graph as the note holds it', () => {
     assert.match(BASIS, /^[0-9a-f]{16}$/);
-    const block = `// graph: reader · CHANGE SET c · against ${BASIS} · by ada\n(x:Option {name: 'X'})`;
+    const block = `// graph: reader · CHANGE SET c · against sha-256-64:${BASIS} · by ada\n(x:Option {name: 'X'})`;
     const checked = gs.checkChangeset([GRAPH], block, {}).results;
     assert.equal(checked.find(([l]) => l.startsWith('it was made against'))[1], true);
-    const moved = `// graph: reader · CHANGE SET c · against ${basisOf(noteOf(`${GRAPH},\n(z:T)`), 'reader')} · by ada\n(x:Option)`;
+    const moved = `// graph: reader · CHANGE SET c · against sha-256-64:${basisOf(noteOf(`${GRAPH},\n(z:T)`), 'reader')} · by ada\n(x:Option)`;
     assert.equal(
       gs.checkChangeset([GRAPH], moved, {}).results.find(([l]) => l.startsWith('it was made against'))[1],
       false,

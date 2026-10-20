@@ -73,8 +73,20 @@ def current_decisions(db: GrafeoDB, jg: str) -> list[str]:
 def judgement_hash(db: GrafeoDB, jg: str, d: str) -> str:
     """rule:judgement-hash@1 — a decision's own source properties and every edge it states, so an
     edited pin shows."""
+    return seal_hash(db, jg, "Decision", d, "decision")
+
+
+def serving_hash(db: GrafeoDB, jg: str, s: str) -> str:
+    """rule:serving-hash@1 — a serving's own properties and every item it served, so an edited
+    record shows."""
+    return seal_hash(db, jg, "Serving", s, "serving")
+
+
+def seal_hash(db: GrafeoDB, jg: str, label: str, d: str, key: str) -> str:
+    """The content hash that seals node d, a label, of judgement graph jg: its own properties and
+    every edge it states, under key."""
     db.set_graph(jg)
-    p = Q(db, f"MATCH (d:Decision {{id: '{d}'}}) RETURN properties(d) AS p")[0]["p"]
+    p = Q(db, f"MATCH (d:{label} {{id: '{d}'}}) RETURN properties(d) AS p")[0]["p"]
     from graphspec.rules.canonical_json import jcs
 
     out = sorted(
@@ -82,14 +94,14 @@ def judgement_hash(db: GrafeoDB, jg: str, d: str) -> str:
             [r["ty"], r["t"], {k: _norm(v) for k, v in (r["e"] or {}).items()}]
             for r in Q(
                 db,
-                f"MATCH (d:Decision {{id: '{d}'}})-[e]->(t) RETURN type(e) AS ty, t.id AS t, properties(e) AS e",  # noqa: E501  # one literal: embedded_queries reads it whole
+                f"MATCH (d:{label} {{id: '{d}'}})-[e]->(t) RETURN type(e) AS ty, t.id AS t, properties(e) AS e",  # noqa: E501  # one literal: embedded_queries reads it whole
             )
         ],
         key=jcs,
     )
     return hash16(
         {
-            "decision": {k: _norm(v) for k, v in p.items() if k not in ("content_hash", "review")},
+            key: {k: _norm(v) for k, v in p.items() if k not in ("content_hash", "review")},
             "edges": out,
         }
     )

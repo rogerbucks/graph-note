@@ -108,7 +108,7 @@ describe('Claude is the only AI the browser editor offers (cc_claude_only)', () 
     const { where, launcher } = await opened();
     assert.equal((await launcher.propose({ changes: [EXTRA] })).ok, true);
     const block = gqlSpans(readFileSync(where.plan, 'utf8')).find((s) => /CHANGE SET/.test(s.text)).text;
-    assert.match(block, /^\/\/ graph: plan · CHANGE SET \S+ · against [0-9a-f]{16} · by Claude$/m);
+    assert.match(block, /^\/\/ graph: plan · CHANGE SET \S+ · against sha-256-64:[0-9a-f]{16} · by Claude$/m);
     const lines = block.split('\n').filter((l) => !l.startsWith('//'));
     assert.match(lines[0], /^\(Claude:Model \{name: 'Claude'\}\),$/);
   });
