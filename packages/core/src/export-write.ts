@@ -3,6 +3,9 @@
 // reason is said in a sentence, for the editor to show. The core knows no file system: the host gives the three
 // operations. The rename must put the whole file in place or leave the target as it was.
 
+import { word } from './words.ts';
+import type { WordKey } from './words.ts';
+
 /** The file operations the host gives. Each may throw, or reject, with an error that may carry a `code` such as `ENOSPC`. */
 export interface WriteOps {
   /** Writes `bytes` to `path`, making the file or replacing it. */
@@ -14,16 +17,17 @@ export interface WriteOps {
 }
 
 /** The result: written, or why not — and, when the temporary file could not be removed either, which file is left. */
-export type SafeWrite = { ok: true; path: string } | { ok: false; why: string; left?: string };
+export type SafeWrite = { ok: true; path: string } | { ok: false; why: string; cause: string; left?: string };
 
-const CAUSES: Record<string, string> = {
-  ENOSPC: 'the disk is full',
-  EACCES: 'permission was refused',
-  EPERM: 'permission was refused',
-  EROFS: 'the folder cannot be written to',
-  ENOENT: 'the folder is not there',
-  ENAMETOOLONG: 'the file name is too long',
-  EBUSY: 'the file is in use by another program',
+/** The common causes by their code, each as the key of its words. */
+const CAUSES: Record<string, WordKey> = {
+  ENOSPC: 'write.cause.full',
+  EACCES: 'write.cause.refused',
+  EPERM: 'write.cause.refused',
+  EROFS: 'write.cause.read-only',
+  ENOENT: 'write.cause.no-folder',
+  ENAMETOOLONG: 'write.cause.long-name',
+  EBUSY: 'write.cause.in-use',
 };
 
 const codeOf = (e: unknown): string => (e && typeof e === 'object' && 'code' in e ? String(e.code) : '');
@@ -31,9 +35,9 @@ const codeOf = (e: unknown): string => (e && typeof e === 'object' && 'code' in 
 /** Why, in words that complete "could not be written: …": a common cause by name, else the host's own message. */
 function reason(e: unknown): string {
   const known = CAUSES[codeOf(e)];
-  if (known) return known;
+  if (known) return word(known);
   const message = e instanceof Error ? e.message : typeof e === 'string' ? e : '';
-  return message.trim().replace(/[.\s]+$/, '') || 'the host gave no reason';
+  return message.trim().replace(/[.\s]+$/, '') || word('write.cause.none');
 }
 
 /** Whether the temporary file is gone: removed, or never there. */
@@ -46,9 +50,10 @@ async function cleared(ops: WriteOps, temp: string): Promise<boolean> {
   }
 }
 
-const failed = (why: string): SafeWrite => ({
+const failed = (cause: string): SafeWrite => ({
   ok: false,
-  why: `The export could not be written: ${why}. Nothing was saved.`,
+  why: `${word('write.failed', { cause })} ${word('exporting.nothing-saved')}`,
+  cause,
 });
 
 /**
@@ -63,18 +68,15 @@ export async function writeSafely(
   ops: WriteOps,
   temp: string = `${path}.part`,
 ): Promise<SafeWrite> {
-  if (!(typeof bytes === 'string' ? bytes.length : bytes.byteLength)) return failed('there is nothing to write');
-  if (temp === path) return failed('the temporary file would be the target itself');
+  if (!(typeof bytes === 'string' ? bytes.length : bytes.byteLength)) return failed(word('write.cause.empty'));
+  if (temp === path) return failed(word('write.cause.temp-is-target'));
   try {
     await ops.write(temp, bytes);
     await ops.rename(temp, path);
     return { ok: true, path };
   } catch (e) {
-    if (await cleared(ops, temp)) return failed(reason(e));
-    return {
-      ok: false,
-      why: `The export could not be written: ${reason(e)}. The temporary file ${temp} could not be removed, so delete it by hand.`,
-      left: temp,
-    };
+    const cause = reason(e);
+    if (await cleared(ops, temp)) return failed(cause);
+    return { ok: false, why: word('write.failed-left', { cause, temp }), cause, left: temp };
   }
 }

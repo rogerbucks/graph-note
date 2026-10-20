@@ -1,6 +1,7 @@
 // A PNG of an exported SVG (spec §16, export_png_sharp). It is drawn on a canvas at the size the core gives, never less
 // than twice natural size, so its text stays sharp. The SVG is self-contained, with fixed colours, so it draws the same here.
 // The SVG is given that size itself before it is read, so no engine draws it small and scales it up.
+import { word } from '@thoughtknot/core';
 import type { PngSize } from '@thoughtknot/core';
 
 /** The most pixels a phone's canvas holds (iOS's limit): a larger PNG is refused before it is drawn, never drawn blank. */
@@ -29,22 +30,21 @@ export function rasterise(svg: string, size: PngSize): Promise<Uint8Array> {
         canvas.width = size.width;
         canvas.height = size.height;
         const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('the image is too large for this device to draw as a PNG; export it as SVG');
+        if (!ctx) throw new Error(word('exporting.png-too-large'));
         ctx.drawImage(img, 0, 0, size.width, size.height);
         canvas.toBlob((blob) => {
           // the canvas let go at once, PNG or none, so page after page of a large image holds one canvas at a time
           canvas.width = canvas.height = 0;
-          if (!blob)
-            return reject(new Error('the image is too large for this device to draw as a PNG; export it as SVG'));
+          if (!blob) return reject(new Error(word('exporting.png-too-large')));
           blob.arrayBuffer().then((b) => resolve(new Uint8Array(b)), reject);
         }, 'image/png');
       } catch (e) {
-        reject(e instanceof Error ? e : new Error('the PNG could not be drawn'));
+        reject(e instanceof Error ? e : new Error(word('exporting.png-failed')));
       }
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('the drawing could not be read as an image'));
+      reject(new Error(word('exporting.png-unreadable')));
     };
     img.src = url;
   });

@@ -222,10 +222,10 @@ export function linkHost(plugin: ThoughtKnotPlugin, path: string, graph: string)
       try {
         await plugin.app.vault.create(at, '');
       } catch (e) {
-        new Notice(`The note ${at} could not be made: ${e instanceof Error ? e.message : String(e)}`);
+        new Notice(word('links.note-failed', { path: at, why: e instanceof Error ? e.message : String(e) }));
         return false;
       }
-      new Notice(`Created the note ${at}.`);
+      new Notice(word('links.note-made', { path: at }));
       return true;
     },
   };

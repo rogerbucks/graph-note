@@ -7,6 +7,7 @@ import { AI_SOURCE_WORDS } from './ai-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
+import { EXPORT_SOURCE_WORDS } from './export-source-words.ts';
 import { FIRST_RUN_SOURCE_WORDS } from './first-run-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
@@ -108,25 +109,6 @@ export const SOURCE_WORDS = {
   'editor.lock': 'Lock the graph',
   'editor.block-picker': 'Graph block',
   'editor.pane-title': 'Graph',
-  'export.form': 'Export',
-  'export.data-gql': 'Data as a GQL block',
-  'export.data-csv': 'Data as CSV',
-  'export.data-graphml': 'Data as GraphML',
-  'export.view': 'View {name}',
-  'export.view-in-context': 'View {name}, with the rest faded',
-  'export.whole': 'The whole diagram',
-  'export.path': 'Path {title}, played as an animated SVG',
-  'export.what': 'What to export',
-  'export.format': 'Format',
-  'export.pace': 'Pace',
-  'export.pace-half': 'Half a second a step',
-  'export.pace-seconds': { one: '{count} second a step', other: '{count} seconds a step' },
-  'export.theme': 'Theme',
-  'export.anyway': 'Export anyway',
-  'export.do-not': 'Do not export',
-  'export.ready': '{name} is ready.',
-  'export.share': 'Share',
-  'export.it': 'Export it',
   'path.pause': 'Pause',
   'path.play-on': 'Play on',
   'path.previous': 'Previous step',
@@ -386,4 +368,6 @@ export const SOURCE_WORDS = {
   ...FIRST_RUN_SOURCE_WORDS,
   // the drawing's card, its details, the editor pane and the property rows (display-source-words.ts)
   ...DISPLAY_SOURCE_WORDS,
+  // making an export, sharing it and writing it into the vault (export-source-words.ts)
+  ...EXPORT_SOURCE_WORDS,
 } as const;

@@ -89,7 +89,7 @@ export function pageStates(open) {
     'a notice shown': async () => {
       const page = open(withNote);
       await drawn(page);
-      browserHost(page.window).notice('Exported two files.');
+      browserHost(page.window).notice('Two files were written.');
       return page;
     },
     'a menu open': async () => {
