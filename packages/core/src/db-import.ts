@@ -98,6 +98,9 @@ export function importedBlock(
 
 /** Note `note` with `block` added at its end, after a blank line. */
 export function withImport(note: string, block: string): string {
-  const body = note.replace(/\n*$/, '');
+  // the blank lines at its end are counted back from the end, one pass: never a search that could start at each one
+  let end = note.length;
+  while (end && note[end - 1] === '\n') end--;
+  const body = note.slice(0, end);
   return body ? `${body}\n\n${block}\n` : `${block}\n`;
 }

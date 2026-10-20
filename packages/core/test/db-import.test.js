@@ -70,4 +70,11 @@ describe('an import is a copy written as text (db_import_on_request)', () => {
     assert.equal(withImport('# Sales\n\n', 'B'), '# Sales\n\nB\n');
     assert.equal(withImport('', 'B'), 'B\n');
   });
+
+  test('a note of many blank lines is read in one pass, never slowly (CodeQL, polynomial regular expression)', () => {
+    // a search for the blank lines at the end tried again from each one, so this took minutes; read once, it is quick
+    const note = `# Sales${'\n'.repeat(50_000)}x\n\n`;
+    assert.equal(withImport(note, 'B'), `${note.trimEnd()}\n\nB\n`);
+    assert.equal(withImport('\n'.repeat(50_000), 'B'), 'B\n');
+  });
 });
