@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (84)
+## Open (83)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -67,7 +67,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-9 | No reading options: letter spacing, line height or font | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming and the standalone app) | days |
 | NEURO-10 | Renaming a thing does not follow to other notes | ●●○ | ●●○ | fix-later (Wave 9 · Slice 6 the mesh) | days |
 | NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming and the standalone app) | hours |
-| FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | ●●● | ●●○ | fix-now | hours |
 | FLOW-4 | A one-line fix pays eleven gates and may touch four records | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | FLOW-5 | A requirement's text can be rewritten to fit the code | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
 | FLOW-6 | Store submission is last, with no CI step for its checklist | ●●○ | ●●● | fix-later (Wave 15 · Obsidian community release) | days |
@@ -676,16 +675,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A test in packages/obsidian/test that opens two graphs and asserts the summary lists both, newest first.
 
-### FLOW-3 Waves 1 to 3 are past, mostly unproved, and never replanned
-
-**Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `requirements/waves.json`, `scripts/wiki.mjs`, `scripts/wiki-roadmap.mjs`, `scripts/github-project-waves.mjs`.
-
-**Risk:** The plan's first three waves ended by 15 Oct 2026, yet their workstreams hold 3 proved requirements of 37. The 22 later waves keep their dates, so the Aug 2027 end and the Wave 15 store release are not credible, and nobody is told.
-
-**Fix:** Replan: move the unproved workstreams of waves 1 to 3 into dated waves and shift the rest. Add one generated line to the Roadmap page with proved requirements per fortnight, so the rate is visible and dates are set from it.
-
-**Check:** A test that fails when a wave is 'late' in waveStates for more than one wave length, unless waves.json names the reason. The wiki run reports the fortnightly rate.
-
 ### FLOW-4 A one-line fix pays eleven gates and may touch four records
 
 **Who found it:** Workflow designer and open-source maintainer / community lead. **Where:** `package.json`, `AGENTS.md`, `.github/workflows/ci.yml`, `.github/workflows/claude-review.yml`, `scripts/**`.
@@ -936,7 +925,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** scripts/quality-check.mjs refuses a release when text-to-graph recall or precision drops below the baseline without a reason in quality/accepted.json.
 
-## Done or accepted (18)
+## Done or accepted (19)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -951,6 +940,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
+| FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | done | #616 |
 | FLOW-7 | README status line is hand-written and already wrong | done | #615 |
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |
