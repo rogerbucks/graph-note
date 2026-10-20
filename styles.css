@@ -1646,10 +1646,13 @@ pre.thoughtknot-code {
   text-decoration-skip-ink: none;
   text-underline-offset: 3px;
 }
+/* An error is told from a warning by its line as well as its colour (§44, colour_never_alone). A hint's is dotted. */
 .thoughtknot-problem.is-error {
+  text-decoration-style: wavy;
   text-decoration-color: var(--gn-text-error);
 }
 .thoughtknot-problem.is-warning {
+  text-decoration-style: dashed;
   text-decoration-color: var(--gn-text-warning);
 }
 .thoughtknot-problem.is-hint {
@@ -1658,6 +1661,9 @@ pre.thoughtknot-code {
 }
 .thoughtknot-line-sign {
   color: color-mix(in srgb, var(--gn-text-warning) 50%, var(--gn-text-normal));
+}
+.thoughtknot-line-sign.is-error {
+  color: color-mix(in srgb, var(--gn-text-error) 50%, var(--gn-text-normal));
 }
 .thoughtknot-readback {
   color: var(--gn-text-muted);

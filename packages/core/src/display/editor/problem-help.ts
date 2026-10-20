@@ -51,7 +51,7 @@ export function showFixes(
   fixbar.hidden = !here.length;
   for (const d of here) {
     const row = fixbar.createDiv({ cls: classOf(d) });
-    row.createSpan({ text: `${d.severity === HINT ? 'ℹ' : '⚠'} ${d.message}` });
+    row.createSpan({ text: `${d.severity === HINT ? 'ℹ' : d.severity === 1 ? '✖' : '⚠'} ${d.message}` });
     for (const f of d.data.fixes) button(row, f.title, null, () => apply(f.edit.changes), f.title);
     if (!d.data.fixes.length) row.createSpan({ cls: 'thoughtknot-fix', text: ` ${d.data.fix}` });
   }
