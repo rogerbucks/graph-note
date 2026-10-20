@@ -1,5 +1,6 @@
-// No words the person reads are written in the display layer's code (editor spec §42, words_catalogue). Each comes
-// from the catalogue by key, so a translation reaches it. The check reads every string the layer's code holds. It
+// No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). The
+// areas are the display layer and parts of the Obsidian host; each is added as its words move. Each word comes from
+// the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
 // The few kept in the code are listed, each with why.
@@ -8,29 +9,42 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import ts from 'typescript';
 
-const DISPLAY = new URL('../src/display/', import.meta.url);
+const ROOT = new URL('../../../', import.meta.url);
 
-/** The files of the display layer, as paths from its folder. */
+/** The folders and files whose words come from the catalogue, from the repository's root. */
+const AREAS = [
+  'packages/core/src/display/',
+  'packages/core/src/export-write.ts',
+  'packages/obsidian/src/export/',
+  'packages/obsidian/src/images/',
+  'packages/obsidian/src/links/',
+];
+
+/** The files of the areas, as paths from the repository's root. */
 const files = () =>
-  readdirSync(DISPLAY, { recursive: true })
-    .map(String)
-    .filter((f) => f.endsWith('.ts'));
+  AREAS.flatMap((a) =>
+    a.endsWith('/')
+      ? readdirSync(new URL(a, ROOT), { recursive: true })
+          .map((f) => `${a}${String(f).replaceAll('\\', '/')}`)
+          .filter((f) => f.endsWith('.ts'))
+      : [a],
+  );
 
 /** The strings kept in the code, by file, each with why. `*` keeps every string of the file. */
 const KEPT = {
   // the contract suites a host or a plug-in's developer runs: their test cases and what each says it wanted
-  'host-contract.ts': '*',
-  'panel-contract.ts': '*',
+  'packages/core/src/display/host-contract.ts': '*',
+  'packages/core/src/display/panel-contract.ts': '*',
   // said to a developer who forgot to install a host, never to a person using the app
-  'host.ts': ['The display layer has no host: install one with installHost before drawing.'],
+  'packages/core/src/display/host.ts': ['The display layer has no host: install one with installHost before drawing.'],
   // a reason kept to compare with, never shown: each host says a deleted note in its own words (kept-draft.ts)
-  'editor/editor-note.ts': ['the note was deleted'],
+  'packages/core/src/display/editor/editor-note.ts': ['the note was deleted'],
   // said to a developer whose card option cannot be made read-only, in the console
-  'graph-view/read-only.ts': '*',
+  'packages/core/src/display/graph-view/read-only.ts': '*',
   // a colour the code asks the browser whether it can mix, never shown
-  'graph-view/drawing-svg.ts': ['color-mix(in srgb, red 50%, blue)'],
+  'packages/core/src/display/graph-view/drawing-svg.ts': ['color-mix(in srgb, red 50%, blue)'],
   // the elements that can take the focus, as a selector kept in a constant
-  'graph-view/full-screen.ts': ['a[href], button, input, select, textarea, [tabindex]'],
+  'packages/core/src/display/graph-view/full-screen.ts': ['a[href], button, input, select, textarea, [tabindex]'],
 };
 
 /** The calls whose strings pick elements of the page, never words: `querySelector('a, b')` and the like. */
@@ -78,7 +92,7 @@ function wordsIn(source) {
   return found;
 }
 
-describe('the words of the display layer', () => {
+describe('the words in the code', () => {
   test('the check finds a sentence, a label and a control’s one word, and passes classes, keys and selectors', () => {
     const source = [
       "el.createEl('p', { cls: 'thoughtknot-quiet metadata-input', text: 'No problems.' });",
@@ -95,8 +109,8 @@ describe('the words of the display layer', () => {
   // proves: words_catalogue
   test('every word a person reads comes from the catalogue, but those kept in the code with why', () => {
     const found = files().flatMap((f) => {
-      const kept = KEPT[f.replaceAll('\\', '/')] ?? [];
-      return wordsIn(readFileSync(new URL(f, DISPLAY), 'utf8'))
+      const kept = KEPT[f] ?? [];
+      return wordsIn(readFileSync(new URL(f, ROOT), 'utf8'))
         .filter((w) => kept !== '*' && !kept.includes(w))
         .map((w) => `${f}: ${w}`);
     });

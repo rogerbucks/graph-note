@@ -84,6 +84,15 @@ describe('a write that fails', () => {
   });
 
   // proves: failed_export
+  test('gives the cause on its own too, so a host can say it in a sentence of its own without taking one apart', async () => {
+    const { ops } = fake({ fail: { write: { error: error('no room', 'ENOSPC') } }, partial: true });
+    const r = await writeSafely(TARGET, '<svg>big</svg>', ops);
+    assert.equal(r.cause, 'the disk is full');
+    const { ops: other } = fake({ fail: { write: { error: error('Disk on fire.') } }, partial: true });
+    assert.equal((await writeSafely(TARGET, 'x', other)).cause, 'Disk on fire');
+  });
+
+  // proves: failed_export
   test('in the write, with a file already there: the old file is untouched', async () => {
     const { fs, ops } = fake({
       files: { [TARGET]: 'OLD' },
