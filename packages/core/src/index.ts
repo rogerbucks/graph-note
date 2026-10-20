@@ -2,7 +2,6 @@
 export { gqlBlocks, gqlSpans, graphOfBlock, isSharedSchema, namesSharedSchema, styleOf } from './blocks.ts';
 export { readNote } from './drawing.ts';
 export { blockItems } from './block-items.ts';
-export { hops } from './estimates.ts';
 export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
 export { historyLayer, layered, memoryStorage, notePath, noteVersion, refusal, REFUSED } from './note-storage.ts';
@@ -15,7 +14,7 @@ export type { WorkspaceFiles } from './workspace-storage.ts';
 export type { Span } from './blocks.ts';
 export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote } from './note-reading.ts';
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
-export { explain, distance } from './estimates.ts';
+export { explain, distance, hops } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
 export { estimateFix } from './estimate-fix.ts';
 export type { EstimateFix } from './estimate-fix.ts';
