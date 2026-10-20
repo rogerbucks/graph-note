@@ -4,7 +4,7 @@
 // names, estimates, parked things, proposals and the changes view.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, wait } from '../packages/obsidian/test/host/load-plugin.js';
+import { build, until } from '../packages/obsidian/test/host/load-plugin.js';
 import { READER, open, type } from '../packages/obsidian/test/host/pane-notes.js';
 import { rulesOf, valueOf } from './repository/sheet-rules.js';
 
@@ -14,18 +14,18 @@ const ERROR_LINE = '(x:T {y: })';
 
 before(() => build());
 
-/** The edit pane with `lines` typed after the reader graph, the caret at the end, once it is checked. */
+/** The sign at the end of each line that has one, in order. */
+const signs = (env) =>
+  env.el.querySelectorAll('.thoughtknot-overlay .thoughtknot-line-sign').map((s) => s.textContent.trim());
+
+/** The edit pane with `lines` typed after the reader graph, the caret at the end, once each line has its sign. */
 async function typed(lines) {
   const env = await open();
   const text = [READER + ',', ...lines].join('\n');
   type(env.el, text, text.length);
-  await wait(400);
+  await until(() => signs(env).length === lines.length);
   return env;
 }
-
-/** The sign at the end of each line that has one, in order. */
-const signs = (env) =>
-  env.el.querySelectorAll('.thoughtknot-overlay .thoughtknot-line-sign').map((s) => s.textContent.trim());
 
 /** The words of each row of the fix bar. */
 const rows = (env) => env.el.querySelector('.thoughtknot-fixbar').children.map((r) => r.textContent);
