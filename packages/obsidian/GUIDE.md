@@ -517,6 +517,14 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   stay open, so a new control that writes is read-only there by default. An option it cannot reach is refused, loudly.
 - `view-options.ts` — what a drawing is given, its links' movement among it (`LinkMotion`).
 
+### `src/storage/` — notes kept in the vault (editor spec §41)
+
+- `vault-storage.ts` — `vaultStorage`, the vault as a backend of the core's one storage interface (`NoteStorage`).
+  - Every read and write goes through the vault's API. A write checks the version it was made against inside
+    `vault.process`, so a change made in between is never written over.
+  - A note removed goes where the person's deleted files go (`fileManager.trashFile`).
+  - The plugin's own code still reads and writes notes directly; it moves onto this backend in a later slice.
+
 ### `src/links/` — links and attachments (spec §18)
 
 - `link-host.ts` — `linkHost`, what a card is given to follow its links through Obsidian (`LinkHost`).

@@ -203,6 +203,10 @@
           "on: 'thing' | 'link'",
           "said: string"
         ],
+        "ChangeLog": [
+          "interface",
+          "record: (change: StoredChange) => void | Promise<void>"
+        ],
         "ChangeMark": [
           "interface",
           "ids: Array<string>",
@@ -546,6 +550,9 @@
         ],
         "directions": [
           "value: (drawing: GraphDrawing) => Direction[]"
+        ],
+        "DIRECTORY": [
+          "value: 2"
         ],
         "distance": [
           "value: (a: string, b: string) => number"
@@ -964,6 +971,9 @@
           "redo: () => string | null",
           "undo: () => string | null"
         ],
+        "historyLayer": [
+          "value: (log: ChangeLog, now?: () => string) => StorageLayer"
+        ],
         "hitAreas": [
           "value: (svg: string) => HitAreas"
         ],
@@ -1116,6 +1126,9 @@
         ],
         "LARGE_GRAPH": [
           "value: 50"
+        ],
+        "layered": [
+          "value: (base: NoteStorage, ...layers: StorageLayer[]) => NoteStorage"
         ],
         "Layers": [
           "interface",
@@ -1441,6 +1454,9 @@
         "MAX_SCALE": [
           "value: 4"
         ],
+        "memoryStorage": [
+          "value: (seed?: Record<string, string>) => NoteStorage"
+        ],
         "mergePathProblems": [
           "value: (reading: PathReading) => Problem[]"
         ],
@@ -1543,6 +1559,9 @@
         "noteOf": [
           "value: (_reading: NoteReading, _graph: string, key: string) => FoundLink | null"
         ],
+        "notePath": [
+          "value: (path: unknown) => string"
+        ],
         "NoteReading": [
           "interface",
           "graphs: Map<string, GraphDrawing>",
@@ -1551,6 +1570,16 @@
           "tooLarge?: Refusal | undefined",
           "whole: World",
           "world: World"
+        ],
+        "NoteStorage": [
+          "interface",
+          "list: () => Promise<string[]>",
+          "read: (path: string) => Promise<StoredNote | null>",
+          "remove: (path: string, options?: WriteOptions) => Promise<WriteOutcome>",
+          "write: (path: string, text: string, options?: WriteOptions) => Promise<WriteOutcome>"
+        ],
+        "noteVersion": [
+          "value: (text: string) => string"
         ],
         "noteWithProposal": [
           "value: (note: string, given: Proposal) => string | { refused: string; }"
@@ -2072,8 +2101,14 @@
         "REDUCED_WORDS": [
           "value: 'Still, as the system asks for reduced motion. Press Play to move it.'"
         ],
+        "refusal": [
+          "value: (current: StoredNote | null, options?: WriteOptions) => string | null"
+        ],
         "Refusal": [
           "type = { reason: 'too-large'; limit: 'things' | 'links' | 'word' | 'source' | 'text-bytes' | 'text-lines'; count: number; most: number; atLeast?: true; page?: true; } | { reason: 'timed-out'; ms: number; } | { reason: 'stopped'; failures: number; }"
+        ],
+        "REFUSED": [
+          "value: { readonly changed: 'the note has changed since it was read'; readonly exists: 'a note is already at that path'; readonly missing: 'no note is at that path'; }"
         ],
         "refusedWords": [
           "value: (link: FoundLink) => string"
@@ -2465,6 +2500,30 @@
         ],
         "StepRun": [
           "type = { refused: string[]; } | { nothing: string; output: StepOutput; } | { proposal: Proposal; output: StepOutput; }"
+        ],
+        "StorageCheck": [
+          "interface",
+          "name: string",
+          "run: () => Promise<void>"
+        ],
+        "storageContract": [
+          "value: (make: () => NoteStorage | Promise<NoteStorage>) => StorageCheck[]"
+        ],
+        "StorageLayer": [
+          "type = (inner: NoteStorage) => NoteStorage"
+        ],
+        "StoredChange": [
+          "interface",
+          "after: string | null",
+          "at: string",
+          "author?: string | undefined",
+          "before: string | null",
+          "path: string"
+        ],
+        "StoredNote": [
+          "interface",
+          "text: string",
+          "version: string"
         ],
         "Strictness": [
           "type = 'standard' | 'forgiving' | 'simplified'"
@@ -2905,6 +2964,17 @@
         "WordValues": [
           "type = Record<string, string | number> & { count?: number; }"
         ],
+        "WorkspaceFiles": [
+          "interface",
+          "createDirectory: (path: string) => Promise<void>",
+          "delete: (path: string) => Promise<void>",
+          "readDirectory: (path: string) => Promise<[string, number][]>",
+          "readText: (path: string) => Promise<string>",
+          "writeText: (path: string, text: string) => Promise<void>"
+        ],
+        "workspaceStorage": [
+          "value: (files: WorkspaceFiles) => NoteStorage"
+        ],
         "Workstreams": [
           "type = Map<string, { title: string; members: Set<string>; }>"
         ],
@@ -2916,6 +2986,14 @@
           "remove: (path: string) => Promise<void>",
           "rename: (from: string, to: string) => Promise<void>",
           "write: (path: string, bytes: Uint8Array | string) => Promise<void>"
+        ],
+        "WriteOptions": [
+          "interface",
+          "author?: string | undefined",
+          "expected?: string | null | undefined"
+        ],
+        "WriteOutcome": [
+          "type = { ok: true; version: string | null; } | { ok: false; reason: string; current: StoredNote | null; }"
         ],
         "WriteResult": [
           "type = { ok: true; note: string; ref: BlockRef; } | { ok: false; reason: string; current: Block | null; }"
@@ -2971,6 +3049,14 @@
           "noInlineStyle?: boolean | undefined",
           "notice: (message: string) => void"
         ],
+        "Host": [
+          "interface",
+          "display: DisplayHost",
+          "files: NoteStorage",
+          "links: (path: string, graph: string) => LinkHost",
+          "secrets: SecretStore",
+          "settings: SettingsStore"
+        ],
         "inHost": [
           "value: <T>(value: T) => T"
         ],
@@ -3003,8 +3089,17 @@
         "readInHostDirection": [
           "value: <T extends HTMLElement>(el: T) => T"
         ],
+        "SecretStore": [
+          "interface",
+          "get: (name: string) => string | null | Promise<string | null>"
+        ],
         "setIcon": [
           "value: (el: HTMLElement, name: string) => void"
+        ],
+        "SettingsStore": [
+          "interface",
+          "load: () => Promise<unknown>",
+          "save: (value: unknown) => Promise<void>"
         ]
       },
       "./display/host-contract": {
@@ -3030,6 +3125,9 @@
           "lastMenu: () => MenuRowSeen[] | null",
           "notices: () => string[]"
         ],
+        "hostServicesContract": [
+          "value: (make: () => ServicesUnderTest) => ContractCheck[]"
+        ],
         "HostUnderTest": [
           "interface",
           "host: DisplayHost",
@@ -3037,6 +3135,21 @@
         ],
         "MenuRowSeen": [
           "type = 'separator' | { title: string; checked?: boolean; warning?: boolean; }"
+        ],
+        "ServicesProbe": [
+          "interface",
+          "choose: (title: string) => void",
+          "doc: Document",
+          "element: () => HTMLElement",
+          "keepSecret: (name: string, secret: string) => void",
+          "lastMenu: () => MenuRowSeen[] | null",
+          "notices: () => string[]",
+          "opened: () => string[]"
+        ],
+        "ServicesUnderTest": [
+          "interface",
+          "host: Host",
+          "probe: ServicesProbe"
         ]
       }
     }

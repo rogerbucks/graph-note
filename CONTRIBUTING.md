@@ -444,6 +444,10 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/host-adapters.test.js` — every host's real adapter passes the one host contract of
   `packages/core/src/display/host-contract.ts` (editor spec §43, hosts_pass_contract). Obsidian's is built as the plugin
   builds it, and the browser page's runs in a DOM. It is partial until the standalone app and VS Code join it.
+- `test/storage-contract.test.js` — every note storage backend passes the one storage contract of
+  `packages/core/src/storage-contract.ts` (editor spec §41, storage_contract). The backends are an Obsidian vault, a
+  plain folder and a VS Code workspace, and memory. A new backend joins the list in this file. Encryption, sync and
+  history plug in as layers (`layered` in `note-storage.ts`), and a backend with layers on passes too.
 - `test/rtl.test.js` — the style sheets say sides by reading direction (`margin-inline-start`, `inset-inline-end`,
   `text-align: start`), so the interface mirrors in a right-to-left language. The only rules on a physical side are
   those placed at a point measured on the screen, each listed with why. Each view's root reads in the host's direction
