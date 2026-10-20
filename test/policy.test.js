@@ -239,13 +239,11 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only thirteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
+  test('only fourteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, Sara’s working group reply, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
-        if (!perms) continue;
-        const writes = permissionValues(perms).some((v) => /write/.test(v));
-        if (!writes) continue;
+        if (!perms || !permissionValues(perms).some((v) => /write/.test(v))) continue;
         // the three other writers may touch nothing else. One locks pull request conversations. One leaves the build
         // status comment on a pull request, with read access to what it reads (test/build-status-workflow.test.js)
         const given = perms
@@ -262,8 +260,10 @@ describe('GitHub Actions', () => {
         const only = (file, job, wanted) => f.endsWith(file) && name === job && [...given].sort().join() === wanted;
         // one mirrors the requirements into their issues on a push to main (test/github-project-workflow.test.js)
         const mirror = only('/project-mirror.yml', 'mirror', 'contents: read,issues: write');
-        // one leaves Claude's review on a pull request (test/claude-review-workflow.test.js)
-        const review = only('/claude-review.yml', 'review', 'contents: read,pull-requests: write');
+        // Claude's review on a pull request, and Sara's reply in the working group discussion (their own tests)
+        const review =
+          only('/claude-review.yml', 'review', 'contents: read,pull-requests: write') ||
+          only('/working-group.yml', 'post', 'discussions: write');
         // the wiki, its review issue, the nightly and the home page run no repository code (their own tests say so)
         const wiki = only('/wiki.yml', 'publish', 'contents: write') || only('/wiki.yml', 'report', 'issues: write');
         const nightly =

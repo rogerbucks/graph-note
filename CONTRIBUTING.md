@@ -611,11 +611,17 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/github-project-workflow.test.js` — the workflow that runs that mirror. It is woken by a push to main alone, and
   `issues: write` is its one write permission. One run goes at a time and none is cancelled. Main is checked out with
   nothing installed, the one command runs, and the project secret is given only to it.
+
+### Claude's workflows
+
 - `test/claude-review-workflow.test.js` — the workflow that leaves Claude's review on a pull request.
   - It is woken by a pull request, never `pull_request_target`. It is skipped for forks, drafts and Dependabot.
   - `pull-requests: write` is its one write permission. The token is given only to the step that checks it and to the
     action.
   - No checkout keeps credentials, and the review approves, pushes and edits nothing.
+- `test/working-group-workflow.test.js` — the workflow that lets Sara keep up with the working group discussion.
+  - It wakes Claude only when a comment names Sara, at most once a day. Claude writes a draft and has no GitHub tools.
+  - Only the post job may write, and only to discussions. It checks out nothing and runs no code of the repository.
 - `test/github-project-blocks.test.js` — that mirror's blocked-by links. Each open question's issue blocks the issues
   of the requirements it blocks, made once. A link the requirements dropped is removed, and a person's is kept. A
   refusal by GitHub is a warning, with the issues and project still mirrored.
