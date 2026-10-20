@@ -13,7 +13,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { isSetupInput, readmeSteps, setupInputsChangedSince } from '../scripts/fresh-clone.mjs';
+import { readmeSteps } from '../scripts/fresh-clone.mjs';
 import { messageProblems } from '../scripts/history-text-problems.mjs';
 import { SIGN_OFF_FROM, signOffProblems } from '../scripts/sign-off.mjs';
 import {
@@ -286,43 +286,6 @@ describe('the setup', () => {
     assert.deepEqual(machineSpecific('npm ci\nnpm test\nuv sync --locked\nthe ~ key; a<~[b]~>c'), []);
   });
 
-  test('a setup input is what the README steps run that no other CI job does: the steps, what they install, the hook', () => {
-    for (const f of [
-      'README.md',
-      'package.json',
-      'package-lock.json',
-      'packages/core/package.json',
-      '.npmrc',
-      '.githooks/pre-commit',
-      '.gitignore',
-      '.gitattributes',
-      'python/graph_spec/pyproject.toml',
-      'python/graph_spec/uv.lock',
-      'python/graph_spec/.python-version',
-      'scripts/public-readiness.mjs',
-      'scripts/fresh-clone.mjs',
-    ])
-      assert.ok(isSetupInput(f), f);
-    for (const f of ['packages/core/src/zoom.ts', 'test/zoom.test.js', 'CONTRIBUTING.md', 'docs/README.md.txt'])
-      assert.equal(isSetupInput(f), false, f);
-  });
-
-  test('the setup inputs changed since a base are read from where the branch left it, not from its tip', () => {
-    const { dir, commit } = repository();
-    const g = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim();
-    const base = g('rev-parse', 'HEAD');
-    commit('zoom.ts', 'export {};\n');
-    assert.deepEqual(setupInputsChangedSince(dir, base), []);
-    commit('package.json', '{}\n');
-    assert.deepEqual(setupInputsChangedSince(dir, base), ['package.json']);
-    // the base moving on after the branch point is not the branch's change
-    g('checkout', '-q', '-b', 'later', base);
-    commit('README.md', '# Thing, later\n');
-    const later = g('rev-parse', 'HEAD');
-    g('checkout', '-q', 'main');
-    assert.deepEqual(setupInputsChangedSince(dir, later), ['package.json']);
-  });
-
   test("this repository's README sets up with npm and uv alone, and its documents name no machine", () => {
     const steps = readmeSteps(read('README.md'));
     assert.ok(steps.length >= 2, 'the JavaScript steps and the Python steps');
@@ -414,15 +377,15 @@ describe('the settings on GitHub', () => {
       // a job split by a matrix reports a check for each part, so it is required through the job that needs it
       else assert.ok(!REQUIRED_CHECKS.includes(job), job);
     }
-    assert.match(ci.test.join('\n'), /needs: suite\n\s+if: always\(\)/);
-    assert.ok(runCommands(ci.test.join('\n')).includes('test "$RESULT" = success'));
+    assert.match(ci.test.join('\n'), /needs: \[plan, suite\]\n\s+if: always\(\)/);
+    assert.ok(runCommands(ci.test.join('\n')).some((r) => /^test "\$RESULT" = success$/m.test(r)));
     assert.match(ci.test.join('\n'), /RESULT: \$\{\{ needs\.suite\.result \}\}/);
     // the suite in six parts, each printing only its failures and keeping the full report as a file
     const run = runCommands(ci.suite.join('\n')).find((r) => r.startsWith('npm test'));
-    assert.match(run, /--test-shard="\$SHARD\/6" --test-reporter=\.\/scripts\/quiet-reporter\.mjs /);
+    assert.match(run, /--test-shard="\$SHARD\/\$SHARDS" --test-reporter=\.\/scripts\/quiet-reporter\.mjs /);
     assert.match(
       run,
-      /--test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report\.txt$/,
+      /--test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report\.txt \$TESTS$/,
     );
     assert.match(ci.suite.join('\n'), /shard: \[1, 2, 3, 4, 5, 6\]/);
     assert.ok(REQUIRED_CHECKS.includes('public-readiness'));

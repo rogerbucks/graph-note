@@ -646,6 +646,13 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/repository-scans.test.js` — the source scans behind the one network exception. The AI send module is found
   however it is imported, and Obsidian's `request(` is taken for a request. Every timer and event is found.
 
+### What CI runs for a change
+
+- `test/fresh-clone.test.js` — when a pull request runs the fresh clone. It runs only for a change that can alter what
+  the README's steps do. That is the steps, the npm scripts, the hook or the git settings (spec §13, Delivery).
+- `test/ci-plan.test.js` — what CI runs for a change. A draft runs only the tests its change reaches. Anything else runs
+  everything, and a failed plan runs everything too (spec §13, touched_tests_only).
+
 ### The quality ratchet and the test runner
 
 - `test/quality-metrics.test.js` — the quality metrics are held to a committed baseline, and a worse one fails without a recorded reason.
