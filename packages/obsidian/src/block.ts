@@ -29,6 +29,7 @@ import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@thoughtknot/co
 import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
+import { waitShown } from '@thoughtknot/core/display/progress';
 import { renderStyleBlock } from './style-block';
 import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
@@ -261,7 +262,16 @@ export async function renderBlock(
   let drawn: Drawn | Refusal | null;
   try {
     // a graph drawn as a table is the plugin's own table, never laid out (§15)
-    drawn = diagram?.table ? tableDrawn(diagram.table) : await laidOut(owner);
+    const laid = diagram?.table
+      ? tableDrawn(diagram.table)
+      : await waitShown(root, word('progress.drawing'), () => laidOut(owner));
+    if (laid === 'stopped') {
+      // a layout the person stopped (§44, progress_shown): its graph is shown as text, and its result is not used
+      root.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'status' }, text: word('progress.drawing-stopped') });
+      renderCode(root, source);
+      return;
+    }
+    drawn = laid;
   } catch (e) {
     console.error('ThoughtKnot could not draw', graph, e);
     root.createDiv({

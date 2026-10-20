@@ -236,6 +236,11 @@
   fill: var(--gn-text-error);
   font-weight: var(--gn-font-weight-semibold);
 }
+/* A look colour's tag (§44, colour_never_alone): the same tag is on each box or link of that colour and in the legend. */
+.thoughtknot-svg .thoughtknot-look-tag {
+  font-size: 10px;
+  fill: var(--gn-text-normal);
+}
 /* A view (spec §7):
    - what is outside it is faded, and said so to screen readers;
    - each look's hue is on the outline only, in the locked line blend;
@@ -1174,6 +1179,19 @@ pre.thoughtknot-code {
   border-inline-start: 3px solid var(--gn-text-error);
   background: var(--gn-bg-alt);
   margin-bottom: var(--gn-space-2);
+}
+/* A long wait (§44, progress_shown): a bar and how long it has taken, then Stop, on one line under what waits. */
+.thoughtknot-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-2);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-progress progress {
+  inline-size: 8em;
+  accent-color: var(--gn-accent);
 }
 /* A graph over a size or time limit, shown as text: the banner's icon beside its words (spec §9, layout_contained). */
 .thoughtknot-refusal {

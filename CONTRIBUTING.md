@@ -432,7 +432,8 @@ These test behaviour across modules, or the repository itself, so they are named
 ### Colours and direction
 
 - `test/colour-alone.test.js` — no meaning is carried by colour alone (editor spec §44, colour_never_alone). An error
-  is told from a warning by its sign and its line as well as its colour (partial: looks and hidden link labels next).
+  is told from a warning by its sign and its line as well as its colour. Each colour of a view's looks has a numbered
+  tag. It is on its boxes, its links and the legend, on the card and in an export.
 - `test/forced-colours.test.js` — every view in forced colours and with more contrast asked for (editor spec §44,
   forced_colours).
   - Each sheet gives every colour token its system colour (`FORCED_TOKEN_COLOURS`). For more contrast, secondary text
@@ -654,6 +655,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/working-group-workflow.test.js` — the workflow that lets Sara keep up with the working group discussion.
   - It wakes Claude only when a comment names Sara, at most once a day. Claude writes a draft and has no GitHub tools.
   - Only the post job may write, and only to discussions. It checks out nothing and runs no code of the repository.
+  - Only the owner, members and collaborators wake it. A separate job checks the draft from a fresh checkout of main.
+- `test/claude-workflows.test.js` — every workflow that runs Claude (risk TRUST-5). A comment wakes Claude only when
+  its author is the owner, a member or a collaborator. No step after Claude, in Claude's own job, runs repository code.
 - `test/github-project-blocks.test.js` — that mirror's blocked-by links. Each open question's issue blocks the issues
   of the requirements it blocks, made once. A link the requirements dropped is removed, and a person's is kept. A
   refusal by GitHub is a warning, with the issues and project still mirrored.

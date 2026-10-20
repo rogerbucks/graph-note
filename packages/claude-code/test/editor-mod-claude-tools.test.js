@@ -87,7 +87,7 @@ describe('Claude’s own tools are refused on the note open in the editor (cc_cl
     const register = readFileSync(new URL('../mod/hooks/register.tsx', import.meta.url), 'utf8');
     assert.match(register, /guardOpenNote\(/);
     assert.match(register, /launcher\?\.note/);
-    const hook = /for \(const tool of GUARDED_TOOLS\)[\s\S]*?\.catch\(/.exec(register)?.[0] ?? '';
+    const hook = /on\('tool\.call', async[\s\S]*?\.catch\(/.exec(register)?.[0] ?? '';
     assert.match(hook, /guardOpenNote/, 'the open note is judged in the same hook as the data folder');
     assert.match(hook, /\{ deny: /);
   });

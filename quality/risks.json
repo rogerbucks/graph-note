@@ -3404,7 +3404,7 @@
       "impact": "high",
       "decision": "fix-now",
       "fix": "Guard writes to the matrix note named in the settings, as the data folder is guarded. Refuse a write by Claude that changes or removes a note's classification line, and send it to a proposal card instead.",
-      "check": "packages/claude-code/test/data-guard.test.js: a Write, Edit or Bash call that changes the matrix note or a classification line is refused.",
+      "check": "packages/claude-code/test/gate-guard.test.js: a Write, Edit, MultiEdit, other file tool or Bash call that changes the matrix note or a classification line is refused.",
       "paths": [
         "packages/claude-code/src/data-guard.ts",
         "packages/claude-code/src/editor-matrix.ts",
@@ -3416,7 +3416,11 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open"
+      "status": "done",
+      "prevented_by": [
+        "packages/claude-code/test/gate-guard.test.js"
+      ],
+      "done_in": "#836"
     },
     {
       "id": "TRUST-2",
@@ -3433,7 +3437,7 @@
       "impact": "high",
       "decision": "fix-now",
       "fix": "Hook MultiEdit too. Judge any tool whose input holds a file_path, path or notebook_path field, not only the named ones.",
-      "check": "packages/claude-code/test/data-guard.test.js: MultiEdit and an unknown tool with a file_path into the data folder are refused, and the hooked tools match the guard's list.",
+      "check": "packages/claude-code/test/data-guard.test.js: MultiEdit and an unknown tool with a file_path, path or notebook_path are judged, and the mod hooks every tool with no list.",
       "paths": [
         "packages/claude-code/src/data-guard.ts",
         "packages/claude-code/mod/hooks/register.tsx"
@@ -3444,7 +3448,11 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open"
+      "status": "done",
+      "prevented_by": [
+        "packages/claude-code/test/data-guard.test.js"
+      ],
+      "done_in": "#836"
     },
     {
       "id": "TRUST-3",
@@ -3517,7 +3525,7 @@
       "impact": "high",
       "decision": "fix-now",
       "fix": "Wake it only for comments by the owner or members. Run the checker from a clean checkout of main in a later job that Claude's job cannot write, and drop Write from its tools.",
-      "check": "test/workflows.test.js: working-group.yml filters by author association and runs its checker in a separate job from a fresh checkout.",
+      "check": "test/working-group-workflow.test.js and test/claude-workflows.test.js: every Claude workflow woken by a comment filters by author association, and no step after Claude in its own job runs repository code.",
       "paths": [
         ".github/workflows/working-group.yml",
         "scripts/working-group.mjs"
@@ -3528,7 +3536,12 @@
         "date": "2026-10-20",
         "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
       },
-      "status": "open"
+      "status": "done",
+      "prevented_by": [
+        "test/working-group-workflow.test.js",
+        "test/claude-workflows.test.js"
+      ],
+      "done_in": "#836"
     },
     {
       "id": "TRUST-6",

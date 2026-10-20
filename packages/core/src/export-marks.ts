@@ -6,15 +6,19 @@
 // the drawing's things and links were given.
 import type { Palette } from './palette.ts';
 import type { ThingLook } from './style-graph.ts';
-import { hueColour } from './theme.ts';
+import { fixed, hueColour } from './theme.ts';
 
 /** How faded a thing outside the view is drawn: the pane's own opacity (styles.css), so an export matches what was seen. */
 export const FADED_OPACITY = 0.35;
 
-/** What to mark: the things and links to fade (the links by edge number), and the looks of things (by key) and links. */
+/**
+ * What to mark: the things and links to fade (the links by edge number), and the looks of things (by key) and links.
+ * `tags` gives each look colour's tag (look-tags.ts), drawn on each box or link the colour is on.
+ */
 export interface Marks {
   faded: { things: string[]; links: number[] };
   looks: { things: Map<string, ThingLook>; links: Map<number, ThingLook> };
+  tags?: Map<string, string>;
 }
 
 const DASHES = { dashed: '6 4', dotted: '2 3' } as const;
@@ -52,11 +56,48 @@ function declarations(look: ThingLook, p: Palette, part: 'shape' | 'arrow' | 'te
   return out;
 }
 
-/** The inside of a group with its look drawn. */
-function looked(body: string, look: ThingLook, p: Palette, edge: boolean): string {
-  return body.replace(/<(path|polygon|ellipse|polyline|text)\b[^>]*>/g, (tag, name: string) =>
-    styled(tag, declarations(look, p, name === 'text' ? 'text' : edge && name === 'polygon' ? 'arrow' : 'shape')),
+const NUMBER = /-?\d+(?:\.\d+)?/g;
+
+/** The first numbers of the attribute `name` in the first tag `of` in `body`: read by position, never by a pattern. */
+function numbersOf(body: string, of: string, name: string): number[] {
+  const at = body.indexOf(`<${of} `);
+  if (at < 0) return [];
+  const tag = body.slice(at, body.indexOf('>', at)),
+    from = tag.indexOf(` ${name}="`);
+  if (from < 0) return [];
+  const value = tag.slice(from + name.length + 3, tag.indexOf('"', from + name.length + 3));
+  return (value.match(NUMBER) ?? []).map(Number);
+}
+
+/**
+ * Where a look's tag goes: inside a box at its top left, or over a link's label, else beside its arrowhead. Null when
+ * the group draws none of these.
+ */
+function tagSpot(body: string, edge: boolean): { x: number; y: number } | null {
+  if (edge) {
+    const [x] = numbersOf(body, 'text', 'x'),
+      [y] = numbersOf(body, 'text', 'y');
+    if (x !== undefined && y !== undefined) return { x, y: y - 12 };
+    const [ax, ay] = numbersOf(body, 'polygon', 'points');
+    return ax === undefined || ay === undefined ? null : { x: ax + 4, y: ay - 4 };
+  }
+  const nums = numbersOf(body, 'path', 'd').length
+    ? numbersOf(body, 'path', 'd')
+    : numbersOf(body, 'polygon', 'points');
+  if (nums.length < 4) return null;
+  const xs = nums.filter((_, i) => i % 2 === 0),
+    ys = nums.filter((_, i) => i % 2 === 1);
+  return { x: Math.min(...xs) + 4, y: Math.min(...ys) + 10 };
+}
+
+/** The inside of a group with its look drawn, and its colour's tag when it has one. */
+function looked(body: string, look: ThingLook, p: Palette, edge: boolean, tag?: string): string {
+  const drawn = body.replace(/<(path|polygon|ellipse|polyline|text)\b[^>]*>/g, (t, name: string) =>
+    styled(t, declarations(look, p, name === 'text' ? 'text' : edge && name === 'polygon' ? 'arrow' : 'shape')),
   );
+  const spot = tag ? tagSpot(body, edge) : null;
+  if (!spot || !tag) return drawn;
+  return `${drawn}<text class="look-tag" x="${fixed(spot.x, 2)}" y="${fixed(spot.y, 2)}" text-anchor="start" font-family="Helvetica,sans-Serif" font-size="10" fill="${p.text}">${tag}</text>\n`;
 }
 
 /**
@@ -85,7 +126,8 @@ export function marked(svg: string, keys: readonly string[], marks: Marks, palet
       look = node ? marks.looks.things.get(key) : marks.looks.links.get(pos);
     const open = svg.slice(at, openEnd + 1),
       body = svg.slice(openEnd + 1, close);
-    out += `${svg.slice(from, at)}${faded ? styled(open, [['opacity', String(FADED_OPACITY)]]) : open}${look ? looked(body, look, palette, !node) : body}`;
+    const tag = look?.hue ? marks.tags?.get(look.hue) : undefined;
+    out += `${svg.slice(from, at)}${faded ? styled(open, [['opacity', String(FADED_OPACITY)]]) : open}${look ? looked(body, look, palette, !node, tag) : body}`;
     from = close;
     at = close;
   }

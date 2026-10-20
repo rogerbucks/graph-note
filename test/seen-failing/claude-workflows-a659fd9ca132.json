@@ -1,0 +1,6 @@
+{
+  "file": "test/claude-workflows.test.js",
+  "test": "every workflow that runs Claude > there are such workflows, so the rules below are checked on something",
+  "seen_failing_first": false,
+  "evidence": "A guard that the rules below have something to check: the workflows it counts were already there."
+}
