@@ -1,9 +1,9 @@
 /* ThoughtKnot — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
 
 /* The design tokens (editor spec §44, ui_theme_tokens): Obsidian's theme mapped to the --gn-* tokens every rule below
-   reads, by the core's one table (packages/core/src/theme-tokens.ts, OBSIDIAN_TOKEN_MAP). They are worked out on each
-   of the plugin's own elements, every one with a class of ours. So each reads Obsidian's variables where it is, as its
-   rules did before. A theme that sets them anew inside a sidebar or a modal is followed there. No element of Obsidian's
+   reads, by the core's one table (packages/core/src/theme-tokens.ts). Obsidian has no variable for some, such as how
+   long a dash takes to run: those keep the core's own value. They are worked out on each of the plugin's own elements,
+   every one with a class of ours. So each reads Obsidian's variables where it is, as its rules did before. A theme that sets them anew inside a sidebar or a modal is followed there. No element of Obsidian's
    own is touched. The browser page reads the same variables of its own theme (theme-css.ts). */
 .thoughtknot,
 [class^='thoughtknot-'],
@@ -67,6 +67,12 @@
   --gn-radius-m: var(--radius-m);
   --gn-radius-l: var(--radius-l);
   --gn-cursor-link: var(--cursor-link);
+  --gn-motion-dash: 1s;
+  --gn-motion-dot: 2s;
+  --gn-motion-step: 1s;
+  --gn-motion-pulse: 1.2s;
+  --gn-ease-even: linear;
+  --gn-ease-soft: var(--anim-motion-smooth, ease-in-out);
 }
 
 /* Forced colours and more contrast (editor spec §44, forced_colours). The system may force its own colours, such as a
@@ -810,7 +816,7 @@ details.thoughtknot-style > summary {
    the dashes, the icons, the outline and the words stay. */
 .thoughtknot-svg .thoughtknot-flow-dashes > path {
   stroke-dasharray: 6 4;
-  animation: thoughtknot-flow-dashes 1s linear infinite;
+  animation: thoughtknot-flow-dashes var(--gn-motion-dash) var(--gn-ease-even) infinite;
 }
 .thoughtknot-svg .thoughtknot-flow-back.thoughtknot-flow-dashes > path {
   animation-direction: reverse;
@@ -826,20 +832,20 @@ details.thoughtknot-style > summary {
   pointer-events: none;
 }
 .thoughtknot-svg path.thoughtknot-flow-runner {
-  animation: thoughtknot-flow-dot 2s linear infinite;
+  animation: thoughtknot-flow-dot var(--gn-motion-dot) var(--gn-ease-even) infinite;
 }
 .thoughtknot-svg .thoughtknot-flow-back > path.thoughtknot-flow-runner {
   animation-direction: reverse;
 }
 .thoughtknot-svg path.thoughtknot-path-runner {
   stroke: var(--gn-accent);
-  animation: thoughtknot-flow-dot var(--thoughtknot-run, 1s) ease-in-out 1 forwards;
+  animation: thoughtknot-flow-dot var(--thoughtknot-run, var(--gn-motion-step)) var(--gn-ease-soft) 1 forwards;
 }
 .thoughtknot-svg path.thoughtknot-path-runner-back {
   animation-direction: reverse;
 }
 .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
-  animation: thoughtknot-step-pulse 1.2s ease-in-out infinite alternate;
+  animation: thoughtknot-step-pulse var(--gn-motion-pulse) var(--gn-ease-soft) infinite alternate;
 }
 @keyframes thoughtknot-flow-dashes {
   to {
