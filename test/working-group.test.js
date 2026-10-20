@@ -92,7 +92,9 @@ describe('when Sara is woken', () => {
 
 describe('a reply before it is posted', () => {
   const d = discussion(
-    comment('C1', 'rogerbucks', '2026-10-20T08:00:00Z', 'Sara?', [comment('R1', 'rogerbucks', '2026-10-20T09:00:00Z', 'x')]),
+    comment('C1', 'rogerbucks', '2026-10-20T08:00:00Z', 'Sara?', [
+      comment('R1', 'rogerbucks', '2026-10-20T09:00:00Z', 'x'),
+    ]),
   );
 
   test('passes when it answers under a top-level comment and is signed by Sara', () => {

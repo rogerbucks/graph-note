@@ -1,6 +1,6 @@
 // The workflow that lets Sara (Claude) keep up with the pinned "Working group" discussion (docs/agents/ROLES.md, "How
-// Sara keeps up"). Checked here: what wakes it, that Claude runs only when Sara is named, and that Claude writes a draft
-// while a separate job, running no repository code, posts it. Read as text, by indentation, as policy.test.js reads
+// Sara keeps up"). Checked here: what wakes it, and that Claude runs only when Sara is named. Claude writes a draft;
+// a separate job posts it, running no repository code. Read as text, by indentation, as policy.test.js reads
 // the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
