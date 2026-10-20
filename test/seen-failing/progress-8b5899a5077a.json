@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/progress.test.js",
+  "test": "a wait is shown > a wait that ends within a second shows nothing",
+  "seen_failing_first": false,
+  "evidence": "A guard over what already held: before this change no wait showed anything, so a short one showed nothing too. It keeps short waits quiet now that long ones are shown."
+}

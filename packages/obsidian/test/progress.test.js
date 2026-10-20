@@ -46,7 +46,11 @@ describe('a wait is shown', () => {
       // the export waits until it is let go, as a slow one would
       const real = env.plugin.exportGraph.bind(env.plugin);
       let release;
-      env.plugin.exportGraph = (ask) => new Promise((done) => (release = () => done(real(ask))));
+      let late;
+      env.plugin.exportGraph = (ask) =>
+        new Promise((done) => {
+          release = () => done((late = real(ask)));
+        });
       mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
       labelled(form, 'Export it').click();
       await settle();
@@ -67,7 +71,7 @@ describe('a wait is shown', () => {
       assert.match(form.textContent, /stopped/i);
       mock.timers.reset();
       release();
-      await new Promise((r) => setTimeout(r, 300));
+      assert.match((await late).stopped ?? '', /stopped/i, 'it comes back stopped');
       assert.deepEqual(written(env, '.svg'), [], 'and nothing is written when the export comes back late');
     } finally {
       env.uninstall();
