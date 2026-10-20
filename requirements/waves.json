@@ -443,9 +443,18 @@
       }
     },
     {
-      "title": "Roger’s held changes, after all waves",
+      "title": "Wave 29 · Held: massive graphs on your own machine",
       "start": "2027-01-05",
-      "end": "2027-01-12",
+      "end": "2027-01-08",
+      "estimate": true,
+      "workstreams": [
+        "Z1"
+      ]
+    },
+    {
+      "title": "Roger’s held changes, after all waves",
+      "start": "2027-01-09",
+      "end": "2027-01-16",
       "estimate": true,
       "workstreams": [],
       "earlier_plan": {
