@@ -68,7 +68,7 @@ function variables(t: ThemeColours): string[] {
   ];
 }
 
-/** The scale of sizes, fonts and layers the shared styles use, the same in both schemes. */
+/** The scale of sizes, fonts, layers and easing the shared styles use, the same in both schemes. */
 function scale(): string[] {
   const sizes = [1, 2, 3, 4, 5, 6, 9].flatMap((n) => [`--size-4-${n}:${n * 4}px`]);
   return [
@@ -93,6 +93,7 @@ function scale(): string[] {
     '--layer-tooltip:40',
     '--layer-modal:50',
     '--cursor-link:pointer',
+    '--anim-motion-smooth:ease-in-out',
   ];
 }
 

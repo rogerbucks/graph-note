@@ -469,7 +469,8 @@ These test behaviour across modules, or the repository itself, so they are named
   - Every rule of `styles.css` and the browser page's `page.css` reads a `--gn-*` token (`THEME_TOKENS`) or an
     element's own measure, never a host's variable.
   - Each sheet maps its host's theme to every token in one block. Obsidian's does so by the core's table
-    (`OBSIDIAN_TOKEN_MAP`), and the page's from the theme it is built with.
+    (`obsidianTokenValue`), and the page's from the theme it is built with.
+  - Every animation takes its time and easing from a motion token.
   - No token takes a name the drawing's own colours use.
 - `test/text-scaling.test.js` — text scales to 200 per cent with nothing lost (editor spec §44, text_scaling). Every
   text of the interface is sized by a token or its parent's size, never in pixels or points. The drawing's own marks

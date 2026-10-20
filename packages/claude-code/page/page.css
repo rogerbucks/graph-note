@@ -63,6 +63,12 @@
   --gn-radius-m: var(--radius-m);
   --gn-radius-l: var(--radius-l);
   --gn-cursor-link: var(--cursor-link);
+  --gn-motion-dash: 1s;
+  --gn-motion-dot: 2s;
+  --gn-motion-step: 1s;
+  --gn-motion-pulse: 1.2s;
+  --gn-ease-even: linear;
+  --gn-ease-soft: var(--anim-motion-smooth);
 }
 
 /* Forced colours and more contrast (editor spec §44, forced_colours), for the page's own elements. They use the same

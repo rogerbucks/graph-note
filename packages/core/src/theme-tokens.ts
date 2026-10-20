@@ -1,5 +1,5 @@
 // The interface's design tokens (editor spec §44, ui_theme_tokens and plugin_theme_tokens). One set of named tokens,
-// `--gn-*`, covers colour, type, spacing, corners and depth. Every rule of the style sheets reads them and nothing else
+// `--gn-*`, covers colour, type, spacing, corners, depth and motion. Every rule of the style sheets reads them and nothing else
 // of a host's. Each host maps its own theme to the tokens in one place. Obsidian's sheet (styles.css) does it by the
 // table here, written out for each of the plugin's own elements. So the interface takes the theme's colours and sizes
 // where it is shown, as Obsidian's own does. The browser page's sheet does it from the theme it is built with. A
@@ -10,7 +10,7 @@
 import { THEME_COLOURS } from './palette.ts';
 
 /** What kind of thing a token holds. */
-export type ThemeTokenKind = 'colour' | 'type' | 'spacing' | 'corners' | 'depth' | 'pointer';
+export type ThemeTokenKind = 'colour' | 'type' | 'spacing' | 'corners' | 'depth' | 'pointer' | 'motion';
 
 /** What one design token is for. */
 export interface ThemeTokenUse {
@@ -20,8 +20,11 @@ export interface ThemeTokenUse {
   says: string;
 }
 
-/** The one table: each token, the variable of Obsidian's theme it is mapped from, its kind and what it is for. */
-const TABLE: [token: string, obsidian: string, kind: ThemeTokenKind, says: string][] = [
+/**
+ * The one table: each token, the variable of Obsidian's theme it is mapped from, its kind and what it is for. Some
+ * also have a value of their own. It is used when the theme gives none. A token with no variable has only that value.
+ */
+const TABLE: [token: string, obsidian: string, kind: ThemeTokenKind, says: string, own?: string][] = [
   ['--gn-bg', '--background-primary', 'colour', 'the background of a card, a pane or the page'],
   ['--gn-bg-alt', '--background-secondary', 'colour', 'the background of a bar, a strip, a sheet or a control'],
   ['--gn-bg-hover', '--background-modifier-hover', 'colour', 'the background of a row the pointer is over'],
@@ -79,6 +82,18 @@ const TABLE: [token: string, obsidian: string, kind: ThemeTokenKind, says: strin
   ['--gn-radius-m', '--radius-m', 'corners', 'the rounding of a menu’s or a notice’s corners'],
   ['--gn-radius-l', '--radius-l', 'corners', 'the rounding of a card’s corners'],
   ['--gn-cursor-link', '--cursor-link', 'pointer', 'the pointer over something that opens a note'],
+  ['--gn-motion-dash', '', 'motion', 'how long a moving link’s dashes take to run their length', '1s'],
+  ['--gn-motion-dot', '', 'motion', 'how long a dot takes to travel a moving link', '2s'],
+  ['--gn-motion-step', '', 'motion', 'how long a dot takes to run from one step of a path to the next', '1s'],
+  ['--gn-motion-pulse', '', 'motion', 'how long the step now on takes to swell, then again to shrink', '1.2s'],
+  ['--gn-ease-even', '', 'motion', 'the easing of a movement that loops at an even speed', 'linear'],
+  [
+    '--gn-ease-soft',
+    '--anim-motion-smooth',
+    'motion',
+    'the easing of a movement that starts and stops softly',
+    'ease-in-out',
+  ],
 ];
 
 /** Every design token, by name, with what it is for: what a plug-in inherits and what the style sheets read. */
@@ -86,10 +101,23 @@ export const THEME_TOKENS: Readonly<Record<string, ThemeTokenUse>> = Object.free
   Object.fromEntries(TABLE.map(([token, , kind, says]) => [token, Object.freeze({ kind, says })])),
 );
 
-/** Obsidian's mapping: each token and the variable of Obsidian's theme it reads, written out at the top of styles.css. */
+/** Obsidian's mapping: each token and the variable of Obsidian's theme it reads. Obsidian has none for some. */
 export const OBSIDIAN_TOKEN_MAP: Readonly<Record<string, string>> = Object.freeze(
-  Object.fromEntries(TABLE.map(([token, obsidian]) => [token, obsidian])),
+  Object.fromEntries(TABLE.filter(([, obsidian]) => obsidian).map(([token, obsidian]) => [token, obsidian])),
 );
+
+/** The tokens with a value of their own, and that value: what each is when the theme gives none. */
+export const TOKEN_DEFAULTS: Readonly<Record<string, string>> = Object.freeze(
+  Object.fromEntries(TABLE.filter(([, , , , own]) => own).map(([token, , , , own]) => [token, own ?? ''])),
+);
+
+/** What styles.css gives `token` at its top: Obsidian's variable, then the token's own value if it has one. */
+export function obsidianTokenValue(token: string): string {
+  const variable = OBSIDIAN_TOKEN_MAP[token];
+  const own = TOKEN_DEFAULTS[token];
+  if (!variable) return own ?? '';
+  return own ? `var(${variable}, ${own})` : `var(${variable})`;
+}
 
 /** The colour tokens that forced colours give other than the text colour: backgrounds, the accent and links. */
 const FORCED_OTHER: Readonly<Record<string, string>> = {

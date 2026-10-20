@@ -175,10 +175,11 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - The system entry carries both in the drawing's own style sheet, `prefers-color-scheme` choosing. It is for a host
     that cannot say which it shows.
 - `theme-tokens.ts` — the interface's design tokens (editor spec §44, ui_theme_tokens, plugin_theme_tokens).
-  - `THEME_TOKENS` lists each `--gn-*` token of colour, type, spacing, corners and depth with what it is for. These are
-    the only variables the style sheets' rules read.
-  - `OBSIDIAN_TOKEN_MAP` is the one table from Obsidian's theme. It is written out at the top of styles.css for each
-    of the plugin's own elements. The browser page maps its own theme in page.css.
+  - `THEME_TOKENS` lists each `--gn-*` token of colour, type, spacing, corners, depth and motion with what it is for.
+    These are the only variables the style sheets' rules read.
+  - `OBSIDIAN_TOKEN_MAP` is the one table from Obsidian's theme. `obsidianTokenValue` writes each token out at the top of
+    styles.css for each of the plugin's own elements. The browser page maps its own theme in page.css.
+  - `TOKEN_DEFAULTS` gives a token its own value where the theme has none, such as how long a moving dash takes.
   - A plug-in's own colour (`ThemeToken`) is named `--gn-plugin-<its id>-<word>`. It gives `#rrggbb` or `#rgb` for
     light and dark. It must meet `LOCKED_CONTRAST` on the core background it sits on (`TOKEN_BACKGROUNDS`).
   - `themeTokenCss` writes the tokens added as CSS for a host to apply.
