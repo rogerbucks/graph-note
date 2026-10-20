@@ -214,6 +214,8 @@ These test behaviour across modules, or the repository itself, so they are named
   labels or values is read from its first strong letter. It is set apart from the words around it
   (`unicode-bidi: plaintext`). Each is an element the layer makes (editor spec §42, bidi_labels; partial until the
   drawing and the exports join it).
+- `packages/core/test/locale-bytes.test.js` — the editor writes the same bytes in every setting. No language, locale
+  or direction changes an edit, an export's data or the layout source (editor spec §42, locale_never_changes_bytes).
 - `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
 - `packages/core/test/view-parity.test.js` — every view of the shared table (`python/graph_spec/tests/view_cases.json`)
   is found in its note, read, and returns the things the table gives. Every query outside the view profile gets the
