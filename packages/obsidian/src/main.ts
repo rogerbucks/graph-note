@@ -31,7 +31,7 @@ import type {
   Settings,
   StyleGraph,
 } from '@thoughtknot/core';
-import { AI_COMMAND, CLEAR_SENDS_COMMAND, SENDS_KEPT, askAi, clearAiSends } from './ai/ai';
+import { SENDS_KEPT, addAskCommands, sqliteQuery } from './commands';
 import { exportGraph, type ExportAsk, type ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { installObsidianHost } from './display-host';
@@ -97,9 +97,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followLinks(this, f, old)));
     this.registerHoverLinkSource(HOVER_SOURCE, { display: 'ThoughtKnot', defaultMod: true });
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
-    // nothing is sent unless the user opens this, chooses, sees exactly what goes and presses Send (§19)
-    this.addCommand({ ...AI_COMMAND, callback: () => askAi(this) });
-    this.addCommand({ ...CLEAR_SENDS_COMMAND, callback: () => clearAiSends(this) });
+    addAskCommands(this); // nothing is sent to an AI or read from a database until the user presses Send or Import
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
@@ -262,6 +260,8 @@ export default class ThoughtKnotPlugin extends Plugin {
     return engineOnThePage();
   }
 
+  /** Runs an import's queries on the bytes of a SQLite file in the vault: a test may stand in its own. */
+  queryDatabase = sqliteQuery;
   /** The Graphviz engine on the page's own thread, started once, the first time a graph is laid out there. */
   graphviz(): Promise<Engine> {
     this.engine ??= this.loadEngine();

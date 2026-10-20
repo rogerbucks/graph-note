@@ -354,6 +354,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/obsidian/test/remote-images.test.js` — an image from outside the vault, in a thing's details or a note
   embedded there, is a link with a Load image button. Only pressing it loads that image (editor spec §18,
   remote_images_asked).
+- `packages/obsidian/test/database.test.js` — Import offers the vault's SQLite files, with nothing to set up. It reads
+  one only when pressed, on desktop and mobile, with no network. It writes the rows into the note as text that keeps no
+  live link (editor spec §20, db_import_on_request; §21, settings_db_connections).
 - `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.
 - `packages/obsidian/test/views-many.test.js` — several views of one graph, in one note or in several. Each is drawn
   from the one data set where it is written, and none copies it. A view of a graph written in another note says which

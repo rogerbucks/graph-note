@@ -949,8 +949,7 @@
     "requirements": [
       "storage_user_choice",
       "storage_defaults",
-      "storage_history_layer",
-      "storage_postgres_backend"
+      "storage_history_layer"
     ]
   }
 }
