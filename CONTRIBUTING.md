@@ -505,6 +505,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/graph-spec-proved.test.js` — every graph-spec rule a test here cites by its id counts as proved (spec §51,
   spec_rules_proved; GS1). A 'general' proof or a case kept outside the repository counts for nothing.
   `quality/graph-spec-unproved.json` lists the rest, and it only shrinks: `node scripts/graph-spec-proved.mjs --update`.
+  A rule also counts as proved when its proof names a test in a conformance case kept here.
+- `python/graph_spec/tests/test_conformance_suite.py` — the graph spec's conformance suite passes on the code here
+  (spec §51, spec_conformance_in_repo; GS1). The suite is in `python/graph_spec/conformance/`.
 
 ### The repository, its community files and device checks
 
