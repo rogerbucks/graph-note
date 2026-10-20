@@ -5,7 +5,9 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import {
+  ALERT_KEY,
   CHOICES,
+  RULE_FROM,
   REGISTER,
   REPORT,
   STALE_DAYS,
@@ -174,6 +176,50 @@ describe('what the panel looks at again', () => {
     const ux = risk({ id: 'UX-1', role: 'UX lead', paths: ['styles.css'], status: 'done', done_in: '#2' });
     const roles = rolesTouched(register(risk(), ux), 'tag', () => ['styles.css']);
     assert.deepEqual([...roles.keys()], ['UX lead']);
+  });
+});
+
+describe('security risks: the alerts they plan, and the rule that keeps them fixed', () => {
+  const none = { has: () => false };
+  const all = { has: () => true };
+
+  test('a risk may name the security alerts it plans, each by its key, and a wrong key is refused', () => {
+    for (const key of [
+      'code-scanning/12',
+      'dependabot/3',
+      'secret-scanning/1',
+      'npm/GHSA-abcd-1234-wxyz',
+      'osv/PYSEC-2026-1',
+    ])
+      assert.match(key, ALERT_KEY, key);
+    assert.deepEqual(registerProblems(register(risk({ alerts: ['code-scanning/12'] })), WAVES, none), []);
+    assert.match(registerProblems(register(risk({ alerts: ['codeql 12'] })), WAVES, none).join('\n'), /alerts must be/);
+    assert.match(
+      registerProblems(register(risk({ alerts: 'code-scanning/12' })), WAVES, none).join('\n'),
+      /alerts must be/,
+    );
+  });
+
+  test('a security risk fixed from the day the rule began names the rule that stops it coming back', () => {
+    const fixed = (over) => risk({ status: 'done', done_in: '#700', raised: RULE_FROM, ...over });
+    assert.match(
+      registerProblems(register(fixed()), WAVES, all).join('\n'),
+      /names the rule that stops it coming back/,
+    );
+    assert.deepEqual(registerProblems(register(fixed({ prevented_by: ['test/x.test.js'] })), WAVES, all), []);
+    // one fixed before the rule began, or outside security, is left as it was
+    assert.deepEqual(registerProblems(register(fixed({ raised: '2026-10-19' })), WAVES, all), []);
+    assert.deepEqual(registerProblems(register(fixed({ area: 'ux' })), WAVES, all), []);
+  });
+
+  test('the rule a risk names must be a file in the repository, so a deleted rule stops the release', () => {
+    const fixed = risk({ status: 'done', done_in: '#700', raised: RULE_FROM, prevented_by: ['test/gone.test.js'] });
+    assert.match(registerProblems(register(fixed), WAVES, none).join('\n'), /prevented_by names test\/gone\.test\.js/);
+  });
+
+  test('the page names the rule beside the pull request that fixed it', () => {
+    const fixed = risk({ status: 'done', done_in: '#700', raised: RULE_FROM, prevented_by: ['test/x.test.js'] });
+    assert.match(report(register(fixed)), /\| #700; kept out by `test\/x\.test\.js` \|/);
   });
 });
 

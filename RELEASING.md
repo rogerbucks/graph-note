@@ -58,6 +58,7 @@ Everything a successor would need if Roger could not act. None of the values are
 | --- | --- | --- | --- | --- |
 | `PROJECT_TOKEN` (repository secret) | Lets the project mirror and the build status write the "ThoughtKnot requirements" board. A classic token with the `project` and `public_repo` scopes. | Roger's GitHub account, Settings, Developer settings, Personal access tokens (classic). | 15 Oct 2027. | Make a new token with the same scopes, and set it as the secret. The mirror and the build status warn, and do not fail, while it is missing. |
 | `CLAUDE_CODE_OAUTH_TOKEN` (repository secret) | Lets the Claude review comment on pull requests. | `claude setup-token`, by Roger, on his machine. | Not known. Rotate it if the review starts failing to authenticate. | Run `claude setup-token` again and set the secret. The review passes with a notice while it is missing. |
+| `SECURITY_ALERTS_TOKEN` (repository secret, optional) | Lets the release and the daily Security workflow read Dependabot and secret scanning alerts, which the workflow's own token may not. A fine-grained token for this repository alone, read only: "Dependabot alerts", "Secret scanning alerts" and "Code scanning alerts". | Roger's GitHub account, Settings, Developer settings, Fine-grained tokens. | The date set when it is made; a year at most. | Make a new one with the same access, and set it as the secret. While it is missing, both name the lists as not read, and npm audit and OSV still check the lock files. |
 | The `rogerbucks` GitHub account | Owns the repository, its ruleset, its Pages site and its releases. It is the only admin. | GitHub. | Never. | Recovery codes and a second factor, kept by Roger. |
 | The domains `thoughtknot.app` and `thoughtknot.dev` | The home page on GitHub Pages, and the redirect to it. | Cloudflare, in Roger's account. | Every year on 18 October. | Renew at Cloudflare. Pages reads the domain from the repository's Pages settings. |
 
@@ -96,6 +97,43 @@ again. Then run `node scripts/risk-register.mjs --reviewed ID`, which stamps tod
   All nine roles then read the whole project. Decide its findings, then run `node scripts/risk-register.mjs --full-panel`,
   which records the date, commit and version. Until then the release fails.
 - **Never on a schedule**: a timer would spend a Claude session on days nothing moved.
+
+## Security alerts, every release
+
+**No release goes out with an open security alert** (Roger, 20 Oct 2026). The release, its dry run and the nightly each
+run `node scripts/security-alerts.mjs`, in a job that installs nothing. It reads five lists:
+
+| List | Read with | Stops a stable release | Stops a nightly |
+| --- | --- | --- | --- |
+| Code scanning (CodeQL) | The workflow's own token | Any open alert, or the list not read | High or critical |
+| Dependabot | `SECURITY_ALERTS_TOKEN`, or the workflow's token | Any open alert | High or critical |
+| Secret scanning | `SECURITY_ALERTS_TOKEN` | Any open alert (always critical) | Yes |
+| npm audit, over `package-lock.json` | No token | Any advisory | High or critical |
+| OSV, over `python/graph_spec/uv.lock` | No token | Any advisory | High or critical |
+
+The only way past an alert is to fix it, or to accept it in `quality/risks.json`. An accepted risk names the alert in
+its `alerts` list, with `accepted_by` and `accepted_reason`.
+
+### Each day
+
+The **Security** workflow (`security.yml`) runs at 06:00 UTC. It keeps one issue labelled `security` up to date, and
+closes it when nothing is open. The repository is public, so the issue names each alert by key, severity and link
+alone. The link opens only for the maintainer.
+
+When an alert is not yet planned, its `fix` job asks Claude to fix it. Claude pushes one branch for each alert, named
+`security/...`. It opens no pull request and never touches main. A daily Claude routine opens a draft pull request for
+each branch, so CI runs, and drives it to green. Roger approves it as any other.
+
+### Each fix keeps its kind out for good
+
+A fix to a security risk raised from 20 Oct 2026 carries three things:
+
+1. **A test** that fails on the old code and passes on the fix.
+2. **A rule** that stops the same kind of problem anywhere: a lint rule, a CodeQL query or a check in `scripts/`.
+3. **A risk** in `quality/risks.json`: the alert in `alerts`, and the test and the rule in `prevented_by`.
+
+`node scripts/risk-register.mjs --check` fails a fixed security risk that names no rule, or names a file that is gone.
+So deleting a rule stops the release until a person puts it back or replaces it.
 
 ## Accessibility walk-through, every release
 

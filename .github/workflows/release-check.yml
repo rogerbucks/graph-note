@@ -82,3 +82,25 @@ jobs:
         run: node scripts/changelog.mjs --out release-notes.md
       - name: The release notes tell users what the library changed, and the version rule
         run: node scripts/changelog.mjs --check release-notes.md
+
+  # No open security alert (spec §50, security_release_gate): code scanning, Dependabot and secret scanning, read here
+  # with a token that may see them, and npm audit and OSV over the lock files. An alert stops the release whatever its
+  # severity, unless the risk register accepts it. It installs nothing, and only reads.
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: No security alert is open, unless the risk register accepts it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SECURITY_ALERTS_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
+        run: node scripts/security-alerts.mjs --release

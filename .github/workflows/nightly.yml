@@ -4,8 +4,8 @@ name: Nightly
 # newest work; everyone else stays on the stable releases release.yml makes from a bare version tag. It runs at 16:00 UTC
 # (2 am in Brisbane), and by hand. A night on which main has not moved since the last nightly publishes nothing.
 #
-# Four jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
-# nightly. `build` checks out main, installs and runs main's own code with read access only: the full suite, the content
+# Five jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
+# nightly. `security` stops the night on an open high or critical security alert. `build` checks out main, installs and runs main's own code with read access only: the full suite, the content
 # check and the build, so a nightly is published only when every test passes. It uploads the same assets a release
 # carries, with the nightly version (scripts/nightly-version.mjs) in their manifest. `publish` may write the
 # repository's contents, which a release needs, and so runs no code of the repository at all: no checkout, no install,
@@ -49,8 +49,32 @@ jobs:
             echo "moved=true" >> "$GITHUB_OUTPUT"
           fi
 
-  build:
+  # No open high or critical security alert (spec §50, security_release_gate), read with a token that may see them. A
+  # medium or low one is a warning here, for a stable release stops on every alert. It installs nothing, and only reads.
+  security:
     needs: check
+    if: needs.check.outputs.moved == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: No high or critical security alert is open, unless the risk register accepts it
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SECURITY_ALERTS_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
+        run: node scripts/security-alerts.mjs --nightly
+
+  build:
+    needs: [check, security]
     if: needs.check.outputs.moved == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40

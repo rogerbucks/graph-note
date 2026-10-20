@@ -28,10 +28,17 @@ describe('the nightly workflow', () => {
 
   test('reads only, but for the publish job and the draft check, which may write contents alone', () => {
     assert.deepEqual(permissionValues(block(lines, 'permissions', 0)), ['read']);
-    assert.deepEqual(Object.keys(jobs(text)), ['check', 'build', 'publish', 'drafts']);
+    assert.deepEqual(Object.keys(jobs(text)), ['check', 'security', 'build', 'publish', 'drafts']);
     assert.equal(block(jobs(text).check, 'permissions', 4), null);
     assert.equal(block(jobs(text).build, 'permissions', 4), null);
     assert.deepEqual(given('publish'), ['contents: write']);
+  });
+
+  test('builds only after no high or critical security alert is open, read by a job that installs nothing', () => {
+    const security = jobs(text).security.join('\n');
+    assert.deepEqual(given('security'), ['contents: read', 'security-events: read']);
+    assert.deepEqual(runCommands(security), ['node scripts/security-alerts.mjs --nightly']);
+    assert.match(jobs(text).build.join('\n'), /needs: \[check, security\]/);
   });
 
   test('builds only when main has moved since the last nightly, unless run by hand', () => {

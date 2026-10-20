@@ -239,7 +239,7 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only eleven jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, the wiki, its review issue, the risk panel’s issue and the home page', () => {
+  test('only thirteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
@@ -264,15 +264,15 @@ describe('GitHub Actions', () => {
         const mirror = only('/project-mirror.yml', 'mirror', 'contents: read,issues: write');
         // one leaves Claude's review on a pull request (test/claude-review-workflow.test.js)
         const review = only('/claude-review.yml', 'review', 'contents: read,pull-requests: write');
-        // the wiki's pages, its review issue, the nightly pre-release and the home page. None runs code of the
-        // repository (test/wiki-workflow.test.js, nightly-workflow.test.js and site-workflow.test.js)
+        // the wiki, its review issue, the nightly and the home page run no repository code (their own tests say so)
         const wiki = only('/wiki.yml', 'publish', 'contents: write') || only('/wiki.yml', 'report', 'issues: write');
         const nightly =
           only('/nightly.yml', 'publish', 'contents: write') || only('/nightly.yml', 'drafts', 'contents: write');
-        // one keeps the risk panel's issue up to date (test/risk-panel-workflow.test.js)
+        // the risk panel's issue, the security issue and Claude's security branches: security-workflow.test.js
         const panel = only('/risk-panel.yml', 'report', 'issues: write');
         const pages = only('/pages.yml', 'publish', 'id-token: write,pages: write');
-        assert.ok(release || lock || comment || mirror || review || wiki || nightly || panel || pages, `${f} ${name}`);
+        const security = f.endsWith('/security.yml') && ['report', 'fix'].includes(name);
+        assert.ok(release || lock || comment || mirror || review || wiki || nightly || panel || pages || security, f);
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }

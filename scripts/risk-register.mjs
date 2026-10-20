@@ -15,7 +15,7 @@
 //                                                      today, for the version in manifest.json.
 //   node scripts/risk-register.mjs --write-report      write RISKS.md from the register; --report prints it.
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -52,6 +52,13 @@ export const FIELDS = [
   'reviewed',
   'status',
 ];
+/** The keys of the security alerts a risk may name: as scripts/security-alerts.mjs writes them. */
+export const ALERT_KEY = /^(?:(?:code-scanning|dependabot|secret-scanning)\/\d+|(?:npm|osv)\/[\w.-]+)$/;
+/**
+ * From this day, a security risk marked done names the rule that stops it coming back, in prevented_by. That is a
+ * test, a lint rule, a CodeQL query or a CI script, by its file. Risks closed before this day are left as they were.
+ */
+export const RULE_FROM = '2026-10-20';
 /** How long an open risk may stay unlooked at after its files moved, before it stops a release. */
 export const STALE_DAYS = 30;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -80,7 +87,11 @@ export function globToRegExp(glob) {
 export const underPaths = (file, paths) => paths.some((p) => globToRegExp(p).test(file));
 
 /** What is wrong with the register's shape, if anything: each line names the risk and the field. */
-export function registerProblems(register, waves = readJSON(WAVES)) {
+export function registerProblems(
+  register,
+  waves = readJSON(WAVES),
+  { has = (rel) => existsSync(join(ROOT, rel)) } = {},
+) {
   const found = [];
   const risks = register?.risks;
   if (!Array.isArray(risks)) return [`${REGISTER}: "risks" must be an array`];
@@ -114,6 +125,13 @@ export function registerProblems(register, waves = readJSON(WAVES)) {
       found.push(`${at}: status accepted needs decision accept`);
     if (r?.status === 'done' && !r?.done_in) found.push(`${at}: a done risk names the pull request (done_in)`);
     if (r?.status === 'open' && r?.decision === 'accept') found.push(`${at}: an accepted decision closes the risk`);
+    if ('alerts' in (r ?? {}) && (!Array.isArray(r.alerts) || r.alerts.some((k) => !ALERT_KEY.test(k))))
+      found.push(`${at}: alerts must be a list of keys like code-scanning/12, dependabot/3 or npm/GHSA-xxxx-xxxx-xxxx`);
+    const ruled = r?.area === 'security' && r?.status === 'done' && (r?.raised ?? '') >= RULE_FROM;
+    if (ruled && (!Array.isArray(r?.prevented_by) || !r.prevented_by.length))
+      found.push(`${at}: a fixed security risk names the rule that stops it coming back (prevented_by)`);
+    for (const rule of Array.isArray(r?.prevented_by) ? r.prevented_by : [])
+      if (typeof rule !== 'string' || !has(rule)) found.push(`${at}: prevented_by names ${rule}, which is not there`);
   }
   return found;
 }
@@ -253,7 +271,7 @@ export function report(register) {
     '| --- | --- | --- | --- |',
     ...closed.map(
       (r) =>
-        `| ${r.id} | ${cell(r.title)} | ${r.status} | ${cell(r.done_in ?? `${r.accepted_by}: ${r.accepted_reason}`)} |`,
+        `| ${r.id} | ${cell(r.title)} | ${r.status} | ${cell(r.done_in ?? `${r.accepted_by}: ${r.accepted_reason}`)}${r.prevented_by?.length ? `; kept out by ${r.prevented_by.map((f) => `\`${f}\``).join(', ')}` : ''} |`,
     ),
     '',
   ];
