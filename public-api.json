@@ -740,15 +740,17 @@
           "value: (scope: ExportScope, layout: ExportLayout, info: ExportInfo) => Promise<ExportImage | Refusal | TooLargeToAnimate | null>"
         ],
         "EXTENSION_POINTS": [
-          "value: readonly ['exports', 'theme', 'storage', 'commands']"
+          "value: readonly ['exports', 'theme', 'storage', 'commands', 'panels']"
         ],
         "ExtensionPoint": [
-          "type = 'exports' | 'theme' | 'storage' | 'commands'"
+          "type = 'exports' | 'theme' | 'storage' | 'commands' | 'panels'"
         ],
         "ExtensionPoints": [
           "interface",
           "commands?: { add: (command: PluginCommand) => void; } | undefined",
           "exports?: { add: (exporter: DataExporter) => void; } | undefined",
+          "host?: Partial<HostAbilities> | undefined",
+          "panels?: { add: (panel: PluginPanel) => void; } | undefined",
           "storage?: { add: (backend: StorageBackend) => void; } | undefined",
           "theme?: { core: readonly string[]; add: (token: ThemeToken) => void; } | undefined"
         ],
@@ -993,9 +995,29 @@
         "hops": [
           "value: (text: string) => [string, string, string][]"
         ],
+        "HOST_ABILITIES": [
+          "value: readonly ['notice', 'settings', 'secrets', 'files']"
+        ],
+        "HostAbilities": [
+          "interface",
+          "files: NoteStorage",
+          "notice: (message: string) => void",
+          "secrets: { get: (name: string) => string | null | Promise<string | null>; }",
+          "settings: { load: () => Promise<unknown>; save: (value: unknown) => Promise<void>; }"
+        ],
+        "HostAbility": [
+          "type = 'notice' | 'settings' | 'secrets' | 'files'"
+        ],
         "HostAi": [
           "interface",
           "name: string"
+        ],
+        "HostOffer": [
+          "interface",
+          "files?: NoteStorage | undefined",
+          "notice?: ((message: string) => void) | undefined",
+          "secrets?: { get: (name: string) => string | null | Promise<string | null>; } | undefined",
+          "settingsFor?: ((pluginId: string) => HostAbilities['settings']) | undefined"
         ],
         "hueColour": [
           "value: (hue: string, part: 'fill' | 'line' | 'label', p?: Palette) => string"
@@ -1482,7 +1504,7 @@
           "forPurpose: boolean",
           "model?: AiModel | undefined",
           "name: string",
-          "source: 'host' | 'settings'"
+          "source: 'settings' | 'host'"
         ],
         "modelChoices": [
           "value: (s: Settings, purpose: string, hostAi?: HostAi | null) => ModelChoice[]"
@@ -1677,6 +1699,10 @@
         ],
         "PALETTES": [
           "value: { obsidian: Palette; light: Palette; dark: Palette; system: Palette; }"
+        ],
+        "PanelRoot": [
+          "interface",
+          "dir: string"
         ],
         "PaneSession": [
           "class",
@@ -1898,6 +1924,12 @@
           "run: () => void",
           "title: string"
         ],
+        "PluginPanel": [
+          "interface",
+          "id: string",
+          "render: (el: PanelRoot) => void",
+          "title: string"
+        ],
         "pluginRegistry": [
           "value: (options?: RegistryOptions) => PluginRegistry"
         ],
@@ -1907,9 +1939,11 @@
           "exporter: (format: string) => DataExporter | undefined",
           "exporters: () => DataExporter[]",
           "openStorage: (name: string) => PluginResult<NoteStorage>",
+          "panels: () => PluginPanel[]",
           "plugins: () => string[]",
           "register: (plugin: ThoughtKnotPlugin) => void",
           "runCommand: (id: string) => PluginResult<undefined>",
+          "showPanel: (id: string, el: PanelRoot) => PluginResult<undefined>",
           "stopped: () => StoppedPlugin[]",
           "storages: () => StorageBackend[]",
           "themeTokens: () => ThemeToken[]",
@@ -2137,6 +2171,7 @@
         ],
         "RegistryOptions": [
           "interface",
+          "host?: HostOffer | undefined",
           "now?: (() => number) | undefined",
           "timeLimit?: number | undefined"
         ],
@@ -2780,10 +2815,11 @@
         ],
         "ThoughtKnotPlugin": [
           "interface",
+          "abilities?: Array<'notice' | 'settings' | 'secrets' | 'files'> | undefined",
           "api: string",
           "id: string",
           "register: (points: ExtensionPoints) => void",
-          "uses: Array<'exports' | 'theme' | 'storage' | 'commands'>",
+          "uses: Array<'exports' | 'theme' | 'storage' | 'commands' | 'panels'>",
           "version: string"
         ],
         "Threshold": [

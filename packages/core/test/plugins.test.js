@@ -26,9 +26,29 @@ const NAMES = {
 };
 
 describe('the plug-in interface', () => {
-  test('it is versioned, and its extension points are the data exports, the theme, storage and commands', () => {
+  test('it is versioned, and its extension points are the data exports, the theme, storage, commands and panels', () => {
     assert.equal(PLUGIN_API, '1');
-    assert.deepEqual(EXTENSION_POINTS, ['exports', 'theme', 'storage', 'commands']);
+    assert.deepEqual(EXTENSION_POINTS, ['exports', 'theme', 'storage', 'commands', 'panels']);
+  });
+
+  test('a plug-in’s panel is offered through the registry and drawn into the element the host gives', () => {
+    const registry = pluginRegistry();
+    registry.register({
+      id: 'acme.tags',
+      version: '1.0.0',
+      api: PLUGIN_API,
+      uses: ['panels'],
+      register: (points) =>
+        points.panels.add({ id: 'acme.tags.list', title: 'Tags', render: (el) => (el.drawn = `tags, ${el.dir}`) }),
+    });
+    assert.deepEqual(
+      registry.panels().map((p) => [p.id, p.title]),
+      [['acme.tags.list', 'Tags']],
+    );
+    const el = { dir: 'rtl' };
+    assert.deepEqual(registry.showPanel('acme.tags.list', el), { ok: true, value: undefined });
+    assert.equal(el.drawn, 'tags, rtl');
+    assert.match(registry.showPanel('acme.none', el).message, /No plug-in adds the panel "acme.none"/);
   });
 
   test('the built-in storage is added through it, and opens an empty store each time', async () => {

@@ -10,6 +10,27 @@
 // suite (plugins-contract.ts).
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { NoteStorage } from './note-storage.ts';
+import { backendProblem, commandProblem, exporterProblem, panelProblem } from './plugin-points.ts';
+import { HOST_ABILITIES } from './plugin-points.ts';
+import type {
+  DataExporter,
+  HostAbilities,
+  HostAbility,
+  PanelRoot,
+  PluginCommand,
+  PluginPanel,
+} from './plugin-points.ts';
+import type { StorageBackend } from './plugin-points.ts';
+export type {
+  DataExporter,
+  HostAbilities,
+  HostAbility,
+  PanelRoot,
+  PluginCommand,
+  PluginPanel,
+} from './plugin-points.ts';
+export type { StorageBackend } from './plugin-points.ts';
+export { HOST_ABILITIES } from './plugin-points.ts';
 import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
 import type { ThemeToken } from './theme-tokens.ts';
 
@@ -17,44 +38,10 @@ import type { ThemeToken } from './theme-tokens.ts';
 export const PLUGIN_API = '1';
 
 /** The extension points a plug-in may use, as its manifest names them. */
-export const EXTENSION_POINTS = ['exports', 'theme', 'storage', 'commands'] as const;
+export const EXTENSION_POINTS = ['exports', 'theme', 'storage', 'commands', 'panels'] as const;
 
 /** One of the extension points. */
 export type ExtensionPoint = (typeof EXTENSION_POINTS)[number];
-
-/** A data export a plug-in adds: the format's word, its name as offered, its file's extension and media type, and the writer. */
-export interface DataExporter {
-  /** The word the format is chosen by, lower case: `csv`. */
-  format: string;
-  /** What the format is called where it is offered: `CSV`. */
-  title: string;
-  /** The file name's extension, without its dot. */
-  extension: string;
-  /** The media type the file is shared as. */
-  mime: string;
-  /** The data written in this format. */
-  write: (data: ExportedData, info: DataInfo) => string;
-}
-
-/** A place notes are kept that a plug-in adds, such as a server or a cloud drive (§41, storage_contract). */
-export interface StorageBackend {
-  /** The word it is chosen by, lower case: `webdav`. */
-  name: string;
-  /** What it is called where it is offered: `WebDAV`. */
-  title: string;
-  /** A store of the notes kept there, each read and written as `NoteStorage` promises. */
-  open: () => NoteStorage;
-}
-
-/** A command a plug-in adds, which a host offers in its command list and menus. */
-export interface PluginCommand {
-  /** Its id, under its plug-in's own: `acme.tags.count`. */
-  id: string;
-  /** What it is called where it is offered, in the host's language. */
-  title: string;
-  /** Does what the command does. */
-  run: () => void;
-}
 
 /** What a plug-in is given to add to: only the points its manifest names. */
 export interface ExtensionPoints {
@@ -63,6 +50,9 @@ export interface ExtensionPoints {
   theme?: { core: readonly string[]; add: (token: ThemeToken) => void };
   storage?: { add: (backend: StorageBackend) => void };
   commands?: { add: (command: PluginCommand) => void };
+  panels?: { add: (panel: PluginPanel) => void };
+  /** The host's abilities the manifest names, and no other (plugin_manifest_limits). */
+  host?: Partial<HostAbilities>;
 }
 
 /** A plug-in: who it is, what it uses, and what it adds. */
@@ -75,6 +65,8 @@ export interface ThoughtKnotPlugin {
   api: string;
   /** The extension points it uses: its manifest. */
   uses: ExtensionPoint[];
+  /** The host's abilities it uses, also in its manifest; none unless named. */
+  abilities?: HostAbility[];
   /** Adds what it brings, through the points it is given. */
   register: (points: ExtensionPoints) => void;
 }
@@ -84,13 +76,22 @@ export type PluginResult<T> = { ok: true; value: T } | { ok: false; plugin: stri
 
 const ID = /^[a-z0-9]+(?:[.-][a-z0-9]+)+$/;
 const SEMVER = /^\d+\.\d+\.\d+$/;
-const WORD = /^[a-z][a-z0-9-]*$/;
 
 /** How long a call into a plug-in may run, in milliseconds, before the plug-in is stopped. */
 export const PLUGIN_TIME_LIMIT = 2000;
 
-/** What a registry is made with: how long a call may run, and the clock it is timed by. */
+/** The host's abilities a registry may hand out; settings are made for each plug-in, kept apart from the others'. */
+export interface HostOffer {
+  notice?: HostAbilities['notice'];
+  settingsFor?: (pluginId: string) => HostAbilities['settings'];
+  secrets?: HostAbilities['secrets'];
+  files?: HostAbilities['files'];
+}
+
+/** What a registry is made with: the host's abilities, how long a call may run, and the clock it is timed by. */
 export interface RegistryOptions {
+  /** What the host offers; a plug-in naming an ability it does not offer is refused. */
+  host?: HostOffer;
   /** In milliseconds; `PLUGIN_TIME_LIMIT` unless set. */
   timeLimit?: number;
   /** The time now, in milliseconds; `Date.now` unless set. */
@@ -125,38 +126,12 @@ export interface PluginRegistry {
   commands: () => PluginCommand[];
   /** Runs the command `id`, or says what went wrong and whose plug-in it was. */
   runCommand: (id: string) => PluginResult<undefined>;
+  /** Every panel added, in the order added. */
+  panels: () => PluginPanel[];
+  /** Draws the panel `id` into `el`, or says what went wrong and whose plug-in it was. */
+  showPanel: (id: string, el: PanelRoot) => PluginResult<undefined>;
   /** The plug-ins stopped for running too long, and why; nothing of theirs is called again. */
   stopped: () => StoppedPlugin[];
-}
-
-/** Why a data export a plug-in adds is refused, or null when it is accepted. */
-function exporterProblem(e: DataExporter, taken: Map<string, string>): string | null {
-  if (!WORD.test(e.format)) return `the format "${e.format}" is not a lower-case word`;
-  if (taken.has(e.format)) return `the format "${e.format}" is already added by ${taken.get(e.format)}`;
-  if (!e.title.trim()) return `the format "${e.format}" has no title`;
-  if (!WORD.test(e.extension)) return `the extension "${e.extension}" is not a lower-case word`;
-  if (!/^[a-z]+\/[a-z0-9.+-]+$/.test(e.mime)) return `the media type "${e.mime}" is not one`;
-  if (typeof e.write !== 'function') return `the format "${e.format}" has no writer`;
-  return null;
-}
-
-/** Why a storage backend a plug-in adds is refused, or null when it is accepted. */
-function backendProblem(b: StorageBackend, taken: Map<string, string>): string | null {
-  if (!WORD.test(b.name)) return `the storage "${b.name}" is not named by a lower-case word`;
-  if (taken.has(b.name)) return `the storage "${b.name}" is already added by ${taken.get(b.name)}`;
-  if (!b.title.trim()) return `the storage "${b.name}" has no title`;
-  if (typeof b.open !== 'function') return `the storage "${b.name}" cannot be opened`;
-  return null;
-}
-
-/** Why a command the plug-in `pluginId` adds is refused, or null when it is accepted. */
-function commandProblem(c: PluginCommand, pluginId: string, taken: Map<string, string>): string | null {
-  const word = c.id.startsWith(`${pluginId}.`) ? c.id.slice(pluginId.length + 1) : '';
-  if (!WORD.test(word)) return `the command "${c.id}" is not named ${pluginId}.<word>`;
-  if (taken.has(c.id)) return `the command "${c.id}" is added already`;
-  if (!c.title.trim()) return `the command "${c.id}" has no title`;
-  if (typeof c.run !== 'function') return `the command "${c.id}" does nothing`;
-  return null;
 }
 
 /** What a plug-in adds to one point, kept aside until all it adds has been accepted. */
@@ -169,7 +144,7 @@ const shelf = <T>(): Shelf<T> => ({ items: [], owner: new Map() });
 
 /** A registry with no plug-ins installed yet. */
 export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
-  const { timeLimit = PLUGIN_TIME_LIMIT, now = Date.now } = options;
+  const { host = {}, timeLimit = PLUGIN_TIME_LIMIT, now = Date.now } = options;
   const installed: string[] = [];
   const exporters: DataExporter[] = [];
   const owner = new Map<string, string>();
@@ -177,6 +152,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const tokenOwner = new Map<string, string>();
   const backends = shelf<StorageBackend>();
   const commands = shelf<PluginCommand>();
+  const panels = shelf<PluginPanel>();
   const stopped = new Map<string, string>();
   const core = Object.freeze(Object.keys(THEME_TOKENS));
   /** The answer of `call`, made by `plugin`'s `what`, timed, caught and named. A call over the limit stops the plug-in. */
@@ -199,6 +175,17 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     }
     return { ok: true, value };
   };
+  /** The abilities `named` from the host's offer, frozen, or why one cannot be given. */
+  const granted = (named: HostAbility[], pluginId: string): Partial<HostAbilities> | string => {
+    const missing = named.filter((a) => (a === 'settings' ? !host.settingsFor : !host[a]));
+    if (missing.length) return `it asks for host abilities this host does not offer: ${missing.join(', ')}`;
+    const out: Partial<HostAbilities> = {};
+    if (named.includes('notice')) out.notice = host.notice;
+    if (named.includes('settings')) out.settings = host.settingsFor?.(pluginId);
+    if (named.includes('secrets')) out.secrets = host.secrets;
+    if (named.includes('files')) out.files = host.files;
+    return Object.freeze(out);
+  };
   /** Moves what a plug-in added onto the registry's own shelf, once all of it was accepted. */
   const keep = <T>(from: Shelf<T>, to: Shelf<T>, key: (t: T) => string, plugin: string) => {
     for (const t of from.items) {
@@ -218,6 +205,11 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
         refuse(`it was built for version ${plugin.api} of the interface, not ${PLUGIN_API}`);
       const unknown = plugin.uses.filter((p) => !(EXTENSION_POINTS as readonly string[]).includes(p));
       if (unknown.length) refuse(`its manifest names extension points that do not exist: ${unknown.join(', ')}`);
+      const abilities = plugin.abilities ?? [];
+      const strange = abilities.filter((a) => !(HOST_ABILITIES as readonly string[]).includes(a));
+      if (strange.length) refuse(`its manifest names host abilities that do not exist: ${strange.join(', ')}`);
+      const given = abilities.length ? granted(abilities, plugin.id) : null;
+      if (typeof given === 'string') refuse(given);
       // what it adds is kept aside until it has all been accepted, so a refused plug-in leaves nothing behind
       const added: DataExporter[] = [];
       const taken = new Map(owner);
@@ -225,6 +217,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const tokenTaken = new Map(tokenOwner);
       const addedBackends = shelf<StorageBackend>();
       const addedCommands = shelf<PluginCommand>();
+      const addedPanels = shelf<PluginPanel>();
       const points: ExtensionPoints = {};
       if (plugin.uses.includes('exports'))
         points.exports = {
@@ -265,6 +258,16 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
             addedCommands.items.push({ ...c });
           },
         };
+      if (plugin.uses.includes('panels'))
+        points.panels = {
+          add: (c) => {
+            const why = panelProblem(c, plugin.id, new Map([...panels.owner, ...addedPanels.owner]));
+            if (why) refuse(why);
+            addedPanels.owner.set(c.id, plugin.id);
+            addedPanels.items.push({ ...c, render: c.render.bind(c) });
+          },
+        };
+      if (given && typeof given !== 'string') points.host = given;
       try {
         plugin.register(Object.freeze(points));
       } catch (e) {
@@ -282,6 +285,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       }
       keep(addedBackends, backends, (b) => b.name, plugin.id);
       keep(addedCommands, commands, (c) => c.id, plugin.id);
+      keep(addedPanels, panels, (c) => c.id, plugin.id);
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
@@ -307,6 +311,12 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const c = commands.items.find((x) => x.id === id);
       if (!c) return { ok: false, plugin: '', message: `No plug-in adds the command "${id}".` };
       return guarded(commands.owner.get(id) ?? '', `The command ${c.title}`, () => void c.run());
+    },
+    panels: () => panels.items.map((c) => ({ ...c })),
+    showPanel(id, el) {
+      const c = panels.items.find((x) => x.id === id);
+      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the panel "${id}".` };
+      return guarded(panels.owner.get(id) ?? '', `The panel ${c.title}`, () => void c.render(el));
     },
     stopped: () => [...stopped].map(([plugin, why]) => ({ plugin, why })),
   };

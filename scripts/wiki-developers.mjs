@@ -22,6 +22,7 @@ export const POINT_ABOUT = {
   theme: 'Colours of its own, named under its id, in light and dark, each meeting the locked contrast.',
   storage: 'A place notes are kept, such as a server or a cloud drive, that passes the note storage contract.',
   commands: 'A command a person runs from the host’s command list, named under its id.',
+  panels: 'A panel shown beside a graph, drawn right to left in a right-to-left host, with logical sides only.',
 };
 
 /** Where a requirement stands, as a mark and words: in the latest release, on main only, being built, or planned. */
