@@ -1,0 +1,9 @@
+SQLite is in the public domain. Its authors have dedicated the code to the public domain, and in place of a legal
+notice, every source file carries this blessing:
+
+    May you do good and not evil.
+    May you find forgiveness for yourself and forgive others.
+    May you share freely, never taking more than you give.
+
+See https://www.sqlite.org/copyright.html. The extension functions compiled in with it
+(https://www.sqlite.org/contrib, extension-functions.c) are also in the public domain.

@@ -74,7 +74,14 @@ describe('the wiki', () => {
   });
 
   test('clusters the roadmap into phases, in order, each wave under one', () => {
-    const page = made()['Roadmap.md'];
+    // a day inside the first wave not yet done, so there is a Now however far the plan has got
+    const states = waveStates(
+      json('requirements/waves.json').waves,
+      json('requirements/workstreams.json'),
+      readBoard(requirementsText).requirements,
+      '2026-01-01',
+    );
+    const page = made({ today: states.find((w) => w.state !== 'done').start })['Roadmap.md'];
     const chart = page.match(/```mermaid\n([\s\S]*?)```/)[1];
     const sections = [...chart.matchAll(/^ {2}section (.+)$/gm)].map((m) => m[1]);
     assert.deepEqual(

@@ -42,6 +42,32 @@
       "checked": "2026-10-16, from the package's own LICENSE and package.json (no dependencies, no install script) at 18.1.0, published 2026-10-05",
       "inside": []
     },
+    "sql.js@1.14.2": {
+      "licence": "MIT",
+      "licenceText": "texts/sql-js.MIT.txt",
+      "source": "https://github.com/sql-js/sql.js",
+      "checked": "2026-10-20, from the Makefile and .devcontainer/Dockerfile at v1.14.2 in the sql.js repository, and the SQLite version inside dist/sql-wasm-browser.wasm (no dependencies, no install script)",
+      "inside": [
+        {
+          "name": "SQLite",
+          "version": "3.49.1",
+          "licence": "blessing",
+          "licenceText": "texts/sqlite.blessing.txt",
+          "provenance": "https://sqlite.org/2025/sqlite-amalgamation-3490100.zip",
+          "source": "https://www.sqlite.org/src/timeline?t=version-3.49.1",
+          "note": "Compiled unmodified to WebAssembly, with the public-domain extension functions, and bundled into main.js for Import (spec §20)."
+        },
+        {
+          "name": "Emscripten",
+          "version": "5.0.0",
+          "licence": "MIT OR NCSA",
+          "licenceText": "texts/emscripten.MIT-NCSA.txt",
+          "provenance": "pkg:docker/emscripten/emsdk@5.0.0",
+          "source": "https://github.com/emscripten-core/emscripten/tree/5.0.0",
+          "note": "The compiler's runtime and system libraries, linked into the WebAssembly."
+        }
+      ]
+    },
     "lucide-icons@redrawn": {
       "licence": "ISC AND MIT",
       "licenceText": "texts/lucide.ISC.txt",
@@ -91,8 +117,14 @@
         "licence": "GPL-3.0",
         "licenceSource": "https://valgrind.org/docs/manual/manual-intro.html",
         "installedBy": "sudo apt-get install -y --no-install-recommends valgrind",
-        "jobs": ["quality-baseline.yml measure", "release-check.yml quality", "release.yml quality"],
-        "images": ["docker/benchmarks.Dockerfile"],
+        "jobs": [
+          "quality-baseline.yml measure",
+          "release-check.yml quality",
+          "release.yml quality"
+        ],
+        "images": [
+          "docker/benchmarks.Dockerfile"
+        ],
         "reason": "Its Cachegrind counts the instructions the benchmarks take (scripts/instruction-counts.mjs). Running a GPL program is unrestricted (GPLv3 §2), the counts it writes are not a work covered by it, and nothing of it is copied, linked or shipped."
       }
     }

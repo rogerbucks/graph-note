@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/database.test.js",
+  "test": "Import offers the SQLite files of the vault, with nothing to set up (settings_db_connections) > the settings page holds no database connection, password or key",
+  "seen_failing_first": false,
+  "evidence": "A guard: the settings page never had a database part on main, so it held true before; it keeps one from coming back."
+}

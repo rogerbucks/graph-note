@@ -27,7 +27,7 @@ import {
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
-const RUNTIME_ALLOWED = new Set(['@viz-js/viz']);
+const RUNTIME_ALLOWED = new Set(['@viz-js/viz', 'sql.js']); // two WebAssembly engines inside the bundle (§13, §20)
 // The one addition spec §13 allows, for the browser host alone (§26, cc_one_renderer): a Markdown renderer.
 const MARKDOWN_RENDERER = 'marked';
 // The one place that may reach the network: sending to an AI the user has set up.
@@ -146,7 +146,7 @@ describe('the supply chain', () => {
       );
   });
 
-  test('the only runtime dependencies are the Graphviz WebAssembly engine and, for the browser host alone, one Markdown renderer', () => {
+  test('the only runtime dependencies are the Graphviz and SQLite WebAssembly engines and, for the browser host alone, one Markdown renderer', () => {
     const workspaceNames = new Set(jsPackages().map((p) => readJSON(`${p}/package.json`).name));
     for (const p of jsPackages()) {
       const deps = Object.keys(readJSON(`${p}/package.json`).dependencies ?? {});

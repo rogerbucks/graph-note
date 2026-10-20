@@ -906,7 +906,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     - the settings options' words in `settings-source-words.ts`;
     - the browser page's own in `page-source-words.ts`;
     - editing's (properties, adding a thing, Edit, kept drafts) in `edit-source-words.ts`;
-    - and the AI dialog's and AI models' in `ai-source-words.ts`.
+    - the AI dialog's and AI models' in `ai-source-words.ts`;
+    - and Import's in `db-source-words.ts`.
 
 #### The plug-in interface
 
@@ -1194,6 +1195,14 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
   - `matrixRowsFrom` checks rows handed over as data. It takes none at all if anything in them is not a row.
 - `settings-matrix.ts` — the two options of the matrix, the note that holds it and the table of class names
   (`MATRIX_OPTIONS`).
+#### Databases
+
+- `db-import.ts` — importing from a database (spec §20, §21). The database is a SQLite file in the vault.
+  - `isDbFile` says which vault files are databases: those ending .sqlite, .sqlite3 or .db.
+  - `importedBlock` writes the rows as a GQL block. Each things row is a thing, by its `id` and `kind` columns. Each
+    links row is a link, by `from`, `type` and `to`. Its comment names the file. It keeps no live link. A blob is left
+    out.
+  - A row it cannot write refuses the whole import, with the reason. `withImport` puts the block at the note's end.
 
 #### The Claude gate
 

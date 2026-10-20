@@ -5,9 +5,10 @@ import { readJSON } from './repo.js';
 
 // Compatible with distributing the plugin under MPL-2.0 (spec §13, Licence).
 const ALLOWED = new Set(['MIT', 'ISC', 'BSD-2-Clause', 'BSD-3-Clause', 'Apache-2.0', '0BSD', 'Zlib']);
-// Weak copyleft at the file level, distributed unmodified with its notice and
-// a link to its source: allowed for this one component and no other.
-const ALLOWED_FOR = { 'EPL-2.0': new Set(['Graphviz']) };
+// Allowed for one component each and no other. Graphviz: weak copyleft at the file level, distributed unmodified with
+// its notice and a link to its source. SQLite: public domain, with its blessing in place of a licence (spec §20,
+// Roger, 20 Oct 2026).
+const ALLOWED_FOR = { 'EPL-2.0': new Set(['Graphviz']), blessing: new Set(['SQLite']) };
 // Exceptions that only widen what a licence permits.
 const PERMISSIVE_EXCEPTIONS = new Set(['LLVM-exception']);
 

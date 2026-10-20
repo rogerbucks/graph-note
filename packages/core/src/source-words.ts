@@ -4,6 +4,7 @@
 // brought to the catalogue; the plain-language check (ux_copy_auto) reads them here.
 
 import { AI_SOURCE_WORDS } from './ai-source-words.ts';
+import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
@@ -361,6 +362,8 @@ export const SOURCE_WORDS = {
   'parked.park-it': 'Park it',
   // the AI send dialog, the AI models' settings and leaving the app (ai-source-words.ts)
   ...AI_SOURCE_WORDS,
+  // Import from a database (db-source-words.ts)
+  ...DB_SOURCE_WORDS,
   // the words of editing (edit-source-words.ts)
   ...EDIT_SOURCE_WORDS,
   // the browser page's own words (page-source-words.ts)

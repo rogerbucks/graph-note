@@ -70,6 +70,20 @@
       "to": 246274394,
       "reason": "5.3% over the baseline, just past the 5% allowance, with no change to the mesh search since 0.6.0; the count is noisy. Accepted by Roger, 18 Oct 2026, for the 0.7.0 release",
       "date": "2026-10-18"
+    },
+    {
+      "metric": "bundle_bytes",
+      "from": 1958060,
+      "to": 3982864,
+      "reason": "Import's SQLite engine, sql.js 1.14.2 (its WebAssembly is 878 kB inside main.js, so a database file is read on the device and nothing is fetched); chosen by Roger, 20 Oct 2026, over a PostgreSQL client that needed the network",
+      "date": "2026-10-20"
+    },
+    {
+      "metric": "bundle_bytes_without_viz",
+      "from": 357577,
+      "to": 2376283,
+      "reason": "Import's SQLite engine, sql.js 1.14.2 (its WebAssembly is 878 kB inside main.js, so a database file is read on the device and nothing is fetched); chosen by Roger, 20 Oct 2026, over a PostgreSQL client that needed the network",
+      "date": "2026-10-20"
     }
   ]
 }

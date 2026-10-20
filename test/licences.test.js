@@ -79,6 +79,12 @@ describe('the allow-list', () => {
     assert.equal(licenceAllowed('EPL-2.0', 'Something else'), false);
   });
 
+  test('the public-domain blessing is allowed for SQLite alone', () => {
+    assert.ok(licenceAllowed('blessing', 'SQLite'));
+    assert.equal(licenceAllowed('blessing'), false);
+    assert.equal(licenceAllowed('blessing', 'Something else'), false);
+  });
+
   test('it finds WebAssembly, as a file or inlined', () => {
     assert.ok(carriesWasm('x.wasm', Buffer.from([0, 0x61, 0x73, 0x6d])));
     assert.ok(carriesWasm('x.js', Buffer.from('const b = "AGFzbQEAAAAB";')));
@@ -90,7 +96,7 @@ describe('what is bundled into a release', () => {
   test('the bundled packages are found from the lockfile', () => {
     assert.deepEqual(
       bundledPackages().map((p) => p.name),
-      ['@viz-js/viz', 'marked'],
+      ['@viz-js/viz', 'marked', 'sql.js'],
     );
   });
 
