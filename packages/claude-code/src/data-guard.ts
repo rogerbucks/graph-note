@@ -1,7 +1,8 @@
 // The mod's data folder is the user's alone (spec §26). It holds the editor's drafts, and settings.json. That file sets
 // Claude's classification gate: the ceiling, the matrix row, the classes switched on, the level for an unlabelled note.
-// A session that could write there could loosen its own gate. So Claude's own Write, Edit, NotebookEdit and Bash calls
-// are refused when they reach it. Reads stay allowed.
+// A session that could write there could loosen its own gate. So Claude's own calls that write are refused when they
+// reach it: Write, Edit, MultiEdit, NotebookEdit and Bash, and any other tool whose input names a path (risk TRUST-2).
+// Reads stay allowed.
 //
 // File tools are judged by the target's real path, links settled. A relative path is taken from the session's folder. A
 // file not yet made is judged by its nearest folder that exists. Bash cannot be parsed, so the rule is the conservative
@@ -11,7 +12,7 @@
 // module is imported. The real path is asked through the port.
 //
 // The note open in the editor is guarded the same way (cc_claude_proposes, risk AI-1). Claude changes it only by the
-// propose tool, so the user sees each change on the card first. Its own Write, Edit, NotebookEdit and Bash calls that
+// propose tool, so the user sees each change on the card first. Its own writing calls, of every tool above, that
 // reach the note are refused, and the refusal points to that tool. For Bash, the note's file name alone counts too.
 
 /** The tools whose target is a file path, and the field that holds it. */
@@ -21,6 +22,26 @@ const FILE_TOOLS: Readonly<Record<string, 'file_path' | 'notebook_path'>> = {
   MultiEdit: 'file_path',
   NotebookEdit: 'notebook_path',
 };
+
+/** The fields that name a path in the input of a tool not listed above, such as a file tool from another server. */
+const PATH_FIELDS = ['file_path', 'notebook_path', 'path'] as const;
+
+/** The tools that only read. They name a path, but are never judged. */
+const READ_TOOLS: ReadonlySet<string> = new Set(['Read', 'Glob', 'Grep', 'LS', 'NotebookRead']);
+
+/**
+ * The path a call writes, or null when it writes none the guards judge. A listed file tool gives its own field. Any
+ * other tool but the readers gives the first path field it holds, so a tool the guard has not met is judged too.
+ */
+export function pathOf(tool: string, input: ToolInput): string | null {
+  if (tool === 'Bash' || READ_TOOLS.has(tool)) return null;
+  const listed = FILE_TOOLS[tool];
+  for (const field of listed ? [listed] : PATH_FIELDS) {
+    const value = input[field];
+    if (typeof value === 'string' && value) return value;
+  }
+  return null;
+}
 
 /** The most words of a command that are looked up as paths, each a process to start. */
 const MAX_WORDS = 40;
@@ -126,7 +147,7 @@ async function settle(path: string, ports: GuardPorts, links = 0): Promise<strin
 }
 
 /** Every form of `path` that matters: as written and normalised, and the real path of each. */
-async function forms(path: string, ports: GuardPorts): Promise<string[]> {
+export async function forms(path: string, ports: GuardPorts): Promise<string[]> {
   const full = absolute(path, ports);
   const out = new Set<string>([normalise(full)]);
   for (const text of [full, normalise(full)]) {
@@ -213,7 +234,7 @@ async function guardFile(path: string, kept: Kept, ports: GuardPorts): Promise<s
 }
 
 /** Whether `text` holds `name` as a whole word: neither what comes before nor what follows is part of a longer name. */
-function namesWord(text: string, name: string): boolean {
+export function namesWord(text: string, name: string): boolean {
   const hay = text.toLowerCase();
   const find = name.toLowerCase();
   for (let at = hay.indexOf(find); at >= 0; at = hay.indexOf(find, at + 1)) {
@@ -250,15 +271,15 @@ async function guardCommand(command: string, kept: Kept, ports: GuardPorts): Pro
 }
 
 /**
- * The refusal for a call that would write the mod's data folder, or null when the call may go on. Any tool but the file
- * writers and Bash is not judged (Read, Grep and the rest only read).
+ * The refusal for a call that would write the mod's data folder, or null when the call may go on. A tool that names
+ * no path, and the tools that only read (Read, Grep and the rest), are not judged.
  */
 export async function guardDataFolder(tool: string, input: ToolInput, ports: GuardPorts): Promise<string | null> {
   return guardCall(tool, input, dataKept(ports), ports);
 }
 
 /** What a guarded call holds: a file tool's path, or a command. */
-type ToolInput = { file_path?: unknown; notebook_path?: unknown; command?: unknown };
+export type ToolInput = { file_path?: unknown; notebook_path?: unknown; path?: unknown; command?: unknown };
 
 /** What the open note's guard asks of the host: the note open in the editor (none when none is), with the rest. */
 export type OpenNotePorts = Omit<GuardPorts, 'data'> & { note: string | null };
@@ -281,14 +302,13 @@ export async function guardOpenNote(tool: string, input: ToolInput, ports: OpenN
 }
 
 async function guardCall(tool: string, input: ToolInput, kept: Kept, ports: GuardPorts): Promise<string | null> {
-  const field = FILE_TOOLS[tool];
-  if (tool !== 'Bash' && !field) return null;
+  const path = pathOf(tool, input);
+  if (tool !== 'Bash' && path === null) return null;
   try {
     if (tool === 'Bash') {
       return typeof input.command === 'string' && input.command ? await guardCommand(input.command, kept, ports) : null;
     }
-    const path = input[field as 'file_path' | 'notebook_path'];
-    return typeof path === 'string' && path ? await guardFile(path, kept, ports) : null;
+    return path === null ? null : await guardFile(path, kept, ports);
   } catch {
     // the real path could not be had (the process did not run, node is missing, it timed out): not knowing is a no
     return kept.failed;

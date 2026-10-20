@@ -16,7 +16,9 @@ import {
   DATA_FOLDER_REFUSAL,
   EditorLauncher,
   guardDataFolder,
+  guardGateFiles,
   guardOpenNote,
+  pathOf,
   confirmArgs,
   editArgs,
   layOut,
@@ -66,8 +68,14 @@ async function dataFolderOf($: EngineInterface): Promise<{ data: string; home?: 
   return home ? { data, home } : { data };
 }
 
-/** The tools the data folder's guard judges; the user changes the settings there, never Claude. */
-const GUARDED_TOOLS = ['Write', 'Edit', 'NotebookEdit', 'Bash'] as const;
+/** The user's settings, saved as settings.json in the data folder; none, or one that cannot be read, is the defaults. */
+async function settingsAt($: EngineInterface, data: string) {
+  try {
+    return settingsFrom(JSON.parse(await $.fs.read(`${data}/settings.json`)));
+  } catch {
+    return settingsFrom(null);
+  }
+}
 
 /** The launcher over this host's calls; the server it runs is the mod's own bin/editor-server.mjs. */
 async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
@@ -86,13 +94,7 @@ async function launcherOf($: EngineInterface): Promise<EditorLauncher> {
     read: (path) => $.fs.read(path),
     // the user's settings, saved as settings.json in the plugin data folder; none, or one that cannot be read, is the
     // defaults, which are the strictest: Claude's ceiling the lowest, a note with no classification the highest
-    settings: async () => {
-      try {
-        return settingsFrom(JSON.parse(await $.fs.read(`${data}/settings.json`)));
-      } catch {
-        return settingsFrom(null);
-      }
-    },
+    settings: () => settingsAt($, data),
     after: (ms, fn) => $.clock.after(ms, fn),
     cwd: await $.session.cwd(),
     server: ['node', `${$.plugin.root}/bin/editor-server.mjs`],
@@ -151,31 +153,38 @@ async function drawNote($: EngineInterface, path: string): Promise<string> {
 export const register: Register = (on) => {
   // Claude's own writes to the data folder are refused (spec §26): it could loosen its own gate. So are its writes to
   // the note open in the editor (cc_claude_proposes, risk AI-1): it changes that note only by the propose tool, which
-  // the refusal names. A guard that fails refuses too. Reads are not hooked.
-  for (const tool of GUARDED_TOOLS) {
-    on('tool.call', { tool }, async ($, e, next) => {
-      const { data, home } = await dataFolderOf($);
-      const ports = {
-        ...(home ? { home } : {}),
-        cwd: await $.session.cwd(),
-        realPath: realPathVia(
-          (request) => $.process.spawn(request),
-          ['node', `${$.plugin.root}/bin/real-path.mjs`],
-          (ms, fn) => $.clock.after(ms, fn),
-        ),
-        readLink: readLinkVia(
-          (request) => $.process.spawn(request),
-          ['node', `${$.plugin.root}/bin/real-path.mjs`],
-          (ms, fn) => $.clock.after(ms, fn),
-        ),
-      };
-      const input = e as Record<string, unknown>;
-      const refusal =
-        (await guardDataFolder(tool, input, { data, ...ports })) ??
-        (await guardOpenNote(tool, input, { note: launcher?.note ?? null, ...ports }));
-      return refusal === null ? next(e) : { deny: refusal };
-    }).catch(($, e, next) => (next.called ? next(e) : { deny: DATA_FOLDER_REFUSAL }));
-  }
+  // the refusal names. So are its writes to the matrix note and to a classification line (risk TRUST-1). Every tool is
+  // hooked, as the guards judge any tool whose input names a path, not only the ones listed (risk TRUST-2). A guard
+  // that fails refuses too. Reads are not judged.
+  on('tool.call', async ($, e, next) => {
+    const tool = e.tool;
+    const input = e as Record<string, unknown>;
+    if (tool !== 'Bash' && pathOf(tool, input) === null) return next(e);
+    const { data, home } = await dataFolderOf($);
+    const ports = {
+      ...(home ? { home } : {}),
+      cwd: await $.session.cwd(),
+      realPath: realPathVia(
+        (request) => $.process.spawn(request),
+        ['node', `${$.plugin.root}/bin/real-path.mjs`],
+        (ms, fn) => $.clock.after(ms, fn),
+      ),
+      readLink: readLinkVia(
+        (request) => $.process.spawn(request),
+        ['node', `${$.plugin.root}/bin/real-path.mjs`],
+        (ms, fn) => $.clock.after(ms, fn),
+      ),
+    };
+    const refusal =
+      (await guardDataFolder(tool, input, { data, ...ports })) ??
+      (await guardOpenNote(tool, input, { note: launcher?.note ?? null, ...ports })) ??
+      (await guardGateFiles(tool, input, {
+        matrixNote: (await settingsAt($, data)).aiMatrixNote ?? null,
+        read: (path) => $.fs.read(path),
+        ...ports,
+      }));
+    return refusal === null ? next(e) : { deny: refusal };
+  }).catch(($, e, next) => (next.called ? next(e) : { deny: DATA_FOLDER_REFUSAL }));
 
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'graph', description: "Draw a graph note's first graph in a pane" });

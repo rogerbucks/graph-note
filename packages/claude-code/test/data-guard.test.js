@@ -4,11 +4,20 @@
 import { afterEach, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readlinkSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { guardDataFolder } from '../src/data-guard.ts';
+import { guardDataFolder, pathOf } from '../src/data-guard.ts';
 
 const made = [];
 afterEach(() => {
@@ -102,6 +111,30 @@ describe('file tools are judged by the target’s real path', () => {
     allowed(await guardDataFolder('Write', {}, w.ports));
     allowed(await guardDataFolder('Read', { file_path: join(w.data, 'settings.json') }, w.ports));
     allowed(await guardDataFolder('Grep', { file_path: join(w.data, 'settings.json') }, w.ports));
+  });
+});
+
+describe('every tool that writes a path is judged, not only those listed (risk TRUST-2)', () => {
+  test('MultiEdit, and a tool the guard has not met with a file_path, path or notebook_path, are refused', async () => {
+    const w = world();
+    const file = join(w.data, 'settings.json');
+    refused(await guardDataFolder('MultiEdit', { file_path: file, edits: [] }, w.ports));
+    refused(await guardDataFolder('mcp__files__write_file', { path: file, content: '{}' }, w.ports));
+    refused(await guardDataFolder('mcp__notes__save', { file_path: file }, w.ports));
+    refused(await guardDataFolder('mcp__nb__edit', { notebook_path: file }, w.ports));
+  });
+
+  test('the tools that only read, and a tool that names no path, are not judged', () => {
+    for (const tool of ['Read', 'Glob', 'Grep', 'LS', 'NotebookRead']) assert.equal(pathOf(tool, { path: '/x' }), null);
+    assert.equal(pathOf('mcp__search__query', { query: 'settings.json' }), null);
+    assert.equal(pathOf('MultiEdit', { file_path: '/x' }), '/x');
+  });
+
+  test('the mod hooks every tool call, with no list, and lets one through untouched when it names no path', () => {
+    const register = readFileSync(new URL('../mod/hooks/register.tsx', import.meta.url), 'utf8');
+    assert.doesNotMatch(register, /GUARDED_TOOLS/);
+    assert.match(register, /on\('tool\.call', async \(\$, e, next\) => \{/);
+    assert.match(register, /pathOf\(tool, input\) === null\) return next\(e\)/);
   });
 });
 
