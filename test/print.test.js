@@ -1,12 +1,12 @@
 // Printing a note (editor spec §44, print_ready). Each graph is printed whole, in print colours, with its legend. The
 // checks:
-// - in print, the card's own colours are the light palette exports use, by the core's one table;
+// - in print, the card follows the host's print colours: Obsidian prints in its light theme, whose variables the card
+//   and its drawing read. The card asks for light system colours too, and for its colours to be printed;
 // - the drawing is drawn whole: not cut by its frame, nor moved or zoomed as it was on screen;
 // - the card's controls are left out, as paper cannot press them, but its legends are kept.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { PRINT_COLOURS } from '../packages/core/src/print-colours.ts';
-import { THEME_COLOURS } from '../packages/core/src/palette.ts';
+import { PALETTES } from '../packages/core/src/palette.ts';
 import { build } from '../packages/obsidian/test/host/load-plugin.js';
 import { fence } from '../packages/obsidian/test/host/notes.js';
 import { load, GRAPH, show, svgOf } from '../packages/obsidian/test/host/view-notes.js';
@@ -42,16 +42,14 @@ const LEGENDS = ['.thoughtknot-legend', '.thoughtknot-flow-legend', '.thoughtkno
 
 describe('a printed note', () => {
   // proves: print_ready
-  test('draws each card in print colours: the light palette, by the core’s table', () => {
-    const light = THEME_COLOURS.light;
-    assert.equal(PRINT_COLOURS['--background-primary'], light.page);
-    assert.equal(PRINT_COLOURS['--text-normal'], light.text);
-    assert.equal(PRINT_COLOURS['--color-blue'], light.blue);
-    assert.equal(PRINT_COLOURS['--color-blue-rgb'], '8, 109, 221');
+  test('draws each card in the host’s print colours, and prints them', () => {
     const rule = rules.find((r) => r.selectors.join(', ') === '.thoughtknot');
     assert.ok(rule, 'a print block for the card');
-    for (const [name, value] of Object.entries(PRINT_COLOURS)) assert.equal(valueOf(rule, name), value, name);
+    assert.equal(valueOf(rule, 'color-scheme'), 'light', 'light system colours');
     assert.equal(valueOf(rule, 'print-color-adjust'), 'exact', 'the colours are printed, not dropped');
+    // the drawing's colours are the theme's variables, so it takes the light theme Obsidian prints in
+    assert.match(PALETTES.obsidian.fill('blue'), /var\(--color-blue-rgb\)/);
+    assert.match(PALETTES.obsidian.blend('blue', 50), /var\(--color-blue\)/);
   });
 
   // proves: print_ready
