@@ -358,6 +358,9 @@ These test behaviour across modules, or the repository itself, so they are named
 ### The graph format library
 
 - `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.
+- `packages/graph-spec/test/changesets.test.mjs` — a change set's author is the session that sent it, never the name in
+  its header (editor spec §51, spec_author_from_session; GS4). A header naming anyone else fails, and the set is checked
+  as the session's.
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way, and write it into the same corrected text.
 - `packages/graph-spec/test/escapes.test.mjs` — both readers read quoted text's escapes as GQL does. They refuse one GQL
   does not name, with the fix that doubles the backslash, and quote a text alike (req:3.gql-escapes; one table,

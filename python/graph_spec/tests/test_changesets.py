@@ -101,5 +101,54 @@ class ChecksReadPlain(unittest.TestCase):
         self.assertEqual([(a, b) for a, b, _ in ours], [(a, b) for a, b, _ in theirs])
 
 
+SESSION = (
+    "its author is the session that sent it, not a name written in its header (editor spec §51)"
+)
+WITH_MODEL = BASE.replace(
+    "(ada:Person {name: 'Ada'}),",
+    "(t_model:ElementType {id: 'type:Model', name: 'Model', kind: 'node'}),\n"
+    "(meta)-[:DECLARES]->(t_model),\n(ada:Person {name: 'Ada'}),\n(bot:Model {name: 'Drafter'}),",
+)
+
+
+def signed(by):
+    """A change set adding one book, its header naming by."""
+    st = gp.Store()
+    st.apply(WITH_MODEL)
+    now = gp.canon(st, "library")[0][:16]
+    head = f"// graph: library · CHANGE SET cs · against {now} · by {by}"
+    return head + "\n(more:Book {title: 'More'})"
+
+
+class AuthorFromSession(unittest.TestCase):
+    """editor spec §51, spec_author_from_session (GS4): who wrote a change set is the session that
+    sent it, as packages/graph-spec/test/changesets.test.mjs holds the JavaScript checker to."""
+
+    def outcomes(self, by, session):
+        old = settings.PARSER
+        try:
+            for parser in ("profile", "grafeo"):
+                settings.PARSER = parser
+                yield (
+                    parser,
+                    gs.check_changeset([("library", WITH_MODEL)], signed(by), session=session),
+                )
+        finally:
+            settings.PARSER = old
+
+    @needs_engine
+    def test_a_model_s_set_naming_a_person_is_recorded_as_the_model_s(self):
+        for parser, (res, h, _) in self.outcomes("ada", "bot"):
+            self.assertEqual((h["by"], h["claimed"]), ("bot", "ada"), parser)
+            self.assertIn(SESSION, [label for label, ok, _ in res if not ok], parser)
+
+    @needs_engine
+    def test_a_header_naming_the_session_passes(self):
+        for parser, (res, h, _) in self.outcomes("bot", "bot"):
+            self.assertEqual([label for label, ok, _ in res if not ok], [], parser)
+            self.assertIn((SESSION, True), [(label, ok) for label, ok, _ in res], parser)
+            self.assertNotIn("claimed", h, parser)
+
+
 if __name__ == "__main__":
     unittest.main()
