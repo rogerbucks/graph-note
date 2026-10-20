@@ -28,3 +28,16 @@ test('the agreement repeats the rules every tool keeps: sign-off, approval, secu
   assert.match(flat, /Copilot/);
   assert.match(flat, /## Reviewing each other/);
 });
+
+test('the agreement sets a weekly web review of the tools and of best practice, with its owner (Roger, 20 Oct 2026)', () => {
+  const roles = read(ROLES);
+  assert.match(roles, /^## The weekly review$/m);
+  const section = roles.slice(roles.indexOf('## The weekly review'));
+  assert.match(section, /every Monday/i);
+  assert.match(section, /graph-note/);
+  assert.match(section, /https:\/\//, 'it names the sources the last review used');
+});
+
+test('a tool stuck on the same error three times stops and hands the item on', () => {
+  assert.match(read(ROLES).replace(/\s+/g, ' '), /same error three times/);
+});

@@ -15,7 +15,7 @@ The best result for the least cost. So:
 - **Claude's quota is the scarce one.** Roger pays a flat fee for it, and its weekly limit is the real cap. Keep Claude
   on building, and give checking and advice to the others.
 
-Prices and limits change. When one changes, Roger updates this page.
+Prices and limits change, so the weekly review below checks them.
 
 ## Who does what
 
@@ -85,5 +85,32 @@ These are the repo's own rules. AGENTS.md and CONTRIBUTING.md hold the detail; t
 
 ## When a tool is stuck
 
-Comment on the pull request and mention `@rogerbucks`. Say in one line what only Roger can do. Then say in the
-discussion that the item is free, so another tool can pick it up if Roger wants.
+- **A tool that hits the same error three times stops.** More tries cost more and rarely work. It hands the item on.
+- **To hand it on,** comment on the pull request and mention `@rogerbucks`. Say in one line what is stuck, and what
+  only Roger can do if anything. Then say in the discussion that the item is free.
+
+## The weekly review
+
+The tools, their prices and good practice all change fast. So every Monday, graph-note searches the web and checks:
+
+1. **What each tool can do now**, and what it costs: plans, limits, models and new features.
+2. **Good practice** for several AI agents on one repo.
+3. **Whether this page still holds.** For example: is each item still with the tool best and cheapest at it?
+
+graph-note posts what it found in the "Working group" discussion, each finding with its link. When this page should
+change, it proposes the change there, and Claude makes it in a pull request. Roger approves as usual.
+
+graph-note is the cheapest tool with live web search, so it owns this. If it misses a week, Claude runs it instead.
+
+### What the first review found (20 Oct 2026)
+
+- **Antigravity is not free without limits.** It comes with a Google AI plan. The free plan has weekly limits that
+  Google has cut more than once since its launch in November 2025. Google AI Pro, at about $20 a month, raises them.
+  ([codeagentswarm.com](https://www.codeagentswarm.com/en/guides/antigravity-plans-and-pricing))
+- **Antigravity reads AGENTS.md.** So no GEMINI.md is needed here.
+  ([inventivehq.com](https://inventivehq.com/blog/claude-md-vs-agents-md-vs-gemini-md))
+- **Grok's API costs about $1 to $2 for each million tokens read.** Grok Code Fast 1 is no longer listed.
+  ([benchlm.ai](https://benchlm.ai/xai/api-pricing))
+- **Good practice matches this page.** It gives each agent its own branch, and one read-only reviewer for every three
+  or four builders. It uses cheaper models for planning, and stops an agent after three tries at the same error. Keep
+  AGENTS.md short and written by a person. ([addyosmani.com](https://addyosmani.com/blog/code-agent-orchestra/))
