@@ -17,6 +17,15 @@ The best result for the least cost. So:
 
 Prices and limits change, so the weekly review below checks them.
 
+### Your own plans stay off the repo
+
+Which plan each person pays for is their own business, so it never goes in the repo. Keep it in
+`docs/agents/plans.local.md` on your own machine: git ignores every `*.local.md` file in this folder.
+
+- **A tool on your machine reads that file** if it is there, before it weighs cost.
+- **A tool that runs in the cloud cannot see it.** Give it the same facts in its own memory or settings instead.
+- **Write only plan names and limits.** Never a password, key or token: those belong in a password manager.
+
 ## Who does what
 
 | Who         | Does                                                                                                 | Branches        | Label               |

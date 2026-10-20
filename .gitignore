@@ -58,3 +58,6 @@ main.js.*.part
 # A release's measured quality metrics; only the baseline they are held to, quality/baseline.json, is committed.
 quality/metrics.json
 quality/instruction-spread.json
+
+# Each person's own AI plans and limits, read by the tools on their machine (docs/agents/ROLES.md). Never committed.
+/docs/agents/*.local.md
