@@ -4,6 +4,8 @@
 // itself, so the core never knows which are there.
 import { sha256 } from './ai-digest.ts';
 import { vaultFolder } from './vault-folder.ts';
+import { PLUGIN_API } from './plugins.ts';
+import type { ThoughtKnotPlugin } from './plugins.ts';
 
 /** A note as read: its text, byte for byte, and the version a write checks it against. */
 export interface StoredNote {
@@ -145,3 +147,15 @@ export const historyLayer =
   });
 
 const author = (options: WriteOptions) => (options.author === undefined ? {} : { author: options.author });
+
+/**
+ * The core's own storage, added through the plug-in interface as any plug-in's is (plugin_interface). It keeps notes in
+ * memory, empty when opened, as a page or a test keeps them before it has a folder.
+ */
+export const CORE_STORAGE: ThoughtKnotPlugin = {
+  id: 'thoughtknot.storage',
+  version: '1.0.0',
+  api: PLUGIN_API,
+  uses: ['storage'],
+  register: (points) => points.storage?.add({ name: 'memory', title: 'In memory', open: () => memoryStorage() }),
+};

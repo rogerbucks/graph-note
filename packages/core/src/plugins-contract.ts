@@ -1,8 +1,12 @@
 // The contract suite of each extension point (editor spec §43, plugin_contract_suites). It checks any plug-in runs
 // against what it adds, and every built-in passes in CI. Like the host contract, the checks need no test framework.
-// Each throws, saying what was wanted, when what was added breaks a promise of its point.
+// Each throws, saying what was wanted, when what was added breaks a promise of its point. A point's titles are checked
+// for right-to-left too (plugin_rtl). A title forces no direction of its own, so it reads in the host's. A host shows
+// each one isolated, so a name keeps its own direction beside it.
 import type { DataInfo, ExportedData } from './export-data-model.ts';
-import type { DataExporter } from './plugins.ts';
+import type { DataExporter, PluginCommand, StorageBackend } from './plugins.ts';
+import { storageContract } from './storage-contract.ts';
+import type { StorageCheck } from './storage-contract.ts';
 import {
   isTokenColour,
   TOKEN_BACKGROUNDS,
@@ -50,6 +54,17 @@ function fail(name: string, wanted: string, got: unknown): never {
   throw new Error(`${name}: wanted ${wanted}, got ${JSON.stringify(got)}`);
 }
 
+/** The marks that force a direction on text: left-to-right and right-to-left marks, embeddings, overrides, isolates. */
+const FORCED_DIRECTION = /[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/u;
+
+/** The check that a title a person reads forces no direction, so it reads in the host's (plugin_rtl). */
+const readsInHostDirection = (what: string, title: string): PluginCheck => ({
+  name: 'its title reads in the host’s direction, forcing none of its own',
+  run: () => {
+    if (FORCED_DIRECTION.test(title)) fail(what, 'a title with no direction marks', title);
+  },
+});
+
 /** Every check a data export is held to. */
 export function exporterContract(e: DataExporter): PluginCheck[] {
   const each = (check: (name: string, data: ExportedData) => void) => () => {
@@ -87,6 +102,36 @@ export function exporterContract(e: DataExporter): PluginCheck[] {
         if (!/^[a-z]+\/[a-z0-9.+-]+$/.test(e.mime)) fail(e.format, 'a media type', e.mime);
       },
     },
+    readsInHostDirection(e.format, e.title),
+  ];
+}
+
+/**
+ * Every check a storage backend is held to (§41, storage_contract). It is the one note storage contract, run on a store
+ * the backend opens afresh for each check, which must start empty. Its title is checked as any title is.
+ */
+export function storageBackendContract(b: StorageBackend): StorageCheck[] {
+  const title = readsInHostDirection(b.name, b.title);
+  return [...storageContract(async () => b.open()), { name: title.name, run: async () => title.run() }];
+}
+
+/** Every check a command of the plug-in `pluginId` is held to. */
+export function commandContract(c: PluginCommand, pluginId: string): PluginCheck[] {
+  return [
+    {
+      name: 'it is named under its plug-in’s own id, and offered under a title on one line',
+      run: () => {
+        if (!c.id.startsWith(`${pluginId}.`)) fail(c.id, `an id ${pluginId}.<word>`, c.id);
+        if (!c.title.trim() || /[\r\n]/.test(c.title)) fail(c.id, 'a title on one line', c.title);
+      },
+    },
+    {
+      name: 'it can be run',
+      run: () => {
+        if (typeof c.run !== 'function') fail(c.id, 'a run', typeof c.run);
+      },
+    },
+    readsInHostDirection(c.id, c.title),
   ];
 }
 

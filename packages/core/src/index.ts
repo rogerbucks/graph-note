@@ -4,7 +4,8 @@ export { readNote } from './drawing.ts';
 export { blockItems } from './block-items.ts';
 export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
-export { historyLayer, layered, memoryStorage, notePath, noteVersion, refusal, REFUSED } from './note-storage.ts';
+export { CORE_STORAGE, historyLayer, layered, memoryStorage } from './note-storage.ts';
+export { notePath, noteVersion, refusal, REFUSED } from './note-storage.ts';
 export type { ChangeLog, NoteStorage, StorageLayer, StoredChange } from './note-storage.ts';
 export type { StoredNote, WriteOptions, WriteOutcome } from './note-storage.ts';
 export { storageContract } from './storage-contract.ts';
@@ -174,27 +175,13 @@ export type { PngPage } from './export-pages.ts';
 export { CORE_EXPORTS, DATA_FORMATS, dataText, exportedData, isDataFormat } from './export-data.ts';
 export type { DataFormat } from './export-data.ts';
 export type { DataInfo, ExportedData } from './export-data-model.ts';
-export { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from './plugins.ts';
-export {
-  currentLocale,
-  DEFAULT_LOCALE,
-  formatCount,
-  formatDay,
-  formatInstant,
-  formatList,
-  formatSize,
-  setLocale,
-  sortedForReader,
-} from './locale-formats.ts';
-export type {
-  DataExporter,
-  ExtensionPoint,
-  ExtensionPoints,
-  ThoughtKnotPlugin,
-  PluginRegistry,
-  PluginResult,
-} from './plugins.ts';
-export { exporterContract, sampleExports, themeTokenContract } from './plugins-contract.ts';
+export { EXTENSION_POINTS, PLUGIN_API, PLUGIN_TIME_LIMIT, pluginRegistry } from './plugins.ts';
+export { currentLocale, DEFAULT_LOCALE, formatCount, formatDay, formatInstant } from './locale-formats.ts';
+export { formatList, formatSize, setLocale, sortedForReader } from './locale-formats.ts';
+export type { DataExporter, ExtensionPoint, ExtensionPoints, ThoughtKnotPlugin, PluginRegistry } from './plugins.ts';
+export type { PluginCommand, PluginResult, RegistryOptions, StorageBackend, StoppedPlugin } from './plugins.ts';
+export { commandContract, exporterContract, sampleExports, storageBackendContract } from './plugins-contract.ts';
+export { themeTokenContract } from './plugins-contract.ts';
 export { OBSIDIAN_TOKEN_MAP, THEME_TOKENS, themeTokenCss } from './theme-tokens.ts';
 export type { ThemeToken, ThemeTokenUse } from './theme-tokens.ts';
 export {
