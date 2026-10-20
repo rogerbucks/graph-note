@@ -1066,7 +1066,7 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (test_plugin_manifest_limits:Test {proves: 'a plug-in gets only what its manifest declares, and one that fails is stopped and named', file: 'packages/core/test/plugins-limits.test.js', where: 'repo', status: 'partial'}),
 (test_plugin_contract_suites:Test {proves: 'each extension point\'s contract suite passes for every built-in', file: 'packages/core/test/plugins-contract.test.js', where: 'repo', status: 'partial'}),
 (test_hosts_pass_contract:Test {proves: 'every host\'s real adapter passes the shared host contract suite', file: 'test/host-adapters.test.js', where: 'repo', status: 'partial'}),
-(test_layers_checked:Test {proves: 'each layer imports only the layers below it', file: 'test/layers.test.js', where: 'repo', status: 'planned'}),
+(test_layers_checked:Test {proves: 'each layer imports only the layers below it', file: 'test/layers.test.js', where: 'repo', status: 'written'}),
 (test_affected_tests_by_imports:Test {proves: 'the quick run picks the tests that reach a change through the import graph', file: 'test/import-graph.test.js', where: 'repo', status: 'written'}),
 (test_ui_theme_tokens:Test {proves: 'the interface is styled through the tokens alone, mapped from each host\'s theme in one table', file: 'test/theme-tokens.test.js', where: 'repo', status: 'partial'}),
 (test_plugin_theme_tokens:Test {proves: 'a plug-in inherits the tokens, adds its own in light and dark, and meets the locked contrast', file: 'packages/core/test/plugins-theme.test.js', where: 'repo', status: 'partial'}),
