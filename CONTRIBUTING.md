@@ -367,6 +367,9 @@ These test behaviour across modules, or the repository itself, so they are named
   and anything else is refused (editor spec §51, spec_guard_language; GS4; `guard-cases.json`).
 - `packages/graph-spec/test/serving.test.mjs` — a secret is found by its shape in any value of a graph. The editor finds
   it the same way (editor spec §51, spec_secrets_and_fences; GS4; `secret-cases.json`).
+- `packages/graph-spec/test/hashes.test.mjs` — every hash names its algorithm, as `requirements/hashes.md` says, and a
+  bare one is refused. A judgement or a serving edited after its hash was made is reported (editor spec §51,
+  spec_hashes_named; GS4; `hash-cases.json`).
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way, and write it into the same corrected text.
 - `packages/graph-spec/test/escapes.test.mjs` — both readers read quoted text's escapes as GQL does. They refuse one GQL
   does not name, with the fix that doubles the backslash, and quote a text alike (req:3.gql-escapes; one table,
@@ -406,6 +409,8 @@ These test behaviour across modules, or the repository itself, so they are named
   text can close its fence (editor spec §51, spec_secrets_and_fences).
 - `python/graph_spec/tests/test_limits.py` — the Python library stops at the limits of `limit-cases.json`, as the
   JavaScript one does (editor spec §51, spec_read_limits).
+- `python/graph_spec/tests/test_hashes_named.py` — the Python library and Grafeo answer `hash-cases.json` as the
+  JavaScript one does. Both refuse a change set made against a bare state (editor spec §51, spec_hashes_named).
 - `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
