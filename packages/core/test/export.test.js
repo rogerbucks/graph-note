@@ -202,7 +202,7 @@ describe('the image of a view', () => {
     const p = PALETTES.light;
     const { svg } = exportSvg(only, engine, INFO);
     const said = texts(svg);
-    assert.ok(said.includes('the owner') && said.includes('where they sit'));
+    assert.ok(said.includes('① the owner') && said.includes('② where they sit'), 'each with its tag');
     const swatches = [...svg.matchAll(/<rect class="legend-swatch"[^>]*>/g)].map((m) => m[0]);
     assert.equal(swatches.length, 4, 'two kinds and two looks');
     for (const hue of ['green', 'purple'])

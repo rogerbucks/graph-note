@@ -60,7 +60,8 @@
 // 18 Oct 2026. So did the tallest drawing in a note (`tallestOf, DrawingHeightSetting`, drawing_height_setting),
 // schemaPicture (schema_drawn) and withStandardSchemas (standard_schemas). thingSaid and linksSaid (details_said) came
 // the same day, as did a drawing in the direction it is read (`mirrored, inReadingDirection, shownAsRead`,
-// rtl_drawing_direction). The lists moved here from index.test.js in the review of #452.
+// rtl_drawing_direction). lookTag and lookTags came on 20 Oct 2026 (colour_never_alone). The lists moved here from
+// index.test.js in the review of #452.
 import { TYPES_LATE } from './index-types-late.js';
 
 /** The values src/index.ts exports, sorted. */
@@ -293,6 +294,8 @@ export const VALUES = [
   'loadEngine',
   'lockBlock',
   'lookOf',
+  'lookTag',
+  'lookTags',
   'makeList',
   'makeProposal',
   'makeView',
@@ -586,11 +589,5 @@ export const TYPES = [
   'Option',
   'OptionChoice',
   'Outside',
-  'Palette',
-  'PaneWrite',
-  'Park',
-  'Parked',
-  'ParkedCount',
-  'Parsed',
   ...TYPES_LATE,
 ];

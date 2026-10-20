@@ -4,8 +4,15 @@
 // names, estimates, parked things, proposals and the changes view.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, until } from '../packages/obsidian/test/host/load-plugin.js';
+import { readNote } from '../packages/core/src/drawing.ts';
+import { loadEngine } from '../packages/core/src/engine.ts';
+import { exportSvg } from '../packages/core/src/export.ts';
+import { exportScope } from '../packages/core/src/export-scope.ts';
+import { legendOf, readStyle } from '../packages/core/src/style.ts';
+import { build, load, until } from '../packages/obsidian/test/host/load-plugin.js';
+import { fence } from '../packages/obsidian/test/host/notes.js';
 import { READER, open, type } from '../packages/obsidian/test/host/pane-notes.js';
+import { show } from '../packages/obsidian/test/host/view-notes.js';
 import { rulesOf, valueOf } from './repository/sheet-rules.js';
 
 // a warning on its own line (a name not in the graph), then an error on its own (a value left out)
@@ -70,5 +77,82 @@ describe('an error is told from a warning without its colour', () => {
     assert.equal(style('.thoughtknot-problem.is-error'), 'wavy');
     assert.equal(style('.thoughtknot-problem.is-warning'), 'dashed');
     assert.equal(style('.thoughtknot-problem.is-hint'), 'dotted');
+  });
+});
+
+// A view whose looks give colours only: purple for the places near the park, orange for the lake
+const TRIP = `// graph: trip
+(home:Place {name: 'Home'}),
+(park:Place {name: 'The park'}),
+(cafe:Cafe {name: 'Cafe'}),
+(lake:Place {name: 'The lake'}),
+(home)-[:NEAR]->(park), (park)-[:NEAR]->(cafe), (cafe)-[:NEAR]->(lake)`;
+const NEAR = "// graph: trip · QUERY view round_park\nMATCH (n {id: 'park'})-[]-{1,3}(m) RETURN n, m";
+const LOOKS = `// graph: trip_style · STYLE trip
+(a:Look {view: 'round_park', kind: 'Place', colour: 'purple', means: 'places'}),
+(b:Look {view: 'round_park', thing: 'lake', colour: 'orange', means: 'by the water'})`;
+const BLOCKS = [TRIP, NEAR, LOOKS];
+const reading = readNote(BLOCKS);
+const { style } = readStyle(BLOCKS, 'trip', reading);
+const legend = legendOf(style, { view: 'round_park' });
+
+describe('a look’s colour is told by a tag as well', () => {
+  // proves: colour_never_alone
+  test('each colour of a view’s legend has its own numbered tag, in the legend’s order', async () => {
+    const { lookTags } = await import('../packages/core/src/look-tags.ts');
+    assert.deepEqual(
+      legend.map((e) => e.means),
+      ['places', 'by the water'],
+    );
+    assert.deepEqual(
+      [...lookTags(legend)],
+      [
+        ['purple', '①'],
+        ['orange', '②'],
+      ],
+    );
+    const many = Array.from({ length: 22 }, (_, i) => ({ colour: `c${i}`, means: `m${i}` }));
+    assert.deepEqual([...lookTags(many).values()].slice(18), ['⑲', '⑳', '(21)', '(22)']);
+  });
+
+  // proves: colour_never_alone
+  test('on the view’s card: each box a look colours carries its tag, and the legend gives it beside the meaning', async () => {
+    const note = ['# Trip', '', ...BLOCKS.flatMap((b) => [fence(b), '']), ''].join('\n');
+    const env = await load({ files: { 'Trip.md': note } });
+    try {
+      const { el } = await show(env, note, 1);
+      const tagOf = (key) =>
+        el
+          .querySelectorAll('g.node')
+          .find((g) => g.getAttribute('data-key') === key)
+          ?.querySelector('.thoughtknot-look-tag')?.textContent;
+      assert.equal(tagOf('park'), '①');
+      assert.equal(tagOf('home'), '①');
+      assert.equal(tagOf('lake'), '②', 'the thing’s own look, over its kind’s');
+      assert.equal(tagOf('cafe'), undefined, 'no look, no tag');
+      const rows = el.querySelectorAll('.thoughtknot-legend li').map((li) => li.textContent);
+      assert.deepEqual(rows, ['① places', '② by the water']);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: colour_never_alone
+  test('in an export of the view: each coloured box carries its tag, and the legend gives it beside the meaning', async () => {
+    const engine = await loadEngine();
+    const scope = exportScope(reading, {
+      graph: 'trip',
+      view: { name: 'round_park', spec: { kind: 'near', id: 'park', depth: 3 } },
+    });
+    const { svg } = exportSvg(scope, engine, { note: 'Trip.md', date: '2026-10-20', theme: 'light', style });
+    // the group of the box whose name is drawn as `name`
+    const group = (name) =>
+      [...svg.matchAll(/<g id="node\d+"[\s\S]*?<\/g>/g)].map((m) => m[0]).find((g) => g.includes(`>${name}</text>`)) ??
+      '';
+    assert.match(group('The park'), />①<\/text>/);
+    assert.match(group('The lake'), />②<\/text>/);
+    assert.doesNotMatch(group('Cafe'), /[①②]/);
+    const said = [...svg.matchAll(/>([^<>]+)<\/(?:text|tspan)>/g)].map((m) => m[1]);
+    assert.ok(said.includes('① places') && said.includes('② by the water'), said.join('|'));
   });
 });

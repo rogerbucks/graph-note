@@ -1364,6 +1364,12 @@
         "lookOf": [
           "value: (style: StyleGraph, scope: StyleScope, target: StyleTarget) => ThingLook"
         ],
+        "lookTag": [
+          "value: (n: number) => string"
+        ],
+        "lookTags": [
+          "value: (legend: readonly LegendEntry[]) => Map<string, string>"
+        ],
         "LookWrite": [
           "interface",
           "colour?: string | undefined",

@@ -816,6 +816,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     key, links by edge number).
   - An empty graph or view is `empty`, with `why`.
 - `export-marks.ts` — fading and looks written into the SVG (`marked`).
+- `look-tags.ts` — a numbered tag for each colour a view's looks use (`lookTag`, `lookTags`). Each box or link of that
+  colour carries the tag, and so does the legend. So no look is told by colour alone (§44, colour_never_alone).
   - Each faded thing and link gets an opacity in the style attribute of its group (the pane's 0.35).
   - Each look's border, text, line and format become style declarations in the locked blend of its hue, as the pane's
     stylesheet draws them. This is because an image cannot take the stylesheet.

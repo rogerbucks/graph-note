@@ -236,6 +236,11 @@
   fill: var(--gn-text-error);
   font-weight: var(--gn-font-weight-semibold);
 }
+/* A look colour's tag (§44, colour_never_alone): the same tag is on each box or link of that colour and in the legend. */
+.thoughtknot-svg .thoughtknot-look-tag {
+  font-size: 10px;
+  fill: var(--gn-text-normal);
+}
 /* A view (spec §7):
    - what is outside it is faded, and said so to screen readers;
    - each look's hue is on the outline only, in the locked line blend;
