@@ -109,6 +109,11 @@ jobs:
             not a finding. Do not report style a linter checks or what quality/risks.json already holds. Read a
             requirement's proved status from `node scripts/check-requirements.mjs --done N`, never by counting tests.
 
+            Each role is a character in docs/agents/ROLES.md, section "The review panel’s characters": Morgan
+            (security), Dot (release), Bram (coder and QA), Wren (architect), Pip (user experience), Juno
+            (neurodiversity), Tam (workflow), Rory (API) and Nell (AI). Open each role's part with a few dry, kind words
+            in that character's voice (humour setting 60%: often none), signed with its name. The risks table and the JSON stay plain: no jokes there.
+
             Write your findings to panel-out/panel.md as plain language (sentences of 25 words or fewer): first a
             table of proposed new risks, each as the JSON object quality/risks.json uses (id, role, area, title,
             risk, evidence, likelihood, impact, decision, fix, check, paths, effort), then one line per stale risk
