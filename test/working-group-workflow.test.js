@@ -34,11 +34,27 @@ describe('the workflow that keeps Sara up with the working group discussion', ()
     assert.match(jobs(text).check?.join('\n') ?? '', /github\.event\.discussion\.number == 825/);
   });
 
+  test('is woken only by a comment from the owner, a member or a collaborator, and hides the rest (risk TRUST-5)', () => {
+    const check = jobs(text).check.join('\n');
+    assert.match(
+      check,
+      /contains\(fromJSON\('\["OWNER","MEMBER","COLLABORATOR"\]'\), github\.event\.comment\.author_association\)/,
+    );
+    assert.match(check, /authorAssociation/);
+    const runs = runCommands(check);
+    const trimAt = runs.findIndex((r) => /working-group\.mjs trim/.test(r));
+    assert.ok(
+      trimAt >= 0 && trimAt < runs.findIndex((r) => /working-group\.mjs plan/.test(r)),
+      'trimmed before the plan',
+    );
+  });
+
   test('defaults to read-only; only the post job may write, and only to discussions', () => {
     assert.deepEqual(permissionValues(block(lines, 'permissions', 0) ?? []), ['read']);
-    assert.deepEqual(Object.keys(jobs(text)), ['check', 'draft', 'post']);
+    assert.deepEqual(Object.keys(jobs(text)), ['check', 'draft', 'vet', 'post']);
     assert.deepEqual(given('check'), ['contents: read', 'discussions: read']);
     assert.deepEqual(given('draft'), ['contents: read']);
+    assert.deepEqual(given('vet'), ['contents: read']);
     assert.deepEqual(given('post'), ['discussions: write']);
     assert.doesNotMatch(text, /write-all|contents: write|issues: write|pull-requests: write|id-token: write/);
   });
@@ -48,9 +64,15 @@ describe('the workflow that keeps Sara up with the working group discussion', ()
     assert.match(jobs(text).draft.join('\n'), /if: needs\.check\.outputs\.act == 'true'/);
   });
 
-  test('gives Claude no GitHub tools: it reads files and writes a draft, nothing else', () => {
+  test('gives Claude no GitHub tools: it reads files and may write its two draft files, nothing else', () => {
     const allowed = text.match(/--allowedTools "([^"]+)"/)?.[1] ?? '';
-    assert.deepEqual(allowed.split(','), ['Read', 'Glob', 'Grep', 'Write']);
+    assert.deepEqual(allowed.split(','), [
+      'Read',
+      'Glob',
+      'Grep',
+      'Write(.working-group/reply.md)',
+      'Write(.working-group/reply-to)',
+    ]);
     assert.match(text, /--max-turns \d+/);
   });
 
@@ -67,8 +89,19 @@ describe('the workflow that keeps Sara up with the working group discussion', ()
       ['actions/download-artifact'],
     );
     assert.doesNotMatch(post, /actions\/checkout|npm |node /);
-    assert.match(jobs(text).draft.join('\n'), /node scripts\/working-group\.mjs check/);
+    assert.match(post, /needs: vet\n/);
     assert.match(post, /addDiscussionComment/);
+  });
+
+  test('checks the draft in its own job, from a fresh checkout of the default branch, never where Claude wrote', () => {
+    const draft = jobs(text).draft.join('\n');
+    const vet = jobs(text).vet.join('\n');
+    assert.doesNotMatch(runCommands(draft).join('\n'), /node /, 'the draft job runs no script after Claude');
+    assert.match(vet, /needs: draft\n/);
+    assert.match(vet, /ref: \$\{\{ github\.event\.repository\.default_branch \|\| 'main' \}\}/);
+    const vetted = runCommands(vet).join('\n');
+    assert.match(vetted, /^node scripts\/working-group\.mjs check vet\/discussion\/discussion\.json vet\/draft$/m);
+    assert.equal((vetted.match(/node /g) ?? []).length, 1, 'the checker alone');
   });
 
   test('pins every action to a full commit and puts no event text in a command line', () => {

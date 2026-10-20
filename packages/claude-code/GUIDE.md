@@ -81,9 +81,10 @@ Whether the desktop app does, and keeps the drawing's style sheet, is checked by
 ### The data folder's guard
 
 - `data-guard.ts` — `guardDataFolder` (spec §26). The mod's data folder holds `settings.json` and the drafts, and is
-  the user's alone. So a `tool.call` hook in `register.tsx` refuses Claude's own Write, Edit, NotebookEdit and Bash
-  calls that reach it.
-  - A guard that fails refuses too. `MultiEdit` is not a tool of this Claude Code, and is judged if it appears.
+  the user's alone. So a `tool.call` hook in `register.tsx` refuses Claude's own calls that reach it.
+  - The hook takes every tool, not a list (risk TRUST-2). `pathOf` finds the path a tool writes: its known field, or
+    else `file_path`, `notebook_path` or `path`. So MultiEdit and a file tool from an MCP server are judged too.
+  - A guard that fails refuses too.
   - The refusal (`DATA_FOLDER_REFUSAL`) says the user changes these settings, in `settings.json` in the plugin data
     folder. It echoes nothing of the call.
   - Reads (the Read tool, Grep) are not hooked.
@@ -130,8 +131,8 @@ or Bash calls. So the guard does not meet them.
 ### The open note's guard
 
 - `data-guard.ts` — `guardOpenNote` (cc_claude_proposes, risk AI-1). While a note is open in the editor, Claude changes
-  it only by the `propose` tool. So the same `tool.call` hook refuses Claude's own Write, Edit, NotebookEdit and Bash
-  calls that reach that note.
+  it only by the `propose` tool. So the same `tool.call` hook refuses Claude's own file tool and Bash calls that reach
+  that note.
   - The note is the launcher's `note`: the full path of the note open now, or none. With none open, nothing is refused.
   - File tools are judged by the real path, as for the data folder: a relative path, a link or a change of case is
     found.
@@ -143,6 +144,23 @@ or Bash calls. So the guard does not meet them.
     MCP server. Other notes in the vault are not guarded.
 
 So a change to the open note is never applied by Claude's own tools while `guardOpenNote` holds: it waits on the card.
+
+### What sets the gate: its guard
+
+- `gate-guard.ts` — `guardGateFiles` (spec §26, risk TRUST-1). Two vault files set Claude's gate: the matrix note named
+  in the settings (`aiMatrixNote`), and each note's classification line. The same `tool.call` hook refuses Claude's own
+  calls that would change either.
+  - **The matrix note:** a file tool whose real path ends with the note's path in the vault is refused
+    (`MATRIX_NOTE_REFUSAL`). A link to it is found. Bash is refused when it names the note's file name.
+  - **A classification:** the note is read, the call's change is made to a copy, and the classification before and
+    after is compared. A change or removal is refused (`CLASSIFICATION_REFUSAL`). So is an edit that breaks the front
+    matter around it. A note not yet made may be written.
+  - When the note cannot be read, a call is refused if any text it carries holds a classification line.
+  - Bash is refused when it names `classification`, unless it only searches or prints (`grep`, `rg`, `cat`, `head`,
+    `tail`, `less`) with nothing to write its output.
+  - The refusals name no level, path or text of the call.
+  - **What it does not stop:** a command that changes the front matter without naming it, such as by line numbers. And
+    the list under Bash limits above. The user changes a classification in the note themselves.
 
 ### Proposals, the hooks entry and the page's session
 
