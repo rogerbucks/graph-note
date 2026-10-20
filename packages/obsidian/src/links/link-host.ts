@@ -104,15 +104,19 @@ const OFFERED = 'data-thoughtknot-image-offered';
 function offerImages(el: HTMLElement, remote: ReadonlySet<string>): void {
   if (!remote.size) return;
   for (const a of Array.from(el.querySelectorAll('a'))) {
-    const address = a.getAttribute('data-href') ?? '';
-    if (a.hasAttribute(OFFERED) || !remote.has(address)) continue;
-    a.setAttribute(OFFERED, '');
-    let host = address;
+    // the address loaded is the one read from the Markdown, never the page's text, and only one on the web
+    const shown = a.getAttribute('data-href'),
+      address = [...remote].find((r) => r === shown);
+    if (a.hasAttribute(OFFERED) || !address) continue;
+    let host = '';
     try {
-      host = new URL(address).host || address;
+      const url = new URL(address);
+      if (url.protocol === 'https:' || url.protocol === 'http:') host = url.host;
     } catch {
-      host = address;
+      host = '';
     }
+    if (!host) continue;
+    a.setAttribute(OFFERED, '');
     const box = createSpan({ cls: 'thoughtknot-remote-image' });
     a.parentElement?.insertBefore(box, a);
     box.appendChild(a);
