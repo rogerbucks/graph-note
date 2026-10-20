@@ -31,8 +31,7 @@ On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`
   for one that passed first. A doc: `node scripts/plain-docs.mjs`. An export: `node scripts/public-api.mjs --update`.
 - **More of the same.** A dependency: `node scripts/notices.mjs`. A slice done: `node scripts/readme-status.mjs --write`.
   A fixed sleep removed: `node scripts/fixed-sleeps.mjs --tighten`.
-- **Merging.** Mark it ready: a draft runs part of CI. Once the full run is green, turn on auto-merge, as a merge commit.
-  No "all good" is needed (Roger, 20 Oct 2026). Ask Roger only for a real decision.
+- **Merging.** Mark it ready. Once its full CI run is green, turn on auto-merge, as a merge commit. No "all good" needed.
 
 ## Guards
 
