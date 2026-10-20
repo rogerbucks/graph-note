@@ -66,6 +66,18 @@ declare namespace GraphSpecCheck {
   /** A graph's canonical text, hashed: the state a change set is made against is its first sixteen digits. */
   function canon(g: Graph): string;
 
+  /** The limits every reader, check and join stops at, each refusal a ProfileError GN601 to GN605 (editor spec §51). */
+  const LIMITS: {
+    readonly block_chars: number;
+    readonly items: number;
+    readonly nesting: number;
+    readonly join_documents: number;
+    readonly join_items: number;
+  };
+  /** The kinds of secret a text holds, each once and in words, never the text that matched (editor spec §51). */
+  function secretsIn(text: string): string[];
+  /** [id, kind] for each secret any text value of a graph holds. */
+  function secretsInGraph(g: Graph): [string, string][];
   /** A change set's first line (§24 H1): its graph, its id, the state it was made against and its author. Null when it is not one. */
   function changesetHeader(block: string): { graph: string; id: string; against: string; by: string } | null;
   /** A change set checked against its base blocks: each check with whether it passed, its header and the graph's state after it. */
@@ -74,12 +86,16 @@ declare namespace GraphSpecCheck {
     block: string,
     matrix?: unknown,
     switches?: Set<string>,
+    /** The author id of the session that sent the set. When given, it is the author, whatever the header names (editor spec §51). */
+    session?: string | null,
   ): {
     results: [string, boolean][];
     /** The header, with `refreshes` — each §20 value the change set recomputes: the claim, the key, its value before and after. */
     header:
       | ({ graph: string; id: string; against: string; by: string } & {
           refreshes?: [string, string, Value | null, Value][];
+          /** The author the header named, when it was not the session that sent the set. */
+          claimed?: string;
           /** Each DELETE and SET it holds, in order: the id derived from its statement, its kind of change and the `//@ reason:` hint above it. */
           changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][] }[];
         })
@@ -105,6 +121,10 @@ declare namespace GraphSpecCheck {
   function tokens(text: string): [string, string, number, string, number][];
   /** The first sixteen hexadecimal digits of the SHA-256 of an object in canonical JSON (RFC 8785). */
   function hash16(value: unknown): string;
+  /** A hash written with its algorithm's name: `sha-256-64:` for 16 digits, `sha-256:` for 64 (editor spec §51). */
+  function named(digits: string): string;
+  /** Whether a value is a hash that names an algorithm the check knows, with the right number of digits for it. */
+  function isNamed(value: unknown): boolean;
   /** One statement of a change set, as the check reads it (§24). */
   interface ReadChange {
     op: 'delete-thing' | 'detach-delete-thing' | 'delete-link' | 'set-thing' | 'set-link';

@@ -40,7 +40,7 @@ const written = (proposal = proposalOf()) => noteWithChangeSet(proposal, NOTE_WI
 describe('proposals_checked: the review refuses what the check refuses, and writes only what it passes', () => {
   /** A change set written by something else, in a note whose graphs say who ada is. */
   const foreign = (body) => {
-    const block = `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada\n${body}`;
+    const block = `// graph: reader · CHANGE SET cs1 · against sha-256-64:${BASIS} · by ada\n${body}`;
     return { block, note: `${NOTE_WITH_ADA}\n\`\`\`gql\n${block}\n\`\`\`\n` };
   };
 
@@ -86,7 +86,7 @@ describe('proposals_checked: the review refuses what the check refuses, and writ
 
 describe('proposals_checked: a DELETE keeps what it says, and a label in the MATCH is held to', () => {
   test('a plain DELETE is read as plain, written back as plain, and never detaches', () => {
-    const block = `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada\nMATCH (v {id: 'large_reader'}) DELETE v`;
+    const block = `// graph: reader · CHANGE SET cs1 · against sha-256-64:${BASIS} · by ada\nMATCH (v {id: 'large_reader'}) DELETE v`;
     const [c] = ProposalReview.fromChangeSet(block, NOTE_WITH_ADA).proposal.changes;
     assert.equal(c.detach, false);
     assert.equal(statementOf(c), "MATCH (v {id: 'large_reader'}) DELETE v");
@@ -124,7 +124,7 @@ describe('proposals_checked: a DELETE keeps what it says, and a label in the MAT
   });
 
   test('the labels are read from the statement and written back, for a thing, a value and a link', () => {
-    const block = `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada
+    const block = `// graph: reader · CHANGE SET cs1 · against sha-256-64:${BASIS} · by ada
 MATCH (v:Person {id: 'alice'}) SET v.age = 3
 MATCH (a:Option {id: 'large_reader'})-[r:ANSWERS]->(b:Question {id: 'question'}) DELETE r`;
     const [set, del] = ProposalReview.fromChangeSet(block, NOTE_WITH_ADA).proposal.changes;
@@ -141,7 +141,7 @@ describe('cs-rejected-out: only a data block of the judgement graph is the judge
   test('a change set, a query or a schema that is named for one is never written into', () => {
     const { note } = written();
     const fakes = [
-      `// graph: x_judgements · CHANGE SET z · against ${BASIS} · by ada\n(zz:Option {name: 'Z'})`,
+      `// graph: x_judgements · CHANGE SET z · against sha-256-64:${BASIS} · by ada\n(zz:Option {name: 'Z'})`,
       "// graph: judgements · SCHEMA s@1\n(m:GraphMeta {id: 'meta:judgements', graph: 'judgements'})",
     ];
     for (const fake of fakes) {

@@ -5,6 +5,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from graphspec.reader.limits import within_nesting
+
 if TYPE_CHECKING:
     from graphspec.rules.plain_graph import Graph
 
@@ -24,14 +26,18 @@ def path_steps(g: Graph, pid: str) -> list[dict[str, Any]]:
     ]
 
 
-def view_at(g: Graph, pid: str, level: int, _seen: set[str] | None = None) -> list[str]:
+def view_at(
+    g: Graph, pid: str, level: int, _seen: set[str] | None = None, _depth: int = 0
+) -> list[str]:
     """A path seen at an altitude: every step that is a path above that level opened; everything at
-    or below kept."""
+    or below kept. Paths opened deeper than the limit are refused (editor spec §51,
+    spec_read_limits)."""
+    within_nesting(_depth)
     seen = (_seen or set()) | {pid}
     out = []
     for r in path_steps(g, pid):
         if "Path" in r["labels"] and (r["altitude"] or 0) > level and r["id"] not in seen:
-            out += view_at(g, r["id"], level, seen)
+            out += view_at(g, r["id"], level, seen, _depth + 1)
         else:
             out.append(r["id"])
     return out

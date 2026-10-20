@@ -207,7 +207,7 @@ describe('a model’s own answer cannot declare an author', () => {
 });
 
 describe('only the declaration the editor writes is written with the first accept', () => {
-  const header = `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada`;
+  const header = `// graph: reader · CHANGE SET cs1 · against sha-256-64:${BASIS} · by ada`;
 
   /** A change set from elsewhere, whose first item names its own author, accepting its SET alone. */
   const acceptSet = (first) => {

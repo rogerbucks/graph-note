@@ -1,0 +1,137 @@
+{
+  "about": "Named hashes (editor spec section 51, spec_hashes_named; requirements/hashes.md). Every hash a judgement graph holds names its algorithm, and a judgement or a serving edited after its content hash was made is reported. Both libraries run these cases: packages/graph-spec/test/hashes.test.mjs and python/graph_spec/tests/test_hashes_named.py. Each case gives the judgement graph jud, and whether each rule it names holds.",
+  "rules": {
+    "named": "every hash names its algorithm: sha-256-64: or sha-256: before its digits (editor spec §51)",
+    "judgement": "§23 rule 7: no judgement is edited — each content hash, covering its pins, still matches (rule:judgement-hash@1)",
+    "serving": "§24 H3 rule 5: no serving is edited — each content hash, covering what it served, still matches (rule:serving-hash@1)"
+  },
+  "data": ["// graph: loans", "(L1:Loan {id: 'loan:L1', balance_cents: 1000, days_late: 40})"],
+  "cases": [
+    {
+      "name": "a judgement whose hashes name sha-256-64 holds",
+      "body": [
+        "// graph: jud",
+        "(t_rests:ElementType {name: 'RESTS_ON', kind: 'edge', reading: 'rests on', reverse_name: 'is the basis of'}),",
+        "(r_L1:Ref {id: 'ref:loans/loan:L1', ref: 'loan:L1', graph: 'loans'}),",
+        "(d1:Decision {id: 'decision:L1', statement: 'Write off L1', at: DATE '2026-12-14', content_hash: 'sha-256-64:57b3b7e3cf39e0ef'}),",
+        "(d1)-[:RESTS_ON {reads: 'balance_cents, days_late', hash: 'sha-256-64:b9bfb43139c2ef60', as_of: DATE '2026-12-13'}]->(r_L1)"
+      ],
+      "holds": {
+        "named": true,
+        "judgement": true
+      }
+    },
+    {
+      "name": "a pin whose hash names no algorithm is refused",
+      "body": [
+        "// graph: jud",
+        "(t_rests:ElementType {name: 'RESTS_ON', kind: 'edge', reading: 'rests on', reverse_name: 'is the basis of'}),",
+        "(r_L1:Ref {id: 'ref:loans/loan:L1', ref: 'loan:L1', graph: 'loans'}),",
+        "(d1:Decision {id: 'decision:L1', statement: 'Write off L1', at: DATE '2026-12-14', content_hash: 'sha-256-64:7d1f54a3028471c4'}),",
+        "(d1)-[:RESTS_ON {reads: 'balance_cents, days_late', hash: 'b9bfb43139c2ef60', as_of: DATE '2026-12-13'}]->(r_L1)"
+      ],
+      "holds": {
+        "named": false,
+        "judgement": true
+      }
+    },
+    {
+      "name": "a content hash that names no algorithm is refused",
+      "body": [
+        "// graph: jud",
+        "(t_rests:ElementType {name: 'RESTS_ON', kind: 'edge', reading: 'rests on', reverse_name: 'is the basis of'}),",
+        "(r_L1:Ref {id: 'ref:loans/loan:L1', ref: 'loan:L1', graph: 'loans'}),",
+        "(d1:Decision {id: 'decision:L1', statement: 'Write off L1', at: DATE '2026-12-14', content_hash: '57b3b7e3cf39e0ef'}),",
+        "(d1)-[:RESTS_ON {reads: 'balance_cents, days_late', hash: 'sha-256-64:b9bfb43139c2ef60', as_of: DATE '2026-12-13'}]->(r_L1)"
+      ],
+      "holds": {
+        "named": false,
+        "judgement": true
+      }
+    },
+    {
+      "name": "a hash that names an algorithm the check does not know is refused",
+      "body": [
+        "// graph: jud",
+        "(t_rests:ElementType {name: 'RESTS_ON', kind: 'edge', reading: 'rests on', reverse_name: 'is the basis of'}),",
+        "(r_L1:Ref {id: 'ref:loans/loan:L1', ref: 'loan:L1', graph: 'loans'}),",
+        "(d1:Decision {id: 'decision:L1', statement: 'Write off L1', at: DATE '2026-12-14', content_hash: 'sha-256-64:fc267dedd7fd0ccf'}),",
+        "(d1)-[:RESTS_ON {reads: 'balance_cents, days_late', hash: 'md5:b9bfb43139c2ef60', as_of: DATE '2026-12-13'}]->(r_L1)"
+      ],
+      "holds": {
+        "named": false,
+        "judgement": true
+      }
+    },
+    {
+      "name": "a hash with the wrong number of digits for its name is refused",
+      "body": [
+        "// graph: jud",
+        "(t_rests:ElementType {name: 'RESTS_ON', kind: 'edge', reading: 'rests on', reverse_name: 'is the basis of'}),",
+        "(r_L1:Ref {id: 'ref:loans/loan:L1', ref: 'loan:L1', graph: 'loans'}),",
+        "(d1:Decision {id: 'decision:L1', statement: 'Write off L1', at: DATE '2026-12-14', content_hash: 'sha-256-64:fa2336db54f758ac'}),",
+        "(d1)-[:RESTS_ON {reads: 'balance_cents, days_late', hash: 'sha-256:b9bfb43139c2ef60', as_of: DATE '2026-12-13'}]->(r_L1)"
+      ],
+      "holds": {
+        "named": false,
+        "judgement": true
+      }
+    },
+    {
+      "name": "a judgement edited after its hash was made is reported",
+      "body": [
+        "// graph: jud",
+        "(t_rests:ElementType {name: 'RESTS_ON', kind: 'edge', reading: 'rests on', reverse_name: 'is the basis of'}),",
+        "(r_L1:Ref {id: 'ref:loans/loan:L1', ref: 'loan:L1', graph: 'loans'}),",
+        "(d1:Decision {id: 'decision:L1', statement: 'Keep L1 open', at: DATE '2026-12-14', content_hash: 'sha-256-64:57b3b7e3cf39e0ef'}),",
+        "(d1)-[:RESTS_ON {reads: 'balance_cents, days_late', hash: 'sha-256-64:b9bfb43139c2ef60', as_of: DATE '2026-12-13'}]->(r_L1)"
+      ],
+      "holds": {
+        "named": true,
+        "judgement": false
+      }
+    },
+    {
+      "name": "a serving sealed by its content hash holds",
+      "body": [
+        "// graph: jud",
+        "(t_rests:ElementType {name: 'RESTS_ON', kind: 'edge', reading: 'rests on', reverse_name: 'is the basis of'}),",
+        "(r_L1:Ref {id: 'ref:loans/loan:L1', ref: 'loan:L1', graph: 'loans'}),",
+        "(sv:Serving {id: 'serving:L1', at: DATE '2026-12-13', consumer: 'model:drafter', consumer_kind: 'local', conditions_met: FALSE, content_hash: 'sha-256-64:26129389437aa86c'}),",
+        "(sv)-[:SERVED {reads: 'balance_cents, days_late', hash: 'sha-256-64:b9bfb43139c2ef60', as_of: DATE '2026-12-13', classification: 'Own'}]->(r_L1)"
+      ],
+      "holds": {
+        "named": true,
+        "serving": true
+      }
+    },
+    {
+      "name": "a serving edited after its hash was made is reported",
+      "body": [
+        "// graph: jud",
+        "(t_rests:ElementType {name: 'RESTS_ON', kind: 'edge', reading: 'rests on', reverse_name: 'is the basis of'}),",
+        "(r_L1:Ref {id: 'ref:loans/loan:L1', ref: 'loan:L1', graph: 'loans'}),",
+        "(sv:Serving {id: 'serving:L1', at: DATE '2026-12-13', consumer: 'model:drafter', consumer_kind: 'local', conditions_met: FALSE, content_hash: 'sha-256-64:26129389437aa86c'}),",
+        "(sv)-[:SERVED {reads: 'balance_cents, days_late', hash: 'sha-256-64:b9bfb43139c2ef60', as_of: DATE '2026-12-13', classification: 'Personal'}]->(r_L1)"
+      ],
+      "holds": {
+        "named": true,
+        "serving": false
+      }
+    },
+    {
+      "name": "a serving with no content hash is reported",
+      "body": [
+        "// graph: jud",
+        "(t_rests:ElementType {name: 'RESTS_ON', kind: 'edge', reading: 'rests on', reverse_name: 'is the basis of'}),",
+        "(r_L1:Ref {id: 'ref:loans/loan:L1', ref: 'loan:L1', graph: 'loans'}),",
+        "(sv:Serving {id: 'serving:L1', at: DATE '2026-12-13', consumer: 'model:drafter', consumer_kind: 'local', conditions_met: FALSE}),",
+        "(sv)-[:SERVED {reads: 'balance_cents, days_late', hash: 'sha-256-64:b9bfb43139c2ef60', as_of: DATE '2026-12-13', classification: 'Own'}]->(r_L1)"
+      ],
+      "holds": {
+        "named": true,
+        "serving": false
+      }
+    }
+  ]
+}

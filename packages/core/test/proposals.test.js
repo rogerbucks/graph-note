@@ -333,7 +333,7 @@ describe('proposal_provenance: a proposal shows who proposed it, when and what i
 
   test('the basis is the graph’s state as graph-spec’s change sets name it: a change set made against it passes that check', () => {
     const base = blocksOf(NOTE);
-    const block = `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada\n${SMALL}`;
+    const block = `// graph: reader · CHANGE SET cs1 · against sha-256-64:${BASIS} · by ada\n${SMALL}`;
     const results = gs.checkChangeset(base, block, {}).results;
     assert.deepEqual(
       results.find(([label]) => label.startsWith('it was made against the graph as it stands')),

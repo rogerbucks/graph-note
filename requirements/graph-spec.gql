@@ -1,4 +1,4 @@
-// graph: requirements · SOURCE · schema spec-requirements@1 · 209 requirements, 10 wordings
+// graph: requirements · SOURCE · schema spec-requirements@1 · 210 requirements, 10 wordings
 // The graph spec, frozen as it stood before the requirements moved to GitHub (Roger's vault, 19 Oct 2026).
 // Each Section is a § the code cites. Each Requirement's quote is the rule's own words. Do not edit by hand.
 // It came by a paste. Its escapes, underscores and the emphasis inside its quotes were put back from the spec's own text.
@@ -524,6 +524,8 @@ INSERT
 (r24_serving4:Requirement {id: 'req:24.serving4', level: 'must', statement: 'Every proposal a model generated used a serving', quote: 'Every proposal a model generated used a serving'}), (r24_serving4)-[:PART_OF]->(s24),
 (r24_serving4)-[:DECIDED_IN]->(d2026_10_05_A_model_s_proposal_must_come),
 (r24_serving4)-[:PROVED_BY {test: 'G21'}]->(cjudgements),
+(r24_serving5:Requirement {id: 'req:24.serving5', level: 'must', statement: 'No serving is edited: each content hash, covering what it served, still matches', quote: 'No serving is edited'}), (r24_serving5)-[:PART_OF]->(s24),
+(r24_serving5)-[:PROVED_BY {test: 'F15'}]->(cview_server),
 (r24_cs_linted:Requirement {id: 'req:24.cs-linted', level: 'must', statement: 'A change set has a complete header and passes the dialect linter', quote: 'the header is complete, and the block passes the dialect linter (H1);'}), (r24_cs_linted)-[:PART_OF]->(s24),
 (r24_cs_linted)-[:DECIDED_IN]->(d2026_10_05_An_AI_writes_only_claims_and),
 (r24_cs_linted)-[:PROVED_BY {test: 'X8'}]->(cchange_sets),

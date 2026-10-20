@@ -7,8 +7,10 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
 from graphspec.engine.documents.classification import destination_matrix, may_serve
+from graphspec.engine.judgements.basis import serving_hash
 from graphspec.engine.judgements.proposers import proposers_of
 from graphspec.engine.queries import Q
+from graphspec.rules.named_hashes import digits_of
 
 if TYPE_CHECKING:
     from grafeo import GrafeoDB
@@ -71,6 +73,20 @@ def served_rules(db: GrafeoDB, jg: str) -> list[tuple[str, bool, str]]:
         (
             "§24 H3 rule 4: every proposal a model generated used a serving — "
             "it drafted from what it was shown",
+            not bad,
+            str(bad),
+        )
+    )
+    db.set_graph(jg)
+    bad = sorted(
+        r["s"]
+        for r in Q(db, "MATCH (s:Serving) RETURN s.id AS s, s.content_hash AS h")
+        if digits_of(r["h"]) != serving_hash(db, jg, r["s"])
+    )
+    out.append(
+        (
+            "§24 H3 rule 5: no serving is edited — each content hash, covering what it served, "
+            "still matches (rule:serving-hash@1)",
             not bad,
             str(bad),
         )

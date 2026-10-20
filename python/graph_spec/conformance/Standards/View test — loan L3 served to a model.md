@@ -39,6 +39,7 @@ edges:
 | F12 | a proposal pin whose hash differs from what was served | caught by H3 rule 1 |
 | F13 | a pin on an item the model was never served | caught by H3 rule 1 |
 | F14 | a served item recorded as Eyes-only | caught by H3 rule 2 |
+| F15 | the serving's date edited after it was recorded | caught by H3 rule 5 |
 
 ## A note from the borrower
 
@@ -70,26 +71,26 @@ MATCH (r6:Ref {id: 'ref:loanbook/ev:L3/grace'})
 MATCH (r7:Ref {id: 'ref:loanbook/loan:L3'})
 MATCH (pp:Proposal {id: 'proposal:L3'})
 INSERT
- (sv:Serving {id: 'serving:L3/draft', at: DATE '2026-12-13', consumer: 'model:drafter', consumer_kind: 'cloud', conditions_met: FALSE}),
+ (sv:Serving {id: 'serving:L3/draft', at: DATE '2026-12-13', consumer: 'model:drafter', consumer_kind: 'cloud', conditions_met: FALSE, content_hash: 'sha-256-64:4e87ce0873d929ec'}),
  (r0:Ref {id: 'ref:loanbook/path:L3/life', ref: 'path:L3/life', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'altitude, name, ordered_by', hash: 'a85410534743ead2', as_of: DATE '2026-12-13', classification: 'Own'}]->(r0),
+ (sv)-[:SERVED {reads: 'altitude, name, ordered_by', hash: 'sha-256-64:a85410534743ead2', as_of: DATE '2026-12-13', classification: 'Own'}]->(r0),
  (r1:Ref {id: 'ref:loanbook/ev:L3/request', ref: 'ev:L3/request', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'at, kind', hash: '66bc7375f58fefbe', as_of: DATE '2026-12-13', classification: 'Own'}]->(r1),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:66bc7375f58fefbe', as_of: DATE '2026-12-13', classification: 'Own'}]->(r1),
  (r2:Ref {id: 'ref:loanbook/ev:L3/sign', ref: 'ev:L3/sign', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'at, kind', hash: '724549cbbe271480', as_of: DATE '2026-12-13', classification: 'Own'}]->(r2),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:724549cbbe271480', as_of: DATE '2026-12-13', classification: 'Own'}]->(r2),
  (r3:Ref {id: 'ref:loanbook/ev:L3/drawdown', ref: 'ev:L3/drawdown', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'at, kind', hash: 'b4eea5aff82e5234', as_of: DATE '2026-12-13', classification: 'Own'}]->(r3),
- (sv)-[:SERVED {reads: 'altitude, name, ordered_by', hash: '0da15fb864c28859', as_of: DATE '2026-12-13', classification: 'Own'}]->(r4),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:b4eea5aff82e5234', as_of: DATE '2026-12-13', classification: 'Own'}]->(r3),
+ (sv)-[:SERVED {reads: 'altitude, name, ordered_by', hash: 'sha-256-64:0da15fb864c28859', as_of: DATE '2026-12-13', classification: 'Own'}]->(r4),
  (r5:Ref {id: 'ref:loanbook/ev:L3/missed', ref: 'ev:L3/missed', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'at, kind', hash: 'a1208ca8465660ca', as_of: DATE '2026-12-13', classification: 'Own'}]->(r5),
- (sv)-[:SERVED {reads: 'at, kind', hash: '27d759be8114e7c0', as_of: DATE '2026-12-13', classification: 'Own'}]->(r6),
- (sv)-[:SERVED {reads: 'balance_cents, days_late, servicer', hash: 'aaae1ecfc82d02ce', as_of: DATE '2026-12-13', classification: 'Own'}]->(r7),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:a1208ca8465660ca', as_of: DATE '2026-12-13', classification: 'Own'}]->(r5),
+ (sv)-[:SERVED {reads: 'at, kind', hash: 'sha-256-64:27d759be8114e7c0', as_of: DATE '2026-12-13', classification: 'Own'}]->(r6),
+ (sv)-[:SERVED {reads: 'balance_cents, days_late, servicer', hash: 'sha-256-64:aaae1ecfc82d02ce', as_of: DATE '2026-12-13', classification: 'Own'}]->(r7),
  (r8:Ref {id: 'ref:loanbook/claim:L3/borrower-note', ref: 'claim:L3/borrower-note', graph: 'loanbook'}),
- (sv)-[:SERVED {reads: 'claimed_property, claimed_value, confidence, likelihood, status', hash: 'fc498370d4d0b853', as_of: DATE '2026-12-13', classification: 'Own'}]->(r8),
+ (sv)-[:SERVED {reads: 'claimed_property, claimed_value, confidence, likelihood, status', hash: 'sha-256-64:fc498370d4d0b853', as_of: DATE '2026-12-13', classification: 'Own'}]->(r8),
  (pp)-[:USED]->(sv),
- (pp)-[:RESTS_ON {reads: 'balance_cents, days_late, servicer', hash: 'aaae1ecfc82d02ce', as_of: DATE '2026-12-13'}]->(r7),
- (pp)-[:RESTS_ON {reads: 'at, kind', hash: '27d759be8114e7c0', as_of: DATE '2026-12-13'}]->(r6),
- (pp)-[:RESTS_ON {reads: 'altitude, name, ordered_by', hash: '0da15fb864c28859', as_of: DATE '2026-12-13'}]->(r4)
+ (pp)-[:RESTS_ON {reads: 'balance_cents, days_late, servicer', hash: 'sha-256-64:aaae1ecfc82d02ce', as_of: DATE '2026-12-13'}]->(r7),
+ (pp)-[:RESTS_ON {reads: 'at, kind', hash: 'sha-256-64:27d759be8114e7c0', as_of: DATE '2026-12-13'}]->(r6),
+ (pp)-[:RESTS_ON {reads: 'altitude, name, ordered_by', hash: 'sha-256-64:0da15fb864c28859', as_of: DATE '2026-12-13'}]->(r4)
 ```
 
 ## Conformance case
@@ -159,7 +160,8 @@ rounds:
             - {test: F11, treat_as: {loanbook: Eyes-only}}
             - {test: F11, serve: "path:L3/life", graph: loanbook, altitude: 3, budget: 600, refused: "Eyes-only"}
     mutations:
-      - {test: F12, name: "a proposal pin whose hash differs from what was served", document: "View test — loan L3 served to a model#The serving", replace_regex: "\\(pp\\)-\\[:RESTS_ON \\{reads: 'at, kind', hash: '[0-9a-f]{16}'", with_regex: "(pp)-[:RESTS_ON {reads: 'at, kind', hash: '0000000000000000'", expect_check: "§24 H3 rule 1"}
-      - {test: F13, name: "a pin on an item the model was never served", document: "View test — loan L3 served to a model#The serving", replace_regex: " \\(sv\\)-\\[:SERVED \\{reads: 'at, kind', hash: '27d759be8114e7c0'[^\\n]*\\n", with_regex: "", expect_check: "§24 H3 rule 1"}
+      - {test: F12, name: "a proposal pin whose hash differs from what was served", document: "View test — loan L3 served to a model#The serving", replace_regex: "\\(pp\\)-\\[:RESTS_ON \\{reads: 'at, kind', hash: 'sha-256-64:[0-9a-f]{16}'", with_regex: "(pp)-[:RESTS_ON {reads: 'at, kind', hash: 'sha-256-64:0000000000000000'", expect_check: "§24 H3 rule 1"}
+      - {test: F13, name: "a pin on an item the model was never served", document: "View test — loan L3 served to a model#The serving", replace_regex: " \\(sv\\)-\\[:SERVED \\{reads: 'at, kind', hash: 'sha-256-64:27d759be8114e7c0'[^\\n]*\\n", with_regex: "", expect_check: "§24 H3 rule 1"}
       - {test: F14, name: "a served item recorded as Eyes-only", document: "View test — loan L3 served to a model#The serving", replace_regex: "classification: 'Own'\\}\\]->\\(r8\\)", with_regex: "classification: 'Eyes-only'}]->(r8)", expect_check: "§24 H3 rule 2"}
+      - {test: F15, name: "a serving edited after it was recorded", document: "View test — loan L3 served to a model#The serving", replace_regex: "\\(sv:Serving \\{id: 'serving:L3/draft', at: DATE '2026-12-13'", with_regex: "(sv:Serving {id: 'serving:L3/draft', at: DATE '2026-12-12'", expect_check: "§24 H3 rule 5"}
 ```

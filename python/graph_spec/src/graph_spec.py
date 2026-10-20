@@ -138,6 +138,7 @@ from graphspec.engine.joining.union import (
 from graphspec.engine.joining.merge3 import (
     merge3,
 )
+from graphspec.reader.limits import LIMITS  # noqa: E402, F401  # editor spec §51, spec_read_limits
 from graphspec.engine.joining.finish import (
     finish,
     join,
@@ -256,6 +257,8 @@ from graphspec.engine.documents.classification import (
     document_class,
     may_serve,
 )
+from graphspec.reader.secrets import secrets_in  # noqa: E402, F401  # editor spec §51
+from graphspec.rules.named_hashes import is_named, named  # noqa: E402, F401  # editor spec §51
 from graphspec.engine.serving.view_server import (
     ViewServer,
 )

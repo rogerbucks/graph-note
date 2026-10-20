@@ -18,6 +18,7 @@ from graphspec.reader.canonical_hash import canon as plain_canon
 from graphspec.reader.store import Store
 from graphspec.rules.canonical_json import basis_hash as plain_basis_hash
 from graphspec.rules.judgements import judgement_hash as plain_judgement_hash
+from graphspec.rules.named_hashes import named
 from graphspec.rules.plain_graph import World
 
 
@@ -66,11 +67,13 @@ def _compute_plain(recipe: dict[str, Any], st: Store) -> str:
                 f"refused: {recipe['basis']} is not in graph {recipe['graph']} after loading "
                 f"{recipe['load']}"
             )
-        return plain_basis_hash(g.p(recipe["basis"]), recipe["reads"])
+        return named(plain_basis_hash(g.p(recipe["basis"]), recipe["reads"]))
     if "judgement" in recipe:
-        return plain_judgement_hash(w, recipe["graph"], recipe["judgement"])
+        return named(plain_judgement_hash(w, recipe["graph"], recipe["judgement"]))
     if "state_of" in recipe:
-        return plain_canon(st, recipe["state_of"])[0][:16]  # what a change set is made against
+        return named(
+            plain_canon(st, recipe["state_of"])[0][:16]
+        )  # what a change set is made against
     raise ValueError(
         f"refused: a recipe must name basis, judgement, state_of or ni — got {sorted(recipe)}"
     )
@@ -107,13 +110,12 @@ def compute(recipe: dict[str, Any], text: str, std_dir: str, vault_dir: str) -> 
                 f"refused: {recipe['basis']} is not in graph {recipe['graph']} after loading "
                 f"{recipe['load']}"
             )
-        return basis_hash(hit[0]["p"], recipe["reads"])
+        return named(basis_hash(hit[0]["p"], recipe["reads"]))
     if "judgement" in recipe:
-        return judgement_hash(db, recipe["graph"], recipe["judgement"])
+        return named(judgement_hash(db, recipe["graph"], recipe["judgement"]))
     if "state_of" in recipe:
-        return canon_graph(db, recipe["state_of"])[0][
-            :16
-        ]  # a graph's whole state — what a change set is made against (§24 H4)
+        # a graph's whole state — what a change set is made against (§24 H4)
+        return named(canon_graph(db, recipe["state_of"])[0][:16])
     raise ValueError(
         f"refused: a recipe must name basis, judgement, state_of or ni — got {sorted(recipe)}"
     )

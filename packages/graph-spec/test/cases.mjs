@@ -324,7 +324,7 @@ export const changesetCase = (against) => ({
     {
       base: library,
       block: lines(
-        `// graph: library · CHANGE SET cs1 · against ${against} · by ada`,
+        `// graph: library · CHANGE SET cs1 · against sha-256-64:${against} · by ada`,
         "(more:Book {title: 'A second book'}),",
         '(ada)-[:WROTE]->(more)',
       ),
@@ -332,7 +332,7 @@ export const changesetCase = (against) => ({
     {
       base: library,
       block: lines(
-        '// graph: library · CHANGE SET cs2 · against 0000000000000000 · by ada',
+        '// graph: library · CHANGE SET cs2 · against sha-256-64:0000000000000000 · by ada',
         "(late:Book {title: 'Made against an old state'})",
       ),
     },

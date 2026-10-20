@@ -209,7 +209,8 @@ class EnginePathsSkipTheReader(unittest.TestCase):
             ("g", "// graph: g\n(a:Person {name: 'A'})"),
             ("g", "// graph: g\n(b:Person {id: 'a', name: 'B'})"),
         ]
-        block = f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\n(c:Person)"
+        head = f"// graph: g · CHANGE SET cs1 · against sha-256-64:{state_hash(base)} · by a"
+        block = head + "\n(c:Person)"
         self.assertTrue(names_the_id(gs.check_changeset(base, block)[0], "a"))
 
     # Was a GAP, open after PR #36 too. Take a change set that writes a new node with an id the
@@ -219,7 +220,7 @@ class EnginePathsSkipTheReader(unittest.TestCase):
     def test_check_changeset_refuses_a_change_set_reusing_a_base_id(self):
         base = [("g", "// graph: g\n(a:Person {name: 'A'})")]
         block = (
-            f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\n"
+            f"// graph: g · CHANGE SET cs1 · against sha-256-64:{state_hash(base)} · by a\n"
             "(b:Person {id: 'a', name: 'A'})"
         )
         self.assertTrue(names_the_id(gs.check_changeset(base, block)[0], "a"))
@@ -231,7 +232,7 @@ class EnginePathsSkipTheReader(unittest.TestCase):
     def test_check_changeset_refuses_a_base_text_whose_first_line_names_another_graph(self):
         base = [("g", "// graph: h\n(a:Person {name: 'A'})")]
         block = (
-            f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\n"
+            f"// graph: g · CHANGE SET cs1 · against sha-256-64:{state_hash(base)} · by a\n"
             "(b:Person {id: 'a'})"
         )
         results = gs.check_changeset(base, block)[0]
@@ -243,7 +244,7 @@ class EnginePathsSkipTheReader(unittest.TestCase):
 
         base = [("g", "// graph: g\n(a:Person {name: 'A'})")]
         block = (
-            f"// graph: g · CHANGE SET cs1 · against {state_hash(base)} · by a\n"
+            f"// graph: g · CHANGE SET cs1 · against sha-256-64:{state_hash(base)} · by a\n"
             "(b:Person {id: 'a', name: 'A'})"
         )
         self.assertTrue(names_the_id(gr.check_changeset(base, block)[0], "a"))

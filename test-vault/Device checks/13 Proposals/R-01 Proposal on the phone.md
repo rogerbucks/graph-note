@@ -13,7 +13,7 @@
 ```
 
 ```gql
-// graph: reader · CHANGE SET cs1 · against 05d75fdcbdb1d37b · by ada
+// graph: reader · CHANGE SET cs1 · against sha-256-64:05d75fdcbdb1d37b · by ada
 // proposer kind: model
 // proposed: 2026-10-13T09:00:00Z
 // read: reader

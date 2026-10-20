@@ -7,6 +7,7 @@
 import { matrixRefusal } from './ai-matrix.ts';
 import type { MatrixInput } from './ai-matrix.ts';
 import type { AiModel } from './settings.ts';
+import gs from '@thoughtknot/graph-spec';
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 const rank = (levels: string[], level: string) => levels.findIndex((l) => same(l, level));
@@ -77,64 +78,13 @@ export function clearance(
   return { refused: `${why}${offer}${change}`, cleared: offer ? others : [] };
 }
 
-const luhn = (digits: string) => {
-  let sum = 0;
-  for (let i = 0; i < digits.length; i++) {
-    let d = Number(digits[digits.length - 1 - i]);
-    if (i % 2 === 1) d = d * 2 > 9 ? d * 2 - 9 : d * 2;
-    sum += d;
-  }
-  return sum % 10 === 0;
-};
-
-// A secret's name, ending the name a value is given under. In snake_case (user_password, db_secret) it is bounded by
-// what is not a letter or digit. It is never bounded by \b, for which an underscore is part of the word. In camelCase
-// (smtpPassword, apiKey) it starts with a capital after a lower-case letter or digit. A bare `key` is an ordinary word
-// (key: 'primary'), so only a name ending in _key or Key is a secret's. A real key under a bare name is still found by
-// its value's shape.
-const SECRET_NAMES = [
-  // the character before is matched, not looked behind at: a lookbehind is a syntax error on iOS before 16.4
-  /(?:^|[^A-Za-z0-9])(?:pass(?:word|wd|phrase|code)?|pwd|pin|secret|token|credentials?)(?![A-Za-z0-9])/i,
-  /_key(?![A-Za-z0-9])/i,
-  /[a-z0-9](?:Pass(?:word|wd|phrase|code)?|Pwd|Pin|Secret|Token|Key|Credentials?)(?![A-Za-z0-9])/,
-];
-// then a text of four characters or more, given to it with a colon or an equals sign
-const SECRET_VALUE = String.raw`["']?\s*[:=]\s*["'][^"'\s]{4,}`;
-
-// The kinds of credential looked for, each by its shape: general patterns, never anyone's own.
-const CREDENTIALS: { what: string; test: (line: string) => boolean }[] = [
-  { what: 'a private key', test: (l) => /-----BEGIN [A-Z ]*PRIVATE KEY/.test(l) },
-  { what: 'an access key', test: (l) => /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/.test(l) },
-  {
-    what: 'an API key',
-    test: (l) =>
-      /\bsk-[A-Za-z0-9_-]{16,}/.test(l) ||
-      /\bAIza[0-9A-Za-z_-]{30,}/.test(l) ||
-      /\bgh[pousr]_[A-Za-z0-9]{30,}/.test(l) ||
-      /\bgithub_pat_\w{20,}/.test(l) ||
-      /\bxox[abeprs]-[A-Za-z0-9-]{10,}/.test(l),
-  },
-  { what: 'a token', test: (l) => /\beyJ[\w-]{8,}\.eyJ[\w-]{8,}\.[\w-]{8,}/.test(l) },
-  {
-    what: 'a password or secret',
-    test: (l) => SECRET_NAMES.some((name) => new RegExp(`${name.source}${SECRET_VALUE}`, name.flags).test(l)),
-  },
-  {
-    what: 'a card number',
-    test: (l) =>
-      [...l.matchAll(/(?:^|[^\w.-])([2-6](?:[ -]?\d){12,18})(?![\w.-])/g)].some(([, m]) =>
-        luhn((m ?? '').replace(/[ -]/g, '')),
-      ),
-  },
-];
-
 /**
  * The kinds of credential `text` holds, each once and in words (never the text that matched). It finds `secrets`, such
  * as the key of the model asked, wherever they are written.
  */
 export function credentialsIn(text: string, secrets: readonly string[] = []): string[] {
-  const found = new Set<string>();
-  for (const line of text.split('\n')) for (const c of CREDENTIALS) if (c.test(line)) found.add(c.what);
+  // the shapes are the graph spec library's, so the editor and every reader find the same (editor spec §51)
+  const found = new Set<string>(gs.secretsIn(text));
   if (secrets.some((s) => s.length >= 8 && text.includes(s))) found.add('the key of a model set up here');
   return [...found];
 }

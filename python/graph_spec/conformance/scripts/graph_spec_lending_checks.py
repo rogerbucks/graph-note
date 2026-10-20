@@ -76,7 +76,7 @@ def checks(env, expect):
         if want != s['b']: bad.append((s['s'], s['b'], want))
     check(f"{tag(t_.get('closes'))}close proofs: every one of {len([s for s in snaps if not s['s'].startswith('snap:2026-08/')])} snapshots recomputes from the transactions up to its close", not bad, str(bad))
     bad = [r['id'] for r in _q(env.get('built_db', db), 'decisions', "MATCH (d:Decision) RETURN d.id AS id, d.title AS t, d.statement AS s, d.rationale AS r, d.content_hash AS h")   # the published graph — an engine recomputes its own
-           if hashlib.sha256('|'.join([r['t'], r['s'], r['r']]).encode()).hexdigest()[:16] != r['h']]
+           if 'sha-256-64:' + hashlib.sha256('|'.join([r['t'], r['s'], r['r']]).encode()).hexdigest()[:16] != r['h']]
     check(f"{tag(t_.get('closes'))}close proofs: every decision's content hash still matches its text", not bad, str(bad))
     # known answers, one by one
     kn = _q(db, 'catalog', f"MATCH (k:KnownAnswers {{id: '{expect['known_answers']}'}}) RETURN k.figures AS f")[0]['f'] if expect.get('known_answers') else ''

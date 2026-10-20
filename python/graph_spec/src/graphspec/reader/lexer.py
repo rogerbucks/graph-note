@@ -100,6 +100,9 @@ def _excerpt(s: str, n: int = 20) -> str:
 def tokens(block: str) -> list[tuple[str, str, int, str, int]]:
     """(kind, text, line, raw, end) for every token, whole-line comments removed — '//' also
     occurs inside ni:/// ids. raw is the token as written; end is where it ends in the block."""
+    from graphspec.reader.limits import within_size  # it raises this module's ProfileError
+
+    within_size(block)
     out = []
     # offsets count code points, as Python strings index; the JavaScript reader counts UTF-16
     # units. Each is used only on the text it was counted in (Store.corrected), so both readers
