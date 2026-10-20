@@ -105,3 +105,10 @@ test('the risk panel workflow speaks as those characters, and keeps its findings
   for (const name of PANEL_CHARACTERS) assert.ok(prompt.includes(name), name);
   assert.match(prompt, /the risks table and the JSON stay plain/i);
 });
+
+test('the humour is set to 60%: about half of messages carry none, and a joke is a few words (Roger, 20 Oct 2026)', () => {
+  const flat = read(ROLES).replace(/\s+/g, ' ');
+  assert.match(flat, /\*\*Humour setting: 60%\.\*\*/);
+  assert.match(flat, /About half of all messages carry no joke at all/);
+  assert.match(read('.github/workflows/risk-panel.yml').replace(/\s+/g, ' '), /humour setting 60%/);
+});
