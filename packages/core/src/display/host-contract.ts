@@ -3,7 +3,7 @@
 // for Obsidian's, the browser page's, the standalone app's and VS Code's alike. The checks need no test framework. Each
 // one throws when the host breaks the promise, so a host's tests run them with whatever runner it has. A host lets the
 // checks see what it showed through a probe, as only it knows where its notices and menus go.
-import type { DisplayHost, MenuEntry } from './host.ts';
+import type { DisplayHost, Host, MenuEntry } from './host.ts';
 
 /**
  * Each version of the host interface, with a digest of how `public-api.json` declares it then. The digest is the first
@@ -160,4 +160,29 @@ export function hostContract(make: () => HostUnderTest): ContractCheck[] {
       },
     },
   ];
+}
+
+/** What a whole host lets the checks see: what its display showed, the links it opened, and a way to keep a secret. */
+export interface ServicesProbe extends HostProbe {
+  /** The target of each link the host opened, in order. */
+  opened: () => string[];
+  /** Keeps `secret` under `name`, as the person would in the host's own secret storage. */
+  keepSecret: (name: string, secret: string) => void;
+}
+
+/** A whole host for one check: a fresh one, and its probe. */
+export interface ServicesUnderTest {
+  host: Host;
+  probe: ServicesProbe;
+}
+
+/**
+ * Every check of the whole host interface, each run on a fresh host from `make`: the display's, then its links,
+ * settings, secrets and notes. The notes are held to the storage contract (storage-contract.ts).
+ */
+export function hostServicesContract(make: () => ServicesUnderTest): ContractCheck[] {
+  return hostContract(() => {
+    const { host, probe } = make();
+    return { host: host.display, probe };
+  });
 }

@@ -5,6 +5,20 @@ export { blockItems } from './block-items.ts';
 export { hops } from './estimates.ts';
 export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
+export { historyLayer, layered, memoryStorage, notePath, noteVersion, refusal, REFUSED } from './note-storage.ts';
+export type {
+  ChangeLog,
+  NoteStorage,
+  StorageLayer,
+  StoredChange,
+  StoredNote,
+  WriteOptions,
+  WriteOutcome,
+} from './note-storage.ts';
+export { storageContract } from './storage-contract.ts';
+export type { StorageCheck } from './storage-contract.ts';
+export { DIRECTORY, workspaceStorage } from './workspace-storage.ts';
+export type { WorkspaceFiles } from './workspace-storage.ts';
 export type { Span } from './blocks.ts';
 export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote } from './note-reading.ts';
 export { layoutSource, drawingSource, STYLE } from './layout.ts';

@@ -5,6 +5,8 @@
 // browser editor's page installs one of its own. The layer imports no host, so nothing else tells it which it is in.
 
 import { currentDirection, directionOf, setDirection, setLanguage, SOURCE_LANGUAGE } from '@thoughtknot/core';
+import type { NoteStorage } from '@thoughtknot/core';
+import type { LinkHost } from './links/link-types.ts';
 
 /** A row of a menu the layer asks the host to show. */
 export interface MenuRow {
@@ -49,6 +51,37 @@ export interface DisplayHost {
    * of its language, so an Arabic or Hebrew host mirrors the interface with no word from it.
    */
   direction?: () => 'ltr' | 'rtl';
+}
+
+/** A host's settings: one value, kept where the host keeps its own, and read back as it was saved. */
+export interface SettingsStore {
+  /** The settings last saved, or undefined when none were. */
+  load: () => Promise<unknown>;
+  /** Saves `value`, a plain JSON value, in place of what was saved before. */
+  save: (value: unknown) => Promise<void>;
+}
+
+/**
+ * A host's secrets, such as an AI provider's key, each read by its name: Obsidian's secret storage, VS Code's, the
+ * system keychain for the app. The settings keep only a secret's name, never the secret itself.
+ */
+export interface SecretStore {
+  /** The secret named `name`, or null when the host holds none by that name. */
+  get: (name: string) => string | null | Promise<string | null>;
+}
+
+/**
+ * Everything a host gives the core (editor spec §41, host_contract_published). That is its display, its links, its
+ * settings, its secrets and its notes. A new host is built from this alone, with no change to the core.
+ */
+export interface Host {
+  display: DisplayHost;
+  /** What the card of graph `graph`, in the note at `path`, is given to show and follow its links. */
+  links: (path: string, graph: string) => LinkHost;
+  settings: SettingsStore;
+  secrets: SecretStore;
+  /** Where the host's notes are read and written. */
+  files: NoteStorage;
 }
 
 /** What is said when the layer is used before any host was installed. */
