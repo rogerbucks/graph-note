@@ -9,6 +9,9 @@ const { unquote, utcNaive } = require('./tokens.js');
  * never takes it for a pattern that is not one. */
 class IdNotTextError extends ProfileError {}
 
+// What to write, said for a kind of token wanted with no one text: a value in quotes, or an arrow.
+const WANTED = { str: '…', arrow: '->' };
+
 // Parses a data block's tokens into its MATCHes, paths and SETs, as the document profile (§3) writes them. A
 // missing comma is read in. Its place is kept in commas, so the store can write it in.
 class Parser {
@@ -32,8 +35,8 @@ class Parser {
     if ((kind && tok[0] !== kind) || (text && tok[1] !== text))
       throw new ProfileError(
         tok[2],
-        `expected '${text || kind}', found '${tok[1] || 'the end'}'`,
-        'keep to the document profile (§3)',
+        `expected '${text || WANTED[kind] || kind}', found '${tok[1] || 'the end'}'`,
+        `write '${text || WANTED[kind] || kind}' here`,
         undefined,
         'GN201',
       );
@@ -53,7 +56,7 @@ class Parser {
     throw new ProfileError(
       n,
       `expected a name, found '${t || 'the end'}'`,
-      'keep to the document profile (§3)',
+      'write a name here, in letters, digits and underscores',
       undefined,
       'GN202',
     );
@@ -86,7 +89,7 @@ class Parser {
     }
     throw new ProfileError(
       n,
-      `'${t || 'nothing'}' is not a value in the profile`,
+      `'${t || 'nothing'}' is not a value a graph can hold`,
       "use 'text', a number, TRUE, FALSE, DATE '…' or DATETIME '…' — no lists, no expressions",
       undefined,
       'GN207',
@@ -105,7 +108,7 @@ class Parser {
     throw new IdNotTextError(
       n,
       `id ${written} is not text`,
-      `write id: ${quoted} — a node's id is always text (§3)`,
+      `write id: ${quoted} — a thing's id is always text`,
       undefined,
       'GN208',
     );
@@ -209,8 +212,8 @@ class Parser {
         if (key === 'id')
           throw new ProfileError(
             n,
-            `SET would change ${v}'s id, and a node's id never changes (§3)`,
-            `write the right node, then link ${v} to it or supersede it (§12)`,
+            `SET would change ${v}'s id, and a thing's id never changes`,
+            `write the right thing, then link ${v} to it or supersede it`,
             undefined,
             'GN209',
           );
@@ -224,7 +227,7 @@ class Parser {
       throw new ProfileError(
         this.line(),
         `unexpected '${this.peek()[1]}'`,
-        'a data block ends after its INSERT and SET (§3)',
+        'a data block ends after its INSERT and SET',
         undefined,
         'GN210',
       );

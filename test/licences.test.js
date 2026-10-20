@@ -1,12 +1,12 @@
 // Licences through the whole build chain. Spec §13, Licence:
-// - The plugin is MPL-2.0.
+// - The plugin is MPL-2.0. The graph spec's own text is CC-BY-4.0 (spec_text_licence).
 // - Every library bundled into a release, and everything compiled inside one, carries a licence on the allow-list.
 // - The notices name them all and ship with every release.
 // - Build tools should be on the allow-list too. A GPL tool is allowed only where it runs in CI alone and is never
 //   shipped (build_tool_licences).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { exists, read, readJSON, path, walk, jsPackages, jobs, runCommands, workflowFiles } from './repository/repo.js';
 import {
   aptInstalls,
@@ -32,6 +32,32 @@ describe('the plugin licence', () => {
   test('every package declares MPL-2.0, the Python library too', () => {
     for (const p of jsPackages()) assert.equal(readJSON(`${p}/package.json`).license, 'MPL-2.0', p);
     assert.match(read('python/graph_spec/pyproject.toml'), /^license = "MPL-2\.0"$/m);
+  });
+});
+
+describe('the spec text licence (spec_text_licence)', () => {
+  const SPEC_NOTES = 'python/graph_spec/conformance/Standards';
+  const notice = () => read('LICENSE-SPEC.md');
+  const listed = () => [...notice().matchAll(/^- `([^`]+)`/gm)].map((m) => m[1]);
+
+  test('LICENSE-SPEC.md puts the spec text under CC-BY-4.0 and links the legal code (Roger, 20 Oct 2026)', () => {
+    assert.match(notice(), /Creative Commons Attribution 4\.0 International \(CC-BY-4\.0\)/);
+    assert.match(notice(), /https:\/\/creativecommons\.org\/licenses\/by\/4\.0\/legalcode/);
+  });
+
+  test('it names the requirements graph and every graph spec note, and each one exists', () => {
+    const spec = readdirSync(path(SPEC_NOTES))
+      .filter((f) => /^Graph spec (model|requirements|meta-schema)\.md$/.test(f))
+      .map((f) => `${SPEC_NOTES}/${f}`);
+    assert.equal(spec.length, 3);
+    assert.deepEqual(listed().sort(), ['requirements/graph-spec.gql', ...spec].sort());
+    for (const f of listed()) assert.ok(exists(f), f);
+  });
+
+  test('the README says the spec text is CC-BY-4.0 and the code stays MPL-2.0', () => {
+    const licence = /## Licence\n([\s\S]*?)(?=\n## |$)/.exec(read('README.md'))?.[1] ?? '';
+    assert.match(licence, /CC-BY-4\.0/);
+    assert.match(licence, /\(LICENSE-SPEC\.md\)/);
   });
 });
 

@@ -33,6 +33,9 @@ reference = ["grafeo==0.5.43"]
 [tool.ruff]
 # PEP 8 lets a team agree on up to 99 characters.
 line-length = 99
+# The conformance suite's scripts came from the owner's vault (GS1). They keep the vault's own style,
+# so a change to them can still be compared with the vault's copy. GS6 rewrites them plainly.
+extend-exclude = ["conformance"]
 
 [tool.ruff.lint]
 # D1xx: every public module, class, method and function has its docstring (CONTRIBUTING.md);

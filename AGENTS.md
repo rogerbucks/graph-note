@@ -26,7 +26,7 @@ On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`
 ## Before you open a pull request
 
 - **Merge commits only**, never squash or rebase: the tests-first records name the branch's own commits.
-- **Sign off** with `git commit -s`. Whose name goes on it: CONTRIBUTING.md, "Signing off your work".
+- **Sign off as Roger, never as Claude:** CONTRIBUTING.md, "Signing off your work", gives the exact line. CI checks it.
 - **Rewrite what CI checks.** A test: `node scripts/tests-first.mjs --update`, or `node scripts/tests-first.mjs --excuse`
   for one that passed first. A doc: `node scripts/plain-docs.mjs`. An export: `node scripts/public-api.mjs --update`.
 - **More of the same.** A dependency: `node scripts/notices.mjs`. A slice done: `node scripts/readme-status.mjs --write`.

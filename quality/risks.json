@@ -48,7 +48,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#614"
     },
     {
       "id": "SEC-2",
@@ -364,7 +365,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#614, #620"
     },
     {
       "id": "OPS-2",
@@ -395,7 +397,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#614"
     },
     {
       "id": "OPS-3",
@@ -430,7 +433,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#614"
     },
     {
       "id": "OPS-4",
@@ -467,7 +471,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#614, #620"
     },
     {
       "id": "OPS-5",
@@ -1511,7 +1516,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#619"
     },
     {
       "id": "ARCH-12",
@@ -1575,7 +1581,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#619"
     },
     {
       "id": "UX-2",
@@ -1752,7 +1759,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "UX-7",
@@ -2011,7 +2019,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#619"
     },
     {
       "id": "NEURO-5",
@@ -2272,7 +2281,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "FLOW-2",
@@ -2304,7 +2314,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#621"
     },
     {
       "id": "FLOW-3",
@@ -2479,7 +2490,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "FLOW-8",
@@ -2512,7 +2524,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "FLOW-9",
@@ -2742,7 +2755,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#614"
     },
     {
       "id": "API-4",
@@ -2808,7 +2822,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#615"
     },
     {
       "id": "API-6",
@@ -3064,7 +3079,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#618"
     },
     {
       "id": "AI-2",
@@ -3125,7 +3141,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#618"
     },
     {
       "id": "AI-4",
@@ -3369,7 +3386,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open"
+      "status": "done",
+      "done_in": "#618"
     }
   ]
 }

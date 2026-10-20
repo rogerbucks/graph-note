@@ -316,7 +316,7 @@ describe('a comment after code on its line', () => {
   // spec §3: "Comments are whole lines starting //. A comment must not follow code on the same line, because // also
   // occurs inside identifiers such as ni:/// hashes." Checking refuses it. Drawing leaves it out and draws the code.
   // Its problem names the rule, and its fix puts the comment on its own line (§4, "Problems in place")
-  const RULE = 'a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// hashes (§3)';
+  const RULE = 'a comment must be on a line of its own: // also occurs inside values, such as ni:/// hashes';
   test('the code before it is drawn; one warning names the rule, and its fix puts the comment on its own line', () => {
     const block = "// graph: g\n(a:T {name: 'A'}), // the first\n(b:T {name: 'B // not a comment'}),\n(a)-[:R]->(b)";
     const { graphs, problems } = readNote([block]);
@@ -472,7 +472,7 @@ describe('a schema whose types its GraphMeta does not declare', () => {
         block: 1,
         line: 3,
         severity: 'warning',
-        message: 'the schema does not declare Book and Person: its GraphMeta must DECLARE each type (§5)',
+        message: 'the schema does not declare Book and Person: its GraphMeta must DECLARE each type',
         fix: 'add a DECLARES link from g_schema to each',
         insert: {
           line: 3,
@@ -489,7 +489,7 @@ describe('a schema whose types its GraphMeta does not declare', () => {
   test('with no GraphMeta at all, the fix writes one too', () => {
     const none = OLD.replace("(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),\n", '');
     const [p] = readNote([DATA, none]).problems;
-    assert.equal(p.message, 'the schema has no GraphMeta to declare Book and Person: each type must be declared (§5)');
+    assert.equal(p.message, 'the schema has no GraphMeta to declare Book and Person: each type must be declared');
     assert.equal(
       p.insert.text,
       ",\n(g_schema:GraphMeta {graph: 'g', schema: 'g@1'}),\n(g_schema)-[:DECLARES]->(kind_book),\n(g_schema)-[:DECLARES]->(kind_person)",
@@ -507,7 +507,7 @@ describe('a schema whose types its GraphMeta does not declare', () => {
     const spaced = OLD.replaceAll('(kind_', '(\u{180e}kind_').replaceAll(':Meta:', '\u{180e}:\u{180e}Meta:');
     assert.equal(
       readNote([DATA, spaced]).problems[0]?.message,
-      'the schema does not declare Book and Person: its GraphMeta must DECLARE each type (§5)',
+      'the schema does not declare Book and Person: its GraphMeta must DECLARE each type',
     );
   });
 });

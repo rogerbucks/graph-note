@@ -71,10 +71,9 @@ export class TextHelp {
     el.text.setAttribute('rows', String(text.split('\n').length + 1)); // grown to its text: it never scrolls apart from its colours
     this.suggest(el, s);
     this.picture(el, s);
-    // put again under the caret once the picture it is measured in shows what was typed
-    if (!el.suggest.hidden) placeSuggestions(el.suggest, el.text, el.overlay);
-    listProblems(el.list, this.problems);
     this.fixbar(el);
+    // put again by the caret once the picture it is measured in shows what was typed, and the fix bar is drawn
+    if (!el.suggest.hidden) placeSuggestions(el.suggest, el.text, el.overlay, !el.fixbar.hidden);
   }
 
   /** The coloured picture of the text, with each line read back and the inline match as ghost text where the caret is. */
@@ -86,9 +85,9 @@ export class TextHelp {
   }
 
   /**
-   * The problems on the caret's line, with their fixes. They are drawn again only when the problems or the line change.
-   * So a fix the keyboard is going to as the field loses the focus is still there to take it (spec §41,
-   * a11y_keyboard_auto).
+   * The problems on the caret's line, with their fixes, and the rest in the list. They are drawn again only when the
+   * problems or the line change. So a fix the keyboard is going to as the field loses the focus is still there to take
+   * it (spec §41, a11y_keyboard_auto).
    */
   fixbar(el: EditorParts): void {
     const line = caretLine(el.text),
@@ -96,6 +95,7 @@ export class TextHelp {
     if (was && was.bar === el.fixbar && was.problems === this.problems && was.line === line) return;
     this.shownFixes = { bar: el.fixbar, problems: this.problems, line };
     showFixes(el.fixbar, this.problems, line, (changes) => this.on.fix(changes));
+    listProblems(el.list, this.problems, line);
   }
 
   /**
@@ -116,7 +116,7 @@ export class TextHelp {
       this.list.active = 0;
       showSuggestions(el.suggest, shown, this.list.active, (item) => this.on.accept(item));
     }
-    if (shown.length) placeSuggestions(el.suggest, el.text, el.overlay);
+    if (shown.length) placeSuggestions(el.suggest, el.text, el.overlay, !el.fixbar.hidden);
     chooseSuggestion(el.suggest, el.text, shown.length ? this.list.active : null);
     this.moved = this.inline.update(el.text, this.reading, s.graph, this.suggestions.items.length > 0);
   }

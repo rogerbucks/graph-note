@@ -14,6 +14,10 @@ class IdNotTextError(ProfileError):
     retry keeps it, never taking it for a pattern that is not one."""
 
 
+# What to write, said for a kind of token wanted with no one text: a value in quotes, or an arrow.
+WANTED = {"str": "…", "arrow": "->"}
+
+
 class Parser:
     """Reads one block's tokens, left to right, into its statement: MATCHes, paths and
     SETs (§3)."""
@@ -41,7 +45,7 @@ class Parser:
         raise ProfileError(
             n,
             f"expected a name, found {t or 'the end'!r}",
-            "keep to the document profile (§3)",
+            "write a name here, in letters, digits and underscores",
             code="GN202",
         )
 
@@ -54,11 +58,11 @@ class Parser:
         text."""
         tok = self.peek()
         if (kind and tok[0] != kind) or (text and tok[1] != text):
-            want = text or kind
+            want = text or WANTED.get(kind, kind)
             raise ProfileError(
                 tok[2],
                 f"expected {want!r}, found {tok[1] or 'the end'!r}",
-                "keep to the document profile (§3)",
+                f"write {want!r} here",
                 code="GN201",
             )
         self.i += 1
@@ -107,7 +111,7 @@ class Parser:
                 raise ProfileError(
                     n,
                     f"{s!r} has no offset",
-                    "an instant carries its offset (§9, principle 11)",
+                    "add its offset from UTC, such as +10:00",
                     code="GN205",
                 )
             # an instant as its UTC time, exactly as Grafeo returns it. One whose UTC time is
@@ -123,7 +127,7 @@ class Parser:
                 )
         raise ProfileError(
             n,
-            f"{t or 'nothing'!r} is not a value in the profile",
+            f"{t or 'nothing'!r} is not a value a graph can hold",
             "use 'text', a number, TRUE, FALSE, DATE '…' or DATETIME '…' — "
             "no lists, no expressions",
             code="GN207",
@@ -142,7 +146,7 @@ class Parser:
         raise IdNotTextError(
             n,
             f"id {written} is not text",
-            f"write id: {quoted} — a node's id is always text (§3)",
+            f"write id: {quoted} — a thing's id is always text",
             code="GN208",
         )
 
@@ -249,8 +253,8 @@ class Parser:
                     # the node's own
                     raise ProfileError(
                         n,
-                        f"SET would change {var}'s id, and a node's id never changes (§3)",
-                        f"write the right node, then link {var} to it or supersede it (§12)",
+                        f"SET would change {var}'s id, and a thing's id never changes",
+                        f"write the right thing, then link {var} to it or supersede it",
                         code="GN209",
                     )
                 self.take("p", "=")
@@ -262,7 +266,7 @@ class Parser:
             raise ProfileError(
                 self.line(),
                 f"unexpected {self.peek()[1]!r}",
-                "a data block ends after its INSERT and SET (§3)",
+                "a data block ends after its INSERT and SET",
                 code="GN210",
             )
         return matches, paths, sets

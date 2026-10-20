@@ -84,8 +84,7 @@ function refusal(reading: PathReading, graph: string, g: Graph, title: string, s
     const labels = g.nodes.get(key)?.[0];
     if (!labels) return `${key} is not in graph ${graph}, so it cannot be a step`;
     const bar = [...labels].find((l) => l === 'Path' || l === 'Concept' || HIDDEN.has(l));
-    if (bar)
-      return `${key} is a ${bar}, which a step cannot be: a path's steps are facts (graph spec §22 rules 1 and 3)`;
+    if (bar) return `${key} is a ${bar}, which a step cannot be: a path's steps are facts`;
   }
   // a step drawn under a suggested name would write that name without its fix (§4, unnamed_drawn_suggested)
   const first = acceptNameFirst(reading, graph, steps);

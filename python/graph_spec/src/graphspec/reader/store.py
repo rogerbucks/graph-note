@@ -187,7 +187,7 @@ class Store:
             if set(m["props"]) != {"id"}:
                 raise ProfileError(
                     m["line"],
-                    "MATCH must find a node by its id alone",
+                    "MATCH must find a thing by its id alone",
                     "write MATCH (v:Label {id: '…'})",
                     code="GN305",
                 )
@@ -197,7 +197,7 @@ class Store:
                     m["line"],
                     f"MATCH finds no {':'.join(m['labels'])} with id {m['props']['id']!r} "
                     f"in graph {g}",
-                    "the node must be written earlier — in this document or one loaded before it",
+                    "the thing must be written earlier — in this document or one loaded before it",
                     code="GN306",
                 )
             bound[m["var"]] = k
@@ -210,7 +210,7 @@ class Store:
                         raise ProfileError(
                             n["line"],
                             f"{n['var']} is written twice",
-                            "give each new node its own variable",
+                            "give each new thing its own variable",
                             code="GN307",
                         )
                     if "id" not in n["props"]:
@@ -219,9 +219,8 @@ class Store:
                     if found(n["props"]["id"]) is not None:
                         raise ProfileError(
                             n["line"],
-                            f"id {n['props']['id']!r} is already a node in graph {g}",
-                            "an id names one node (§10) — MATCH it to add to it, "
-                            "or supersede it (§12)",
+                            f"id {n['props']['id']!r} is already a thing in graph {g}",
+                            "an id names one thing — MATCH it to add to it, or supersede it",
                             code="GN308",
                         )
                     self._k += 1
@@ -240,8 +239,7 @@ class Store:
                         raise ProfileError(
                             n["line"],
                             f"{n['var']} is used before it is written",
-                            "write the node before any relationship that uses it — "
-                            "GQL binds a name only once its node is written (§3)",
+                            "write the thing before any link that uses it",
                             code="GN309",
                         )
                     # a bare name not written in this block names the existing node with that

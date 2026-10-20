@@ -105,7 +105,7 @@ class DrawnInPart(unittest.TestCase):
                 (
                     1,
                     2,
-                    "id 'walk' is already a node in graph trip",
+                    "id 'walk' is already a thing in graph trip",
                     "(walk:Leg {name: 'Walk again'})",
                 )
             ],
@@ -168,8 +168,7 @@ class ADanglingComma(unittest.TestCase):
 
 
 RULE = (
-    "a comment must be on a line of its own: // also occurs inside identifiers, such as ni:/// "
-    "hashes (§3)"
+    "a comment must be on a line of its own: // also occurs inside values, such as ni:/// hashes"
 )
 
 

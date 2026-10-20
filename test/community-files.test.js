@@ -68,7 +68,7 @@ test('AGENTS.md lists the rules for a pull request: merge commits, the regenerat
   const list = agents.slice(at, agents.indexOf('\n## ', at + 1));
   assert.match(list, /merge commit/i);
   assert.match(list, /never squash/i);
-  assert.match(list, /git commit -s/);
+  assert.match(list, /sign off as Roger/i);
   assert.match(list, /all good/);
   assert.match(list, /auto-merge/);
   for (const command of REGENERATING) assert.ok(list.includes(command), `names ${command}`);

@@ -1714,6 +1714,10 @@ pre.thoughtknot-code {
   font-size: var(--gn-code-size, 0.9em);
   line-height: 1.5;
 }
+/* Above the caret while the fix bar shows, so the list never covers it (NEURO-4): its foot sits on the caret's row. */
+.thoughtknot-suggestions.is-above {
+  transform: translateY(-100%);
+}
 .thoughtknot-suggestions[hidden] {
   display: none;
 }
