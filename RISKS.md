@@ -411,11 +411,11 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 ### ARCH-2 Storage interface exists only as EditorNote, with no contract suite
 
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/display/editor/editor-note.ts`, `packages/core/src/store.ts`, `packages/core/test/storage-contract.test.js`, `packages/claude-code/server/**`, `packages/obsidian/src/block-editor/**`.
+**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/display/editor/editor-note.ts`, `packages/core/src/store.ts`, `test/storage-contract.test.js`, `packages/claude-code/server/**`, `packages/obsidian/src/block-editor/**`.
 
 **Risk:** Sync (Wave 13), the encrypted store (W30) and the GitHub backend (Wave 22) are all planned as 'one more backend of the storage interface'. But that interface has no file and no contract test. It has two hand-written implementations. Whoever adds the third backend inherits the differences between the first two.
 
-**Fix:** In Wave 6 (L1) lift EditorNote plus a small NoteStore (read, write-if-unchanged, watch, list, draft) into core as the named storage interface. Write packages/core/test/storage-contract.test.js. Run the vault, the page store and a plain-folder backend against it before the Tauri app starts.
+**Fix:** In Wave 6 (L1) lift EditorNote plus a small NoteStore (read, write-if-unchanged, watch, list, draft) into core as the named storage interface. Write test/storage-contract.test.js. Run the vault, the page store and a plain-folder backend against it before the Tauri app starts.
 
 **Check:** storage-contract.test.js in the suite, listed in CONTRIBUTING.md, with every backend registered; the requirement flips to written only with all three.
 
