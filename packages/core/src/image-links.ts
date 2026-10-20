@@ -1,8 +1,8 @@
 // Where a thing's image comes from (editor spec §18, animated_image_shown). It is a property whose value names an image
 // file attached in the vault. The value is a link, `[[cat.gif]]`, an embed, `![[cat.gif]]`, or a path from the vault's
 // root. The file is of a type an image is: GIF, PNG or APNG, WebP, SVG, and the photographs' JPEG and AVIF. Only the
-// vault's own files are loaded (§13, remote_images_asked, a later slice). An address outside it is never loaded and
-// says so. A place that could leave the vault or reach what it hides is refused, as a graph source's is (sources.ts).
+// vault's own files are loaded as a thing's image (§13). An address outside it is never loaded here, and says so. In the
+// details, such an image waits for the user to ask for it (remote_images_asked). A place that could leave the vault or reach what it hides is refused, as a graph source's is (sources.ts).
 import { outsideVault } from './sources.ts';
 
 /** The file types an image is known by, by extension, in any case. */

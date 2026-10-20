@@ -1,7 +1,7 @@
 // The Markdown a host renders for a thing's details (editor spec §18, rich_details, safe_to_click; §13). It is as
 // written, but for what could load something remote, run a script or put HTML on the page:
 // - An image from outside the vault, written as Markdown or as HTML, becomes a link showing its address. So nothing is
-//   fetched until the user asks (remote_images_asked, slice 5).
+//   fetched until the user asks (remote_images_asked). `remoteImagesIn` lists those images, for a host to offer to load.
 // - A Markdown link or a reference definition the user may not open is shown as text.
 // - Any other raw HTML is shown as text, never rendered, inside maths too.
 // - A note embedded is cut out for the host to read itself and render made safe. So nothing the note holds loads
@@ -17,7 +17,7 @@ const REFERENCE = /^( {0,3})\[([^\]]{1,999})\]:[ \t]*(<[^>]*>|\S+)/;
 const REFERENCE_OPEN = /^( {0,3})\[([^\]]{1,999})\]:[ \t]*$/;
 const NEXT_DESTINATION = /^[ \t]*(<[^>]*>|\S+)/;
 const SRC = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i;
-const HEADING = /^ {0,3}(#{1,6})(?:[ \t]+(.*))?$/;
+const HEADING = /^ {0,3}(#{1,6})(?:[ \t](.*))?$/; // one space or tab before the words, so no two parts share a run of them
 /** The files shown in place, which load nothing but themselves; a canvas, a base or any other file embedded is a link. */
 const SHOWN_IN_PLACE = new Set(['image', 'audio', 'video', 'PDF']);
 
@@ -76,8 +76,8 @@ const destination = (address: string) =>
 /** Words shown as a link's text, every mark Markdown would read escaped, so they show as written. */
 const asLabel = (words: string) => words.replace(/[\\[\]*_`<>$~|!]/g, '\\$&');
 
-/** One line outside a fence, made safe. */
-function safeLine(written: string, next = ''): string {
+/** One line outside a fence, made safe. Each image from the web it makes a link is added to `remote`. */
+function safeLine(written: string, next = '', remote: string[] = []): string {
   // a reference definition of an address the user may not open defines nothing. Its bracket is escaped; its address
   // is on its own line, or on the next
   const reference = REFERENCE.exec(written),
@@ -100,6 +100,7 @@ function safeLine(written: string, next = ''): string {
       // an image, a sound, a video or a PDF of the vault is shown in place. An embedded note is a link here, as a
       // host reads one itself (embedParts). Anything else, a canvas, a base or an image from outside the vault among
       // it, is a link to it, never loaded
+      if (link?.markdown && link.kind === 'web') remote.push(link.opens);
       if (link?.embed && link.kind === 'file' && SHOWN_IN_PLACE.has(attachmentType(link.target) ?? '')) out += c;
       else if (link?.markdown && link.kind === 'refused') out += '\\';
       else if (link?.markdown && !link.label) {
@@ -124,6 +125,7 @@ function safeLine(written: string, next = ''): string {
       src = /^<img[\s/]/i.test(tag) && closer < line.length ? SRC.exec(tag) : null,
       address = src ? (src[1] ?? src[2] ?? src[3] ?? '') : '';
     if (address && linkKind(address) !== 'refused') {
+      if (linkKind(address) === 'web') remote.push(address);
       out += `[${asLabel(address)}](${destination(address)})`;
       i = closer;
     } else out += '&lt;';
@@ -164,6 +166,17 @@ function outsideFences(markdown: string, outside: (line: string, at: number, nex
  */
 export function safeMarkdown(markdown: string): string {
   return outsideFences(markdown, (line, _at, next) => safeLine(line, next));
+}
+
+/**
+ * The address of each image from the web in `markdown`, as Markdown or as HTML, outside code, in the order written and
+ * each once. These are the images `safeMarkdown` makes links. A host may offer to load each one, only when the user asks
+ * (remote_images_asked).
+ */
+export function remoteImagesIn(markdown: string): string[] {
+  const remote: string[] = [];
+  outsideFences(markdown, (line, _at, next) => safeLine(line, next, remote));
+  return [...new Set(remote)];
 }
 
 /** A piece of Markdown: text to make safe and render, or a note embedded in it, for the host to read itself. */
@@ -239,6 +252,15 @@ function sectionOf(lines: string[], heading: string): string[] | null {
  * embeds in turn a link.
  */
 export function embeddedMarkdown(note: string, heading?: string): string {
+  return safeMarkdown(embeddedText(note, heading));
+}
+
+/** The images from the web in an embedded note, as `remoteImagesIn` lists them, of what `embeddedMarkdown` shows. */
+export const embeddedRemoteImages = (note: string, heading?: string): string[] =>
+  remoteImagesIn(embeddedText(note, heading));
+
+/** An embedded note's text as shown, before it is made safe: no front matter, and only the section a heading names. */
+function embeddedText(note: string, heading?: string): string {
   const lines = note.split('\n');
   let body = 0;
   if (lines[0]?.trimEnd() === '---') {
@@ -246,5 +268,5 @@ export function embeddedMarkdown(note: string, heading?: string): string {
     if (end > 0) body = end + 1;
   }
   const text = lines.slice(body);
-  return safeMarkdown((heading ? (sectionOf(text, heading) ?? text) : text).join('\n'));
+  return (heading ? (sectionOf(text, heading) ?? text) : text).join('\n');
 }

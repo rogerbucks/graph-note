@@ -5,19 +5,22 @@
 //   (safe_to_click).
 // - Any other link is never opened.
 // - The preview Page preview shows on hover (link_preview).
-// - Markdown rendered by Obsidian's own renderer, with nothing remote loaded and no HTML (rich_details).
+// - Markdown rendered by Obsidian's own renderer, with nothing remote loaded and no HTML (rich_details). An image
+//   from outside the vault is a link with a Load image button. Only pressing it loads that image (remote_images_asked).
 // - Where the card was left, so the back step finds it as it was (back_where_you_were).
-// Nothing here fetches anything: every opening is Obsidian's.
+// Nothing here fetches anything on its own: every opening is Obsidian's, and an image loads only when asked for.
 import { Component, Keymap, MarkdownRenderer, Modal, Notice, TFile } from 'obsidian';
 import type { App } from 'obsidian';
 import { readInHostDirection } from '@thoughtknot/core/display/host';
 import {
   embedParts,
   embeddedMarkdown,
+  embeddedRemoteImages,
   leavingWords,
   linkKind,
   linkTo,
   refusedWords,
+  remoteImagesIn,
   safeMarkdown,
   word,
 } from '@thoughtknot/core';
@@ -91,6 +94,46 @@ function followRendered(el: HTMLElement, host: LinkHost, where: () => LeftAt | n
   }
 }
 
+/** Marks a link already given its Load image button. */
+const OFFERED = 'data-thoughtknot-image-offered';
+
+/**
+ * A Load image button beside each link in `el` to an image of `remote`, the images from the web its Markdown held.
+ * Pressing it shows that image in place of the button, sending no referrer. Nothing loads until it is pressed.
+ */
+function offerImages(el: HTMLElement, remote: ReadonlySet<string>): void {
+  if (!remote.size) return;
+  for (const a of Array.from(el.querySelectorAll('a'))) {
+    // the address loaded is the one read from the Markdown, never the page's text, and only one on the web
+    const shown = a.getAttribute('data-href'),
+      address = [...remote].find((r) => r === shown);
+    if (a.hasAttribute(OFFERED) || !address) continue;
+    let host = '';
+    try {
+      const url = new URL(address);
+      if (url.protocol === 'https:' || url.protocol === 'http:') host = url.host;
+    } catch {
+      host = '';
+    }
+    if (!host) continue;
+    a.setAttribute(OFFERED, '');
+    const box = createSpan({ cls: 'thoughtknot-remote-image' });
+    a.parentElement?.insertBefore(box, a);
+    box.appendChild(a);
+    const load = box.createEl('button', {
+      cls: 'thoughtknot-load-image',
+      text: word('details.load-image'),
+      attr: { type: 'button', 'aria-label': word('details.load-image-from', { host }) },
+    });
+    load.addEventListener('click', (evt) => {
+      evt.preventDefault();
+      box.createEl('img', { attr: { src: address, alt: a.textContent ?? '', referrerpolicy: 'no-referrer' } });
+      load.remove();
+      a.focus();
+    });
+  }
+}
+
 /** The links of graph `graph` in the note at `path`, followed through Obsidian. */
 export function linkHost(plugin: ThoughtKnotPlugin, path: string, graph: string): Omit<LinkHost, 'broken'> {
   const key = `${path}\u0000${graph}`;
@@ -129,20 +172,30 @@ export function linkHost(plugin: ThoughtKnotPlugin, path: string, graph: string)
       const component = new Component();
       component.load();
       owner.register(() => component.unload());
-      const draw = async (md: string, into: HTMLElement, from: string) => {
+      const draw = async (md: string, into: HTMLElement, from: string, remote: string[] = []) => {
+        const images = new Set(remote);
+        const judge = () => {
+          followRendered(into, { ...host, broken: [] }, where);
+          offerImages(into, images);
+        };
         // links Obsidian puts in later, as a post-processor may, are judged as they come, for as long as `owner` lasts
-        const later = new MutationObserver(() => followRendered(into, { ...host, broken: [] }, where));
+        const later = new MutationObserver(judge);
         later.observe(into, { childList: true, subtree: true });
         owner.register(() => later.disconnect());
         await MarkdownRenderer.render(plugin.app, md, into, from, component);
-        followRendered(into, { ...host, broken: [] }, where);
+        judge();
       };
       // a note embedded is read here and rendered made safe, never handed to Obsidian to embed. So nothing it holds is
       // loaded, a remote image among it (offline_and_mobile_apis). A note it embeds in turn is a link
       const parts = embedParts(markdown);
       for (const part of parts) {
         if ('text' in part) {
-          await draw(safeMarkdown(part.text), parts.length === 1 ? el : el.createDiv(), path);
+          await draw(
+            safeMarkdown(part.text),
+            parts.length === 1 ? el : el.createDiv(),
+            path,
+            remoteImagesIn(part.text),
+          );
           continue;
         }
         const box = el.createDiv({ cls: 'thoughtknot-embed' }),
@@ -150,9 +203,10 @@ export function linkHost(plugin: ThoughtKnotPlugin, path: string, graph: string)
         // a heading embedded, `![[Note#Heading]]`, is that section alone
         const hash = part.embed.opens.indexOf('#'),
           heading = hash >= 0 ? part.embed.opens.slice(hash + 1) : undefined;
-        if (file instanceof TFile && file.extension === 'md')
-          await draw(embeddedMarkdown(await plugin.app.vault.cachedRead(file), heading), box, file.path);
-        else await draw(safeMarkdown(`[[${part.embed.opens}]]`), box, path); // a note not there: a link to it
+        if (file instanceof TFile && file.extension === 'md') {
+          const note = await plugin.app.vault.cachedRead(file);
+          await draw(embeddedMarkdown(note, heading), box, file.path, embeddedRemoteImages(note, heading));
+        } else await draw(safeMarkdown(`[[${part.embed.opens}]]`), box, path); // a note not there: a link to it
       }
     },
     cameBack: () => {
