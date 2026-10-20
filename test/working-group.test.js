@@ -50,3 +50,22 @@ test('each person keeps their own plans in a local file git never takes, and the
   assert.equal(ignored.trim(), 'docs/agents/plans.local.md');
   assert.ok(read(ROLES).includes('`docs/agents/plans.local.md`'));
 });
+
+test('each tool has a name and a personality suited to its job, and the jokes keep out of the way (Roger, 20 Oct 2026)', () => {
+  const roles = read(ROLES);
+  assert.match(roles, /^## Personalities$/m);
+  const section = roles.slice(
+    roles.indexOf('## Personalities'),
+    roles.indexOf('\n## ', roles.indexOf('## Personalities') + 1),
+  );
+  for (const [name, tool] of [
+    ['Sara', 'Claude'],
+    ['Charles', 'Antigravity'],
+    ['Eve', 'graph-note'],
+  ])
+    assert.ok(section.includes(`**${name}** (${tool})`), `${name} is ${tool}`);
+  const flat = section.replace(/\s+/g, ' ');
+  assert.match(flat, /The answer comes first/);
+  assert.match(flat, /never in code, a commit/i);
+  assert.match(flat, /never at anyone's expense/i);
+});
