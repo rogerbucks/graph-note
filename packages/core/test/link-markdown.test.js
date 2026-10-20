@@ -170,4 +170,17 @@ describe('an embedded note loads nothing remote (rich_details, offline_and_mobil
     assert.equal(embeddedMarkdown(note, 'A#B'), embeddedMarkdown(note, 'B'), 'a nested heading by its last part');
     assert.equal(embeddedMarkdown(note, 'Nowhere'), embeddedMarkdown(note), 'no such heading: the whole note');
   });
+
+  test('a heading line of many tabs is read in one pass, never slowly (CodeQL, polynomial regular expression)', () => {
+    const note = `# ${'\t'.repeat(40_000)}\rx\n## Route\nby the coast`;
+    const started = performance.now();
+    assert.equal(embeddedMarkdown(note, 'Route'), '## Route\nby the coast');
+    // 4 seconds when a run of tabs could be split two ways; a few milliseconds read once
+    assert.ok(performance.now() - started < 1000, `${Math.round(performance.now() - started)} ms`);
+    assert.equal(
+      embeddedMarkdown('#\t\tRoute  ##\nbody', 'Route'),
+      '#\t\tRoute  ##\nbody',
+      'tabs before the words still read',
+    );
+  });
 });

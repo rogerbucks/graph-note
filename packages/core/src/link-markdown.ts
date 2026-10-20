@@ -17,7 +17,7 @@ const REFERENCE = /^( {0,3})\[([^\]]{1,999})\]:[ \t]*(<[^>]*>|\S+)/;
 const REFERENCE_OPEN = /^( {0,3})\[([^\]]{1,999})\]:[ \t]*$/;
 const NEXT_DESTINATION = /^[ \t]*(<[^>]*>|\S+)/;
 const SRC = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i;
-const HEADING = /^ {0,3}(#{1,6})(?:[ \t]+(.*))?$/;
+const HEADING = /^ {0,3}(#{1,6})(?:[ \t](.*))?$/; // one space or tab before the words, so no two parts share a run of them
 /** The files shown in place, which load nothing but themselves; a canvas, a base or any other file embedded is a link. */
 const SHOWN_IN_PLACE = new Set(['image', 'audio', 'video', 'PDF']);
 
