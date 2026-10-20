@@ -63,7 +63,7 @@
 // rtl_drawing_direction). lookTag and lookTags came on 20 Oct 2026 (colour_never_alone). The lists moved here from
 // index.test.js in the review of #452. The storage interface (`memoryStorage, layered, historyLayer, storageContract,
 // workspaceStorage, notePath, noteVersion, refusal, REFUSED, DIRECTORY` and their types, storage_contract) came on 20
-// Oct 2026 too.
+// Oct 2026 too, as did SHORTCUTS and SHORTCUT_PLACES (shortcuts_listed).
 import { TYPES_LATE } from './index-types-late.js';
 import { VALUES_LATE } from './index-values-late.js';
 
@@ -142,6 +142,8 @@ export const VALUES = [
   'REVIEW_LEVELS',
   'ReviewItems',
   'SEVERITY',
+  'SHORTCUTS',
+  'SHORTCUT_PLACES',
   'SOURCE_LANGUAGE',
   'SOURCE_WORDS',
   'STEP',

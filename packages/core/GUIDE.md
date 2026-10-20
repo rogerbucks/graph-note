@@ -816,12 +816,14 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     key, links by edge number).
   - An empty graph or view is `empty`, with `why`.
 - `export-marks.ts` — fading and looks written into the SVG (`marked`).
-- `look-tags.ts` — a numbered tag for each colour a view's looks use (`lookTag`, `lookTags`). Each box or link of that
-  colour carries the tag, and so does the legend. So no look is told by colour alone (§44, colour_never_alone).
   - Each faded thing and link gets an opacity in the style attribute of its group (the pane's 0.35).
   - Each look's border, text, line and format become style declarations in the locked blend of its hue, as the pane's
     stylesheet draws them. This is because an image cannot take the stylesheet.
   - Groups are found by Graphviz's numbering (`node1`, `edge1`…) in a single pass.
+- `look-tags.ts` — a numbered tag for each colour a view's looks use (`lookTag`, `lookTags`). Each box or link of that
+  colour carries the tag, and so does the legend. So no look is told by colour alone (§44, colour_never_alone).
+- `shortcuts.ts` — every keyboard shortcut in one list (`SHORTCUTS`, by `SHORTCUT_PLACES`), with its words in
+  `shortcut-source-words.ts`. The drawing's commands are marked, for a host to offer (§44, shortcuts_listed).
 - `export-frame.ts` — the frame (`framed`).
   - It holds the image's own background, a title, the reading of a view, and the legend. It also holds a footer with
     the note and the day (`saidDate`, `11 Oct 2026`).
@@ -1314,6 +1316,8 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.
 - `progress.ts` — a long wait shown (§44, progress_shown). After a second it shows a bar and the seconds taken. After
   ten it offers Stop (`waitShown`). A drawing laid out and an export wait through it.
+- `shortcuts-list.ts` — the list of every keyboard shortcut (`listShortcuts`), and the card's own copy that ? shows
+  (`toggleShortcuts`). `graph-view/card-in-use.ts` keeps the card used last, for a host's commands (`cardInUse`).
 
 ### The edit pane and the rest
 

@@ -9,6 +9,8 @@ import type { Zoom, ZoomEvent } from '@thoughtknot/core';
 import { BoxDrag } from './box-drag-view';
 import type { DragHost } from './box-drag-view';
 import { BoxMoveKeys } from './box-move-keys';
+import { trackUse } from './card-in-use';
+import { toggleShortcuts } from '../shortcuts-list';
 import type { ViewOptions } from './view-options';
 import type { DetailsPanel } from './details-panel';
 import type { Selection } from './selection';
@@ -42,6 +44,10 @@ export interface ViewportHost {
   unfold: (fold: string, byKey?: boolean) => void;
   /** The card's options, for moving a box by dragging it (§6) where they give a way to write a nudge. */
   o?: ViewOptions;
+  /** The card's own element, for the list of shortcuts and to know when the card is used (§44). */
+  root: HTMLElement;
+  /** The card's full screen, which a host's command opens. A full-screen card's own command closes it. */
+  full: { show: () => void };
 }
 
 /** Binds the drawing's pointer, wheel, focus and key events, and the window's and note's that move the details sheet. */
@@ -51,6 +57,15 @@ export function bindViewportEvents(host: ViewportHost): void {
     drag = movers?.drag ?? null,
     keys = movers?.keys ?? null;
   if (drag) card.register(() => drag.onunload());
+  // ? lists every keyboard shortcut, and the host's commands for the drawing act on the card used last (§44)
+  const shortcuts = () => toggleShortcuts(host.root, vp);
+  trackUse(card, host.root, {
+    zoomIn: () => zoom.zoomIn(),
+    zoomOut: () => zoom.zoomOut(),
+    fit: () => zoom.fit(),
+    fullScreen: () => (host.o?.mode === 'full' ? host.o.onClose?.() : host.full.show()),
+    shortcuts,
+  });
   // Move in a box's details picks it up as M does, its box given the focus for the keys that follow (§6)
   if (keys)
     details.onMove = (key) => {
@@ -217,6 +232,12 @@ export function bindViewportEvents(host: ViewportHost): void {
     // a box picked up from the keyboard takes the arrows, Enter and Escape until it is put down; M on a box picks it up
     if (keys?.key(e)) {
       e.preventDefault();
+      return;
+    }
+    // ? shows every keyboard shortcut (§44, shortcuts_listed)
+    if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      shortcuts();
       return;
     }
     // Enter and Space press an image's control, never the box it is on (§18)

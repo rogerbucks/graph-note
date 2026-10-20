@@ -31,7 +31,7 @@ import type {
   Settings,
   StyleGraph,
 } from '@thoughtknot/core';
-import { SENDS_KEPT, addAskCommands, sqliteQuery } from './commands';
+import { SENDS_KEPT, addCommands, sqliteQuery } from './commands';
 import { exportGraph, type ExportAsk, type ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { installObsidianHost } from './display-host';
@@ -97,7 +97,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followLinks(this, f, old)));
     this.registerHoverLinkSource(HOVER_SOURCE, { display: 'ThoughtKnot', defaultMod: true });
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
-    addAskCommands(this); // nothing is sent to an AI or read from a database until the user presses Send or Import
+    addCommands(this); // the shortcuts' (§44); nothing is sent to an AI or read from a database until Send or Import
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)

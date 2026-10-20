@@ -8,6 +8,7 @@ import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
+import { SHORTCUT_SOURCE_WORDS } from './shortcut-source-words.ts';
 
 /** The source words, by key, in UK English: what every translation gives again. */
 export const SOURCE_WORDS = {
@@ -377,4 +378,6 @@ export const SOURCE_WORDS = {
   ...PAGE_SOURCE_WORDS,
   // each option of the settings page, by its key (settings-source-words.ts)
   ...SETTINGS_SOURCE_WORDS,
+  // the list of keyboard shortcuts (shortcut-source-words.ts)
+  ...SHORTCUT_SOURCE_WORDS,
 } as const;

@@ -1193,6 +1193,35 @@ pre.thoughtknot-code {
   inline-size: 8em;
   accent-color: var(--gn-accent);
 }
+/* Every keyboard shortcut (§44, shortcuts_listed): a table for each place, keys first. In a card it sits under the
+   bar, with its Close button; in Obsidian's dialog it is the dialog's content. */
+.thoughtknot-shortcuts {
+  padding: var(--gn-space-2);
+  background: var(--gn-bg-alt);
+  margin-bottom: var(--gn-space-2);
+}
+.thoughtknot-shortcuts button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.thoughtknot-shortcuts table {
+  border-collapse: collapse;
+  margin-block: var(--gn-space-2);
+}
+.thoughtknot-shortcuts caption {
+  text-align: start;
+  font-weight: 600;
+}
+.thoughtknot-shortcuts th,
+.thoughtknot-shortcuts td {
+  text-align: start;
+  padding-block: 2px;
+  padding-inline-end: var(--gn-space-2);
+}
+.thoughtknot-shortcuts th {
+  font-family: var(--gn-font-mono);
+  font-weight: normal;
+}
 /* A graph over a size or time limit, shown as text: the banner's icon beside its words (spec §9, layout_contained). */
 .thoughtknot-refusal {
   display: flex;

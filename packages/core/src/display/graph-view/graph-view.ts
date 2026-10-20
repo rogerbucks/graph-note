@@ -234,12 +234,12 @@ export class GraphView extends Lifecycle {
     const was = view?.shown ?? this.o.links?.cameBack();
     if (was?.zoom !== undefined) this.zoom.restore(was.zoom, was.x ?? 0, was.y ?? 0);
     this.apply(this.zoom.view());
-    const { viewport, zoom, sel, details, taps, svg } = this,
+    const { viewport, zoom, sel, details, taps, svg, o, fullscreen: full } = this,
       { info } = this.aids;
     const open = (t: Target, x?: boolean) => this.open(t, x),
       unfold = (fold: string, byKey?: boolean) =>
         this.switching?.unfold(fold, byKey ? (key) => boxIn(this.svg, key)?.focus({ preventScroll: true }) : undefined);
-    bindViewportEvents({ card: this, viewport, zoom, sel, details, taps, info, svg, open, unfold, o: this.o });
+    bindViewportEvents({ card: this, root, viewport, zoom, sel, details, taps, info, svg, open, unfold, o, full });
     const observer = new ResizeObserver(() => {
       this.zoom.resize(this.zoomSize());
       this.aids.placeDetails();
