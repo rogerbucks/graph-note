@@ -3023,7 +3023,7 @@
           "changeId: (change: GraphSpecCheck.ReadChange) => string",
           "changesetHeader: (block: string) => { graph: string; id: string; against: string; by: string; } | null",
           "check: (world: GraphSpecCheck.World, graph: string, matrix?: unknown, switches?: Set<string>) => [string, boolean][]",
-          "checkChangeset: (base: string[], block: string, matrix?: unknown, switches?: Set<string>) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }",
+          "checkChangeset: (base: string[], block: string, matrix?: unknown, switches?: Set<string>, session?: string | null) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; claimed?: string; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }",
           "checkSyntax: (block: string) => GraphSpecCheck.ProfileError | null",
           "COMMENT_FIX: string",
           "COMMENT_RULE: string",
@@ -3067,7 +3067,7 @@
           "value: (world: GraphSpecCheck.World, graph: string, matrix?: unknown, switches?: Set<string>) => [string, boolean][]"
         ],
         "checkChangeset": [
-          "value: (base: string[], block: string, matrix?: unknown, switches?: Set<string>) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }"
+          "value: (base: string[], block: string, matrix?: unknown, switches?: Set<string>, session?: string | null) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; claimed?: string; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }"
         ],
         "checkSyntax": [
           "value: (block: string) => GraphSpecCheck.ProfileError | null"

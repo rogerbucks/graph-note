@@ -44,6 +44,7 @@ from graphspec.rules.change_apply import (
     stop_fix,
 )
 from graphspec.rules.changes import read_all, split_changeset
+from graphspec.rules.changesets import SESSION, from_session
 from graphspec.rules.changesets import check_changeset as plain_check_changeset
 from graphspec.rules.graph_check import check
 from graphspec.rules.plain_graph import World
@@ -162,7 +163,10 @@ def graph_rules(
 
 
 def check_changeset(
-    base: Iterable[tuple[str, str]], block: str, switches: Collection[str] = frozenset()
+    base: Iterable[tuple[str, str]],
+    block: str,
+    switches: Collection[str] = frozenset(),
+    session: str | None = None,
 ) -> tuple[list[tuple[str, bool, str]], dict[str, Any] | None, str | None]:
     """A change set dry-run against its base — [(graph, text)] loaded in order. Writes nothing.
     Returns (results [(label, ok, fix)], header, the state hash it would produce). The base and
@@ -174,7 +178,7 @@ def check_changeset(
     never more lenient than Grafeo's — the reader may only refuse more, what is outside the
     profile (tests/test_reader_agrees_with_grafeo.py)."""
     if settings.PARSER == "profile":
-        return plain_check_changeset(base, block, _MatrixWhenAsked(), lint, switches)
+        return plain_check_changeset(base, block, _MatrixWhenAsked(), lint, switches, session)
     res = []
 
     def add(label, ok, fix=""):
@@ -190,6 +194,8 @@ def check_changeset(
     )
     if not h:
         return res, None, None
+    if session is not None:
+        add(SESSION, from_session(h, session), f"write 'by {session}': the session that sent it")
     parts = split_changeset(block)
     additions = parts["additions"]
     found = lint(additions) + [x for c in parts["changes"] for x in lint(c["text"])]

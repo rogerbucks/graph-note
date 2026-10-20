@@ -48,6 +48,21 @@ def changeset_header(block: str) -> dict[str, str] | None:
     return dict(zip(("graph", "id", "against", "by"), m.groups())) if m else None
 
 
+SESSION = (
+    "its author is the session that sent it, not a name written in its header (editor spec §51)"
+)
+
+
+def from_session(h: dict[str, Any], session: str) -> bool:
+    """Who wrote a set is the session that sent it, never the name in its header (editor spec §51,
+    spec_author_from_session). The header's author becomes the session's, and the name it wrote is
+    kept as `claimed`. True when they agree."""
+    if h["by"] == session:
+        return True
+    h["claimed"], h["by"] = h["by"], session
+    return False
+
+
 def _state(g):
     return (
         {
@@ -87,9 +102,11 @@ def check_changeset(
     matrix: dict[str, dict[str, str]] | None = None,
     lint: Callable[[str], list[dict[str, Any]]] | None = None,
     switches: Collection[str] = frozenset(),
+    session: str | None = None,
 ) -> tuple[list[tuple[str, bool, str]], dict[str, Any] | None, str | None]:
     """A change set dry-run against its base — [(graph, text)] applied in order. Returns (results
-    [(label, ok, fix)], header, the state it would produce)."""
+    [(label, ok, fix)], header, the state it would produce). session is the author id of the
+    session that sent the set, when the host knows it (from_session)."""
     from graphspec.reader.lexer import ProfileError
     from graphspec.reader.store import Store
     from collections import Counter
@@ -109,6 +126,8 @@ def check_changeset(
     )
     if not h:
         return res, None, None
+    if session is not None:
+        add(SESSION, from_session(h, session), f"write 'by {session}': the session that sent it")
     parts = split_changeset(block)
     if lint:
         found = lint(parts["additions"]) + [x for c in parts["changes"] for x in lint(c["text"])]

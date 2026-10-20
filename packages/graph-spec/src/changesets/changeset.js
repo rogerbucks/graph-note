@@ -35,6 +35,15 @@ function changesetHeader(block) {
   );
   return m ? { graph: m[1], id: m[2], against: m[3], by: m[4] } : null;
 }
+const SESSION = 'its author is the session that sent it, not a name written in its header (editor spec §51)';
+// Who wrote a set is the session that sent it, never the name in its header (editor spec §51, spec_author_from_session).
+// The header's author becomes the session's, and the name it wrote is kept as `claimed`. True when they agree.
+function fromSession(h, session) {
+  if (h.by === session) return true;
+  h.claimed = h.by;
+  h.by = session;
+  return false;
+}
 const stateOf = (g) => {
   const pj = (p) => {
     const o = {};
@@ -68,14 +77,16 @@ function refreshSection20(store, name) {
 }
 // A change set dry-run against its base, the blocks loaded in order; it writes nothing. Returns each check as
 // [label, ok], the header (with its changes, warnings and §20 refreshes) and the state hash it would produce. It stops
-// at a failure that makes the later checks meaningless, with after null; sw turns named checks off.
-function checkChangeset(base, block, matrix, sw = new Set()) {
+// at a failure that makes the later checks meaningless, with after null; sw turns named checks off. session is the
+// author id of the session that sent the set, when the host knows it (fromSession).
+function checkChangeset(base, block, matrix, sw = new Set(), session = null) {
   const res = [],
     add = (label, ok) => res.push([label, !!ok]);
   block = block.replace(/\r\n/g, '\n'); // a line ends at LF in the reader; CRLF text is read as LF text
   const h = changesetHeader(block);
   add('the change set names its graph, its id, the state it was made against, and its author', h);
   if (!h) return { results: res, header: null, after: null };
+  if (session !== null) add(SESSION, fromSession(h, session));
   const parts = splitChangeset(block);
   add(
     'it passes the dialect linter (§24 H1)',

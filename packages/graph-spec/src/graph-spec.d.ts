@@ -74,12 +74,16 @@ declare namespace GraphSpecCheck {
     block: string,
     matrix?: unknown,
     switches?: Set<string>,
+    /** The author id of the session that sent the set. When given, it is the author, whatever the header names (editor spec §51). */
+    session?: string | null,
   ): {
     results: [string, boolean][];
     /** The header, with `refreshes` — each §20 value the change set recomputes: the claim, the key, its value before and after. */
     header:
       | ({ graph: string; id: string; against: string; by: string } & {
           refreshes?: [string, string, Value | null, Value][];
+          /** The author the header named, when it was not the session that sent the set. */
+          claimed?: string;
           /** Each DELETE and SET it holds, in order: the id derived from its statement, its kind of change and the `//@ reason:` hint above it. */
           changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][] }[];
         })
