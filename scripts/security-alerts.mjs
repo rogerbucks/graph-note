@@ -266,7 +266,7 @@ export function planPage({ alerts, read, unread }, register = { risks: [] }) {
   if (!alerts.length && !Object.keys(unread).length) return '';
   const plan = planned(register);
   const sorted = [...alerts].sort((a, b) => SEVERITIES.indexOf(a.severity) - SEVERITIES.indexOf(b.severity));
-  const cell = (s) => String(s).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+  const cell = (s) => String(s).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
   const lines = [
     '# Open security alerts',
     '',

@@ -266,6 +266,11 @@ describe('the page for the daily issue', () => {
     assert.match(problems[0], /^code-scanning\/9 \(high\) https:\/\/x\/code-scanning\/9/);
   });
 
+  test('a reason not read keeps its backslashes and pipes inside one table cell', () => {
+    const page = planPage({ alerts: [], read: [], unread: { dependabot: 'a\\|b\nc' } });
+    assert.match(page, /- dependabot: a\\\\\\\|b c\n/);
+  });
+
   test('the alerts not yet planned are those no register risk names', () => {
     const register = { risks: [{ id: 'SEC-40', alerts: ['npm/B'] }] };
     assert.deepEqual(
