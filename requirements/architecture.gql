@@ -36,7 +36,9 @@
 (claude_code)-[:IN_LAYER]->(apps),
 (standalone)-[:IN_LAYER]->(apps),
 (vscode)-[:IN_LAYER]->(apps),
-(built_in_exports)-[:IN_LAYER]->(plugins),
+// the built-in exports are written to the plug-in interface, so they prove it, but they ship in the core: the core
+// and the apps import them. A plug-in from outside is loaded through the interface instead (plugin_interface, P1)
+(built_in_exports)-[:IN_LAYER]->(core),
 (display_part)-[:OFFERS]->(host_interface),
 (core_part)-[:OFFERS]->(plugin_interface),
 (core_part)-[:OFFERS]->(storage_interface),
