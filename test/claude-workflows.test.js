@@ -1,8 +1,10 @@
-// Every workflow that runs Claude keeps two rules, so the gap risk TRUST-5 found cannot come back in another one:
+// Every workflow that runs Claude keeps these rules, so the gaps found so far cannot come back in another one:
 // - A comment wakes Claude only when its author is the owner, a member or a collaborator. Anyone can comment on a
 //   public repository, and a comment is text Claude reads.
 // - No step after Claude, in Claude's own job, runs code of the repository. Claude could have changed that code, so a
 //   check of its work runs in a later job, from a checkout Claude never touched.
+// - A file outside the checkout that Claude must read sits in a folder named by --add-dir. Without it, every read is
+//   refused, as the daily fix job found on 21 Oct 2026.
 // Read as text, by indentation, as policy.test.js reads the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -34,6 +36,17 @@ describe('every workflow that runs Claude', () => {
       const on = (block(text.split('\n'), 'on', 0) ?? []).join('\n');
       if (!COMMENT_EVENTS.test(on)) continue;
       assert.match(text, HEARD, `${file}: a comment from anyone wakes Claude`);
+    }
+  });
+
+  test('a file outside the checkout that Claude is told to read sits in a folder it may read (--add-dir)', () => {
+    for (const { file, name, lines } of claudeJobs()) {
+      const text = lines.join('\n');
+      const allowed = [...text.matchAll(/--add-dir \$\{\{ runner\.temp \}\}\/([\w.-]+)/g)].map((m) => m[1]);
+      for (const [, path] of text.matchAll(/(?<!--add-dir )\$\{\{ runner\.temp \}\}\/(\S+)/g)) {
+        const folder = path.includes('/') ? path.split('/')[0] : null;
+        assert.ok(folder && allowed.includes(folder), `${file} ${name}: Claude may not read ${path}`);
+      }
     }
   });
 

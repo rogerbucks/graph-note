@@ -73,7 +73,7 @@ describe('the daily security workflow', () => {
     assert.deepEqual(given(all.fix), ['contents: read', 'id-token: write', 'security-events: read']);
     assert.equal((fix.match(/secrets\.CLAUDE_CODE_OAUTH_TOKEN/g) ?? []).length, 2, 'the check and the action');
     assert.doesNotMatch(fix, /npm ci|npm install|github_token:/);
-    assert.match(fix, /--details --out "\$RUNNER_TEMP\/security-alerts\.json"/);
+    assert.match(fix, /--details --out "\$RUNNER_TEMP\/alerts\/security-alerts\.json"/);
     const allowed = /--allowedTools "([^"]+)"/.exec(fix)?.[1] ?? '';
     const pushes = allowed.split(',').filter((t) => /git push/.test(t));
     assert.deepEqual(pushes, ['Bash(git push -u origin security/:*)']);
@@ -81,5 +81,15 @@ describe('the daily security workflow', () => {
     assert.match(fix, /Open no pull request/);
     assert.match(fix, /prevented_by/);
     assert.match(fix, /Signed-off-by: Roger Bucks/);
+  });
+
+  test('lets Claude read the alerts file, and names each refused tool without its text (21 Oct 2026)', () => {
+    const fix = job('fix');
+    assert.match(fix, /--add-dir \$\{\{ runner\.temp \}\}\/alerts\n/);
+    assert.match(fix, /\$\{\{ runner\.temp \}\}\/alerts\/security-alerts\.json lists every open alert/);
+    const refused = runCommands(fix).at(-1) ?? '';
+    assert.match(refused, /permission_denials/);
+    assert.match(refused, /split\(" "\)\[0\]/, 'for Bash, the first word alone');
+    assert.doesNotMatch(refused, /tool_input\.(file_path|content|new_string)/);
   });
 });

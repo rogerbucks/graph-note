@@ -666,6 +666,7 @@ These test behaviour across modules, or the repository itself, so they are named
   - Only the owner, members and collaborators wake it. A separate job checks the draft from a fresh checkout of main.
 - `test/claude-workflows.test.js` — every workflow that runs Claude (risk TRUST-5). A comment wakes Claude only when
   its author is the owner, a member or a collaborator. No step after Claude, in Claude's own job, runs repository code.
+  A file outside the checkout that Claude must read sits in a folder named by `--add-dir`.
 - `test/github-project-blocks.test.js` — that mirror's blocked-by links. Each open question's issue blocks the issues
   of the requirements it blocks, made once. A link the requirements dropped is removed, and a person's is kept. A
   refusal by GitHub is a warning, with the issues and project still mirrored.
