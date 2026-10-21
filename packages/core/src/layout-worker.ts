@@ -109,6 +109,27 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
 
 const said = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
+/**
+ * A layout that failed: its worker failed while laying out (`worker`), or its engine could not start (`start`). `why`
+ * is the cause's own words, and `slow` marks an engine that took too long to start. Its message is for a developer; a
+ * host says it from the catalogue by its stage (hosts/refusal-words.ts).
+ */
+export class LayoutFailure extends Error {
+  readonly stage: 'worker' | 'start';
+  readonly why: string;
+  readonly slow: boolean;
+  constructor(stage: 'worker' | 'start', why: string, slow = false) {
+    super(stage === 'worker' ? `the layout worker failed: ${why}` : `the layout engine could not start: ${why}`);
+    this.stage = stage;
+    this.why = why;
+    this.slow = slow;
+    this.name = 'LayoutFailure';
+  }
+}
+
+/** Why an engine is given up on that did not say it was ready in time: its message is for a developer. */
+const SLOW_START = new Error('the layout engine took too long to start');
+
 /** A port to a worker served on this thread, for where no worker can run: the same talk, with no time limit possible. */
 export function inThreadPort(serve: (scope: LayoutScope) => void): LayoutPort {
   let open = true;
@@ -241,7 +262,7 @@ export class LayoutRunner {
     this.port = port;
     this.ready = false;
     this.startTimer = this.o.clock.setTimeout(() => {
-      if (port === this.port && !this.ready) this.failedToStart(new Error('the layout engine took too long to start'));
+      if (port === this.port && !this.ready) this.failedToStart(SLOW_START);
     }, this.limits().startMs);
     port.onmessage = ({ data }) => {
       if (port !== this.port) return;
@@ -270,7 +291,7 @@ export class LayoutRunner {
       // a worker that fails while laying out: its layout fails, never retried anywhere, and the next starts a fresh one
       const job = this.busy;
       this.drop();
-      if (job) this.settle(job, new Error(`the layout worker failed: ${said(why)}`));
+      if (job) this.settle(job, new LayoutFailure('worker', said(why)));
       else this.pump();
     };
   }
@@ -289,7 +310,7 @@ export class LayoutRunner {
       return;
     }
     const job = this.queue.shift();
-    const error = new Error(`the layout engine could not start: ${said(why)}`);
+    const error = new LayoutFailure('start', said(why), why === SLOW_START);
     if (this.onPage) {
       if (job) this.settle(job, error);
     } else if (job) this.failed(job, error);

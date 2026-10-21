@@ -22,6 +22,8 @@ import {
   exportPlan,
   exportScope,
   exportedData,
+  formatCount,
+  formatSize,
   gqlBlocks,
   isDataFormat,
   pathsOf,
@@ -122,7 +124,8 @@ async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<Exp
   const texts = gqlBlocks(text).map((b) => b.text);
   const reading = readNote(texts);
   // a note over the text limit is never read (layout_contained), so there is nothing to draw: say why, never "nothing to export"
-  if (reading.tooLarge) return said({ stopped: exportRefusalWords(reading.tooLarge) });
+  if (reading.tooLarge)
+    return said({ stopped: exportRefusalWords(reading.tooLarge, { word, formatCount, formatSize }) });
   const scope = exportScope(reading, {
     graph: ask.graph,
     ...(ask.view ? { view: ask.view } : {}),

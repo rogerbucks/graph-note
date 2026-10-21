@@ -3,6 +3,7 @@
 // line is read once through. Every search for a closing mark goes on from where the last one stopped. So text full of
 // openers that never close costs no more than its length (spec §9). Only notes and files in the vault and web and mail
 // addresses may be opened. Any other scheme, however it is disguised, is refused and shown as text.
+import { word } from './words.ts';
 
 /** What a link is: a note or a file in the vault, a web or a mail address, or anything else, which is never opened. */
 export type LinkKind = 'note' | 'file' | 'web' | 'mail' | 'refused';
@@ -305,12 +306,11 @@ export function linkTo(href: string): FoundLink {
 
 /** What is said, plainly, before a link that leaves Obsidian is opened; null for a link in the vault. */
 export function leavingWords(link: FoundLink): string | null {
-  if (link.kind === 'web') return `This link leaves Obsidian: it opens ${link.target} in your web browser.`;
+  if (link.kind === 'web') return word('links.leaves-web', { target: link.target });
   if (link.kind !== 'mail') return null;
   const to = link.target.slice('mailto:'.length).split('?')[0] ?? '';
-  return `This link leaves Obsidian: it writes to ${to} in your mail app.`;
+  return word('links.leaves-mail', { to });
 }
 
 /** What is said of a link that is never opened, shown as text in its place (safe_to_click). */
-export const refusedWords = (link: FoundLink): string =>
-  `${link.written} — not opened: only notes and files in the vault, and web and mail addresses, are opened.`;
+export const refusedWords = (link: FoundLink): string => word('links.not-opened', { link: link.written });

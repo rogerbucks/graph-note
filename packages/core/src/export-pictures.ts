@@ -3,14 +3,17 @@
 // image moving where its limits allow (image-limits.ts), with its first frame beside it. Under reduced motion the
 // image's own style sheet, scoped under its class, shows that frame instead (motion_reduced_respected). A PNG cannot
 // move, so each is reduced to its first frame, as is one past a limit. What was done with each animated image is said,
-// a line each, for the host's notice and the image's own frame. A still image is embedded as it is, with nothing to
-// say. The host loads the files (`PictureLoad`): the core never reads the vault.
+// a line each. It is said in UK English for the image's own frame, which is the file's bytes, and in the reader's
+// language for the host's notice. A still image is embedded as it is, with nothing to say. The host loads the files
+// (`PictureLoad`): the core never reads the vault.
 import { inImage, withStyleSheet } from './export-motion.ts';
 import type { ImageFacts } from './image-facts.ts';
 import { IMAGE_LIMITS, pastLimit } from './image-limits.ts';
+import type { Say } from './image-limits.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Palette } from './palette.ts';
 import { PICTURE_MARK } from './picture.ts';
+import { sourceWord, word } from './words.ts';
 
 /**
  * An image a host has loaded for an export. It has its file's name, type, bytes in base64 and size, what its bytes say,
@@ -92,7 +95,8 @@ const imageAt = (cls: string, at: ReturnType<typeof placeOf>, mime: string, base
  * A drawn SVG (themed, before its frame) with each picture's square filled. The image loaded for it fills it, moving in
  * an SVG that may move (`moving`) when animated and within the limits. Else its first frame fills it. A dashed frame
  * fills it when none was loaded. It comes with what was done with each animated image, and why a picture was not drawn,
- * a line each. None when nothing was loaded at all (`loaded` empty).
+ * a line each. None when nothing was loaded at all (`loaded` empty). `said` is in UK English, for the file's bytes;
+ * `told` is the same in the reader's language, for the host's notice.
  */
 export function withPictures(
   svg: string,
@@ -100,8 +104,14 @@ export function withPictures(
   loaded: readonly PictureLoaded[],
   moving: boolean,
   palette: Palette,
-): { svg: string; said: string[] } {
-  const said: string[] = [];
+): { svg: string; said: string[]; told: string[] } {
+  const said: string[] = [],
+    told: string[] = [];
+  /** Says one line both ways: in UK English for the file, and in the reader's language for the notice. */
+  const line = (lineOf: (say: Say) => string) => {
+    said.push(lineOf(sourceWord));
+    told.push(lineOf(word));
+  };
   let moved = 0,
     out = svg;
   (drawing.pictures ?? []).forEach((p, i) => {
@@ -117,51 +127,53 @@ export function withPictures(
     let drawn: string;
     if (!image || 'why' in image) {
       drawn = frame;
-      if (image) said.push(`${thing}: not drawn, as ${image.why}`);
+      if (image) line((say) => say('export.picture.not-drawn', { thing, why: image.why }));
     } else if ('unread' in image) {
       drawn = frame;
-      said.push(`${thing}: ${image.name} left out, as it is ${mb(image.size)}, over ${mb(IMAGE_LIMITS.bytes)}`);
+      const values = { thing, name: image.name, size: mb(image.size), most: mb(IMAGE_LIMITS.bytes) };
+      line((say) => say('export.picture.too-large', values));
     } else if (!EMBEDDED.has(image.mime) || !BASE64.test(image.base64)) {
       drawn = frame;
-      said.push(`${thing}: not drawn, as ${image.name} is not of an image type an export embeds`);
+      line((say) => say('export.picture.not-embedded', { thing, name: image.name }));
     } else if (image.facts && image.facts.format !== null && !image.facts.animated) {
       drawn = imageAt('thoughtknot-picture', at, image.mime, image.base64);
     } else {
       const first = image.still !== undefined && BASE64.test(image.still) ? image.still : undefined;
-      const past = pastLimit(image),
-        why = !moving
-          ? 'a PNG cannot move'
-          : past
-            ? past
-            : moved >= IMAGE_LIMITS.moving
-              ? `${IMAGE_LIMITS.moving} animated images already move in it`
-              : null;
+      const moves = moving && !pastLimit(image) && moved < IMAGE_LIMITS.moving;
+      /** Why the image does not move, said by `say`. */
+      const why = (say: Say): string =>
+        !moving
+          ? say('export.picture.png')
+          : (pastLimit(image, say) ?? say('export.picture.moving-already', { moving: String(IMAGE_LIMITS.moving) }));
+      const named = { thing, name: image.name };
       const still = first ? imageAt('thoughtknot-picture-still', at, 'image/png', first) : '';
-      if (why === null) {
+      if (moves) {
         moved++;
         drawn = imageAt('thoughtknot-picture-moving', at, image.mime, image.base64) + still;
-        said.push(
-          `${thing}: ${image.name} kept moving${still ? ', and still under reduced motion' : ', and moving under reduced motion too, as its first frame could not be made'}`,
-        );
+        line((say) => say(still ? 'export.picture.moving' : 'export.picture.moving-always', named));
       } else if (first || !moving) {
         // a PNG is drawn from the file as an image, which shows an animated one's first frame
         drawn = first
           ? imageAt('thoughtknot-picture', at, 'image/png', first)
           : imageAt('thoughtknot-picture', at, image.mime, image.base64);
-        said.push(`${thing}: ${image.name} reduced to its first frame, as ${why}`);
+        line((say) => say('export.picture.first-frame', { ...named, why: why(say) }));
       } else {
         drawn = frame;
-        said.push(`${thing}: ${image.name} left out, as ${why} and its first frame could not be made`);
+        line((say) => say('export.picture.left-out', { ...named, why: why(say) }));
       }
     }
     out = out.replace(group[0], () => `${group[1]}${(group[2] ?? '').replace(square[0], () => drawn)}${group[3]}`);
   });
-  return { svg: out, said };
+  return { svg: out, said, told };
 }
 
 /** The framed image with its pictures' first frames shown in place of their movement under reduced motion, when any moves. */
 export const withStillPictures = (svg: string): string =>
   svg.includes('thoughtknot-picture-moving') ? withStyleSheet(svg, STILL_CSS) : svg;
 
-/** What an export did with its animated images, as one line for the image's frame and the host's notice. */
-export const animationSaid = (said: readonly string[]): string => `Animated images: ${said.join('; ')}.`;
+/**
+ * What an export did with its animated images, as one line for the host's notice, in the reader's language. With
+ * `sourceWord` as `say`, it is the line for the image's frame, in UK English.
+ */
+export const animationSaid = (said: readonly string[], say: Say = word): string =>
+  say('export.animated-images', { said: said.join('; ') });

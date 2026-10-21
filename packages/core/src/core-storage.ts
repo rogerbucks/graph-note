@@ -3,6 +3,7 @@
 import { memoryStorage } from './note-storage.ts';
 import { PLUGIN_API } from './plugins.ts';
 import type { ThoughtKnotPlugin } from './plugins.ts';
+import { word } from './words.ts';
 
 /**
  * The core's own storage, added through the plug-in interface as any plug-in's is (plugin_interface). It keeps notes in
@@ -13,5 +14,7 @@ export const CORE_STORAGE: ThoughtKnotPlugin = {
   version: '1.0.0',
   api: PLUGIN_API,
   uses: ['storage'],
-  register: (points) => points.storage?.add({ name: 'memory', title: 'In memory', open: () => memoryStorage() }),
+  // its title is said in the reader's language as it is added
+  register: (points) =>
+    points.storage?.add({ name: 'memory', title: word('plugins.storage.memory'), open: () => memoryStorage() }),
 };

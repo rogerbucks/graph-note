@@ -2,8 +2,10 @@
 // with its fix. So is a frame that is not a well-formed list of numbers. The diagnostics' code actions apply the fix. A
 // view's name, which is the user's own, is never checked against anything. Beside style.test.js, which holds the rest of
 // the style graph's tests.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { diagnostics } from '../src/help.ts';
@@ -20,6 +22,8 @@ const TRIP = `// graph: trip · SOURCE
 (walk)-[:STEP {seq: 2}]->(park),
 (home)-[:NEAR]->(park),
 (park)-[:NEAR]->(lake)`;
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const URI = 'file:///Some%20note.md';
 /** The style of graph trip in a note of the given blocks, and its problems. */
@@ -344,5 +348,22 @@ describe('a word written in a style graph', () => {
       '$` is not a direction the locked style lays out in',
       '$$ is not a direction the locked style lays out in',
     ]);
+  });
+});
+
+describe('what a key or a frame at fault says, in the person’s language', () => {
+  // proves: words_catalogue
+  test('the problem and its fix are said in it, for an unknown key and for each frame at fault', () => {
+    setLanguage('en-XA');
+    const block = styleBlock(
+      "(l1:Look {view: 'v', kind: 'Place', colur: 'green'}),",
+      "(a1:Arrows {view: 'v', zzz: 'x'}),",
+      "(w1:Shown {view: 'v', frame: '1,2,3,4,'}),",
+      "(w2:Shown {view: 'w', frame: '1,2,3,'}),",
+      "(w3:Shown {view: 'x', frame: 'a,b'})",
+    );
+    const { problems } = styleIn(TRIP, block);
+    assert.ok(problems.length >= 5, 'each is a problem');
+    for (const p of problems) assert.ok(isPseudoWord(p.message) && isPseudoWord(p.fix), `${p.message} / ${p.fix}`);
   });
 });

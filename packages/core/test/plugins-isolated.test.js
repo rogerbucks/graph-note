@@ -4,8 +4,10 @@
 // - what the plug-in adds is installed as any other, and each call goes over the port as data;
 // - a call that loops or never answers is stopped by the host's clock, and the plug-in is named and stopped for good;
 // - the worker has no network, and reaches only the host abilities its manifest names.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 import { Worker } from 'node:worker_threads';
 import { PLUGIN_API, pluginRegistry } from '../src/plugins.ts';
 import { isolatedPlugin } from '../src/plugin-isolated.ts';
@@ -71,6 +73,8 @@ const installed = async (port, options = {}, host) => {
 };
 
 describe('a plug-in run apart from the host (TRUST-14)', () => {
+  afterEach(() => setLanguage(SOURCE_LANGUAGE));
+
   test('what it adds is installed as any other, and its calls go over the port as data', async () => {
     const { port } = inThread({
       ...manifest(['sources', 'steps', 'diagrams', 'commands', 'theme']),
@@ -138,6 +142,20 @@ describe('a plug-in run apart from the host (TRUST-14)', () => {
     assert.equal(port.ended, true);
     assert.match(iso.stopped(), /ran over the 300 ms allowed/);
     assert.match((await registry.readGraph('loop', 'x', ['Public'])).message, /the plug-in was stopped/);
+  });
+
+  // proves: words_catalogue
+  test('why a plug-in run apart was stopped is said in the person’s language, by every call after it', async () => {
+    setLanguage('en-XA');
+    const { port } = inThread({
+      ...manifest(['diagrams']),
+      register: (p) => p.diagrams.add({ type: 'acme.iso.wait', title: 'Wait', draw: () => new Promise(() => {}) }),
+    });
+    const { iso, registry } = await installed(port, { timeLimit: 50 });
+    const first = await registry.drawDiagram('acme.iso.wait', SHAPE, { width: 10, height: 10 });
+    const again = await registry.drawDiagram('acme.iso.wait', SHAPE, { width: 10, height: 10 });
+    iso.stop();
+    for (const words of [first.message, again.message, iso.stopped()]) assert.ok(isPseudoWord(words), words);
   });
 
   test('a call whose answer never comes is stopped too', async () => {

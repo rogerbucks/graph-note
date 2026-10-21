@@ -30,6 +30,7 @@ import { legendOf, lookOf } from './style.ts';
 import type { StyleGraph, ThingLook } from './style-graph.ts';
 import { styledDrawing } from './style-source.ts';
 import { hueColour } from './theme.ts';
+import { sourceWord, word } from './words.ts';
 
 /** The formats an image is offered in (export_formats). */
 export const EXPORT_FORMATS = ['svg', 'png'] as const;
@@ -157,8 +158,11 @@ function looksOf(scope: ExportScope, style: StyleGraph | undefined): Marks['look
   return looks;
 }
 
-/** The line at the foot of an exported image, saying which note it is from (its path in the vault) and the day (`YYYY-MM-DD`). */
-export const footerText = (note: string, date: string) => `From ${note}, exported ${saidDate(date)}`;
+/**
+ * The line at the foot of an exported image, saying which note it is from (its path in the vault) and the day
+ * (`YYYY-MM-DD`). It is in UK English: it is the file's bytes.
+ */
+export const footerText = (note: string, date: string) => sourceWord('export.footer', { note, date: saidDate(date) });
 
 /** The first letter capital, as a reading begins a sentence. */
 const sentence = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -171,7 +175,7 @@ const sentence = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 export type ExportLayout = (drawing: GraphDrawing, theme: ExportTheme) => Promise<Drawn | Refusal | null>;
 
 const refuseEmpty = (scope: ExportScope): void => {
-  if (scope.empty) throw new Error(`There is nothing to export: ${scope.why ?? 'the scope is empty'}`);
+  if (scope.empty) throw new Error(word('export.nothing', { why: scope.why ?? word('export.scope-empty') }));
 };
 
 /**
@@ -191,7 +195,7 @@ export function exportSvg(scope: ExportScope, engine: Engine, info: ExportInfo):
   refuseEmpty(scope);
   const drawing = laidOutDrawing(scope, info);
   const large = tooLarge(drawing, info);
-  if (large) throw new Error(`The animated SVG was not made: ${large.why}. ${sentence(large.fix)}.`);
+  if (large) throw new Error(word('export.animation-not-made', { why: large.why, fix: sentence(large.fix) }));
   const laid = directions(drawing);
   const drawn = chosen(
     laid,
@@ -252,11 +256,19 @@ function framedImage(
   const body = withRunners(walk && plan ? pathBody(pictured.svg, walk.path, plan, palette) : pictured.svg, flow);
   const view = scope.view !== undefined;
   const viewSaid = view
-    ? sentence(scope.reading ?? '') + (scope.context ? ' (the rest of the graph is faded)' : '')
+    ? scope.context
+      ? sourceWord('export.reading-faded', { reading: sentence(scope.reading ?? '') })
+      : sentence(scope.reading ?? '')
     : undefined;
+  // what was done with the animated images: in UK English in the image's frame, and in the reader's language for the
+  // host's notice
   const animation = pictured.said.length ? pictured.said : undefined;
   // a played path says it is played, at what pace, and the walk in order, so the image tells it still (motion_not_alone)
-  const subtitle = [viewSaid, walk && pathSubtitle(walk), animation && animationSaid(animation).slice(0, -1)]
+  const subtitle = [
+    viewSaid,
+    walk && pathSubtitle(walk),
+    animation && animationSaid(animation, sourceWord).slice(0, -1),
+  ]
     .filter(Boolean)
     .join('. ');
   const title = view ? `${scope.graph} · view ${scope.view}` : scope.graph;
@@ -272,7 +284,7 @@ function framedImage(
   );
   image.svg = withStillPictures(withFlow(image.svg, flow));
   if (walk && plan) image.svg = withPath(image.svg, plan, walk.pace);
-  if (animation) image.animation = animation;
+  if (animation) image.animation = pictured.told;
   // a theme variable or a blend in a colour would read as black or nothing outside Obsidian: never let one out
   if (/(?:style|fill|stroke)="[^"]*(?:var\(--|color-mix\()/.test(image.svg))
     throw new Error(

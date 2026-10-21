@@ -8,12 +8,14 @@ import { BLOCKS_SOURCE_WORDS } from './blocks-source-words.ts';
 import { CC_SOURCE_WORDS } from './cc-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
+import { DRAWING_SOURCE_WORDS } from './drawing-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
 import { EDITING_SOURCE_WORDS } from './editing-source-words.ts';
 import { EXPORT_SOURCE_WORDS } from './export-source-words.ts';
 import { FIRST_RUN_SOURCE_WORDS } from './first-run-source-words.ts';
 import { HOST_SOURCE_WORDS } from './host-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
+import { PLUGINS_SOURCE_WORDS } from './plugins-source-words.ts';
 import { PROPOSAL_CARD_SOURCE_WORDS } from './proposal-card-source-words.ts';
 import { PROPOSAL_SOURCE_WORDS } from './proposal-source-words.ts';
 import { READING_SOURCE_WORDS } from './reading-source-words.ts';
@@ -330,4 +332,8 @@ export const SOURCE_WORDS = {
   ...VIEWS_SOURCE_WORDS,
   // the core's graph steps and walked paths: their refusals, problems and animation (steps-source-words.ts)
   ...STEPS_SOURCE_WORDS,
+  // the core's drawing: its diagram types, layout limits, animated images, links and rules (drawing-source-words.ts)
+  ...DRAWING_SOURCE_WORDS,
+  // what the plug-ins' calls say when one fails (plugins-source-words.ts)
+  ...PLUGINS_SOURCE_WORDS,
 } as const;

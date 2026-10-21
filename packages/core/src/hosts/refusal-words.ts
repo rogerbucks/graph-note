@@ -1,17 +1,17 @@
 // Why a graph is not laid out, in words (spec §9, layout_contained, and §16, failed_export). It gives the limit it is
 // over and the numbers, how long its layout was given, or that drawing is paused. One telling of each reason, in two
 // voices. One is the banner over a graph shown as text instead. One is the notice of an export that was stopped and
-// wrote nothing.
+// wrote nothing. Each is said in the reader's language, from the catalogue (drawing-source-words.ts). A host-side
+// module imports only types from the core, so the host hands in how words and numbers are said (`Say`).
 import type { Refusal } from '../layout-limits.ts';
+import type { LayoutFailure } from '../layout-worker.ts';
+import type { WordKey, WordValues } from '../words.ts';
 
-const count = (n: number) => n.toLocaleString('en-GB');
-
-/** A size in bytes, as a person reads it: 100 bytes, 12.5 kB, 1.2 MB. */
-function size(bytes: number): string {
-  const one = (n: number) => String(Math.round(n * 10) / 10);
-  if (bytes < 1000) return `${count(bytes)} bytes`;
-  if (bytes < 1_000_000) return `${one(bytes / 1000)} kB`;
-  return `${one(bytes / 1_000_000)} MB`;
+/** How the host says words and numbers: the core's `word`, `formatCount` and `formatSize`. */
+export interface Say {
+  word: (key: WordKey, values?: WordValues) => string;
+  formatCount: (n: number) => string;
+  formatSize: (bytes: number) => string;
 }
 
 type TooLarge = Extract<Refusal, { reason: 'too-large' }>;
@@ -19,68 +19,79 @@ type TooLarge = Extract<Refusal, { reason: 'too-large' }>;
 /** Whether the limit is on the note's text, which is never read, rather than on the drawing. */
 const ofText = (r: TooLarge) => r.limit === 'text-bytes' || r.limit === 'text-lines';
 
-/** What is over the limit, and the limit, in words that follow a colon. */
-function overWhat(r: TooLarge, counted: 'drawn' | 'laid out'): string {
-  const least = r.atLeast ? 'at least ' : '';
+/** What is over the limit, and the limit, in words that follow a colon: what is `drawn`, or what is `laid out`. */
+function overWhat(r: TooLarge, counted: 'drawn' | 'laid-out', say: Say): string {
+  const { word, formatCount, formatSize } = say;
+  const most = r.limit === 'text-bytes' || r.limit === 'source' ? formatSize(r.most) : formatCount(r.most);
+  const values = { size: formatCount(r.count), most };
   switch (r.limit) {
     case 'text-bytes':
-      return `the graph blocks here hold ${size(r.count)} of text, and at most ${size(r.most)} is read`;
+      return word('refusal.over.text-bytes', { size: formatSize(r.count), most });
     case 'text-lines':
-      return `the graph blocks here hold ${count(r.count)} lines, and at most ${count(r.most)} are read`;
+      return word('refusal.over.text-lines', values);
     case 'source':
-      return `this graph's drawing instructions are ${least}${size(r.count)}, and at most ${size(r.most)} are laid out`;
+      return word(r.atLeast ? 'refusal.over.source-at-least' : 'refusal.over.source', {
+        size: formatSize(r.count),
+        most,
+      });
     case 'word':
-      return `a word in this graph is ${count(r.count)} characters long, and at most ${count(r.most)} are ${counted}`;
+      return word(counted === 'drawn' ? 'refusal.over.word-drawn' : 'refusal.over.word-laid-out', values);
+    case 'links':
+      return word(counted === 'drawn' ? 'refusal.over.links-drawn' : 'refusal.over.links-laid-out', values);
     default:
-      return `this graph has ${count(r.count)} ${r.limit}, and at most ${count(r.most)} are ${counted}`;
+      return word(counted === 'drawn' ? 'refusal.over.things-drawn' : 'refusal.over.things-laid-out', values);
   }
 }
 
-const INSTEAD = 'It is shown as text instead.';
-
-// on the page's own thread a layout cannot be stopped, so its limits are lower: say so, or the numbers puzzle
-const PAGE = 'Graphs are laid out on the main thread here, so the limits are lower.';
+/** The sentence a refusal on the page's own thread adds, or nothing: there a layout cannot be stopped, so its limits are lower. */
+const onPage = (r: TooLarge, say: Say): string[] => (r.page ? [say.word('refusal.page')] : []);
 
 /** The banner's words. */
-export function refusalWords(r: Refusal): string {
-  if (r.reason === 'timed-out') {
-    const s = r.ms / 1000;
-    return `Took too long to draw: laying this graph out took longer than ${s} second${s === 1 ? '' : 's'}, so it was stopped. ${INSTEAD}`;
-  }
-  if (r.reason === 'stopped')
-    return `Drawing is paused: the last ${r.failures} layouts took too long or failed, so no more are started until the plugin is reloaded. ${INSTEAD}`;
-  const head = ofText(r) ? 'Too large to read' : 'Too large to draw';
-  return `${head}: ${overWhat(r, 'drawn')}.${r.page ? ` ${PAGE}` : ''} ${INSTEAD}`;
+export function refusalWords(r: Refusal, say: Say): string {
+  const { word } = say;
+  const instead = word('refusal.instead');
+  if (r.reason === 'timed-out') return [word('refusal.timed-out', { count: r.ms / 1000 }), instead].join(' ');
+  if (r.reason === 'stopped') return [word('refusal.stopped', { failures: String(r.failures) }), instead].join(' ');
+  const over = overWhat(r, 'drawn', say);
+  const head = word(ofText(r) ? 'refusal.too-large-to-read' : 'refusal.too-large-to-draw', { over });
+  return [head, ...onPage(r, say), instead].join(' ');
 }
 
 /**
  * The notice of an export that was stopped for a limit, in the words of every export that cannot be made. It says what
  * happened, why, that nothing was saved, and what to do.
  */
-export function exportRefusalWords(r: Refusal): string {
-  const made = 'The export could not be made:';
-  if (r.reason === 'timed-out') {
-    const s = r.ms / 1000;
-    return `${made} laying the graph out took longer than ${s} second${s === 1 ? '' : 's'}, so it was stopped. Nothing was saved. Export a smaller view of the graph, or try again.`;
-  }
-  if (r.reason === 'stopped')
-    return `${made} the last ${r.failures} layouts took too long or failed, so no more are started until the plugin is reloaded. Nothing was saved. Reload the plugin, then try again.`;
+export function exportRefusalWords(r: Refusal, say: Say): string {
+  const { word } = say;
+  if (r.reason === 'timed-out') return word('refusal.export.timed-out', { count: r.ms / 1000 });
+  if (r.reason === 'stopped') return word('refusal.export.stopped', { failures: String(r.failures) });
   const todo = ofText(r)
-    ? 'Move some of the graphs to another note.'
+    ? word('refusal.export.move-graphs')
     : r.limit === 'word'
-      ? 'Shorten the long name or text.'
-      : 'Export a smaller view of the graph, or split it into smaller graphs.';
-  return `${made} ${overWhat(r, 'laid out')}.${r.page ? ` ${PAGE}` : ''} Nothing was saved. ${todo}`;
+      ? word('refusal.export.shorten')
+      : word('refusal.export.smaller');
+  const over = word('refusal.export.too-large', { over: overWhat(r, 'laid-out', say) });
+  return [over, ...onPage(r, say), word('exporting.nothing-saved'), todo].join(' ');
 }
+
+/** Whether `error` is a layout's failure, told by its stage (layout-worker.ts). */
+const isLayoutFailure = (error: unknown): error is LayoutFailure =>
+  error instanceof Error && error.name === 'LayoutFailure';
 
 /**
  * The notice of an export whose layout failed: the layout worker or its engine raised `error`. Its reason is put in
- * brackets, as the runner words it. So "the layout worker failed: boom" becomes "the layout worker failed (boom)". Then
- * it says that nothing was saved and what to do.
+ * brackets. So a worker that failed with "boom" is told as "the layout worker failed (boom)". Then it says that
+ * nothing was saved and what to do.
  */
-export function exportFailureWords(error: unknown): string {
+export function exportFailureWords(error: unknown, say: Say): string {
+  const { word } = say;
   const message = error instanceof Error ? error.message : String(error);
-  const told = /^(the layout (?:worker failed|engine could not start)): ([\s\S]*)$/.exec(message);
-  const why = told ? `${told[1]} (${told[2]})` : `the layout worker failed (${message})`;
-  return `The export could not be made: ${why}. Nothing was saved. Try again; if it keeps failing, reload the plugin.`;
+  const why = isLayoutFailure(error)
+    ? error.stage === 'start'
+      ? word('refusal.layout.could-not-start', {
+          why: error.slow ? word('refusal.layout.slow-start') : error.why,
+        })
+      : word('refusal.layout.failed', { why: error.why })
+    : word('refusal.layout.failed', { why: message });
+  return word('refusal.export.failed', { why });
 }

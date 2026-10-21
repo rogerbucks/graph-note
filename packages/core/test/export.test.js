@@ -4,8 +4,10 @@
 // only the view, unless the faded context is asked for. An image too large for one sharp PNG is split across pages
 // (big_export). The data is exported as a GQL block, as CSV and as GraphML (export_data_formats). Each reads back into
 // the very things and links exported, however large the graph (export_lossless).
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { loadEngine } from '../src/engine.ts';
 import { readNote } from '../src/drawing.ts';
@@ -42,6 +44,7 @@ const STYLED = [
 ];
 
 const engine = await loadEngine();
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 const reading = readNote(STYLED);
 const { style, problems } = readStyle(STYLED, 'team', reading);
 assert.deepEqual(problems, []);
@@ -513,5 +516,25 @@ describe('an image too large for one sharp PNG', () => {
     assert.match(root, /\sheight="50"/);
     assert.match(root, /\sviewBox="10 20\.5 100 50"/);
     assert.equal(cut.slice(root.length), image.svg.slice(/^<svg\b[^>]*>/.exec(image.svg)[0].length));
+  });
+});
+
+describe('what an export says, in the person’s language', () => {
+  // proves: words_catalogue
+  test('why there is nothing to export is said in it, and the image’s frame stays in UK English', () => {
+    setLanguage('en-XA');
+    const none = exportScope(reading, {
+      graph: 'team',
+      view: { name: 'robots', spec: { kind: 'kinds', kinds: ['Robot'] } },
+    });
+    for (const scope of [none, { ...none, why: undefined }])
+      assert.throws(
+        () => exportSvg(scope, engine, INFO),
+        (e) => isPseudoWord(e.message.replace(none.why, '')),
+      );
+    const view = { graph: 'team', view: AROUND, context: true };
+    const image = exportSvg(exportScope(reading, view), engine, INFO);
+    assert.ok(texts(image.svg).includes('From Trips/Team.md, exported 11 Oct 2026'), 'the footer');
+    assert.match(texts(image.svg).join(' '), /\(the rest of the graph is faded\)/, 'the faded context, in the frame');
   });
 });

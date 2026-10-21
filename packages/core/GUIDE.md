@@ -652,7 +652,7 @@ own image decoding. The core says what it is and what it may do. No library deco
   - An SVG has no frames to count. It has a pixel size only when its root gives one in pixels. Otherwise its size on
     disk alone holds it to the limits.
   - An AVIF's size is not read either.
-- `image-limits.ts` — the limits an animated image moves within (`IMAGE_LIMITS`, said in `LIMITS_SAID`).
+- `image-limits.ts` — the limits an animated image moves within (`IMAGE_LIMITS`, said by `limitsSaid`).
   - They are size on disk, pixels a frame, frames, and how many move at once in one drawing.
   - An image over the size on disk is never read, and is not shown, saying why.
   - `startOf` says how an image starts:
@@ -890,8 +890,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - A PNG, or one past a limit, is reduced to its first frame.
   - One that cannot be had, or was never read (`UnreadImage`, over the size limit: left out), is drawn as a dashed frame.
   - Only an image type of a fixed list is written before the bytes, which must be base64. An image is never put inline.
-  - `ExportImage.animation` says what was done with each animated image, a line each. The frame says it too
-    (`animationSaid`).
+  - `ExportImage.animation` says what was done with each animated image, a line each, in the reader's language. The
+    frame says it too, in UK English, as it is the file's bytes (`animationSaid` with `sourceWord`).
 - `export-pages.ts` — `pngPages`: an image too large for one sharp PNG on the device, split into a grid of pages.
   - Each page is at twice natural size or more, within the device's pixels, and no side over `PNG_MOST_SIDE` (32,767
     device pixels).
@@ -912,6 +912,9 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - `dataText` writes it in one of `DATA_FORMATS`. These are the built-in exports `CORE_EXPORTS` adds through the
     plug-in interface.
   - No layout is asked for.
+
+#### The reader's words and formats
+
 - `locale-formats.ts` — what is shown, in the reader's locale (editor spec §42, locale_formats, locale_sorting).
   - `formatCount`, `formatSize`, `formatDay`, `formatInstant`, `formatList` and `sortedForReader` work through the
     platform's Intl.
@@ -919,8 +922,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - They are never used for what is written into a note, an export's data or the layout source
     (locale_never_changes_bytes). So an order written into text, as `github-review-items.ts` writes its groups, keeps
     one collation.
-  - `hosts/refusal-words.ts` still says its counts in UK English, as a host-side module may import only types from the
-    core.
+  - `hosts/refusal-words.ts` imports only types from the core, as a host-side module must. So the host hands in
+    `word`, `formatCount` and `formatSize` (its `Say`), and the refusals are said in the reader's language.
 - `words.ts` and `source-words.ts` — the words the person reads, by key (editor spec §42, words_catalogue,
   language_follows_host, translations_as_files).
   - `word(key, values)` says one in the current language. Its `{name}` placeholders are filled, and its plural form is
@@ -936,7 +939,12 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     - the browser page's own in `page-source-words.ts`;
     - editing's (properties, adding a thing, Edit, kept drafts) in `edit-source-words.ts`;
     - the AI dialog's and AI models' in `ai-source-words.ts`;
-    - and Import's in `db-source-words.ts`.
+    - Import's in `db-source-words.ts`;
+    - the drawing's (diagram types, layout refusals, animated images, links leaving the vault, completeness) in
+      `drawing-source-words.ts`;
+    - and the plug-ins' calls that fail in `plugins-source-words.ts`.
+  - Every word a person reads in the core and the hosts comes from here. words-in-code.test.js checks every file, and
+    lists the few strings kept in the code, each with why (words-in-code-areas.js, words-in-code-kept.js).
 
 #### The plug-in interface
 

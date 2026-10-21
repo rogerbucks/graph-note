@@ -6,14 +6,17 @@
 // The core's part is tested on its own first. Then the built Obsidian plugin is loaded against its stand-ins. It shows
 // that the host does the opening, the previewing and the going back (host_opens_links, link_preview,
 // back_where_you_were).
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 import { readNote } from '../src/drawing.ts';
 import {
   attachmentsOf,
   brokenLinks,
   leavingWords,
   linkKind,
+  refusedWords,
   linksIn,
   linksHeld,
   noteOf,
@@ -24,6 +27,8 @@ import {
 } from '../src/links.ts';
 
 const fence = (t) => '```gql\n' + t + '\n```';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 /** A graph whose things hold every kind of link. */
 const TRIP = `// graph: trip
@@ -99,6 +104,14 @@ describe('only notes, files and web and mail addresses may be opened (safe_to_cl
     assert.equal(leavingWords(web), 'This link leaves Obsidian: it opens https://example.com/a in your web browser.');
     assert.equal(leavingWords(mail), 'This link leaves Obsidian: it writes to me@example.org in your mail app.');
     assert.equal(leavingWords(note), null);
+  });
+
+  // proves: words_catalogue
+  test('what is said before a link leaves Obsidian, and of a link never opened, is said in the person’s language', () => {
+    setLanguage('en-XA');
+    const [web, mail, refused] = linksIn('https://example.com/a mailto:me@example.org [x](javascript:alert(1))');
+    for (const words of [leavingWords(web), leavingWords(mail), refusedWords(refused)])
+      assert.ok(isPseudoWord(words), words);
   });
 
   test('Markdown for the host to render loads nothing remote, runs no script and holds no HTML', () => {

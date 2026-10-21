@@ -11,6 +11,8 @@ import {
   IMAGE_LIMITS,
   animationSaid,
   exportWithLayout,
+  formatCount,
+  formatSize,
   imageFacts,
   pageSvg,
   pngPages,
@@ -33,6 +35,9 @@ import { exportFailureWords, exportRefusalWords } from '@thoughtknot/core/hosts/
 import type ThoughtKnotPlugin from '../main';
 import { vaultImages } from '../images/vault-images';
 import { STILL_PIXELS } from '@thoughtknot/core/display/images/still-frame';
+
+/** How the refusals are said: the core's words and numbers, in the reader's language. */
+const SAY = { word, formatCount, formatSize };
 
 /** One file an export writes: its name, its path in the vault, and its bytes or text. */
 export interface ExportFile {
@@ -98,13 +103,13 @@ export async function imageFiles(
   } catch (e) {
     // the layout worker or its engine failed: told as a limit is, with what to do; any other failure is the caller's
     if (!layoutFailed) throw e;
-    return { stopped: exportFailureWords(e) };
+    return { stopped: exportFailureWords(e, SAY) };
   }
   if (!image)
     return {
       stopped: word('exporting.unloaded'),
     };
-  if ('reason' in image) return { stopped: exportRefusalWords(image) };
+  if ('reason' in image) return { stopped: exportRefusalWords(image, SAY) };
   if ('why' in image) return { stopped: tooLargeWords(image) };
   const { go } = x;
   // what was done with each animated image, said with the outcome (export_animation_stated)
