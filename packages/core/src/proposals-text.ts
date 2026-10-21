@@ -24,6 +24,7 @@ import { groupOf } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';
 import { readStatement, statementOf } from './proposals-statements.ts';
 import { trim } from './whitespace.ts';
+import { word } from './words.ts';
 
 /** The graph and the id a change set's first line names; null for a block that is not a change set. */
 export function changeSetId(block: string): { graph: string; id: string } | null {
@@ -85,17 +86,9 @@ const metaOf = (lines: readonly string[], re: RegExp): string | undefined =>
  */
 export function readChangeSet(block: string): ChangeSetRead | { refused: string } {
   const h = gs.changesetHeader(block);
-  if (!h)
-    return {
-      refused:
-        'this is not a change set: its first line reads `// graph: <graph> · CHANGE SET <id> · against <state> · by <author>`',
-    };
+  if (!h) return { refused: word('proposing.text.not-change-set') };
   const lines = block.split('\n');
-  if (lines.some((l) => OLD.test(trim(l))))
-    return {
-      refused:
-        'this change set is in the editor’s old form, where removals, ids and decisions were comments that other tools skip, so a rejected change stayed live. It is not read: remove the block and ask for the proposal again',
-    };
+  if (lines.some((l) => OLD.test(trim(l)))) return { refused: word('proposing.text.old-form') };
   const parts = gs.splitChangeset(block);
   // the comments directly above a line, up to the first line that is not one: its group and reason
   const tagsAbove = (line: number): { group?: string; reason?: string } => {

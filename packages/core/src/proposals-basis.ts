@@ -4,6 +4,7 @@
 import gs from '@thoughtknot/graph-spec';
 import { gqlBlocks } from './blocks.ts';
 import { readNote } from './drawing.ts';
+import { word } from './words.ts';
 
 /** What a graph with nothing in it hashes to here: the state of a graph the note does not hold. */
 export const NO_BASIS = '0000000000000000';
@@ -40,6 +41,6 @@ export function staleness(note: string, graph: string, expected: string, shared:
     : {
         was: expected,
         now,
-        message: `The graph has changed since this was proposed (it was made against state ${expected}, and the graph is now ${now}). Check each change against the graph as it is before accepting it.`,
+        message: word('proposing.stale', { was: expected, now }),
       };
 }

@@ -15,6 +15,7 @@ import { appended, withoutItem } from './linked-list.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
 import type { ProposedChange } from './proposals.ts';
 import { writtenIn } from './written-things.ts';
+import { word } from './words.ts';
 
 /** The blocks' new texts after a change, or why it cannot be written. */
 export type Edited = { ok: true; texts: string[] } | { ok: false; reason: string };
@@ -114,7 +115,7 @@ function setIn(texts: readonly string[], blocks: number[], c: ProposedChange & {
     const r = setProperty(texts[i] ?? '', '', { thing: c.thing }, c.key, c.value);
     if (r.ok) return put(texts, i, r.text);
   }
-  return { ok: false, reason: `${c.thing} is not written in a block of this graph: edit it where it is written` };
+  return { ok: false, reason: word('proposing.apply.not-written', { thing: c.thing }) };
 }
 
 /** A link taken out: every item of the graph's blocks that is that link alone. A link written in a longer path is not. */
@@ -131,7 +132,7 @@ function linkOut(texts: readonly string[], blocks: number[], c: ProposedChange &
     ? { ok: true, texts: out }
     : {
         ok: false,
-        reason: `the link ${c.from} ${c.type} ${c.to} is not written by itself in a block: edit it in the text`,
+        reason: word('proposing.apply.link-not-alone', { from: c.from, type: c.type, to: c.to }),
       };
 }
 
@@ -168,14 +169,14 @@ function thingOut(texts: readonly string[], blocks: number[], c: ProposedChange 
     });
     out = out.map((t, j) => (j === i ? text : t));
   }
-  if (!wrote) return { ok: false, reason: `${c.thing} is not written by itself in a block: edit it in the text` };
+  if (!wrote) return { ok: false, reason: word('proposing.apply.thing-not-alone', { thing: c.thing }) };
   const left = blocks.find((i) => {
     const block = out[i] ?? '';
     return items(block).some((x) => mentions.test(blankOf(block, x)));
   });
   return left === undefined
     ? { ok: true, texts: out }
-    : { ok: false, reason: `${c.thing} is also named in a longer path: edit it in the text` };
+    : { ok: false, reason: word('proposing.apply.in-path', { thing: c.thing }) };
 }
 
 /**
@@ -199,10 +200,10 @@ function targetFault(texts: readonly string[], graph: string, c: ProposedChange)
   for (const [id, kinds] of wants) {
     const have = g?.nodes.get(id)?.[0];
     const lacks = have && (kinds ?? []).find((k) => !have.has(k));
-    if (lacks) return `${id} is not a ${lacks}: the statement's MATCH names a kind it does not have`;
+    if (lacks) return word('proposing.apply.not-kind', { thing: id, kind: lacks });
   }
   if (plain && g?.edges.some((e) => e[0] === c.thing || e[2] === c.thing))
-    return `${c.thing} still has links: a DELETE without DETACH leaves none without its end; write DETACH DELETE to take them too`;
+    return word('proposing.apply.still-linked', { thing: c.thing });
   return null;
 }
 
@@ -213,7 +214,7 @@ export function applyChange(texts: readonly string[], graph: string, c: Proposed
   const blocks = dataBlocks(texts, graph);
   // an addition goes after the last block that is data, never into the schema locked after it
   const last = blocks.filter((i) => !declares(texts[i] ?? '')).at(-1) ?? blocks.at(-1);
-  if (last === undefined) return { ok: false, reason: `graph ${graph} has no block to write into` };
+  if (last === undefined) return { ok: false, reason: word('proposing.apply.no-block', { graph }) };
   if (c.op === 'add') return put(texts, last, appended(texts[last] ?? '', [c.gql]));
   if (c.op === 'set') return setIn(texts, blocks, c);
   return c.op === 'remove-link' ? linkOut(texts, blocks, c) : thingOut(texts, blocks, c);
@@ -231,21 +232,24 @@ function valueRead(value: string): string {
  */
 export function notTaken(reading: NoteReading, graph: string, c: ProposedChange): string | null {
   const g = reading.world[graph];
-  if (!g) return `graph ${graph} was not read`;
+  if (!g) return word('proposing.taken.not-read', { graph });
   const edge = (from: string, type: string, to: string) =>
     g.edges.some((e) => e[0] === from && e[1] === type && e[2] === to);
   if (c.op === 'add') {
     const missing = namesOf(c).writes.find((n) => !g.nodes.has(n));
-    if (missing) return `${missing} is not in the graph after it was written`;
+    if (missing) return word('proposing.taken.thing-missing', { thing: missing });
     const gone = hops(c.gql).find(([from, type, to]) => !edge(from, type, to));
-    return gone ? `the link ${gone[0]} ${gone[1]} ${gone[2]} is not in the graph after it was written` : null;
+    return gone ? word('proposing.taken.link-missing', { from: gone[0], type: gone[1], to: gone[2] }) : null;
   }
   if (c.op === 'set')
     return g.nodes.has(c.thing) && JSON.stringify(g.p(c.thing)[c.key]) === valueRead(c.value)
       ? null
-      : `${c.thing}.${c.key} is not ${c.value} after it was written`;
-  if (c.op === 'remove-thing') return g.nodes.has(c.thing) ? `${c.thing} is still in the graph` : null;
-  return edge(c.from, c.type, c.to) ? `the link ${c.from} ${c.type} ${c.to} is still in the graph` : null;
+      : word('proposing.taken.value-missing', { thing: c.thing, key: c.key, value: c.value });
+  if (c.op === 'remove-thing')
+    return g.nodes.has(c.thing) ? word('proposing.taken.thing-left', { thing: c.thing }) : null;
+  return edge(c.from, c.type, c.to)
+    ? word('proposing.taken.link-left', { from: c.from, type: c.type, to: c.to })
+    : null;
 }
 
 /** The problems of a graph that `after` has and `before` did not (hints are no problem), each once for each time it is new. */

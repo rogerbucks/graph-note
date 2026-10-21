@@ -13,6 +13,8 @@ import { EXPORT_SOURCE_WORDS } from './export-source-words.ts';
 import { FIRST_RUN_SOURCE_WORDS } from './first-run-source-words.ts';
 import { HOST_SOURCE_WORDS } from './host-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
+import { PROPOSAL_CARD_SOURCE_WORDS } from './proposal-card-source-words.ts';
+import { PROPOSAL_SOURCE_WORDS } from './proposal-source-words.ts';
 import { READING_SOURCE_WORDS } from './reading-source-words.ts';
 import { SERVER_SOURCE_WORDS } from './server-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
@@ -203,77 +205,6 @@ export const SOURCE_WORDS = {
   'untangle.nothing-to-filter': 'Nothing to filter.',
   'untangle.in-front': ' — in front',
   'untangle.hidden': ' — hidden',
-  'proposal.region': 'Proposal {id} for graph {graph}',
-  'proposal.name': 'Proposal {id}',
-  'proposal.not-yet-written': 'nothing is written until you accept',
-  'proposal.check-fails': 'The graph spec’s check of this change set fails {failed} of {count}:',
-  'proposal.check-passes': 'The graph spec’s check of this change set passes all {count}.',
-  'proposal.decide': '{label}: {said}',
-  'proposal.read-this': 'I have read this',
-  'proposal.accept-all': 'Accept all ({count})',
-  'proposal.accept-all.said': {
-    one: 'every change that can be accepted now, {count} change',
-    other: 'every change that can be accepted now, {count} changes',
-  },
-  'proposal.reject-all': 'Reject all ({count})',
-  'proposal.reject-all.said': {
-    one: 'every change still waiting, {count} change',
-    other: 'every change still waiting, {count} changes',
-  },
-  'proposal.all-decided': 'Every change has been decided.',
-  'proposal.undo': 'Undo',
-  'proposal.undo.said': 'Undo the last decision',
-  'proposal.blocked': 'Cannot be accepted yet: {why}',
-  'proposal.accepted-by': 'Accepted by {who} on {day}',
-  'proposal.rejected-by': 'Rejected by {who} on {day}',
-  'proposal.accept': 'Accept',
-  'proposal.reject': 'Reject',
-  'proposal.group': {
-    one: '{group} — {count} change, {waiting} waiting',
-    other: '{group} — {count} changes, {waiting} waiting',
-  },
-  'proposal.accept-group': 'Accept {group}',
-  'proposal.accept-group.said': {
-    one: 'the {count} change in {group} that can be accepted now',
-    other: 'the {count} changes in {group} that can be accepted now',
-  },
-  'proposal.reject-group': 'Reject {group}',
-  'proposal.reject-group.said': 'the {count} waiting in {group}',
-  'proposal.waiting': 'Waiting for your decision',
-  'proposal.accepted': 'Accepted',
-  'proposal.rejected': 'Rejected',
-  'proposal.by': 'Proposed by {who}',
-  'proposal.read-moved': 'I have read that the graph has moved since this was proposed',
-  'proposal.warning': 'Warning: {message}',
-  'proposal.check-failed': 'Check failed: {failed}. It cannot be accepted.',
-  'proposal.decided-by': ' by {who}',
-  'proposal.reason': 'Reason: {reason}',
-  'proposal.accept-change': 'Accept this change, {change}',
-  'proposal.reject-change': 'Reject this change, {change}',
-  'proposal.accept-all-by': 'Accept all',
-  'proposal.accept-all-by.said': 'Accept all changes waiting in the proposal by {who}',
-  'proposal.reject-all-by': 'Reject all',
-  'proposal.reject-all-by.said': 'Reject all changes waiting in the proposal by {who}',
-  'proposal.page-group': 'group {group}',
-  'proposal.accept-of': 'Accept {group} of the proposal by {who}',
-  'proposal.reject-of': 'Reject {group} of the proposal by {who}',
-  'step.gone': 'The note is not there any more.',
-  'step.did-not-run': 'Step {name} did not run:',
-  'step.did-not-run-why': 'Step {name} did not run: {why}',
-  'step.proposed': {
-    one: 'Step {name} proposed {count} change to {graph}: accept or reject each below the graph.',
-    other: 'Step {name} proposed {count} changes to {graph}: accept or reject each below the graph.',
-  },
-  'step.not-written': 'Step {name} gave a proposal that was not written: {why}',
-  'step.cannot-run': 'This step cannot run: {why}',
-  'step.about':
-    'Step {name} proposes links into {graph}. It runs only when you press Run, and what it gives is proposed for you to accept or reject.',
-  'step.takes': '{name} takes {what}',
-  'step.any-graph': 'any graph',
-  'step.give': 'Give {name}',
-  'step.run': 'Run',
-  'step.run.said': 'Run step {name}',
-  'step.could-not-run': 'Step {name} could not run, and nothing was written.',
   'details.properties': 'Properties',
   'style.nudges': { one: '{count} nudge', other: '{count} nudges' },
   'style.looks': { one: '{count} look', other: '{count} looks' },
@@ -386,4 +317,8 @@ export const SOURCE_WORDS = {
   // the core's problems found while reading a note or checking its style (reading-, style-source-words.ts)
   ...READING_SOURCE_WORDS,
   ...STYLE_SOURCE_WORDS,
+  // a proposal's card and a graph step's card (proposal-card-source-words.ts)
+  ...PROPOSAL_CARD_SOURCE_WORDS,
+  // the core's proposals: their checks, refusals and where they came from (proposal-source-words.ts)
+  ...PROPOSAL_SOURCE_WORDS,
 } as const;

@@ -19,6 +19,7 @@ import type { ChangeInput, ProposedChange, Proposer, ProposerKind } from './prop
 import { readStatement, statementOf } from './proposals-statements.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
 import { trim } from './whitespace.ts';
+import { word } from './words.ts';
 
 /** What a person decided about a change: accepted or rejected, who decided (as typed) and when. */
 export interface Decision {
@@ -230,8 +231,7 @@ export function withoutDecisions(
   w: Pick<Written, 'before' | 'after'>,
 ): { ok: true; note: string } | { ok: false; reason: string } {
   const span = gqlSpans(note).find((s) => s.text === w.after && isJudgementBlock(s.text));
-  if (!span)
-    return { ok: false, reason: 'the judgement block has changed since the decision was made, so it cannot be undone' };
+  if (!span) return { ok: false, reason: word('proposing.undo.judgement-changed') };
   if (w.before !== null) {
     const r = replaceBlock(note, { line: span.open, text: span.text }, w.before);
     return r.ok ? { ok: true, note: r.note } : { ok: false, reason: r.reason };

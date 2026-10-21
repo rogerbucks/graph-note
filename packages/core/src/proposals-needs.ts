@@ -4,6 +4,7 @@
 // names the graph holds and `waiting` the changes not yet decided.
 import { namesOf } from './proposals-apply.ts';
 import type { ProposedChange } from './proposals.ts';
+import { word } from './words.ts';
 
 /**
  * Why a change cannot be accepted until another is: it needs a thing that one adds, or one that is not there at all.
@@ -18,8 +19,8 @@ export function lacking(
     if (have.has(n)) continue;
     const adds = waiting.find((o) => o !== c && namesOf(o).writes.includes(n));
     return adds
-      ? `${c.id} needs ${adds.id}, which adds ${n}: accept ${adds.id} first`
-      : `${c.id} needs ${n}, which is not in the graph`;
+      ? word('proposing.needs.accept-first', { id: c.id, other: adds.id, name: n })
+      : word('proposing.needs.missing', { id: c.id, name: n });
   }
   return null;
 }
@@ -52,7 +53,7 @@ export function leftNeeding(
     if (rejecting.includes(c)) continue;
     for (const n of namesOf(c).needs) {
       const gone = have.has(n) ? undefined : rejecting.find((r) => namesOf(r).writes.includes(n));
-      if (gone) return `${c.id} needs ${n}, which ${gone.id} adds: reject ${c.id} too, or leave ${gone.id}`;
+      if (gone) return word('proposing.needs.reject-too', { id: c.id, name: n, other: gone.id });
     }
   }
   return null;

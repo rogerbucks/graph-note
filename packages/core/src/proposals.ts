@@ -12,6 +12,7 @@ import { saidDate } from './export-frame.ts';
 import { parseValue } from './inspector.ts';
 import { changeIdOf } from './proposals-statements.ts';
 import { writtenIn } from './written-things.ts';
+import { word } from './words.ts';
 
 /** More changes than this are reviewed in groups (big_proposal): fewer are listed in one. */
 export const BIG_PROPOSAL = 8;
@@ -102,31 +103,31 @@ function isOneValue(value: string): boolean {
 
 /** Why one change cannot be part of a proposal, or null. */
 function faultIn(c: ChangeInput, n: number): string | null {
-  const at = `change ${n}`;
+  const change = String(n);
   if (c.op === 'add') {
     const found = items(c.gql);
-    const word = /^[A-Za-z]+/.exec(blankText(c.gql).trim())?.[0].toUpperCase();
-    if (found.length !== 1 || word === 'SET' || word === 'MATCH' || word === 'INSERT' || !c.gql.includes('('))
-      return `${at}: an addition is one thing, or one link or path, as a block writes it; write each as its own change`;
+    const keyword = /^[A-Za-z]+/.exec(blankText(c.gql).trim())?.[0].toUpperCase();
+    if (found.length !== 1 || keyword === 'SET' || keyword === 'MATCH' || keyword === 'INSERT' || !c.gql.includes('('))
+      return word('proposing.fault.addition-one', { change });
     // a line break outside a text would let the addition write a line of its own into the change set
     const item = found[0];
     if (item && /[\r\n]/.test(blankText(c.gql.slice(item.from, item.to))))
-      return `${at}: an addition is on one line: a line break outside a text is not part of it`;
+      return word('proposing.fault.addition-line', { change });
   } else if (c.op === 'set') {
     if (!WORD.test(c.thing) || !WORD.test(c.key) || c.key === 'id')
-      return `${at}: a change of a property names a thing and a property (not its id), each one word`;
-    if (!c.value.trim() || !oneLine(c.value)) return `${at}: a change of a property gives its value, on one line`;
-    if (!isOneValue(c.value))
-      return `${at}: a change of a property gives one value, and nothing else: ${c.value} reads as more, or as something wrong`;
+      return word('proposing.fault.set-names', { change });
+    if (!c.value.trim() || !oneLine(c.value)) return word('proposing.fault.set-value', { change });
+    if (!isOneValue(c.value)) return word('proposing.fault.set-one-value', { change, value: c.value });
   } else if (c.op === 'remove-thing') {
-    if (!WORD.test(c.thing)) return `${at}: a removal names the thing, one word`;
+    if (!WORD.test(c.thing)) return word('proposing.fault.removal-names', { change });
   } else if (![c.from, c.type, c.to].every((w) => WORD.test(w))) {
-    return `${at}: a removal of a link names where it is from, its type and where it goes to, each one word`;
+    return word('proposing.fault.link-removal-names', { change });
   }
   const kinds = c.op === 'remove-link' ? (c.ends ?? []).flat() : c.op === 'add' ? [] : (c.labels ?? []);
-  if (!kinds.every((k) => WORD.test(k))) return `${at}: a kind a statement names is one word`;
-  if (c.group !== undefined && (!c.group.trim() || !oneLine(c.group))) return `${at}: a group is named on one line`;
-  if (c.reason !== undefined && !oneLine(c.reason)) return `${at}: a reason is given on one line`;
+  if (!kinds.every((k) => WORD.test(k))) return word('proposing.fault.kind-word', { change });
+  if (c.group !== undefined && (!c.group.trim() || !oneLine(c.group)))
+    return word('proposing.fault.group-line', { change });
+  if (c.reason !== undefined && !oneLine(c.reason)) return word('proposing.fault.reason-line', { change });
   return null;
 }
 
@@ -169,17 +170,12 @@ export interface ProposalInput {
  */
 export function makeProposal(input: ProposalInput): Proposal | { refused: string } {
   const { id, graph, by, basis } = input;
-  if (!id || !ID.test(id)) return { refused: 'a proposal has an id of one word' };
-  if (!graph || /\s/.test(graph)) return { refused: 'a proposal names the graph it is for, one word' };
-  if (!by?.name || /\s/.test(by.name))
-    return { refused: 'say who proposed it: a name of one word, as a change set’s header holds it' };
-  if (!BASIS.test(basis ?? ''))
-    return {
-      refused: 'say which state of the graph it was made against: sixteen hexadecimal digits (basisOf gives them)',
-    };
-  if (input.at != null && !/^\d{4}-\d\d-\d\d/.test(input.at))
-    return { refused: 'say when it was proposed as a day, YYYY-MM-DD, with the time if known' };
-  if (!input.changes.length) return { refused: 'a proposal holds at least one change' };
+  if (!id || !ID.test(id)) return { refused: word('proposing.refused.id') };
+  if (!graph || /\s/.test(graph)) return { refused: word('proposing.refused.graph') };
+  if (!by?.name || /\s/.test(by.name)) return { refused: word('proposing.refused.by') };
+  if (!BASIS.test(basis ?? '')) return { refused: word('proposing.refused.basis') };
+  if (input.at != null && !/^\d{4}-\d\d-\d\d/.test(input.at)) return { refused: word('proposing.refused.day') };
+  if (!input.changes.length) return { refused: word('proposing.refused.no-change') };
   const faults = input.changes.map((c, i) => faultIn(c, i + 1));
   const fault = faults.find((f) => f !== null);
   if (fault) return { refused: fault };
@@ -192,8 +188,7 @@ export function makeProposal(input: ProposalInput): Proposal | { refused: string
     return { ...op, id: changeIdOf(op), group: group?.trim() || groupOf(op), ...(reason ? { reason } : {}) };
   });
   // the same change twice would be accepted or rejected as two, though it is one
-  if (new Set(changes.map((c) => c.id)).size !== changes.length)
-    return { refused: 'two changes are the same change: a change is proposed once' };
+  if (new Set(changes.map((c) => c.id)).size !== changes.length) return { refused: word('proposing.refused.twice') };
   // what it read is kept on one line, parted by semicolons: a semicolon in a name is a comma there
   const read = (input.read ?? [])
     .map((r) =>
@@ -244,20 +239,19 @@ export function linkChange(
 export function provenanceLines(p: Proposal): string[] {
   const { by, at, read } = p.provenance;
   // what the change set says, never as if the editor had checked it: who proposed it, when and what it read are its word
-  const who = {
-    model: ', a model',
-    person: ', a person',
-    step: ', a graph step',
-    unknown: ', of a kind it does not say',
-  }[by.kind];
-  const day = /^(\d{4}-\d\d-\d\d)(?:T(\d\d:\d\d))?/.exec(at ?? '');
-  const when = day
-    ? `It says it was proposed on ${saidDate(day[1] ?? '')}${day[2] ? `, ${day[2]}${/(Z|[+-]00:?00)$/.test(at ?? '') ? ' UTC' : ''}` : ''}.`
-    : 'It does not say when it was proposed.';
+  const said = /^(\d{4}-\d\d-\d\d)(?:T(\d\d:\d\d))?/.exec(at ?? '');
+  const day = saidDate(said?.[1] ?? ''),
+    time = said?.[2] ?? '';
+  const utc = /(Z|[+-]00:?00)$/.test(at ?? '');
+  const when = !said
+    ? word('proposing.said-on.none')
+    : !time
+      ? word('proposing.said-on', { day })
+      : word(utc ? 'proposing.said-on.utc' : 'proposing.said-on.time', { day, time });
   return [
-    `The change set says it was proposed by ${by.name}${who}.`,
+    word(`proposing.said-by.${by.kind}`, { name: by.name }),
     when,
-    read.length ? `It says it read: ${read.join('; ')}.` : 'It does not say what it read.',
+    read.length ? word('proposing.said-read', { read: read.join('; ') }) : word('proposing.said-read.none'),
   ];
 }
 
