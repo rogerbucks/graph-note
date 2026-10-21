@@ -7,6 +7,7 @@ import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
 import type { Problem } from './note-reading.ts';
 import type { LegendChoice } from './untangle-saved.ts';
+import { word } from './words.ts';
 
 /** The four words a nudge may be (§6, four_nudge_words). */
 export const NUDGE_WORDS = ['beside', 'before', 'group', 'direction'] as const;
@@ -359,6 +360,12 @@ export function wordFix(written: string, among: readonly string[], always = fals
     if (d < best) [best, nearest] = [d, w];
   }
   if (nearest !== undefined && (always || best <= Math.max(2, Math.floor(written.length / 2))))
-    return { fix: `change ${written} to ${nearest}`, nearest };
-  return { fix: `change ${written} to ${among.length > 2 ? 'one of ' : ''}${orList(among)}` };
+    return { fix: word('styling.change-to', { written, to: nearest }), nearest };
+  const list = orList(among);
+  return {
+    fix:
+      among.length > 2
+        ? word('styling.change-to-one-of', { written, among: list })
+        : word('styling.change-to', { written, to: list }),
+  };
 }

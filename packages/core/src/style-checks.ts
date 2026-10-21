@@ -38,8 +38,9 @@ import type {
 import { reader } from './style-reader.ts';
 import { readFrame, unknownKeys } from './style-words.ts';
 import { legendChecked } from './untangle-saved.ts';
+import { word as say } from './words.ts';
 
-export { TREE_ONLY } from './style-choice-checks.ts';
+export { treeOnly } from './style-choice-checks.ts';
 
 /** One thing of a style graph as read: its kinds, its properties, where it is, and where each property's text is. */
 export interface RawThing {
@@ -80,7 +81,14 @@ export interface Checked {
   problems: Problem[];
 }
 
-const FOUR = 'a nudge must be one of four words: beside, before, group or direction';
+/** The words a style check says, each made when said so it is in the language of the moment. */
+const four = () => say('styling.nudge.four-words'),
+  aThing = () => say('styling.what.thing'),
+  thingId = () => say('styling.what.thing-id');
+/** That `key` must be one of `among`. */
+const mustBe = (key: string, among: readonly string[]) => say('styling.must-be', { key, among: orList(among) });
+/** The words of `among` as GQL writes them, each in quotes. */
+const quoted = (among: readonly string[]) => orList(among.map((w) => `'${w}'`));
 const KINDS = `${STYLE_KINDS.slice(0, -1).join(', ')} or ${STYLE_KINDS.at(-1)}`;
 /** The View menu's switches a view saved as shown keeps (§25, view_switch_view_only). */
 const SAVED_SWITCHES = ['labels', 'hubs', 'groups', 'merge'] as const;
@@ -90,36 +98,36 @@ function nudgeOf(raw: RawThing, names: StyledNames, out: Problem[]): Nudge | nul
   const r = reader(raw, names, out),
     before = out.length;
   if (raw.props.word === undefined) {
-    r.missing(FOUR, `add word: ${orList(NUDGE_WORDS.map((w) => `'${w}'`))}`);
+    r.missing(four(), say('styling.nudge.add-word', { among: quoted(NUDGE_WORDS) }));
     return null;
   }
-  const word = r.word('word', NUDGE_WORDS, FOUR, true);
+  const word = r.word('word', NUDGE_WORDS, four(), true);
   if (!word) return null;
   const n: Nudge = { word, at: raw.at };
   const has = (k: string) => raw.props[k] !== undefined;
   if (word === 'beside' || word === 'before') {
     const missing = ['thing', 'other'].find((k) => !has(k));
-    if (missing) r.missing(`a ${word} nudge names two things: thing and other`, `add ${missing}: '<id>'`);
+    if (missing) r.missing(say('styling.nudge.two-things', { word }), say('styling.add-id', { key: missing }));
     else
       [n.thing, n.other] = [
-        r.name('thing', names.things, 'a thing', 'the id of a thing'),
-        r.name('other', names.things, 'a thing', 'the id of a thing'),
+        r.name('thing', names.things, aThing(), thingId()),
+        r.name('other', names.things, aThing(), thingId()),
       ];
   } else if (word === 'group') {
-    if (!has('thing')) r.missing('a group nudge names a thing and its group', "add thing: '<id>'");
-    else if (!has('group')) r.missing('a group nudge names a thing and its group', "add group: '<the group's label>'");
-    else [n.thing, n.group] = [r.name('thing', names.things, 'a thing', 'the id of a thing'), r.text('group')];
+    if (!has('thing')) r.missing(say('styling.nudge.group'), say('styling.add-id', { key: 'thing' }));
+    else if (!has('group')) r.missing(say('styling.nudge.group'), say('styling.nudge.add-group'));
+    else [n.thing, n.group] = [r.name('thing', names.things, aThing(), thingId()), r.text('group')];
   } else if (!has('direction'))
-    r.missing(
-      'a direction nudge names its direction',
-      `add direction: ${orList(STYLE.directions.map((d) => `'${d}'`))}`,
+    r.missing(say('styling.nudge.direction'), say('styling.nudge.add-direction', { among: quoted(STYLE.directions) }));
+  else
+    n.direction = r.word('direction', STYLE.directions, (written) =>
+      say('styling.nudge.direction-unknown', { written }),
     );
-  else n.direction = r.word('direction', STYLE.directions, '$ is not a direction the locked style lays out in');
   return out.length === before ? n : null;
 }
 
 /** What a Show is for: one kind, thing or relationship type (§14). */
-export const SHOW_FOR = 'a Show is for one kind, thing or relationship type';
+export const showFor = () => say('styling.show.for');
 
 /**
  * A property switched on or off for showing inline, checked. It names a property of the kind's things, of the thing, or
@@ -130,23 +138,22 @@ function showOf(raw: RawThing, names: StyledNames, out: Problem[]): Show | null 
     before = out.length;
   const has = (k: string) => raw.props[k] !== undefined;
   const targets = ['kind', 'thing', 'type'].filter(has).length;
-  if (!has('property')) r.missing('a Show names the property to show', "add property: '<name>'");
-  else if (targets > 1) r.report(SHOW_FOR, 'remove all but one of them');
-  else if (!targets) r.missing(SHOW_FOR, "add kind: '<Kind>', thing: '<id>' or type: '<TYPE>'");
+  if (!has('property')) r.missing(say('styling.show.property'), say('styling.add-property'));
+  else if (targets > 1) r.report(showFor(), say('styling.remove-all-but-one'));
+  else if (!targets) r.missing(showFor(), say('styling.show.add-target'));
   else {
-    const kind = r.name('kind', names.kinds, 'a kind'),
-      thing = r.name('thing', names.things, 'a thing', 'the id of a thing'),
-      type = r.name('type', names.types, 'a relationship type');
+    const kind = r.name('kind', names.kinds, say('styling.what.kind')),
+      thing = r.name('thing', names.things, aThing(), thingId()),
+      type = r.name('type', names.types, say('styling.what.type'));
     const of = kind ? { kind } : thing ? { thing } : type ? { type } : null;
     if (of) {
       const property = r.name(
         'property',
         names.properties(of),
-        `a property of ${kind ?? thing ?? type}`,
-        'a property it has',
+        say('styling.what.property-of', { of: kind ?? thing ?? type ?? '' }),
+        say('styling.what.property-it-has'),
       );
-      const inline =
-        raw.props.inline === undefined ? 'on' : r.word('inline', INLINE, `inline must be ${orList(INLINE)}`);
+      const inline = raw.props.inline === undefined ? 'on' : r.word('inline', INLINE, mustBe('inline', INLINE));
       const view = r.text('view');
       if (property && inline && out.length === before)
         return { property, ...of, ...(view === undefined ? {} : { view }), inline, at: raw.at };
@@ -160,52 +167,41 @@ function lookOf(raw: RawThing, names: StyledNames, out: Problem[]): Look | null 
   const r = reader(raw, names, out),
     has = (k: string) => raw.props[k] !== undefined;
   if (has('view') === has('path')) {
-    if (has('view')) r.report('a look is for one view or one path, not both', 'remove one of them');
-    else
-      r.missing(
-        "a look is for a view or a path: add view: '<name>' or path: '<id>'",
-        "add view: '<name>' or path: '<id>'",
-      );
+    if (has('view')) r.report(say('styling.look.view-and-path'), say('styling.remove-one'));
+    else r.missing(say('styling.look.view-or-path'), say('styling.look.view-or-path.fix'));
     return null;
   }
   const targets = [has('thing'), has('kind'), has('from') && has('type') && has('to')].filter(Boolean).length;
   if (targets !== 1) {
-    if (targets) r.report('a look styles one thing, kind or link, not more', 'remove all but one of them');
-    else
-      r.missing('a look styles one thing, kind or link: add thing, kind, or from, type and to', 'add what it styles');
+    if (targets) r.report(say('styling.look.too-many'), say('styling.remove-all-but-one'));
+    else r.missing(say('styling.look.target'), say('styling.look.target.fix'));
     return null;
   }
   if (!has('colour') && !has('line') && !has('format')) {
-    r.missing(
-      'a look changes a colour, a line or a format: add one',
-      "add colour, line or format, such as line: 'dashed'",
-    );
+    r.missing(say('styling.look.change'), say('styling.look.change.fix'));
     return null;
   }
   const before = out.length,
     look: Look = { at: raw.at };
   const view = r.text('view'),
-    path = r.name('path', names.paths, 'a path', 'the id of a path');
-  const thing = r.name('thing', names.things, 'a thing', 'the id of a thing'),
-    kind = r.name('kind', names.kinds, 'a kind');
-  const from = r.name('from', names.things, 'a thing', 'the id of a thing'),
-    type = r.name('type', names.types, 'a relationship type'),
-    to = r.name('to', names.things, 'a thing', 'the id of a thing');
+    path = r.name('path', names.paths, say('styling.what.path'), say('styling.what.path-id'));
+  const thing = r.name('thing', names.things, aThing(), thingId()),
+    kind = r.name('kind', names.kinds, say('styling.what.kind'));
+  const from = r.name('from', names.things, aThing(), thingId()),
+    type = r.name('type', names.types, say('styling.what.type')),
+    to = r.name('to', names.things, aThing(), thingId());
   if (out.length > before) return null;
   Object.assign(look, view === undefined ? { path } : { view });
   if (thing !== undefined) look.thing = thing;
   else if (kind !== undefined) look.kind = kind;
   else if (from !== undefined && type !== undefined && to !== undefined) look.link = { from, type, to };
-  const colour = r.word('colour', STYLE_HUES, '$ is not a colour of the locked style');
+  const colour = r.word('colour', STYLE_HUES, (written) => say('styling.look.colour-unknown', { written }));
   const means = r.text('means');
   if (colour !== undefined && !means)
-    r.missing(
-      `${colour} has no meaning written, so the legend cannot say what it means`,
-      `add means: '<what ${colour} means here>'`,
-    );
+    r.missing(say('styling.look.means', { colour }), say('styling.look.means.fix', { colour }));
   else if (colour !== undefined) Object.assign(look, { colour, means });
-  const line = r.word('line', LINES, `line must be ${orList(LINES)}`),
-    format = r.word('format', FORMATS, `format must be ${orList(FORMATS)}`);
+  const line = r.word('line', LINES, mustBe('line', LINES)),
+    format = r.word('format', FORMATS, mustBe('format', FORMATS));
   if (line) look.line = line;
   if (format) look.format = format;
   return look.colour || look.line || look.format ? look : null;
@@ -216,12 +212,12 @@ function viewStyleOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked
   const r = reader(raw, names, out);
   // a view's name cannot be checked against the graph: views are query blocks, read elsewhere, so any name is taken
   const view = r.text('view');
-  if (!view) r.missing('a ViewStyle names its view', "add view: '<the view's name>'");
+  if (!view) r.missing(say('styling.view-style.view'), say('styling.add-view-name'));
   if (raw.props.outside === undefined) {
-    r.missing('a ViewStyle says fade or hide', "add outside: 'fade' or 'hide'");
+    r.missing(say('styling.view-style.outside'), say('styling.view-style.outside.fix'));
     return null;
   }
-  const outside = r.word('outside', OUTSIDE, `outside must be ${orList(OUTSIDE)}`);
+  const outside = r.word('outside', OUTSIDE, mustBe('outside', OUTSIDE));
   return view && outside ? { view, outside, at: raw.at } : null;
 }
 
@@ -230,13 +226,12 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
   const r = reader(raw, names, out);
   const view = r.text('view');
   if (!view) {
-    r.missing('a Shown names its view', "add view: '<the view's name>'");
+    r.missing(say('styling.shown.view'), say('styling.add-view-name'));
     return null;
   }
   const shown: Checked['shown'][number] = { view, at: raw.at };
   const zoom = r.number('zoom');
-  if (zoom !== undefined && zoom <= 0)
-    r.report('zoom must be a number above 0', 'write a zoom above 0, such as zoom: 1');
+  if (zoom !== undefined && zoom <= 0) r.report(say('styling.shown.zoom'), say('styling.shown.zoom.fix'));
   else if (zoom !== undefined) shown.zoom = zoom;
   for (const k of ['x', 'y'] as const) {
     const v = r.number(k);
@@ -253,11 +248,11 @@ function shownOf(raw: RawThing, names: StyledNames, out: Problem[]): Checked['sh
         typeof written === 'string' && read.clean !== undefined ? r.edit('frame', written, [read.clean]) : {},
       );
   }
-  const selected = r.name('selected', names.things, 'a thing', 'the id of a thing');
+  const selected = r.name('selected', names.things, aThing(), thingId());
   if (selected !== undefined) shown.selected = selected;
   // the View menu's switches as they stood when it was saved (§25)
   for (const k of SAVED_SWITCHES) {
-    const v = r.word(k, ON_OFF, `${k} must be ${orList(ON_OFF)}`);
+    const v = r.word(k, ON_OFF, mustBe(k, ON_OFF));
     if (v !== undefined) shown[k] = v;
   }
   // the legend's lines brought forward or hidden (§25, untangle_legend): the sound ones kept
@@ -286,9 +281,9 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     if (kinds.length !== 1 || raw.labels.length !== 1) {
       const other = raw.labels.find((l) => !kinds.includes(l));
       const message = other
-        ? `${other} is not a kind of thing a style graph holds: ${KINDS}`
-        : `a thing of a style graph is one of ${KINDS}`;
-      c.problems.push(styleProblem(names.graph, raw.at, message, `write it as one of ${KINDS}, or remove it`));
+        ? say('styling.kind-unknown', { label: other, kinds: KINDS })
+        : say('styling.kind-one', { kinds: KINDS });
+      c.problems.push(styleProblem(names.graph, raw.at, message, say('styling.kind.fix', { kinds: KINDS })));
       continue;
     }
     const p = c.problems;
