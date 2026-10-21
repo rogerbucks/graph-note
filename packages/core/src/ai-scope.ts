@@ -6,10 +6,12 @@ import gs from '@thoughtknot/graph-spec';
 import type { Graph, Value } from '@thoughtknot/graph-spec';
 import { gqlBlocks } from './blocks.ts';
 import { readNote } from './drawing.ts';
+import { formatList } from './locale-formats.ts';
 import type { Link, NoteReading } from './note-reading.ts';
 import { evaluate } from './view-evaluate.ts';
 import { parseView } from './view-profile.ts';
 import { readingOf, viewsOf } from './views.ts';
+import { word } from './words.ts';
 
 /** What the user chose to send: a graph whole, one of its views by name, or some of its things by name. */
 export type ScopeChoice =
@@ -22,7 +24,10 @@ export interface AiScope {
   graph: string;
   /** Which choice it was: the whole graph, a view, or things ticked. */
   kind: 'whole' | 'view' | 'ticked';
+  /** What was chosen, in UK English: it goes to the model, and into the change set the answer makes. */
   said: string;
+  /** What was chosen, in the person's language: what the person is told is sent. */
+  shown: string;
   things: string[];
   links: number;
   gql: string;
@@ -70,20 +75,21 @@ function viewPart(
   reading: NoteReading,
   graph: string,
   name: string,
-): { keys: string[]; links: number[]; said: string } | string {
+): { keys: string[]; links: number[]; said: string; shown: string } | string {
   const view = viewsOf(reading.texts).find((v) => v.graph === graph && v.name === name);
-  if (!view) return `Graph ${graph} has no view named ${name} in this note.`;
-  if (view.fault) return `View ${name} cannot be sent: ${view.fault}`;
+  if (!view) return word('ai.scope.no-view', { graph, view: name });
+  if (view.fault) return word('ai.scope.view-fault', { view: name, why: view.fault });
   const spec = parseView(view.query);
-  if ('refused' in spec) return `View ${name} cannot be sent: ${spec.refused}`;
+  if ('refused' in spec) return word('ai.scope.view-fault', { view: name, why: spec.refused });
   const result = evaluate(spec, reading, graph);
-  if (result.empty)
-    return `View ${name} matches nothing, so there is nothing to send: ${result.why ?? 'change the view'}`;
+  if (result.empty) return word('ai.scope.view-empty', { view: name, why: result.why ?? word('ai.scope.change-view') });
   const text = new Map((reading.graphs.get(graph)?.boxes ?? []).map((b) => [b.key, b.text]));
+  const read = readingOf(spec, (id) => text.get(id) ?? id);
   return {
     keys: result.things,
     links: result.links,
-    said: `view ${name} of graph ${graph}: ${readingOf(spec, (id) => text.get(id) ?? id)}`,
+    said: `view ${name} of graph ${graph}: ${read}`,
+    shown: word('ai.scope.said-view', { view: name, graph, reading: read }),
   };
 }
 
@@ -100,29 +106,31 @@ export function aiScope(note: string, choice: ScopeChoice, shared: string[] = []
   const { graph } = choice;
   const base = reading.graphs.get(graph),
     g = reading.world[graph];
-  if (reading.tooLarge) return { refused: 'This note is too large to read, so nothing of it is sent.' };
-  if (!base || !g || !base.boxes.length)
-    return { refused: `Graph ${graph} has no things in this note, so there is nothing to send.` };
-  let keys: string[], links: Link[], said: string;
+  if (reading.tooLarge) return { refused: word('ai.scope.too-large') };
+  if (!base || !g || !base.boxes.length) return { refused: word('ai.scope.empty', { graph }) };
+  // `said` goes to the model and into the change set, so it stays in UK English; `shown` is what the person reads
+  let keys: string[], links: Link[], said: string, shown: string;
   if (choice.what === 'graph') {
     keys = base.boxes.map((b) => b.key);
     links = base.links;
     said = `the whole graph ${graph}`;
+    shown = word('ai.scope.said-whole', { graph });
   } else if (choice.what === 'view') {
     const part = viewPart(reading, graph, choice.view);
     if (typeof part === 'string') return { refused: part };
     keys = part.keys;
     links = part.links.flatMap((i) => base.links[i] ?? []);
-    said = part.said;
+    ({ said, shown } = part);
   } else {
-    if (!choice.things.length) return { refused: 'Choose at least one thing to send.' };
+    if (!choice.things.length) return { refused: word('ai.scope.choose') };
     const known = new Set(base.boxes.map((b) => b.key));
     const missing = choice.things.filter((t) => !known.has(t));
     if (missing.length)
-      return { refused: `${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} not a thing of graph ${graph}.` };
+      return { refused: word('ai.scope.missing', { count: missing.length, things: formatList(missing), graph }) };
     keys = choice.things;
     links = base.links.filter((l) => keys.includes(l.from) && keys.includes(l.to));
     said = `${keys.length} thing${keys.length === 1 ? '' : 's'} chosen from graph ${graph}: ${keys.join(', ')}`;
+    shown = word('ai.scope.said-things', { count: keys.length, graph, things: keys.join(', ') });
   }
   const chosen = new Set(keys);
   const things = base.boxes.filter((b) => chosen.has(b.key));
@@ -132,6 +140,7 @@ export function aiScope(note: string, choice: ScopeChoice, shared: string[] = []
     graph,
     kind,
     said,
+    shown,
     things: things.map((b) => b.key),
     links: links.length,
     gql: `// graph: ${graph}\n${lines.join(',\n')}`,

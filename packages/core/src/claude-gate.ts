@@ -12,10 +12,12 @@
 // or a missing row never clears; a conditional class clears only once switched on. So a note the row does not clear
 // asks. What is said names kinds and the levels set, never the note's own label or its text.
 import { sha256 } from './ai-digest.ts';
-import { credentialsIn } from './ai-ceiling.ts';
+import { credentialsIn, levelSaid } from './ai-ceiling.ts';
 import { matrixRefusal } from './ai-matrix.ts';
 import type { MatrixRow } from './ai-matrix.ts';
+import { formatList } from './locale-formats.ts';
 import type { AiModel, Settings } from './settings.ts';
+import { word } from './words.ts';
 
 /** The settings the gate reads. */
 export type GateSettings = Pick<Settings, 'classifications' | 'aiUnlabelled'> & {
@@ -134,28 +136,16 @@ function ceilingOf(settings: GateSettings): number {
 export function claudeGate(text: string, settings: GateSettings, confirmed: string | null = null): Gate {
   const levels = settings.classifications;
   const held = credentialsIn(text);
-  if (held.length)
-    return {
-      refuse: `This note holds ${held.join(' and ')}, and a credential is never shown to Claude, so it is not opened.`,
-    };
+  if (held.length) return { refuse: word('ai.gate.credential', { held: formatList(held) }) };
   const given = classificationOf(text);
-  if (given.kind === 'unknown')
-    return {
-      refuse: `This note has an unknown classification (its front matter does not give exactly one), so it counts as above every ceiling and is not opened.`,
-    };
+  if (given.kind === 'unknown') return { refuse: word('ai.gate.unknown') };
   const unlabelled = given.kind === 'none';
   const wanted = given.kind === 'given' ? given.level : settings.aiUnlabelled;
   const at = rank(levels, wanted);
-  if (at === -1)
-    return {
-      refuse: `This note has an unknown classification, which is not one of the classifications set (${levels.join(', ')}), so it counts as above every ceiling and is not opened.`,
-    };
+  if (at === -1) return { refuse: word('ai.gate.not-set', { levels: levels.join(', ') }) };
   const level = levels[at] ?? '';
-  const said = unlabelled
-    ? `This note has no classification, so it counts as ${level}`
-    : `This note is classified ${level}`;
-  if (at === levels.length - 1)
-    return { refuse: `${said}, the highest classification set: it is never shown to Claude, whatever the settings.` };
+  const said = levelSaid(level, unlabelled);
+  if (at === levels.length - 1) return { refuse: word('ai.gate.highest', { said }) };
   const ceiling = ceilingOf(settings);
   // a row of the destination matrix picked for the model named Claude replaces its ceiling, held to the same rules
   const claude = settings.aiModels.find((m) => same(m.name, CLAUDE));
@@ -172,11 +162,10 @@ export function claudeGate(text: string, settings: GateSettings, confirmed: stri
       : at <= ceiling;
   if (!cleared) {
     if (confirmed && confirmed === sha256(text)) return { open: true };
-    const set = row
-      ? `not cleared for Claude by its matrix row, ${row}`
-      : `above the level set for Claude, ${levels[ceiling]}`;
-    const why = row && settings.matrixProblem ? ` ${settings.matrixProblem}` : '';
-    return { ask: `${said}, ${set}. Claude can read the pane the editor opens in.${why}` };
+    const asked = row
+      ? word('ai.gate.ask-row', { said, row })
+      : word('ai.gate.ask-ceiling', { said, level: levels[ceiling] ?? '' });
+    return { ask: row && settings.matrixProblem ? `${asked} ${settings.matrixProblem}` : asked };
   }
   return { open: true };
 }

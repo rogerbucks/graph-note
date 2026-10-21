@@ -3,8 +3,12 @@
 // - the host's own AI first, where it has one, so the choices and consents made there apply;
 // - then the user's own models, each by its address, the one set up for the purpose first.
 import type { AiModel, Settings } from './settings.ts';
+import { word } from './words.ts';
 
-/** The purposes a model may be set up for, as the spec names them; a model may be given any other. */
+/**
+ * The purposes a model may be set up for, as the spec names them; a model may be given any other. They are the values
+ * a person types and the send dialog compares with, so they stay as the spec writes them.
+ */
 export const AI_PURPOSES = ['Research questions', 'Proposing changes', 'Restricted processing'];
 
 /** The host's own AI, where the host has one: offered before any model set up here. */
@@ -38,30 +42,26 @@ const AUTHORITY = /^[A-Za-z0-9.:[\]-]+$/;
  */
 export function endpointProblem(endpoint: string): string | null {
   const given = endpoint.trim();
-  const example = 'such as http://localhost:11434/v1/chat/completions for a model on this device';
-  if (!given) return `No address is set: give the address requests go to, ${example}.`;
+  const example = 'http://localhost:11434/v1/chat/completions';
+  if (!given) return word('ai.address.none', { example });
   const parts = /^([a-z][a-z0-9+.-]*):\/\/(.*)$/is.exec(given);
-  if (!parts) return `${given} is not an address: give the full address requests go to, ${example}.`;
+  if (!parts) return word('ai.address.not-one', { given, example });
   const scheme = (parts[1] ?? '').toLowerCase(),
     rest = parts[2] ?? '';
-  if (scheme !== 'https' && scheme !== 'http')
-    return `An address starts with https://, or http:// for a model on this device; ${given} does not.`;
+  if (scheme !== 'https' && scheme !== 'http') return word('ai.address.scheme', { given });
   const authority = rest.split(/[/?#]/)[0] ?? '';
-  const unclear = `The host in ${given} cannot be told apart from another: write it with letters, digits, dots and hyphens only.`;
+  const unclear = word('ai.address.unclear', { given });
   if (/[\\\s]/.test(authority)) return unclear;
-  if (authority.includes('@'))
-    return 'An address holds no user name or password: keep the key in the app’s secret store instead.';
+  if (authority.includes('@')) return word('ai.address.user');
   if (!authority || !AUTHORITY.test(authority)) return unclear;
-  if (/[?#]/.test(rest))
-    return 'An address holds no query string or fragment (the part after ? or #), as a key or anything else could ride in it: keep the key in the app’s secret store instead.';
+  if (/[?#]/.test(rest)) return word('ai.address.query');
   let hostname: string;
   try {
     hostname = new URL(given).hostname;
   } catch {
-    return `${given} is not an address: give the full address requests go to, ${example}.`;
+    return word('ai.address.not-one', { given, example });
   }
-  if (scheme === 'http' && !LOCAL_HOSTS.test(hostname))
-    return `A model on another machine is reached over https only, so what is sent cannot be read on the way: start ${given} with https://.`;
+  if (scheme === 'http' && !LOCAL_HOSTS.test(hostname)) return word('ai.address.https', { given });
   return null;
 }
 
@@ -70,14 +70,9 @@ export const usable = (m: AiModel): boolean => !!m.name.trim() && !!m.model.trim
 
 /** Whether AI may be used: the models that may be asked, or why none may. */
 export function aiReady(s: Settings): { ready: AiModel[] } | { off: string } {
-  if (s.aiUse !== 'on')
-    return { off: 'AI is off: turn on Use AI models in the settings, and set up a model, before anything is sent.' };
+  if (s.aiUse !== 'on') return { off: word('ai.off') };
   const ready = s.aiModels.filter(usable);
-  return ready.length
-    ? { ready }
-    : {
-        off: 'No AI model is set up yet: set one up under AI models in the settings, with its name, model and address.',
-      };
+  return ready.length ? { ready } : { off: word('ai.no-model') };
 }
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
