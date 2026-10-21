@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (94)
+## Open (93)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -102,7 +102,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
-| TRUST-14 | Plug-ins run with the host's full powers | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 
 ## Each open risk
 
@@ -1036,17 +1035,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
 
-### TRUST-14 Plug-ins run with the host's full powers
-
-**Who found it:** Trust model review. **Where:** `packages/core/src/plugins.ts`.
-
-**Risk:** A plug-in runs in the same process as the host, so it can reach the network and the host's calls whatever its manifest says. Its time is read only after a call returns, so a call that never returns, or work it starts and leaves running, is not stopped. No host loads outside plug-ins yet, so this matters once one does.
-
-**Fix:** Do this before any host loads a plug-in it did not ship. Run plug-ins in a worker that gets only the extension points, and stop one that runs too long.
-
-**Check:** packages/core/test/plugins.test.js: a plug-in that loops is stopped and named, and one cannot reach the host's file or network calls.
-
-## Done or accepted (24)
+## Done or accepted (25)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1072,5 +1061,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-1 | Claude can loosen its own gate by editing vault files | done | #836; kept out by `packages/claude-code/test/gate-guard.test.js` |
 | TRUST-2 | MultiEdit and other write tools are not hooked | done | #836; kept out by `packages/claude-code/test/data-guard.test.js` |
 | TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | done | #836; kept out by `test/working-group-workflow.test.js`, `test/claude-workflows.test.js` |
+| TRUST-14 | Plug-ins run with the host's full powers | done | #882; kept out by `packages/core/test/plugins-isolated.test.js` |
 | TRUST-15 | A plug-in given secrets could read every secret, AI keys too | done | #856; kept out by `packages/core/test/plugins-limits.test.js` |
 | TRUST-16 | The files ability reaches every note, whatever its class | done | #867; kept out by `packages/core/test/plugins-limits.test.js` |
