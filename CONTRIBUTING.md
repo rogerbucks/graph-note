@@ -691,8 +691,12 @@ These test behaviour across modules, or the repository itself, so they are named
   the tag before anything is installed, and every other job waits for it (editor spec §13, release_from_main).
 - `test/ai-disclosed.test.js` — the AI use disclosed in the README. Content goes only to models the user sets up, only
   when the user sends it. The one exception to no network use is stated precisely (spec §19, ai_disclosed).
+### Being public, and pull requests
+
 - `test/public-readiness.test.js` — fit to be public and kept so. It covers a clean history, and a fresh clone set up
   from the README alone. It also covers GitHub settings that let only a collaborator contribute.
+- `test/pr-checks.test.js` — what an AI agent's pull request must say: a `Requirements:` line, its label, no private
+  session link, and a test seen failing first. It also covers the workflow that checks this, and the template.
 - `test/repository-scans.test.js` — the source scans behind the one network exception. The AI send module is found
   however it is imported, and Obsidian's `request(` is taken for a request. Every timer and event is found.
 

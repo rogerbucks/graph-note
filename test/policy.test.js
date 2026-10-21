@@ -239,7 +239,7 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only fourteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, Sara’s working group reply, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
+  test('only fifteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
@@ -260,10 +260,10 @@ describe('GitHub Actions', () => {
         const only = (file, job, wanted) => f.endsWith(file) && name === job && [...given].sort().join() === wanted;
         // one mirrors the requirements into their issues on a push to main (test/github-project-workflow.test.js)
         const mirror = only('/project-mirror.yml', 'mirror', 'contents: read,issues: write');
-        // Claude's review on a pull request, and Sara's reply in the working group discussion (their own tests)
+        // Claude's review on a pull request, and Sara's replies in the working group discussion (their own tests)
         const review =
           only('/claude-review.yml', 'review', 'contents: read,pull-requests: write') ||
-          only('/working-group.yml', 'post', 'discussions: write');
+          (/\/working-group(-reply)?\.yml$/.test(f) && name === 'post' && given.join() === 'discussions: write');
         // the wiki, its review issue, the nightly and the home page run no repository code (their own tests say so)
         const wiki = only('/wiki.yml', 'publish', 'contents: write') || only('/wiki.yml', 'report', 'issues: write');
         const nightly =

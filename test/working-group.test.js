@@ -3,6 +3,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { HIDDEN, checkReply, items, plan, trim } from '../scripts/working-group.mjs';
+import { read } from './repository/repo.js';
 
 const comment = (id, login, createdAt, body, replies = [], authorAssociation = 'OWNER') => ({
   id,
@@ -14,7 +15,7 @@ const comment = (id, login, createdAt, body, replies = [], authorAssociation = '
 });
 const discussion = (...nodes) => ({ id: 'D_1', comments: { nodes } });
 const NOW = new Date('2026-10-21T07:30:00Z');
-const SARA = 'Agreed.\n\n— Sara';
+const SARA = '**From Sara:** Agreed.';
 
 describe('reading the working group discussion', () => {
   test('lists comments and their replies, each reply under its top-level comment', () => {
@@ -128,17 +129,35 @@ describe('a reply before it is posted', () => {
     assert.match(checkReply({ body: SARA, replyTo: 'C9' }, d).join('\n'), /top-level comment/);
   });
 
-  test('must be signed "— Sara"', () => {
-    assert.match(checkReply({ body: 'Agreed.', replyTo: 'C1' }, d).join('\n'), /signed/);
+  test('must open with "From Sara:", and carry no signature at the bottom (Roger, 21 Oct 2026)', () => {
+    assert.match(checkReply({ body: 'Agreed.', replyTo: 'C1' }, d).join('\n'), /From Sara/);
+    assert.match(checkReply({ body: `${SARA}\n\n— Sara`, replyTo: 'C1' }, d).join('\n'), /signature/);
+  });
+
+  test('an older comment of hers, signed "— Sara" at the bottom, still counts as hers', () => {
+    const old = discussion(comment('C1', 'github-actions', '2026-10-21T01:00:00Z', 'Done.\n\n— Sara'));
+    assert.equal(plan(old, NOW).reason, 'Sara already posted today');
   });
 
   test('pings no one but Roger: names go without the @ sign', () => {
-    assert.match(checkReply({ body: `@eve hello\n\n— Sara`, replyTo: 'C1' }, d).join('\n'), /@eve/);
-    assert.deepEqual(checkReply({ body: `@rogerbucks one choice for you.\n\n— Sara`, replyTo: 'C1' }, d), []);
+    assert.match(checkReply({ body: `**From Sara:** @eve hello`, replyTo: 'C1' }, d).join('\n'), /@eve/);
+    assert.deepEqual(checkReply({ body: `**From Sara:** @rogerbucks one choice for you.`, replyTo: 'C1' }, d), []);
   });
 
   test('stays short: one batched comment, not an essay', () => {
-    const long = `${'word '.repeat(1000)}\n\n— Sara`;
+    const long = `**From Sara:** ${'word '.repeat(1000)}`;
     assert.match(checkReply({ body: long, replyTo: 'C1' }, d).join('\n'), /too long/);
   });
+});
+
+// A folder whose name starts with a dot is hidden, and upload-artifact leaves hidden files out unless told. So the
+// discussion never reached the draft job, and every run from 20 Oct 2026 failed there: Sara never saw a comment.
+test('every upload of the hidden .working-group folder includes hidden files, and fails when it finds none', () => {
+  const flow = read('.github/workflows/working-group.yml');
+  const uploads = flow.split(/\n(?=\s+(?:- )?(?:if: .*\n\s+)?uses: )/).filter((s) => /upload-artifact@/.test(s));
+  assert.equal(uploads.length, 2);
+  for (const step of uploads) {
+    assert.match(step, /include-hidden-files: true/);
+    assert.match(step, /if-no-files-found: error/);
+  }
 });

@@ -82,6 +82,9 @@ jobs:
         with:
           name: discussion
           path: .working-group/
+          # the folder's name starts with a dot, so its files are hidden ones
+          include-hidden-files: true
+          if-no-files-found: error
 
   draft:
     needs: check
@@ -138,8 +141,8 @@ jobs:
             - Name people without the @ sign. Use @rogerbucks only to put one choice to Roger, after two rounds of
               disagreement.
             - When asked to build something, say what you will build and that it starts in your next working
-              session once Roger says "all good". Never say work is done unless the discussion shows it is.
-            - End with the line "— Sara".
+              session. Never say work is done unless the discussion shows it is.
+            - Open with "**From Sara:**", and each request with "**To [name]:**". No signature at the bottom.
           claude_args: |
             --allowedTools "Read,Glob,Grep,Write(.working-group/reply.md),Write(.working-group/reply-to)"
             --max-turns 12
@@ -154,6 +157,8 @@ jobs:
           path: |
             .working-group/reply.md
             .working-group/reply-to
+          include-hidden-files: true
+          if-no-files-found: error
 
   # The draft is checked here, by the checker on the default branch, never by a copy in the folder Claude wrote in.
   vet:

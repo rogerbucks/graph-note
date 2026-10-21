@@ -114,3 +114,53 @@ describe('the workflow that keeps Sara up with the working group discussion', ()
     assert.match(text, /concurrency:\s*\n\s*group: working-group\s*\n\s*cancel-in-progress: false/);
   });
 });
+
+// Sara answers in #825 herself, from any session, through a workflow she starts (spec §13, working_group_reply;
+// Roger, 21 Oct 2026). Checked here: who can start it, that the reply is checked before it is posted, and that the job
+// that posts runs no repository code.
+describe('the workflow that posts a reply from Sara in the working group discussion', () => {
+  const REPLY = '.github/workflows/working-group-reply.yml';
+  const text = exists(REPLY) ? read(REPLY) : '';
+  const lines = text.split('\n');
+
+  test('is started by hand only, with the comment it answers and the reply', () => {
+    const on = block(lines, 'on', 0)?.join('\n') ?? '';
+    assert.match(on, /workflow_dispatch:/);
+    assert.match(on, /reply_to:/);
+    assert.match(on, /body:/);
+    assert.doesNotMatch(on, /push:|pull_request|issue_comment|discussion|schedule|workflow_run/);
+    assert.match(text, /DISCUSSION: 825/);
+  });
+
+  test("checks the reply with the watcher's checker, from the default branch, before anything is posted", () => {
+    const vet = jobs(text).vet?.join('\n') ?? '';
+    assert.match(vet, /ref: \$\{\{ github\.event\.repository\.default_branch \}\}/);
+    assert.match(
+      runCommands(vet).join('\n'),
+      /^node scripts\/working-group\.mjs check vet\/discussion\.json vet\/draft$/m,
+    );
+    assert.match(vet, /BODY: \$\{\{ inputs\.body \}\}/);
+    for (const run of runCommands(text)) assert.doesNotMatch(run, /\$\{\{/);
+  });
+
+  test('posts from a job that needs the check, may write only to discussions, and runs no repository code', () => {
+    const post = jobs(text).post?.join('\n') ?? '';
+    assert.match(post, /needs: vet\n/);
+    assert.deepEqual(
+      usesRefs(post).map((r) => r.split('@')[0]),
+      ['actions/download-artifact'],
+    );
+    assert.doesNotMatch(post, /actions\/checkout|npm |node /);
+    assert.match(post, /discussions: write/);
+    assert.doesNotMatch(jobs(text).vet?.join('\n') ?? '', /: write/);
+    for (const ref of usesRefs(text)) assert.match(ref, /@[0-9a-f]{40}$/, ref);
+  });
+
+  test("shares the watcher's queue, so the two never post at once", () => {
+    assert.match(text, /concurrency:\s*\n\s*group: working-group\s*\n\s*cancel-in-progress: false/);
+  });
+
+  test('ROLES.md says how Sara replies', () => {
+    assert.match(read('docs/agents/ROLES.md'), /working-group-reply\.yml/);
+  });
+});

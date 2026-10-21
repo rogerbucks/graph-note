@@ -1,0 +1,6 @@
+{
+  "file": "test/working-group.test.js",
+  "test": "a reply before it is posted > an older comment of hers, signed \"— Sara\" at the bottom, still counts as hers",
+  "seen_failing_first": false,
+  "evidence": "It guards behaviour the old code already had: her older comments, signed at the bottom, must still count as hers once replies open with \"From Sara:\"."
+}

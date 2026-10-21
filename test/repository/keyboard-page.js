@@ -67,6 +67,9 @@ export function keyboardPageTests(part, phone = false) {
 
     for (const name of phone ? phoneHalf(Object.keys(STATES), part) : PAGE_PARTS[part])
       test(`${name}: every action reached and operated, and every focus left`, async () => {
+        // each state opens many pages; stopped here, not at the end, so their windows can be freed as the file runs
+        const first = opened.length;
+        after(() => Promise.all(opened.splice(first).map((o) => o.stop())));
         const problems = await runProblems(
           async () => {
             const page = await STATES[name]();
