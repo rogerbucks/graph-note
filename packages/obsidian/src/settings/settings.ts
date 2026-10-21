@@ -18,6 +18,7 @@ import type ThoughtKnotPlugin from '../main';
 import { knownClass } from '../ai/matrix-known';
 import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
+import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
 
 const SECTIONS = ['Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
 
@@ -50,7 +51,16 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
       },
       // a list stands on its own, after its part of the page
       ...(heading === 'AI models' ? [aiModelList(this.app, this.owner, this, this.matrix)] : []),
-    ]);
+    ]).concat(outsideGroup(this.owner.outside, () => void this.addLink()));
+  }
+
+  /** The link typed in for a plug-in from outside: never saved, only fetched once Add is pressed. */
+  private link = '';
+
+  private async addLink(): Promise<void> {
+    await this.owner.outside.addFromLink(this.link);
+    this.link = '';
+    this.update();
   }
 
   /** The matrix note's rows as last read; the page is drawn again when the note, or the path to it, changes them. */
@@ -135,6 +145,8 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
 
   override getControlValue(key: string): unknown {
     const s = this.owner.settings;
+    if (key.startsWith(OUTSIDE_KEY)) return this.owner.outside.isOn(key.slice(OUTSIDE_KEY.length));
+    if (key === LINK_KEY) return this.link;
     if (key.startsWith('allowed.')) return s.allowed.some((a) => `allowed.${a}` === key);
     if (key === 'classifications') return s.classifications.join('\n');
     if (key === 'aiClassMap') return classMapText(s.aiClassMap);
@@ -144,6 +156,11 @@ export class ThoughtKnotSettingTab extends PluginSettingTab {
 
   override async setControlValue(key: string, value: unknown): Promise<void> {
     const s = this.owner.settings;
+    if (key === LINK_KEY) return void (this.link = String(value));
+    if (key.startsWith(OUTSIDE_KEY)) {
+      await this.owner.outside.turn(key.slice(OUTSIDE_KEY.length), !!value);
+      return this.update();
+    }
     let change: Partial<Settings>;
     if (key.startsWith('allowed.')) {
       const id = key.slice('allowed.'.length);

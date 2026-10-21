@@ -60,6 +60,37 @@ export const layoutWorker = {
   },
 };
 
+// The worker an outside plug-in runs in (spec §54, plugin_outside_file). src/outside/plugin-worker-entry.ts is bundled on
+// its own, as the layout worker is. It is the body of one function, `pluginWorker`, from 'thoughtknot:plugin-worker'.
+// The worker's script is that function's text, run on `self` first, then the plug-in's file.
+export const pluginWorker = {
+  name: 'plugin-worker',
+  setup(build) {
+    build.onResolve({ filter: /^thoughtknot:plugin-worker$/ }, (a) => ({ path: a.path, namespace: 'plugin-worker' }));
+    build.onLoad({ filter: /.*/, namespace: 'plugin-worker' }, async () => {
+      const inner = await esbuild.build({
+        absWorkingDir: here,
+        entryPoints: ['src/outside/plugin-worker-entry.ts'],
+        bundle: true,
+        platform: 'browser',
+        format: 'iife',
+        globalName: 'thoughtknotPluginWorker',
+        target: 'es2022',
+        legalComments: 'inline',
+        write: false,
+        metafile: true,
+        logLevel: 'warning',
+      });
+      return {
+        contents: `export function pluginWorker(scope) {\n${inner.outputFiles[0].text}\nreturn thoughtknotPluginWorker.serve;\n}\n`,
+        loader: 'js',
+        resolveDir: here,
+        watchFiles: Object.keys(inner.metafile.inputs).map((f) => join(here, f)),
+      };
+    });
+  },
+};
+
 // Exported so scripts/quality-metrics.mjs measures the bundle this build makes, not a copy of its settings.
 export const options = {
   absWorkingDir: here,
@@ -77,7 +108,7 @@ export const options = {
   minify: false,
   logLevel: 'info',
   write: false,
-  plugins: [layoutWorker, swapIn],
+  plugins: [layoutWorker, pluginWorker, swapIn],
 };
 
 // --watch (npm run dev): rebuild on every save, for installing into a test vault. Only when run, never when imported.

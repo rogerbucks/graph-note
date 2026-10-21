@@ -23,7 +23,7 @@ Wave 6.
 | the editor server | A local web server the mod starts | Serve one vault to one browser tab, behind a token. |
 | Claude | The AI in Claude Code | Read and propose. Never to raise its own limits. |
 | AI models | Model endpoints the person picks in Obsidian | Nothing. They get only what the person saw and sent. |
-| plug-ins | Code that adds exporters and other extension points | Today, only plug-ins that ship with ThoughtKnot. Each gets only what its manifest names. |
+| plug-ins | Code that adds exporters and other extension points | Plug-ins that ship with ThoughtKnot, and in Obsidian, ones the person turns on. Each gets only what its manifest names. |
 | joined graphs | Notes and graphs read from other notes, files or databases | Nothing. They are data, checked before use. |
 | GitHub | The API, pull requests and the CI that builds releases | Read only, through the person's own sign-in. |
 | peers | Other devices and people on the mesh | Not built yet. See the boundaries still to come. |
@@ -137,7 +137,8 @@ Wave 6.
 
 - **Sides:** a plug-in against the core and its host.
 - **Crosses:** the extension points the manifest names.
-- **Trusted:** today, only plug-ins that ship with ThoughtKnot.
+- **Trusted:** plug-ins that ship with ThoughtKnot. In Obsidian, a plug-in from outside runs once the person turns it
+  on, apart in a worker.
 - **Controls:** A version check, and only the extension points and host abilities the manifest names. Settings and
   secrets are the plug-in's own, kept apart from the others'. Objects are frozen. Errors are caught and named. A call
   over the time limit stops its plug-in.
@@ -267,7 +268,7 @@ For the graph source and step extension points (`trust_source_joined`).
 
 ### Before any outside plug-in loads
 
-Today every plug-in ships with ThoughtKnot. Before a host loads one it did not ship, these must be fixed:
+Before a host loads a plug-in it did not ship, these must be fixed:
 
 - Plug-ins run apart from the host, in a worker, and one that runs too long is stopped (TRUST-14). Done in the core:
   `packages/core/src/plugin-isolated.ts` is the host's side and `packages/core/src/plugin-serve.ts` the worker's. The
@@ -283,9 +284,11 @@ Today every plug-in ships with ThoughtKnot. Before a host loads one it did not s
   sample plug-in outside the packages runs in a worker in CI and passes each contract.
 - A host loads an outside plug-in from one file that imports nothing (API-10). Done in the core:
   `packages/core/src/plugin-outside.ts`. A file that holds the word `import` never starts a worker. The worker's own
-  start takes away the network and every way to make code from text, and only then does the file run. Still to come:
-  the browser page and Obsidian each load one from a plug-ins folder or a web link. Each loads only once the person
-  turns it on.
+  start takes away the network and every way to make code from text, and only then does the file run.
+- Obsidian loads one this way (`packages/obsidian/src/outside/outside-plugins.ts`). It comes from the vault folder
+  `ThoughtKnot plug-ins`, or from a link fetched once, when the person presses Add
+  (`packages/obsidian/src/outside/outside-link.ts`). Each stays off until the person turns it on, and turns off
+  again if its file changes. Still to come: the browser page.
 
 ## Boundaries still to come
 

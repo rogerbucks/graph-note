@@ -107,6 +107,17 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   brackets. The host hands in the core's `word`, `formatCount` and `formatSize`, so they are said in the reader's
   language.
 
+### `src/outside/` — plug-ins from outside ThoughtKnot (spec §54, plugin_outside_file)
+
+- `outside-plugins.ts` — `OutsidePlugins`: the plug-in files in the vault folder `ThoughtKnot plug-ins`. Each stays off
+  until the person turns it on. Turning one on keeps the file's SHA-256, and a file that changes after is turned off and
+  said.
+- Each runs in a worker of its own, from a Blob of main.js's sealing bundle and then the file. Its commands join
+  Obsidian's while it runs. A link is fetched once with `requestUrl`, checked and kept in the folder, off.
+- `plugin-worker-entry.ts` — what runs first in that worker: the core's `sealOutside`. `esbuild.config.mjs` bundles it
+  into the function `pluginWorker` of the module `thoughtknot:plugin-worker` (typed in `plugin-worker.d.ts`).
+- `outside-settings.ts` — the section on the settings page: a switch for each file, and the link with its Add.
+
 ### `src/sources/` — a graph drawn from another note or a .gql file (spec §20, §7 view_of_another_note)
 
 - `sources.ts` — `renderSourceBlock`: a FROM block's card, the whole graph as its source holds it, read-only, with its

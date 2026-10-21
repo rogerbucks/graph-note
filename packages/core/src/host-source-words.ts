@@ -4,6 +4,22 @@
 /** The words of the host's commands and notices, by key, in UK English. */
 export const HOST_SOURCE_WORDS = {
   'host.command.convert': 'Convert this note to standard GQL',
+  'outside.heading': 'Plug-ins from outside',
+  'outside.sentence':
+    'Code from outside ThoughtKnot. Put a plug-in file in the folder {folder}, or add one from a link. Each stays off until you turn it on. It runs apart, with no network, but it can add commands, so turn on only plug-ins you trust.',
+  'outside.none': 'No plug-in files are in the folder {folder}.',
+  'outside.file': 'Runs this plug-in file. If the file changes, it is turned off until you turn it on again.',
+  'outside.link': 'Add a plug-in from a link',
+  'outside.link.sentence':
+    'The address of a plug-in file, starting https://. It is fetched once, checked, and kept in the folder {folder}, off.',
+  'outside.link.add': 'Add',
+  'outside.added': 'Added {name}. Turn it on in the settings to run it.',
+  'outside.not-added': 'Not added: {why}',
+  'outside.not-a-link': 'that is not an address starting https://',
+  'outside.not-js': 'the address does not end in a file name ending .js',
+  'outside.not-on': 'The plug-in {name} was not turned on: {why}',
+  'outside.gone': 'its file is no longer in the folder',
+  'outside.changed': 'The plug-in {name} changed since you turned it on, so it is off until you turn it on again.',
   'host.command.recover': 'Recover kept drafts into a new note',
   'host.command.ask-ai': 'Ask an AI model to propose changes',
   'host.command.clear-sends': 'Clear the record of sends to AI models',

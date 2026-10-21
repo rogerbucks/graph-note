@@ -816,13 +816,13 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 ### API-10 Plug-in API version is one string, no host loads third parties
 
-**Who found it:** API design expert. **Where:** `packages/core/src/plugin-outside.ts`, `examples/sample-plugin/plugin.js`, `packages/core/src/plugin-versions.ts`, `packages/core/src/plugins-contract.ts`, `packages/core/src/plugins.ts`, `wiki/Writing-a-plug-in.md`.
+**Who found it:** API design expert. **Where:** `packages/core/src/plugin-outside.ts`, `packages/obsidian/src/outside/outside-plugins.ts`, `examples/sample-plugin/plugin.js`, `packages/core/src/plugin-versions.ts`, `packages/core/src/plugins-contract.ts`, `packages/core/src/plugins.ts`, `wiki/Writing-a-plug-in.md`.
 
 **Risk:** PLUGIN_API is '1' and a plug-in built for any other value is refused. So an additive change to the interface would orphan every plug-in unless the version never moves. The registry and two extension points (exports, theme) are in the public API and the wiki. But no host was found that loads a plug-in from outside the bundle, so the contract is untested against a real third party.
 
-**Fix:** Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version, and a sample plug-in passes each contract in a worker. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Left: the browser page and Obsidian each load one from a plug-ins folder.
+**Fix:** Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version, and a sample plug-in passes each contract in a worker. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Obsidian loads one from its plug-ins folder or a link, off until turned on (outside-plugins.ts). Left: the browser page.
 
-**Check:** test/sample-plugin.test.js runs the sample in a worker now. The browser page and the Obsidian harness load it through their real paths once hosts load outside plug-ins.
+**Check:** test/sample-plugin.test.js runs the sample in a worker. packages/obsidian/test/outside-plugins.test.js loads it through main.js. The browser page is to come.
 
 ### API-11 Schema @1 is a name suffix, not a version negotiation
 

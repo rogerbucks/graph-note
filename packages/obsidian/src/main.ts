@@ -53,6 +53,7 @@ import type { KeptDraft } from '@thoughtknot/core/display/editor/editor-note';
 import { convertToStandard } from './convert';
 import { followLinks } from './links/rename-follow';
 import { HOVER_SOURCE } from './links/link-host';
+import { OutsidePlugins, type TurnedOn } from './outside/outside-plugins';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -69,6 +70,8 @@ interface Saved {
   settings?: unknown;
   /** The record of every send to an AI model (§19, record_every_send): never a key. */
   aiSends?: SendRecord[];
+  /** The plug-in files from outside the person turned on, each with its SHA-256 then (§54, plugin_outside_file). */
+  outside?: Record<string, TurnedOn>;
 }
 
 /** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
@@ -84,6 +87,14 @@ export default class ThoughtKnotPlugin extends Plugin {
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
+    this.outside = new OutsidePlugins(this, {
+      read: () => this.saved.outside ?? {},
+      write: async (outside) => {
+        this.saved = { ...this.saved, outside };
+        await this.saveData(this.saved);
+      },
+    });
+    this.app.workspace.onLayoutReady(() => void this.outside.startAll());
     this.addSettingTab(new ThoughtKnotSettingTab(this.app, this));
     this.addCommand({
       id: 'convert-to-standard',
@@ -137,6 +148,8 @@ export default class ThoughtKnotPlugin extends Plugin {
 
   /** Every option the editor offers (spec §21), as set on the settings page. */
   override settings: Settings = settingsFrom(null);
+  /** The plug-ins from outside: each file, off until turned on, and those running (§54). */
+  outside!: OutsidePlugins;
 
   /** Who to tell when a setting that changes how a graph is read or drawn has changed: each drawing and editor. */
   private readonly settingsWatchers = new Set<() => void>();
@@ -300,6 +313,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.unloaded = true;
     this.layouts?.close();
     this.layouts = null;
+    this.outside.stopAll();
   }
 
   /** The reviews of proposals, by note and proposal: kept while the plugin runs, so a decision can be undone (spec §17). */

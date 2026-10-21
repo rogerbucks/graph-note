@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "the shipped source > no source makes a network request, except the AI send module and the plug-in link",
+  "seen_failing_first": false,
+  "evidence": "Renamed from the AI-only scan when the plug-in link module was allowed; before the change no source fetched, so it passed, as it should."
+}

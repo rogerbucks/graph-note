@@ -30,9 +30,9 @@ const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 const RUNTIME_ALLOWED = new Set(['@viz-js/viz', 'sql.js']); // two WebAssembly engines inside the bundle (§13, §20)
 // The one addition spec §13 allows, for the browser host alone (§26, cc_one_renderer): a Markdown renderer.
 const MARKDOWN_RENDERER = 'marked';
-// The one place that may reach the network: sending to an AI the user has set up.
-// It sends only when the user sends (spec §13 and §19). Only the send dialog reaches it.
+// The places that may reach the network (§13): sending to an AI, as the user sends (§19); a plug-in link, on Add (§54).
 const AI_SEND_MODULE = 'packages/obsidian/src/ai/send.ts';
+const NETWORK_ALLOWED = [AI_SEND_MODULE, 'packages/obsidian/src/outside/outside-link.ts'];
 const AI_SEND_DIALOG = 'packages/obsidian/src/ai/send-dialog.ts';
 const TEST_FRAMEWORKS = ['jest', 'mocha', 'vitest', 'ava', 'tap', 'jasmine', 'uvu', 'chai'];
 
@@ -513,8 +513,8 @@ describe('the shipped source', () => {
     assert.ok(sourceFiles().length > 0);
   });
 
-  test('no source makes a network request, except the AI send module', () => {
-    const offenders = sourceFiles().filter((f) => f !== AI_SEND_MODULE && findsNetwork(read(f)));
+  test('no source makes a network request, except the AI send module and the plug-in link', () => {
+    const offenders = sourceFiles().filter((f) => !NETWORK_ALLOWED.includes(f) && findsNetwork(read(f)));
     assert.deepEqual(offenders, []);
   });
 
