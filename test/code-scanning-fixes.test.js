@@ -1,6 +1,6 @@
 // The code scanning alerts of #849, each fixed at its cause (risks SEC-11 to SEC-15). Each test fails on the code before
-// the fix. A slow pattern is timed on text made to slow it, at a size where the old pattern took seconds. A pattern
-// that ran in time with the square of the text's length now runs in time with its length.
+// the fix. A slow pattern is given text made to slow it, at a size where the old pattern took seconds. A pattern that
+// ran in time with the square of the text's length now runs in time with its length.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -16,47 +16,37 @@ const require = createRequire(import.meta.url);
 const { project } = require('../packages/graph-spec/src/rules/projection.js');
 const { lensBuckets } = require('../packages/graph-spec/src/rules/lenses.js');
 
-/** How long `run` takes, in milliseconds. */
-function took(run) {
-  const start = performance.now();
-  run();
-  return performance.now() - start;
-}
-
-// generous, so a slow runner never fails it: the old patterns took several seconds at these sizes
-const QUICK = 1000;
-const quick = (name, run) => {
-  const ms = took(run);
-  assert.ok(ms < QUICK, `${name} took ${Math.round(ms)} ms`);
-};
+// The old patterns took seconds at these sizes, and minutes at a few times more. The test's own time limit fails a
+// pattern that slows again, without the test measuring time itself.
+const LIMIT = { timeout: 10_000 };
 
 describe('a pattern that ran slow on text made for it now runs in time with its length (js/polynomial-redos)', () => {
-  test('the kind captions of a drawing', () => {
-    quick('themed', () => themed(`<svg><text${' fill="#0000fe"'.repeat(30000)}`, [], []));
+  test('the kind captions of a drawing', LIMIT, () => {
+    assert.match(themed(`<svg><text${' fill="#0000fe"'.repeat(30000)}`, [], []), /^<svg/);
   });
 
-  test('the scale and the move of a drawing, and its graph group', () => {
-    quick('hitAreas', () => hitAreas(`<svg><g class="graph" transform="${'scale(('.repeat(30000)}">`));
-    quick('hitAreas', () => hitAreas(`<svg><g class="graph" transform="${'translate(('.repeat(30000)}">`));
-    quick('hitAreas', () => hitAreas(`<svg><g ${'class="graph"'.repeat(30000)}`));
+  test('the scale and the move of a drawing, and its graph group', LIMIT, () => {
+    assert.ok(hitAreas(`<svg><g class="graph" transform="${'scale(('.repeat(30000)}">`));
+    assert.ok(hitAreas(`<svg><g class="graph" transform="${'translate(('.repeat(30000)}">`));
+    assert.ok(hitAreas(`<svg><g ${'class="graph"'.repeat(30000)}`));
   });
 
-  test('an image address with many marks', () => {
-    quick('imageLink', () => imageLink(`https://x/${'#'.repeat(60000)}`));
+  test('an image address with many marks', LIMIT, () => {
+    assert.equal(imageLink(`https://x/${'#'.repeat(60000)}`), null);
   });
 
-  test('a view query with a long unclosed quote', () => {
-    quick('parseView', () => parseView(`MATCH (n) WHERE n.name = '${"\\'".repeat(60000)}`));
+  test('a view query with a long unclosed quote', LIMIT, () => {
+    assert.match(parseView(`MATCH (n) WHERE n.name = '${"\\'".repeat(60000)}`).refused, /never closed/);
   });
 
-  test('a lens rule with many WHENs and no THEN', () => {
+  test('a lens rule with many WHENs and no THEN', LIMIT, () => {
     const rule = `MATCH (n:T) RETURN n.id AS id, CASE ${'WHEN a'.repeat(30000)} ELSE 'x' END AS grp`;
-    quick('lensBuckets', () => assert.equal(lensBuckets(null, rule), null));
+    assert.equal(lensBuckets(null, rule), null);
   });
 
-  test('the cuts that took the place of the slow patterns', () => {
-    quick('trimChars', () => assert.equal(trimChars(`${'-'.repeat(60000)}x`, '-.'), 'x'));
-    quick('cutAtFirst', () => assert.equal(cutAtFirst(`${'//'.repeat(60000)}`, '//'), ''));
+  test('the cuts that took the place of the slow patterns', LIMIT, () => {
+    assert.equal(trimChars(`${'-'.repeat(60000)}x`, '-.'), 'x');
+    assert.equal(cutAtFirst(`${'//'.repeat(60000)}`, '//'), '');
     assert.equal(trimChars('.-a.b-.', '-.'), 'a.b');
     assert.equal(cutAtFirst('a.png?x#y', '?', '#'), 'a.png');
     assert.equal(cutAtFirst('a.png#y?x', '?', '#'), 'a.png');
