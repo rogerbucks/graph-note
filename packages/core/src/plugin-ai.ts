@@ -6,6 +6,7 @@
 //   shaped, and their yes is bound to it;
 // - it names where the key goes, such as a header. The host puts the key there and sends, so B7 stays the one way out;
 // - the answer it reads is checked as any answer is (AI-4).
+import { word } from './words.ts';
 
 /** What a provider is given to shape: the model's id, the instructions, and the asked text. */
 export interface ProviderRequest {
@@ -69,7 +70,7 @@ type Guarded = <T>(
  * is given frozen. A call that fails throws, saying whose it was, so a send stops there.
  */
 export function guardedProvider(p: AiProvider, plugin: string, guarded: Guarded): AiProvider {
-  const what = `The AI provider ${p.title}`;
+  const what = word('plugins.what.provider', { title: p.title });
   const sure = <T>(r: { ok: true; value: T } | { ok: false; message: string }): T => {
     if (!r.ok) throw new Error(r.message);
     return r.value;
@@ -79,7 +80,7 @@ export function guardedProvider(p: AiProvider, plugin: string, guarded: Guarded)
     key: p.key && Object.freeze({ ...p.key }),
     shape: (request: ProviderRequest) => {
       const body: unknown = sure(guarded(plugin, what, () => p.shape(Object.freeze({ ...request }))));
-      if (typeof body !== 'string') throw new Error(`${what} of ${plugin} gave no request text.`);
+      if (typeof body !== 'string') throw new Error(word('plugins.provider.no-request', { what, plugin }));
       return body;
     },
     read: (reply: { status: number; text: string }) => {
@@ -90,7 +91,7 @@ export function guardedProvider(p: AiProvider, plugin: string, guarded: Guarded)
         (typeof (r as { content?: unknown }).content === 'string' ||
           typeof (r as { refused?: unknown }).refused === 'string' ||
           typeof (r as { unread?: unknown }).unread === 'string');
-      if (!ok) throw new Error(`${what} of ${plugin} read no answer from the reply.`);
+      if (!ok) throw new Error(word('plugins.provider.no-answer', { what, plugin }));
       return r as ProviderReading;
     },
   });

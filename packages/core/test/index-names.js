@@ -37,7 +37,7 @@
 // Oct 2026). The View menu's folding, merging and routing (`ViewState, startingSwitches, labelsHidden, foldsHiding,
 // linksOf, VIEW_SWITCHES, switchName, SWITCH_SETTINGS, LABEL_SCALE, BUSY_HUB` and their types, 14 Oct 2026). Animated
 // images and pictures on boxes (`imageFacts, imageLink, imagesOf, neverMoves, IMAGE_EXTENSIONS, IMAGE_LIMITS,
-// LIMITS_SAID, REDUCED_WORDS, pastLimit, playRefusal, startOf, PICTURE_MARK, PICTURE_SIZE, pictureFor, picturesFor,
+// limitsSaid, reducedWords, pastLimit, playRefusal, startOf, PICTURE_MARK, PICTURE_SIZE, pictureFor, picturesFor,
 // animationSaid` and their types, 14 Oct 2026). The host loads the files, and the core says what each can do. Links and
 // attachments (`linksIn, linkKind, linkTo, linksHeld, attachmentsOf, noteOf, brokenLinks, withMeant, renamedLinks,
 // applyChanges, safeMarkdown, leavingWords, refusedWords, attachmentType` and their types, 15 Oct 2026). An embedded
@@ -112,7 +112,6 @@ export const VALUES = [
   'LARGE_GRAPH',
   'LAYOUT_LIMITS',
   'LEGEND_CHOICES',
-  'LIMITS_SAID',
   'LINES',
   'LOCKED_AWAY',
   'LayoutRunner',
@@ -142,7 +141,6 @@ export const VALUES = [
   'ProposalReview',
   'READABLE_SCALE',
   'READ_LIMITS',
-  'REDUCED_WORDS',
   'REFUSED',
   'REVIEW_LEVELS',
   'ReviewItems',
@@ -297,6 +295,7 @@ export const VALUES = [
   'layoutSource',
   'leavingWords',
   'legendOf',
+  'limitsSaid',
   'lineDiff',
   'lineInSource',
   'linkChange',
@@ -387,6 +386,7 @@ export const VALUES = [
   'readSource',
   'readStyle',
   'readingOf',
+  'reducedWords',
   'refusal',
   'refusedWords',
   'remoteImagesIn',

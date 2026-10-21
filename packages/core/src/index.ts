@@ -72,7 +72,7 @@ export { imageFacts } from './image-facts.ts';
 export type { ImageFacts, ImageFormat } from './image-facts.ts';
 export { IMAGE_EXTENSIONS, imageLink, imagesOf, neverMoves } from './image-links.ts';
 export type { ImageLink, NamedImage } from './image-links.ts';
-export { IMAGE_LIMITS, LIMITS_SAID, REDUCED_WORDS, pastLimit, playRefusal, startOf } from './image-limits.ts';
+export { IMAGE_LIMITS, limitsSaid, reducedWords, pastLimit, playRefusal, startOf } from './image-limits.ts';
 export type { ImageAt, Start } from './image-limits.ts';
 export { animationSaid } from './export-pictures.ts';
 export type { LoadedImage, PictureLoad, UnreadImage } from './export-pictures.ts';

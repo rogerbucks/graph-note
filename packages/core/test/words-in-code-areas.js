@@ -1,5 +1,7 @@
 // The areas whose words come from the catalogue (editor spec §42, words_catalogue), and the strings kept in their code.
-// words-in-code.test.js reads them. Each area is added here as its words move.
+// words-in-code.test.js reads them. Every file of the core and the hosts is in them now. The named areas below are
+// each one move to the catalogue, held on their own. The rest of the core's kept strings are in words-in-code-kept.js.
+import { CORE_KEPT } from './words-in-code-kept.js';
 
 /** The core's AI: what is sent, its ceilings, choices and refusals. */
 export const AI_AREA = [
@@ -52,64 +54,46 @@ export const STEPS_AREA = [
   'packages/core/src/export-scope.ts',
 ];
 
-/** The folders and files whose words come from the catalogue, from the repository's root. */
+/** The rest of the core: its exports, plug-ins' results, diagram types, layout refusals, images, links and rules. */
+export const REST_AREA = [
+  'packages/core/src/types.ts',
+  'packages/core/src/types-table.ts',
+  'packages/core/src/hosts/refusal-words.ts',
+  'packages/core/src/layout-worker.ts',
+  'packages/core/src/image-limits.ts',
+  'packages/core/src/link-scan.ts',
+  'packages/core/src/completeness.ts',
+  'packages/core/src/style-words.ts',
+  'packages/core/src/export.ts',
+  'packages/core/src/export-plan.ts',
+  'packages/core/src/export-pictures.ts',
+  'packages/core/src/export-data-graphml.ts',
+  'packages/core/src/plugins.ts',
+  'packages/core/src/plugin-calls.ts',
+  'packages/core/src/plugin-sources.ts',
+  'packages/core/src/plugin-diagrams.ts',
+  'packages/core/src/plugin-ai.ts',
+  'packages/core/src/plugin-isolated.ts',
+  'packages/core/src/core-storage.ts',
+];
+
+/**
+ * The folders and files whose words come from the catalogue, from the repository's root: the whole core, and every
+ * host. A folder ends in `/` and holds every file under it.
+ */
 export const AREAS = [
-  'packages/core/src/display/',
-  'packages/core/src/export-write.ts',
+  'packages/core/src/',
   'packages/obsidian/src/',
   'packages/claude-code/page/',
   'packages/claude-code/src/',
   'packages/claude-code/server/',
   'packages/claude-code/bin/',
   'packages/claude-code/mod/hooks/register.tsx',
-  // the core's problems found while reading a note
-  'packages/core/src/partial-read.ts',
-  'packages/core/src/estimates.ts',
-  'packages/core/src/help.ts',
-  'packages/core/src/name-gaps.ts',
-  'packages/core/src/notes.ts',
-  'packages/core/src/links.ts',
-  'packages/core/src/blocks.ts',
-  'packages/core/src/schema-checks.ts',
-  'packages/core/src/schema-names.ts',
-  'packages/core/src/sources.ts',
-  'packages/core/src/strictness.ts',
-  'packages/core/src/suggested-names.ts',
-  'packages/core/src/image-links.ts',
-  'packages/core/src/schema-picture.ts',
-  // the core's problems found while checking a style graph
-  'packages/core/src/style-checks.ts',
-  'packages/core/src/style-choice-checks.ts',
-  'packages/core/src/style-conflicts.ts',
-  'packages/core/src/style-graph.ts',
-  'packages/core/src/style-reader.ts',
-  'packages/core/src/style.ts',
-  'packages/core/src/link-flow.ts',
-  'packages/core/src/picture.ts',
-  'packages/core/src/untangle-saved.ts',
-  // the core's proposals: their cards, checks and refusals
-  'packages/core/src/proposals.ts',
-  'packages/core/src/proposals-apply.ts',
-  'packages/core/src/proposals-review.ts',
-  'packages/core/src/proposals-author.ts',
-  'packages/core/src/proposals-basis.ts',
-  'packages/core/src/proposals-check.ts',
-  'packages/core/src/proposals-judgement.ts',
-  'packages/core/src/proposals-needs.ts',
-  'packages/core/src/proposals-record.ts',
-  'packages/core/src/proposals-statements.ts',
-  'packages/core/src/proposals-text.ts',
-  'packages/core/src/proposals-marks.ts',
-  ...AI_AREA,
-  // the core's editing: its refusals, the inspector and imports
-  ...EDITING_AREA,
-  ...VIEWS_AREA,
-  // the core's steps and paths, and what an export's scope says
-  ...STEPS_AREA,
 ];
 
 /** The strings kept in the code, by file, each with why. `*` keeps every string of the file. */
 export const KEPT = {
+  ...CORE_KEPT,
   // the contract suites a host or a plug-in's developer runs: their test cases and what each says it wanted
   'packages/core/src/display/host-contract.ts': '*',
   'packages/core/src/display/panel-contract.ts': '*',

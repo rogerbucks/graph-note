@@ -13,6 +13,8 @@ import { DIAGRAM_TYPES, pluginTypeOf } from './style-graph.ts';
 import type { Diagram, DiagramType, StyleGraph } from './style-graph.ts';
 import { centreOf, dayOf, loopIn, shapeOf } from './types-shape.ts';
 import type { GraphShape } from './types-shape.ts';
+import { formatList } from './locale-formats.ts';
+import { word } from './words.ts';
 
 export { DIAGRAM_TYPES, pluginTypeOf, shapeOf };
 export type { DiagramType, GraphShape };
@@ -49,8 +51,6 @@ export interface DiagramChoice {
 /** More things than this are too many to read in one drawing (§15, large_way_in). */
 export const LARGE_GRAPH = 50;
 
-const NOTHING = 'there is nothing here to draw';
-
 /** The types tried, in order, when the chosen one stops fitting; the network fits always, so it is the last resort. */
 const NEAREST: Record<DiagramType, DiagramType[]> = {
   network: [],
@@ -62,10 +62,8 @@ const NEAREST: Record<DiagramType, DiagramType[]> = {
   table: [],
 };
 
-/** Words joined as a sentence lists them: "a, b and c". */
-const andList = (xs: readonly string[]): string =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
-const counted = (n: number) => (n === 2 ? 'two' : String(n));
+/** Words joined as a sentence lists them, in the reader's language: "a, b and c". */
+const andList = (xs: readonly string[]): string => formatList([...xs]);
 
 /** Two names in the order a sort by name puts them, as JavaScript compares them (UTF-16 code units). */
 const byName = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
@@ -76,18 +74,21 @@ const byName = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
  */
 function treeAlong(shape: GraphShape, type: string, text: (k: string) => string): string | null {
   const links = shape.links.filter((l) => l.type === type);
-  if (!links.length) return `there is no ${type} link here`;
+  if (!links.length) return word('diagram.tree.no-link', { type });
   const parents = new Map<string, Set<string>>();
   for (const l of links) parents.set(l.to, (parents.get(l.to) ?? new Set()).add(l.from));
   for (const t of shape.things) {
     const ps = [...(parents.get(t.key) ?? [])];
-    if (ps.length > 1) return `${t.text} has ${counted(ps.length)} parents, ${andList(ps.map(text))}`;
+    if (ps.length > 1)
+      return ps.length === 2
+        ? word('diagram.tree.two-parents', { thing: t.text, parents: andList(ps.map(text)) })
+        : word('diagram.tree.parents', { thing: t.text, number: String(ps.length), parents: andList(ps.map(text)) });
   }
   const loop = loopIn(
     shape.things.map((t) => t.key),
     links,
   );
-  return loop ? `it loops back: ${loop.map(text).join(' → ')}` : null;
+  return loop ? word('diagram.tree.loops', { loop: loop.map(text).join(' → ') }) : null;
 }
 
 const no = (type: DiagramType, why: string): TypeFit => ({ type, fits: false, why });
@@ -98,17 +99,17 @@ const yes = (type: DiagramType): TypeFit => ({ type, fits: true });
  * makes one. Of two with as many, the first by name wins, so the choice never hangs on the order written.
  */
 function treeFit(shape: GraphShape, relationship: string | undefined, text: (k: string) => string): TypeFit {
-  if (!shape.links.length) return no('tree', 'a tree needs links, and there are none');
+  if (!shape.links.length) return no('tree', word('diagram.tree.no-links'));
   if (relationship !== undefined) {
     const why = treeAlong(shape, relationship, text);
-    return why ? no('tree', `along ${relationship}, ${why}`) : { ...yes('tree'), relationship };
+    return why ? no('tree', word('diagram.tree.along', { relationship, why })) : { ...yes('tree'), relationship };
   }
   const count = (t: string) => shape.links.filter((l) => l.type === t).length;
   const types = [...new Set(shape.links.map((l) => l.type))].sort((a, b) => count(b) - count(a) || byName(a, b));
   const best = types.find((t) => treeAlong(shape, t, text) === null);
   if (best !== undefined) return { ...yes('tree'), relationship: best };
   const most = types[0] as string;
-  return no('tree', `no relationship makes a tree: along ${most}, ${treeAlong(shape, most, text)}`);
+  return no('tree', word('diagram.tree.none', { relationship: most, why: treeAlong(shape, most, text) ?? '' }));
 }
 
 /**
@@ -116,9 +117,9 @@ function treeFit(shape: GraphShape, relationship: string | undefined, text: (k: 
  * run. No group may be written, as Graphviz's radial layout cannot draw a group's box.
  */
 function radialFit(shape: GraphShape, text: (k: string) => string): TypeFit {
-  if (shape.things.length < 3) return no('radial', 'a radial drawing needs three things or more');
+  if (shape.things.length < 3) return no('radial', word('diagram.radial.three'));
   const group = shape.groups?.[0];
-  if (group) return no('radial', `a radial drawing cannot draw the box of group ${group[0]}`);
+  if (group) return no('radial', word('diagram.radial.group', { group: group[0] }));
   const centre = centreOf(shape),
     near = new Map<string, string[]>();
   for (const l of shape.links) {
@@ -134,28 +135,23 @@ function radialFit(shape: GraphShape, text: (k: string) => string): TypeFit {
         queue.push(n);
       }
   const lone = shape.things.find((t) => !reached.has(t.key));
-  return lone
-    ? no('radial', `a radial drawing needs every thing joined to the centre, ${text(centre)}, and ${lone.text} is not`)
-    : yes('radial');
+  return lone ? no('radial', word('diagram.radial.joined', { centre: text(centre), thing: lone.text })) : yes('radial');
 }
 
 /** Whether lanes fit: every thing of one kind, every group's things of one kind, so it sits in one lane, and two kinds. */
 function lanesFit(shape: GraphShape): TypeFit {
   for (const t of shape.things) {
-    if (!t.kinds.length) return no('lanes', `${t.text} has no kind, so it has no lane`);
-    if (t.kinds.length > 1)
-      return no(
-        'lanes',
-        `${t.text} is of ${counted(t.kinds.length)} kinds, ${andList(t.kinds)}, so it cannot sit in one lane`,
-      );
+    if (!t.kinds.length) return no('lanes', word('diagram.lanes.no-kind', { thing: t.text }));
+    if (t.kinds.length > 1) {
+      const values = { thing: t.text, number: String(t.kinds.length), kinds: andList(t.kinds) };
+      return no('lanes', word(t.kinds.length === 2 ? 'diagram.lanes.two-kinds' : 'diagram.lanes.kinds', values));
+    }
   }
   const kindOf = new Map(shape.things.map((t) => [t.key, t.kinds[0]]));
   for (const [label, keys] of shape.groups ?? [])
     if (new Set(keys.map((k) => kindOf.get(k))).size > 1)
-      return no('lanes', `group ${label} holds things of two kinds`);
-  return new Set(shape.things.map((t) => t.kinds[0])).size < 2
-    ? no('lanes', 'lanes need things of two kinds or more')
-    : yes('lanes');
+      return no('lanes', word('diagram.lanes.group', { group: label }));
+  return new Set(shape.things.map((t) => t.kinds[0])).size < 2 ? no('lanes', word('diagram.lanes.two')) : yes('lanes');
 }
 
 /**
@@ -164,7 +160,8 @@ function lanesFit(shape: GraphShape): TypeFit {
  * date (timeline_fits). A network fits every graph, and with nothing to draw only a network is offered.
  */
 export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
-  if (!shape.things.length) return DIAGRAM_TYPES.map((t) => (t === 'network' ? yes(t) : no(t, NOTHING)));
+  if (!shape.things.length)
+    return DIAGRAM_TYPES.map((t) => (t === 'network' ? yes(t) : no(t, word('diagram.nothing'))));
   const texts = new Map(shape.things.map((t) => [t.key, t.text]));
   const text = (k: string) => texts.get(k) ?? k;
   const loop = loopIn(
@@ -176,15 +173,13 @@ export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
     yes('network'),
     treeFit(shape, relationship, text),
     !shape.links.length
-      ? no('flow', 'a flow needs links, and there are none')
+      ? no('flow', word('diagram.flow.no-links'))
       : loop
-        ? no('flow', `a flow runs one way, and this loops back: ${loop.map(text).join(' → ')}`)
+        ? no('flow', word('diagram.flow.loops', { loop: loop.map(text).join(' → ') }))
         : yes('flow'),
     radialFit(shape, text),
     lanesFit(shape),
-    undated
-      ? no('timeline', `a timeline needs every thing to carry a date, and ${undated.text} carries none`)
-      : yes('timeline'),
+    undated ? no('timeline', word('diagram.timeline.undated', { thing: undated.text })) : yes('timeline'),
     yes('table'),
   ];
 }
@@ -198,24 +193,26 @@ export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
 export function suggestType(fits: readonly TypeFit[], shape: GraphShape): Suggestion {
   const fit = (t: DiagramType) => fits.find((f) => f.type === t && f.fits);
   const n = shape.things.length;
-  if (n > LARGE_GRAPH && fit('table'))
-    return { type: 'table', because: `a graph of ${n} things reads best as a table first` };
-  if (fit('timeline')) return { type: 'timeline', because: 'every thing carries a date' };
+  if (n > LARGE_GRAPH && fit('table')) return { type: 'table', because: word('diagram.because.table', { count: n }) };
+  if (fit('timeline')) return { type: 'timeline', because: word('diagram.because.timeline') };
   const along = fit('tree')?.relationship;
   const touched = (type: string) => new Set(shape.links.filter((l) => l.type === type).flatMap((l) => [l.from, l.to]));
   if (along !== undefined && shape.things.every((t) => touched(along).has(t.key)))
-    return { type: 'tree', because: `each thing has at most one parent along ${along}` };
+    return { type: 'tree', because: word('diagram.because.tree', { relationship: along }) };
   const centre = centreOf(shape);
   const spokes = new Set(shape.links.flatMap((l) => (l.from === centre ? [l.to] : l.to === centre ? [l.from] : [])));
   if (fit('radial') && n >= 4 && shape.things.every((t) => t.key === centre || spokes.has(t.key)))
     return {
       type: 'radial',
-      because: `every thing links to ${shape.things.find((t) => t.key === centre)?.text ?? centre}`,
+      because: word('diagram.because.radial', { centre: shape.things.find((t) => t.key === centre)?.text ?? centre }),
     };
   if (fit('lanes'))
-    return { type: 'lanes', because: `its things are of ${new Set(shape.things.map((t) => t.kinds[0])).size} kinds` };
-  if (fit('flow')) return { type: 'flow', because: 'the links run one way' };
-  return { type: 'network', because: 'a network fits any graph' };
+    return {
+      type: 'lanes',
+      because: word('diagram.because.lanes', { count: new Set(shape.things.map((t) => t.kinds[0])).size }),
+    };
+  if (fit('flow')) return { type: 'flow', because: word('diagram.because.flow') };
+  return { type: 'network', because: word('diagram.because.network') };
 }
 
 /** The type to offer when `type` stops fitting (type_stops_fitting): the first of its neighbours that fits, else a network. */
@@ -299,7 +296,7 @@ export function diagramFor(
   if (!d) return { drawn: 'network' };
   const own = d.plugin === undefined ? null : pluginTypeOf(d.plugin);
   if (d.plugin !== undefined && own) {
-    const why = `the diagram type ${d.plugin} comes from the plug-in ${own.plugin}, which is not here, so the graph is drawn as a network`;
+    const why = word('diagram.plugin-missing', { type: d.plugin, plugin: own.plugin });
     return { drawn: 'network', plugin: { type: d.plugin, plugin: own.plugin, why } };
   }
   const shape = shapeOf(drawing, g, style.nudges),

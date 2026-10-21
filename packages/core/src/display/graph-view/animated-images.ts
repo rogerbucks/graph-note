@@ -13,7 +13,7 @@ import {
   IMAGE_LIMITS,
   imageFacts,
   imagesOf,
-  LIMITS_SAID,
+  limitsSaid,
   neverMoves,
   playRefusal,
   startOf,
@@ -120,7 +120,7 @@ export class AnimatedImage {
     // a photograph too large to read is shown from the vault's own address, never read here
     if (!start.moving && start.plain) this.view.show(this.bytes ? this.movingUrl() : this.found.url, 'plain');
     else if (start.moving) this.play();
-    else void this.hold(start.playable ? start.why : `${start.why} ${LIMITS_SAID}`, !start.playable);
+    else void this.hold(start.playable ? start.why : `${start.why} ${limitsSaid()}`, !start.playable);
   }
 
   /** Pause or Play, as pressed: Play refused, saying why, past a limit or while as many as may move already do. */

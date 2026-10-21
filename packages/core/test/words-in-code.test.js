@@ -1,15 +1,13 @@
-// No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). Those
-// areas are the hosts, the display layer, the core's reading and style problems, its proposals, its AI, its editing and
-// its views. Each is added as its words move. Each word comes from the catalogue by key, so a translation reaches it. The
-// check reads every string the code holds. It flags any that reads as words. That is two plain words with a space, or a
-// word that starts a control's text, name or hint. It is also a short template that is a sentence, as `Graph ${g}: ${n}.`
-// is. Or it is a joining word alone between spaces, as the ' or ' of a list joined in code is.
-// The few kept in the code are listed, each with why.
+// No words the person reads are written in the code (editor spec §42, words_catalogue). That covers the whole core and
+// every host. Each word comes from the catalogue by key, so a translation reaches it. The check reads every string the
+// code holds. It flags any that reads as words. That is two plain words with a space, or a word that starts a control's
+// text, name or hint. It is also a short template that is a sentence, as `Graph ${g}: ${n}.` is. Or it is a joining
+// word alone between spaces, as the ' or ' of a list joined in code is. The few kept in the code are listed, with why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import ts from 'typescript';
-import { AI_AREA, AREAS, EDITING_AREA, KEPT, STEPS_AREA, VIEWS_AREA } from './words-in-code-areas.js';
+import { AI_AREA, AREAS, EDITING_AREA, KEPT, REST_AREA, STEPS_AREA, VIEWS_AREA } from './words-in-code-areas.js';
 
 const ROOT = new URL('../../../', import.meta.url);
 
@@ -162,5 +160,10 @@ describe('the words in the code', () => {
   // proves: words_catalogue
   test('the core’s step and path words, their problems, refusals, labels and animation, come from the catalogue', () => {
     assert.deepEqual(saidInCode(STEPS_AREA), [], 'say each by a key of steps-source-words.ts, with word()');
+  });
+
+  // proves: words_catalogue
+  test('the rest of the core’s words, its exports, plug-ins’ results, diagram types and layout refusals, come from the catalogue', () => {
+    assert.deepEqual(saidInCode(REST_AREA), [], 'say each by a key of drawing-, plugins- or export-source-words.ts');
   });
 });

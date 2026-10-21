@@ -1,10 +1,14 @@
 // The completeness report behind the problems badge (spec §8). It covers each completeness rule the graph declares (§25
 // of the graph spec). It says what is covered, what is deferred and overdue, and what is missing, with a fix for each
 // gap.
-import { test } from 'node:test';
+import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { completenessReport } from '../src/completeness.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const GRAPH = `// graph: reader
 (q:Question {title: 'Which device?'}),
@@ -64,4 +68,16 @@ test('a rule that cannot be read says what it lacks', () => {
     '2026-10-07',
   );
   assert.match(r.rules[0].malformed, /must carry relationship, direction, min or max/);
+});
+
+// proves: words_catalogue
+test('how much a rule covers, or that it cannot be checked, is said in the person’s language', () => {
+  setLanguage('en-XA');
+  const report = completenessReport(readNote([GRAPH]), 'reader', '2026-10-07');
+  const bad = completenessReport(
+    readNote(["// graph: g\n(a:T),\n(bad:Cardinality {kind: 'T', says: 'x'})"]),
+    'g',
+    '2026-10-07',
+  );
+  for (const words of [report.rules[0].summary, bad.rules[0].summary]) assert.ok(isPseudoWord(words), words);
 });

@@ -3,8 +3,10 @@
 // - a GQL block the profile reads as written;
 // - CSV as RFC 4180 has it, typed by its header and safe to open in a spreadsheet;
 // - GraphML that XML reads as written, or a refusal where XML cannot hold a character.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 import { readNote } from '../src/drawing.ts';
 import { dataText, exportedData, isDataFormat } from '../src/export-data.ts';
 import { exportScope } from '../src/export-scope.ts';
@@ -265,6 +267,23 @@ describe('GraphML', () => {
 });
 
 const readCsvOrGql = (format, text) => (format === 'csv' ? readCsv(text) : readGql(text));
+
+describe('why GraphML refuses a text, in the person’s language', () => {
+  afterEach(() => setLanguage(SOURCE_LANGUAGE));
+
+  // proves: words_catalogue
+  test('the refusal is said in it, for a thing’s property, a link’s property and a thing’s id', () => {
+    setLanguage('en-XA');
+    for (const note of [
+      "// graph: g\n(a:A {name: 'A', bell: 'ring\\bring'})",
+      "// graph: g\n(a:A),\n(b:B),\n(a)-[:T {bell: 'ring\\bring'}]->(b)",
+    ])
+      assert.throws(
+        () => dataText(dataOfNote(note, 'g'), 'graphml', INFO),
+        (e) => isPseudoWord(e.message) && /\bbell\b/.test(e.message),
+      );
+  });
+});
 
 describe('a view’s faded context, when it is asked for', () => {
   const r = readNote([

@@ -22,6 +22,36 @@ export const EXPORT_SOURCE_WORDS = {
   'export.scope.graph-empty': 'Graph {graph} has no things in this note: add some, or pick another graph',
   'export.scope.view-empty': 'View {view} matches nothing: {why}',
   'export.scope.view-empty-plain': 'View {view} matches nothing: change the view',
+  // why an export is not made, or asked about first (export.ts, export-plan.ts)
+  'export.nothing': 'There is nothing to export: {why}',
+  'export.scope-empty': 'the scope is empty',
+  'export.animation-not-made': 'The animated SVG was not made: {why}. {fix}.',
+  'export.ask.unknown':
+    '{note} is classified "{given}", which is not one of the classifications set ({levels}), so it counts as above every level, {level} included.',
+  'export.ask.level-gone':
+    '{note} is classified {given}, and the level set for asking before an export, {level}, is no longer one of the classifications, so every classified note is asked about.',
+  'export.ask.above': '{note} is classified {given}, above {level}, the level set for asking before an export.',
+  'export.ask.anyway': 'Export it anyway?',
+  'export.graphml.not-held':
+    '{where} holds a character GraphML cannot hold (U+{code}), so it cannot be exported as GraphML without losing it: export it as a GQL block or as CSV, which hold it',
+  'export.graphml.thing-id': 'A thing’s id, {id},',
+  'export.graphml.thing-property': 'Thing {id}’s {name}',
+  'export.graphml.link-property': 'The link {from} {type} {to}’s {name}',
+  // what an image's frame says, in UK English as its bytes (sourceWord), and the same in the notice (export.ts)
+  'export.footer': 'From {note}, exported {date}',
+  'export.reading-faded': '{reading} (the rest of the graph is faded)',
+  // what was done with each picture on a box (export-pictures.ts)
+  'export.picture.not-drawn': '{thing}: not drawn, as {why}',
+  'export.picture.too-large': '{thing}: {name} left out, as it is {size}, over {most}',
+  'export.picture.not-embedded': '{thing}: not drawn, as {name} is not of an image type an export embeds',
+  'export.picture.png': 'a PNG cannot move',
+  'export.picture.moving-already': '{moving} animated images already move in it',
+  'export.picture.moving': '{thing}: {name} kept moving, and still under reduced motion',
+  'export.picture.moving-always':
+    '{thing}: {name} kept moving, and moving under reduced motion too, as its first frame could not be made',
+  'export.picture.first-frame': '{thing}: {name} reduced to its first frame, as {why}',
+  'export.picture.left-out': '{thing}: {name} left out, as {why} and its first frame could not be made',
+  'export.animated-images': 'Animated images: {said}.',
   'export.theme': 'Theme',
   'export.anyway': 'Export anyway',
   'export.do-not': 'Do not export',

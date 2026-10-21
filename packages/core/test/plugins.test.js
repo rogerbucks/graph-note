@@ -1,7 +1,9 @@
 // The plug-in interface (editor spec §43, plugin_interface): one typed, versioned way in, which the built-in data
 // exports and storage use too. A plug-in's own export, storage or command is offered through it beside them.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 import { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS, DATA_FORMATS, dataText } from '../src/export-data.ts';
 import { memoryStorage } from '../src/note-storage.ts';
@@ -139,5 +141,47 @@ describe('the plug-in interface', () => {
     registry.plugins().pop();
     assert.equal(registry.exporters().length, 1);
     assert.deepEqual(registry.plugins(), ['acme.names']);
+  });
+});
+
+describe('what a plug-in’s call says when it fails, in the person’s language', () => {
+  afterEach(() => setLanguage(SOURCE_LANGUAGE));
+
+  /** A plug-in whose export throws, whose command runs too long, and whose source and diagram give back nothing usable. */
+  const faulty = (clock) => ({
+    id: 'acme.faulty',
+    version: '1.0.0',
+    api: PLUGIN_API,
+    uses: ['exports', 'commands', 'sources', 'diagrams'],
+    register: (points) => {
+      const write = () => {
+        throw new Error('out of ink');
+      };
+      points.exports.add({ format: 'ink', title: 'Ink', extension: 'txt', mime: 'text/plain', write });
+      points.commands.add({ id: 'acme.faulty.go', title: 'Go', run: () => void (clock.now += 5000) });
+      points.sources.add({ scheme: 'faulty', title: 'Faulty', read: () => ({ text: 'x'.repeat(600_000) }) });
+      points.diagrams.add({ type: 'acme.faulty.chart', title: 'Chart', draw: () => 'no marks' });
+    },
+  });
+
+  // proves: words_catalogue
+  test('nothing adds it, it failed, ran too long, was not run, or gave back nothing usable: each is said in it', async () => {
+    setLanguage('en-XA');
+    const clock = { now: 0 };
+    const registry = pluginRegistry({ now: () => clock.now });
+    registry.register(faulty(clock));
+    const shape = { things: [], links: [] };
+    const said = [
+      registry.writeData('none', DATA, INFO).message,
+      registry.writeData('ink', DATA, INFO).message,
+      (await registry.readGraph('faulty', 'x', ['Public'])).message,
+      (await registry.drawDiagram('acme.faulty.chart', shape, { width: 100, height: 100 })).message,
+      (await registry.drawDiagram('acme.faulty.chart', shape, { width: 0, height: 0 })).message,
+      registry.runCommand('acme.faulty.go').message,
+      registry.runCommand('acme.faulty.go').message,
+      registry.stopped()[0].why,
+    ];
+    for (const words of said) assert.ok(isPseudoWord(words), words);
+    assert.throws(() => registry.register(faulty(clock)), /^Error: The plug-in acme\.faulty was not installed/);
   });
 });
