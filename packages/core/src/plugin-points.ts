@@ -65,14 +65,14 @@ export const HOST_ABILITIES = ['notice', 'settings', 'secrets', 'files'] as cons
 export type HostAbility = (typeof HOST_ABILITIES)[number];
 
 /**
- * What each ability is: a brief notice, the plug-in's own settings, the host's secrets, and its notes. They are the
+ * What each ability is: a brief notice, the plug-in's own settings and secrets, and the host's notes. They are the
  * host's own (display/host.ts, `Host`), which the core does not import, so the shapes are said again here.
  */
 export interface HostAbilities {
   notice: (message: string) => void;
   /** The plug-in's settings: one JSON value, kept by the host for this plug-in alone. */
   settings: { load: () => Promise<unknown>; save: (value: unknown) => Promise<void> };
-  /** The host's secrets, each read by its name. */
+  /** The plug-in's own secrets, each read by its name under the plug-in's id: `acme.one.token`. */
   secrets: { get: (name: string) => string | null | Promise<string | null> };
   files: NoteStorage;
 }

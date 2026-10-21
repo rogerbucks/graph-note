@@ -229,6 +229,21 @@ describe('a plug-in’s manifest and limits', () => {
     return given.host.settings.save({ on: true }).then(() => assert.deepEqual(kept, { 'acme.one': { on: true } }));
   });
 
+  test('a plug-in reads only the secrets under its own id, never an AI key or another plug-in’s (TRUST-15)', async () => {
+    const store = { 'acme.one.token': 'mine', 'openai-key': 'ai', 'acme.two.token': 'theirs', 'acme.one': 'bare' };
+    const asked = [];
+    const secrets = { get: (name) => (asked.push(name), store[name] ?? null) };
+    let given;
+    pluginRegistry({ host: { secrets } }).register(
+      plugin({ uses: [], abilities: ['secrets'], register: (p) => (given = p) }),
+    );
+    assert.equal(await given.host.secrets.get('acme.one.token'), 'mine');
+    for (const name of ['openai-key', 'acme.two.token', 'acme.one', 'acme.one.', 'acme.onex.token'])
+      assert.equal(await given.host.secrets.get(name), null, `${name} is not the plug-in’s own`);
+    assert.deepEqual(asked, ['acme.one.token'], 'the host is never asked for a secret that is not the plug-in’s');
+    assert.ok(Object.isFrozen(given.host.secrets));
+  });
+
   test('a plug-in that names no host ability is given none', () => {
     let given;
     pluginRegistry({ host: { notice: () => {} } }).register(plugin({ uses: [], register: (p) => (given = p) }));

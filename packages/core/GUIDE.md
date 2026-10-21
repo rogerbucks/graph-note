@@ -930,10 +930,13 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     `CORE_STORAGE` in note-storage.ts, keeps notes in memory.
   - Its fourth, `commands`, adds a command (`PluginCommand`), named under the plug-in's id and run by `runCommand`.
   - Its fifth, `panels`, adds a panel (`PluginPanel`), drawn by `showPanel` into an element the host gives.
-  - A manifest also names the host's abilities it uses (`HOST_ABILITIES`): a notice, its own settings, the secrets and
-    the notes. It is given those alone, as `points.host`. One the host does not offer (`HostOffer`) is refused.
+  - A manifest also names the host's abilities it uses (`HOST_ABILITIES`): a notice, its own settings, its own secrets
+    and the notes. It is given those alone, as `points.host`. One the host does not offer (`HostOffer`) is refused.
+  - Its secrets are only those named under its id, such as `acme.one.token`. Any other name gives null, so it never
+    reads an AI model's key or another plug-in's (TRUST-15).
   - A call that runs longer than `PLUGIN_TIME_LIMIT` is named and its answer dropped. Its plug-in is then stopped, and
-    `stopped()` lists it. A host may set its own limit and clock (`RegistryOptions`).
+    `stopped()` lists it. A host may set its own limit and clock (`RegistryOptions`). The time is read after the call
+    returns, so a call that never returns is not stopped yet (TRUST-14).
 - `plugin-points.ts` — what a plug-in adds through each point, the host's abilities, and why each is refused.
 - `plugins-contract.ts` — the contract suite of each extension point (plugin_contract_suites).
   - `exporterContract`: the checks a data export is held to on `sampleExports`, which the built-ins pass.
