@@ -30,10 +30,10 @@ export type { DataExporter, HostAbilities, HostAbility, PanelRoot, PluginCommand
 export type { PluginSource, PluginStep, GivenGraph, PluginPanel, StorageBackend } from './plugin-points.ts';
 export { HOST_ABILITIES } from './plugin-points.ts';
 import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
+import { POINT_VERSIONS, pointsUsed } from './plugin-versions.ts';
 import type { ThemeToken } from './theme-tokens.ts';
 
-/** The version of the plug-in interface; a plug-in built for another is refused. */
-export const PLUGIN_API = '1';
+export { PLUGIN_API, POINT_VERSIONS } from './plugin-versions.ts';
 
 /** The extension points a plug-in may use, as its manifest names them. */
 export const EXTENSION_POINTS = [
@@ -75,8 +75,8 @@ export interface ThoughtKnotPlugin {
   version: string;
   /** The version of the plug-in interface it was built for. */
   api: string;
-  /** The extension points it uses: its manifest. */
-  uses: ExtensionPoint[];
+  /** The extension points it uses, its manifest, each as `diagrams` or with the version built for, `diagrams@1.0`. */
+  uses: (ExtensionPoint | `${ExtensionPoint}@${string}`)[];
   /** The host's abilities it uses, also in its manifest; none unless named. */
   abilities?: HostAbility[];
   /** Adds what it brings, through the points it is given. */
@@ -118,6 +118,8 @@ export interface RegistryOptions {
   timeLimit?: number;
   /** The time now, in milliseconds; `Date.now` unless set. */
   now?: () => number;
+  /** The version of each extension point this host has; `POINT_VERSIONS` unless set. */
+  pointVersions?: Partial<Record<ExtensionPoint, string>>;
 }
 
 /** A plug-in that was stopped, and why. */
@@ -193,6 +195,7 @@ type Problem<T> = (t: T, pluginId: string, taken: Map<string, string>) => string
 /** A registry with no plug-ins installed yet. */
 export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const { host = {}, timeLimit = PLUGIN_TIME_LIMIT, now = Date.now } = options;
+  const versions = { ...POINT_VERSIONS, ...options.pointVersions };
   const installed: string[] = [];
   const exporters: DataExporter[] = [];
   const owner = new Map<string, string>();
@@ -233,10 +236,9 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       if (!ID.test(plugin.id)) refuse('its id must be dotted lower-case words, such as acme.mermaid-export');
       if (installed.includes(plugin.id)) refuse('a plug-in with that id is installed already');
       if (!SEMVER.test(plugin.version)) refuse(`its version "${plugin.version}" is not major.minor.patch`);
-      if (plugin.api !== PLUGIN_API)
-        refuse(`it was built for version ${plugin.api} of the interface, not ${PLUGIN_API}`);
-      const unknown = plugin.uses.filter((p) => !(EXTENSION_POINTS as readonly string[]).includes(p));
-      if (unknown.length) refuse(`its manifest names extension points that do not exist: ${unknown.join(', ')}`);
+      const named = pointsUsed(plugin, versions);
+      if (typeof named === 'string') return refuse(named);
+      const uses = (p: ExtensionPoint) => named.includes(p);
       const abilities = plugin.abilities ?? [];
       const strange = abilities.filter((a) => !(HOST_ABILITIES as readonly string[]).includes(a));
       if (strange.length) refuse(`its manifest names host abilities that do not exist: ${strange.join(', ')}`);
@@ -251,7 +253,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const addedCommands = shelf<PluginCommand>('id');
       const addedPanels = shelf<PluginPanel>('id');
       const points: ExtensionPoints = {};
-      if (plugin.uses.includes('exports'))
+      if (uses('exports'))
         points.exports = {
           add: (e) => {
             const why = exporterProblem(e, taken);
@@ -260,7 +262,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
             added.push({ ...e });
           },
         };
-      if (plugin.uses.includes('theme'))
+      if (uses('theme'))
         points.theme = Object.freeze({
           core,
           add: (t: ThemeToken) => {
@@ -281,7 +283,6 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
           mine.items.push(copy(t));
         },
       });
-      const uses = (p: ExtensionPoint) => plugin.uses.includes(p);
       const addedSources = shelf<PluginSource>('scheme');
       const addedSteps = shelf<PluginStep>('id');
       const addedProviders = shelf<AiProvider>('name');

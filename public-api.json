@@ -2007,7 +2007,7 @@
           "value: (start: Start, moving: number) => string | null"
         ],
         "PLUGIN_API": [
-          "value: '1'"
+          "value: '1.1'"
         ],
         "PLUGIN_TIME_LIMIT": [
           "value: 2000"
@@ -2116,6 +2116,9 @@
           "height: number",
           "scale: number",
           "width: number"
+        ],
+        "POINT_VERSIONS": [
+          "value: Readonly<Record<'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai' | 'diagrams', string>>"
         ],
         "pointerTo": [
           "value: (box: Bounds, view: View, viewport: Size, clear?: number) => Pointing | null"
@@ -2333,6 +2336,7 @@
           "interface",
           "host?: HostOffer | undefined",
           "now?: (() => number) | undefined",
+          "pointVersions?: Partial<Record<'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai' | 'diagrams', string>> | undefined",
           "timeLimit?: number | undefined"
         ],
         "remoteImagesIn": [
@@ -2992,7 +2996,7 @@
           "api: string",
           "id: string",
           "register: (points: ExtensionPoints) => void",
-          "uses: Array<'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai' | 'diagrams'>",
+          "uses: Array<'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai' | 'diagrams' | `exports@${string}` | `theme@${string}` | `storage@${string}` | `commands@${string}` | `panels@${string}` | `sources@${string}` | `steps@${string}` | `ai@${string}` | `diagrams@${string}`>",
           "version: string"
         ],
         "Threshold": [

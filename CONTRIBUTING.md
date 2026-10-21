@@ -452,6 +452,9 @@ These test behaviour across modules, or the repository itself, so they are named
   `packages/core/src/storage-contract.ts` (editor spec §41, storage_contract). The backends are an Obsidian vault, a
   plain folder and a VS Code workspace, and memory. A new backend joins the list in this file. Encryption, sync and
   history plug in as layers (`layered` in `note-storage.ts`), and a backend with layers on passes too.
+- `test/sample-plugin.test.js` — the sample plug-in outside the packages, `examples/sample-plugin`, runs as a host
+  runs one it did not ship (API-10). It loads in a real thread with no network, and each thing it adds passes its
+  point's contract over the port.
 - `test/rtl.test.js` — the style sheets say sides by reading direction (`margin-inline-start`, `inset-inline-end`,
   `text-align: start`), so the interface mirrors in a right-to-left language. The only rules on a physical side are
   those placed at a point measured on the screen, each listed with why. Each view's root reads in the host's direction

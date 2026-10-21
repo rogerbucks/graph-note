@@ -701,7 +701,8 @@
       "plugin_diagram_type_named",
       "trust_diagram_type_data",
       "trust_source_joined",
-      "trust_plugin_isolated"
+      "trust_plugin_isolated",
+      "plugin_point_versions"
     ]
   },
   "U1": {

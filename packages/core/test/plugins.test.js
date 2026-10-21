@@ -28,7 +28,7 @@ const NAMES = {
 
 describe('the plug-in interface', () => {
   test('it is versioned, and its extension points are the data exports, the theme, storage, commands, panels, graph sources and steps, and AI providers', () => {
-    assert.equal(PLUGIN_API, '1');
+    assert.equal(PLUGIN_API, '1.1');
     assert.deepEqual(EXTENSION_POINTS, [
       'exports',
       'theme',
