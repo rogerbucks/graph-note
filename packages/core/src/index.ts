@@ -177,7 +177,7 @@ export type { DataInfo, ExportedData } from './export-data-model.ts';
 export { EXTENSION_POINTS, HOST_ABILITIES, PLUGIN_API, PLUGIN_TIME_LIMIT, pluginRegistry } from './plugins.ts';
 export { POINT_VERSIONS } from './plugins.ts';
 export { currentLocale, DEFAULT_LOCALE, formatCount, formatDay, formatInstant } from './locale-formats.ts';
-export { formatList, formatSize, setLocale, sortedForReader } from './locale-formats.ts';
+export { formatList, formatSeries, formatSize, setLocale, sortedForReader } from './locale-formats.ts';
 export type { DataExporter, ExtensionPoint, ExtensionPoints, ThoughtKnotPlugin, PluginRegistry } from './plugins.ts';
 export type { PluginCommand, PluginResult, RegistryOptions, StorageBackend, StoppedPlugin } from './plugins.ts';
 export type { HostAbilities, HostAbility, HostOffer, PanelRoot, PluginPanel } from './plugins.ts';
@@ -307,7 +307,7 @@ export type {
 export { CLAUDE, claudeGate, classificationOf, noteClassification } from './claude-gate.ts';
 export type { Gate, GateSettings, NoteClassification } from './claude-gate.ts';
 export { sha256 } from './ai-digest.ts';
-export { AI_PURPOSES, endpointProblem, modelChoices } from './ai-choice.ts';
+export { AI_PURPOSES, endpointProblem, modelChoices, purposeWords } from './ai-choice.ts';
 export type { HostAi, ModelChoice } from './ai-choice.ts';
 export type { ScopeChoice } from './ai-scope.ts';
 export {

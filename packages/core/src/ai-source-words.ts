@@ -25,6 +25,9 @@ export const AI_SOURCE_WORDS = {
   'ai.model.matrix': '{purpose}; held to the matrix row {row}.',
   'ai.model.ceiling': '{purpose}; sent notes up to {ceiling}.',
   'ai.model.for-proposing': '{name}, for proposing changes',
+  'ai.purpose.research': 'Research questions',
+  'ai.purpose.proposing': 'Proposing changes',
+  'ai.purpose.restricted': 'Restricted processing',
   'ai.matrix-unread':
     'The matrix note could not be read, so nothing is sent: check the note named in the settings, then press Show what will be sent again.',
   'ai.exactly': 'Exactly this is sent, with these headers, and only once you choose to send it:',

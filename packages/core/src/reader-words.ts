@@ -6,6 +6,7 @@
 // Matching a code's own template is safe: the template never changes, unlike other English text. A code it does not
 // know, or words that do not fit their template, are said as the reader gave them, so nothing is lost.
 import TABLE from '../../graph-spec/src/reader/problem-codes.json' with { type: 'json' };
+import { formatCount, formatSeries } from './locale-formats.ts';
 import { READER_KEYS } from './reader-source-words.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
@@ -84,14 +85,38 @@ export function readerKeys(code: string | undefined): { message: WordKey; fix: W
   return { message, fix: `${message}.fix` as WordKey };
 }
 
+/** The codes whose sizes and limits are numbers, written by the reader in plain digits. */
+const NUMBERS: Record<string, readonly string[]> = {
+  GN601: ['size', 'limit'],
+  GN602: ['limit'],
+  GN603: ['limit'],
+  GN604: ['limit'],
+  GN605: ['limit'],
+};
+
+/**
+ * `values` as the person reads them, for a problem with code `code`. A list the reader joined with ", " is joined the
+ * locale's way. A number is grouped as the locale groups digits. `count` stays a number: the word picks its form by it.
+ */
+function shownValues(code: string, values: ReaderValues): ReaderValues {
+  const shown = { ...values };
+  if (code === 'GN302' && typeof shown.types === 'string') shown.types = formatSeries(shown.types.split(', '));
+  for (const name of NUMBERS[code] ?? []) {
+    const value = shown[name];
+    if (typeof value === 'string' && /^\d+$/.test(value)) shown[name] = formatCount(Number(value));
+  }
+  return shown;
+}
+
 /**
  * A reader problem's message and fix, in the person's language: its code's words, filled with its own values. When
  * the code is not known, or its words do not fit their template, they are the reader's own words.
  */
 export function readerWords(problem: ReaderProblem): { message: string; fix: string } {
   const keys = readerKeys(problem.code);
-  const values = keys ? readerValues(problem) : null;
-  if (!keys || !values) return { message: problem.msg, fix: problem.fix };
+  const found = keys ? readerValues(problem) : null;
+  if (!keys || !found) return { message: problem.msg, fix: problem.fix };
+  const values = shownValues(problem.code ?? '', found);
   return { message: word(keys.message, values), fix: word(keys.fix, values) };
 }
 

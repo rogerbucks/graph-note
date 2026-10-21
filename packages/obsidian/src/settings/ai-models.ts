@@ -3,7 +3,7 @@
 // reaches the vault: the plugin's saved settings hold only that name.
 import { SecretComponent } from 'obsidian';
 import type { App, SettingDefinitionList, SettingTab } from 'obsidian';
-import { AI_PURPOSES, aiModel, endpointProblem, word } from '@thoughtknot/core';
+import { AI_PURPOSES, aiModel, endpointProblem, formatSeries, purposeWords, word } from '@thoughtknot/core';
 import type { AiModel, MatrixRow, Settings } from '@thoughtknot/core';
 import { matrixControls, switchIsOn, switchedClass, withSwitch } from './ai-matrix-controls';
 import type ThoughtKnotPlugin from '../main';
@@ -11,7 +11,11 @@ import type ThoughtKnotPlugin from '../main';
 /** Each text field of a model's page, with its name and sentence, said in the person's language when the page is drawn. */
 const texts = (): [keyof AiModel, string, string][] => [
   ['name', word('models.name'), ''],
-  ['purpose', word('models.purpose'), word('models.purpose.sentence', { purposes: AI_PURPOSES.join(', ') })],
+  [
+    'purpose',
+    word('models.purpose'),
+    word('models.purpose.sentence', { purposes: formatSeries(AI_PURPOSES.map(purposeWords)) }),
+  ],
   ['model', word('models.model'), word('models.model.sentence')],
   ['endpoint', word('models.endpoint'), word('models.endpoint.sentence')],
 ];
@@ -36,7 +40,11 @@ export function aiModelList(
       name: word('models.page', { n: i + 1 }),
       desc: [
         m.name
-          ? word('models.said', { name: m.name, purpose: m.purpose || word('models.no-purpose'), ceiling: m.ceiling })
+          ? word('models.said', {
+              name: m.name,
+              purpose: purposeWords(m.purpose) || word('models.no-purpose'),
+              ceiling: m.ceiling,
+            })
           : word('models.unnamed'),
         // a ceiling no longer among the classifications is kept as written, and said, until it is chosen again
         ...(s.classifications.includes(m.ceiling) ? [] : [word('models.ceiling-gone', { ceiling: m.ceiling })]),
