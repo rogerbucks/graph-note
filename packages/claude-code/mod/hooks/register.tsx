@@ -32,13 +32,11 @@ import {
   sayStopped,
   settingsFrom,
   viewOf,
+  word,
 } from './graph.js';
 
 const PANE = 'graph';
 const EDITOR_PANE = 'graph-editor';
-const USAGE = 'Name a note to draw: /graph <path to a note>, quoted if it has spaces.';
-const EDITOR_USAGE = 'No editor is running. /graph edit <path to a note> starts one.';
-const NO_PICTURES = 'This surface cannot draw pictures, so the graph is shown as text. The desktop app draws it.';
 const PROPOSE = 'mcp__thoughtknot__propose';
 const PROPOSE_TOOL =
   'Propose changes to the graph of the note open in the ThoughtKnot editor. Nothing is applied: the changes wait on a card ' +
@@ -128,7 +126,7 @@ async function viewAt($: EngineInterface, path: string): Promise<GraphView> {
   try {
     note = await $.fs.read(path);
   } catch (err) {
-    const why = `Could not read ${path}: ${err instanceof Error ? err.message : String(err)}`;
+    const why = word('cc.could-not-read', { path, why: err instanceof Error ? err.message : String(err) });
     return { title: path, alt: why, lines: [why] };
   }
   const run = (argv: readonly string[], stdin: string, timeoutMs: number) => $.process.run(argv, { stdin, timeoutMs });
@@ -143,12 +141,12 @@ async function viewAt($: EngineInterface, path: string): Promise<GraphView> {
  */
 async function drawNote($: EngineInterface, path: string): Promise<string> {
   const gate = await (await launcherOf($)).gate(path, await $.session.cwd());
-  if ('refuse' in gate) return `${gate.refuse} Nothing was drawn.`;
-  if ('ask' in gate) return `${gate.ask} Nothing was drawn: /graph edit ${path} asks first.`;
+  if ('refuse' in gate) return word('cc.refused-not-drawn', { why: gate.refuse });
+  if ('ask' in gate) return word('cc.asks-not-drawn', { why: gate.ask, path });
   const shown = await viewAt($, path);
   await update($, view, () => shown);
-  await $.ui.open({ id: PANE, title: `Graph: ${shown.title}` });
-  return shown.why ? `${shown.alt} — shown as text. ${shown.why}` : shown.alt;
+  await $.ui.open({ id: PANE, title: word('cc.pane-title', { title: shown.title }) });
+  return shown.why ? word('cc.shown-as-text', { alt: shown.alt, why: shown.why }) : shown.alt;
 }
 
 export const register: Register = (on) => {
@@ -190,7 +188,7 @@ export const register: Register = (on) => {
   }).catch(($, e, next) => (next.called ? next(e) : { deny: DATA_FOLDER_REFUSAL }));
 
   on('session.start', async ($, e, next) => {
-    await $.command.register({ name: 'graph', description: "Draw a graph note's first graph in a pane" });
+    await $.command.register({ name: 'graph', description: word('cc.command') });
     // the one tool Claude has here: to propose changes to the note open in the editor. It writes nothing itself.
     await $.tool.register({
       name: 'propose',
@@ -210,7 +208,7 @@ export const register: Register = (on) => {
   on('command.run', { command: 'graph' }, async ($, e) => {
     if (e.args.trim() === 'stop') {
       const stopped = launcher ? await launcher.stop('/graph stop') : false;
-      return { text: stopped ? sayStopped('/graph stop') : EDITOR_USAGE };
+      return { text: stopped ? sayStopped('/graph stop') : word('cc.editor.usage') };
     }
     const confirming = confirmArgs(e.args);
     const editing = editArgs(e.args);
@@ -226,17 +224,17 @@ export const register: Register = (on) => {
         return { text: sayEdit(opened) };
       }
       await update($, editorChanges, (n) => n + 1);
-      await $.ui.open({ id: EDITOR_PANE, title: 'Graph editor', focus: true });
+      await $.ui.open({ id: EDITOR_PANE, title: word('cc.editor.pane-title'), focus: true });
       return { text: sayEdit(opened) };
     }
     const path = notePath(e.args);
-    if (!path) return { text: USAGE };
+    if (!path) return { text: word('cc.usage') };
     return { text: await drawNote($, path) };
   });
 
   // the session ending ends its server
   on('session.end', async ($, e, next) => {
-    await launcher?.stop('the session ended');
+    await launcher?.stop(word('server.session-ended'));
     return next(e);
   });
 
@@ -247,14 +245,14 @@ export const register: Register = (on) => {
     const href = launcher?.link ?? null;
     if (href === null) {
       const ended = launcher?.ended;
-      return <Text dimColor>{ended ? sayStopped(ended) : EDITOR_USAGE}</Text>;
+      return <Text dimColor>{ended ? sayStopped(ended) : word('cc.editor.usage')}</Text>;
     }
     return (
       <Box flexDirection="column">
-        <Text>Open this address in the browser pane to edit the note:</Text>
-        <Link href={href} label="Open the graph editor" />
-        <Button label="Copy the address" onPress={(press) => $.ui.copy({ text: href, surface: press.surface })} />
-        <Text dimColor>It holds a secret for this session only. It stops when the session ends, or /graph stop.</Text>
+        <Text>{word('cc.editor.open-address')}</Text>
+        <Link href={href} label={word('cc.editor.open-link')} />
+        <Button label={word('cc.editor.copy')} onPress={(press) => $.ui.copy({ text: href, surface: press.surface })} />
+        <Text dimColor>{word('cc.editor.secret')}</Text>
       </Box>
     );
   });
@@ -263,13 +261,13 @@ export const register: Register = (on) => {
     const elements = $.ui.resolve(e);
     const { Box, Text } = elements;
     const shown = await read($, view);
-    if (!shown) return <Text dimColor>{USAGE}</Text>;
+    if (!shown) return <Text dimColor>{word('cc.usage')}</Text>;
 
     // the terminal draws no Svg (Image and Raster only), though `'Svg' in` its table holds: the text stands in there
     const Svg = e.surface !== 'terminal' && 'Svg' in elements ? elements.Svg : undefined;
     if (Svg && shown.svg) return <Svg source={shown.svg} alt={shown.alt} />;
     // never text with no reason: a graph that could be drawn says why it is text here
-    const why = shown.why ?? (shown.svg ? NO_PICTURES : undefined);
+    const why = shown.why ?? (shown.svg ? word('cc.no-pictures') : undefined);
     return (
       <Box flexDirection="column">
         {why ? <Text color="warning">⚠ {why}</Text> : null}
