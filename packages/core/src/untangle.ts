@@ -9,8 +9,8 @@ import type { FocusDepth, FocusEdge, Kept } from './focus.ts';
 import { propertiesOf } from './inspector.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
 import type { LegendChoice } from './untangle-saved.ts';
+import { word } from './words.ts';
 
-const stepsWord = (n: number): string => `${n} step${n === 1 ? '' : 's'}`;
 const SEPARATOR = ' · ';
 
 /** The things within `steps` links of a thing and the links among them, either way along each: the drawing filtered to them. */
@@ -25,7 +25,7 @@ export function neighbourhood(edges: readonly FocusEdge[], key: string, steps: F
 
 /** What the banner over a filtered drawing says: the filter, by the thing's words, and how far it reaches. */
 export function neighbourhoodWords(text: string, reach: number): string {
-  return `Showing only ${text} and the things within ${stepsWord(reach)} of it.`;
+  return word('untangle.showing-only', { thing: text, count: reach });
 }
 
 /** One line of the legend: a kind of thing or a relationship type of the drawing, and how many of it are drawn. */
@@ -191,8 +191,13 @@ export function shortestPath(edges: readonly FocusEdge[], from: string, to: stri
 
 /** What is said of a path, or of there being none, by the words `text` gives each thing. */
 export function pathWords(text: (key: string) => string, from: string, to: string, found: PathFound | null): string {
-  if (!found) return `There is no path between ${text(from)} and ${text(to)}.`;
-  return `The shortest path from ${text(from)} to ${text(to)} is ${stepsWord(found.edges.length)}: ${found.things.map(text).join(', ')}.`;
+  const ends = { from: text(from), to: text(to) };
+  if (!found) return word('untangle.no-path', ends);
+  return word('untangle.shortest-path', {
+    ...ends,
+    count: found.edges.length,
+    things: found.things.map(text).join(', '),
+  });
 }
 
 /** A thing found by a search: its key, its words, its kind, and why it matched — its name, or a property and its value. */

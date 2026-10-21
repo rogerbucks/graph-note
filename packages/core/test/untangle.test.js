@@ -3,7 +3,7 @@
 // by arrow key and labels by zoom. Busy hubs and groups are folded, and links merged into trunks and routed. In every
 // one, only the drawing changes, never the data. Host-free: plain data in, sets of what to show out, or the drawing
 // laid out; the Obsidian package's tests put them on a card.
-import { test, describe, before } from 'node:test';
+import { afterEach, test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { readStyle } from '../src/style.ts';
@@ -27,6 +27,10 @@ import {
   pathWords,
   shortestPath,
 } from '../src/untangle.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const NOTE = `// graph: reader · SOURCE
 (q:Question {title: 'Which device?'}),
@@ -494,5 +498,21 @@ describe('only the drawing changes, never the data', () => {
     state.folded(d);
     assert.equal(JSON.stringify([d, text, whole(), propertiesOf(fresh, 'reader', { thing: 'tablet' })]), before);
     assert.equal(fresh.texts[0], NOTE, 'the note’s text itself');
+  });
+});
+
+describe('what untangling says, in the person’s language', () => {
+  // proves: words_catalogue
+  test('the filter’s banner and the shortest path, or that there is none, are said in the person’s language', () => {
+    setLanguage('en-XA');
+    const said = [
+      neighbourhoodWords('Which device?', 1),
+      neighbourhoodWords('Which device?', 2),
+      pathWords(textOf, 'q', 'island', null),
+      pathWords(textOf, 'tablet', 'large', shortestPath(edges, 'tablet', 'large')),
+      pathWords(textOf, 'q', 'large', shortestPath(edges, 'q', 'large')),
+    ];
+    for (const words of said) assert.ok(isPseudoWord(words), words);
+    assert.match(said[3], /Tablet, Which device\?, Large reader/);
   });
 });

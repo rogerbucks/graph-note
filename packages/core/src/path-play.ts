@@ -5,6 +5,7 @@
 // it moves at once under reduced motion, is the host's (motion_reduced_respected).
 import type { PathPlayer } from './paths.ts';
 import { THRESHOLDS, thresholdValue } from './thresholds.ts';
+import { sourceWord } from './words.ts';
 
 /** The paces Play may step at: how long each step is shown, in milliseconds. */
 export const PATH_PACES = [500, 1000, 2000, 4000] as const;
@@ -18,11 +19,13 @@ export interface Scheduler {
   cancel(handle: unknown): void;
 }
 
-/** A pace said in words, as a choice of it reads: "Half a second a step", "2 seconds a step". */
+/**
+ * A pace said in words, as an exported file says it: "Half a second a step", "2 seconds a step". It is in UK English,
+ * whatever the reader's language: the file's bytes never change with the reader (locale_never_changes_bytes). The
+ * Export form says a pace in the reader's language (`paceOffered`).
+ */
 export function paceSaid(ms: number): string {
-  if (ms === 500) return 'Half a second a step';
-  const s = ms / 1000;
-  return `${s} second${s === 1 ? '' : 's'} a step`;
+  return ms === 500 ? sourceWord('export.pace-half') : sourceWord('export.pace-seconds', { count: ms / 1000 });
 }
 
 /** Playing a path on its own, step by step at a pace, around a `PathPlayer` that says each step. */

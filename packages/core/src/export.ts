@@ -12,7 +12,7 @@ import { withFlow, withRunners } from './export-motion.ts';
 import { animationSaid, withPictures, withStillPictures } from './export-pictures.ts';
 import type { PictureLoad, PictureLoaded } from './export-pictures.ts';
 import { flowLegend, reversedLinks } from './link-flow.ts';
-import { PATH_LEGEND, animationFits, pathBody, pathPlan, pathSubtitle, withPath } from './path-animation.ts';
+import { animationFits, pathBody, pathLegend, pathPlan, pathSubtitle, withPath } from './path-animation.ts';
 import type { Device, ExportWalk, TooLargeToAnimate } from './path-animation.ts';
 import { framed, saidDate } from './export-frame.ts';
 import type { LegendItem } from './export-frame.ts';
@@ -126,7 +126,7 @@ function legendItems(scope: ExportScope, drawing: GraphDrawing, info: ExportInfo
       stroke: hueColour(e.colour, 'line', p),
     })),
     ...flowLegend(drawing.flow ?? []).map((e) => ({ label: e.words, fill: p.page ?? 'none', stroke: p.text })),
-    ...(walk ? [{ label: PATH_LEGEND, fill: p.page ?? 'none', stroke: p.text }] : []),
+    ...(walk ? [{ label: pathLegend(), fill: p.page ?? 'none', stroke: p.text }] : []),
   ];
   return items;
 }

@@ -4,7 +4,7 @@
 // it implies — never code or a named action. Each input, a whole graph or part of one such as a queried path, is
 // checked against its point before the rule runs. The output is a graph, offered as a proposal (§17) and written only
 // when a person accepts it. Nothing here runs a step unasked: a host calls `runStep` when the user presses Run.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { dataKind, gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
@@ -14,7 +14,11 @@ import { linkChange, thingChange } from '../src/proposals.ts';
 import { ProposalReview } from '../src/proposals-review.ts';
 import { viewBlock, viewQuery } from '../src/view-write.ts';
 import { checkInputs, inputsFor, MOST_STEP_CHARACTERS, runStep, stepOf, stepsOf } from '../src/steps.ts';
-import { ruleTokens } from '../src/steps-rule.ts';
+import { readRule, ruleTokens } from '../src/steps-rule.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const TEAM = `// graph: team
 (ada:Person {name: 'Ada'}),
@@ -280,5 +284,67 @@ describe('a step never holds the editor, however it is written (spec §9)', () =
     const toks = ruleTokens("MATCH (a {k: 'x\n'})");
     assert.deepEqual(toks.at(-1), { kind: 'bad', text: "'" });
     assert.equal(toks.length, 7, 'MATCH ( a { k : then the open quote, and nothing after it');
+  });
+});
+
+describe('a step’s words in the person’s language', () => {
+  const block = (head, takes, rule) => [`// graph: team · QUERY step ${head}`, ...takes, rule].join('\n');
+  const TAKES = ['// takes people: (:Person), (:Project), [:WORKS_ON]'];
+
+  // proves: words_catalogue
+  test('why a step’s block or rule is refused is said in the person’s language', () => {
+    setLanguage('en-XA');
+    const blocks = [
+      block('', TAKES, 'MATCH (a) INSERT (a)-[:R]->(a)'),
+      block('two-words', TAKES, 'MATCH (a) INSERT (a)-[:R]->(a)'),
+      block('s', ['// takes : (:Person)'], 'MATCH (a) INSERT (a)-[:R]->(a)'),
+      block('s', ['// takes people: Person'], 'MATCH (a) INSERT (a)-[:R]->(a)'),
+      block('s', [...TAKES, ...TAKES], 'MATCH (a) INSERT (a)-[:R]->(a)'),
+      block('s', [], 'MATCH (a) INSERT (a)-[:R]->(a)'),
+      block('s', TAKES, 'MATCH (a:Team)-[:LEADS]->(b) INSERT (a)-[:R]->(b)'),
+      `${STEP}\n${' '.repeat(MOST_STEP_CHARACTERS)}`,
+    ];
+    const rules = [
+      '',
+      'CALL db.labels()',
+      'MATCH (a) SET a.x = 1',
+      'MATCH (a) RETURN a',
+      'const x = 1',
+      'OPTIONAL MATCH (a)',
+      'MATCH a',
+      'MATCH (a {k})',
+      'MATCH (a)-(b)',
+      'MATCH (a)-[:R]-(b)-[:R]-(c)-[:R]-(d)-[:R]-(e)-[:R]-(f)-[:R]-(g)-[:R]-(h) INSERT (a)-[:S]->(b)',
+      'MATCH (a)',
+      'MATCH (a) INSERT (b)-[:S]->(a)',
+      'MATCH (a)-[:R]->(b) INSERT (a)-[R]->(b)',
+      'MATCH (a)-[:R]->(b) INSERT (a)-[:S]-(b)',
+      'MATCH (a)-[:R]->(b) INSERT (a)-[:S]->(b) (c)',
+    ];
+    const faults = [...blocks.map((b) => stepOf(b).fault), ...rules.map((r) => readRule(r).fault)];
+    for (const fault of faults) assert.ok(isPseudoWord(fault ?? ''), fault);
+    const twice = stepsOf([STEP, STEP]).at(-1);
+    assert.ok(isPseudoWord(twice.fault), twice.fault);
+  });
+
+  // proves: words_catalogue, locale_never_changes_bytes
+  test('why a run is refused is said in the person’s language, and the change set records what was read in UK English', () => {
+    const path = viewQuery('reaches', { from: 'ada', to: 'cy', steps: 2, directed: false });
+    const people = viewQuery('kinds', { kinds: ['Person'] });
+    const n = note(TEAM, viewBlock('team', 'ada_to_cy', path), viewBlock('team', 'people', people), STEP);
+    setLanguage('en-XA');
+    const refusals = [
+      runStep(n, stepOf(block('', TAKES, 'MATCH (a) INSERT (a)-[:R]->(a)')), {}, { at: AT }),
+      runStep(note(STEP), stepIn(note(STEP)), { people: { graph: 'team' } }, { at: AT }),
+      run(n, { people: { graph: 'nowhere' } }),
+      run(n, { people: { graph: 'team', view: 'none' } }),
+      run(n, { people: { graph: 'team' }, others: { graph: 'team' } }),
+      run(n, {}),
+      run(n, { people: { graph: 'team', view: 'people' } }),
+    ].flatMap((r) => r.refused);
+    assert.ok(refusals.length >= 8);
+    for (const why of refusals) assert.ok(isPseudoWord(why), why);
+    const r = run(n, { people: { graph: 'team', view: 'ada_to_cy' } });
+    assert.deepEqual(r.proposal.provenance.read, ['people: view ada_to_cy of team']);
   });
 });

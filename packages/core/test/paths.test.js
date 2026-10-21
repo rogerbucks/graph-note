@@ -1,11 +1,15 @@
 // Walked paths (editor spec §7; graph spec §22). A path recorded from boxes tapped in order is stored as a Path node
 // with ordered STEP edges. It plays step by step. It is reported when it steps through something removed or has no
 // steps.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';
 import { readNote } from '../src/drawing.ts';
 import { PathPlayer, PathRecorder, pathBlock, pathProblems, pathsOf } from '../src/paths.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const TRIP = `// graph: trip · SOURCE
 (home:Place {name: 'Home'}),
@@ -508,5 +512,40 @@ describe('a path with no steps', () => {
       pathProblems(reading).map((p) => p.graph),
       ['trip', 'other'],
     );
+  });
+});
+
+describe('a path’s words in the person’s language', () => {
+  // proves: words_catalogue
+  test('why a path is not written is said in the person’s language', () => {
+    const schema = `// graph: trip · SOURCE
+(trip_schema:GraphMeta {graph: 'trip', schema: 'trip@1'}),
+(kind_place:Meta:ElementType {name: 'Place', kind: 'node', origin: 'source'}),
+(trip_schema)-[:DECLARES]->(kind_place)`;
+    const inner = `${TRIP},\n(idea:Concept {name: 'Idea'})`;
+    setLanguage('en-XA');
+    const refused = [
+      pathBlock(readNote([TRIP]), 'trip', TRIP, '  ', ['home']),
+      pathBlock(readNote([TRIP]), 'trip', TRIP, 'A walk', []),
+      pathBlock(readNote([TRIP]), 'trip', TRIP, 'A walk', ['nowhere']),
+      pathBlock(readNote([inner]), 'trip', inner, 'A walk', ['idea']),
+      pathBlock(readNote([TRIP, schema]), 'trip', TRIP, 'A walk', ['home']),
+      pathBlock(readNote([TRIP]), 'elsewhere', TRIP, 'A walk', ['home']),
+      pathBlock(readNote([TRIP]), 'trip', `${TRIP},\nMATCH (home) SET home.x = 1`, 'A walk', ['home']),
+    ].map((r) => r.refused);
+    for (const why of refused) assert.ok(isPseudoWord(why ?? ''), why);
+  });
+
+  // proves: words_catalogue
+  test('a path’s problems, their fixes and each step as it plays are said in the person’s language', () => {
+    setLanguage('en-XA');
+    const said = [];
+    for (const block of [BROKEN, BROKEN.replace('zzzzzzz', 'parl'), `${TRIP},\n(tour:Path {title: 'Walk'})`])
+      for (const p of pathProblems(readNote([block]))) said.push(p.message, p.fix, ...(p.fixTitle ? [p.fixTitle] : []));
+    assert.equal(said.length, 7);
+    const [path] = pathsOf(readNote([BROKEN]), 'trip');
+    said.push(...new PathPlayer(path).sentences);
+    said.push(PathPlayer.refusal(pathsOf(readNote([`${TRIP},\n(tour:Path {title: 'Walk'})`]), 'trip')[0]));
+    for (const words of said) assert.ok(isPseudoWord(words ?? ''), words);
   });
 });

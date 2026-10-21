@@ -17,7 +17,6 @@ import {
   PATH_PACES,
   PathPlayer,
   animationFits,
-  paceSaid,
   companionNote,
   dataText,
   exportPlan,
@@ -40,6 +39,7 @@ import type {
   NoteReading,
   WriteOps,
 } from '@thoughtknot/core';
+import { paceOffered } from '@thoughtknot/core/display/export/export-form';
 import type { ExportAsk, ExportOutcome } from '@thoughtknot/core/display/export/export-types';
 import { exportRefusalWords } from '@thoughtknot/core/hosts/refusal-words';
 import type ThoughtKnotPlugin from '../main';
@@ -96,7 +96,7 @@ function playedWalk(
     return {
       stopped: word('exporting.bad-pace', {
         pace: asked.pace,
-        paces: PATH_PACES.map(paceSaid).join(', ').toLowerCase(),
+        paces: PATH_PACES.map(paceOffered).join(', ').toLowerCase(),
       }),
     };
   const large = animationFits(

@@ -20,6 +20,7 @@ import { READING_SOURCE_WORDS } from './reading-source-words.ts';
 import { SERVER_SOURCE_WORDS } from './server-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
 import { SHORTCUT_SOURCE_WORDS } from './shortcut-source-words.ts';
+import { STEPS_SOURCE_WORDS } from './steps-source-words.ts';
 import { STYLE_SOURCE_WORDS } from './style-source-words.ts';
 import { VIEWS_SOURCE_WORDS } from './views-source-words.ts';
 
@@ -327,4 +328,6 @@ export const SOURCE_WORDS = {
   ...PROPOSAL_SOURCE_WORDS,
   // the core's views: their kinds, their readings and why one is refused (views-source-words.ts)
   ...VIEWS_SOURCE_WORDS,
+  // the core's graph steps and walked paths: their refusals, problems and animation (steps-source-words.ts)
+  ...STEPS_SOURCE_WORDS,
 } as const;

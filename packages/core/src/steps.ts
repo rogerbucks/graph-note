@@ -9,7 +9,7 @@
 import gs from '@thoughtknot/graph-spec';
 import { firstLine, gqlBlocks, graphOfBlock, isStepBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
-import { formatCount } from './locale-formats.ts';
+import { formatCount, formatList } from './locale-formats.ts';
 import { linkChange, makeProposal, thingChange } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';
 import { basisOf } from './proposals-basis.ts';
@@ -21,6 +21,7 @@ import type { StepMatch } from './steps-match.ts';
 import { readRule, ruleWords } from './steps-rule.ts';
 import type { StepRule } from './steps-rule.ts';
 import { N, S, trim } from './whitespace.ts';
+import { word } from './words.ts';
 
 /** A step found in a note: its name, the graph it proposes into, its block (0-based), its points and its rule. */
 export interface Step {
@@ -59,7 +60,7 @@ export const MOST_STEP_CHARACTERS = 8192;
 function pointOf(line: string): StepPoint | string {
   const m = TAKES.exec(line);
   const name = trim(m?.[1] ?? '');
-  if (!WORD.test(name)) return `name the point a step takes a graph at, one word: // takes <point>: (:Kind), [:TYPE]`;
+  if (!WORD.test(name)) return word('steps.fault.point-name');
   const point: StepPoint = { name, kinds: [], types: [] };
   for (const raw of (m?.[2] ?? '').split(',')) {
     const item = trim(raw);
@@ -68,7 +69,7 @@ function pointOf(line: string): StepPoint | string {
       type = /^\[:([A-Za-z_]\w*)\]$/.exec(item)?.[1];
     if (kind) point.kinds.push(kind);
     else if (type) point.types.push(type);
-    else return `cannot read '${item}' in what ${name} takes: write (:Kind) for things and [:TYPE] for links`;
+    else return word('steps.fault.point-item', { item, point: name });
   }
   return point;
 }
@@ -92,14 +93,13 @@ export function stepOf(text: string, block = 0): Step | StepFault | null {
   const of = graph,
     name = named[1] ?? '',
     fault = (f: string): StepFault => ({ name, graph: of, block, fault: f });
-  if (!name) return fault('a step needs a name: write it after step, as QUERY step <name>');
-  if (!WORD.test(name))
-    return fault(`the step name '${name}' is not one word: use letters, digits and underscores only`);
+  if (!name) return fault(word('steps.fault.no-name'));
+  if (!WORD.test(name)) return fault(word('steps.fault.not-one-word', { name }));
   // a step is a short rule. A longer block is refused before its rule is read, so no text pasted or synced into a
   // note can hold the editor (§9)
   if (text.length > MOST_STEP_CHARACTERS)
     return fault(
-      `a step is at most ${formatCount(MOST_STEP_CHARACTERS)} characters long, and this one is ${formatCount(text.length)}: shorten it, or split it into steps`,
+      word('steps.fault.too-long', { most: formatCount(MOST_STEP_CHARACTERS), length: formatCount(text.length) }),
     );
   const lines = text.split('\n'),
     at = lines.findIndex((l) => trim(l));
@@ -108,11 +108,10 @@ export function stepOf(text: string, block = 0): Step | StepFault | null {
   for (const line of body.filter((l) => TAKES.test(l))) {
     const p = pointOf(line);
     if (typeof p === 'string') return fault(p);
-    if (points.some((x) => x.name === p.name)) return fault(`the point ${p.name} is declared twice`);
+    if (points.some((x) => x.name === p.name)) return fault(word('steps.fault.point-twice', { point: p.name }));
     points.push(p);
   }
-  if (!points.length)
-    return fault('a step says what it takes: write // takes <point>: (:Kind), [:TYPE] above its MATCH');
+  if (!points.length) return fault(word('steps.fault.no-points'));
   const rule = readRule(body.filter((l) => !trim(l).startsWith('//')).join('\n'));
   if ('fault' in rule) return fault(rule.fault);
   const words = ruleWords(rule),
@@ -122,10 +121,7 @@ export function stepOf(text: string, block = 0): Step | StepFault | null {
     ...words.kinds.filter((k) => !kinds.has(k)).map((k) => `(:${k})`),
     ...words.types.filter((t) => !types.has(t)).map((t) => `[:${t}]`),
   ];
-  if (loose.length)
-    return fault(
-      `the rule matches ${loose.join(' and ')}, which no point says it takes: add ${loose.length > 1 ? 'them' : 'it'} to a // takes line`,
-    );
+  if (loose.length) return fault(word('steps.fault.loose', { loose: formatList(loose), count: loose.length }));
   return { name, graph, block, points, rule };
 }
 
@@ -144,7 +140,7 @@ export function stepsOf(texts: readonly string[]): (Step | StepFault)[] {
             name: s.name,
             graph: s.graph,
             block: i,
-            fault: `another step of graph ${s.graph} is already called ${s.name}`,
+            fault: word('steps.fault.taken', { graph: s.graph, step: s.name }),
           }
         : s,
     ];
@@ -198,16 +194,18 @@ export function runStep(
   given: Readonly<Record<string, StepGiven>>,
   options: { at: string; shared?: string[] },
 ): StepRun {
-  if ('fault' in step) return { refused: [`Step ${step.name || 'without a name'} cannot run: ${step.fault}`] };
+  if ('fault' in step)
+    return {
+      refused: [
+        step.name
+          ? word('steps.run.cannot', { step: step.name, why: step.fault })
+          : word('steps.run.cannot-unnamed', { why: step.fault }),
+      ],
+    };
   const shared = options.shared ?? [],
     texts = gqlBlocks(note).map((b) => b.text),
     { name, graph } = step;
-  if (!texts.some((t) => graphOfBlock(t) === graph))
-    return {
-      refused: [
-        `graph ${graph} is not written in this note, so the step has nowhere to propose its output: run it in the note that holds ${graph}.`,
-      ],
-    };
+  if (!texts.some((t) => graphOfBlock(t) === graph)) return { refused: [word('steps.run.no-graph', { graph })] };
   const reading = readNote(texts, undefined, shared);
   const { inputs, refused } = inputsFrom(step.points, given, reading, texts);
   if (refused.length) return { refused };
@@ -215,12 +213,7 @@ export function runStep(
   if (faults.length) return { refused: faults };
   const g = together(inputs);
   const { found, over } = matchesOf(step.rule, g);
-  if (over)
-    return {
-      refused: [
-        `Step ${name} found more than ${formatCount(MOST_MATCHES)} matches, so it was stopped: give it a smaller part of the graph.`,
-      ],
-    };
+  if (over) return { refused: [word('steps.run.too-many', { step: name, count: MOST_MATCHES })] };
   const at = (m: StepMatch, thing: string) => m.ids[step.rule.things.findIndex((t) => t.name === thing)] ?? '';
   const links = new Map<string, { link: [string, string, string]; m: StepMatch }>();
   for (const m of found)
@@ -236,17 +229,11 @@ export function runStep(
   const target = reading.world[graph],
     held = new Set(target?.edges.map(([s, t, d]) => [s, t, d].join(' ')) ?? []);
   const fresh = all.filter(({ link }) => !held.has(link.join(' ')));
-  if (!fresh.length)
-    return { nothing: `Step ${name} works out nothing new: every link it gives is already in ${graph}.`, output };
+  if (!fresh.length) return { nothing: word('steps.run.nothing-new', { step: name, graph }), output };
   // an id is written into the change set as a name. Only a plain word is, never text that could write a line of its
   // own
   const odd = fresh.flatMap(({ link }) => [link[0], link[2]]).find((id) => !/^[A-Za-z_]\w*$/.test(id));
-  if (odd !== undefined)
-    return {
-      refused: [
-        `Step ${name} found a thing whose id is not a plain word (${JSON.stringify(odd)}), so it is not proposed.`,
-      ],
-    };
+  if (odd !== undefined) return { refused: [word('steps.run.odd-id', { step: name, id: JSON.stringify(odd) })] };
   const changes: ChangeInput[] = [],
     added = new Set<string>();
   for (const { link, m } of fresh) {
@@ -268,7 +255,8 @@ export function runStep(
     graph,
     by: { name, kind: 'step' },
     at: options.at,
-    read: inputs.map((i) => `${i.point}: ${i.label}`),
+    // the inputs as the change set records them in the note: its bytes, in UK English
+    read: inputs.map((i) => `${i.point}: ${i.read}`),
     basis: basisOf(note, graph, shared),
     changes,
   });
