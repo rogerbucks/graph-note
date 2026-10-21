@@ -11,6 +11,8 @@ import type { GraphDrawing } from './note-reading.ts';
 import type { Palette } from './palette.ts';
 import { paceSaid } from './path-play.ts';
 import type { WalkedPath } from './paths.ts';
+import { formatCount } from './locale-formats.ts';
+import { sourceWord, word } from './words.ts';
 
 /** Where an export is made: a phone takes a smaller animated SVG than a computer. */
 export type Device = 'phone' | 'desktop';
@@ -44,8 +46,6 @@ export interface TooLargeToAnimate {
 export const animationBytes = (x: { steps: number; things: number; links: number }): number =>
   2000 + x.things * 800 + x.links * 600 + x.steps * 800;
 
-const where = (device: Device) => (device === 'phone' ? 'this phone' : 'this computer');
-
 /**
  * Whether an animated SVG of a path of `steps` steps fits `device`, over a drawing of `things` things and `links`
  * links. Null when it does. Otherwise why not and what would make it fit, said before anything is laid out.
@@ -55,17 +55,22 @@ export function animationFits(
   device: Device,
 ): TooLargeToAnimate | null {
   const limit = ANIMATION_LIMITS[device];
-  if (x.steps > limit.steps)
+  const phone = device === 'phone';
+  if (x.steps > limit.steps) {
+    const steps = { count: x.steps, most: formatCount(limit.steps) };
     return {
-      why: `the path has ${x.steps} steps, more than the ${limit.steps} an animated SVG can play smoothly on ${where(device)}`,
-      fix: `export a path of ${limit.steps} steps or fewer, such as part of this one recorded as a path of its own, or export the drawing as a still SVG`,
+      why: word(phone ? 'paths.animation.steps-phone' : 'paths.animation.steps-computer', steps),
+      fix: word('paths.animation.steps.fix', { most: formatCount(limit.steps) }),
     };
+  }
   const bytes = animationBytes(x);
-  if (bytes > limit.bytes)
+  if (bytes > limit.bytes) {
+    const size = { size: formatCount(Math.round(bytes / 100_000) / 10), most: formatCount(limit.bytes / 1_000_000) };
     return {
-      why: `the animated SVG would be about ${Math.round(bytes / 100_000) / 10} MB, more than the ${limit.bytes / 1_000_000} MB ${where(device)} opens smoothly`,
-      fix: 'export a view that holds the path, so fewer things are drawn, or a shorter path',
+      why: word(phone ? 'paths.animation.size-phone' : 'paths.animation.size-computer', size),
+      fix: word('paths.animation.size.fix'),
     };
+  }
   return null;
 }
 
@@ -210,17 +215,23 @@ export function pathCss(plan: PathPlan, pace: number): string {
   return out.join('\n');
 }
 
+// What the animated SVG says of its path is written into the file. So it is in UK English, whatever the reader's
+// language: the file's bytes never change with the reader (locale_never_changes_bytes).
+
 /** The walk in words, in order: "1 Home → 2 The park", a step whose thing is gone said so. */
 export const walkSaid = (path: WalkedPath): string =>
-  path.steps.map((s) => `${s.seq} ${s.text}${s.missing ? ' (not in the graph)' : ''}`).join(' → ');
+  path.steps
+    .map((s) =>
+      s.missing ? sourceWord('paths.animation.step-gone', { seq: s.seq, text: s.text }) : `${s.seq} ${s.text}`,
+    )
+    .join(' → ');
 
-/** How a played path is said under its title: played step by step at its pace, and the walk in order. */
+/** How a played path is said under its title: played step by step, at its pace, and the walk in order. */
 export const pathSubtitle = (walk: ExportWalk): string =>
-  `Played step by step, ${paceSaid(walk.pace).toLowerCase()}: ${walkSaid(walk.path)}`;
+  sourceWord('paths.animation.subtitle', { pace: paceSaid(walk.pace).toLowerCase(), walk: walkSaid(walk.path) });
 
 /** The legend's row for a played path: what the outlines, numbers and moving dot mean, in words. */
-export const PATH_LEGEND =
-  'Outlined and numbered: the steps of the path, in order; the heavier outline moves from step to step, and a dot travels a link between two steps';
+export const pathLegend = (): string => sourceWord('paths.animation.legend');
 
 /** The framed image with its path playing: the style sheet that plays it. */
 export function withPath(svg: string, plan: PathPlan, pace: number): string {

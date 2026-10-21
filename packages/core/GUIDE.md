@@ -469,7 +469,7 @@ own handlers. Nothing here reaches the network.
 - `path-play.ts` — `PathAutoplay`: Play stepping through a path on its own (path_autoplay).
   - It works around a `PathPlayer`, which also says where it is (`index`) and goes back to the first step (`restart`).
   - It goes from the step it is on, one step at the pace set, until the last. The paces are `PATH_PACES` and
-    `DEFAULT_PACE`, said by `paceSaid`.
+    `DEFAULT_PACE`. `paceSaid` says a pace in UK English, as an exported file says it.
   - It can be paused or stopped at any step, and played on from where it paused. A step taken by hand pauses it.
   - The host hands in its timer (`Scheduler`). So the core never waits on a clock, and a host clears it when its card
     goes.
@@ -479,9 +479,10 @@ own handlers. Nothing here reaches the network.
   - `pathBody`: each step's number on its thing, and the dots' runners.
   - `pathCss`: a heavier outline moving from step to step at the pace, round and round, by `step-end` keyframes. Every
     step is outlined when still. All of it is stopped under reduced motion.
-  - `pathSubtitle` says the walk in order.
+  - `pathSubtitle` says the walk in order, and `pathLegend` what the outlines mean. Both are in UK English: they are
+    the file's bytes.
   - `animationFits` refuses one too large for the device (`ANIMATION_LIMITS`: steps, and an estimate of its bytes). It
-    says why and what would make it fit, before anything is laid out (animation_export_fits).
+    says why and what would make it fit, in the reader's language, before anything is laid out (animation_export_fits).
   - `exportWithLayout` gives that refusal back as a `TooLargeToAnimate`.
 - `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`). These are carried as the
   removing fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
@@ -800,15 +801,19 @@ data of the note it is written in.
   - It is MATCH one pattern, then INSERT links between things it named. The pattern is things with an optional name,
     kind and properties, joined by up to `MOST_PATTERN_LINKS` links, one way or either.
   - CALL, a function, SET or DELETE and the other writes, RETURN, and anything that reads as code are refused. Each says
-    why and shows `RULE_FORM`.
+    why and shows `RULE_FORM`. The words of steps and paths come from the catalogue (steps-source-words.ts).
   - `ruleTokens` reads a rule once. A text ends at its line, and nothing after the first mark that cannot be read is
     read (spec §9).
 - `steps-match.ts` — every match of the pattern, as GQL matches a path. Each link is used once in a match, and a name
   used twice is the same thing.
   - It is bounded by `MOST_MATCHES` and `MOST_TRIES` (every thing and link looked at, fitting or not). Past them it stops
     and says so (spec §9).
+#### What a step is given
+
 - `steps-input.ts` — what is given at a point: a graph of the note, whole, or a view of one (a queried path among them).
   - It is put to the reading as `evaluate` puts it, never a copy.
+  - `givenLabel` names what is given in the reader's language. Each input's `read` names it in UK English, as the
+    change set records it.
   - `inputFaults` checks each against its point before the step runs: every kind and type it takes held, something
     given.
   - `together` reads the inputs as one graph, a thing by id.

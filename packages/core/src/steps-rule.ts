@@ -5,6 +5,8 @@
 // saying why and showing the form. That means a procedure or function called, a write (SET, DELETE…), a RETURN, or
 // anything that reads as code.
 import { N, S } from './whitespace.ts';
+import { word } from './words.ts';
+import type { WordKey } from './words.ts';
 
 /** One thing in a step's pattern: the name it is given there, its kind, and the properties it must have. */
 export interface ThingPattern {
@@ -40,12 +42,6 @@ export const MOST_PATTERN_LINKS = 6;
 export const RULE_FORM =
   'MATCH (a:Person)-[:WORKS_ON]->(p:Project)<-[:WORKS_ON]-(b:Person) INSERT (a)-[:WORKS_WITH]->(b)';
 
-const FORM = `a step is MATCH a pattern, then INSERT the links it implies, as in ${RULE_FORM}`;
-const NAMED = 'a step never calls a procedure or a named action, so the editor only ever works out information';
-const WRITES = 'a step never changes or removes anything itself: what it gives is offered as a proposal';
-const RETURNS = 'a step gives a graph: write INSERT and the links it gives in place of RETURN';
-const CODE = 'a step is a query, never code';
-const ADDS = 'INSERT adds links between things the MATCH found, never a thing of its own';
 const WRITE_WORDS = new Set(['SET', 'DELETE', 'DETACH', 'REMOVE', 'MERGE', 'CREATE', 'DROP', 'LOAD', 'FINISH']);
 const CODE_WORDS = new Set(['const', 'let', 'var', 'function', 'import', 'await', 'async', 'new', 'class', 'def']);
 
@@ -81,25 +77,26 @@ export function ruleTokens(text: string): Tok[] {
   return out;
 }
 
-const fault = (detail: string) => ({ fault: `${detail}: ${FORM}` });
+/** A refusal of the rule: the detail, in the reader's language, then the form every refusal shows. */
+const fault = (detail: string) => ({ fault: word('steps.rule.refused', { reason: detail, form: RULE_FORM }) });
 
 /** Why the rule is not one a step may be before it is parsed, by the words and marks it uses; null when none. */
-function notAQuery(toks: Tok[]): string | null {
+function notAQuery(toks: Tok[]): WordKey | null {
   // a word that is a kind, a type or a property's key (beside a colon) is a name, never a keyword
   const keyword = (i: number) =>
     toks[i]?.kind === 'word' && toks[i - 1]?.text !== ':' && toks[i + 1]?.text !== ':'
       ? (toks[i]?.text ?? '').toUpperCase()
       : '';
   const words = toks.map((_, i) => keyword(i));
-  if (words.includes('CALL')) return NAMED;
-  if (words.some((w) => WRITE_WORDS.has(w))) return WRITES;
-  if (words.includes('RETURN')) return RETURNS;
+  if (words.includes('CALL')) return 'steps.rule.named';
+  if (words.some((w) => WRITE_WORDS.has(w))) return 'steps.rule.writes';
+  if (words.includes('RETURN')) return 'steps.rule.returns';
   const first = toks[0]?.kind === 'word' ? (toks[0]?.text ?? '') : '';
   if (CODE_WORDS.has(first) || toks.some((t) => t.kind === 'bad' || ['=', '=>', ';', '.'].includes(t.text)))
-    return CODE;
+    return 'steps.rule.code';
   // a word straight before a bracket, other than MATCH and INSERT, is a function or a named action called
   const called = words.some((w, i) => !!w && w !== 'MATCH' && w !== 'INSERT' && toks[i + 1]?.text === '(');
-  return called ? NAMED : null;
+  return called ? 'steps.rule.named' : null;
 }
 
 /** A value in a pattern's properties: a text, a number, or true or false. */
@@ -117,61 +114,60 @@ function valueOf(t: Tok | undefined): string | number | boolean | undefined {
  */
 export function readRule(text: string): StepRule | { fault: string } {
   const toks = ruleTokens(text);
-  if (!toks.length) return fault('a step needs its rule');
+  if (!toks.length) return fault(word('steps.rule.empty'));
   const not = notAQuery(toks);
-  if (not) return fault(not);
+  if (not) return fault(word(not));
   let i = 0;
   const peek = () => toks[i]?.text ?? '',
     take = (want: string) => (peek().toUpperCase() === want.toUpperCase() ? (i++, true) : false),
-    word = () => (toks[i]?.kind === 'word' ? (toks[i++]?.text ?? '') : '');
-  if (!take('MATCH')) return fault(`a step starts with MATCH, not '${peek()}'`);
+    name = () => (toks[i]?.kind === 'word' ? (toks[i++]?.text ?? '') : '');
+  if (!take('MATCH')) return fault(word('steps.rule.no-match', { found: peek() }));
   const things: ThingPattern[] = [],
     links: LinkPattern[] = [];
   const thing = (): ThingPattern | string => {
-    if (!take('(')) return `cannot read '${peek()}' where a thing in brackets is wanted`;
+    if (!take('(')) return word('steps.rule.thing-bracket', { found: peek() });
     const t: ThingPattern = { props: [] };
-    if (toks[i]?.kind === 'word') t.name = word();
-    if (take(':')) t.kind = word() || undefined;
+    if (toks[i]?.kind === 'word') t.name = name();
+    if (take(':')) t.kind = name() || undefined;
     if (take('{'))
       do {
-        const key = word(),
+        const key = name(),
           value = take(':') ? valueOf(toks[i++]) : undefined;
-        if (!key || value === undefined)
-          return 'a property in the pattern is a key, a colon and a text, a number or true or false';
+        if (!key || value === undefined) return word('steps.rule.property');
         t.props.push([key, value]);
       } while (take(','));
-    if (t.props.length && !take('}')) return `cannot read '${peek()}' in a thing's properties`;
-    return take(')') ? t : `cannot read '${peek()}' in a thing of the pattern`;
+    if (t.props.length && !take('}')) return word('steps.rule.properties', { found: peek() });
+    return take(')') ? t : word('steps.rule.thing', { found: peek() });
   };
   const link = (): LinkPattern | string => {
     const back = take('<-');
-    if ((!back && !take('-')) || !take('[')) return 'a link is written -[:TYPE]->, <-[:TYPE]- or -[:TYPE]-';
-    if (toks[i]?.kind === 'word') word();
-    const type = take(':') ? word() || undefined : undefined;
-    if (!take(']')) return `cannot read '${peek()}' in a link of the pattern, matched by its type only`;
-    if (back) return take('-') ? { type, way: 'in' } : 'a link written <-[:TYPE] ends with -';
+    if ((!back && !take('-')) || !take('[')) return word('steps.rule.link');
+    if (toks[i]?.kind === 'word') name();
+    const type = take(':') ? name() || undefined : undefined;
+    if (!take(']')) return word('steps.rule.link-type', { found: peek() });
+    if (back) return take('-') ? { type, way: 'in' } : word('steps.rule.link-in');
     if (take('->')) return { type, way: 'out' };
-    return take('-') ? { type, way: 'either' } : 'a link written -[:TYPE] ends with -> or -';
+    return take('-') ? { type, way: 'either' } : word('steps.rule.link-out');
   };
   for (;;) {
     const t = thing();
     if (typeof t === 'string') return fault(t);
     things.push(t);
     if (peek() !== '-' && peek() !== '<-') break;
-    if (links.length === MOST_PATTERN_LINKS) return fault(`a step's pattern holds at most ${MOST_PATTERN_LINKS} links`);
+    if (links.length === MOST_PATTERN_LINKS) return fault(word('steps.rule.most-links', { count: MOST_PATTERN_LINKS }));
     const l = link();
     if (typeof l === 'string') return fault(l);
     links.push(l);
   }
-  if (!take('INSERT')) return fault(`the pattern is followed by INSERT and the links it implies, not '${peek()}'`);
+  if (!take('INSERT')) return fault(word('steps.rule.no-insert', { found: peek() }));
   const named = new Set(things.flatMap((t) => (t.name ? [t.name] : [])));
   const insert: InsertLink[] = [];
   const end = (): string | null => {
-    if (!take('(')) return ADDS;
-    const name = word();
-    if (!name || peek() === ':' || peek() === '{') return ADDS;
-    if (!named.has(name)) return `INSERT names ${name}, which the MATCH does not`;
-    return take(')') ? null : ADDS;
+    if (!take('(')) return word('steps.rule.adds');
+    const at = name();
+    if (!at || peek() === ':' || peek() === '{') return word('steps.rule.adds');
+    if (!named.has(at)) return word('steps.rule.unnamed', { name: at });
+    return take(')') ? null : word('steps.rule.adds');
   };
   do {
     const fromAt = i;
@@ -179,18 +175,18 @@ export function readRule(text: string): StepRule | { fault: string } {
     if (bad) return fault(bad);
     const from = toks[fromAt + 1]?.text ?? '';
     const back = take('<-');
-    if (!back && !take('-')) return fault(ADDS);
-    if (!take('[') || !take(':')) return fault('a link INSERT gives is written -[:TYPE]->, with its type');
-    const type = word();
-    if (!type || !take(']')) return fault('a link INSERT gives is written -[:TYPE]->, with its type');
-    if (back ? !take('-') : !take('->')) return fault('a link INSERT gives runs one way: -[:TYPE]-> or <-[:TYPE]-');
+    if (!back && !take('-')) return fault(word('steps.rule.adds'));
+    if (!take('[') || !take(':')) return fault(word('steps.rule.insert-type'));
+    const type = name();
+    if (!type || !take(']')) return fault(word('steps.rule.insert-type'));
+    if (back ? !take('-') : !take('->')) return fault(word('steps.rule.insert-way'));
     const toAt = i;
     const badTo = end();
     if (badTo) return fault(badTo);
     const to = toks[toAt + 1]?.text ?? '';
     insert.push(back ? { from: to, type, to: from } : { from, type, to });
   } while (take(','));
-  if (i < toks.length) return fault(`cannot read '${peek()}' after the links INSERT gives`);
+  if (i < toks.length) return fault(word('steps.rule.after-insert', { found: peek() }));
   return { things, links, insert };
 }
 

@@ -18,6 +18,10 @@ export const EXPORT_SOURCE_WORDS = {
   'export.pace': 'Pace',
   'export.pace-half': 'Half a second a step',
   'export.pace-seconds': { one: '{count} second a step', other: '{count} seconds a step' },
+  // why there is nothing to export (export-scope.ts)
+  'export.scope.graph-empty': 'Graph {graph} has no things in this note: add some, or pick another graph',
+  'export.scope.view-empty': 'View {view} matches nothing: {why}',
+  'export.scope.view-empty-plain': 'View {view} matches nothing: change the view',
   'export.theme': 'Theme',
   'export.anyway': 'Export anyway',
   'export.do-not': 'Do not export',
