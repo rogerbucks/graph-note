@@ -1,12 +1,20 @@
 // Views in a note (editor spec §2 views_in_the_note, §7 view_is_query, views_by_tapping). A view is a named query block
 // whose graph line says QUERY view and its name. This finds each, never draws it as data, and says it in plain language.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { parseView, VIEW_FORMS } from '../src/view-profile.ts';
 import { viewBlock, viewQuery } from '../src/view-write.ts';
-import { readingOf, viewsOf } from '../src/views.ts';
+import { readingOf, sourceReadingOf, viewsOf } from '../src/views.ts';
+import { setLocale } from '../src/locale-formats.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => {
+  setLanguage(SOURCE_LANGUAGE);
+  setLocale('en-GB');
+});
 
 const TEAM = `// graph: team · SOURCE
 (alice:Person {name: 'Alice'}),
@@ -142,5 +150,43 @@ describe('a view in plain English', () => {
   // proves: view_is_query
   test('the forms the profile shows each read in English', () => {
     for (const form of Object.values(VIEW_FORMS)) assert.match(readingOf(parseView(form), text), /^[a-zA-Z]/);
+  });
+});
+
+describe('a view’s words in the person’s language', () => {
+  const text = (id) => ({ alice: 'Alice', dan: 'Dan', tour: 'Tour' })[id] ?? id;
+  const VIEWS = [
+    { kind: 'picked', ids: ['alice', 'dan'] },
+    { kind: 'picked', ids: [] },
+    { kind: 'near', id: 'alice', depth: 2 },
+    { kind: 'reaches', from: 'alice', to: 'dan', steps: 6, directed: true },
+    { kind: 'reaches', from: 'alice', to: 'dan', steps: 1, directed: false },
+    { kind: 'kinds', kinds: ['Person', 'Team'] },
+    { kind: 'path', path: 'tour' },
+  ];
+
+  // proves: words_catalogue
+  test('each kind is read in the person’s language, and a block meant as a view says its fault in it too', () => {
+    setLanguage('en-XA');
+    for (const view of VIEWS) assert.ok(isPseudoWord(readingOf(view, text)), JSON.stringify(view));
+    const faults = viewsOf([
+      '// graph: team · QUERY view\nMATCH (n) RETURN n',
+      '// graph: team · QUERY view two-words\nMATCH (n) RETURN n',
+      '// graph: team · QUERY view mine\nMATCH (n) RETURN n',
+      '// graph: team · QUERY view mine\nMATCH (n) RETURN n',
+    ]).flatMap((v) => v.fault ?? []);
+    assert.equal(faults.length, 3);
+    for (const fault of faults) assert.ok(isPseudoWord(fault), fault);
+  });
+
+  // proves: words_catalogue, locale_never_changes_bytes
+  test('what is sent or written of a view is read in UK English, whatever the language and locale', () => {
+    const english = VIEWS.map((view) => readingOf(view, text));
+    setLanguage('en-XA');
+    setLocale('ar-EG');
+    assert.deepEqual(
+      VIEWS.map((view) => sourceReadingOf(view, text)),
+      english,
+    );
   });
 });

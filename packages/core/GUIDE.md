@@ -290,7 +290,7 @@ the user saves a view as shown (untangle-saved.ts).
 #### Switches and the details
 
 - `view-switches.ts` — the View menu's four switches (view_switches).
-  - `VIEW_SWITCHES`, `SWITCH_NAMES`.
+  - `VIEW_SWITCHES`, and `switchName`, each switch's name from the catalogue.
   - `startingSwitches`: from the settings' defaults, the style graph's merging and a view's switches saved as shown
     (view_switch_defaults).
   - `labelsHidden` and `LABEL_SCALE`: a link's label under 11 pixels is hidden (untangle_labels).
@@ -718,12 +718,13 @@ reads `· QUERY` as a query, and the core draws no query as data. So a view is n
 - `views.ts` — `viewsOf` finds the views of a note, each with its graph, its block and its query text.
   - Some blocks are listed with a `fault`, never skipped. That is a block meant as a view with no name, or a name that
     is not one word. It is also a name already used in its graph.
-  - `readingOf` says a view in plain language ("everything within 2 steps of Alice").
+  - `readingOf` says a view in plain language ("everything within 2 steps of Alice"), in the reader's language.
+  - `sourceReadingOf` says it in UK English, for what is sent to a model or written into a file.
 - `view-profile.ts` — the view profile.
   - `parseView` reads the five shapes of query into a `ViewSpec`. The shapes are a hand-picked set, everything near a
     thing, how one thing reaches another, only some kinds, and a walked path.
   - It refuses anything else with a message that names the five shapes in words. The message shows the nearest one's
-    form (`VIEW_NAMES`, `VIEW_FORMS`).
+    form (`viewName`, `VIEW_FORMS`). Its words come from the catalogue (views-source-words.ts).
   - The queries are ISO GQL that Grafeo runs as written.
   - A thing is named by its `id` property. The reader writes it into every node it gives Grafeo, and the core's world
     keys every node by it.
@@ -1160,7 +1161,7 @@ shown over the graph and never written until a person accepts a change. Then it 
   - `notTaken`: a change read back to see it took effect.
   - `newProblems`: what a change leaves wrong that was not before.
   - It is not exported by the entry: only a review writes a change.
-- `proposals-marks.ts` — which boxes and links each change adds, changes or removes. `MARK_WORDS` says it in words, never
+- `proposals-marks.ts` — which boxes and links each change adds, changes or removes. `markWord` says it in words, never
   by colour alone. Each change is read back in plain language as the text pane reads a line (`readBack`).
 - `proposals-review.ts` — `ProposalReview`.
   - `show`: the proposal laid over the graph, with rows, groups, marks, provenance, and whether the graph has moved. It

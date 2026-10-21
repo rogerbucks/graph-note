@@ -8,6 +8,7 @@ import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
 import { VIEW_LIMITS, parseView } from './view-profile.ts';
 import { viewsOf } from './views.ts';
 import type { ViewArgs, ViewKind, ViewSpec } from './view-profile.ts';
+import { word } from './words.ts';
 
 const ESCAPED: Record<string, string> = { '\\': '\\\\', "'": "\\'", '\n': '\\n', '\r': '\\r', '\t': '\\t' };
 
@@ -65,10 +66,9 @@ export function viewQuery<K extends ViewKind>(kind: K, args: ViewArgs[K]): strin
     }
     case 'kinds': {
       const kinds = (args as ViewArgs['kinds']).kinds;
-      if (!kinds.length) throw new RangeError('a view of kinds needs at least one kind');
+      if (!kinds.length) throw new RangeError(word('views.write.no-kind'));
       const bad = kinds.find((k) => !WORD.test(k));
-      if (bad !== undefined)
-        throw new RangeError(`'${bad}' is not a kind a query can name: use letters, digits and underscores`);
+      if (bad !== undefined) throw new RangeError(word('views.write.bad-kind', { kind: bad }));
       // a kind Grafeo refuses as a label would be written into a view parseView then refuses: said here instead
       const kept = kinds.find(isRefusedKind);
       if (kept !== undefined) throw new RangeError(kindRefusal(kept));
@@ -85,12 +85,11 @@ export function viewQuery<K extends ViewKind>(kind: K, args: ViewArgs[K]): strin
  * says so otherwise.
  */
 export function viewBlock(graph: string, name: string, query: string): string {
-  for (const [what, word] of [
-    ['graph', graph],
-    ['view', name],
+  for (const [key, written] of [
+    ['views.write.graph-name', graph],
+    ['views.write.view-name', name],
   ] as const)
-    if (!/^\w+$/.test(word))
-      throw new RangeError(`the ${what} name '${word}' is not one word: use letters, digits and underscores`);
+    if (!/^\w+$/.test(written)) throw new RangeError(word(key, { name: written }));
   return `// graph: ${graph} · QUERY view ${name}\n${query}`;
 }
 
@@ -119,7 +118,7 @@ export function makeView(graph: string, name: string, spec: ViewSpec): { block: 
     const { kind, ...args } = spec;
     return { block: viewBlock(graph, name, viewQuery(kind, args as never)) };
   } catch (e) {
-    return { refused: `This view cannot be written: ${(e as Error).message}` };
+    return { refused: word('views.write.cannot', { why: (e as Error).message }) };
   }
 }
 
@@ -137,14 +136,14 @@ export function makeView(graph: string, name: string, spec: ViewSpec): { block: 
 export function addView(note: string, graph: string, block: string): { note: string } | { refused: string } {
   const view = viewsOf([block])[0];
   const spec = view && !view.fault && view.graph === graph ? parseView(view.query) : null;
-  if (!view || !spec || 'refused' in spec) return { refused: `This view cannot be written: it is no view of ${graph}` };
+  if (!view || !spec || 'refused' in spec) return { refused: word('views.write.not-a-view', { graph }) };
   const spans = gqlSpans(note),
     texts = spans.map((s) => s.text);
   const first = acceptNameFirst(unnamedIn(texts, graph), graph, named(spec));
   if (first) return { refused: first };
   if (viewsOf(texts).some((v) => v.graph === graph && v.name === view.name))
-    return { refused: `graph ${graph} already has a view called ${view.name}: give this one another name` };
+    return { refused: word('views.write.name-taken', { graph, view: view.name }) };
   const last = spans.filter((s) => graphOfBlock(s.text) === graph).pop();
   const r = last ? insertBlockAfter(note, { line: last.open, text: last.text }, block) : null;
-  return r?.ok ? { note: r.note } : { refused: r?.reason ?? `graph ${graph} is no longer in the note` };
+  return r?.ok ? { note: r.note } : { refused: r?.reason ?? word('views.write.graph-gone', { graph }) };
 }

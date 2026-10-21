@@ -21,6 +21,7 @@ import { SERVER_SOURCE_WORDS } from './server-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
 import { SHORTCUT_SOURCE_WORDS } from './shortcut-source-words.ts';
 import { STYLE_SOURCE_WORDS } from './style-source-words.ts';
+import { VIEWS_SOURCE_WORDS } from './views-source-words.ts';
 
 /** The source words, by key, in UK English: what every translation gives again. */
 export const SOURCE_WORDS = {
@@ -324,4 +325,6 @@ export const SOURCE_WORDS = {
   ...PROPOSAL_CARD_SOURCE_WORDS,
   // the core's proposals: their checks, refusals and where they came from (proposal-source-words.ts)
   ...PROPOSAL_SOURCE_WORDS,
+  // the core's views: their kinds, their readings and why one is refused (views-source-words.ts)
+  ...VIEWS_SOURCE_WORDS,
 } as const;

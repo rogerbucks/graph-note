@@ -9,9 +9,11 @@
 // steps on to b add up to k or fewer. A link is on one when the steps to its start, the link itself and the steps on
 // from its end do. That takes two breadth-first searches, however many routes there are.
 import type { Graph } from '@thoughtknot/graph-spec';
+import { formatList } from './locale-formats.ts';
 import { pathsOf } from './paths.ts';
 import type { PathReading } from './paths.ts';
 import type { ViewSpec } from './view-profile.ts';
+import { word } from './words.ts';
 
 type Edge = Graph['edges'][number];
 
@@ -32,14 +34,12 @@ export interface ViewResult {
   walk?: string[];
 }
 
-const or = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`);
-const steps = (n: number) => `${n} step${n === 1 ? '' : 's'}`;
+const or = (xs: string[]) => formatList(xs, 'disjunction');
 
 /** Nothing matches: no things, no links, and the sentence. */
 const nothing = (why: string): ViewResult => ({ things: [], links: [], empty: true, why });
 
-const noThing = (names: string[]) =>
-  `No thing is called ${or(names)}: pick ${names.length > 1 ? 'others' : 'another'}, or change the view`;
+const noThing = (names: string[]) => word('views.empty.no-thing', { count: names.length, names: or(names) });
 
 /** The things one link away from a thing: forwards only, or either way. */
 function neighbours(g: Graph, at: string, forwards: boolean, backwards: boolean): string[] {
@@ -77,8 +77,7 @@ export function evaluate(view: ViewSpec, reading: PathReading, graph: string): V
   const drawing = reading.graphs.get(graph),
     g = reading.world[graph];
   // a graph with nothing written in it is not in the reading at all, so the two are said alike
-  if (!drawing || !g || !drawing.boxes.length)
-    return nothing(`Graph ${graph} has no things in this note: add some, or change the view`);
+  if (!drawing || !g || !drawing.boxes.length) return nothing(word('views.empty.no-things', { graph }));
   const text = new Map(drawing.boxes.map((b) => [b.key, b.text])),
     say = (id: string) => text.get(id) ?? id,
     drawn = [...text.keys()];
@@ -99,7 +98,7 @@ export function evaluate(view: ViewSpec, reading: PathReading, graph: string): V
       const wanted = [...new Set(view.ids)],
         gone = wanted.filter((id) => !text.has(id)),
         here = wanted.filter((id) => text.has(id));
-      if (!wanted.length) return nothing('Nothing is picked: pick a thing, or change the view');
+      if (!wanted.length) return nothing(word('views.empty.none-picked'));
       if (!here.length) return nothing(noThing(gone));
       return { things: here, links: among(new Set(here)), empty: false, ...(gone.length ? { missing: gone } : {}) };
     }
@@ -107,7 +106,7 @@ export function evaluate(view: ViewSpec, reading: PathReading, graph: string): V
       if (!text.has(view.id)) return nothing(noThing([view.id]));
       // as Grafeo has it, a thing with no links is matched by no route, so nothing is near it
       if (!neighbours(g, view.id, true, true).length)
-        return nothing(`${say(view.id)} has no links, so nothing is near it: pick another thing, or change the view`);
+        return nothing(word('views.empty.no-links', { thing: say(view.id) }));
       return shown(new Set(spread(g, view.id, view.depth, true, true).keys()));
     }
     case 'reaches': {
@@ -121,19 +120,15 @@ export function evaluate(view: ViewSpec, reading: PathReading, graph: string): V
         used = g.edges.filter((e) => on(e[0], e[2]) || (!directed && on(e[2], e[0]))),
         ids = new Set(used.flatMap((e) => [e[0], e[2]]));
       if (!used.length) {
-        const [a, b] = [say(view.from), say(view.to)];
-        return nothing(
-          directed
-            ? `${a} does not reach ${b} in up to ${steps(most)}: allow either direction, or change the view`
-            : `${a} and ${b} are not connected in up to ${steps(most)}: pick other things, or change the view`,
-        );
+        const ends = { from: say(view.from), to: say(view.to), count: most };
+        return nothing(word(directed ? 'views.empty.not-reached' : 'views.empty.not-connected', ends));
       }
       return { things: drawn.filter((id) => ids.has(id)), links: linksOf(used), empty: false };
     }
     case 'kinds': {
       const wanted = new Set(view.kinds),
         here = new Set(drawn.filter((id) => [...(g.nodes.get(id)?.[0] ?? [])].some((k) => wanted.has(k))));
-      if (!here.size) return nothing(`No thing is a ${or(view.kinds)}: pick other kinds, or change the view`);
+      if (!here.size) return nothing(word('views.empty.no-kind', { kinds: or(view.kinds) }));
       return shown(here);
     }
     case 'path': {
@@ -141,16 +136,12 @@ export function evaluate(view: ViewSpec, reading: PathReading, graph: string): V
       if (!path || !g.has(view.path, 'Path'))
         return nothing(
           g.nodes.has(view.path)
-            ? `${say(view.path)} is not a path: pick a path, or change the view`
-            : `No path is called ${view.path}: pick another, or change the view`,
+            ? word('views.empty.not-path', { thing: say(view.path) })
+            : word('views.empty.no-path', { path: view.path }),
         );
       const walk = path.steps.filter((s) => !s.missing).map((s) => s.key);
       if (!walk.length)
-        return nothing(
-          path.empty
-            ? `The path ${path.title} has no steps: record a walk, or change the view`
-            : `Every step of the path ${path.title} is gone from the graph: restore a step, or change the view`,
-        );
+        return nothing(word(path.empty ? 'views.empty.no-steps' : 'views.empty.steps-gone', { path: path.title }));
       const ordered = g
         .out(view.path, 'STEP')
         .map((e, i) => ({ e, at: typeof e[3].seq === 'number' ? e[3].seq : Infinity, i }))

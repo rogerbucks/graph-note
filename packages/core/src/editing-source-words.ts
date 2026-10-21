@@ -104,4 +104,12 @@ export const EDITING_SOURCE_WORDS = {
   // locking a graph, and two versions compared (lock.ts, changes-view.ts)
   'editing.lock.no-graph': 'there is no graph {graph} to lock',
   'editing.no-changes': 'No changes between these versions.',
+  'editing.changes.add-kind': 'Added: {thing} ({kind})',
+  'editing.changes.change-kind': 'Changed: {thing} ({kind})',
+  'editing.changes.remove-kind': 'Removed: {thing} ({kind})',
+  'editing.changes.property-added': '{key} added: {value}',
+  'editing.changes.property-removed': '{key} removed: {value}',
+  'editing.changes.property-changed': '{key}: {was} → {now}',
+  'editing.changes.kind-changed': 'kind: {was} → {now}',
+  'editing.changes.no-kind': 'none',
 } as const;

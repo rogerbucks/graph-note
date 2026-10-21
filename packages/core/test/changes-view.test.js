@@ -1,13 +1,17 @@
 // The changes view (editor spec §41, changes_view): two versions of a note's graph drawn as one. Each thing and link
 // added, removed or changed is marked on the drawing by its line as well as its hue, in both themes. Each is listed as
 // text too.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadEngine } from '../src/engine.ts';
 import { CHANGE_LOOKS, changesText, changesView, markedChanges, noChanges } from '../src/changes-view.ts';
 import { chosen, directions } from '../src/render.ts';
 import { PALETTES } from '../src/palette.ts';
 import { hueColour } from '../src/theme.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const engine = await loadEngine();
 const fence = (body) => '# Reading\n\n```gql\n' + body + '\n```\n';
@@ -165,5 +169,21 @@ describe('the changes view', () => {
       markedChanges(drawnIn(PALETTES.light), shown, PALETTES.light),
       markedChanges(drawnIn(PALETTES.dark), shown, PALETTES.dark),
     );
+  });
+});
+
+describe('the changes listed in the person’s language', () => {
+  // proves: words_catalogue, changes_view
+  test('each change, and each line of what changed, is said in the person’s language', () => {
+    setLanguage('en-XA');
+    const shown = changesView(BEFORE, AFTER, 'reader');
+    const kinds = changesView(
+      fence("// graph: g\n(a:Option {name: 'A'}),\n(b:Option {name: 'B', size: 1})"),
+      fence("// graph: g\n(a {name: 'A'}),\n(b:Option {name: 'B', colour: 'red'})"),
+      'g',
+    );
+    const lines = [...shown.changes, ...kinds.changes].flatMap((c) => [c.said, ...c.details]);
+    assert.ok(lines.length > shown.changes.length + kinds.changes.length, 'details listed too');
+    for (const line of lines) assert.ok(isPseudoWord(line), line);
   });
 });

@@ -10,7 +10,7 @@ import { formatList } from './locale-formats.ts';
 import type { Link, NoteReading } from './note-reading.ts';
 import { evaluate } from './view-evaluate.ts';
 import { parseView } from './view-profile.ts';
-import { readingOf, viewsOf } from './views.ts';
+import { readingOf, sourceReadingOf, viewsOf } from './views.ts';
 import { word } from './words.ts';
 
 /** What the user chose to send: a graph whole, one of its views by name, or some of its things by name. */
@@ -84,12 +84,12 @@ function viewPart(
   const result = evaluate(spec, reading, graph);
   if (result.empty) return word('ai.scope.view-empty', { view: name, why: result.why ?? word('ai.scope.change-view') });
   const text = new Map((reading.graphs.get(graph)?.boxes ?? []).map((b) => [b.key, b.text]));
-  const read = readingOf(spec, (id) => text.get(id) ?? id);
+  const textOf = (id: string) => text.get(id) ?? id;
   return {
     keys: result.things,
     links: result.links,
-    said: `view ${name} of graph ${graph}: ${read}`,
-    shown: word('ai.scope.said-view', { view: name, graph, reading: read }),
+    said: `view ${name} of graph ${graph}: ${sourceReadingOf(spec, textOf)}`,
+    shown: word('ai.scope.said-view', { view: name, graph, reading: readingOf(spec, textOf) }),
   };
 }
 

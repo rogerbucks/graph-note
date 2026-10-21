@@ -35,7 +35,7 @@
 // flowLegend, flowSaid, reversedLinks` and their types, 14 Oct 2026). A path played on its own and exported as an
 // animated SVG (`PathAutoplay, PATH_PACES, DEFAULT_PACE, paceSaid, animationFits, ANIMATION_LIMITS` and their types, 14
 // Oct 2026). The View menu's folding, merging and routing (`ViewState, startingSwitches, labelsHidden, foldsHiding,
-// linksOf, VIEW_SWITCHES, SWITCH_NAMES, SWITCH_SETTINGS, LABEL_SCALE, BUSY_HUB` and their types, 14 Oct 2026). Animated
+// linksOf, VIEW_SWITCHES, switchName, SWITCH_SETTINGS, LABEL_SCALE, BUSY_HUB` and their types, 14 Oct 2026). Animated
 // images and pictures on boxes (`imageFacts, imageLink, imagesOf, neverMoves, IMAGE_EXTENSIONS, IMAGE_LIMITS,
 // LIMITS_SAID, REDUCED_WORDS, pastLimit, playRefusal, startOf, PICTURE_MARK, PICTURE_SIZE, pictureFor, picturesFor,
 // animationSaid` and their types, 14 Oct 2026). The host loads the files, and the core says what each can do. Links and
@@ -117,7 +117,6 @@ export const VALUES = [
   'LOCKED_AWAY',
   'LayoutRunner',
   'LegendFilter',
-  'MARK_WORDS',
   'MAX_SCALE',
   'MOVE_MS',
   'NO_BASIS',
@@ -156,7 +155,6 @@ export const VALUES = [
   'STEP',
   'STYLE',
   'STYLE_HUES',
-  'SWITCH_NAMES',
   'SWITCH_SETTINGS',
   'THEME_COLOURS',
   'THEME_TOKENS',
@@ -172,7 +170,6 @@ export const VALUES = [
   'VIEW_FORMS',
   'VIEW_KINDS',
   'VIEW_LIMITS',
-  'VIEW_NAMES',
   'VIEW_SWITCHES',
   'ViewState',
   'Zoom',
@@ -324,6 +321,7 @@ export const VALUES = [
   'makeList',
   'makeProposal',
   'makeView',
+  'markWord',
   'markedChanges',
   'matchClass',
   'matrixGrants',

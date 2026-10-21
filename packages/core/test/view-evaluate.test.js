@@ -2,10 +2,14 @@
 // for the same query. It gives the links to draw with them too, as indexes into the drawing's links. The expected
 // things were checked against Grafeo too: 2,764 queries on 260 random graphs, run on 11 Oct 2026. They gave the same
 // things as the core, and for how one thing reaches another, the same links.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { evaluate } from '../src/view-evaluate.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 // links 0..4 in the order written
 const TEAM = `// graph: team · SOURCE
@@ -223,5 +227,29 @@ describe('the links are the drawing’s', () => {
     const before = JSON.stringify(team.graphs.get('team'));
     onTeam({ kind: 'reaches', from: 'alice', to: 'dan', steps: 6, directed: false });
     assert.equal(JSON.stringify(team.graphs.get('team')), before);
+  });
+});
+
+describe('a view that matches nothing, in the person’s language', () => {
+  // proves: words_catalogue, empty_view
+  test('says why, and what to change, in the person’s language', () => {
+    setLanguage('en-XA');
+    const lonely = readNote([`${TEAM},\n(solo:Person {name: 'Solo'})`]);
+    const tour = readNote([TOUR]);
+    const empty = [
+      onTeam({ kind: 'picked', ids: [] }),
+      onTeam({ kind: 'picked', ids: ['nobody', 'noone'] }),
+      run(lonely, 'team', { kind: 'near', id: 'solo', depth: 1 }),
+      onTeam({ kind: 'reaches', from: 'dan', to: 'alice', steps: 2, directed: true }),
+      onTeam({ kind: 'reaches', from: 'alice', to: 'zoe', steps: 1, directed: false }),
+      onTeam({ kind: 'kinds', kinds: ['Robot', 'Cat'] }),
+      onTeam({ kind: 'path', path: 'alice' }),
+      run(tour, 'team', { kind: 'path', path: 'nowhere' }),
+      run(team, 'other', { kind: 'picked', ids: ['alice'] }),
+    ];
+    for (const r of empty) {
+      assert.equal(r.empty, true);
+      assert.ok(isPseudoWord(r.why), r.why);
+    }
   });
 });
