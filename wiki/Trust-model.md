@@ -142,7 +142,7 @@ Wave 6.
   secrets are the plug-in's own, kept apart from the others'. Objects are frozen. Errors are caught and named. A call
   over the time limit stops its plug-in.
 - **Code:** `packages/core/src/plugins.ts`, with `plugin-points.ts`, `plugin-calls.ts`, `plugin-files.ts` and
-  `plugin-sources.ts` beside it.
+  `plugin-sources.ts` and `plugin-ai.ts` beside it.
 - **Gaps:**
   - A plug-in runs in the host's process, so it can reach the network whatever its manifest says. A call that never
     returns is not stopped, as the time is read after it returns (TRUST-14).
@@ -231,6 +231,9 @@ For the AI provider extension point (`trust_ai_provider_bounded`). B7 stays the 
 - **What the host keeps:** the key and the send. The provider names where its key goes, such as a header, and the
   host puts it there. The provider never sees the key, the notes or the network.
 - **The answer is still outside data.** The core checks what the provider read, as it checks any answer (AI-4).
+- **Built.** `packages/core/src/plugin-ai.ts` holds the provider point, and `ai.ts` calls it. The test is
+  `packages/core/test/plugins-ai.test.js`. A provider may not put the key in a header the host sets itself, such as
+  `Host` or `Cookie`. The body it shapes is checked for credentials too.
 
 ### Plug-in diagram types
 

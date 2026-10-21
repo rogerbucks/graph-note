@@ -57,7 +57,16 @@
           "matrixRow?: string | undefined",
           "model: string",
           "name: string",
+          "provider?: string | undefined",
           "purpose: string"
+        ],
+        "AiProvider": [
+          "interface",
+          "key?: { header: string; format?: string; } | undefined",
+          "name: string",
+          "read: (reply: { status: number; text: string; }) => ProviderReading",
+          "shape: (request: ProviderRequest) => string",
+          "title: string"
         ],
         "aiReady": [
           "value: (s: Settings) => { ready: AiModel[]; } | { off: string; }"
@@ -743,13 +752,14 @@
           "value: (scope: ExportScope, layout: ExportLayout, info: ExportInfo) => Promise<ExportImage | Refusal | TooLargeToAnimate | null>"
         ],
         "EXTENSION_POINTS": [
-          "value: readonly ['exports', 'theme', 'storage', 'commands', 'panels', 'sources', 'steps']"
+          "value: readonly ['exports', 'theme', 'storage', 'commands', 'panels', 'sources', 'steps', 'ai']"
         ],
         "ExtensionPoint": [
-          "type = 'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps'"
+          "type = 'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai'"
         ],
         "ExtensionPoints": [
           "interface",
+          "ai?: { add: (provider: AiProvider) => void; } | undefined",
           "commands?: { add: (command: PluginCommand) => void; } | undefined",
           "exports?: { add: (exporter: DataExporter) => void; } | undefined",
           "host?: Partial<HostAbilities> | undefined",
@@ -1969,6 +1979,8 @@
         ],
         "PluginRegistry": [
           "interface",
+          "aiProvider: (name: string) => AiProvider | undefined",
+          "aiProviders: () => AiProvider[]",
           "commands: () => PluginCommand[]",
           "exporter: (format: string) => DataExporter | undefined",
           "exporters: () => DataExporter[]",
@@ -2050,6 +2062,7 @@
           "level: string | null",
           "model: AiModel",
           "note: string",
+          "provider?: AiProvider | undefined",
           "said: string",
           "scope: SendScope",
           "summary: Array<string>",
@@ -2172,6 +2185,18 @@
         ],
         "provenanceLines": [
           "value: (p: Proposal) => string[]"
+        ],
+        "providerContract": [
+          "value: (p: AiProvider) => PluginCheck[]"
+        ],
+        "ProviderReading": [
+          "type = { content: string; } | { refused: string; } | { unread: string; }"
+        ],
+        "ProviderRequest": [
+          "interface",
+          "asked: string",
+          "instructions: string",
+          "model: string"
         ],
         "PSEUDO_LANGUAGES": [
           "value: { readonly 'en-XA': 'ltr'; readonly 'ar-XB': 'rtl'; }"
@@ -2359,6 +2384,7 @@
           "model: string",
           "note: string",
           "notePath: string",
+          "provider?: AiProvider | undefined",
           "question: string",
           "secrets?: ReadonlyArray<string> | undefined",
           "settings: Settings",
@@ -2884,7 +2910,7 @@
           "api: string",
           "id: string",
           "register: (points: ExtensionPoints) => void",
-          "uses: Array<'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps'>",
+          "uses: Array<'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai'>",
           "version: string"
         ],
         "Threshold": [

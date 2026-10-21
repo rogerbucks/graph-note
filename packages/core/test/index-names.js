@@ -371,6 +371,7 @@ export const VALUES = [
   'propertiesOf',
   'propertyNames',
   'provenanceLines',
+  'providerContract',
   'pseudoWords',
   'readBack',
   'readNote',
@@ -413,6 +414,7 @@ export const VALUES = [
 /** The types src/index.ts exports, sorted. */
 export const TYPES = [
   'AiModel',
+  'AiProvider',
   'AiUse',
   'ArrowheadsChoice',
   'Arrows',

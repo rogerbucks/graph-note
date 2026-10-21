@@ -27,6 +27,7 @@ export const POINT_ABOUT = {
     'A place graphs are read from, such as a database. Its graph is held as a joined graph: untrusted, and strictest when unlabelled.',
   steps:
     'A step that makes a graph from others, named under its id. Its graph keeps the lowest trust and strictest class it was given.',
+  ai: 'An AI service’s request shape. It only shapes the body and reads the reply; the core keeps the gate and the person’s yes, and the host the key.',
 };
 
 /** Where a requirement stands, as a mark and words: in the latest release, on main only, being built, or planned. */

@@ -950,6 +950,9 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   carries its origins. A source's graph starts untrusted; a step's keeps the lowest trust it was given. An unlabelled
   graph counts as the strictest class, and a step's keeps the strictest class it was given. One past the read limits
   is refused. The registry reads them with `readGraph` and `runStep`.
+- `plugin-ai.ts` — AI providers (trust_ai_provider_bounded). A provider only shapes the body (`shape`) and reads the
+  reply (`read`). It names where the key goes (`key`), and the host puts it there. `aiProvider` gives one with each
+  call timed and named; `prepareSend` takes it as `provider` for a model whose `provider` names it.
 
 #### The contract suites
 
@@ -960,6 +963,7 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - `commandContract`: a command's id, its title on one line, and that it can be run.
   - `sourceContract` and `stepContract`: a graph source or step gives back a graph's text within the read limits. A
     step is tried on `SAMPLE_GRAPH` and must give the same graph each time.
+  - `providerContract`: an AI provider shapes text holding what it was asked, the same each time, and reads any reply.
   - Each title is checked for right-to-left too (plugin_rtl). It must force no direction of its own, so it reads in
     the host's.
 

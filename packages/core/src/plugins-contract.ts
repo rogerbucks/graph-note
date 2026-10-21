@@ -6,6 +6,8 @@
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { DataExporter, GivenGraph, PluginCommand, PluginSource, PluginStep, StorageBackend } from './plugins.ts';
 import { joinedGraph } from './plugin-sources.ts';
+import { providerProblem } from './plugin-ai.ts';
+import type { AiProvider } from './plugin-ai.ts';
 import { storageContract } from './storage-contract.ts';
 import type { StorageCheck } from './storage-contract.ts';
 import {
@@ -216,5 +218,49 @@ export function stepContract(s: PluginStep, pluginId: string): StorageCheck[] {
       },
     },
     { name: title.name, run: async () => title.run() },
+  ];
+}
+
+/** The request every AI provider is tried on. */
+const SAMPLE_REQUEST = Object.freeze({
+  model: 'sample-1',
+  instructions: 'Answer with JSON only.',
+  asked: '```graph-data\nGraph trip:\n\n(paris:City)\n```\n\nQuestion: What is missing?',
+});
+
+/** Every check an AI provider is held to (trust_ai_provider_bounded): it shapes text, the same each time, and reads any reply. */
+export function providerContract(p: AiProvider): PluginCheck[] {
+  return [
+    {
+      name: 'it is named by a lower-case word, and puts the key only in a header it may',
+      run: () => {
+        const why = providerProblem(p, new Map());
+        if (why) fail(p.name, 'a provider the registry accepts', why);
+      },
+    },
+    {
+      name: 'it shapes a request as text, the same each time, holding what it was asked',
+      run: () => {
+        const a: unknown = p.shape(SAMPLE_REQUEST);
+        if (typeof a !== 'string') fail(p.name, 'text', a);
+        if (a !== p.shape(SAMPLE_REQUEST)) fail(p.name, 'the same text twice', a);
+        if (!a.includes('graph-data')) fail(p.name, 'the asked text, fence and all', a);
+      },
+    },
+    {
+      name: 'it reads an answer, a refusal or nothing from any reply, and never throws',
+      run: () => {
+        for (const reply of [
+          { status: 200, text: '{}' },
+          { status: 500, text: 'down' },
+          { status: 200, text: 'not json' },
+        ]) {
+          const r: unknown = p.read(reply);
+          const said: unknown = r && typeof r === 'object' ? Object.values(r)[0] : undefined;
+          if (typeof said !== 'string') fail(p.name, 'an answer, a refusal or why it read none', r);
+        }
+      },
+    },
+    readsInHostDirection(p.name, p.title),
   ];
 }
