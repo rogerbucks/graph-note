@@ -3837,8 +3837,8 @@
       "likelihood": "low",
       "impact": "high",
       "decision": "fix-later",
-      "fix": "Before a host loads an outside plug-in, give the files ability through the note gate: a plug-in reads only notes at or below a ceiling the person sets for it, and its writes go to a proposal card.",
-      "check": "packages/core/test/plugins-limits.test.js: a plug-in's files ability lists and reads only notes at or below its ceiling, and a write it makes waits for the person.",
+      "fix": "Do this before a host loads an outside plug-in. Give the files ability through the note gate. A plug-in reads only notes at or below a ceiling the person sets for it. Its writes go to a proposal card.",
+      "check": "packages/core/test/plugins-limits.test.js: a plug-in lists and reads only notes at or below its ceiling. A write it makes waits for the person.",
       "paths": [
         "packages/core/src/plugins.ts",
         "packages/core/src/plugin-points.ts"

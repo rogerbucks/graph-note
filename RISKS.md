@@ -1053,9 +1053,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Risk:** A plug-in given the files ability reads and writes every note through the host's storage. Nothing checks a note's class, so a plug-in can read a note the person keeps from AI and from other people.
 
-**Fix:** Before a host loads an outside plug-in, give the files ability through the note gate: a plug-in reads only notes at or below a ceiling the person sets for it, and its writes go to a proposal card.
+**Fix:** Do this before a host loads an outside plug-in. Give the files ability through the note gate. A plug-in reads only notes at or below a ceiling the person sets for it. Its writes go to a proposal card.
 
-**Check:** packages/core/test/plugins-limits.test.js: a plug-in's files ability lists and reads only notes at or below its ceiling, and a write it makes waits for the person.
+**Check:** packages/core/test/plugins-limits.test.js: a plug-in lists and reads only notes at or below its ceiling. A write it makes waits for the person.
 
 ## Done or accepted (23)
 
