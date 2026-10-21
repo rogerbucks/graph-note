@@ -5,6 +5,7 @@
 // The path is checked as written, and again as its real path, every link followed. So neither `..` nor a link can leave
 // the vault. The note store checks a note's place when it is opened, and again before every read and write. So a note
 // swapped for a link after it was opened is refused too.
+import { word } from '@thoughtknot/core';
 import { promises as fs } from 'node:fs';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 
@@ -27,34 +28,34 @@ export function inside(root: string, full: string): string | null {
 function refusal(inVault: string, given: string, linked: boolean): string | null {
   const parts = inVault.split(/[\\/]/);
   if (parts.some((p) => p.startsWith('.')))
-    return `${given} ${linked ? 'leads into' : 'is in'} a hidden folder or file, which the editor never opens.`;
+    return word(linked ? 'server.place.hidden-linked' : 'server.place.hidden', { path: given });
   if (!inVault.endsWith('.md'))
-    return `${given} ${linked ? 'leads to a file that is' : 'is'} not a Markdown note (.md).`;
+    return word(linked ? 'server.place.not-markdown-linked' : 'server.place.not-markdown', { path: given });
   return null;
 }
 
 /** Where the note `given` (a path inside the vault, or a full one) is, or why it may not be opened. */
 export async function notePlace(vault: Vault, given: string): Promise<Place> {
   if (typeof given !== 'string' || given === '' || given.includes('\0'))
-    return { ok: false, why: 'That is not a note’s path.' };
+    return { ok: false, why: word('server.place.not-path') };
   const named = isAbsolute(given) ? resolve(given) : resolve(vault.real, given);
   const written = inside(vault.real, named) ?? inside(vault.named, named);
-  if (written === null) return { ok: false, why: `${given} is outside the vault.` };
+  if (written === null) return { ok: false, why: word('server.place.outside', { path: given }) };
   const asWritten = refusal(written, given, false);
   if (asWritten) return { ok: false, why: asWritten };
   let real: string;
   try {
     real = await fs.realpath(named);
   } catch {
-    return { ok: false, why: `${given} is not there.` };
+    return { ok: false, why: word('server.place.not-there', { path: given }) };
   }
   const inVault = inside(vault.real, real);
-  if (inVault === null) return { ok: false, why: `${given} leads outside the vault.` };
+  if (inVault === null) return { ok: false, why: word('server.place.leads-outside', { path: given }) };
   const asLinked = refusal(inVault, given, true);
   if (asLinked) return { ok: false, why: asLinked };
   const stat = await fs.stat(real).catch(() => null);
-  if (!stat?.isFile()) return { ok: false, why: `${given} is not a file.` };
+  if (!stat?.isFile()) return { ok: false, why: word('server.place.not-file', { path: given }) };
   // another hard link to it may lie outside the vault, so a write here would change a file there
-  if (stat.nlink > 1) return { ok: false, why: `${given} has another hard link, which may lie outside the vault.` };
+  if (stat.nlink > 1) return { ok: false, why: word('server.place.hard-link', { path: given }) };
   return { ok: true, real, inVault };
 }

@@ -1,6 +1,6 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). The
-// areas are the display layer, the Obsidian host, the browser page and the Claude Code mod; each is added as its words
-// move. Each word comes from
+// areas are the display layer, the Obsidian host, the browser page, the Claude Code mod and its editor server. Each is
+// added as its words move. Each word comes from
 // the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
@@ -19,6 +19,8 @@ const AREAS = [
   'packages/obsidian/src/',
   'packages/claude-code/page/',
   'packages/claude-code/src/',
+  'packages/claude-code/server/',
+  'packages/claude-code/bin/',
 ];
 
 /** The files of the areas, as paths from the repository's root. */
@@ -65,6 +67,26 @@ const KEPT = {
   'packages/claude-code/src/editor-propose.ts': '*',
   // a process's errors, never shown: each caller says why in its own words (editor-matrix.ts, data-guard.ts)
   'packages/claude-code/src/editor-realpath.ts': '*',
+  // what the editor server tells Claude alone: the answers to Claude's propose tool and the key it proposes with
+  'packages/claude-code/server/editor-proposals.ts': '*',
+  'packages/claude-code/bin/propose-process.ts': '*',
+  'packages/claude-code/server/editor-store.ts': ['This key proposes changes and does nothing else.'],
+  // refusals of a request the editor's own page never makes, so no person reads them, and a developer's error
+  'packages/claude-code/server/request-guard.ts': '*',
+  'packages/claude-code/server/start-server.ts': [
+    '<body><p>The ThoughtKnot editor is not here yet.</p></body></html>\n',
+    'HTTP/1.1 {} {}\r\n{}content-length: 0\r\nconnection: close\r\n\r\n',
+    'The editor server takes no {}: it listens on 127.0.0.1, on a port the system chooses.',
+    'This server answers only its own address.',
+    'This server answers no request from another origin.',
+    'This server takes nothing in the address after its path, and never a token.',
+    'This server takes only GET and PUT.',
+  ],
+  // the lines the server writes for the mod, which reads them by their start (editor-launch.ts)
+  'packages/claude-code/server/editor-process.ts': ['editor server: {}\n', 'editor server stopped: {}\n'],
+  'packages/claude-code/server/editor-server.ts': ['editor server: {}\n'],
+  // a marker the note's writer throws and catches again, never shown
+  'packages/claude-code/server/note-file.ts': ['folder moved'],
 };
 
 /** The calls whose strings pick elements of the page, never words: `querySelector('a, b')` and the like. */

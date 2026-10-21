@@ -7,6 +7,7 @@
 //   GET notes/<id>/at/<commit>               {text} at a commit just listed for it
 //   GET notes/<id>/reviews                   {items: [{kind, id, title, author, when, url}]}, or 404 {why}
 //   GET notes/<id>/reviews/<kind>/<item id>  {files: [{path, before, after}], withheld: [{path, why}], workstreams, unread}
+import { word } from '@thoughtknot/core';
 import type { ReviewItem } from '@thoughtknot/core';
 import type { GitHubReader } from './github-reader.ts';
 import type { NoteHistory } from './note-history.ts';
@@ -38,11 +39,10 @@ const json = (status: number, body: object): ApiAnswer => ({
 /** Answers `tail`, a route of changes on one note: the versions, a text at one, the review items, or one item. */
 export async function changesAnswer(tail: string, a: ChangesAsked): Promise<ApiAnswer> {
   const at = /^\/at\/([0-9a-f]{40})$/.exec(tail)?.[1];
-  if (at && !a.listed.versions.has(at)) return json(404, { why: 'No such version of this note.' });
+  if (at && !a.listed.versions.has(at)) return json(404, { why: word('server.no-version-of-note') });
   const m = REVIEW_ROUTE.exec(tail);
-  if (!at && tail !== '/versions' && !m) return json(404, { why: 'No such change.' });
-  if (m?.[1] && !a.listed.items.has(`${m[1]}/${m[2]}`))
-    return json(404, { why: 'No such change listed for this note.' });
+  if (!at && tail !== '/versions' && !m) return json(404, { why: word('server.no-change') });
+  if (m?.[1] && !a.listed.items.has(`${m[1]}/${m[2]}`)) return json(404, { why: word('server.change-not-listed') });
   // a note the gate holds back says nothing of its history or its repository either
   const real = await a.sendable();
   if (typeof real !== 'string') return real;

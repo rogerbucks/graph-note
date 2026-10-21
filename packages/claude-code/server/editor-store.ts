@@ -19,7 +19,7 @@ import { DraftShelf } from './note-drafts.ts';
 import { NODE_FILES, readNoteFile, writeAtomically, type NoteFiles, type NoteText } from './note-file.ts';
 import { notePlace, type Vault } from './note-place.ts';
 import { watchNote, type Watcher } from './note-watch.ts';
-import { sha256 } from '@thoughtknot/core';
+import { sha256, word } from '@thoughtknot/core';
 
 import type { NoteGate } from './editor-gate.ts';
 import { proposalInto } from './editor-proposals.ts';
@@ -73,8 +73,8 @@ const ROUTE =
 
 const NOT_YOURS: ApiAnswer = { status: 403, text: 'This key proposes changes and does nothing else.' };
 
-const NOT_OPEN: ApiAnswer = { status: 404, text: 'No such note is open.' };
-const STOPPED: ApiAnswer = { status: 503, text: 'The editor has stopped; nothing was written.' };
+const notOpen = (): ApiAnswer => ({ status: 404, text: word('server.note-not-open') });
+const stopped = (): ApiAnswer => ({ status: 503, text: word('server.stopped-unwritten') });
 
 /** An answer in JSON. */
 function answer(status: number, body: object, headers: Record<string, string> = {}): ApiAnswer {
@@ -118,7 +118,7 @@ export class NoteStore {
   static async create(options: NoteStoreOptions): Promise<NoteStore> {
     const named = resolve(options.vault);
     const real = await fs.realpath(named);
-    if (!(await fs.stat(real)).isDirectory()) throw new Error('The vault must be a folder.');
+    if (!(await fs.stat(real)).isDirectory()) throw new Error(word('server.vault-not-folder'));
     const where = { real, named };
     const drafts = await DraftShelf.open(options.drafts, where);
     const store = new NoteStore(where, drafts, options.watch ?? watchNote, options.files ?? NODE_FILES, options.gate);
@@ -149,7 +149,7 @@ export class NoteStore {
    * it may not be opened.
    */
   async open(given: string): Promise<Opened> {
-    if (this.stopped) return { ok: false, why: 'The editor has stopped.' };
+    if (this.stopped) return { ok: false, why: word('server.stopped') };
     const place = await notePlace(this.where, given);
     if (!place.ok) return place;
     const known = this.ids.get(place.inVault);
@@ -173,8 +173,8 @@ export class NoteStore {
   readonly api = async (r: ApiRequest): Promise<ApiAnswer> => {
     const m = ROUTE.exec(r.path);
     const id = m?.[1];
-    if (!m || !id || !this.notes.has(id)) return NOT_OPEN;
-    if (this.stopped) return STOPPED;
+    if (!m || !id || !this.notes.has(id)) return notOpen();
+    if (this.stopped) return stopped();
     const ifMatch = typeof r.headers['if-match'] === 'string' ? r.headers['if-match'] : null;
     const what = `${r.method} ${m[2] ?? ''}`;
     // Claude's key proposes and does nothing else; the page's token never does (cc_claude_proposes)
@@ -185,7 +185,7 @@ export class NoteStore {
     if (what === 'PUT /draft') return this.keepDraft(id, r.body, ifMatch);
     if (what === 'GET /events') return this.follow(id);
     if (/^GET \/(versions|at|reviews)/.test(what)) return this.changes(id, what.slice('GET '.length));
-    return { status: 405, text: 'Not this method.' };
+    return { status: 405, text: word('server.not-this-method') };
   };
 
   /** Stops: no write starts after this, and it resolves once every write under way is finished. */
@@ -200,8 +200,7 @@ export class NoteStore {
   /** The note read from disk where it was opened, its place checked again first. */
   private async load(note: OpenNote): Promise<NoteText & { real?: string }> {
     const place = await notePlace(this.where, note.inVault);
-    if (!place.ok || place.inVault !== note.inVault)
-      return { ok: false, why: 'The note is no longer where it was opened, or now leads outside the vault.' };
+    if (!place.ok || place.inVault !== note.inVault) return { ok: false, why: word('server.note-moved') };
     const r = await readNoteFile(place.real);
     return r.ok ? { ...r, real: place.real } : r;
   }
@@ -229,12 +228,12 @@ export class NoteStore {
     return changesAnswer(tail, {
       sendable: async () => {
         const r = await this.load(note);
-        if (!r.ok || !r.real) return answer(410, { why: r.ok ? 'The note is gone.' : r.why });
+        if (!r.ok || !r.real) return answer(410, { why: r.ok ? word('server.note-gone') : r.why });
         const held = this.refusal(note, r.text);
         return held === null ? r.real : answer(403, { why: held });
       },
       refusal: (text) => this.refusal(note, text),
-      held: (text) => (!gate ? null : gate.file ? gate.file(text) : 'The gate has no word on files.'),
+      held: (text) => (!gate ? null : gate.file ? gate.file(text) : word('server.gate-no-files')),
       history: this.history,
       github: this.github,
       listed: note.listed,
@@ -259,18 +258,17 @@ export class NoteStore {
   }
 
   private write(id: string, text: string, ifMatch: string | null): Promise<ApiAnswer> {
-    if (ifMatch === null)
-      return Promise.resolve({ status: 428, text: 'A change must name the version of the note it was made against.' });
+    if (ifMatch === null) return Promise.resolve({ status: 428, text: word('server.change-needs-version') });
     return this.counted(
       this.locked(id, async () => {
         // checked again once its turn comes: a write waiting behind another when the stop came is never made
-        if (this.stopped) return STOPPED;
+        if (this.stopped) return stopped();
         const note = this.notes.get(id) as OpenNote;
         const keep = () => this.drafts.keep(note.inVault, { text, against: ifMatch });
         const now = await this.load(note);
         if (!now.ok || !now.real) {
           const kept = await keep();
-          return answer(410, { why: now.ok ? 'The note is gone.' : now.why, draft: kept.ok });
+          return answer(410, { why: now.ok ? word('server.note-gone') : now.why, draft: kept.ok });
         }
         const refused = this.refusal(note, now.text);
         if (refused !== null) return answer(410, { why: refused, draft: false });
@@ -278,7 +276,7 @@ export class NoteStore {
           const kept = await keep();
           return answer(409, { text: now.text, version: now.version, draft: kept.ok }, { etag: now.version });
         }
-        if (this.stopped) return STOPPED;
+        if (this.stopped) return stopped();
         const w = text === now.text ? { ok: true as const, version: now.version } : await this.writeNote(now, text);
         if (!w.ok) {
           const kept = await keep();
@@ -307,10 +305,10 @@ export class NoteStore {
   private propose(id: string, body: string): Promise<ApiAnswer> {
     return this.counted(
       this.locked(id, async () => {
-        if (this.stopped) return STOPPED;
+        if (this.stopped) return stopped();
         const note = this.notes.get(id) as OpenNote;
         const now = await this.load(note);
-        if (!now.ok || !now.real) return answer(410, { why: now.ok ? 'The note is gone.' : now.why });
+        if (!now.ok || !now.real) return answer(410, { why: now.ok ? word('server.note-gone') : now.why });
         const refused = this.refusal(note, now.text);
         if (refused !== null) return answer(403, { why: refused });
         const at = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
@@ -319,7 +317,7 @@ export class NoteStore {
         // the text to be written is held to the same refusals: a credential in a change never reaches the note
         const next = this.gate?.note(made.text, sha256(made.text)) ?? null;
         if (next !== null) return answer(403, { why: next });
-        if (this.stopped) return STOPPED;
+        if (this.stopped) return stopped();
         const w = await this.writeNote(now, made.text);
         if (!w.ok) return answer(500, { why: w.why });
         // Claude's own text never carries the user's yes: a note that needed one asks again about this text
@@ -337,9 +335,9 @@ export class NoteStore {
     const note = this.notes.get(id) as OpenNote;
     return this.counted(
       this.locked(id, async () => {
-        if (this.stopped) return STOPPED;
+        if (this.stopped) return stopped();
         const against = ifMatch ?? (await this.load(note).then((r) => (r.ok ? r.version : null)));
-        if (this.stopped) return STOPPED;
+        if (this.stopped) return stopped();
         const kept = await this.drafts.keep(note.inVault, { text, against });
         return kept.ok ? { status: 204, text: '' } : answer(500, { why: kept.why });
       }),

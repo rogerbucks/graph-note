@@ -2,7 +2,7 @@
 // asked before every send of a note, not only when the mod opens it. So a note changed on disk after the check never
 // reaches the page, which Claude can read. A refusal is words that name a kind and a level, never the note's label or
 // text.
-import { claudeGate, sha256 } from '@thoughtknot/core';
+import { claudeGate, sha256, word } from '@thoughtknot/core';
 import type { Gate, GateSettings } from '@thoughtknot/core';
 
 /** What the store asks before it sends a note's text, or a draft: the reason it may not be sent, or null when it may. */
@@ -25,7 +25,7 @@ export interface NoteGate {
 }
 
 const said = (gate: Gate): string | null =>
-  'open' in gate ? null : 'ask' in gate ? `${gate.ask} The yes it was given does not cover this text.` : gate.refuse;
+  'open' in gate ? null : 'ask' in gate ? word('server.yes-not-covering', { ask: gate.ask }) : gate.refuse;
 
 /**
  * The store's gate over the settings, with the digest of the text the user said yes to (null when none was asked). A

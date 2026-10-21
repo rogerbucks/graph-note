@@ -18,6 +18,7 @@ import {
   type ServerOptions,
   type ServerResponse,
 } from 'node:http';
+import { word } from '@thoughtknot/core';
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 import type { PageAssets, PageFile } from './page-assets.ts';
@@ -195,7 +196,7 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
         if (url === '/') seen();
         return sendFile(res, file);
       }
-      if (url !== '/' || method !== 'GET') return send(res, 404, 'Not found.');
+      if (url !== '/' || method !== 'GET') return send(res, 404, word('server.not-found'));
       seen();
       return send(res, 200, PAGE, { 'content-type': 'text/html; charset=utf-8' });
     }
@@ -208,21 +209,24 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
       : tokenMatches(req.headers.authorization, sessionToken)
         ? 'page'
         : null;
-    if (as === null) return send(res, 401, 'Not authorised.', { 'www-authenticate': 'Bearer' });
+    if (as === null) return send(res, 401, word('server.not-authorised'), { 'www-authenticate': 'Bearer' });
     seen();
     if (method === 'PUT' && !writeAllowed(req.headers, host))
-      return send(res, 403, 'A change must come from the editor’s own page.');
+      return send(res, 403, word('server.change-not-from-page'));
     const limit = bodyLimitOf(url);
     const body = method === 'PUT' ? await readBody(req, limit) : '';
     if (body === null) {
       req.resume();
-      const what = limit === BODY_LIMIT ? 'a note' : 'an export';
-      return send(res, 413, `Larger than ${what} may be: at most ${limit} bytes.`, { connection: 'close' });
+      return send(
+        res,
+        413,
+        word(limit === BODY_LIMIT ? 'server.too-large.note' : 'server.too-large.export', { most: limit }),
+        { connection: 'close' },
+      );
     }
-    if (!api) return send(res, 404, 'Not found.');
+    if (!api) return send(res, 404, word('server.not-found'));
     // checked again after the body is read, so no call reaches the API once a stop has begun
-    if (stopped !== null)
-      return send(res, 503, 'The editor has stopped; nothing was written.', { connection: 'close' });
+    if (stopped !== null) return send(res, 503, word('server.stopped-unwritten'), { connection: 'close' });
     const answer = await api({ method, path: url.slice('/api/'.length), body, headers: req.headers, as });
     if (!answer.feed) return send(res, answer.status, answer.text, answer.headers);
     res.writeHead(answer.status, { ...SECURITY_HEADERS, ...answer.headers });
@@ -245,7 +249,7 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
       last = now();
     };
     handle(req, res, seen).catch(() => {
-      if (!res.headersSent) send(res, 500, 'The server could not answer.');
+      if (!res.headersSent) send(res, 500, word('server.no-answer'));
       else res.destroy();
     });
   });

@@ -6,6 +6,7 @@
 // - every transport is refused, and there is no fetch of a missing object.
 // So nothing runs that the repository names, and nothing leaves the machine. Only the open note is ever read, and only
 // at a commit this module listed for it.
+import { word } from '@thoughtknot/core';
 import { execFile } from 'node:child_process';
 import { dirname, relative, sep } from 'node:path';
 import { BODY_LIMIT } from './request-body.ts';
@@ -51,7 +52,7 @@ const SAFE = [
 ];
 
 const COMMIT = /^[0-9a-f]{40}$/;
-const NOT_KEPT = 'This note is not kept in a git repository, so there are no earlier versions to compare with.';
+const notKept = (): string => word('server.history.not-kept');
 
 /** Runs git in `cwd` with `args`; its standard output, or null when it fails. */
 function git(cwd: string, args: string[], limit = BODY_LIMIT): Promise<string | null> {
@@ -93,31 +94,35 @@ export async function originOf(real: string): Promise<string | null> {
 export const GIT_HISTORY: NoteHistory = {
   async versions(real) {
     const at = await placeOf(real);
-    if (!at) return { ok: false, why: NOT_KEPT };
+    if (!at) return { ok: false, why: notKept() };
     const log = await git(at.top, ['log', `-n${COMMITS_LISTED}`, '--format=%H%x1f%cs%x1f%s', '--', at.path]);
     const heads = await git(at.top, ['for-each-ref', '--format=%(objectname)%1f%(refname:short)', 'refs/heads']);
-    if (log === null || heads === null) return { ok: false, why: 'The repository’s history could not be read.' };
+    if (log === null || heads === null) return { ok: false, why: word('server.history.unreadable') };
     const versions: Version[] = [];
     log.split('\n').forEach((line, i) => {
       const [commit = '', day = '', subject = ''] = line.split('\u001f');
       if (!COMMIT.test(commit)) return;
-      const label = `${i === 0 ? 'Last commit' : 'Commit'}: ${subject} (${day}, ${commit.slice(0, 7)})`;
+      const label = word(i === 0 ? 'server.history.last-commit' : 'server.history.commit', {
+        subject,
+        day,
+        commit: commit.slice(0, 7),
+      });
       versions.push({ commit, kind: 'commit', label });
     });
     for (const line of heads.split('\n')) {
       const [commit = '', name = ''] = line.split('\u001f');
       if (COMMIT.test(commit) && name) versions.push({ commit, kind: 'branch', label: `Branch ${name}` });
     }
-    if (!versions.length) return { ok: false, why: 'This note has no earlier version in its repository yet.' };
+    if (!versions.length) return { ok: false, why: word('server.history.none-earlier') };
     return { ok: true, versions };
   },
 
   async textAt(real, commit) {
-    if (!COMMIT.test(commit)) return { ok: false, why: 'No such version.' };
+    if (!COMMIT.test(commit)) return { ok: false, why: word('server.history.no-version') };
     const at = await placeOf(real);
-    if (!at) return { ok: false, why: NOT_KEPT };
+    if (!at) return { ok: false, why: notKept() };
     // cat-file, plumbing: the stored bytes, never a filter or a conversion the repository names
     const text = await git(at.top, ['cat-file', 'blob', `${commit}:${at.path}`]);
-    return text === null ? { ok: false, why: 'The note was not in that version.' } : { ok: true, text };
+    return text === null ? { ok: false, why: word('server.history.not-in-version') } : { ok: true, text };
   },
 };

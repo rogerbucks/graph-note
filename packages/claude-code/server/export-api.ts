@@ -6,6 +6,7 @@
 //   PUT export/<id>   {files: [{name, text} | {name, base64}]} gives {written: [name…]}. A PNG is base64, all else text.
 // The call carries the token and the server's own origin like any change. Its body has its own, larger limit, as an
 // image is larger than a note. Any other path keeps the note's limit.
+import { word } from '@thoughtknot/core';
 import { posix } from 'node:path';
 import { vaultFolder } from '@thoughtknot/core/hosts/vault-folder';
 import type { ApiAnswer, ApiHandler, ApiRequest } from './start-server.ts';
@@ -20,8 +21,8 @@ export const MOST_FILES = 100;
 const ROUTE = /^export\/([0-9a-f]{32})$/;
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
-const NOT_OPEN: ApiAnswer = { status: 404, text: 'No such note is open.' };
-const STOPPED: ApiAnswer = { status: 503, text: 'The editor has stopped; nothing was written.' };
+const notOpen = (): ApiAnswer => ({ status: 404, text: word('server.note-not-open') });
+const stopped = (): ApiAnswer => ({ status: 503, text: word('server.stopped-unwritten') });
 
 const plain = (status: number, text: string): ApiAnswer => ({ status, text });
 const json = (body: object): ApiAnswer => ({
@@ -48,11 +49,11 @@ function filesOf(body: string): NewFile[] | string {
   try {
     given = JSON.parse(body);
   } catch {
-    return 'The request is not JSON.';
+    return word('server.export.not-json');
   }
   const list = given && typeof given === 'object' ? (given as { files?: unknown }).files : undefined;
-  if (!Array.isArray(list) || list.length === 0) return 'The request holds no files.';
-  if (list.length > MOST_FILES) return `An export holds at most ${MOST_FILES} files.`;
+  if (!Array.isArray(list) || list.length === 0) return word('server.export.no-files');
+  if (list.length > MOST_FILES) return word('server.export.too-many', { most: MOST_FILES });
   const files: NewFile[] = [];
   const seen = new Set<string>();
   for (const item of list as unknown[]) {
@@ -60,18 +61,18 @@ function filesOf(body: string): NewFile[] | string {
     const problem = nameProblem(f.name);
     if (problem) return problem;
     const name = f.name as string;
-    if (seen.has(name.toLowerCase())) return `${name} is named twice.`;
+    if (seen.has(name.toLowerCase())) return word('server.export.named-twice', { name });
     seen.add(name.toLowerCase());
     const image = name.endsWith('.png');
-    if ((f.text === undefined) === (f.base64 === undefined)) return `${name} needs its text or its bytes, one of them.`;
+    if ((f.text === undefined) === (f.base64 === undefined)) return word('server.export.text-or-bytes', { name });
     if (image) {
       const bytes = typeof f.base64 === 'string' ? Buffer.from(f.base64, 'base64') : null;
       // only canonical base64 decodes and encodes back to itself
-      if (!bytes || bytes.toString('base64') !== f.base64) return `${name} is a PNG, sent as base64.`;
-      if (PNG_SIGNATURE.some((b, i) => bytes[i] !== b)) return `${name} is not a PNG image.`;
+      if (!bytes || bytes.toString('base64') !== f.base64) return word('server.export.png-base', { name });
+      if (PNG_SIGNATURE.some((b, i) => bytes[i] !== b)) return word('server.export.not-png', { name });
       files.push({ name, bytes: new Uint8Array(bytes) });
     } else {
-      if (typeof f.text !== 'string') return `${name} is text, not bytes.`;
+      if (typeof f.text !== 'string') return word('server.export.text-not-bytes', { name });
       files.push({ name, bytes: new TextEncoder().encode(f.text) });
     }
   }
@@ -93,10 +94,10 @@ export class Exporter {
     const id = ROUTE.exec(r.path)?.[1];
     if (!id) return null;
     const note = this.o.notePath(id);
-    if (note === null) return NOT_OPEN;
-    if (this.stopped) return STOPPED;
+    if (note === null) return notOpen();
+    if (this.stopped) return stopped();
     const set = vaultFolder(this.o.exportFolder);
-    if (set === null) return plain(403, 'The export folder set is not a folder an export may use. Nothing was saved.');
+    if (set === null) return plain(403, word('server.export.folder-unusable'));
     const folder = set || (posix.dirname(note) === '.' ? '' : posix.dirname(note));
     if (r.method === 'GET') return json({ note, folder });
     const files = filesOf(r.body);
@@ -117,5 +118,5 @@ export class Exporter {
 /** `inner`, with the export's routes answered here. */
 export function withExport(exporter: Exporter, inner: ApiHandler | undefined): ApiHandler {
   return async (request) =>
-    (await exporter.handle(request)) ?? (inner ? inner(request) : { status: 404, text: 'Not found.' });
+    (await exporter.handle(request)) ?? (inner ? inner(request) : { status: 404, text: word('server.not-found') });
 }
