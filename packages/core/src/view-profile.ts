@@ -9,6 +9,8 @@
 // (`Store` `n.props.id`, `Graph.nodes`). So `n.id` is the name on both sides.
 import { isRefusedKind, isReservedName, kindRefusal, nameRefusal } from './reserved-words.ts';
 import { isSpace, trimStart } from './whitespace.ts';
+import { word } from './words.ts';
+import type { WordKey } from './words.ts';
 
 /** The five kinds of view (spec §7): a hand-picked set, everything near a thing, how one thing reaches another, only some kinds, a walked path. */
 export const VIEW_KINDS = ['picked', 'near', 'reaches', 'kinds', 'path'] as const;
@@ -41,14 +43,8 @@ export interface ViewRefusal {
   refused: string;
 }
 
-/** Each kind in words, as a refusal names it. */
-export const VIEW_NAMES: Record<ViewKind, string> = {
-  picked: 'a hand-picked set of things',
-  near: 'everything near a thing',
-  reaches: 'how one thing reaches another',
-  kinds: 'only some kinds',
-  path: 'a walked path',
-};
+/** Each kind in words, as a refusal names it, in the reader's language. */
+export const viewName = (kind: ViewKind): string => word(`views.kind.${kind}`);
 
 /** Each kind's form, written as an example: what a refusal shows as the nearest, and what `viewQuery` writes. */
 export const VIEW_FORMS: Record<ViewKind, string> = {
@@ -58,8 +54,6 @@ export const VIEW_FORMS: Record<ViewKind, string> = {
   kinds: 'MATCH (n IS Person|Team) RETURN n',
   path: "MATCH (p:Path {id: 'tour'})-[:STEP]->(n) RETURN p, n",
 };
-
-const ALLOWED = `A view query has one of five shapes: ${Object.values(VIEW_NAMES).join(', ')}`;
 
 type Tok = { kind: 'str' | 'num' | 'word' | 'sym'; text: string };
 
@@ -89,7 +83,7 @@ const ESCAPES: Record<string, string> = {
 function unquote(raw: string): string {
   return raw.slice(1, -1).replace(/\\(u[0-9A-Fa-f]{4}|[\s\S])/g, (_, e: string) => {
     const c = e.length === 5 ? String.fromCharCode(parseInt(e.slice(1), 16)) : ESCAPES[e];
-    if (c === undefined) throw new Fault(`The text ${raw} has an escape, \\${e}, that is not known`);
+    if (c === undefined) throw new Fault(word('views.profile.escape', { text: raw, escape: e }));
     return c;
   });
 }
@@ -111,8 +105,8 @@ function lex(query: string): Tok[] {
     if (!m)
       throw new Fault(
         text[at] === "'"
-          ? `The text that starts at ${text.slice(at, at + 12).trim()} is never closed: end it with a single quote`
-          : `"${text[at]}" is not allowed in a view: text goes in single quotes, and the only symbols are ()[]{}:,.=|-`,
+          ? word('views.profile.unclosed', { start: text.slice(at, at + 12).trim() })
+          : word('views.profile.symbol', { symbol: text[at] ?? '' }),
       );
     at = TOKEN.lastIndex;
     out.push(
@@ -124,7 +118,13 @@ function lex(query: string): Tok[] {
   return out;
 }
 
-const found = (t: Tok | undefined) => (t ? (t.kind === 'str' ? `the text '${t.text}'` : `"${t.text}"`) : 'the end');
+/** What was found where the query should have more: a text, a word or a symbol, or the end. */
+const found = (t: Tok | undefined) =>
+  t
+    ? t.kind === 'str'
+      ? word('views.found.text', { text: t.text })
+      : word('views.found.symbol', { symbol: t.text })
+    : word('views.found.end');
 
 /** A place in the tokens, taking each token the shape expects or failing in its words. */
 class Cursor {
@@ -140,36 +140,37 @@ class Cursor {
   }
   private next(want: string): Tok {
     const t = this.toks[this.at];
-    if (!t) this.fail(`The query ends where ${want} should be`);
+    if (!t) this.fail(word('views.profile.ends-early', { want }));
     this.at++;
     return t;
   }
-  sym(s: string, why = `"${s}"`): void {
+  sym(s: string, why = word('views.found.symbol', { symbol: s })): void {
     const t = this.next(why);
-    if (t.kind !== 'sym' || t.text !== s) this.fail(`Expected ${why}, found ${found(t)}`);
+    if (t.kind !== 'sym' || t.text !== s) this.fail(word('views.profile.expected', { want: why, found: found(t) }));
   }
   word(w: string): void {
     const t = this.next(w);
-    if (t.kind !== 'word' || t.text.toUpperCase() !== w.toUpperCase()) this.fail(`Expected ${w}, found ${found(t)}`);
+    if (t.kind !== 'word' || t.text.toUpperCase() !== w.toUpperCase())
+      this.fail(word('views.profile.expected', { want: w, found: found(t) }));
   }
-  /** The word `w` exactly as written, or a refusal: `why` ends with "found", and what was found follows it. */
-  exact(w: string, why: string): void {
+  /** The word `w` exactly as written, or a refusal: `why` says what belongs there, and what was found instead. */
+  exact(w: string, why: WordKey): void {
     const t = this.next(w);
-    if (t.kind !== 'word' || t.text !== w) this.fail(`${why} ${found(t)}`);
+    if (t.kind !== 'word' || t.text !== w) this.fail(word(why, { found: found(t) }));
   }
   ident(what: string): string {
     const t = this.next(what);
-    if (t.kind !== 'word') this.fail(`Expected ${what}, found ${found(t)}`);
+    if (t.kind !== 'word') this.fail(word('views.profile.expected', { want: what, found: found(t) }));
     return t.text;
   }
   text(what: string): string {
     const t = this.next(what);
-    if (t.kind !== 'str') this.fail(`Expected ${what} in single quotes, found ${found(t)}`);
+    if (t.kind !== 'str') this.fail(word('views.profile.expected-text', { want: what, found: found(t) }));
     return t.text;
   }
   int(what: string): number {
     const t = this.next(what);
-    if (t.kind !== 'num') this.fail(`Expected ${what}, found ${found(t)}`);
+    if (t.kind !== 'num') this.fail(word('views.profile.expected', { want: what, found: found(t) }));
     return Number(t.text);
   }
   is(s: string): boolean {
@@ -189,34 +190,34 @@ class Cursor {
   }
   /** A kind the query asks for: a label, so never one Grafeo refuses as a label (reserved-words.ts). */
   kind(): string {
-    const k = this.ident('a kind');
+    const k = this.ident(word('views.want.kind'));
     if (isRefusedKind(k)) this.fail(kindRefusal(k));
     return k;
   }
   /** The name the query already gave a thing, written again. */
   again(name: string): void {
     const t = this.ident(name);
-    if (t !== name) this.fail(`The thing is called ${name} here, so write ${name}, not ${t}`);
+    if (t !== name) this.fail(word('views.profile.called', { name, written: t }));
   }
   /** A new name, not one already used. */
   fresh(what: string, used: string[]): string {
     const n = this.name(what);
-    if (used.includes(n)) this.fail(`${n} names two things: give each its own name`);
+    if (used.includes(n)) this.fail(word('views.profile.twice', { name: n }));
     return n;
   }
   finish(): void {
     this.take(';');
     const t = this.toks[this.at];
-    if (t) this.fail(`Nothing may follow the view's RETURN, found ${found(t)}`);
+    if (t) this.fail(word('views.profile.after-return', { found: found(t) }));
   }
 }
 
 /** The part of a thing's pattern that names it: `{id: 'a'}`. */
 function named(c: Cursor): string {
   c.sym('{');
-  c.exact('id', "A view finds a thing by its id: write {id: 'name'}; found");
+  c.exact('id', 'views.profile.thing-id');
   c.sym(':');
-  const id = c.text("the thing's name");
+  const id = c.text(word('views.want.thing-name'));
   c.sym('}');
   return id;
 }
@@ -227,13 +228,13 @@ function hops(c: Cursor, most: number, arrow: boolean): { steps: number; directe
   c.sym('[');
   c.sym(']');
   const directed = c.take('->');
-  if (!directed) c.sym('-', arrow ? '"->" or "-" after []' : '"-" after []');
-  if (directed && !arrow) c.fail('Everything near a thing ignores direction: write -[]- with no arrow');
+  if (!directed) c.sym('-', word(arrow ? 'views.want.arrow-or-dash' : 'views.want.dash'));
+  if (directed && !arrow) c.fail(word('views.profile.no-arrow'));
   c.sym('{');
-  if (c.int('1') !== 1) c.fail(`Steps are counted from 1: write {1,${most}}`);
+  if (c.int('1') !== 1) c.fail(word('views.profile.from-one', { most: String(most) }));
   c.sym(',');
-  const steps = c.int('the most steps');
-  if (steps < 1 || steps > most) c.fail(`At most ${most} steps are allowed here, not ${steps}`);
+  const steps = c.int(word('views.want.most-steps'));
+  if (steps < 1 || steps > most) c.fail(word('views.profile.too-many', { count: most, steps: String(steps) }));
   c.sym('}');
   return { steps, directed };
 }
@@ -241,17 +242,17 @@ function hops(c: Cursor, most: number, arrow: boolean): { steps: number; directe
 const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
   picked(c) {
     c.sym('(');
-    const n = c.name('a name for the things, such as n');
+    const n = c.name(word('views.want.name-things'));
     c.sym(')');
     c.word('WHERE');
     c.again(n);
     c.sym('.');
-    c.exact('id', 'A view finds things by their id: write n.id; found');
+    c.exact('id', 'views.profile.things-id');
     c.word('IN');
     c.sym('[');
     const ids: string[] = [];
     if (!c.is(']')) {
-      do ids.push(c.text('a thing name'));
+      do ids.push(c.text(word('views.want.picked-name')));
       while (c.take(','));
     }
     c.sym(']');
@@ -262,12 +263,12 @@ const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
   },
   near(c) {
     c.sym('(');
-    const n = c.name('a name for the thing, such as n');
+    const n = c.name(word('views.want.name-thing'));
     const id = named(c);
     c.sym(')');
     const { steps } = hops(c, VIEW_LIMITS.near, false);
     c.sym('(');
-    const m = c.fresh('a name for the things near it, such as m', [n]);
+    const m = c.fresh(word('views.want.name-near'), [n]);
     c.sym(')');
     c.word('RETURN');
     c.again(n);
@@ -277,15 +278,15 @@ const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
     return { kind: 'near', id, depth: steps };
   },
   reaches(c) {
-    const p = c.name('a name for the path, such as p');
+    const p = c.name(word('views.want.name-path'));
     c.sym('=');
     c.sym('(');
-    const a = c.name('a name for where it starts, such as a');
+    const a = c.name(word('views.want.name-start'));
     const from = named(c);
     c.sym(')');
     const { steps, directed } = hops(c, VIEW_LIMITS.steps, true);
     c.sym('(');
-    c.fresh('a name for where it ends, such as b', [a, p]);
+    c.fresh(word('views.want.name-end'), [a, p]);
     const to = named(c);
     c.sym(')');
     c.word('RETURN');
@@ -295,12 +296,12 @@ const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
   },
   kinds(c) {
     c.sym('(');
-    const n = c.name('a name for the things, such as n');
+    const n = c.name(word('views.want.name-things'));
     const kinds: string[] = [];
     if (c.take(':')) {
       kinds.push(c.kind());
       // Grafeo reads a choice of kinds after IS only, so a query with a colon and a bar would not run there
-      if (c.is('|')) c.fail('Grafeo reads several kinds only after IS, not after a colon: write (n IS Person|Team)');
+      if (c.is('|')) c.fail(word('views.profile.several-kinds'));
     } else {
       c.word('IS');
       do kinds.push(c.kind());
@@ -314,19 +315,19 @@ const shapes: Record<ViewKind, (c: Cursor) => ViewSpec> = {
   },
   path(c) {
     c.sym('(');
-    const p = c.name('a name for the path, such as p');
+    const p = c.name(word('views.want.name-path'));
     c.sym(':');
-    c.exact('Path', 'A walked path is a Path; found');
+    c.exact('Path', 'views.profile.path-kind');
     const path = named(c);
     c.sym(')');
     c.sym('-');
     c.sym('[');
     c.sym(':');
-    c.exact('STEP', "A walked path's steps are STEPs; found");
+    c.exact('STEP', 'views.profile.path-steps');
     c.sym(']');
     c.sym('->');
     c.sym('(');
-    const n = c.fresh('a name for the steps, such as n', [p]);
+    const n = c.fresh(word('views.want.name-steps'), [p]);
     c.sym(')');
     c.word('RETURN');
     c.again(p);
@@ -358,7 +359,8 @@ function nearest(toks: Tok[], text: string): ViewKind {
 }
 
 function refusal(reason: string, shape: ViewKind): ViewRefusal {
-  return { refused: `${reason}. ${ALLOWED}. The nearest is ${VIEW_NAMES[shape]}: ${VIEW_FORMS[shape]}` };
+  const shapes = VIEW_KINDS.map(viewName).join(', ');
+  return { refused: word('views.refused', { reason, shapes, nearest: viewName(shape), form: VIEW_FORMS[shape] }) };
 }
 
 /**
@@ -374,8 +376,9 @@ export function parseView(query: string): ViewSpec | ViewRefusal {
     toks = lex(query);
     const shape = nearest(toks, query);
     const first = toks[0];
-    if (!first) throw new Fault('The view has no query', shape);
-    if (first.text.toUpperCase() !== 'MATCH') throw new Fault(`A view starts with MATCH, not ${found(first)}`, shape);
+    if (!first) throw new Fault(word('views.profile.no-query'), shape);
+    if (first.text.toUpperCase() !== 'MATCH')
+      throw new Fault(word('views.profile.match-first', { found: found(first) }), shape);
     return shapes[shape](new Cursor(toks.slice(1), shape));
   } catch (e) {
     if (!(e instanceof Fault)) throw e;

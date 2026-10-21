@@ -3,13 +3,15 @@
 // own, in a group or all at once. An accepted change is written as text through the ordinary edit path, checked first
 // and undone like any other edit. A rejected one leaves the graph as it was and is recorded in the change set. Each
 // describe below is one requirement, named by its id.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';
 import { readNote } from '../src/drawing.ts';
 import { lockBlock } from '../src/lock.ts';
 import { ProposalReview } from '../src/proposals-review.ts';
-import { MARK_WORDS } from '../src/proposals-marks.ts';
+import { markWord } from '../src/proposals-marks.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 import { basisOf } from '../src/proposals-basis.ts';
 import { makeProposal } from '../src/proposals.ts';
 import {
@@ -67,7 +69,15 @@ describe('proposal_shown_not_applied: a proposal is shown over the graph, each k
   });
 
   test('a mark is said in words as well as drawn, so it is never told by colour alone', () => {
-    assert.deepEqual(MARK_WORDS, { add: 'Added', change: 'Changed', remove: 'Removed' });
+    const kinds = ['add', 'change', 'remove'];
+    assert.deepEqual(
+      kinds.map((k) => markWord(k)),
+      ['Added', 'Changed', 'Removed'],
+    );
+    assert.deepEqual(
+      kinds.map((k) => markWord(k, true)),
+      ['added', 'changed', 'removed'],
+    );
   });
 
   test('the drawing is the graph with the proposal laid over it: what is added and changed is drawn, what is removed is still there', () => {
@@ -569,5 +579,18 @@ describe('proposals_read_back: each proposed change is read back in plain Englis
       review.show(r.note).rows.map((x) => x.said),
       before,
     );
+  });
+});
+
+describe('a change’s mark in the person’s language', () => {
+  afterEach(() => setLanguage(SOURCE_LANGUAGE));
+
+  // proves: words_catalogue
+  test('each mark, and each change read back, is said in the person’s language', () => {
+    setLanguage('en-XA');
+    for (const kind of ['add', 'change', 'remove'])
+      assert.ok(isPseudoWord(markWord(kind)) && isPseudoWord(markWord(kind, true)), kind);
+    const { rows } = new ProposalReview(proposalOf()).show(NOTE);
+    for (const row of rows) assert.ok(isPseudoWord(row.said), row.said);
   });
 });

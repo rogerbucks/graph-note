@@ -6,20 +6,20 @@
 // offered and works in reading view too (view_switch_view_only). It says in words when the graph could not be redrawn.
 import {
   OPTIONS,
-  SWITCH_NAMES,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
   edgesOf,
   foldsHiding,
   labelsHidden,
   optionSaid,
+  switchName,
   word,
 } from '@thoughtknot/core';
 
 /** A switch's name in the person's language: its setting's, which the settings page says too. */
 const nameOf = (s: ViewSwitch): string => {
   const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
-  return o ? optionSaid(o).name : SWITCH_NAMES[s];
+  return o ? optionSaid(o).name : switchName(s);
 };
 import type { Drawn, GraphDrawing, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';

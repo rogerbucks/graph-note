@@ -6,7 +6,7 @@ import type { Estimate } from './estimates.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
 import { evaluate } from './view-evaluate.ts';
 import type { ViewSpec } from './view-profile.ts';
-import { readingOf } from './views.ts';
+import { sourceReadingOf } from './views.ts';
 
 /** What is asked to be exported: a graph, whole, or one of its views, with or without the faded context. */
 export interface ExportRequest {
@@ -83,7 +83,7 @@ export function exportScope(reading: NoteReading, request: ExportRequest): Expor
   const things = new Set(result.things),
     links = new Set(result.links),
     text = new Map(base.boxes.map((b) => [b.key, b.text]));
-  const said = readingOf(view.spec, (id) => text.get(id) ?? id);
+  const said = sourceReadingOf(view.spec, (id) => text.get(id) ?? id);
   const scope = { kind: 'view' as const, graph, view: view.name, reading: said, empty: false };
   if (request.context) {
     const guessed = base.estimates.filter((e) => e.kind === 'name');

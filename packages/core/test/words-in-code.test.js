@@ -1,9 +1,9 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). Those
-// areas are the hosts, the display layer, the core's reading and style problems, its proposals, its AI and its editing.
-// Each is added as its words move. Each word comes from the catalogue by key, so a translation reaches it. The check reads
-// every string the code holds. It flags any that reads as words. That is two plain words with a space, or a word that
-// starts a control's text, name or hint. It is also a short template that is a sentence, as `Graph ${g}: ${n}.` is.
-// Or it is a joining word alone between spaces, as the ' or ' of a list joined in code is.
+// areas are the hosts, the display layer, the core's reading and style problems, its proposals, its AI, its editing and
+// its views. Each is added as its words move. Each word comes from the catalogue by key, so a translation reaches it. The
+// check reads every string the code holds. It flags any that reads as words. That is two plain words with a space, or a
+// word that starts a control's text, name or hint. It is also a short template that is a sentence, as `Graph ${g}: ${n}.`
+// is. Or it is a joining word alone between spaces, as the ' or ' of a list joined in code is.
 // The few kept in the code are listed, each with why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,6 +38,16 @@ const EDITING_AREA = [
   'packages/core/src/edit-check.ts',
   'packages/core/src/details-nav.ts',
   'packages/core/src/changes-view.ts',
+];
+
+/** The core's views: their kinds, their readings, and why a view is refused or matches nothing. */
+const VIEWS_AREA = [
+  'packages/core/src/view-profile.ts',
+  'packages/core/src/view-evaluate.ts',
+  'packages/core/src/view-write.ts',
+  'packages/core/src/views.ts',
+  'packages/core/src/view-switches.ts',
+  'packages/core/src/reserved-words.ts',
 ];
 
 /** The folders and files whose words come from the catalogue, from the repository's root. */
@@ -87,9 +97,11 @@ const AREAS = [
   'packages/core/src/proposals-record.ts',
   'packages/core/src/proposals-statements.ts',
   'packages/core/src/proposals-text.ts',
+  'packages/core/src/proposals-marks.ts',
   ...AI_AREA,
   // the core's editing: its refusals, the inspector and imports
   ...EDITING_AREA,
+  ...VIEWS_AREA,
 ];
 
 /** The files of `areas`, as paths from the repository's root. */
@@ -233,6 +245,8 @@ const KEPT = {
     '// ── Relationship types, with their readings both ways ──',
     '// ── The graph declares each one ──',
   ],
+  // the block a view is written as, its graph line and its query: the note's bytes, never translated
+  'packages/core/src/view-write.ts': ['// graph: {} · QUERY view {}\n{}'],
   // the graph spec library's reading for a link it cannot turn round, matched as it writes it and never shown
   'packages/core/src/details-nav.ts': ['inverse of '],
 };
@@ -366,5 +380,10 @@ describe('the words in the code', () => {
   // proves: words_catalogue
   test('the core’s editing words, why an edit is refused and what the inspector says, come from the catalogue', () => {
     assert.deepEqual(saidInCode(EDITING_AREA), [], 'say each by a key of editing-source-words.ts, with word()');
+  });
+
+  // proves: words_catalogue
+  test('the core’s view words, its kinds, readings and refusals, come from the catalogue', () => {
+    assert.deepEqual(saidInCode(VIEWS_AREA), [], 'say each by a key of views-source-words.ts, with word()');
   });
 });

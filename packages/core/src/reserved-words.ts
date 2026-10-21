@@ -7,6 +7,7 @@
 // words were GQL's words, Cypher's keywords and the numbers NaN and Inf. python/graph_spec/tests/test_view_parity.py
 // holds both to Grafeo, from a word list of its own. What a person reads says only that GQL keeps the word: the refusal
 // is the same whichever list holds it.
+import { word } from './words.ts';
 
 /** GQL's reserved words (ISO/IEC 39075:2024 §21.3), in the standard's order. */
 export const GQL_RESERVED: readonly string[] = `ABS ACOS ALL ALL_DIFFERENT AND ANY ARRAY AS ASC ASCENDING ASIN AT ATAN
@@ -105,9 +106,7 @@ export function isRefusedKind(word: string): boolean {
 }
 
 /** What a person is told of a name a view may not use: the word, and another to write. */
-export const nameRefusal = (word: string): string =>
-  `${word} is a word GQL keeps for itself, so it cannot be a name in a view: write another, such as ${word}_1`;
+export const nameRefusal = (kept: string): string => word('views.profile.reserved-name', { word: kept });
 
 /** What a person is told of a kind a view may not ask for: the word, and that the kind needs another name. */
-export const kindRefusal = (word: string): string =>
-  `${word} is a word GQL keeps for itself, so a view cannot ask for it as a kind: give the kind another name, such as ${word}_1`;
+export const kindRefusal = (kept: string): string => word('views.profile.reserved-kind', { word: kept });

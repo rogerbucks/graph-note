@@ -133,7 +133,7 @@ export { ANIMATION_LIMITS, animationFits } from './path-animation.ts';
 export type { Device, ExportWalk, TooLargeToAnimate } from './path-animation.ts';
 export { viewsOf, readingOf } from './views.ts';
 export type { NamedView } from './views.ts';
-export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, VIEW_NAMES, parseView } from './view-profile.ts';
+export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, parseView, viewName } from './view-profile.ts';
 export { addView, makeView } from './view-write.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
@@ -267,7 +267,7 @@ export type {
 } from './proposals.ts';
 export { NO_BASIS, basisOf } from './proposals-basis.ts';
 export type { Stale } from './proposals-basis.ts';
-export { MARK_WORDS } from './proposals-marks.ts';
+export { markWord } from './proposals-marks.ts';
 export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
 export { CHANGE_LOOKS, changesText, changesView, markedChanges, noChanges } from './changes-view.ts';
 export type { ChangeLine, ChangesShown } from './changes-view.ts';
@@ -347,12 +347,12 @@ export { BUSY_HUB, foldsHiding } from './untangle-fold.ts';
 export type { Folding } from './untangle-fold.ts';
 export {
   LABEL_SCALE,
-  SWITCH_NAMES,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
   ViewState,
   labelsHidden,
   startingSwitches,
+  switchName,
 } from './view-switches.ts';
 export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
