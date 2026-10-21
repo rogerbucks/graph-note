@@ -255,6 +255,7 @@ export const SOURCE_WORDS = {
   'type.now-graph': 'The graph is now drawn as {type}.',
   'type.now-view': 'View {view} is now drawn as {type}.',
   'type.drawn': 'Drawn as {type}',
+  'type.drawn-plugin': 'Drawn as {type}, a diagram type of the plug-in {plugin}',
   'type.list': 'Diagram types',
   'type.choose': 'Diagram type',
   'type.drawn-now': 'drawn now',
