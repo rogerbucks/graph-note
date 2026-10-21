@@ -48,9 +48,9 @@ export function prProblems({
   const prefix = Object.keys(AGENT_LABELS).find((p) => branch.startsWith(p));
   if (!prefix) return [];
   const problems = [];
-  // the template's hints are HTML comments, which GitHub does not show
-  body = body.replace(/<!--[\s\S]*?-->/g, '');
-  const named = REQUIREMENTS.exec(body)?.[1].match(/[a-z][a-z0-9_]*/g) ?? [];
+  // what a line says, up to the template's hint: an HTML comment, which GitHub does not show
+  const said = (line) => line.exec(body)?.[1].split('<!--')[0].trim() ?? '';
+  const named = said(REQUIREMENTS).match(/[a-z][a-z0-9_]*/g) ?? [];
   if (!named.length)
     problems.push('Add a "Requirements:" line naming the spec requirements this builds, such as words_catalogue.');
   const unknown = named.filter((id) => !requirements.has(id));
@@ -58,7 +58,7 @@ export function prProblems({
   const label = AGENT_LABELS[prefix];
   if (!labels.includes(label)) problems.push(`Add the label ${label}.`);
   if (PRIVATE_LINK.test(body)) problems.push('Take the private session link out of the description.');
-  const why = TESTS_FIRST.exec(body)?.[1].trim() ?? '';
+  const why = said(TESTS_FIRST);
   if (testsChanged && !failedFirst && why.split(/\s+/).length < 3)
     problems.push(
       'No test is seen failing on the old code. Name a new test for what changed, with its code in the same commit,' +

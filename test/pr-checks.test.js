@@ -22,6 +22,8 @@ describe("an AI agent's pull request", () => {
 
   test('needs a Requirements line naming requirements the spec holds', () => {
     assert.match(prProblems({ ...good, body: 'No line here' }).join('\n'), /Requirements:/);
+    const hint = 'Requirements: <!-- such as words_catalogue -->';
+    assert.match(prProblems({ ...good, body: hint }).join('\n'), /Add a "Requirements:" line/);
     assert.match(
       prProblems({ ...good, body: 'Requirements: words_catalog' }).join('\n'),
       /no requirement named: words_catalog/,
