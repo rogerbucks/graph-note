@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only fifteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes",
+  "seen_failing_first": false,
+  "evidence": "A renamed test: it now also lets the new reply workflow post, which the old code had no file for, so it passed there."
+}
