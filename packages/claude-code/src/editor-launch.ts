@@ -5,7 +5,7 @@
 // A session has one server, reused for the same note and replaced for another (cc_one_server). It ends when the session
 // does, on `/graph stop`, or by itself when the server stops (cc_server_stops). No Node module is imported here. The
 // host's calls are handed in, so the tests run the launcher over real processes and the mod over the host's own.
-import { CLAUDE, claudeGate, sha256 } from '@thoughtknot/core';
+import { CLAUDE, claudeGate, sha256, word } from '@thoughtknot/core';
 import type { Gate, GateSettings } from '@thoughtknot/core';
 import { withMatrix } from './editor-matrix.ts';
 import { folderOf, fullPath, nameOf } from './editor-paths.ts';
@@ -14,7 +14,7 @@ import type { ProposeOutcome, ProposeRequest, ProposeReply } from './editor-prop
 import type { Spawned, SpawnedEnd, SpawnedPiece } from './editor-spawn.ts';
 import { settingsEnvironment, settingsForServer } from './editor-settings-env.ts';
 import type { LaunchSettings } from './editor-settings-env.ts';
-import { NOT_THE_PERSON, NOT_THE_PERSON_ASKING, fromPerson } from './editor-words.ts';
+import { notThePerson, notThePersonAsking, fromPerson, sayEndCode, sayEnded } from './editor-words.ts';
 import type { EditOutcome } from './editor-words.ts';
 
 // what the launcher says and understands lives in editor-words.ts; it is one module to the code that imports it
@@ -78,8 +78,7 @@ interface Checked {
 /** How long a server has to hand over its address before it is killed and the start said to have failed. */
 export const START_TIMEOUT_MS = 15_000;
 
-const NO_NODE =
-  'Node could not be started, and the editor needs it. Install Node.js, make sure `node` is on the path, then try again.';
+const noNode = () => word('cc.editor.no-node');
 
 /** The session's editor: at most one server, started for one note. */
 export class EditorLauncher {
@@ -126,10 +125,9 @@ export class EditorLauncher {
   propose(input: unknown): Promise<ProposeOutcome> {
     return this.#inTurn(async () => {
       const running = this.#running;
-      if (!running) return { ok: false as const, why: 'No editor is open: /graph edit <path to a note> opens one.' };
+      if (!running) return { ok: false as const, why: word('cc.editor.none-open') };
       const send = this.#ports.propose;
-      if (!send || running.key === null)
-        return { ok: false as const, why: 'Proposals are not available: this host cannot make the key one needs.' };
+      if (!send || running.key === null) return { ok: false as const, why: word('cc.editor.no-proposals') };
       return sendProposal(send, running.link, running.key, input);
     });
   }
@@ -161,13 +159,13 @@ export class EditorLauncher {
    */
   confirm(origin?: unknown): Promise<EditOutcome> {
     return this.#inTurn(async () => {
-      if (!fromPerson(origin)) return { ok: false as const, why: NOT_THE_PERSON, held: 'refused' as const };
+      if (!fromPerson(origin)) return { ok: false as const, why: notThePerson(), held: 'refused' as const };
       const pending = this.#pending;
       this.#pending = null;
       if (pending === null)
         return {
           ok: false as const,
-          why: 'Nothing is waiting for a yes: /graph edit <path to a note> asks first.',
+          why: word('cc.editor.nothing-waiting'),
           held: 'refused' as const,
         };
       const checked = await this.#check(pending.note);
@@ -199,8 +197,7 @@ export class EditorLauncher {
     } catch {
       return {
         gate: {
-          refuse:
-            'The note or the settings could not be read, so it cannot be checked against the level set for Claude.',
+          refuse: word('cc.editor.unchecked'),
         },
         digest: null,
         settings: null,
@@ -216,26 +213,25 @@ export class EditorLauncher {
     const gate = checked.gate;
     if ('open' in gate) {
       this.#pending = null;
-      return { ok: false, why: `${nameOf(note)}: nothing asks about this note now.`, held: 'refused' };
+      return { ok: false, why: word('cc.editor.nothing-asks', { note: nameOf(note) }), held: 'refused' };
     }
     if ('ask' in gate && person && checked.digest !== null) {
       this.#pending = { note, digest: checked.digest };
       return { ok: false, why: `${nameOf(note)}: ${gate.ask}`, held: 'asks' };
     }
     this.#pending = null;
-    const why = 'ask' in gate ? `${gate.ask} ${NOT_THE_PERSON_ASKING}` : gate.refuse;
+    const why = 'ask' in gate ? `${gate.ask} ${notThePersonAsking()}` : gate.refuse;
     return { ok: false, why: `${nameOf(note)}: ${why}`, held: 'refused' };
   }
 
   async #edit(given: string, cwd: string, person: boolean): Promise<EditOutcome> {
-    if (given === '')
-      return { ok: false, why: 'Name a note to edit: /graph edit <path to a note>, quoted if it has spaces.' };
+    if (given === '') return { ok: false, why: word('cc.editor.name-note') };
     const note = fullPath(cwd, given);
     this.#pending = null;
     const checked = await this.#check(note);
     if (!('open' in checked.gate)) {
       // a note open already and now held back (its classification was raised) is closed, not left readable
-      if (this.#running?.note === note) await this.#stop('the note is now above the level set for Claude');
+      if (this.#running?.note === note) await this.#stop(word('cc.editor.raised'));
       return this.#held(note, checked, person);
     }
     return this.#open(note, checked.settings, null);
@@ -245,7 +241,7 @@ export class EditorLauncher {
   async #open(note: string, settings: LaunchSettings | null, confirmed: string | null): Promise<EditOutcome> {
     const title = nameOf(note);
     if (this.#running?.note === note) return { ok: true, title, reused: true };
-    await this.#stop('another note was opened');
+    await this.#stop(word('cc.editor.other-note'));
     const started = await this.#start(note, settings, confirmed);
     return started.ok ? { ok: true, title, reused: false } : started;
   }
@@ -279,7 +275,7 @@ export class EditorLauncher {
     confirmed: string | null,
   ): Promise<{ ok: true } | { ok: false; why: string }> {
     const [command, ...rest] = this.#ports.server;
-    if (command === undefined) return { ok: false, why: NO_NODE };
+    if (command === undefined) return { ok: false, why: noNode() };
     const key = this.#ports.propose ? (this.#ports.key?.() ?? null) : null;
     const env = {
       // the key itself goes on standard input, where a process listing cannot show it
@@ -300,7 +296,7 @@ export class EditorLauncher {
       const request = { argv: [command, ...rest], env, ...(key === null ? {} : { input: `${key}\n` }) };
       iterator = this.#ports.spawn(request)[Symbol.asyncIterator]();
     } catch {
-      return { ok: false, why: NO_NODE };
+      return { ok: false, why: noNode() };
     }
     return new Promise((resolve) => {
       let said = '';
@@ -315,7 +311,7 @@ export class EditorLauncher {
         void iterator.return?.();
       };
       const timer = this.#ports.after(START_TIMEOUT_MS, () =>
-        giveUp(`The editor server did not become ready in ${START_TIMEOUT_MS / 1000} seconds.`),
+        giveUp(word('cc.editor.not-ready', { seconds: START_TIMEOUT_MS / 1000 })),
       );
       const fail = (why: string) => {
         timer.cancel();
@@ -328,7 +324,7 @@ export class EditorLauncher {
           const end = line.indexOf('\n');
           if (end < 0) return;
           const link = this.#linkIn(line.slice(0, end));
-          if (!link) return giveUp('The editor server did not hand over an address.');
+          if (!link) return giveUp(word('cc.editor.no-address'));
           timer.cancel();
           ready = true;
           running = { note, title: nameOf(note), link, key, iterator, done: Promise.resolve(), stopping: null };
@@ -346,7 +342,7 @@ export class EditorLauncher {
             piece(next.value);
           }
         } catch (err) {
-          const why = running ? `the editor server failed: ${String(err)}` : NO_NODE;
+          const why = running ? word('cc.editor.server-failed', { why: String(err) }) : noNode();
           this.#over(running, ready, said, { code: null, signal: null }, () => fail(why), why);
         }
       })();
@@ -376,13 +372,11 @@ export class EditorLauncher {
     const stopped = /^editor server stopped: (.+)$/.exec(last)?.[1];
     if (!ready) {
       const refused = /^editor server: (.+)$/.exec(last)?.[1];
-      const code = end.code === null ? `signal ${end.signal ?? 'unknown'}` : `exit code ${end.code}`;
-      fail(refused ?? (last || `The editor server stopped before it was ready (${code}).`));
+      fail(refused ?? (last || word('cc.editor.stopped-early', { code: sayEndCode(end) })));
       return;
     }
     if (this.#running === running) this.#running = null;
-    this.#ended =
-      running?.stopping ?? stopped ?? error ?? (end.signal ? `ended by ${end.signal}` : `exited with code ${end.code}`);
+    this.#ended = running?.stopping ?? stopped ?? error ?? sayEnded(end);
     this.#ports.changed?.();
   }
 }

@@ -1,0 +1,78 @@
+// The Claude Code mod's own words, in UK English (editor spec §10, §26 and §42, words_catalogue). They are what the pane
+// and the /graph command say to the person. That is the drawing's words, why it is text, and how the editor opened or
+// stopped.
+// What the mod tells Claude alone stays in the code (words-in-code.test.js). source-words.ts keeps these with every
+// other word.
+
+/** The Claude Code mod's own words, by key, in UK English. */
+export const CC_SOURCE_WORDS = {
+  'cc.no-graph': 'No graph in this note.',
+  'cc.empty-graph': 'The graph in this note has nothing in it yet.',
+  'cc.instead': 'It is shown as text instead.',
+  'cc.not-drawn': 'Not drawn. {instead}',
+  'cc.too-large-to-read': 'Too large to read: the graph blocks here hold {size} {unit}, and at most {most} are read.',
+  'cc.unit.bytes': 'bytes',
+  'cc.unit.lines': 'lines',
+  'cc.unit.source': 'bytes of drawing instructions',
+  'cc.unit.word': 'characters in a word',
+  'cc.too-large-to-draw': 'Too large to draw: this graph has {size} {what}, and at most {most} are drawn. {instead}',
+  'cc.at-least': 'at least {size}',
+  'cc.title.too-large': 'Too large',
+  'cc.title.empty': 'Empty',
+  'cc.title.no-graph': 'No graph',
+  'cc.title.not-read': 'Not read',
+  'cc.not-read': 'The graph could not be read.',
+  'cc.problem-line': 'Line {line}: {message}',
+  'cc.alt': '{graph}: {things}, {links}',
+  'cc.things': { one: '{count} thing', other: '{count} things' },
+  'cc.links': { one: '{count} link', other: '{count} links' },
+  'cc.too-large-for-pane': 'The drawing is too large for a pane (over {most} characters). {instead}',
+  'cc.node-missing':
+    'Graphviz runs through Node.js, and node could not be started. Install Node.js 24 or later (nodejs.org), make sure `node` is on the path Claude Code starts with, and run /graph again. The graph is shown as text meanwhile.',
+  'cc.node-failed': 'Could not run node: {why}',
+  'cc.graphviz-unfinished': 'Graphviz did not finish: {why}',
+  'cc.graphviz-failed': 'Graphviz failed: {why}',
+  'cc.exit-code': 'exit code {code}',
+  'cc.graphviz-too-large': 'The drawing was too large to hand back from Graphviz.',
+  'cc.graphviz-no-drawing': 'Graphviz gave no drawing: its output was not one SVG for each layout.',
+  'cc.editor.no-node':
+    'Node could not be started, and the editor needs it. Install Node.js, make sure `node` is on the path, then try again.',
+  'cc.editor.none-open': 'No editor is open: /graph edit <path to a note> opens one.',
+  'cc.editor.no-proposals': 'Proposals are not available: this host cannot make the key one needs.',
+  'cc.editor.nothing-waiting': 'Nothing is waiting for a yes: /graph edit <path to a note> asks first.',
+  'cc.editor.unchecked':
+    'The note or the settings could not be read, so it cannot be checked against the level set for Claude.',
+  'cc.editor.nothing-asks': '{note}: nothing asks about this note now.',
+  'cc.editor.name-note': 'Name a note to edit: /graph edit <path to a note>, quoted if it has spaces.',
+  'cc.editor.raised': 'the note is now above the level set for Claude',
+  'cc.editor.other-note': 'another note was opened',
+  'cc.editor.not-ready': 'The editor server did not become ready in {seconds} seconds.',
+  'cc.editor.no-address': 'The editor server did not hand over an address.',
+  'cc.editor.server-failed': 'the editor server failed: {why}',
+  'cc.editor.signal': 'signal {signal}',
+  'cc.editor.signal-unknown': 'unknown',
+  'cc.editor.stopped-early': 'The editor server stopped before it was ready ({code}).',
+  'cc.editor.ended-by': 'ended by {signal}',
+  'cc.editor.exited': 'exited with code {code}',
+  'cc.editor.not-the-person':
+    'Only the person typing can say yes to opening a note above the level set for Claude: a command from anything else is refused.',
+  'cc.editor.not-the-person-asking':
+    'Only the person typing can say yes to that, and this command did not come from them, so it is not opened.',
+  'cc.editor.already-open':
+    'The editor is already open for {title}. The link to open in the browser pane is in the Graph editor pane, and is not shown here.',
+  'cc.editor.ready':
+    'The editor is ready for {title}. The link to open in the browser pane is in the Graph editor pane, and is not shown here.',
+  'cc.editor.asks':
+    '{why} Nothing was opened or shown. Say /graph confirm to open it anyway; anything else leaves it closed.',
+  'cc.editor.refused': '{why} Nothing was opened or shown.',
+  'cc.editor.not-started': 'The editor was not started: {why} The drawing /graph gives is shown instead.',
+  'cc.editor.stopped': 'The editor stopped: {reason}.',
+  'cc.matrix.outside-settings':
+    'The matrix note named in the settings is not a path inside the vault, so it is not read.',
+  'cc.matrix.cannot-tell': 'This host cannot tell whether the matrix note is inside the vault, so it is not read.',
+  'cc.matrix.outside-real': 'The matrix note is, by its real path, outside the vault, so it is not read.',
+  'cc.matrix.no-real-path': 'The real path of the matrix note could not be found, so it is not read.',
+  'cc.matrix.unreadable': 'The matrix note could not be read.',
+  'cc.undo-over-theirs':
+    'Another program changed this graph block since your last change here, so undoing now would undo its change too. Nothing was undone.',
+} as const;

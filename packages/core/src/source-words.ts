@@ -5,6 +5,7 @@
 
 import { AI_SOURCE_WORDS } from './ai-source-words.ts';
 import { BLOCKS_SOURCE_WORDS } from './blocks-source-words.ts';
+import { CC_SOURCE_WORDS } from './cc-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
@@ -376,4 +377,6 @@ export const SOURCE_WORDS = {
   ...BLOCKS_SOURCE_WORDS,
   // the Obsidian host's own commands and notices (host-source-words.ts)
   ...HOST_SOURCE_WORDS,
+  // the Claude Code mod's pane and /graph command (cc-source-words.ts)
+  ...CC_SOURCE_WORDS,
 } as const;

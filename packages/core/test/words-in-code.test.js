@@ -1,5 +1,6 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). The
-// areas are the display layer, the Obsidian host and the browser page; each is added as its words move. Each word comes from
+// areas are the display layer, the Obsidian host, the browser page and the Claude Code mod; each is added as its words
+// move. Each word comes from
 // the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
@@ -17,6 +18,7 @@ const AREAS = [
   'packages/core/src/export-write.ts',
   'packages/obsidian/src/',
   'packages/claude-code/page/',
+  'packages/claude-code/src/',
 ];
 
 /** The files of the areas, as paths from the repository's root. */
@@ -57,6 +59,12 @@ const KEPT = {
   // the elements that can take the focus, as a selector kept in a constant
   'packages/core/src/display/graph-view/full-screen.ts': ['a[href], button, input, select, textarea, [tabindex]'],
   'packages/claude-code/page/keyboard.ts': ['a[href], button, input, select, textarea, [tabindex]'],
+  // what the mod tells Claude alone: a hook's refusal and a tool's result, which no person reads in the pane
+  'packages/claude-code/src/data-guard.ts': '*',
+  'packages/claude-code/src/gate-guard.ts': '*',
+  'packages/claude-code/src/editor-propose.ts': '*',
+  // a process's errors, never shown: each caller says why in its own words (editor-matrix.ts, data-guard.ts)
+  'packages/claude-code/src/editor-realpath.ts': '*',
 };
 
 /** The calls whose strings pick elements of the page, never words: `querySelector('a, b')` and the like. */

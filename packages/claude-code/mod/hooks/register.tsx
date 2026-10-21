@@ -21,6 +21,7 @@ import {
   pathOf,
   confirmArgs,
   editArgs,
+  followSystemLanguage,
   layOut,
   notePath,
   PANE_PALETTE,
@@ -151,6 +152,8 @@ async function drawNote($: EngineInterface, path: string): Promise<string> {
 }
 
 export const register: Register = (on) => {
+  // the pane's words are said in the system's language (spec §42)
+  followSystemLanguage();
   // Claude's own writes to the data folder are refused (spec §26): it could loosen its own gate. So are its writes to
   // the note open in the editor (cc_claude_proposes, risk AI-1): it changes that note only by the propose tool, which
   // the refusal names. So are its writes to the matrix note and to a classification line (risk TRUST-1). Every tool is

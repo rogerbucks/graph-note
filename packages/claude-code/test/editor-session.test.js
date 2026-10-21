@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { EditorSession, UNDO_OVER_THEIRS } from '../src/editor-session.ts';
+import { EditorSession, undoOverTheirs } from '../src/editor-session.ts';
 import { PLAN } from './editor-store-support.js';
 
 const sha = (bytes) => `"${createHash('sha256').update(bytes).digest('hex')}"`;
@@ -22,7 +22,7 @@ test('a copy pasted beside the block: undo and redo say the session cannot tell 
   assert.equal(page.changed(pasted, sha(pasted)), 'conflict');
   for (const step of [page.undo(), page.redo()]) {
     assert.equal(step.ok, false);
-    assert.notEqual(step.reason, UNDO_OVER_THEIRS);
+    assert.notEqual(step.reason, undoOverTheirs());
     assert.match(step.reason, /copy of this block/);
   }
 });
