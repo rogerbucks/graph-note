@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { commandContract, exporterContract, sampleExports, storageBackendContract } from '../src/plugins-contract.ts';
-import { SAMPLE_GRAPH, sourceContract, stepContract } from '../src/plugins-contract.ts';
+import { SAMPLE_GRAPH, providerContract, sourceContract, stepContract } from '../src/plugins-contract.ts';
 import { pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS } from '../src/export-data.ts';
 import { memoryStorage } from '../src/note-storage.ts';
@@ -122,6 +122,44 @@ describe('the graph source and step contracts', () => {
     ]);
     assert.deepEqual(await failing(stepContract({ ...step, id: 'other.same' }, 'acme.db')), [
       'it is named under its plug-in’s own id, and offered under a title on one line',
+    ]);
+  });
+});
+
+describe('the AI provider contract', () => {
+  const echo = {
+    name: 'echo',
+    title: 'Echo',
+    shape: (r) => JSON.stringify(r),
+    read: ({ status, text }) => {
+      if (status !== 200) return { refused: `HTTP ${status}` };
+      try {
+        return { content: JSON.parse(text).output ?? '' };
+      } catch {
+        return { unread: 'not JSON' };
+      }
+    },
+  };
+  const names = (p) =>
+    providerContract(p).flatMap((c) => {
+      try {
+        c.run();
+        return [];
+      } catch {
+        return [c.name];
+      }
+    });
+
+  test('a provider that keeps its promises passes every check', () => {
+    assert.deepEqual(names(echo), []);
+  });
+
+  test('one that drops the asked text, or throws on a reply, fails the check that holds it', () => {
+    assert.deepEqual(names({ ...echo, shape: () => '{}' }), [
+      'it shapes a request as text, the same each time, holding what it was asked',
+    ]);
+    assert.deepEqual(names({ ...echo, read: ({ text }) => ({ content: JSON.parse(text).output }) }), [
+      'it reads an answer, a refusal or nothing from any reply, and never throws',
     ]);
   });
 });

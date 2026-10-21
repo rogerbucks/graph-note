@@ -5,12 +5,16 @@
 // exactly that, good for one send only (never_in_background). `sendPrepared` sends it through the transport the host
 // hands in; the core itself reaches no network. It puts the key in only as it goes (keys_kept_secret). It records the
 // send whatever comes of it (record_every_send). It says plainly when the model cannot be reached or refuses
-// (ai_unreachable). It gives an answer back as a proposal, never an edit (answers_are_proposals).
+// (ai_unreachable). It gives an answer back as a proposal, never an edit (answers_are_proposals). A model may name an AI
+// provider a plug-in adds (plugin-ai.ts, trust_ai_provider_bounded). It only shapes the body and reads the reply; all
+// else here holds as for any model.
 import { proposalFrom } from './ai-answer.ts';
 import { clearance, credentialsIn, levelSaid } from './ai-ceiling.ts';
 import { aiReady, endpointProblem } from './ai-choice.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
-import { askedText, changesIn, readReply, requestBody } from './ai-request.ts';
+import { INSTRUCTIONS, askedText, changesIn, readReply, requestBody } from './ai-request.ts';
+import { keyHeader } from './plugin-ai.ts';
+import type { AiProvider } from './plugin-ai.ts';
 import type { MatrixRow } from './ai-matrix.ts';
 import { aiScope } from './ai-scope.ts';
 import type { ScopeChoice } from './ai-scope.ts';
@@ -54,6 +58,8 @@ export interface SendAsk {
   shared?: string[];
   /** The rows of the vault's destination matrix, as the host read them; a model with a row picked is held to its row. */
   matrix?: MatrixRow[];
+  /** The AI provider the model names, as the host's plug-ins give it (`aiProvider`); none for the one wire format. */
+  provider?: AiProvider;
 }
 
 /** A send made ready: everything that will go, and where, for the user to see before saying yes. */
@@ -76,6 +82,8 @@ export interface PreparedSend {
   scope: SendScope;
   /** The state of the graph sent: a proposal from the answer is made against it. */
   basis: string;
+  /** The AI provider that shaped the body and reads the reply, when the model names one. */
+  provider?: AiProvider;
 }
 
 /** What a send held, as its record keeps it: the kind of choice and the counts. */
@@ -135,11 +143,24 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   const matrix = { rows: ask.matrix ?? [], classMap: settings.aiClassMap };
   const cleared = clearance(ask.level, model, settings.classifications, ready.ready, settings.aiUnlabelled, matrix);
   if ('refused' in cleared) return cleared;
+  const provider = model.provider ? ask.provider : undefined;
+  if (model.provider && provider?.name !== model.provider)
+    return { refused: `${model.name} is sent through the AI provider ${model.provider}, which no plug-in adds.` };
   const scope = aiScope(ask.note, ask.choice, ask.shared);
   if ('refused' in scope) return scope;
+  let body: string;
+  try {
+    const asked = askedText(scope, ask.question);
+    body = provider
+      ? provider.shape({ model: model.model, instructions: INSTRUCTIONS, asked })
+      : requestBody(model, scope, ask.question);
+  } catch (e) {
+    return { refused: e instanceof Error ? e.message : String(e) };
+  }
   // everything that goes is looked over as written, before it is put in the request. That is the address, and the whole
-  // message (the graph's name, what was chosen in words, its GQL and the question)
-  const held = credentialsIn(`${model.endpoint}\n${askedText(scope, ask.question)}`, ask.secrets);
+  // message (the graph's name, what was chosen in words, its GQL and the question). The body a provider shaped is
+  // looked over too, as it may add to what it was given
+  const held = credentialsIn(`${model.endpoint}\n${askedText(scope, ask.question)}\n${body}`, ask.secrets);
   if (held.length)
     return {
       refused: `What would be sent holds what looks like ${held.join(' and ')}, so nothing is sent. Leave out what holds it, or take it out of the note or the model’s address.`,
@@ -147,10 +168,12 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   return {
     model,
     to: model.endpoint.trim(),
-    body: requestBody(model, scope, ask.question),
+    body,
     headersShown: {
       'Content-Type': 'application/json',
-      ...(model.keyName ? { Authorization: `Bearer (the key named ${model.keyName} in the app’s secret store)` } : {}),
+      ...(model.keyName
+        ? Object.fromEntries([keyHeader(provider, `(the key named ${model.keyName} in the app’s secret store)`)])
+        : {}),
     },
     summary: [
       `To ${model.name} (${model.model}), at ${model.endpoint.trim()}, ${model.matrixRow ? `held to the matrix row ${model.matrixRow}` : `whose ceiling is ${model.ceiling}`}.`,
@@ -166,6 +189,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
     said: scope.said,
     scope: { kind: scope.kind, things: scope.things.length, links: scope.links },
     basis: basisOf(ask.note, scope.graph, ask.shared),
+    ...(provider && { provider }),
   };
 }
 
@@ -231,7 +255,7 @@ export async function sendPrepared(
     reply = await deps.transport({
       url: p.to,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(key ? { Authorization: `Bearer ${key}` } : {}) },
+      headers: { 'Content-Type': 'application/json', ...(key ? Object.fromEntries([keyHeader(p.provider, key)]) : {}) },
       body: p.body,
     });
   } catch (e) {
@@ -241,7 +265,14 @@ export async function sendPrepared(
       `${p.model.name} could not be reached at ${p.to} (${said.length > 200 ? `${said.slice(0, 200)}…` : said}).`,
     );
   }
-  const read = readReply(reply.status, hide(reply.text));
+  let read;
+  try {
+    read = p.provider
+      ? p.provider.read({ status: reply.status, text: hide(reply.text) })
+      : readReply(reply.status, hide(reply.text));
+  } catch (e) {
+    return failed(hide(e instanceof Error ? e.message : String(e)));
+  }
   if ('refused' in read) return failed(`${p.model.name} refused the request (${read.refused}).`);
   const changes = 'content' in read ? changesIn(read.content) : read;
   const cannot = (why: string) =>

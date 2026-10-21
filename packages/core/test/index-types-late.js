@@ -45,6 +45,8 @@ export const TYPES_LATE = [
   'Proposer',
   'ProposerKind',
   'Provenance',
+  'ProviderReading',
+  'ProviderRequest',
   'Range',
   'ReadLimits',
   'Refusal',

@@ -18,6 +18,8 @@ import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './pl
 import { heldGraph, stepInputs } from './plugin-sources.ts';
 import type { JoinedGraph } from './plugin-sources.ts';
 import { pluginCalls } from './plugin-calls.ts';
+import { guardedProvider, providerProblem } from './plugin-ai.ts';
+import type { AiProvider } from './plugin-ai.ts';
 import type { PluginResult } from './plugin-calls.ts';
 import { gatedFiles } from './plugin-files.ts';
 import type { FilesOffer } from './plugin-files.ts';
@@ -31,7 +33,16 @@ import type { ThemeToken } from './theme-tokens.ts';
 export const PLUGIN_API = '1';
 
 /** The extension points a plug-in may use, as its manifest names them. */
-export const EXTENSION_POINTS = ['exports', 'theme', 'storage', 'commands', 'panels', 'sources', 'steps'] as const;
+export const EXTENSION_POINTS = [
+  'exports',
+  'theme',
+  'storage',
+  'commands',
+  'panels',
+  'sources',
+  'steps',
+  'ai',
+] as const;
 
 /** One of the extension points. */
 export type ExtensionPoint = (typeof EXTENSION_POINTS)[number];
@@ -46,6 +57,7 @@ export interface ExtensionPoints {
   panels?: { add: (panel: PluginPanel) => void };
   sources?: { add: (source: PluginSource) => void };
   steps?: { add: (step: PluginStep) => void };
+  ai?: { add: (provider: AiProvider) => void };
   /** The host's abilities the manifest names, and no other (plugin_manifest_limits). */
   host?: Partial<HostAbilities>;
 }
@@ -147,6 +159,10 @@ export interface PluginRegistry {
     inputs: readonly JoinedGraph[],
     levels: readonly string[],
   ) => Promise<PluginResult<JoinedGraph>>;
+  /** Every AI provider added, in the order added. */
+  aiProviders: () => AiProvider[];
+  /** The AI provider `name`, each call into it timed, caught and named, for `prepareSend`; undefined when none adds it. */
+  aiProvider: (name: string) => AiProvider | undefined;
   /** The plug-ins stopped for running too long, and why; nothing of theirs is called again. */
   stopped: () => StoppedPlugin[];
 }
@@ -155,9 +171,12 @@ export interface PluginRegistry {
 interface Shelf<T> {
   items: T[];
   owner: Map<string, string>;
+  /** What each is named by on its point, such as a command's `id`. */
+  key: keyof T;
 }
 
-const shelf = <T>(): Shelf<T> => ({ items: [], owner: new Map() });
+const shelf = <T>(key: keyof T): Shelf<T> => ({ items: [], owner: new Map(), key });
+const nameOf = <T>(s: Shelf<T>, t: T) => String(t[s.key]);
 
 /** Why something a plug-in adds to a point is refused, given the plug-in's id and who added each name so far. */
 type Problem<T> = (t: T, pluginId: string, taken: Map<string, string>) => string | null;
@@ -170,11 +189,12 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const owner = new Map<string, string>();
   const tokens: ThemeToken[] = [];
   const tokenOwner = new Map<string, string>();
-  const backends = shelf<StorageBackend>();
-  const commands = shelf<PluginCommand>();
-  const panels = shelf<PluginPanel>();
-  const sources = shelf<PluginSource>();
-  const steps = shelf<PluginStep>();
+  const backends = shelf<StorageBackend>('name');
+  const commands = shelf<PluginCommand>('id');
+  const panels = shelf<PluginPanel>('id');
+  const sources = shelf<PluginSource>('scheme');
+  const steps = shelf<PluginStep>('id');
+  const providers = shelf<AiProvider>('name');
   const { guarded, awaited, stopped } = pluginCalls(now, timeLimit);
   const core = Object.freeze(Object.keys(THEME_TOKENS));
   /** The abilities `named` from the host's offer, frozen, or why one cannot be given. */
@@ -189,10 +209,10 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     return Object.freeze(out);
   };
   /** Moves what a plug-in added onto the registry's own shelf, once all of it was accepted. */
-  const keep = <T>(from: Shelf<T>, to: Shelf<T>, key: (t: T) => string, plugin: string) => {
+  const keep = <T>(from: Shelf<T>, to: Shelf<T>, plugin: string) => {
     for (const t of from.items) {
       to.items.push(t);
-      to.owner.set(key(t), plugin);
+      to.owner.set(nameOf(to, t), plugin);
     }
   };
   return {
@@ -217,9 +237,9 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const taken = new Map(owner);
       const addedTokens: ThemeToken[] = [];
       const tokenTaken = new Map(tokenOwner);
-      const addedBackends = shelf<StorageBackend>();
-      const addedCommands = shelf<PluginCommand>();
-      const addedPanels = shelf<PluginPanel>();
+      const addedBackends = shelf<StorageBackend>('name');
+      const addedCommands = shelf<PluginCommand>('id');
+      const addedPanels = shelf<PluginPanel>('id');
       const points: ExtensionPoints = {};
       if (plugin.uses.includes('exports'))
         points.exports = {
@@ -243,63 +263,25 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
           },
         });
       /** A point whose additions are checked by `problem` against all added so far, and kept aside on `mine`. */
-      const onShelf = <T>(
-        mine: Shelf<T>,
-        all: Shelf<T>,
-        key: (t: T) => string,
-        problem: Problem<T>,
-        copy: (t: T) => T,
-      ) => ({
+      const onShelf = <T>(mine: Shelf<T>, all: Shelf<T>, problem: Problem<T>, copy = (t: T): T => ({ ...t })) => ({
         add: (t: T) => {
           const why = problem(t, plugin.id, new Map([...all.owner, ...mine.owner]));
           if (why) refuse(why);
-          mine.owner.set(key(t), plugin.id);
+          mine.owner.set(nameOf(mine, t), plugin.id);
           mine.items.push(copy(t));
         },
       });
       const uses = (p: ExtensionPoint) => plugin.uses.includes(p);
-      const addedSources = shelf<PluginSource>();
-      const addedSteps = shelf<PluginStep>();
-      if (uses('storage'))
-        points.storage = onShelf(
-          addedBackends,
-          backends,
-          (b) => b.name,
-          (b, _, t) => backendProblem(b, t),
-          (b) => ({ ...b }),
-        );
-      if (uses('commands'))
-        points.commands = onShelf(
-          addedCommands,
-          commands,
-          (c) => c.id,
-          commandProblem,
-          (c) => ({ ...c }),
-        );
+      const addedSources = shelf<PluginSource>('scheme');
+      const addedSteps = shelf<PluginStep>('id');
+      const addedProviders = shelf<AiProvider>('name');
+      if (uses('storage')) points.storage = onShelf(addedBackends, backends, (b, _, t) => backendProblem(b, t));
+      if (uses('commands')) points.commands = onShelf(addedCommands, commands, commandProblem);
       if (uses('panels'))
-        points.panels = onShelf(
-          addedPanels,
-          panels,
-          (c) => c.id,
-          panelProblem,
-          (c) => ({ ...c, render: c.render.bind(c) }),
-        );
-      if (uses('sources'))
-        points.sources = onShelf(
-          addedSources,
-          sources,
-          (c) => c.scheme,
-          (c, _, t) => sourceProblem(c, t),
-          (c) => ({ ...c }),
-        );
-      if (uses('steps'))
-        points.steps = onShelf(
-          addedSteps,
-          steps,
-          (c) => c.id,
-          stepProblem,
-          (c) => ({ ...c }),
-        );
+        points.panels = onShelf(addedPanels, panels, panelProblem, (c) => ({ ...c, render: c.render.bind(c) }));
+      if (uses('sources')) points.sources = onShelf(addedSources, sources, (c, _, t) => sourceProblem(c, t));
+      if (uses('steps')) points.steps = onShelf(addedSteps, steps, stepProblem);
+      if (uses('ai')) points.ai = onShelf(addedProviders, providers, (c, _, t) => providerProblem(c, t));
       if (given && typeof given !== 'string') points.host = given;
       try {
         plugin.register(Object.freeze(points));
@@ -316,11 +298,12 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
         tokens.push(t);
         tokenOwner.set(t.name, plugin.id);
       }
-      keep(addedBackends, backends, (b) => b.name, plugin.id);
-      keep(addedCommands, commands, (c) => c.id, plugin.id);
-      keep(addedPanels, panels, (c) => c.id, plugin.id);
-      keep(addedSources, sources, (c) => c.scheme, plugin.id);
-      keep(addedSteps, steps, (c) => c.id, plugin.id);
+      keep(addedBackends, backends, plugin.id);
+      keep(addedCommands, commands, plugin.id);
+      keep(addedPanels, panels, plugin.id);
+      keep(addedSources, sources, plugin.id);
+      keep(addedSteps, steps, plugin.id);
+      keep(addedProviders, providers, plugin.id);
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
@@ -370,6 +353,11 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
         what = `The step ${c.title}`;
       const r = await awaited(plugin, what, () => c.run(stepInputs(inputs)));
       return heldGraph(plugin, what, r, `step ${id}`, inputs, levels);
+    },
+    aiProviders: () => providers.items.map((c) => ({ ...c })),
+    aiProvider(name) {
+      const c = providers.items.find((x) => x.name === name);
+      return c && guardedProvider(c, providers.owner.get(name) ?? '', guarded);
     },
     stopped: () => [...stopped].map(([plugin, why]) => ({ plugin, why })),
   };
