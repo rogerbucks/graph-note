@@ -1,5 +1,5 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). Those
-// areas are the hosts, the display layer and the core's reading and style problems. Each is added as its words move. Each word
+// areas are the hosts, the display layer and the core's reading and style problems and proposals. Each is added as its words move. Each word
 // comes from the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
@@ -46,6 +46,18 @@ const AREAS = [
   'packages/core/src/link-flow.ts',
   'packages/core/src/picture.ts',
   'packages/core/src/untangle-saved.ts',
+  // the core's proposals: their cards, checks and refusals
+  'packages/core/src/proposals.ts',
+  'packages/core/src/proposals-apply.ts',
+  'packages/core/src/proposals-review.ts',
+  'packages/core/src/proposals-author.ts',
+  'packages/core/src/proposals-basis.ts',
+  'packages/core/src/proposals-check.ts',
+  'packages/core/src/proposals-judgement.ts',
+  'packages/core/src/proposals-needs.ts',
+  'packages/core/src/proposals-record.ts',
+  'packages/core/src/proposals-statements.ts',
+  'packages/core/src/proposals-text.ts',
 ];
 
 /** The files of the areas, as paths from the repository's root. */
