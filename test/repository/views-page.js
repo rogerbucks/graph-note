@@ -120,7 +120,7 @@ export function pageStates(open) {
       browserHost(page.window).menu(
         [
           { title: 'Export as SVG', icon: 'download', onClick() {} },
-          { title: 'Copy the address', icon: 'copy', onClick() {} },
+          { title: 'Copy its address', icon: 'copy', onClick() {} },
         ],
         { x: 20, y: 20 },
         doc,

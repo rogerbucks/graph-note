@@ -1,6 +1,6 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). The
-// areas are the display layer, the Obsidian host, the browser page, the Claude Code mod and its editor server. Each is
-// added as its words move. Each word comes from
+// areas are the display layer, the Obsidian host, the browser page, the Claude Code mod, its /graph command and its
+// editor server. Each is added as its words move. Each word comes from
 // the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
@@ -21,6 +21,7 @@ const AREAS = [
   'packages/claude-code/src/',
   'packages/claude-code/server/',
   'packages/claude-code/bin/',
+  'packages/claude-code/mod/hooks/register.tsx',
 ];
 
 /** The files of the areas, as paths from the repository's root. */
@@ -29,7 +30,7 @@ const files = () =>
     a.endsWith('/')
       ? readdirSync(new URL(a, ROOT), { recursive: true })
           .map((f) => `${a}${String(f).replaceAll('\\', '/')}`)
-          .filter((f) => f.endsWith('.ts'))
+          .filter((f) => /\.tsx?$/.test(f))
       : [a],
   );
 
@@ -85,6 +86,14 @@ const KEPT = {
   // the lines the server writes for the mod, which reads them by their start (editor-launch.ts)
   'packages/claude-code/server/editor-process.ts': ['editor server: {}\n', 'editor server stopped: {}\n'],
   'packages/claude-code/server/editor-server.ts': ['editor server: {}\n'],
+  // the propose tool's description, which only Claude reads
+  'packages/claude-code/mod/hooks/register.tsx': [
+    'Propose changes to the graph of the note open in the ThoughtKnot editor. Nothing is applied: the changes wait on a card ',
+    'in the editor for the user to accept or reject. Each change is one of: {op: "add-thing", name, kind, properties?}, ',
+    '{op: "add-link", from, type, to}, {op: "set", thing, key, value}, {op: "remove-thing", thing}, ',
+    '{op: "remove-link", from, type, to}, each with an optional "reason". Names are one word. You cannot add a Person, ',
+    'a Model or a Step. "read" lists what you read, if you say so.',
+  ],
   // a marker the note's writer throws and catches again, never shown
   'packages/claude-code/server/note-file.ts': ['folder moved'],
 };
@@ -116,13 +125,15 @@ function givenTo(node) {
   return '';
 }
 
-/** The strings in `source` a person would read, with the `${…}` of a template left out. */
-function wordsIn(source) {
-  const file = ts.createSourceFile('x.ts', source, ts.ScriptTarget.Latest, true);
+/** The strings in `source` a person would read, with the `${…}` of a template left out; `name` says if it is TSX. */
+function wordsIn(source, name = 'x.ts') {
+  const kind = name.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true, kind);
   const found = [];
   const visit = (node) => {
     let text = null;
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) text = node.text;
+    else if (ts.isJsxText(node) && node.text.trim()) text = node.text.trim();
     else if (ts.isTemplateExpression(node))
       text = [node.head.text, ...node.templateSpans.map((s) => s.literal.text)].join('{}');
     if (text !== null) {
@@ -155,11 +166,16 @@ describe('the words in the code', () => {
     assert.deepEqual(wordsIn(source), ['No problems.', 'Line {}: {}', 'Cancel']);
   });
 
+  test('the check finds the words written between the tags of a TSX file', () => {
+    const source = 'const pane = <Box><Text>Open this address:</Text><Text>{why}</Text></Box>;';
+    assert.deepEqual(wordsIn(source, 'pane.tsx'), ['Open this address:']);
+  });
+
   // proves: words_catalogue
   test('every word a person reads comes from the catalogue, but those kept in the code with why', () => {
     const found = files().flatMap((f) => {
       const kept = KEPT[f] ?? [];
-      return wordsIn(readFileSync(new URL(f, ROOT), 'utf8'))
+      return wordsIn(readFileSync(new URL(f, ROOT), 'utf8'), f)
         .filter((w) => kept !== '*' && !kept.includes(w))
         .map((w) => `${f}: ${w}`);
     });
