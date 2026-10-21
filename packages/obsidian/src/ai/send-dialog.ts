@@ -14,6 +14,7 @@ import {
   modelChoices,
   noteWithProposal,
   prepareSend,
+  purposeWords,
   readNote,
   sendPrepared,
   viewsOf,
@@ -188,9 +189,12 @@ export class SendDialog extends Modal {
       .setDesc(
         chosen
           ? chosen.matrixRow
-            ? word('ai.model.matrix', { purpose: chosen.purpose || word('ai.model.no-purpose'), row: chosen.matrixRow })
+            ? word('ai.model.matrix', {
+                purpose: purposeWords(chosen.purpose) || word('ai.model.no-purpose'),
+                row: chosen.matrixRow,
+              })
             : word('ai.model.ceiling', {
-                purpose: chosen.purpose || word('ai.model.no-purpose'),
+                purpose: purposeWords(chosen.purpose) || word('ai.model.no-purpose'),
                 ceiling: chosen.ceiling,
               })
           : '',

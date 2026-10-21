@@ -57,6 +57,21 @@ export const formatInstant = (at: Date): string =>
 export const formatList = (words: string[], type: 'conjunction' | 'disjunction' = 'conjunction'): string =>
   new Intl.ListFormat(current, { style: 'long', type }).format(words);
 
+/**
+ * Words joined as the first items of a long list are in the locale, with no "and": "a, b, c" in UK English, "a、b、c"
+ * in Japanese. It is for words that the text around them ends, such as "types {types} and {last}".
+ */
+export function formatSeries(words: string[]): string {
+  const parts = new Intl.ListFormat(current, { style: 'long', type: 'conjunction' }).formatToParts([
+    'a',
+    'b',
+    'c',
+    'd',
+  ]);
+  const between = parts.find((p) => p.type === 'literal')?.value ?? ', ';
+  return words.join(between);
+}
+
 /** Texts sorted as the locale's reader expects, digits as numbers; never for an order written into text. */
 export const sortedForReader = (texts: string[]): string[] =>
   [...texts].sort(new Intl.Collator(current, { numeric: true }).compare);
