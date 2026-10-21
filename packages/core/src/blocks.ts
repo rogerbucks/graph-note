@@ -3,6 +3,7 @@
 // may have a graph line that cannot be read.
 import gs from '@thoughtknot/graph-spec';
 import type { Problem } from './note-reading.ts';
+import { readerWords } from './reader-words.ts';
 import { N, S, SPACE, trim } from './whitespace.ts';
 import { word } from './words.ts';
 
@@ -79,13 +80,14 @@ export function dataKind(text: string): 'data' | 'schema' | null | Problem {
   } catch (e) {
     if (!isGraphLine(text)) return null;
     const p = e instanceof gs.ProfileError ? e : null;
+    const said = p ? readerWords(p) : null;
     return {
       graph: null,
       block: -1,
       severity: 'error',
       line: p?.line ?? 1,
-      message: p?.msg ?? word('reading.graph-line'),
-      fix: p?.fix ?? word('reading.graph-line.fix'),
+      message: said?.message ?? word('reading.graph-line'),
+      fix: said?.fix ?? word('reading.graph-line.fix'),
       ...(p?.code ? { code: p.code } : {}),
     };
   }

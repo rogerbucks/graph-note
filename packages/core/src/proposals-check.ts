@@ -7,6 +7,7 @@ import { items } from './block-items.ts';
 import { dataKind, gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import type { ProposerKind } from './proposals.ts';
+import { readerWords } from './reader-words.ts';
 import { word } from './words.ts';
 
 /** What the check said of a proposal: each thing it checked, and whether the proposal passes every one. */
@@ -43,7 +44,12 @@ export function checkProposal(note: string, block: string, shared: readonly stri
     if (!(e instanceof gs.ProfileError)) throw e;
     return {
       passed: false,
-      results: [{ label: word('proposing.check.cannot-load', { line: String(e.line), why: e.msg }), ok: false }],
+      results: [
+        {
+          label: word('proposing.check.cannot-load', { line: String(e.line), why: readerWords(e).message }),
+          ok: false,
+        },
+      ],
     };
   }
 }

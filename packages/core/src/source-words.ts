@@ -18,6 +18,7 @@ import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
 import { PLUGINS_SOURCE_WORDS } from './plugins-source-words.ts';
 import { PROPOSAL_CARD_SOURCE_WORDS } from './proposal-card-source-words.ts';
 import { PROPOSAL_SOURCE_WORDS } from './proposal-source-words.ts';
+import { READER_SOURCE_WORDS } from './reader-source-words.ts';
 import { READING_SOURCE_WORDS } from './reading-source-words.ts';
 import { SERVER_SOURCE_WORDS } from './server-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
@@ -324,6 +325,8 @@ export const SOURCE_WORDS = {
   // the core's problems found while reading a note or checking its style (reading-, style-source-words.ts)
   ...READING_SOURCE_WORDS,
   ...STYLE_SOURCE_WORDS,
+  // the graph spec reader's own problems, a message and a fix for each code (reader-source-words.ts)
+  ...READER_SOURCE_WORDS,
   // a proposal's card and a graph step's card (proposal-card-source-words.ts)
   ...PROPOSAL_CARD_SOURCE_WORDS,
   // the core's proposals: their checks, refusals and where they came from (proposal-source-words.ts)

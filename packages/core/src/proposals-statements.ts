@@ -6,6 +6,7 @@
 import gs from '@thoughtknot/graph-spec';
 import { blankText } from './block-items.ts';
 import type { ChangeOp } from './proposals.ts';
+import { readerWords } from './reader-words.ts';
 import { trim } from './whitespace.ts';
 import { word } from './words.ts';
 
@@ -63,7 +64,10 @@ export function readStatement(text: string): ChangeOp | { refused: string } {
   try {
     c = gs.readChange(text);
   } catch (e) {
-    if (e instanceof gs.ProfileError) return { refused: `${e.msg}: ${e.fix}` };
+    if (e instanceof gs.ProfileError) {
+      const said = readerWords(e);
+      return { refused: `${said.message}: ${said.fix}` };
+    }
     throw e;
   }
   const labels = c.labels?.length ? { labels: c.labels } : {};
