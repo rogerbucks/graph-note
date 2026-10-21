@@ -1,0 +1,6 @@
+{
+  "file": "test/repository-scans.test.js",
+  "test": "the list a plug-in’s worker takes away is not a request, but a call beside it still is",
+  "seen_failing_first": false,
+  "evidence": "The scan it tests lives in test/repository/repo.js, which the replay takes from the new commit, so the old scan never runs against it."
+}
