@@ -6,6 +6,7 @@
 import type { Box, NoteReading, Problem } from './note-reading.ts';
 import { prepare } from './partial-read.ts';
 import { textKeyOf, writtenIn } from './written-things.ts';
+import { word } from './words.ts';
 
 /** What these checks read of a note: the graphs as drawn, whose boxes say which are drawn under a suggested name. */
 export type SuggestedReading = Pick<NoteReading, 'graphs'>;
@@ -66,8 +67,8 @@ export function acceptNameFirst(reading: SuggestedReading, graph: string, keys: 
   if (!unwritten.length) return null;
   if (unwritten.length === 1) {
     const [key] = unwritten as [string];
-    return `accept its name first: ${textOf(key)} is only drawn under the suggested name ${key}, which is not written yet`;
+    return word('reading.accept-name-first', { text: textOf(key), name: key });
   }
   const each = unwritten.map((k) => `${textOf(k)} (${k})`);
-  return `accept their names first: ${each.slice(0, -1).join(', ')} and ${each.at(-1)} are only drawn under suggested names, which are not written yet`;
+  return word('reading.accept-names-first', { texts: each.slice(0, -1).join(', '), last: `${each.at(-1)}` });
 }

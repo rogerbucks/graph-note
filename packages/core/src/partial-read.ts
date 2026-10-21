@@ -11,6 +11,7 @@ import type { BlockGaps } from './name-gaps.ts';
 import type { Problem } from './note-reading.ts';
 import { trim, trimEnd } from './whitespace.ts';
 import { THRESHOLDS } from './thresholds.ts';
+import { word } from './words.ts';
 
 /**
  * Each comment after code on its line. §3 says comments are whole lines, as // also occurs inside identifiers. The
@@ -36,7 +37,7 @@ function lineEndComments(text: string): { text: string; problems: Omit<Problem, 
           message: gs.COMMENT_RULE,
           fix: gs.COMMENT_FIX,
           replace: { written: line.slice(from, i), with: ['\n'] },
-          fixTitle: 'Put the comment on its own line',
+          fixTitle: word('reading.comment-own-line.fix-title'),
           span: { line: n, character: from, end: i },
         });
         return line.slice(0, i) + ' '.repeat(line.length - i);
@@ -64,10 +65,10 @@ function danglingComma(text: string): { text: string; problem: Omit<Problem, 'bl
     problem: {
       line,
       severity: 'warning',
-      message: 'a comma with nothing after it; it is read as if it were not there',
-      fix: 'remove the comma, or write the next pattern after it',
+      message: word('reading.comma-trailing'),
+      fix: word('reading.comma-trailing.fix'),
       replace: { written: ',', with: [''] },
-      fixTitle: 'Remove the comma',
+      fixTitle: word('reading.comma-trailing.fix-title'),
       span: { line: line - 1, character, end: character + 1 },
       departure: 'trailing-comma',
     },
@@ -158,8 +159,8 @@ function readAsMeant(store: gs.Store, i: number, text: string, commasFrom: numbe
       block: i,
       line: c.line,
       severity: 'warning',
-      message: 'a comma is missing at the end of this line; it is read as if it were there',
-      fix: 'add a comma at the end of the line',
+      message: word('reading.comma-missing'),
+      fix: word('reading.comma-missing.fix'),
       insert: { line: c.line - 1, character: trimEnd(code).length, text: ',' },
       departure: 'missing-comma',
     });
@@ -174,10 +175,10 @@ function readAsMeant(store: gs.Store, i: number, text: string, commasFrom: numbe
       block: i,
       line: b.line,
       severity: 'warning',
-      message: `[${b.written}] has no colon; it is read as the relationship type ${b.type}`,
-      fix: `write it with its colon: [:${b.type}]`,
+      message: word('reading.bare-type', { written: b.written, type: b.type }),
+      fix: word('reading.bare-type.fix', { type: b.type }),
       replace: { written: b.written, with: [`:${b.type}`] },
-      fixTitle: `Write the colon: [:${b.type}]`,
+      fixTitle: word('reading.bare-type.fix-title', { type: b.type }),
       ...(names[k] ? { span: names[k] } : {}),
       departure: 'bare-type',
     });
@@ -194,14 +195,14 @@ function failure(block: number, text: string, error: unknown, all: Item[], lineA
     block,
     line,
     severity: 'error',
-    message: pe?.msg ?? 'this could not be read',
-    fix: pe?.fix ?? 'check the line against the guide to writing a graph note',
+    message: pe?.msg ?? word('reading.unreadable'),
+    fix: pe?.fix ?? word('reading.unreadable.fix'),
     ...(pe?.code ? { code: pe.code } : {}),
   };
   // an escape GQL does not name (req:3.gql-escapes): the reader says where its backslash is, and the fix doubles it
   if (typeof pe?.at === 'number') {
     problem.insert = { line: line - 1, character: pe.at, text: '\\' };
-    problem.fixTitle = 'Double the backslash';
+    problem.fixTitle = word('reading.escape.fix-title');
   }
   // "unexpected '('" straight after a path that ends its line with no comma: say so, and offer the comma
   const opened = all.findIndex((it) => lineAt(it.from) === line),
@@ -209,8 +210,8 @@ function failure(block: number, text: string, error: unknown, all: Item[], lineA
   if (pe?.msg === "unexpected '('" && prior && prior.comma === -1 && text[prior.to - 1] === ')') {
     const at = text.slice(0, prior.to).split('\n'),
       lastLine = trim(at[at.length - 1] ?? '');
-    problem.message = `${pe.msg} — a comma is missing at the end of the line before`;
-    problem.fix = `add a comma at the end of the line before, after ${lastLine}`;
+    problem.message = word('reading.comma-missing-before', { message: pe.msg });
+    problem.fix = word('reading.comma-missing-before.fix', { line: lastLine });
     problem.insert = { line: at.length - 1, character: (at[at.length - 1] ?? '').length, text: ',' };
   }
   return problem;
@@ -304,7 +305,7 @@ export function readBlocks(
         if (over) {
           const first = (drop[0] as Item).from;
           chosen = all.filter((it) => it.from >= first);
-          problem.message = `${problem.message} — too much of this block could not be read, so it is left out from this line on`;
+          problem.message = word('reading.too-much-unread', { message: problem.message });
           // the comma before what is left out would end the block with nothing after it
           comma = all.filter((it) => it.from < first).pop()?.comma ?? -1;
         }

@@ -4,6 +4,7 @@
 // vault's own files are loaded as a thing's image (§13). An address outside it is never loaded here, and says so. In the
 // details, such an image waits for the user to ask for it (remote_images_asked). A place that could leave the vault or reach what it hides is refused, as a graph source's is (sources.ts).
 import { outsideVault } from './sources.ts';
+import { word } from './words.ts';
 
 /** The file types an image is known by, by extension, in any case. */
 export const IMAGE_EXTENSIONS: ReadonlySet<string> = new Set([
@@ -51,13 +52,11 @@ export function imageLink(value: unknown): ImageLink | null {
     place = LINK.exec(written)?.[1]?.trim() ?? written;
   if (SCHEME.test(place) && !/^[A-Za-z]:[/\\]/.test(place))
     return isImage(place.replace(/[?#].*$/, '')) || /^data:image\//i.test(place)
-      ? { refused: `${written} is outside the vault, and an image from outside the vault is not loaded` }
+      ? { refused: word('reading.image.outside', { written }) }
       : null;
   if (!isImage(place)) return null;
   if (outsideVault(place) || place.split(/[/\\]/).includes('..'))
-    return {
-      refused: `${written} is not a place inside the vault: write its path from the vault’s root, or link it as [[name]]`,
-    };
+    return { refused: word('reading.image.not-in-vault', { written }) };
   return { link: place };
 }
 

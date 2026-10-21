@@ -4,6 +4,7 @@
 import gs from '@thoughtknot/graph-spec';
 import type { Problem } from './note-reading.ts';
 import { N, S, SPACE, trim } from './whitespace.ts';
+import { word } from './words.ts';
 
 export { gqlBlocks, gqlSpans, type Span } from './fences.ts';
 
@@ -68,8 +69,8 @@ export function dataKind(text: string): 'data' | 'schema' | null | Problem {
       block: -1,
       severity: 'error',
       line: 1,
-      message: 'this style block names no graph to style, so it is not read',
-      fix: `write the graph it styles after STYLE: '// graph: ${own} · STYLE <graph>'`,
+      message: word('reading.style-no-graph'),
+      fix: word('reading.style-no-graph.fix', { graph: own }),
     };
   }
   try {
@@ -83,8 +84,8 @@ export function dataKind(text: string): 'data' | 'schema' | null | Problem {
       block: -1,
       severity: 'error',
       line: p?.line ?? 1,
-      message: p?.msg ?? 'the graph line cannot be read',
-      fix: p?.fix ?? "start the block with '// graph: <name>'",
+      message: p?.msg ?? word('reading.graph-line'),
+      fix: p?.fix ?? word('reading.graph-line.fix'),
       ...(p?.code ? { code: p.code } : {}),
     };
   }
