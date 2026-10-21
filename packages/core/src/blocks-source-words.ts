@@ -44,6 +44,8 @@ export const BLOCKS_SOURCE_WORDS = {
     'Graph {graph} has nothing to draw in this note, so the proposal is listed without a drawing.',
   'blocks.proposal-failed': 'Proposal {id} could not be drawn, so its change set is shown.',
   'blocks.source-strip': 'Drawn from the {kind} {name}, read where it is written: change the graph there.',
+  'blocks.source-strip-plugin':
+    'Drawn from the plug-in source {name}, read each time from the plug-in: change the graph where the plug-in keeps it.',
   'blocks.source-open': 'Open {name}',
   'blocks.source-refused': 'Graph {graph} cannot be drawn from elsewhere: {why}.',
   'blocks.source-block-refused': 'This block cannot be drawn: {why}.',

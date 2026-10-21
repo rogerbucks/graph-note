@@ -4,6 +4,7 @@
 // What is not there is looked for by its name elsewhere in the vault. So a moved file is said to be moved.
 // One that cannot be read is said with its reason.
 // And a card drawn from a source is drawn again whenever that source changes, moves, or comes back.
+// A plug-in's source (`· FROM sample:trip`) is asked of the plug-in turned on that adds it (outside-plugins.ts).
 import { MarkdownRenderChild, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext, TAbstractFile } from 'obsidian';
 import { namesSharedSchema, READ_LIMITS, readSource } from '@thoughtknot/core';
@@ -30,6 +31,9 @@ function fileOf(plugin: ThoughtKnotPlugin, source: GraphSource, from: string): T
 
 /** What the vault holds at a source's place: its text, why it cannot be read, or that it is missing and where its name is. */
 async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: string): Promise<SourceFetched> {
+  // a plug-in's source is asked of the plug-in that adds it, never looked for in the vault (plugin_source_from)
+  if (source.kind === 'plugin')
+    return plugin.outside.readGraph(source.scheme ?? '', source.target, plugin.settings.classifications);
   const file = fileOf(plugin, source, from);
   if (!file) {
     const name = nameOf(source);
@@ -78,7 +82,8 @@ export function watchSource(
   read: SourceRead | SourceRefusal,
   redraw?: () => void,
 ): void {
-  if (!redraw) return;
+  // a plug-in's source is not in the vault, so the vault never says it changed
+  if (!redraw || source.kind === 'plugin') return;
   const name = nameOf(source),
     found = 'from' in read ? read.from : null;
   const watcher = new MarkdownRenderChild(el);

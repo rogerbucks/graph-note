@@ -13,11 +13,19 @@ import { S, trim } from './whitespace.ts';
 import { formatList } from './locale-formats.ts';
 import { word } from './words.ts';
 
-/** Where a graph's data is written: a .gql file, or a note, by the place written after FROM; and the block that says so. */
+/**
+ * Where a graph's data is written, by the place written after FROM, and the block that says so. It is a .gql file, a
+ * note, or a plug-in's source (plugin_source_from): `sample:trip` is the place `trip` of the source `sample`.
+ */
 export interface Source {
   graph: string;
-  kind: 'file' | 'note';
-  /** The place as written, its link brackets, alias and heading taken off: a path to a .gql file, or a note's link. */
+  kind: 'file' | 'note' | 'plugin';
+  /** A plug-in source's word, before the colon; only for `kind: 'plugin'`. */
+  scheme?: string;
+  /**
+   * The place as written, its link brackets, alias and heading taken off. It is a path to a .gql file, a note's link,
+   * or the place a plug-in's source reads, after the colon.
+   */
   target: string;
   /** The block (0-based, among those given) that says it. */
   block: number;
@@ -60,6 +68,8 @@ export interface SourceRefusal {
 }
 
 const PLACE = new RegExp(`·${S}*FROM(?:${S}+([^·]*))?`);
+/** A plug-in source's place: its word of two letters or more, so never a drive letter, a colon, then the place. */
+const PLUGGED = /^([a-z][a-z0-9-]+):(.*)$/;
 const NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 /** The place written after FROM, as a link names it: brackets, alias (`|…`) and heading (`#…`) taken off. */
@@ -95,6 +105,13 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
   const fault = (f: string): SourceFault => ({ graph, block, fault: f });
   if (!graph || !NAME.test(graph)) return fault(word('reading.source.name-not-word', { graph: graph ?? '' }));
   if (!target) return fault(word('reading.source.no-place'));
+  const plugged = written.startsWith('[[') ? null : PLUGGED.exec(target);
+  if (plugged?.[1]) {
+    const [, scheme, place = ''] = plugged;
+    if (!trim(place)) return fault(word('reading.source.no-plugin-place', { scheme }));
+    if (lines.slice(at + 1).some(holds)) return fault(word('reading.source.holds-lines', { target }));
+    return { graph, kind: 'plugin', scheme, target: trim(place), block };
+  }
   if (outsideVault(target)) return fault(word('reading.source.outside', { target }));
   const last = target.split('/').at(-1) ?? '';
   const kind = /\.gql$/i.test(last) ? 'file' : /\.md$/i.test(last) || !last.includes('.') ? 'note' : null;
@@ -118,7 +135,9 @@ export function sourceFor(texts: readonly string[], graph: string): Source | Sou
 
 /** A source in words, as a sentence begins with it: "The file Graphs/trip.gql", "The note Trip plan". */
 export const sourceName = (s: Source): string =>
-  word(s.kind === 'file' ? 'reading.source.file' : 'reading.source.note', { target: s.target });
+  s.kind === 'plugin'
+    ? word('reading.source.plugin', { target: `${s.scheme ?? ''}:${s.target}` })
+    : word(s.kind === 'file' ? 'reading.source.file' : 'reading.source.note', { target: s.target });
 
 const and = (xs: readonly string[]) => formatList([...xs]);
 
@@ -146,6 +165,8 @@ export function readSource(source: Source, fetched: Fetched, shared: string[] = 
   const name = sourceName(source),
     { graph, kind } = source;
   if ('missing' in fetched) {
+    if (kind === 'plugin')
+      return refuse(source, 'missing', word('reading.source.no-plugin', { scheme: source.scheme ?? '', graph }));
     const elsewhere = fetched.elsewhere ?? [];
     if (!elsewhere.length)
       return refuse(
@@ -170,9 +191,9 @@ export function readSource(source: Source, fetched: Fetched, shared: string[] = 
     const reading: NoteReading = { graphs: new Map(), problems: [], world: {}, whole: {}, texts: [], tooLarge };
     return { source, from: fetched.found, texts: [], lines: [], reading };
   }
-  const blocks = kind === 'file' ? [{ text: fileBlock(fetched.text), line: 0 }] : gqlBlocks(fetched.text);
+  const blocks = kind === 'note' ? gqlBlocks(fetched.text) : [{ text: fileBlock(fetched.text), line: 0 }];
   const texts = blocks.map((b) => b.text);
-  if (kind === 'file' && graphOf(texts[0] ?? '') === null)
+  if (kind !== 'note' && graphOf(texts[0] ?? '') === null)
     return refuse(source, 'no-graph', word('reading.source.no-graph-line', { name, graph }));
   const reading = readNote(texts, undefined, shared);
   const own = texts.some((t) => graphOfBlock(t) === graph);

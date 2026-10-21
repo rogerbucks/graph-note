@@ -703,7 +703,8 @@
       "trust_source_joined",
       "trust_plugin_isolated",
       "plugin_point_versions",
-      "plugin_outside_file"
+      "plugin_outside_file",
+      "plugin_source_from"
     ]
   },
   "U1": {
