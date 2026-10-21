@@ -3817,7 +3817,7 @@
       "prevented_by": [
         "packages/core/test/plugins-limits.test.js"
       ],
-      "done_in": "#PR"
+      "done_in": "#856"
     },
     {
       "id": "TRUST-16",
