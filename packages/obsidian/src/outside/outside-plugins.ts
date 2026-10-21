@@ -5,12 +5,20 @@
 //   only ever the code the person turned on;
 // - each runs in a worker of its own, sealed before the file's first line runs (packages/core/src/plugin-outside.ts);
 // - its commands join Obsidian's, named as the plug-in names them;
-// - its graph sources are read by a block written `· FROM sample:trip` (plugin_source_from). Its other points join as
-//   the host draws them.
+// - its graph sources are read by a block written `· FROM sample:trip` (plugin_source_from);
+// - its diagram types draw a graph whose style graph chooses one (outside-diagrams.ts). Its other points join as the
+//   host draws them.
 import { Notice, TFile } from 'obsidian';
 import type { Plugin } from 'obsidian';
 import { outsidePlugin, outsideProblem, pluginRegistry, READ_LIMITS, word } from '@thoughtknot/core';
-import type { IsolatedPlugin, PluginPort, PluginRegistry, SourceFetched } from '@thoughtknot/core';
+import type {
+  DiagramSpace,
+  GraphShape,
+  IsolatedPlugin,
+  PluginPort,
+  PluginRegistry,
+  SourceFetched,
+} from '@thoughtknot/core';
 import { pluginWorker } from 'thoughtknot:plugin-worker';
 import { fetchPluginFile } from './outside-link';
 
@@ -191,6 +199,23 @@ export class OutsidePlugins {
       return size > READ_LIMITS.bytes ? { found, tooLarge: size } : { found, text: r.value.text };
     }
     return { missing: true };
+  }
+
+  /**
+   * The SVG the core drew from the marks of the diagram type `type`, for `shape` in `space`. Or why the plug-in running
+   * that adds it could not draw it, or null when none running adds it.
+   */
+  async drawDiagram(
+    type: string,
+    shape: GraphShape,
+    space: DiagramSpace,
+  ): Promise<{ svg: string } | { why: string } | null> {
+    for (const { registry } of this.running.values()) {
+      if (!registry.diagramTypes().some((d) => d.type === type)) continue;
+      const r = await registry.drawDiagram(type, shape, space);
+      return r.ok ? { svg: r.value } : { why: r.message };
+    }
+    return null;
   }
 
   /** The commands of the plug-in in file `name`, while it runs. */

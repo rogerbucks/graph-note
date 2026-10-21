@@ -3,7 +3,8 @@
 // style graph. Each that does not comes with why. The one suggested is said so, and never drawn until chosen. A chosen
 // type that has stopped fitting is said, with why, and the nearest type that fits offered (type_stops_fitting). A graph
 // of more than 50 things is offered the table or a view as the way in (large_way_in). The core decides all of it
-// (types.ts).
+// (types.ts). A type a plug-in adds is drawn as a picture of the marks that plug-in gave, when one here draws it
+// (plugin_diagram_type_named). Otherwise the strip says which plug-in draws it.
 import { diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
@@ -15,7 +16,7 @@ import type {
   NoteReading,
   StyleGraph,
 } from '@thoughtknot/core';
-import { tableSize } from './table-view';
+import { renderTable, tableSize } from './table-view';
 import { button } from './view-bar';
 
 /** What a card is given of the diagram types, beyond its drawing. */
@@ -26,6 +27,17 @@ export interface DiagramShown extends DiagramOffer {
   table?: DiagramTable;
   /** Writes the type chosen into the style graph: for the graph, or for the view the card shows. */
   choose: (type: DiagramType) => void;
+  /** The drawing as a plug-in's diagram type drew it: the core's SVG of its marks, the type and its size. */
+  picture?: PluginPicture;
+}
+
+/** A graph drawn by a plug-in's diagram type: the SVG the core made of its marks, safe to show, and its size. */
+export interface PluginPicture {
+  svg: string;
+  type: string;
+  plugin: string;
+  width: number;
+  height: number;
 }
 
 /** A type's name as a sentence says it, with its article: "a tree". */
@@ -63,6 +75,28 @@ export function diagramShown(
   };
 }
 
+/** What a card is given for a graph a plug-in drew: no SVG of Graphviz's, and the picture's size, for the zoom to fit. */
+export const pictureDrawn = (p: PluginPicture): Drawn => ({ svg: '', rankdir: 'LR', width: p.width, height: p.height });
+
+/** Puts a plug-in's picture in `viewport`, moved and scaled as a table is. Its SVG is the core's, every label escaped. */
+export function renderPicture(viewport: HTMLElement, p: PluginPicture): HTMLElement {
+  const wrap = viewport.createDiv({ cls: ['thoughtknot-table', 'thoughtknot-plugin-picture'] });
+  wrap.setAttribute('role', 'img');
+  wrap.setAttribute('aria-label', word('type.drawn-plugin', { type: p.type, plugin: p.plugin }));
+  const svg = new DOMParser().parseFromString(p.svg, 'image/svg+xml').documentElement;
+  wrap.appendChild(activeDocument.importNode(svg, true));
+  return wrap;
+}
+
+/** The drawing a card shows in `viewport` that is not Graphviz's: the table, or a plug-in's picture; else null. */
+export function drawnApart(
+  viewport: HTMLElement,
+  d: Pick<DiagramShown, 'table' | 'picture'> | undefined,
+): HTMLElement | null {
+  if (d?.table) return renderTable(viewport, d.table);
+  return d?.picture ? renderPicture(viewport, d.picture) : null;
+}
+
 /** What a card is given for a graph drawn as a table: no SVG, and the table's own size, for the zoom to fit. */
 export const tableDrawn = (table: DiagramTable): Drawn => ({ svg: '', rankdir: 'LR', ...tableSize(table) });
 
@@ -75,7 +109,13 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
   const { choice, suggested } = d,
     writes: HTMLElement[] = [];
   const strip = root.createDiv({ cls: 'thoughtknot-type-strip' });
-  strip.createSpan({ cls: 'thoughtknot-type-drawn', text: word('type.drawn', { type: said(choice.drawn) }) });
+  const drawnAs = d.picture
+    ? word('type.drawn-plugin', { type: d.picture.type, plugin: d.picture.plugin })
+    : word('type.drawn', { type: said(choice.drawn) });
+  strip.createSpan({ cls: 'thoughtknot-type-drawn', text: drawnAs });
+  // a plug-in's type that nothing here draws: which plug-in draws it, and that the graph is a network meanwhile
+  if (choice.plugin && !d.picture)
+    root.createDiv({ cls: 'thoughtknot-type-plugin', attr: { role: 'note' }, text: choice.plugin.why });
   const list = root.createEl('ul', { cls: 'thoughtknot-type-list', attr: { 'aria-label': word('type.list') } });
   list.hidden = true;
   const open = () => {

@@ -39,7 +39,8 @@ import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
 import { renderEmpty, takeTour } from './first-run';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
-import { diagramShown, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
+import { diagramShown, pictureDrawn, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
+import { withPicture } from './outside/outside-diagrams';
 import { readOnlyHere, settlePlacements, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-list';
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
@@ -209,12 +210,19 @@ export async function renderBlock(
     .map(shown);
   const plain = reading.graphs.get(graph);
   const drawing = plain && styledDrawing(plain, styling.style, reading.world[graph]);
-  // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph
+  // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph.
+  // A type a plug-in from outside adds is drawn by that plug-in, when one turned on adds it (outside-diagrams.ts).
   const diagram =
     plain &&
-    diagramShown(plain, styling.style, reading.world[graph], undefined, (change, done) => {
-      void writeStyle(plugin, target.path, graph, { diagram: change }, done);
-    });
+    (await withPicture(
+      plugin.outside,
+      diagramShown(plain, styling.style, reading.world[graph], undefined, (change, done) => {
+        void writeStyle(plugin, target.path, graph, { diagram: change }, done);
+      }),
+      plain,
+      reading.world[graph],
+      styling.style.nudges,
+    ));
   const root = el.createDiv({ cls: 'thoughtknot' });
 
   if (!drawing || !drawing.boxes.length) {
@@ -245,14 +253,16 @@ export async function renderBlock(
 
   // the View menu (§25). One state for every card of this graph in this note, folding it as its switches say. A graph
   // drawn as a table has none
-  const state = diagram?.table ? undefined : plugin.switchesFor(target.path, graph, styling.style);
+  const state = diagram?.table || diagram?.picture ? undefined : plugin.switchesFor(target.path, graph, styling.style);
   const laidOut = (by?: object) => plugin.layout(state ? state.folded(drawing) : drawing, by);
   let drawn: Drawn | Refusal | null;
   try {
     // a graph drawn as a table is the plugin's own table, never laid out (§15)
     const laid = diagram?.table
       ? tableDrawn(diagram.table)
-      : await waitShown(root, word('progress.drawing'), () => laidOut(owner));
+      : diagram?.picture
+        ? pictureDrawn(diagram.picture)
+        : await waitShown(root, word('progress.drawing'), () => laidOut(owner));
     if (laid === 'stopped') {
       // a layout the person stopped (§44, progress_shown): its graph is shown as text, and its result is not used
       root.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'status' }, text: word('progress.drawing-stopped') });
@@ -294,7 +304,7 @@ export async function renderBlock(
       ...(diagram ? { diagram } : {}),
       ...(state ? { switches: { state, relayout: (by: object) => laidOut(by) } } : {}),
       // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
-      ...(diagram?.table
+      ...(diagram?.table || diagram?.picture
         ? {}
         : {
             moving: {
