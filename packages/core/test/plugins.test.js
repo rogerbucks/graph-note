@@ -29,7 +29,17 @@ const NAMES = {
 describe('the plug-in interface', () => {
   test('it is versioned, and its extension points are the data exports, the theme, storage, commands, panels, graph sources and steps, and AI providers', () => {
     assert.equal(PLUGIN_API, '1');
-    assert.deepEqual(EXTENSION_POINTS, ['exports', 'theme', 'storage', 'commands', 'panels', 'sources', 'steps', 'ai']);
+    assert.deepEqual(EXTENSION_POINTS, [
+      'exports',
+      'theme',
+      'storage',
+      'commands',
+      'panels',
+      'sources',
+      'steps',
+      'ai',
+      'diagrams',
+    ]);
   });
 
   test('a plug-in’s panel is offered through the registry and drawn into the element the host gives', () => {

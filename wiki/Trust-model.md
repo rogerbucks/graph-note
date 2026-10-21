@@ -246,6 +246,10 @@ keeps up.
 - **The graph-format rule.** Done: a style graph names a plug-in's type under its id, such as `acme.charts.sankey`.
   Where no plug-in draws it, the core and the Python library both draw a network, naming the plug-in
   (`plugin_diagram_type_named`).
+- **Built.** `packages/core/src/plugin-diagrams.ts` holds the diagram type point. The test is
+  `packages/core/test/plugins-diagrams.test.js`. The core checks every mark: its kind, its place in the space, and its
+  label's length. It keeps only a mark's own fields and draws the SVG itself. A host that has the plug-in draws the
+  type a style graph chooses; one that does not draws a network.
 
 ### Graph sources and graph steps
 

@@ -21,6 +21,7 @@ export const TYPES_LATE = [
   'PlacedLink',
   'PluginCheck',
   'PluginCommand',
+  'PluginDiagram',
   'PluginPanel',
   'PluginRegistry',
   'PluginResult',

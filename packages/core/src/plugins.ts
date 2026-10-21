@@ -7,8 +7,8 @@
 // The third is note storage (§41, storage_contract), and the fourth the commands a person runs. A call over the time
 // limit is named and its answer dropped. Its plug-in is stopped, so it never holds a drawing up again. Then come panels,
 // and graph sources and steps, whose graphs are held as joined graphs (plugin-sources.ts, trust_source_joined).
-// Diagram types and AI providers join them one at a time. Each comes with its own contract
-// suite (plugins-contract.ts).
+// Then AI providers, and diagram types, which give back marks as data that the core draws (plugin-diagrams.ts). Each
+// comes with its own contract suite (plugins-contract.ts).
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { NoteStorage } from './note-storage.ts';
 import { backendProblem, commandProblem, exporterProblem, panelProblem } from './plugin-points.ts';
@@ -20,6 +20,9 @@ import type { JoinedGraph } from './plugin-sources.ts';
 import { pluginCalls } from './plugin-calls.ts';
 import { guardedProvider, providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
+import { diagramProblem, drawnDiagram } from './plugin-diagrams.ts';
+import type { DiagramSpace, PluginDiagram } from './plugin-diagrams.ts';
+import type { GraphShape } from './types-shape.ts';
 import type { PluginResult } from './plugin-calls.ts';
 import { gatedFiles } from './plugin-files.ts';
 import type { FilesOffer } from './plugin-files.ts';
@@ -42,6 +45,7 @@ export const EXTENSION_POINTS = [
   'sources',
   'steps',
   'ai',
+  'diagrams',
 ] as const;
 
 /** One of the extension points. */
@@ -58,6 +62,7 @@ export interface ExtensionPoints {
   sources?: { add: (source: PluginSource) => void };
   steps?: { add: (step: PluginStep) => void };
   ai?: { add: (provider: AiProvider) => void };
+  diagrams?: { add: (diagram: PluginDiagram) => void };
   /** The host's abilities the manifest names, and no other (plugin_manifest_limits). */
   host?: Partial<HostAbilities>;
 }
@@ -163,6 +168,10 @@ export interface PluginRegistry {
   aiProviders: () => AiProvider[];
   /** The AI provider `name`, each call into it timed, caught and named, for `prepareSend`; undefined when none adds it. */
   aiProvider: (name: string) => AiProvider | undefined;
+  /** Every diagram type added, in the order added. */
+  diagramTypes: () => PluginDiagram[];
+  /** The SVG the core draws from the marks the diagram type `type` gives for `shape` in `space`, or why not. */
+  drawDiagram: (type: string, shape: GraphShape, space: DiagramSpace) => Promise<PluginResult<string>>;
   /** The plug-ins stopped for running too long, and why; nothing of theirs is called again. */
   stopped: () => StoppedPlugin[];
 }
@@ -195,6 +204,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const sources = shelf<PluginSource>('scheme');
   const steps = shelf<PluginStep>('id');
   const providers = shelf<AiProvider>('name');
+  const diagrams = shelf<PluginDiagram>('type');
   const { guarded, awaited, stopped } = pluginCalls(now, timeLimit);
   const core = Object.freeze(Object.keys(THEME_TOKENS));
   /** The abilities `named` from the host's offer, frozen, or why one cannot be given. */
@@ -275,6 +285,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const addedSources = shelf<PluginSource>('scheme');
       const addedSteps = shelf<PluginStep>('id');
       const addedProviders = shelf<AiProvider>('name');
+      const addedDiagrams = shelf<PluginDiagram>('type');
       if (uses('storage')) points.storage = onShelf(addedBackends, backends, (b, _, t) => backendProblem(b, t));
       if (uses('commands')) points.commands = onShelf(addedCommands, commands, commandProblem);
       if (uses('panels'))
@@ -282,6 +293,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       if (uses('sources')) points.sources = onShelf(addedSources, sources, (c, _, t) => sourceProblem(c, t));
       if (uses('steps')) points.steps = onShelf(addedSteps, steps, stepProblem);
       if (uses('ai')) points.ai = onShelf(addedProviders, providers, (c, _, t) => providerProblem(c, t));
+      if (uses('diagrams')) points.diagrams = onShelf(addedDiagrams, diagrams, diagramProblem);
       if (given && typeof given !== 'string') points.host = given;
       try {
         plugin.register(Object.freeze(points));
@@ -304,6 +316,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       keep(addedSources, sources, plugin.id);
       keep(addedSteps, steps, plugin.id);
       keep(addedProviders, providers, plugin.id);
+      keep(addedDiagrams, diagrams, plugin.id);
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
@@ -358,6 +371,12 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     aiProvider(name) {
       const c = providers.items.find((x) => x.name === name);
       return c && guardedProvider(c, providers.owner.get(name) ?? '', guarded);
+    },
+    diagramTypes: () => diagrams.items.map((c) => ({ ...c })),
+    async drawDiagram(type, shape, space) {
+      const c = diagrams.items.find((x) => x.type === type);
+      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the diagram type "${type}".` };
+      return drawnDiagram(diagrams.owner.get(type) ?? '', c, shape, space, awaited);
     },
     stopped: () => [...stopped].map(([plugin, why]) => ({ plugin, why })),
   };

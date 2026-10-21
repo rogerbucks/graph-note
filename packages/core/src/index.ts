@@ -186,7 +186,8 @@ export type { GraphOrigin, JoinedGraph, Trust } from './plugin-sources.ts';
 export { commandContract, exporterContract, sampleExports, storageBackendContract } from './plugins-contract.ts';
 export { SAMPLE_GRAPH, providerContract, sourceContract, stepContract } from './plugins-contract.ts';
 export type { AiProvider, ProviderReading, ProviderRequest } from './plugin-ai.ts';
-export { themeTokenContract } from './plugins-contract.ts';
+export { diagramContract, themeTokenContract } from './plugins-contract.ts';
+export type { DiagramGiven, DiagramMark, DiagramSpace, MarkPoint, PluginDiagram } from './plugin-diagrams.ts';
 export { OBSIDIAN_TOKEN_MAP, THEME_TOKENS, themeTokenCss } from './theme-tokens.ts';
 export type { ThemeToken, ThemeTokenUse } from './theme-tokens.ts';
 export {
