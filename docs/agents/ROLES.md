@@ -171,7 +171,6 @@ These are the repo's own rules. AGENTS.md and CONTRIBUTING.md hold the detail; t
   branches belong to the Security workflow. An alert's details never go in a public issue: name its key, severity and
   link only.
 - **No private links** in a commit message. A link to a private chat or workspace helps no reader of a public repo.
-- **Nothing that spends Copilot credits.** Roger's credits ran out.
 - **No new paid service** without Roger's word.
 - **Hands off the release and the repo's settings.** Roger pushes release tags and changes the rules himself.
 - **A guard that refuses means stop.** Ask Roger, and never reach the same result another way.
