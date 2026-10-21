@@ -11,6 +11,7 @@ import { blankText } from './block-items.ts';
 import { BlockPlaces } from './estimate-places.ts';
 import type { Place } from './estimate-places.ts';
 import { formatList } from './locale-formats.ts';
+import { keptValues } from './reader-words.ts';
 import { word } from './words.ts';
 
 /** A guess the drawing makes for a near miss (spec §3): what was written, what it was taken to mean, and the fix. */
@@ -196,7 +197,9 @@ export function estimate(
   // names: each path left out because it names a thing not in the graph
   for (const p of problems) {
     if (p.graph !== graph || !p.dropped) continue;
-    const missing = /^no thing called (\S+) in graph /.exec(p.message)?.[1];
+    // a thing not in the graph (GN310): its name is the one the reader's problem was filled with, whatever the language
+    const name = p.code === 'GN310' ? keptValues(p)?.var : undefined;
+    const missing = typeof name === 'string' ? name : undefined;
     if (!missing) continue;
     const near = nearest(missing, guessable);
     if (!near) continue;

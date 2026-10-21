@@ -7,6 +7,7 @@ import { bareNames, items, lineIndex, without } from './block-items.ts';
 import type { Item } from './block-items.ts';
 import { dataKind, graphOf } from './blocks.ts';
 import { nameGaps, withNames } from './name-gaps.ts';
+import { keepValues, readerValues, readerWords } from './reader-words.ts';
 import type { BlockGaps } from './name-gaps.ts';
 import type { Problem } from './note-reading.ts';
 import { trim, trimEnd } from './whitespace.ts';
@@ -190,13 +191,14 @@ function readAsMeant(store: gs.Store, i: number, text: string, commasFrom: numbe
 function failure(block: number, text: string, error: unknown, all: Item[], lineAt: LineOf): Problem {
   const pe = error instanceof gs.ProfileError ? error : null;
   const line = pe?.line ?? 1;
+  const said = pe ? readerWords(pe) : null;
   const problem: Problem = {
     graph: graphOf(text),
     block,
     line,
     severity: 'error',
-    message: pe?.msg ?? word('reading.unreadable'),
-    fix: pe?.fix ?? word('reading.unreadable.fix'),
+    message: said?.message ?? word('reading.unreadable'),
+    fix: said?.fix ?? word('reading.unreadable.fix'),
     ...(pe?.code ? { code: pe.code } : {}),
   };
   // an escape GQL does not name (req:3.gql-escapes): the reader says where its backslash is, and the fix doubles it
@@ -204,16 +206,18 @@ function failure(block: number, text: string, error: unknown, all: Item[], lineA
     problem.insert = { line: line - 1, character: pe.at, text: '\\' };
     problem.fixTitle = word('reading.escape.fix-title');
   }
-  // "unexpected '('" straight after a path that ends its line with no comma: say so, and offer the comma
+  // an unexpected '(' (GN210) straight after a path that ends its line with no comma: say so, and offer the comma
   const opened = all.findIndex((it) => lineAt(it.from) === line),
     prior = all[opened - 1];
-  if (pe?.msg === "unexpected '('" && prior && prior.comma === -1 && text[prior.to - 1] === ')') {
+  const opens = pe?.code === 'GN210' && readerValues(pe)?.token === '(';
+  if (opens && prior && prior.comma === -1 && text[prior.to - 1] === ')') {
     const at = text.slice(0, prior.to).split('\n'),
       lastLine = trim(at[at.length - 1] ?? '');
-    problem.message = word('reading.comma-missing-before', { message: pe.msg });
+    problem.message = word('reading.comma-missing-before', { message: problem.message });
     problem.fix = word('reading.comma-missing-before.fix', { line: lastLine });
     problem.insert = { line: at.length - 1, character: (at[at.length - 1] ?? '').length, text: ',' };
   }
+  if (pe) keepValues(problem, pe);
   return problem;
 }
 
@@ -312,7 +316,9 @@ export function readBlocks(
         leaveOut(chosen);
         const cut = without(text, all, chosen);
         clean[block] = comma === -1 ? cut : `${cut.slice(0, comma)} ${cut.slice(comma + 1)}`;
-        problems.push({ ...problem, dropped: chosen.map((it) => text.slice(it.from, it.to)).join('\n') });
+        const left = { ...problem, dropped: chosen.map((it) => text.slice(it.from, it.to)).join('\n') };
+        if (error instanceof gs.ProfileError) keepValues(left, error);
+        problems.push(left);
         continue;
       }
       meant.push(...readAsMeant(store, block, text, commasFrom, baresFrom));
