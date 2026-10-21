@@ -3769,9 +3769,9 @@
       "role": "Trust model review",
       "area": "security",
       "title": "Plug-ins run with the host's full powers",
-      "risk": "A plug-in runs in the same process as the host, with all its abilities, and its time limit is not enforced. No host loads outside plug-ins yet, so this matters once one does.",
+      "risk": "A plug-in runs in the same process as the host, so it can reach the network and the host's calls whatever its manifest says. Its time is read only after a call returns, so a call that never returns, or work it starts and leaves running, is not stopped. No host loads outside plug-ins yet, so this matters once one does.",
       "evidence": [
-        "packages/core/src/plugins.ts:139-142"
+        "packages/core/src/plugins.ts:169-187"
       ],
       "likelihood": "low",
       "impact": "high",
@@ -3784,9 +3784,66 @@
       "effort": "weeks",
       "raised": "2026-10-20",
       "reviewed": {
-        "date": "2026-10-20",
-        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+        "date": "2026-10-21",
+        "commit": "f8c22fd3b5d812eacf92b4cad07e76532683e993"
       },
+      "status": "open",
+      "wave": "Wave 6 · Host, storage and plug-in contracts"
+    },
+    {
+      "id": "TRUST-15",
+      "role": "Trust model review",
+      "area": "security",
+      "raised": "2026-10-21",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "f8c22fd3b5d812eacf92b4cad07e76532683e993"
+      },
+      "title": "A plug-in given secrets could read every secret, AI keys too",
+      "risk": "The secrets ability handed a plug-in the host's whole secret store. Any plug-in that named it could read the key of every AI model the person set up, and the secrets of every other plug-in.",
+      "evidence": [
+        "packages/core/src/plugins.ts:195"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "Give each plug-in only the secrets named under its own id, such as acme.one.token. Any other name gives null, and the host is never asked for it.",
+      "check": "packages/core/test/plugins-limits.test.js: a plug-in asking for an AI key, another plug-in's secret or a name that only starts like its id gets null, and the host is asked for none of them.",
+      "paths": [
+        "packages/core/src/plugins.ts"
+      ],
+      "effort": "hours",
+      "status": "done",
+      "prevented_by": [
+        "packages/core/test/plugins-limits.test.js"
+      ],
+      "done_in": "#PR"
+    },
+    {
+      "id": "TRUST-16",
+      "role": "Trust model review",
+      "area": "security",
+      "raised": "2026-10-21",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "f8c22fd3b5d812eacf92b4cad07e76532683e993"
+      },
+      "title": "The files ability reaches every note, whatever its class",
+      "risk": "A plug-in given the files ability reads and writes every note through the host's storage. Nothing checks a note's class, so a plug-in can read a note the person keeps from AI and from other people.",
+      "evidence": [
+        "packages/core/src/plugins.ts:196",
+        "packages/core/src/plugin-points.ts:77"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Before a host loads an outside plug-in, give the files ability through the note gate: a plug-in reads only notes at or below a ceiling the person sets for it, and its writes go to a proposal card.",
+      "check": "packages/core/test/plugins-limits.test.js: a plug-in's files ability lists and reads only notes at or below its ceiling, and a write it makes waits for the person.",
+      "paths": [
+        "packages/core/src/plugins.ts",
+        "packages/core/src/plugin-points.ts"
+      ],
+      "effort": "days",
       "status": "open",
       "wave": "Wave 6 · Host, storage and plug-in contracts"
     }

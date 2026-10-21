@@ -696,7 +696,10 @@
       "plugin_manifest_limits",
       "plugin_contract_suites",
       "plugin_theme_tokens",
-      "plugin_rtl"
+      "plugin_rtl",
+      "trust_ai_provider_bounded",
+      "trust_diagram_type_data",
+      "trust_source_joined"
     ]
   },
   "U1": {
@@ -941,7 +944,7 @@
   "TM1": {
     "title": "Trust model review",
     "size": "M",
-    "requirements": ["trust_model_written", "trust_model_reviewed", "trust_model_kept_current"]
+    "requirements": ["trust_model_written", "trust_model_reviewed", "trust_model_kept_current", "trust_plugin_own_secrets"]
   },
   "ST1": {
     "title": "Storage of your choice",

@@ -88,6 +88,16 @@ export interface HostOffer {
   files?: HostAbilities['files'];
 }
 
+/**
+ * The host's secrets as one plug-in sees them: only those named under its own id, such as `acme.one.token`. Any other
+ * name, an AI model's key or another plug-in's, gives null, and the host is never asked for it (TRUST-15).
+ */
+const ownSecrets = (store: HostAbilities['secrets'], pluginId: string): HostAbilities['secrets'] =>
+  Object.freeze({
+    get: (name: string) =>
+      name.startsWith(`${pluginId}.`) && name.length > pluginId.length + 1 ? store.get(name) : null,
+  });
+
 /** What a registry is made with: the host's abilities, how long a call may run, and the clock it is timed by. */
 export interface RegistryOptions {
   /** What the host offers; a plug-in naming an ability it does not offer is refused. */
@@ -182,7 +192,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     const out: Partial<HostAbilities> = {};
     if (named.includes('notice')) out.notice = host.notice;
     if (named.includes('settings')) out.settings = host.settingsFor?.(pluginId);
-    if (named.includes('secrets')) out.secrets = host.secrets;
+    if (named.includes('secrets') && host.secrets) out.secrets = ownSecrets(host.secrets, pluginId);
     if (named.includes('files')) out.files = host.files;
     return Object.freeze(out);
   };
