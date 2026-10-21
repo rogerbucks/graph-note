@@ -269,7 +269,7 @@ export { NO_BASIS, basisOf } from './proposals-basis.ts';
 export type { Stale } from './proposals-basis.ts';
 export { MARK_WORDS } from './proposals-marks.ts';
 export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
-export { CHANGE_LOOKS, NO_CHANGES, changesText, changesView, markedChanges } from './changes-view.ts';
+export { CHANGE_LOOKS, changesText, changesView, markedChanges, noChanges } from './changes-view.ts';
 export type { ChangeLine, ChangesShown } from './changes-view.ts';
 export { REVIEW_LEVELS, ReviewItems, asNote, groupSaid, reviewLevels, workstreamsFrom } from './github-review-items.ts';
 export type {

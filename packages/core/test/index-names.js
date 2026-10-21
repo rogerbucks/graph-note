@@ -48,7 +48,7 @@
 // mini_map_setting) came with the viewer aids on 16 Oct 2026. What the browser editor may show Claude came on 16 Oct
 // 2026 (`claudeGate, noteClassification, classificationOf, sha256, CLAUDE, Gate, GateSettings, NoteClassification`,
 // cc_classified_asks and cc_credential_never). The changes view (`changesView, changesText, markedChanges,
-// CHANGE_LOOKS, NO_CHANGES, ChangeLine, ChangesShown`, changes_view) came on 17 Oct 2026. The review items
+// CHANGE_LOOKS, noChanges, ChangeLine, ChangesShown`, changes_view) came on 17 Oct 2026. The review items
 // (`ReviewItems, reviewLevels, asNote, groupSaid, workstreamsFrom, REVIEW_LEVELS, lineDiff, DIFF_LIMIT` and their
 // types, github_review_items) came the same day. The plug-in interface (`pluginRegistry, PLUGIN_API, EXTENSION_POINTS,
 // CORE_EXPORTS, exporterContract, sampleExports` and their types, plugin_interface) came on 17 Oct 2026 as well. The
@@ -121,7 +121,6 @@ export const VALUES = [
   'MAX_SCALE',
   'MOVE_MS',
   'NO_BASIS',
-  'NO_CHANGES',
   'NUDGE_WORDS',
   'OBSIDIAN_TOKEN_MAP',
   'OPTIONS',
@@ -344,6 +343,7 @@ export const VALUES = [
   'neighbourhoodWords',
   'neverMoves',
   'nextAlong',
+  'noChanges',
   'noteClassification',
   'noteOf',
   'notePath',

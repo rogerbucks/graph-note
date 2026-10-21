@@ -1,6 +1,6 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). Those
-// areas are the hosts, the display layer, the core's reading and style problems, its proposals and its AI. Each is
-// added as its words move. Each word comes from the catalogue by key, so a translation reaches it. The check reads
+// areas are the hosts, the display layer, the core's reading and style problems, its proposals, its AI and its editing.
+// Each is added as its words move. Each word comes from the catalogue by key, so a translation reaches it. The check reads
 // every string the code holds. It flags any that reads as words. That is two plain words with a space, or a word that
 // starts a control's text, name or hint. It is also a short template that is a sentence, as `Graph ${g}: ${n}.` is.
 // Or it is a joining word alone between spaces, as the ' or ' of a list joined in code is.
@@ -21,6 +21,23 @@ const AI_AREA = [
   'packages/core/src/ai-choice.ts',
   'packages/core/src/ai-scope.ts',
   'packages/core/src/claude-gate.ts',
+];
+
+/** The core's editing: its refusals, the inspector, deferred things, imports and locks. */
+const EDITING_AREA = [
+  'packages/core/src/style-edit.ts',
+  'packages/core/src/linked-list.ts',
+  'packages/core/src/inspector.ts',
+  'packages/core/src/add-thing.ts',
+  'packages/core/src/deferred.ts',
+  'packages/core/src/note-edit.ts',
+  'packages/core/src/db-import.ts',
+  'packages/core/src/pane.ts',
+  'packages/core/src/store.ts',
+  'packages/core/src/lock.ts',
+  'packages/core/src/edit-check.ts',
+  'packages/core/src/details-nav.ts',
+  'packages/core/src/changes-view.ts',
 ];
 
 /** The folders and files whose words come from the catalogue, from the repository's root. */
@@ -71,6 +88,8 @@ const AREAS = [
   'packages/core/src/proposals-statements.ts',
   'packages/core/src/proposals-text.ts',
   ...AI_AREA,
+  // the core's editing: its refusals, the inspector and imports
+  ...EDITING_AREA,
 ];
 
 /** The files of `areas`, as paths from the repository's root. */
@@ -197,6 +216,25 @@ const KEPT = {
   ],
   // the purposes as the spec names them: what a person types for a model, and what the send dialog compares it with
   'packages/core/src/ai-choice.ts': ['Research questions', 'Proposing changes', 'Restricted processing'],
+  // what an edit writes into the note, which is its bytes, never translated: comments, and GQL as Lock writes it
+  'packages/core/src/style-edit.ts': ['// The style of graph {}: how it is drawn, never its data (editor spec §2).'],
+  'packages/core/src/deferred.ts': [
+    '// ── Deferred things, declared so one can be parked for later ──',
+    'is deferred by',
+  ],
+  'packages/core/src/db-import.ts': ['// Imported from {} on {}: {} and {}, a copy that is not kept in step.'],
+  'packages/core/src/lock.ts': [
+    "{}name: {}, kind: 'node', origin: 'source'}),",
+    "{}name: {}, kind: 'edge', origin: 'source',",
+    '// ── The schema: locked {} from the data above ──',
+    '// The reverse readings are guesses — check each one.',
+    '{}graph: {}, schema: {}}),',
+    '// ── Kinds of thing ──',
+    '// ── Relationship types, with their readings both ways ──',
+    '// ── The graph declares each one ──',
+  ],
+  // the graph spec library's reading for a link it cannot turn round, matched as it writes it and never shown
+  'packages/core/src/details-nav.ts': ['inverse of '],
 };
 
 /** The calls whose strings pick elements of the page, never words: `querySelector('a, b')` and the like. */
@@ -323,5 +361,10 @@ describe('the words in the code', () => {
   // proves: words_catalogue
   test('the core’s AI words, what is sent and why not, come from the catalogue', () => {
     assert.deepEqual(saidInCode(AI_AREA), [], 'say each by a key of ai-source-words.ts, with word()');
+  });
+
+  // proves: words_catalogue
+  test('the core’s editing words, why an edit is refused and what the inspector says, come from the catalogue', () => {
+    assert.deepEqual(saidInCode(EDITING_AREA), [], 'say each by a key of editing-source-words.ts, with word()');
   });
 });

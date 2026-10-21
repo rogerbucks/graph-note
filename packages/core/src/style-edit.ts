@@ -27,6 +27,7 @@ import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
 import { legendRefusal, legendText } from './untangle-saved.ts';
 import type { LegendChoice } from './untangle-saved.ts';
+import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
 
 /** A nudge to write: its word, and the parts that word needs. */
@@ -113,68 +114,72 @@ function thingText(id: string, kind: string, props: [string, Value][]): string {
   return `(${id}:${kind} {${given.map(([k, v]) => `${k}: ${typeof v === 'string' ? quoted(v) : String(v)}`).join(', ')}})`;
 }
 
+/** That `key` must be one of `among`, said as the style graph's check says it. */
+const mustBe = (key: string, among: readonly string[]) => word('styling.must-be', { key, among: orList(among) });
+
+/** That a view needs a name. */
+const noViewName = () => word('editing.style.view-name');
+
 /** Why a nudge cannot be written, or null. */
 function nudgeRefusal(n: NudgeWrite): string | null {
-  if (!(NUDGE_WORDS as readonly string[]).includes(n.word))
-    return 'a nudge must be one of four words: beside, before, group or direction';
+  if (!(NUDGE_WORDS as readonly string[]).includes(n.word)) return word('styling.nudge.four-words');
   if ((n.word === 'beside' || n.word === 'before') && !(n.thing && n.other))
-    return `a ${n.word} nudge names two things: thing and other`;
-  if (n.word === 'group' && !(n.thing && n.group)) return 'a group nudge names a thing and its group';
+    return word('styling.nudge.two-things', { word: n.word });
+  if (n.word === 'group' && !(n.thing && n.group)) return word('styling.nudge.group');
   if (n.word === 'direction' && !STYLE.directions.includes(n.direction ?? ''))
-    return `a direction nudge names one of ${orList(STYLE.directions)}`;
+    return word('editing.style.direction', { among: orList(STYLE.directions) });
   return null;
 }
 
 /** Why a look cannot be written, or null: the checks the style graph would make of its words, made before writing. */
 function lookRefusal(l: LookWrite): string | null {
-  if (!l.view === !l.path) return 'a look is for one view or one path';
-  if ([l.thing, l.kind, l.link].filter(Boolean).length !== 1) return 'a look styles one thing, kind or link';
-  if (!l.colour && !l.line && !l.format) return 'a look changes a colour, a line or a format';
-  if (l.colour && !STYLE_HUES.includes(l.colour)) return `${l.colour} is not a colour of the locked style`;
-  if (l.colour && !l.means) return `${l.colour} needs a meaning, for the legend: give means`;
-  if (l.line && !(LINES as readonly string[]).includes(l.line)) return `line must be ${orList(LINES)}`;
-  if (l.format && !(FORMATS as readonly string[]).includes(l.format)) return `format must be ${orList(FORMATS)}`;
+  if (!l.view === !l.path) return word('editing.style.look-place');
+  if ([l.thing, l.kind, l.link].filter(Boolean).length !== 1) return word('editing.style.look-target');
+  if (!l.colour && !l.line && !l.format) return word('editing.style.look-change');
+  if (l.colour && !STYLE_HUES.includes(l.colour)) return word('styling.look.colour-unknown', { written: l.colour });
+  if (l.colour && !l.means) return word('editing.style.means', { colour: l.colour });
+  if (l.line && !(LINES as readonly string[]).includes(l.line)) return mustBe('line', LINES);
+  if (l.format && !(FORMATS as readonly string[]).includes(l.format)) return mustBe('format', FORMATS);
   return null;
 }
 
 /** Why how a view was shown cannot be written, or null. */
 function shownRefusal(s: ShownWrite): string | null {
-  if (!s.view) return 'a view needs a name';
-  if (![s.zoom, s.x, s.y].every(Number.isFinite) || s.zoom <= 0)
-    return 'zoom, x and y must be numbers, and zoom above 0';
+  if (!s.view) return noViewName();
+  if (![s.zoom, s.x, s.y].every(Number.isFinite) || s.zoom <= 0) return word('editing.style.shown-numbers');
   const f = s.frame;
-  if (f && ![f.x, f.y, f.width, f.height].every(Number.isFinite)) return 'frame must be four numbers';
-  if (s.selected !== undefined && !s.selected) return 'selected must name a thing';
+  if (f && ![f.x, f.y, f.width, f.height].every(Number.isFinite)) return word('editing.style.frame');
+  if (s.selected !== undefined && !s.selected) return word('editing.style.selected');
   const wrong = SWITCH_KEYS.find(
     (k) => s.switches?.[k] !== undefined && !(ON_OFF as readonly string[]).includes(s.switches[k] ?? ''),
   );
-  if (wrong) return `${wrong} must be ${orList(ON_OFF)}`;
+  if (wrong) return mustBe(wrong, ON_OFF);
   return legendRefusal(s.legend ?? []);
 }
 
 /** Why a property cannot be switched on or off, or null. */
 function showRefusal(s: ShowWrite): string | null {
-  if (!s.property) return 'a Show names the property to show';
+  if (!s.property) return word('styling.show.property');
   if ([s.kind, s.thing, s.type].filter(Boolean).length !== 1) return showFor();
-  if (!(INLINE as readonly string[]).includes(s.inline)) return `inline must be ${orList(INLINE)}`;
-  if (s.view === '') return 'a view needs a name';
+  if (!(INLINE as readonly string[]).includes(s.inline)) return mustBe('inline', INLINE);
+  if (s.view === '') return noViewName();
   return null;
 }
 
 /** Why arrowheads cannot be hidden or shown so, or null. */
 function arrowsRefusal(a: ArrowsWrite): string | null {
-  if (!(ARROWHEADS as readonly string[]).includes(a.arrowheads)) return `arrowheads must be ${orList(ARROWHEADS)}`;
-  if (a.type === '') return 'a relationship type needs a name';
-  if (a.view === '') return 'a view needs a name';
+  if (!(ARROWHEADS as readonly string[]).includes(a.arrowheads)) return mustBe('arrowheads', ARROWHEADS);
+  if (a.type === '') return word('editing.style.type-name');
+  if (a.view === '') return noViewName();
   return null;
 }
 
 /** Why a diagram type cannot be chosen so, or null. */
 function diagramRefusal(d: DiagramWrite): string | null {
-  if (!(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return `type must be ${orList(DIAGRAM_TYPES)}`;
+  if (!(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return mustBe('type', DIAGRAM_TYPES);
   if (d.relationship !== undefined && d.type !== 'tree') return treeOnly();
-  if (d.relationship === '') return 'a relationship type needs a name';
-  if (d.view === '') return 'a view needs a name';
+  if (d.relationship === '') return word('editing.style.type-name');
+  if (d.view === '') return noViewName();
   return null;
 }
 
@@ -256,8 +261,8 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
   }
   if ('outside' in change) {
     const { view, outside } = change.outside;
-    if (!view) return { refused: 'a view needs a name' };
-    if (!(OUTSIDE as readonly string[]).includes(outside)) return { refused: `outside must be ${orList(OUTSIDE)}` };
+    if (!view) return { refused: noViewName() };
+    if (!(OUTSIDE as readonly string[]).includes(outside)) return { refused: mustBe('outside', OUTSIDE) };
     return {
       kind: 'ViewStyle',
       props: [
@@ -329,7 +334,7 @@ function appended(block: string, thing: string): string {
 export function styleEdit(note: string, graph: string, change: StyleChange): StyleEdit {
   const spans = gqlSpans(note);
   const own = spans.filter((s) => graphOf(s.text) === graph && typeof dataKind(s.text) === 'string');
-  if (!own.length) return { refused: `there is no graph ${graph} in this note to style` };
+  if (!own.length) return { refused: word('styling.no-graph', { graph }) };
   const thing = thingFor(change);
   if ('refused' in thing) return thing;
   const blocks = spans.map((s) => s.text);

@@ -14,6 +14,7 @@ import { History, replaceSpan } from './store.ts';
 import type { BlockRef } from './store.ts';
 import { underStrictness } from './strictness.ts';
 import type { StrictnessSettings } from './strictness.ts';
+import { word } from './words.ts';
 
 /** One of a note's graph blocks, as the pane's picker offers it. */
 export interface Choice {
@@ -36,14 +37,11 @@ export type PaneWrite =
   | { ok: false; reason: string; draft: string; edit?: true; history?: true; stopped?: true };
 
 /** Why Undo and Redo have nothing to take back once the block changed outside the pane (§9, undo_never_over_theirs). */
-const CHANGED_ELSEWHERE = {
-  undo: 'Nothing to undo: another program, a sync or another pane changed this block since, and undoing would overwrite that change.',
-  redo: 'Nothing to redo: another program, a sync or another pane changed this block since, and redoing would overwrite that change.',
-};
+const nothingToStep = (step: 'undo' | 'redo') =>
+  word(step === 'undo' ? 'editing.undo-elsewhere' : 'editing.redo-elsewhere');
 
 /** Why the session stopped: a copy of its block it cannot tell from the block (§9, block_followed_not_its_copy). */
-const TWIN =
-  'The note now holds a copy of this block, and the editor cannot tell which of the two it was opened on, so it neither writes nor undoes either: open the block again to go on.';
+const twinSaid = () => word('editing.twin');
 
 /** The note's graph blocks, each with its fence line and its graph. */
 function graphBlocks(note: string) {
@@ -77,7 +75,7 @@ export class PaneSession {
   constructor(note: string, line: number) {
     const blocks = graphBlocks(note);
     const b = blocks.find((x) => x.open === line) ?? blocks[0];
-    if (!b) throw new Error('this note has no graph block to edit');
+    if (!b) throw new Error(word('editing.no-block'));
     this.graph = b.graph;
     this.text = b.text;
     this.ref = { line: b.open, text: b.text };
@@ -227,7 +225,7 @@ export class PaneSession {
     this.text = this.ref.text;
     this.dirty = false;
     this.dropped[step] = true;
-    return { ok: false, reason: CHANGED_ELSEWHERE[step], draft: this.text, history: true };
+    return { ok: false, reason: nothingToStep(step), draft: this.text, history: true };
   }
 
   /**
@@ -238,11 +236,11 @@ export class PaneSession {
     const draft = this.text;
     this.changedElsewhere();
     this.dirty = false;
-    if (this.twin) return { ok: false, reason: TWIN, draft, stopped: true };
-    if (!span) return { ok: false, reason: 'the block is no longer in the note where the pane read it', draft };
+    if (this.twin) return { ok: false, reason: twinSaid(), draft, stopped: true };
+    if (!span) return { ok: false, reason: word('editing.block-gone'), draft };
     this.ref = { line: span.open, text: span.text };
     this.text = span.text;
-    return { ok: false, reason: 'the block has changed since the pane read it', draft };
+    return { ok: false, reason: word('editing.block-changed'), draft };
   }
 
   /** The refusal of an edit's owed names by the note written into, with the block reloaded as it is there; or null. */
@@ -299,9 +297,9 @@ export class PaneSession {
    * cannot tell from it. Or its steps were dropped as the block changed outside the pane.
    */
   stepRefusal(which: 'undo' | 'redo'): string | null {
-    if (this.twin) return TWIN;
+    if (this.twin) return twinSaid();
     const can = which === 'undo' ? this.canUndo() : this.canRedo();
-    return !can && this.dropped[which] ? CHANGED_ELSEWHERE[which] : null;
+    return !can && this.dropped[which] ? nothingToStep(which) : null;
   }
 
   /** An Undo or Redo refused for the history: why, with the block as it is, as nothing typed needs keeping. */

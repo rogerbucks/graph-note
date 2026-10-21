@@ -5,6 +5,7 @@ import gs from '@thoughtknot/graph-spec';
 import { dataKind, graphOf } from './blocks.ts';
 import type { NoteReading } from './note-reading.ts';
 import { trim } from './whitespace.ts';
+import { word } from './words.ts';
 
 /** A graph with no schema of its own, none written later in its note, and none it names, is a draft (§5). */
 export function isDraft(reading: NoteReading, graph: string): boolean {
@@ -56,7 +57,7 @@ export const typeLines = (id: string, name: string, reading: string, reverse: st
  */
 export function lockBlock(reading: NoteReading, graph: string, today: string, indent = '    '): string {
   const g = reading.whole[graph] ?? reading.world[graph];
-  if (!g) throw new Error(`there is no graph ${graph} to lock`);
+  if (!g) throw new Error(word('editing.lock.no-graph', { graph }));
   // the graph line of a block of the graph's data or schema as written, read with whitespace as GQL names it (graph
   // spec §3). Never a view's, which would make the schema a second view
   const header =

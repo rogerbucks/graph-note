@@ -13,6 +13,7 @@ import { runStart } from './note-lines.ts';
 import type { NameStyle } from './name-suggestions.ts';
 import type { NoteReading } from './note-reading.ts';
 import { acceptNameFirst } from './suggested-names.ts';
+import { word } from './words.ts';
 
 /** The relationship and the kind a list's things are linked by and of. */
 export interface ListShape {
@@ -34,7 +35,7 @@ export type ListEdit = { ok: true; text: string; said: string; things: ListValue
 
 const WORD = /^[A-Za-z_]\w*$/;
 const norm = (s: string) => s.trim().toLowerCase();
-const itself = (v: string) => `${v} is this thing itself: a thing cannot be in its own list`;
+const itself = (value: string) => word('editing.list.itself', { value });
 const triple = (from: string, type: string, to: string) => `${from}\u0000${type}\u0000${to}`;
 
 /** The values a property's words hold: split at commas, semicolons and new lines, trimmed, none empty and none twice. */
@@ -133,8 +134,8 @@ function itemsFor(
 
 /** The shape's words, checked: the relationship and the kind are each one word. */
 function shapeFault(shape: ListShape): string | null {
-  if (!WORD.test(shape.rel)) return 'the relationship must be one word: letters, digits and underscores';
-  if (!WORD.test(shape.kind)) return 'the kind must be one word: letters, digits and underscores';
+  if (!WORD.test(shape.rel)) return word('editing.list.relationship-word');
+  if (!WORD.test(shape.kind)) return word('editing.kind-word');
   return null;
 }
 
@@ -142,7 +143,7 @@ function shapeFault(shape: ListShape): string | null {
 function notHere(block: string, reading: NoteReading, graph: string, thing: string): string | null {
   return spanOf(block, { thing }) || reading.world[graph]?.nodes.has(thing)
     ? null
-    : `${thing} is not written in this block: edit it where it is written, in graph ${graph}`;
+    : word('editing.not-in-block', { thing, graph });
 }
 
 /**
@@ -178,7 +179,11 @@ export function appended(block: string, lines: string[]): string {
 
 function describe(made: { isNew: boolean }[]): string {
   const fresh = made.filter((m) => m.isNew).length;
-  return `${made.length} linked: ${fresh} new, ${made.length - fresh} reused`;
+  return word('editing.list.linked', {
+    count: made.length,
+    fresh: String(fresh),
+    reused: String(made.length - fresh),
+  });
 }
 
 /**
@@ -196,7 +201,7 @@ export function makeList(
 ): ListEdit {
   const fault = shapeFault(shape) ?? unwritten(reading, graph, thing) ?? notHere(block, reading, graph, thing);
   if (fault) return { ok: false, reason: fault };
-  if (key === null) return { ok: true, text: block, said: 'a list with no values yet', things: [] };
+  if (key === null) return { ok: true, text: block, said: word('editing.list.empty'), things: [] };
   // the values are those the block says now: the reading may be older than the text
   const wordsIn = (r: NoteReading) => propertiesOf(r, graph, { thing }).find((p) => p.key === key)?.value;
   const words = wordsIn(readNote([block])) ?? wordsIn(reading) ?? '';
@@ -236,19 +241,21 @@ export function addToList(
   const fault = shapeFault(shape) ?? unwritten(reading, graph, thing) ?? notHere(block, reading, graph, thing);
   if (fault) return { ok: false, reason: fault };
   const v = value.trim();
-  if (v === '') return { ok: false, reason: 'a value cannot be empty' };
+  if (v === '') return { ok: false, reason: word('editing.list.value-empty') };
   const k = known(reading, graph, block);
   const was = existing(k, shape.kind, v);
   if (was === thing) return { ok: false, reason: itself(v) };
   const first = unwritten(reading, graph, was);
   if (first) return { ok: false, reason: first };
   if (was !== null && k.links.has(triple(thing, shape.rel, was)))
-    return { ok: false, reason: `${v} is already in the list` };
+    return { ok: false, reason: word('editing.list.already', { value: v }) };
   const m = itemsFor(k, thing, shape, v);
   return {
     ok: true,
     text: appended(block, m.lines),
-    said: m.isNew ? `added ${m.id}, a new ${shape.kind}` : `added ${m.id}, which was already there`,
+    said: m.isNew
+      ? word('editing.list.added-new', { thing: m.id, kind: shape.kind })
+      : word('editing.list.added-again', { thing: m.id }),
     things: [{ thing: m.id, text: k.things.get(m.id)?.text ?? m.id }],
   };
 }
@@ -296,7 +303,7 @@ export function removeFromList(
   if (fault) return { ok: false, reason: fault };
   const k = known(reading, graph, block);
   const link = triple(thing, shape.rel, value);
-  if (!k.links.has(link)) return { ok: false, reason: `${value} is not in the list` };
+  if (!k.links.has(link)) return { ok: false, reason: word('editing.list.not-in', { value }) };
   const all = items(block);
   // the names as written, each character as itself, so an id such as c++ is matched, never read as a pattern
   const [th, rel, va] = [thing, shape.rel, value].map(literally);
@@ -305,12 +312,11 @@ export function removeFromList(
   );
   const written = all.filter((it) => hops(block.slice(it.from, it.to)).some(([s, t, e]) => triple(s, t, e) === link));
   const item = written.find((it) => bare.test(blankText(block.slice(it.from, it.to)).trim()));
-  if (!written.length)
-    return { ok: false, reason: `the link to ${value} is not written in this block: remove it where it is written` };
+  if (!written.length) return { ok: false, reason: word('editing.list.link-elsewhere', { value }) };
   if (!item)
     return {
       ok: false,
-      reason: `the link to ${value} is written together with other things in one path: edit it in the text`,
+      reason: word('editing.list.link-in-path', { value }),
     };
   let text = withoutItem(block, all, item);
   const stillThere = written.length > 1;
@@ -335,28 +341,28 @@ export function removeFromList(
     return {
       ok: true,
       text,
-      said: `removed the link; ${value} stays, as something else links to it`,
+      said: word('editing.list.stays-linked', { value }),
       things: [{ thing: value, text: label }],
     };
   if (rich)
     return {
       ok: true,
       text,
-      said: `removed the link; ${value} stays, as it has properties of its own`,
+      said: word('editing.list.stays-properties', { value }),
       things: [{ thing: value, text: label }],
     };
   if (!own || mentions !== 1)
     return {
       ok: true,
       text,
-      said: `removed the link; ${value} stays, as it is not written alone in this block`,
+      said: word('editing.list.stays-not-alone', { value }),
       things: [{ thing: value, text: label }],
     };
   text = withoutItem(text, left, own);
   return {
     ok: true,
     text,
-    said: `removed the link and ${value}, which nothing else linked to`,
+    said: word('editing.list.removed-both', { value }),
     things: [{ thing: value, text: label }],
   };
 }

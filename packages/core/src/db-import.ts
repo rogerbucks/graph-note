@@ -10,6 +10,7 @@ import { gqlBlock } from './export-data-gql.ts';
 import { oneLine } from './export-data-model.ts';
 import type { DataLink, DataThing } from './export-data-model.ts';
 import { saidDate } from './export-frame.ts';
+import { word } from './words.ts';
 
 /** Whether a vault file is a SQLite database Import can read, by its ending: .sqlite, .sqlite3 or .db. */
 export const isDbFile = (path: string): boolean => /\.(sqlite3?|db)$/i.test(path);
@@ -67,26 +68,24 @@ export function importedBlock(
   links: DbRow[],
   info: { file: string; date: string },
 ): DbImported {
-  if (!NAME.test(graph)) return { refused: `${graph} is not a graph name: use letters, digits and _` };
+  if (!NAME.test(graph)) return { refused: word('import.not-graph-name', { graph }) };
   const data: DataThing[] = [];
   const ids = new Set<string>();
   for (const [i, row] of things.entries()) {
     const key = cell(row.id);
-    if (!key) return { refused: `Row ${i + 1} of the things has no id column` };
-    if (ids.has(key)) return { refused: `Two rows of the things have the id ${key}` };
+    if (!key) return { refused: word('import.no-id', { row: String(i + 1) }) };
+    if (ids.has(key)) return { refused: word('import.same-id', { id: key }) };
     ids.add(key);
     const kind = cell(row.kind);
-    if (kind && !NAME.test(kind))
-      return { refused: `The kind ${kind} of ${key} is not a name: use letters, digits and _` };
+    if (kind && !NAME.test(kind)) return { refused: word('import.kind-not-name', { kind, id: key }) };
     data.push([key, kind ? [kind] : [], propsOf(row, ['id', 'kind'])]);
   }
   const joined: DataLink[] = [];
   for (const [i, row] of links.entries()) {
     const [from, type, to] = [cell(row.from), cell(row.type), cell(row.to)];
-    if (!from || !to || !type) return { refused: `Row ${i + 1} of the links needs from, type and to columns` };
-    if (!NAME.test(type)) return { refused: `The link type ${type} is not a name: use letters, digits and _` };
-    for (const end of [from, to])
-      if (!ids.has(end)) return { refused: `A link names ${end}, which the things query did not return` };
+    if (!from || !to || !type) return { refused: word('import.link-columns', { row: String(i + 1) }) };
+    if (!NAME.test(type)) return { refused: word('import.type-not-name', { type }) };
+    for (const end of [from, to]) if (!ids.has(end)) return { refused: word('import.link-unknown', { id: end }) };
     joined.push([from, type, to, propsOf(row, ['from', 'type', 'to'])]);
   }
   const written = gqlBlock({ graph, things: data, links: joined }, { note: '', date: info.date }).split('\n');

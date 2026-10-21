@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadEngine } from '../src/engine.ts';
-import { CHANGE_LOOKS, NO_CHANGES, changesText, changesView, markedChanges } from '../src/changes-view.ts';
+import { CHANGE_LOOKS, changesText, changesView, markedChanges, noChanges } from '../src/changes-view.ts';
 import { chosen, directions } from '../src/render.ts';
 import { PALETTES } from '../src/palette.ts';
 import { hueColour } from '../src/theme.ts';
@@ -112,7 +112,8 @@ describe('the changes view', () => {
   test('two versions the same show no marks and say so', () => {
     const shown = changesView(AFTER, AFTER, 'reader');
     assert.equal(shown.marks.boxes.size + shown.marks.links.size, 0);
-    assert.equal(changesText(shown), NO_CHANGES);
+    assert.equal(changesText(shown), noChanges());
+    assert.equal(noChanges(), 'No changes between these versions.');
   });
 
   // proves: changes_view

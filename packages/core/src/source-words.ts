@@ -9,6 +9,7 @@ import { CC_SOURCE_WORDS } from './cc-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
+import { EDITING_SOURCE_WORDS } from './editing-source-words.ts';
 import { EXPORT_SOURCE_WORDS } from './export-source-words.ts';
 import { FIRST_RUN_SOURCE_WORDS } from './first-run-source-words.ts';
 import { HOST_SOURCE_WORDS } from './host-source-words.ts';
@@ -296,6 +297,7 @@ export const SOURCE_WORDS = {
   ...DB_SOURCE_WORDS,
   // the words of editing (edit-source-words.ts)
   ...EDIT_SOURCE_WORDS,
+  ...EDITING_SOURCE_WORDS,
   // the browser page's own words (page-source-words.ts)
   ...PAGE_SOURCE_WORDS,
   // each option of the settings page, by its key (settings-source-words.ts)
