@@ -6,6 +6,7 @@
 import { AI_SOURCE_WORDS } from './ai-source-words.ts';
 import { BLOCKS_SOURCE_WORDS } from './blocks-source-words.ts';
 import { CC_SOURCE_WORDS } from './cc-source-words.ts';
+import { CHECK_SOURCE_WORDS } from './check-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
 import { DRAWING_SOURCE_WORDS } from './drawing-source-words.ts';
@@ -327,6 +328,8 @@ export const SOURCE_WORDS = {
   ...STYLE_SOURCE_WORDS,
   // the graph spec reader's own problems, a message and a fix for each code (reader-source-words.ts)
   ...READER_SOURCE_WORDS,
+  // the graph spec's change-set check: each line it says of a proposal (check-source-words.ts)
+  ...CHECK_SOURCE_WORDS,
   // a proposal's card and a graph step's card (proposal-card-source-words.ts)
   ...PROPOSAL_CARD_SOURCE_WORDS,
   // the core's proposals: their checks, refusals and where they came from (proposal-source-words.ts)
