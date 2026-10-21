@@ -18,7 +18,7 @@ import {
   type ServerOptions,
   type ServerResponse,
 } from 'node:http';
-import { word } from '@thoughtknot/core';
+import { currentLanguage, word } from '@thoughtknot/core';
 import type { AddressInfo } from 'node:net';
 import type { Duplex } from 'node:stream';
 import type { PageAssets, PageFile } from './page-assets.ts';
@@ -127,9 +127,9 @@ const OPTION_NAMES = new Set(['idleMs', 'now', 'every', 'api', 'drain', 'page', 
 const PROPOSAL = /^\/api\/notes\/[0-9a-f]{32}\/proposal$/;
 
 /** The page where the build's files are not there (a server started from source, not from the built mod): it says so, and loads nothing. */
-const PAGE =
-  '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>ThoughtKnot editor</title></head>\n' +
-  '<body><p>The ThoughtKnot editor is not here yet.</p></body></html>\n';
+const page = () =>
+  `<!doctype html>\n<html lang="${currentLanguage()}"><head><meta charset="utf-8"><title>${word('server.no-page.title')}</title></head>\n` +
+  `<body><p>${word('server.no-page')}</p></body></html>\n`;
 
 const realEvery: Every = (ms, check) => {
   const timer = setInterval(check, ms);
@@ -198,7 +198,7 @@ export async function startEditorServer(options: EditorServerOptions = {}): Prom
       }
       if (url !== '/' || method !== 'GET') return send(res, 404, word('server.not-found'));
       seen();
-      return send(res, 200, PAGE, { 'content-type': 'text/html; charset=utf-8' });
+      return send(res, 200, page(), { 'content-type': 'text/html; charset=utf-8' });
     }
     // the proposal route takes the proposer's key and no other; every other route takes the session's token and not
     // that key

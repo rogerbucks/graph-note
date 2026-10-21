@@ -11,24 +11,20 @@
 // parsed, so a command that names `classification` is refused, unless it only searches or prints with no redirection.
 // What a command changes without naming it, such as cutting the front matter by line numbers, is not seen. GUIDE.md
 // says so.
-import { classificationOf } from '@thoughtknot/core';
+import { classificationOf, word } from '@thoughtknot/core';
 import { forms, namesWord, pathOf } from './data-guard.ts';
 import type { GuardPorts, ToolInput } from './data-guard.ts';
 
+// The refusals are said when made, in the language set then. Claude Code shows them in the chat, so the person may read them.
+
 /** The refusal on the matrix note: it names no path or text of the call. */
-export const MATRIX_NOTE_REFUSAL =
-  'thoughtknot: this is the matrix note named in the settings, which sets what Claude may open, so Claude may not ' +
-  'change it. The user edits it in their vault. Nothing was changed.';
+export const matrixNoteRefusal = (): string => word('cc.refusal.matrix-note');
 
 /** The refusal on a classification line: it names no level, path or text of the call. */
-export const CLASSIFICATION_REFUSAL =
-  'thoughtknot: this call would change a note’s classification, which sets what Claude may open, so Claude may not ' +
-  'make it. Ask the user to change the classification in the note themselves. Nothing was changed.';
+export const classificationRefusal = (): string => word('cc.refusal.classification');
 
 /** The refusal when the guard could not tell where a path leads. */
-export const GATE_CHECK_FAILED_REFUSAL =
-  'thoughtknot: this call was refused because the guard for what sets Claude’s gate could not check where it leads ' +
-  '(node could not be run, or did not answer). Nothing was changed. Try again, or ask the user.';
+export const gateCheckFailedRefusal = (): string => word('cc.refusal.gate-check-failed');
 
 /** What this guard asks of the host: the matrix note's path in the vault (none when none is set), and a read. */
 export type GatePorts = Omit<GuardPorts, 'data'> & {
@@ -89,10 +85,10 @@ async function guardClassification(tool: string, path: string, input: Record<str
   const after = before === null ? null : textAfter(tool, input, before);
   if (before !== null && after !== null) {
     const same = JSON.stringify(classificationOf(before)) === JSON.stringify(classificationOf(after));
-    return same ? null : CLASSIFICATION_REFUSAL;
+    return same ? null : classificationRefusal();
   }
   const carried = textsOf({ ...input, file_path: '', notebook_path: '', path: '' });
-  return carried.some((t) => CLASSIFICATION_LINE.test(t)) ? CLASSIFICATION_REFUSAL : null;
+  return carried.some((t) => CLASSIFICATION_LINE.test(t)) ? classificationRefusal() : null;
 }
 
 /**
@@ -103,8 +99,8 @@ export async function guardGateFiles(tool: string, input: ToolInput, ports: Gate
   const note = ports.matrixNote ? vaultPath(ports.matrixNote) : '';
   if (tool === 'Bash') {
     const command = typeof input.command === 'string' ? input.command.replace(/['"`\\]/g, '') : '';
-    if (note && namesWord(command, note.slice(note.lastIndexOf('/') + 1))) return MATRIX_NOTE_REFUSAL;
-    if (namesWord(command, 'classification') && !ONLY_READS.test(command)) return CLASSIFICATION_REFUSAL;
+    if (note && namesWord(command, note.slice(note.lastIndexOf('/') + 1))) return matrixNoteRefusal();
+    if (namesWord(command, 'classification') && !ONLY_READS.test(command)) return classificationRefusal();
     return null;
   }
   const path = pathOf(tool, input);
@@ -113,10 +109,10 @@ export async function guardGateFiles(tool: string, input: ToolInput, ports: Gate
     if (note) {
       const tail = `/${note.toLowerCase()}`;
       if ((await forms(path, { ...ports, data: '' })).some((f) => f.toLowerCase().endsWith(tail)))
-        return MATRIX_NOTE_REFUSAL;
+        return matrixNoteRefusal();
     }
   } catch {
-    return GATE_CHECK_FAILED_REFUSAL;
+    return gateCheckFailedRefusal();
   }
   return guardClassification(tool, path, input, ports);
 }

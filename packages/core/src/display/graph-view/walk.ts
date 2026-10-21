@@ -178,8 +178,13 @@ export class Walk {
     for (const g of this.nodes()) {
       const key = g.getAttribute('data-key');
       const numbers = steps.flatMap((s, i) => (s === key ? [String(i + 1)] : []));
-      const label = (g.getAttribute('aria-label') ?? '').replace(/, step [\d, ]+$/, '');
-      g.setAttribute('aria-label', numbers.length ? `${label}, step ${numbers.join(', ')}` : label);
+      // the box's own name is kept beside the one with its steps, so the steps are taken off in any language
+      const shown = g.getAttribute('aria-label') ?? '';
+      const label = shown === g.getAttribute('data-step-label') ? (g.getAttribute('data-plain-label') ?? '') : shown;
+      const said = numbers.length ? word('walk.box-steps', { label, steps: numbers.join(', ') }) : label;
+      g.setAttribute('aria-label', said);
+      g.setAttribute('data-plain-label', label);
+      g.setAttribute('data-step-label', said);
       const at = numbers.length ? cornerOf(g) : null;
       if (!at) continue;
       const mark = g.appendChild(activeDocument.createElementNS(SVG, 'text'));

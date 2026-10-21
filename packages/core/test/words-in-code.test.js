@@ -2,7 +2,8 @@
 // areas are the hosts, the display layer and the core's reading and style problems and proposals. Each is added as its words move. Each word
 // comes from the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
-// or hint.
+// or hint. It is also a short template that is a sentence, as `Graph ${g}: ${n}.` is. Or it is a joining word alone
+// between spaces, as the ' or ' of a list joined in code is.
 // The few kept in the code are listed, each with why.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -90,7 +91,10 @@ const KEPT = {
   // compared with the purpose a person typed for each model in the settings, never shown
   'packages/obsidian/src/ai/send-dialog.ts': ['Proposing changes'],
   // said once in the console, for a developer
-  'packages/obsidian/src/layout-worker/layout-worker.ts': '*',
+  'packages/obsidian/src/layout-worker/layout-worker.ts': [
+    'ThoughtKnot: web workers cannot run here, so graphs are laid out on the main thread, with lower size limits. A slow layout cannot be stopped there.',
+    'ThoughtKnot: several layouts in a row took too long or failed, so drawing is paused until the plugin is reloaded.',
+  ],
   // said to a developer whose card option cannot be made read-only, in the console
   'packages/core/src/display/graph-view/read-only.ts': '*',
   // a colour the code asks the browser whether it can mix, never shown
@@ -98,12 +102,15 @@ const KEPT = {
   // the elements that can take the focus, as a selector kept in a constant
   'packages/core/src/display/graph-view/full-screen.ts': ['a[href], button, input, select, textarea, [tabindex]'],
   'packages/claude-code/page/keyboard.ts': ['a[href], button, input, select, textarea, [tabindex]'],
-  // what the mod tells Claude alone: a hook's refusal and a tool's result, which no person reads in the pane
-  'packages/claude-code/src/data-guard.ts': '*',
-  'packages/claude-code/src/gate-guard.ts': '*',
-  'packages/claude-code/src/editor-propose.ts': '*',
-  // a process's errors, never shown: each caller says why in its own words (editor-matrix.ts, data-guard.ts)
-  'packages/claude-code/src/editor-realpath.ts': '*',
+  // the guard's own error when links go round, never shown: the guard catches it and refuses in catalogue words
+  'packages/claude-code/src/data-guard.ts': ['Too many links in a row.'],
+  // a process's errors, never shown: each caller catches them and says why in its own words (editor-matrix.ts, data-guard.ts)
+  'packages/claude-code/src/editor-realpath.ts': [
+    'The process did not answer in time.',
+    'The path is not there.',
+    'The real path could not be found.',
+    'The link could not be read.',
+  ],
   // what the editor server tells Claude alone: the answers to Claude's propose tool and the key it proposes with
   'packages/claude-code/server/editor-proposals.ts': '*',
   'packages/claude-code/bin/propose-process.ts': '*',
@@ -111,7 +118,6 @@ const KEPT = {
   // refusals of a request the editor's own page never makes, so no person reads them, and a developer's error
   'packages/claude-code/server/request-guard.ts': '*',
   'packages/claude-code/server/start-server.ts': [
-    '<body><p>The ThoughtKnot editor is not here yet.</p></body></html>\n',
     'HTTP/1.1 {} {}\r\n{}content-length: 0\r\nconnection: close\r\n\r\n',
     'The editor server takes no {}: it listens on 127.0.0.1, on a port the system chooses.',
     'This server answers only its own address.',
@@ -130,7 +136,7 @@ const KEPT = {
     '{op: "remove-link", from, type, to}, each with an optional "reason". Names are one word. You cannot add a Person, ',
     'a Model or a Step. "read" lists what you read, if you say so.',
   ],
-  // the departures in UK English, held equal to their settings words by settings-words.test.js
+  // the departures in UK English, held equal to their settings words by settings-words.test.js, which translate them
   'packages/core/src/strictness.ts': [
     'A missing comma',
     'A pattern may end its line without the comma standard GQL needs before the next one.',
@@ -139,6 +145,8 @@ const KEPT = {
     'A link type without its colon',
     'A link may name its type without the colon, such as [KNOWS], when the graph has one type of that name.',
   ],
+  // the nudge word `before`, joining a loop as the style graph writes it: GQL, never translated
+  'packages/core/src/style-conflicts.ts': [' before '],
   // the schema's picture is GQL, written as the graph's own text
   'packages/core/src/schema-picture.ts': ["({}:Meta:ElementType {name: {}, kind: {}, origin: 'source'{}})"],
   // a marker the note's writer throws and catches again, never shown
@@ -163,6 +171,12 @@ const SHOWN = /^(?:text|title|placeholder|aria-label|say|setText|button)$/;
 /** Whether `text` reads as words: two plain words with a space between, as a sentence or a label has. */
 const readsAsWords = (text) =>
   text.split(/\s+/).filter((w) => /^[(\[⚠✖]?[A-Za-z][a-z]+[,.:;…?!)]?$/.test(w)).length >= 2;
+
+/** Whether a template reads as a short sentence: a word with a capital, a value, then a stop or colon, as `Graph ${g}: ${n}.`. */
+const sentenceTemplate = (text) => /^[A-Z][a-z]+ \{\}/.test(text) && /[.:;!?…]/.test(text);
+
+/** Whether `text` is a joining word alone between spaces, as the ' or ' of a list joined in code is. */
+const joiningWord = (text) => /^,? [a-z]+ $/.test(text);
 
 /** Whether `node` is given to the console, which only a developer reads: `console.error('…', e)`. */
 const toConsole = (node) =>
@@ -197,7 +211,16 @@ function wordsIn(source, name = 'x.ts') {
       const imported = ts.isImportDeclaration(node.parent) || ts.isExportDeclaration(node.parent);
       if (!imported && !PICKS.test(to) && !toConsole(node)) {
         const plain = text.replace(/\{\}/g, ' ');
-        if (readsAsWords(plain) || (SHOWN.test(to) && /^[A-Z][a-z]+\b/.test(plain.trim()))) found.push(text);
+        const template = ts.isTemplateExpression(node);
+        if (
+          readsAsWords(plain) ||
+          (template && sentenceTemplate(text)) ||
+          (template ? [node.head, ...node.templateSpans.map((t) => t.literal)] : [node]).some((t) =>
+            joiningWord(t.text),
+          ) ||
+          (SHOWN.test(to) && /^[A-Z][a-z]+\b/.test(plain.trim()))
+        )
+          found.push(text);
       }
       if (!ts.isTemplateExpression(node)) return;
     }
@@ -220,6 +243,25 @@ describe('the words in the code', () => {
       "console.error('ThoughtKnot could not draw', graph, e);",
     ].join('\n');
     assert.deepEqual(wordsIn(source), ['No problems.', 'Line {}: {}', 'Cancel']);
+  });
+
+  test('the check finds a short template that is a sentence: a word, its values and a stop', () => {
+    const source = [
+      'const said = `Graph ${g}: ${n}.`;',
+      'const path = `${folder}/${name}.md`;',
+      'const auth = `Bearer ${token}`;',
+    ].join('\n');
+    assert.deepEqual(wordsIn(source), ['Graph {}: {}.']);
+  });
+
+  test('the check finds a joining word alone between spaces, and passes a lone space or stop', () => {
+    const source = [
+      "const list = xs.join(' or ');",
+      "const last = `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`;",
+      "const line = xs.join(', ');",
+      "const key = xs.join('.');",
+    ].join('\n');
+    assert.deepEqual(wordsIn(source), [' or ', '{} or {}']);
   });
 
   test('the check finds the words written between the tags of a TSX file', () => {

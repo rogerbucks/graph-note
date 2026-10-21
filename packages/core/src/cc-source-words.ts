@@ -1,8 +1,9 @@
 // The Claude Code mod's own words, in UK English (editor spec §10, §26 and §42, words_catalogue). They are what the pane
 // and the /graph command say to the person. That is the drawing's words, why it is text, and how the editor opened or
 // stopped.
-// What the mod tells Claude alone stays in the code (words-in-code.test.js). source-words.ts keeps these with every
-// other word.
+// They are also the guards' refusals and the propose tool's answers. Those go to Claude, but Claude Code shows them in
+// the chat too, so the person may read them. What the mod tells Claude alone stays in the code
+// (words-in-code.test.js). source-words.ts keeps these with every other word.
 
 /** The Claude Code mod's own words, by key, in UK English. */
 export const CC_SOURCE_WORDS = {
@@ -89,4 +90,40 @@ export const CC_SOURCE_WORDS = {
   'cc.editor.secret': 'It holds a secret for this session only. It stops when the session ends, or /graph stop.',
   'cc.undo-over-theirs':
     'Another program changed this graph block since your last change here, so undoing now would undo its change too. Nothing was undone.',
+  // the guards' refusals (data-guard.ts, gate-guard.ts): each names no path, command or text of the call
+  'cc.refusal.data-folder':
+    'thoughtknot: this is the mod’s data folder, which holds the settings ({settings}) that decide what Claude ' +
+    'may open, so Claude may not write to it. The user changes these settings, by editing {settings} in the ' +
+    'thoughtknot plugin data folder ({variable}, or else the plugins data folder under their Claude config ' +
+    'folder). Nothing was changed.',
+  'cc.refusal.data-check-failed':
+    'thoughtknot: this call was refused because the guard for the mod’s data folder could not check where it ' +
+    'leads (node could not be run, or did not answer). Nothing was changed. Try again, or ask the user.',
+  'cc.refusal.open-note':
+    'thoughtknot: this note is open in the ThoughtKnot editor, so Claude may not change it with its own tools. ' +
+    'Propose the change with the propose tool ({tool}) instead: the user accepts or rejects it on ' +
+    'the card. Reading the note with Read stays allowed. Nothing was changed.',
+  'cc.refusal.note-check-failed':
+    'thoughtknot: this call was refused because the guard for the note open in the ThoughtKnot editor could not check ' +
+    'where it leads (node could not be run, or did not answer). Nothing was changed. Propose the change with the ' +
+    'propose tool ({tool}), or ask the user.',
+  'cc.refusal.matrix-note':
+    'thoughtknot: this is the matrix note named in the settings, which sets what Claude may open, so Claude may not ' +
+    'change it. The user edits it in their vault. Nothing was changed.',
+  'cc.refusal.classification':
+    'thoughtknot: this call would change a note’s classification, which sets what Claude may open, so Claude may not ' +
+    'make it. Ask the user to change the classification in the note themselves. Nothing was changed.',
+  'cc.refusal.gate-check-failed':
+    'thoughtknot: this call was refused because the guard for what sets Claude’s gate could not check where it leads ' +
+    '(node could not be run, or did not answer). Nothing was changed. Try again, or ask the user.',
+  // the propose tool's answers (editor-propose.ts)
+  'cc.propose.made': {
+    one: "Proposed {count} change as {id}. Nothing was applied: the proposal waits on the card in the editor, and only the user's accept applies it.",
+    other:
+      "Proposed {count} changes as {id}. Nothing was applied: the proposal waits on the card in the editor, and only the user's accept applies it.",
+  },
+  'cc.propose.refused': 'The proposal was refused: {why}. Nothing was written.',
+  'cc.propose.unreached': 'The editor could not be reached.',
+  'cc.propose.status': 'The editor said {status}.',
+  'cc.propose.no-account': 'The editor gave no account of the proposal.',
 } as const;

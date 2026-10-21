@@ -10,6 +10,7 @@ import { S } from './whitespace.ts';
 import { blankText } from './block-items.ts';
 import { BlockPlaces } from './estimate-places.ts';
 import type { Place } from './estimate-places.ts';
+import { formatList } from './locale-formats.ts';
 import { word } from './words.ts';
 
 /** A guess the drawing makes for a near miss (spec §3): what was written, what it was taken to mean, and the fix. */
@@ -84,11 +85,8 @@ export function nearest(
   return found.length === 1 ? { one: found[0] ?? '', d: best } : { several: found.sort() };
 }
 
-/**
- * One change of a list of them, such as "Bob to Bobby". It stays in the code: a catalogue word of placeholders and "to"
- * alone would match any page text with "to" in it (pseudo-locales.test.js).
- */
-const pair = (written: string, taken: string) => `${written} to ${taken}`;
+/** One change of a list of them, such as "Bob to Bobby". */
+const pair = (written: string, taken: string) => word('reading.estimate.pair', { written, taken });
 
 /** What a near miss was taken to mean, and how far it is from what was written. */
 const takenAs = (f: Correction) =>
@@ -96,12 +94,8 @@ const takenAs = (f: Correction) =>
     f.d === 0 ? 'reading.estimate.taken-case' : f.d === 1 ? 'reading.estimate.taken-one' : 'reading.estimate.taken-two',
     { name: f.taken },
   );
-const either = (xs: string[]) =>
-  xs.length === 2 ? `${xs[0]} and ${xs[1]}` : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
-const andList = (xs: string[]) =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
-const orList = (xs: string[]) =>
-  xs.length === 2 ? `${xs[0]} or ${xs[1]}` : `${xs.slice(0, -1).join(', ')} or ${xs[xs.length - 1]}`;
+const andList = (xs: string[]) => formatList(xs);
+const orList = (xs: string[]) => formatList(xs, 'disjunction');
 
 /** One near miss: what was written, what it was taken to mean, and how many letters apart. */
 export interface Correction {
@@ -112,12 +106,11 @@ export interface Correction {
 
 /** The sentence an estimate explains itself with, on a given line: what was written, what it was taken to mean, the fix. */
 export function explain(kind: 'name' | 'type', graph: string, fixes: Correction[], line: number): string {
-  const and = (xs: string[]) =>
-    xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+  const and = andList;
   const many = fixes.length > 1,
     written = and(fixes.map((f) => f.written));
   const taken = many
-    ? fixes.map(takenAs).join(', and ')
+    ? fixes.map(takenAs).reduce((first, next) => word('reading.estimate.taken-and', { first, next }))
     : takenAs({ written: '', taken: `${fixes[0]?.taken}`, d: fixes[0]?.d ?? 1 });
   const key =
     kind === 'type'
@@ -208,7 +201,7 @@ export function estimate(
     const near = nearest(missing, guessable);
     if (!near) continue;
     if ('several' in near) {
-      p.message = word('reading.estimate.equally-close', { name: missing, graph, among: either(near.several) });
+      p.message = word('reading.estimate.equally-close', { name: missing, graph, among: andList(near.several) });
       p.fix = word('reading.estimate.equally-close.fix', { name: missing, among: orList(near.several) });
       p.replace = { written: missing, with: near.several };
       continue;

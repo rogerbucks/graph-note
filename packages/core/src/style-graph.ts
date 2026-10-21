@@ -7,6 +7,7 @@ import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
 import type { Problem } from './note-reading.ts';
 import type { LegendChoice } from './untangle-saved.ts';
+import { formatList } from './locale-formats.ts';
 import { word } from './words.ts';
 
 /** The four words a nudge may be (§6, four_nudge_words). */
@@ -343,9 +344,8 @@ export function styleProblem(
   return { graph, block: at.block, line: at.line, severity: 'error', message, fix, ...edit };
 }
 
-/** Words joined as a sentence lists them: "a, b or c". */
-export const orList = (xs: readonly string[]): string =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`;
+/** Words joined as a choice in the reader's locale: "a, b or c" in UK English. */
+export const orList = (xs: readonly string[]): string => formatList([...xs], 'disjunction');
 
 /**
  * The fix for a word that is not one of `among`. It is the nearest by edit distance, always when `always` is set (a

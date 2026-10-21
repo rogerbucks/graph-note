@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CLASSIFICATION_REFUSAL, MATRIX_NOTE_REFUSAL, guardGateFiles } from '../src/gate-guard.ts';
+import { classificationRefusal, matrixNoteRefusal, guardGateFiles } from '../src/gate-guard.ts';
 
 const made = [];
 afterEach(() => {
@@ -40,19 +40,19 @@ const allowed = (answer) => assert.equal(answer, null);
 describe('the matrix note named in the settings', () => {
   test('a Write, Edit, MultiEdit or other file tool onto it is refused, by a relative path or a link', async () => {
     const v = vault();
-    refusedWith(await guardGateFiles('Write', { file_path: v.matrix, content: '' }, v.ports), MATRIX_NOTE_REFUSAL);
-    refusedWith(await guardGateFiles('Edit', { file_path: 'Settings/AI matrix.md' }, v.ports), MATRIX_NOTE_REFUSAL);
-    refusedWith(await guardGateFiles('MultiEdit', { file_path: v.matrix, edits: [] }, v.ports), MATRIX_NOTE_REFUSAL);
-    refusedWith(await guardGateFiles('mcp__files__write', { path: v.matrix }, v.ports), MATRIX_NOTE_REFUSAL);
+    refusedWith(await guardGateFiles('Write', { file_path: v.matrix, content: '' }, v.ports), matrixNoteRefusal());
+    refusedWith(await guardGateFiles('Edit', { file_path: 'Settings/AI matrix.md' }, v.ports), matrixNoteRefusal());
+    refusedWith(await guardGateFiles('MultiEdit', { file_path: v.matrix, edits: [] }, v.ports), matrixNoteRefusal());
+    refusedWith(await guardGateFiles('mcp__files__write', { path: v.matrix }, v.ports), matrixNoteRefusal());
     symlinkSync(v.matrix, join(v.top, 'harmless.md'));
-    refusedWith(await guardGateFiles('Write', { file_path: join(v.top, 'harmless.md') }, v.ports), MATRIX_NOTE_REFUSAL);
+    refusedWith(await guardGateFiles('Write', { file_path: join(v.top, 'harmless.md') }, v.ports), matrixNoteRefusal());
   });
 
   test('a Bash command that names its file is refused, and one that does not is allowed', async () => {
     const v = vault();
     refusedWith(
       await guardGateFiles('Bash', { command: `echo x >> "Settings/AI matrix.md"` }, v.ports),
-      MATRIX_NOTE_REFUSAL,
+      matrixNoteRefusal(),
     );
     allowed(await guardGateFiles('Bash', { command: 'ls Settings' }, v.ports));
   });
@@ -68,27 +68,27 @@ describe('a note’s classification line', () => {
   test('an Edit or MultiEdit that changes or removes it is refused', async () => {
     const v = vault();
     const lower = { old_string: 'classification: secret', new_string: 'classification: public' };
-    refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...lower }, v.ports), CLASSIFICATION_REFUSAL);
+    refusedWith(await guardGateFiles('Edit', { file_path: v.plan, ...lower }, v.ports), classificationRefusal());
     const cut = { old_string: 'classification: secret\n', new_string: '' };
     refusedWith(
       await guardGateFiles('MultiEdit', { file_path: v.plan, edits: [cut] }, v.ports),
-      CLASSIFICATION_REFUSAL,
+      classificationRefusal(),
     );
   });
 
   test('an Edit that breaks the front matter around it, so the line no longer counts, is refused', async () => {
     const v = vault();
     const edit = { file_path: v.plan, old_string: '---\ntitle', new_string: 'title' };
-    refusedWith(await guardGateFiles('Edit', edit, v.ports), CLASSIFICATION_REFUSAL);
+    refusedWith(await guardGateFiles('Edit', edit, v.ports), classificationRefusal());
   });
 
   test('a Write that gives the note another classification, or none, is refused', async () => {
     const v = vault();
     const content = NOTE.replace('secret', 'public');
-    refusedWith(await guardGateFiles('Write', { file_path: v.plan, content }, v.ports), CLASSIFICATION_REFUSAL);
+    refusedWith(await guardGateFiles('Write', { file_path: v.plan, content }, v.ports), classificationRefusal());
     refusedWith(
       await guardGateFiles('Write', { file_path: v.plan, content: 'The plan.\n' }, v.ports),
-      CLASSIFICATION_REFUSAL,
+      classificationRefusal(),
     );
   });
 
@@ -106,19 +106,19 @@ describe('a note’s classification line', () => {
   test('a note that cannot be read is refused when the call carries a classification line at all', async () => {
     const v = vault({ read: false });
     const edit = { file_path: v.plan, old_string: 'x', new_string: 'classification: public' };
-    refusedWith(await guardGateFiles('Edit', edit, v.ports), CLASSIFICATION_REFUSAL);
+    refusedWith(await guardGateFiles('Edit', edit, v.ports), classificationRefusal());
     allowed(await guardGateFiles('Edit', { file_path: v.plan, old_string: 'x', new_string: 'y' }, v.ports));
   });
 
   test('Bash that names it is refused, unless it only searches or prints', async () => {
     const v = vault();
     for (const command of [`sed -i 's/classification: secret//' plan.md`, 'grep classification plan.md > out.md'])
-      refusedWith(await guardGateFiles('Bash', { command }, v.ports), CLASSIFICATION_REFUSAL);
+      refusedWith(await guardGateFiles('Bash', { command }, v.ports), classificationRefusal());
     allowed(await guardGateFiles('Bash', { command: 'grep -n classification plan.md' }, v.ports));
   });
 
   test('the refusals name no level, path or text of the call', () => {
-    for (const refusal of [CLASSIFICATION_REFUSAL, MATRIX_NOTE_REFUSAL])
+    for (const refusal of [classificationRefusal(), matrixNoteRefusal()])
       assert.doesNotMatch(refusal, /secret|public|plan\.md|matrix\.md/);
   });
 });

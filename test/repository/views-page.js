@@ -120,6 +120,7 @@ export function pageStates(open) {
       browserHost(page.window).menu(
         [
           { title: 'Export as SVG', icon: 'download', onClick() {} },
+          // not "Copy the address": that is a catalogue word now (cc.editor.copy), so the test languages' check would flag it
           { title: 'Copy its address', icon: 'copy', onClick() {} },
         ],
         { x: 20, y: 20 },

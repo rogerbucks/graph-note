@@ -89,7 +89,8 @@ const four = () => say('styling.nudge.four-words'),
 const mustBe = (key: string, among: readonly string[]) => say('styling.must-be', { key, among: orList(among) });
 /** The words of `among` as GQL writes them, each in quotes. */
 const quoted = (among: readonly string[]) => orList(among.map((w) => `'${w}'`));
-const KINDS = `${STYLE_KINDS.slice(0, -1).join(', ')} or ${STYLE_KINDS.at(-1)}`;
+/** The style kinds, as a choice of one in the reader's locale. */
+const kindsList = () => orList(STYLE_KINDS);
 /** The View menu's switches a view saved as shown keeps (§25, view_switch_view_only). */
 const SAVED_SWITCHES = ['labels', 'hubs', 'groups', 'merge'] as const;
 
@@ -281,9 +282,9 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     if (kinds.length !== 1 || raw.labels.length !== 1) {
       const other = raw.labels.find((l) => !kinds.includes(l));
       const message = other
-        ? say('styling.kind-unknown', { label: other, kinds: KINDS })
-        : say('styling.kind-one', { kinds: KINDS });
-      c.problems.push(styleProblem(names.graph, raw.at, message, say('styling.kind.fix', { kinds: KINDS })));
+        ? say('styling.kind-unknown', { label: other, kinds: kindsList() })
+        : say('styling.kind-one', { kinds: kindsList() });
+      c.problems.push(styleProblem(names.graph, raw.at, message, say('styling.kind.fix', { kinds: kindsList() })));
       continue;
     }
     const p = c.problems;

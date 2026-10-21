@@ -22,7 +22,10 @@ export interface StrictnessSettings {
   allowed: Departure[];
 }
 
-/** Each departure the reader reads as meant, with its name and a sentence saying what allowing it means. */
+/**
+ * Each departure the reader reads as meant, with its name and a sentence saying what allowing it means. In UK English:
+ * their translation comes from the settings words (settings-source-words.ts), held equal by settings-words.test.js.
+ */
 export const DEPARTURES: { id: Departure; name: string; sentence: string }[] = [
   {
     id: 'missing-comma',

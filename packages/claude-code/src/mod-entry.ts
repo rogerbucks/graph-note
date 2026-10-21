@@ -5,7 +5,7 @@ export { followSystemLanguage } from './mod-language.ts';
 export type { GraphView } from './graph-view.ts';
 export { settingsFrom, word } from '@thoughtknot/core';
 export { EditorLauncher, confirmArgs, editArgs, sayEdit, sayProposed, sayStopped } from './editor-launch.ts';
-export { DATA_FOLDER_REFUSAL, guardDataFolder, guardOpenNote, pathOf } from './data-guard.ts';
+export { dataFolderRefusal, guardDataFolder, guardOpenNote, pathOf } from './data-guard.ts';
 export { guardGateFiles } from './gate-guard.ts';
 export { readLinkVia, realPathVia } from './editor-realpath.ts';
 export type { EditOutcome, EditorPorts, Spawned } from './editor-launch.ts';

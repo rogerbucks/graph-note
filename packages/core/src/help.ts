@@ -309,7 +309,9 @@ export function completions(
   return none;
 }
 
-const article = (k: string) => (/^[aeiou]/i.test(k) ? 'an' : 'a');
+/** A thing said to be of a kind, with "a" or "an" as the kind's first letter needs in UK English. */
+const ofKind = (thing: string, kind: string) =>
+  word(/^[aeiou]/i.test(kind) ? 'reading.back.kind-an' : 'reading.back.kind-a', { thing, kind });
 
 /** Each pattern of the block read back in plain language, by the 0-based line it ends on: what it writes, in the graph's words. */
 export function readBack(reading: NoteReading, graph: string, text: string): Map<number, string> {
@@ -333,7 +335,12 @@ export function readBack(reading: NoteReading, graph: string, text: string): Map
   for (const it of blockItems(text)) {
     let said: string | null = null;
     const set = /^SET\s+(\w+)\.(\w+)\s*=\s*([\s\S]+)$/i.exec(it.text.trim());
-    if (set) said = `${textOf(set[1] ?? '')}: ${set[2]} is ${(set[3] ?? '').trim().replace(/^'([\s\S]*)'$/, '$1')}`;
+    if (set)
+      said = word('reading.back.set', {
+        thing: textOf(set[1] ?? ''),
+        property: set[2] ?? '',
+        value: (set[3] ?? '').trim().replace(/^'([\s\S]*)'$/, '$1'),
+      });
     else {
       const hs = hops(it.text);
       if (hs.length) said = hs.map(([s, t, e]) => `${textOf(s)} ${words(t)} ${textOf(e)}`).join('; ');
@@ -341,7 +348,7 @@ export function readBack(reading: NoteReading, graph: string, text: string): Map
         const node = /^\(\s*(\w+)\s*:\s*([\w:]+)/.exec(it.text.trim());
         if (node) {
           const kind = (node[2] ?? '').split(':').filter((k) => !gs.SCHEMA_LABELS.includes(k))[0];
-          if (kind) said = `${textOf(node[1] ?? '')} is ${article(kind)} ${kind}`;
+          if (kind) said = ofKind(textOf(node[1] ?? ''), kind);
         }
       }
     }
@@ -354,10 +361,11 @@ export function readBack(reading: NoteReading, graph: string, text: string): Map
 export function textVersion(d: GraphDrawing): string[] {
   const textOf = (k: string) => d.boxes.find((b) => b.key === k)?.text ?? k;
   const guessed = new Set(d.estimates.filter((e) => e.kind === 'type').map((e) => e.index));
-  const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const things = word('reading.text.things', { count: d.boxes.length });
+  const links = word('reading.text.links', { count: d.links.length });
   return [
-    `Graph ${d.graph}: ${plural(d.boxes.length, 'thing')}, ${plural(d.links.length, 'link')}.`,
-    ...d.boxes.map((b) => (b.kind ? `${b.text} is ${article(b.kind)} ${b.kind}.` : `${b.text}.`)),
+    word('reading.text.graph', { graph: d.graph, things, links }),
+    ...d.boxes.map((b) => `${b.kind ? ofKind(b.text, b.kind) : b.text}.`),
     ...d.links.filter((_, i) => !guessed.has(i)).map((l) => `${textOf(l.from)} ${l.reading} ${textOf(l.to)}.`),
     ...d.estimates.map((e) =>
       word('reading.estimated-link', { from: textOf(e.from), reading: e.reading, to: textOf(e.to) }),
