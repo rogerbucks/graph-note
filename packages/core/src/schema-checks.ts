@@ -8,6 +8,7 @@ import { blankText } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
 import type { Problem } from './note-reading.ts';
 import { S, trim, trimEnd } from './whitespace.ts';
+import { word } from './words.ts';
 
 // a thing and its kinds, and a link's type, read with whitespace as GQL names it (graph spec §3), as the reader reads them
 const THING = new RegExp(`\\(${S}*([A-Za-z_]\\w*)${S}*((?::${S}*[A-Za-z_]\\w*${S}*)+)`, 'g'),
@@ -49,10 +50,8 @@ export function undeclared(whole: World, texts: string[]): Problem[] {
       block,
       line: blanked.slice(0, first.index).split('\n').length,
       severity: 'warning',
-      message: metas.length
-        ? `the schema does not declare ${names}: its GraphMeta must DECLARE each type`
-        : `the schema has no GraphMeta to declare ${names}: each type must be declared`,
-      fix: meta ? `add a DECLARES link from ${meta} to each` : 'link each type from the GraphMeta by DECLARES',
+      message: metas.length ? word('reading.schema.undeclared', { names }) : word('reading.schema.no-meta', { names }),
+      fix: meta ? word('reading.schema.undeclared.fix', { meta }) : word('reading.schema.no-meta.fix'),
       ...(meta
         ? {
             insert: {
@@ -62,7 +61,7 @@ export function undeclared(whole: World, texts: string[]): Problem[] {
                 (metas.length ? '' : `,\n(${meta}:GraphMeta {graph: '${graph}', schema: '${graph}@1'})`) +
                 missing.map((m) => `,\n(${meta})-[:DECLARES]->(${m[1]})`).join(''),
             },
-            fixTitle: 'Declare each type',
+            fixTitle: word('reading.schema.undeclared.fix-title'),
           }
         : {}),
     });
@@ -89,7 +88,7 @@ export function undeclaredUse(whole: World, texts: string[], problems: Problem[]
       edges = named('edge');
     const blanked = blankText(text),
       seen = new Set<string>();
-    const report = (name: string, what: string, at: number) => {
+    const report = (name: string, what: 'kind' | 'type', at: number) => {
       if (seen.has(`${what} ${name}`)) return;
       seen.add(`${what} ${name}`);
       const line = blanked.slice(0, at).split('\n').length;
@@ -99,16 +98,19 @@ export function undeclaredUse(whole: World, texts: string[], problems: Problem[]
         block,
         line,
         severity: 'warning',
-        message: `${name} is not ${what} the schema of graph ${graph} declares: declare it there, or use one it does`,
-        fix: `declare ${name} in graph ${graph}'s schema`,
+        message: word(what === 'kind' ? 'reading.schema.kind-undeclared' : 'reading.schema.type-undeclared', {
+          name,
+          graph,
+        }),
+        fix: word('reading.schema.use-undeclared.fix', { name, graph }),
       });
     };
     for (const m of blanked.matchAll(THING))
       for (const label of (m[2] ?? '').split(':').map((l) => trim(l)))
-        if (label && !hidden.has(label) && !kinds.has(label)) report(label, 'a kind', m.index);
+        if (label && !hidden.has(label) && !kinds.has(label)) report(label, 'kind', m.index);
     for (const m of blanked.matchAll(LINK_TYPE)) {
       const type = m[1] ?? '';
-      if (type !== 'DECLARES' && !edges.has(type)) report(type, 'a relationship type', m.index);
+      if (type !== 'DECLARES' && !edges.has(type)) report(type, 'type', m.index);
     }
   });
   return out;

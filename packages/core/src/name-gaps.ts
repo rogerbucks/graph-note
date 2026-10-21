@@ -10,6 +10,7 @@ import type { Problem } from './note-reading.ts';
 import { isSpace, trim } from './whitespace.ts';
 import { TEXT_KEYS, setTexts, textKeyOf, writtenIn } from './written-things.ts';
 import type { Written } from './written-things.ts';
+import { word } from './words.ts';
 
 /** A problem before its block and graph are known. */
 type Gap = Omit<Problem, 'block' | 'graph'>;
@@ -60,10 +61,10 @@ function unnamed(block: Indexed, w: Written, name: string): { gap: Gap; naming: 
     gap: {
       line: start.line + 1,
       severity: 'warning',
-      message: `this thing has no name; suggested: ${name}`,
-      fix: `add the name ${name} after the (, or write one of your own`,
+      message: word('reading.no-name', { name }),
+      fix: word('reading.no-name.fix', { name }),
       insert: { line, character, text: name },
-      fixTitle: `Add the name ${name}`,
+      fixTitle: word('reading.no-name.fix-title', { name }),
       span: { line: start.line, character: start.character, end: start.character + closeAt - w.open },
       suggested: name,
     },
@@ -88,10 +89,10 @@ function untexted(block: Indexed, w: Written, name: string, key: string, suggest
   return {
     line: start.line + 1,
     severity: 'hint',
-    message: `the thing ${name} has no text; suggested: ${quoted(suggested)}`,
-    fix: `add {${property}} to it, or write other text`,
+    message: word('reading.no-text', { name, text: quoted(suggested) }),
+    fix: word('reading.no-text.fix', { property }),
     insert: { ...at, text: written },
-    fixTitle: `Add the text ${quoted(suggested)}`,
+    fixTitle: word('reading.no-text.fix-title', { text: quoted(suggested) }),
     span: { line: start.line, character: start.character, end: start.character + name.length },
   };
 }

@@ -14,6 +14,7 @@ import type { Target } from './inspector.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
 import { attachmentType, linkTo, linksIn } from './link-scan.ts';
 import type { FoundLink } from './link-scan.ts';
+import { word } from './words.ts';
 
 export { attachmentType, leavingWords, linkKind, linkTo, linksIn, refusedWords } from './link-scan.ts';
 export type { FoundLink, LinkKind } from './link-scan.ts';
@@ -176,8 +177,16 @@ export function brokenLinks(reading: NoteReading, graph: string, vault: LinkVaul
       }
     }
     if (!place) cursors.set(link.written, { o: ours.length, l: 0, at: 0 });
-    const what = link.kind === 'note' ? `Create the note ${link.target}` : `Put ${link.target} in the vault`;
-    const or = meant.length ? `, or change it to ${orList(meant.map((m) => `[[${m}]]`))}` : '';
+    const target = link.target,
+      among = orList(meant.map((m) => `[[${m}]]`));
+    const fix =
+      link.kind === 'note'
+        ? meant.length
+          ? word('reading.broken.create-or-change', { target, among })
+          : word('reading.broken.create', { target })
+        : meant.length
+          ? word('reading.broken.put-or-change', { target, among })
+          : word('reading.broken.put-or-correct', { target });
     const span = place && {
       line: place.line,
       character: place.col + link.targetAt.start - link.start,
@@ -189,8 +198,8 @@ export function brokenLinks(reading: NoteReading, graph: string, vault: LinkVaul
       block: place?.block ?? ours[0]?.i ?? 0,
       line: (place?.line ?? 0) + 1,
       severity: 'warning',
-      message: `${link.written} names no note or file in the vault, so it is drawn as broken.`,
-      fix: `${what}${or || (link.kind === 'file' ? ', or correct the link' : '')}.`,
+      message: word('reading.broken', { written: link.written }),
+      fix,
       ...(span ? { span } : {}),
       ...(span && written && meant.length ? { replace: { written, with: meant.map((m) => asWritten(link, m)) } } : {}),
     };

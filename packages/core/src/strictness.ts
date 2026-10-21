@@ -9,6 +9,7 @@ import { gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import type { Departure, Problem } from './note-reading.ts';
 import { replaceBlock } from './store.ts';
+import { word } from './words.ts';
 
 export type { Departure } from './note-reading.ts';
 
@@ -44,7 +45,7 @@ export const DEPARTURES: { id: Departure; name: string; sentence: string }[] = [
 export function underStrictness(problems: Problem[], settings: StrictnessSettings): Problem[] {
   if (settings.strictness === 'standard')
     return problems.map((p) =>
-      p.departure ? { ...p, severity: 'error', message: `${p.message} — this is not standard GQL` } : p,
+      p.departure ? { ...p, severity: 'error', message: word('reading.not-standard', { message: p.message }) } : p,
     );
   if (settings.strictness === 'simplified') {
     const allowed = new Set(settings.allowed);
@@ -125,27 +126,34 @@ export function toStandard(note: string): Converted {
   if (first)
     return {
       ok: false,
-      reason: `block ${first.block + 1}, line ${first.line}, cannot be read, so the note cannot be made standard: ${first.message}`,
+      reason: word('reading.standard.unreadable', {
+        block: String(first.block + 1),
+        line: String(first.line),
+        message: first.message,
+      }),
     };
   const { blocks: next, changed, left } = asStandard(blocks);
-  if (left.length) return { ok: false, reason: `block ${(left[0] ?? 0) + 1} has a departure with no fix to write` };
+  if (left.length) return { ok: false, reason: word('reading.standard.no-fix', { block: String((left[0] ?? 0) + 1) }) };
   const check = underStrictness(readNote(next).problems, { strictness: 'standard', allowed: [] });
   const wrong = check.find((p) => p.severity === 'error');
   if (wrong)
-    return { ok: false, reason: `the converted block ${wrong.block + 1} would not be standard: ${wrong.message}` };
-  if (graphsOf(next) !== graphsOf(blocks))
-    return { ok: false, reason: 'the converted note would not read as the same graph' };
+    return {
+      ok: false,
+      reason: word('reading.standard.still-departs', { block: String(wrong.block + 1), message: wrong.message }),
+    };
+  if (graphsOf(next) !== graphsOf(blocks)) return { ok: false, reason: word('reading.standard.other-graph') };
   let out = note;
   for (const [i, s] of spans.entries()) {
     const text = next[i] ?? s.text;
     if (text === s.text) continue;
     const r = replaceBlock(out, { line: s.open, text: s.text }, text);
-    if (!r.ok) return { ok: false, reason: `block ${i + 1} could not be written: ${r.reason}` };
+    if (!r.ok)
+      return { ok: false, reason: word('reading.standard.unwritten', { block: String(i + 1), why: r.reason }) };
     out = r.note;
   }
   // the note as it would be written, checked whole: its blocks are exactly those checked above
   const written = gqlSpans(out).map((s) => s.text);
   if (written.length !== next.length || written.some((t, i) => t !== next[i]))
-    return { ok: false, reason: 'the converted note would not hold the blocks that were checked' };
+    return { ok: false, reason: word('reading.standard.other-blocks') };
   return { ok: true, note: out, changed };
 }
