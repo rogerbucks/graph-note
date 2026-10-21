@@ -1,6 +1,6 @@
 // The AI models of §19, host-free: requests go only where and when the user says, within each model's ceiling, and come
 // back as proposals. Every send here goes through a fake transport handed in, so no test reaches the network.
-import { describe, test } from 'node:test';
+import { afterEach, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { aiReady, confirmSend, prepareSend, sendPrepared } from '../src/ai.ts';
@@ -10,6 +10,10 @@ import { DEFAULT_SETTINGS, settingsFrom } from '../src/settings.ts';
 import { basisOf } from '../src/proposals-basis.ts';
 import { ProposalReview } from '../src/proposals-review.ts';
 import { gqlBlocks } from '../src/blocks.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const fence = (text) => '```gql\n' + text + '\n```';
 const GRAPH = [
@@ -236,6 +240,15 @@ describe('each model carries a ceiling (model_ceiling, never_above_ceiling)', ()
   test('a ceiling no longer among the classifications sends nothing until it is chosen again', () => {
     const s = settingsFrom({ aiUse: 'on', aiModels: [{ ...LOCAL, ceiling: 'Old' }] });
     assert.match(prepareSend(ask({ settings: s, level: 'Public' })).refused, /choose it again/);
+  });
+
+  test('why it is not sent, and what is shown before a send, are said in the person’s language', () => {
+    setLanguage('en-XA');
+    const r = prepareSend(ask({ model: 'Remote', level: 'Confidential' }));
+    assert.ok(isPseudoWord(r.refused), r.refused);
+    assert.match(r.refused, /Local/);
+    const shown = prepareSend(ask());
+    assert.ok(shown.summary.every(isPseudoWord), shown.summary.join('\n'));
   });
   // a note with no classification: packages/core/test/ai-unlabelled.test.js (unclassified_strictest)
 });

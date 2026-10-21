@@ -7,7 +7,9 @@
 // match by exact name, with a table in the settings for other names. A class matched by neither is flagged and never
 // guessed. So it is never allowed. A row named twice, or two columns standing for one classification, is never resolved
 // by taking the first.
+import { formatList } from './locale-formats.ts';
 import type { AiModel } from './settings.ts';
+import { word } from './words.ts';
 
 /** What a row says of a class: yes, conditional on what the row says, no, or unknown (not exactly one of the marks). */
 export type Mark = 'yes' | 'conditional' | 'no' | 'unknown';
@@ -88,15 +90,19 @@ export function matchClass(name: string, classifications: string[], classMap: Re
 /** The rows with this name; more than one is a duplicate, which is never resolved by taking the first. */
 const rowsNamed = (rows: MatrixRow[], name: string) => rows.filter((r) => same(r.name, name));
 
-/** The columns of a row that stand for one classification, as `A and B both stand for L`; null when none do. */
-function sharedColumn(row: MatrixRow, classifications: string[], classMap: Record<string, string>): string | null {
+/** The columns of a row that stand for one classification, as a list in words, and that classification; or null. */
+function sharedColumn(
+  row: MatrixRow,
+  classifications: string[],
+  classMap: Record<string, string>,
+): { columns: string; level: string } | null {
   const seen = new Map<string, string[]>();
   for (const c of row.cells) {
     const level = matchClass(c.class, classifications, classMap);
     if (level !== null) seen.set(level, [...(seen.get(level) ?? []), c.class.trim()]);
   }
   const twice = [...seen].find(([, names]) => names.length > 1);
-  return twice ? `its columns ${twice[1].join(' and ')} both stand for ${twice[0]}` : null;
+  return twice ? { columns: formatList(twice[1]), level: twice[0] } : null;
 }
 
 /** What is wrong with the matrix as it stands, for the settings page to flag: a row named twice, two columns for one class. */
@@ -109,9 +115,9 @@ export function matrixProblems(
   for (const r of rows) {
     const first = rows.findIndex((x) => same(x.name, r.name));
     if (rows.indexOf(r) === first && rowsNamed(rows, r.name).length > 1)
-      problems.push(`The matrix has the row “${r.name}” more than once, so no model is sent to by it.`);
+      problems.push(word('ai.matrix.row-twice', { row: r.name }));
     const shared = sharedColumn(r, classifications, classMap);
-    if (shared) problems.push(`In the matrix row “${r.name}”, ${shared}, so no model is sent to by it.`);
+    if (shared) problems.push(word('ai.matrix.columns-shared', { row: r.name, ...shared }));
   }
   return problems;
 }
@@ -123,14 +129,11 @@ export function classMapProblems(classifications: string[], classMap: Record<str
   for (const k of keys) {
     const group = keys.filter((o) => same(o, k));
     if (group.length > 1 && keys.indexOf(group[0] ?? k) === keys.indexOf(k))
-      problems.push(`The table has ${group.join(' and ')}, which differ only in case: keep one.`);
+      problems.push(word('ai.matrix.table-case', { keys: formatList(group) }));
     const to = classMap[k] ?? '';
-    if (!classifications.some((c) => same(c, to)))
-      problems.push(`The table maps ${k} to ${to}, which is not a classification.`);
+    if (!classifications.some((c) => same(c, to))) problems.push(word('ai.matrix.table-not-class', { from: k, to }));
     else if (classifications.some((c) => same(c, k)) && !classifications.some((c) => same(c, k) && same(c, to)))
-      problems.push(
-        `The table maps ${k} to ${to}, but ${k} is already a classification of that name: remove the entry.`,
-      );
+      problems.push(word('ai.matrix.table-same-name', { from: k, to }));
   }
   return problems;
 }
@@ -204,29 +207,23 @@ export function matrixRefusal(
 ): string | null {
   const wanted = model.matrixRow ?? '';
   const found = matrix ? rowsNamed(matrix.rows, wanted) : [];
-  if (!matrix || !found.length)
-    return `${model.name} uses the matrix row “${wanted}”, which the matrix note does not have now (or the note could not be read), so nothing is sent to it: choose it again in the model’s settings.`;
-  const held =
-    found.length > 1
-      ? 'the matrix has that row more than once'
-      : sharedColumn(found[0] as MatrixRow, classifications, matrix.classMap);
-  if (held)
-    return `${model.name} is held to the matrix row “${wanted}”, but ${held}, so nothing is sent to it: correct the matrix note.`;
+  const named = { model: model.name, row: wanted };
+  if (!matrix || !found.length) return word('ai.matrix.row-missing', named);
+  if (found.length > 1) return word('ai.matrix.held-twice', named);
+  const shared = sharedColumn(found[0] as MatrixRow, classifications, matrix.classMap);
+  if (shared) return word('ai.matrix.held-shared', { ...named, ...shared });
   const grants = matrixGrants(model, matrix.rows, classifications, matrix.classMap);
   const here = grants.find((g) => g.level !== null && same(g.level, level));
   if (!here) {
     const flagged = grants.filter((g) => g.level === null).map((g) => g.name.trim());
-    return `${said}, and the matrix row ${wanted} has no class for ${level}, so it is not sent to ${model.name}.${flagged.length ? ` These classes of the row match no classification and are not used: ${flagged.join(', ')}. Map them in the AI models settings.` : ''}`;
+    const none = word('ai.matrix.no-class', { said, level, ...named });
+    return flagged.length ? `${none} ${word('ai.matrix.unmatched', { classes: flagged.join(', ') })}` : none;
   }
   if (here.allowed) return null;
-  const row = `the matrix row ${wanted}`;
-  if (here.mark === 'no')
-    return `${said}, and ${row} marks ${here.name} never to be sent, so it is not sent to ${model.name}.`;
-  if (here.mark === 'unknown')
-    return `${said}, and ${row} has for ${here.name} something other than exactly ✅, ⚠️ or ❌, so it is not sent to ${model.name}.`;
-  if (here.mark === 'conditional' && !here.condition)
-    return `${said}, and ${row} allows ${here.name} on a condition but gives no condition, so it cannot be switched on and is not sent to ${model.name}.`;
-  if (here.changed)
-    return `${said}, and the condition has changed since you switched on ${here.name} for ${model.name} (it is now: ${here.condition ?? ''}): read it and switch it on again to send it.`;
-  return `${said}, and ${row} allows ${here.name} only on a condition (${here.condition ?? ''}), and that is off for ${model.name}: switch it on in the model’s settings to send it.`;
+  const of = { said, name: here.name, condition: here.condition ?? '', ...named };
+  if (here.mark === 'no') return word('ai.matrix.never', of);
+  if (here.mark === 'unknown') return word('ai.matrix.unknown-mark', of);
+  if (here.mark === 'conditional' && !here.condition) return word('ai.matrix.no-condition', of);
+  if (here.changed) return word('ai.matrix.condition-changed', of);
+  return word('ai.matrix.condition-off', of);
 }

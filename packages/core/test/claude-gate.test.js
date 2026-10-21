@@ -3,11 +3,15 @@
 // - the highest classification never opens;
 // - a note with none counts as the level set for unlabelled notes;
 // - a credential never reaches Claude.
-import { test } from 'node:test';
+import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as gateModule from '../src/claude-gate.ts';
 
 import { sha256 } from '../src/ai-digest.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const { claudeGate, noteClassification } = gateModule;
 const classificationOf = (text) => gateModule.classificationOf(text);
@@ -244,4 +248,12 @@ test('with no row picked the ceiling stands, and a row picked for another model 
   assert.deepEqual(claudeGate(note('Internal'), settings()), { open: true });
   const other = { ...claude('Public'), name: 'Other', matrixRow: 'Claude chat' };
   assert.ok('ask' in claudeGate(note('Internal'), settings({ aiModels: [other], matrix: ROWS })));
+});
+
+test('why a note is not opened, and the question before it opens, are said in the person’s language', () => {
+  setLanguage('en-XA');
+  const refused = claudeGate(note('Restricted'), settings());
+  assert.ok(isPseudoWord(refused.refuse), refused.refuse);
+  const asked = claudeGate(note('Confidential'), settings());
+  assert.ok(isPseudoWord(asked.ask), asked.ask);
 });
