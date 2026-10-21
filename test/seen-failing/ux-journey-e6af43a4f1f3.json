@@ -1,0 +1,6 @@
+{
+  "file": "test/ux-journey.test.js",
+  "test": "every host: the first-run journey, its counts held > claude-code: a person opens a note, reads its graph, edits it, fixes a problem and exports it, in as few steps as the baseline holds",
+  "seen_failing_first": false,
+  "evidence": "Existing end-to-end journey test; the commit only added macOS Finder .DS_Store filtering to package enumeration in another test, so this journey test continued to pass against the parent code."
+}

@@ -186,7 +186,7 @@ describe('every host', () => {
   const HOSTS = { obsidian: Object.keys(OBSIDIAN), 'claude-code': ['the browser editor’s page'] };
 
   test('has its views checked here before it can be released: a new host with no entry fails', () => {
-    const hosts = readdirSync(`${here}packages`).filter((p) => !LIBRARIES.includes(p));
+    const hosts = readdirSync(`${here}packages`).filter((p) => !p.startsWith('.') && !LIBRARIES.includes(p));
     assert.deepEqual(hosts.sort(), Object.keys(HOSTS).sort());
     for (const [host, views] of Object.entries(HOSTS)) assert.ok(views.length > 0, host);
   });
