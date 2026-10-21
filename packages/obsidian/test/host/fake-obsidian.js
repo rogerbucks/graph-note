@@ -151,6 +151,8 @@ export function fakeObsidian(state = {}) {
     },
     on: () => ({}),
     offref: () => {},
+    // the vault and the workspace are ready at once here, as Obsidian's are once it has started
+    onLayoutReady: (run) => run(),
     // a link opened, as a tap on a link in a note opens it. Kept, for a test to see which, from where, and in which leaf
     openLinkText: async (link, from, newLeaf) => {
       state.opened = newLeaf === undefined ? { link, from } : { link, from, newLeaf };
@@ -245,6 +247,9 @@ export function fakeObsidian(state = {}) {
     addCommand(c) {
       (state.commands ??= []).push(c);
       return c;
+    }
+    removeCommand(id) {
+      state.commands = (state.commands ?? []).filter((c) => c.id !== id);
     }
     registerEditorExtension(ext) {
       (state.editorExtensions ??= []).push(ext);

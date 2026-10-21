@@ -2975,10 +2975,11 @@
       "likelihood": "medium",
       "impact": "medium",
       "decision": "fix-later",
-      "fix": "Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version, and a sample plug-in passes each contract in a worker. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Left: the browser page and Obsidian each load one from a plug-ins folder.",
-      "check": "test/sample-plugin.test.js runs the sample in a worker now. The browser page and the Obsidian harness load it through their real paths once hosts load outside plug-ins.",
+      "fix": "Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version, and a sample plug-in passes each contract in a worker. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Obsidian loads one from its plug-ins folder or a link, off until turned on (outside-plugins.ts). Left: the browser page.",
+      "check": "test/sample-plugin.test.js runs the sample in a worker. packages/obsidian/test/outside-plugins.test.js loads it through main.js. The browser page is to come.",
       "paths": [
         "packages/core/src/plugin-outside.ts",
+        "packages/obsidian/src/outside/outside-plugins.ts",
         "examples/sample-plugin/plugin.js",
         "packages/core/src/plugin-versions.ts",
         "packages/core/src/plugins-contract.ts",

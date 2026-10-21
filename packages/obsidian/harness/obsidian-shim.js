@@ -194,6 +194,8 @@ const workspace = {
   // previews nothing
   openLinkText: async () => {},
   trigger: () => {},
+  // ready at once: the one note is read before the plugin loads
+  onLayoutReady: (run) => run(),
 };
 // nothing is indexed here, so a note's front matter is read from its text, and a link finds a note by its path alone
 const metadataCache = {
@@ -235,6 +237,7 @@ export class Plugin extends Component {
   addCommand(c) {
     return c;
   }
+  removeCommand() {}
   async loadData() {
     return null;
   }
