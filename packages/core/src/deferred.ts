@@ -9,12 +9,14 @@ import type { Graph } from '@thoughtknot/graph-spec';
 import { blankText, items } from './block-items.ts';
 import { gqlSpans, graphOf, graphOfBlock, namesSharedSchema } from './blocks.ts';
 import { kindLines, quoted as q, typeLines } from './lock.ts';
+import { formatList } from './locale-formats.ts';
 import type { NoteReading } from './note-reading.ts';
 import { readBlocks } from './partial-read.ts';
 import { replaceBlock } from './store.ts';
 import { acceptNameFirst } from './suggested-names.ts';
 import type { SuggestedReading } from './suggested-names.ts';
 import { S, isSpace, trim, trimEnd } from './whitespace.ts';
+import { word } from './words.ts';
 
 /**
  * What marking a thing for later says: what is needed and why it waits. It may also give the day to look again and
@@ -140,9 +142,7 @@ export class DeferredNotDeclared extends Error {
   readonly lacking: string[];
 
   constructor(graph: string, lacking: string[]) {
-    super(
-      `graph ${graph} is locked and its schema does not declare ${lacking.join(' and ')}: declare them in the schema first`,
-    );
+    super(word('editing.deferred.not-declared', { graph, lacking: formatList(lacking) }));
     this.name = 'DeferredNotDeclared';
     this.graph = graph;
     this.lacking = lacking;
@@ -204,17 +204,17 @@ export function parkForLater(
     why = oneLine(park.why),
     rule = oneLine(park.rule ?? ''),
     day = park.revisitBy ?? '';
-  if (!what) throw new Error('say what is needed: a Deferred must have a what');
-  if (!why) throw new Error('say why it waits: a Deferred must have a why');
-  if (day && !isDay(day)) throw new Error(`the revisit date must be a day like 2026-11-01, not ${day}`);
+  if (!what) throw new Error(word('editing.deferred.what'));
+  if (!why) throw new Error(word('editing.deferred.why'));
+  if (day && !isDay(day)) throw new Error(word('editing.deferred.day', { day }));
   const graph = graphOf(block);
-  if (!graph) throw new Error('the block names no graph: start it with // graph: <name>');
+  if (!graph) throw new Error(word('editing.deferred.no-graph-line'));
   const first = acceptNameFirst(reading, graph, [thing]);
   if (first) throw new Error(first);
   const own = gs.worldFromStore(readBlocks([block], []).store)[graph];
   const graphs = [own, whole].filter((x): x is Graph => !!x);
-  if (!graphs.some((x) => x.nodes.has(thing))) throw new Error(`there is no ${thing} in graph ${graph} to park`);
-  if (endsWithSet(block)) throw new Error('the block ends with a SET or MATCH: park it in a block of its own');
+  if (!graphs.some((x) => x.nodes.has(thing))) throw new Error(word('editing.deferred.no-thing', { thing, graph }));
+  if (endsWithSet(block)) throw new Error(word('editing.deferred.ends-with-set'));
   const lacking = undeclared(graphs);
   if (lacking.length) throw new DeferredNotDeclared(graph, lacking);
   let id = `later_${thing}`;
@@ -253,14 +253,14 @@ const PLAIN_ID = /^[A-Za-z_]\w*$/;
  */
 export function declareDeferredBlock(blocks: string[], graph: string, indent = '    '): DeferredDeclared {
   const own = blocks.flatMap((b, i) => (graphOfBlock(b) === graph ? [i] : []));
-  if (!own.length) throw new Error(`there is no graph ${graph} in the note to declare them in`);
+  if (!own.length) throw new Error(word('editing.deferred.no-graph', { graph }));
   const worlds = own.map((i) => gs.worldFromStore(readBlocks([blocks[i] ?? ''], []).store)[graph]);
   const graphs = worlds.filter((g): g is Graph => !!g);
   if (!graphs.some((g) => g.labelled('ElementType').length))
     throw new Error(
       own.some((i) => namesSharedSchema(blocks[i] ?? ''))
-        ? `graph ${graph} is typed by a shared schema, which declares its types: declare Deferred and DEFERS there`
-        : `graph ${graph} has no schema block in the note: lock the graph first`,
+        ? word('editing.deferred.shared-schema', { graph })
+        : word('editing.deferred.no-schema', { graph }),
     );
   const metaIn = worlds.findIndex((g) => g?.labelled('GraphMeta').some((m) => PLAIN_ID.test(m)));
   const at = own[Math.max(metaIn, 0)] ?? 0;
@@ -272,15 +272,11 @@ export function declareDeferredBlock(blocks: string[], graph: string, indent = '
     // a GraphMeta whose id is not a plain name (set by an `id` property) cannot be named in a link. Say so, and what
     // to use
     const odd = graphs.flatMap((g) => g.labelled('GraphMeta'))[0];
-    if (odd === undefined)
-      throw new Error(`graph ${graph} has no GraphMeta to declare them from: add one to its schema first`);
+    if (odd === undefined) throw new Error(word('editing.deferred.no-meta', { graph }));
     const plain = odd.replace(/[^A-Za-z0-9_]/g, '_').replace(/^(\d)/, '_$1');
-    throw new Error(
-      `graph ${graph}'s GraphMeta has the id '${odd}', which is not a plain name (letters, digits and underscores, not starting with a digit): rename it to ${plain}`,
-    );
+    throw new Error(word('editing.deferred.meta-id', { graph, id: odd, plain }));
   }
-  if (endsWithSet(block))
-    throw new Error('the block that holds the schema ends with a SET or MATCH: end it with a thing of its own first');
+  if (endsWithSet(block)) throw new Error(word('editing.deferred.schema-ends-with-set'));
   const taken = new Set(graphs.flatMap((g) => [...g.nodes.keys()]));
   const fresh = (want: string) => {
     let id = want;

@@ -9,6 +9,7 @@
 import gs from '@thoughtknot/graph-spec';
 import type { Bounds } from './hits.ts';
 import { STYLE } from './layout.ts';
+import { formatList } from './locale-formats.ts';
 import type { NoteReading } from './note-reading.ts';
 import type { Place, Size, View } from './zoom.ts';
 
@@ -32,10 +33,9 @@ export interface LinkGroup {
   after: string;
 }
 
-/** Names listed as a sentence lists them: "Ann", "Bob and Cy", "Bob, Cy and Dee". */
+/** Names listed as a sentence lists them in the reader's language: "Ann", "Bob and Cy", "Bob, Cy and Dee". */
 export function listed(names: string[]): string {
-  if (names.length < 2) return names.join('');
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  return formatList(names);
 }
 
 /** The readings back declared by the graph's schema, or the shared schema it names, by relationship type. */

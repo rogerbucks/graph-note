@@ -12,6 +12,7 @@ import type { Palette } from './palette.ts';
 import { MARK_WORDS } from './proposals-marks.ts';
 import type { MarkKind, Marks } from './proposals-marks.ts';
 import type { ThingLook } from './style-graph.ts';
+import { word } from './words.ts';
 
 /** One change, listed: what it did, to a thing or a link, said in a sentence, and each property it changed. */
 export interface ChangeLine {
@@ -44,8 +45,8 @@ export const CHANGE_LOOKS: Record<MarkKind, ThingLook> = {
   remove: { hue: 'red', line: 'dotted', format: 'italic' },
 };
 
-/** The sentence when nothing changed. */
-export const NO_CHANGES = 'No changes between these versions.';
+/** The sentence when nothing changed, in the reader's language. */
+export const noChanges = (): string => word('editing.no-changes');
 
 const textsOf = (note: string) => gqlBlocks(note).map((b) => b.text);
 const said = (v: Value) => (typeof v === 'string' ? v : valueText(v));
@@ -162,7 +163,7 @@ export function changesView(before: string, after: string, graph: string, shared
 
 /** The changes listed as text, one line each, a change's details indented below it; or that nothing changed. */
 export function changesText(shown: ChangesShown): string {
-  if (!shown.changes.length) return NO_CHANGES;
+  if (!shown.changes.length) return noChanges();
   return shown.changes.flatMap((c) => [c.said, ...c.details.map((d) => `  ${d}`)]).join('\n');
 }
 

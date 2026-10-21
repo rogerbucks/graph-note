@@ -5,6 +5,7 @@
 import { gqlSpans } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import type { Block } from './note-reading.ts';
+import { word } from './words.ts';
 
 /** The block a pane is editing: the 0-based line of its opening fence, and its text as the pane last read or wrote it. */
 export interface BlockRef {
@@ -26,16 +27,16 @@ export function replaceBlock(note: string, ref: BlockRef, next: string): WriteRe
     if (same.length > 1)
       return {
         ok: false,
-        reason: 'the block cannot be told apart from more than one identical block in the note',
+        reason: word('editing.block-twins'),
         current: null,
       };
     if (here)
       return {
         ok: false,
-        reason: 'the block has changed since the pane read it',
+        reason: word('editing.block-changed'),
         current: { text: here.text, line: here.open + 1 },
       };
-    return { ok: false, reason: 'the block is no longer in the note where the pane read it', current: null };
+    return { ok: false, reason: word('editing.block-gone'), current: null };
   }
   return { ok: true, ...replaceSpan(note, target, next) };
 }
@@ -61,7 +62,7 @@ export function insertBlockAfter(note: string, ref: BlockRef, text: string): Wri
   const here = spans.find((s) => s.open === ref.line && s.text === ref.text);
   const same = spans.filter((s) => s.text === ref.text);
   const target = here ?? (same.length === 1 ? same[0] : undefined);
-  if (!target) return { ok: false, reason: 'the block has changed since the pane read it', current: null };
+  if (!target) return { ok: false, reason: word('editing.block-changed'), current: null };
   const lines = note.match(/[^\n]*\n|[^\n]+$/g) ?? [];
   const eol = /\r\n$/.test(lines[target.open] ?? '') ? '\r\n' : '\n';
   const at = Math.min(target.close + 1, lines.length);

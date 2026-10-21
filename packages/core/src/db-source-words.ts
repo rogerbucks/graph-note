@@ -20,4 +20,12 @@ export const DB_SOURCE_WORDS = {
   'import.too-many': 'The query gave more than {most} rows. Narrow it with where or limit.',
   'import.done': 'Imported {graph} from {file} into {note}.',
   'import.failed': 'The import from {file} failed, so nothing was written: {why}',
+  // why the rows cannot be written, said as the {why} above (db-import.ts)
+  'import.not-graph-name': '{graph} is not a graph name: use letters, digits and _',
+  'import.no-id': 'Row {row} of the things has no id column',
+  'import.same-id': 'Two rows of the things have the id {id}',
+  'import.kind-not-name': 'The kind {kind} of {id} is not a name: use letters, digits and _',
+  'import.link-columns': 'Row {row} of the links needs from, type and to columns',
+  'import.type-not-name': 'The link type {type} is not a name: use letters, digits and _',
+  'import.link-unknown': 'A link names {id}, which the things query did not return',
 } as const;
