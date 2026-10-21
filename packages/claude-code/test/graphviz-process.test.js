@@ -4,7 +4,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { layOut, NODE_MISSING, RENDER_SCRIPT, LAYOUT_TIMEOUT_MS, VERSION_TIMEOUT_MS } from '../src/graphviz-process.ts';
+import { layOut, nodeMissing, RENDER_SCRIPT, LAYOUT_TIMEOUT_MS, VERSION_TIMEOUT_MS } from '../src/graphviz-process.ts';
 
 const DOT = 'digraph { a -> b }';
 const ok = (stdout) => ({ exitCode: 0, stdout, stderr: '' });
@@ -50,15 +50,15 @@ describe('when node is missing', () => {
       tried.push(argv[0]);
       throw new Error('spawn node ENOENT');
     });
-    assert.deepEqual(laid, { why: NODE_MISSING });
-    assert.match(NODE_MISSING, /Node\.js/);
-    assert.match(NODE_MISSING, /install/i);
+    assert.deepEqual(laid, { why: nodeMissing() });
+    assert.match(nodeMissing(), /Node\.js/);
+    assert.match(nodeMissing(), /install/i);
     assert.ok(tried.every((c) => c === 'node'));
   });
 
   test('so is the shell’s "command not found", exit code 127', async () => {
     assert.deepEqual(await layOut([DOT], '/mod', async () => ({ exitCode: 127, stdout: '', stderr: '' })), {
-      why: NODE_MISSING,
+      why: nodeMissing(),
     });
   });
 
@@ -66,7 +66,7 @@ describe('when node is missing', () => {
     const laid = await layOut([DOT], '/mod', async () => {
       throw new Error('process.run was denied by a hook');
     });
-    assert.notEqual(laid.why, NODE_MISSING);
+    assert.notEqual(laid.why, nodeMissing());
     assert.match(laid.why, /^Could not run node: process\.run was denied by a hook/);
   });
 
@@ -93,7 +93,7 @@ describe('when node is missing', () => {
       if (argv[1] === '--version') return ok('v24.1.0\n');
       throw new Error('timed out after 30000 ms');
     });
-    assert.notEqual(laid.why, NODE_MISSING);
+    assert.notEqual(laid.why, nodeMissing());
     assert.match(laid.why, /timed out after 30000 ms/);
   });
 
