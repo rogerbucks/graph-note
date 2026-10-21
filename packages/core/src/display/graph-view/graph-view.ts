@@ -27,8 +27,7 @@ import { Taps, boxIn } from './taps';
 import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
-import { renderTypeStrip } from './type-strip';
-import { renderTable } from './table-view';
+import { drawnApart, renderTypeStrip } from './type-strip';
 import { bindViewportEvents } from './viewport-events';
 import { FullScreen } from './full-screen';
 import { Aids } from './viewer-aids';
@@ -184,10 +183,10 @@ export class GraphView extends Lifecycle {
         'aria-label': word('drawing.of', { graph: this.o.graph, count: this.o.drawn.width ? this.boxes().length : 0 }),
       },
     });
-    // a graph drawn as a table is the plugin's own table; any other, the SVG Graphviz drew (§15)
-    const table = this.o.diagram?.table;
-    if (table) this.table = renderTable(this.viewport, table);
-    else this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
+    // a graph drawn as a table is the plugin's own table; by a plug-in's type, its picture; else Graphviz's SVG (§15)
+    this.table = drawnApart(this.viewport, this.o.diagram);
+    if (!this.table)
+      this.svg = insertSvg(this.viewport, this.o.drawn, this.drawing(), this.o.switches?.state.plan, this.o);
     // the mini-map, the quick-info tooltip and where the kept-open details go (§24)
     this.aids = new Aids(this, {
       o: this.o,
