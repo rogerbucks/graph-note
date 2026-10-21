@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (93)
+## Open (92)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -48,7 +48,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | ARCH-9 | The JavaScript library is private TypeScript sources in an archive | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | ARCH-10 | Three decisions that cost most if left after their wave | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
-| ARCH-12 | Plug-in API is one version string for all future extension points | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
 | UX-2 | Half the manual walk-through could run on the existing Chrome harness | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming and the standalone app) | days |
 | UX-4 | No busy state while a layout runs, and a silent stop after failures | ●●○ | ●●● | fix-later (Wave 7 · Language, theming and the standalone app) | days |
@@ -495,16 +494,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** Each decision is a written requirement with a test flipped to written before the named wave starts; scripts/check-requirements.mjs --done lists them.
 
-### ARCH-12 Plug-in API is one version string for all future extension points
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/plugins.ts`, `packages/core/src/plugins-contract.ts`, `wiki/Writing-a-plug-in.md`.
-
-**Risk:** PLUGIN_API '1' covers exports and theme only; storage, AI providers, diagram types and steps are to 'join one at a time'. Each addition either bumps the one number and refuses every existing plug-in, or ships unversioned.
-
-**Fix:** In P1 (Wave 6) version each extension point in the manifest (exports@1, theme@1). Refuse only the point whose version a plug-in does not match.
-
-**Check:** plugins.test.js: a plug-in built for exports@1 still loads after theme moves to @2.
-
 ### UX-2 Half the manual walk-through could run on the existing Chrome harness
 
 **Who found it:** User experience lead and accessibility specialist. **Where:** `test/a11y-targets-reflow.test.js`, `scripts/targets-reflow.mjs`, `scripts/chrome.mjs`, `RELEASING.md`.
@@ -827,13 +816,13 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 ### API-10 Plug-in API version is one string, no host loads third parties
 
-**Who found it:** API design expert. **Where:** `packages/core/src/plugins.ts`, `packages/core/src/plugins-contract.ts`, `wiki/Writing-a-plug-in.md`.
+**Who found it:** API design expert. **Where:** `examples/sample-plugin/plugin.js`, `packages/core/src/plugin-versions.ts`, `packages/core/src/plugins-contract.ts`, `packages/core/src/plugins.ts`, `wiki/Writing-a-plug-in.md`.
 
 **Risk:** PLUGIN_API is '1' and a plug-in built for any other value is refused. So an additive change to the interface would orphan every plug-in unless the version never moves. The registry and two extension points (exports, theme) are in the public API and the wiki. But no host was found that loads a plug-in from outside the bundle, so the contract is untested against a real third party.
 
-**Fix:** In Wave 6 make `api` a major.minor pair, where the host accepts an equal major and lower-or-equal minor. Ship one out-of-tree sample plug-in that CI loads through each host's real path.
+**Fix:** Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version. A sample plug-in outside the packages runs in a worker in CI and passes each contract. Left: each host loads an outside plug-in through its real path, the browser page and Obsidian.
 
-**Check:** A CI step builds the sample plug-in and runs plugins-contract.ts against it in the browser page and the Obsidian harness.
+**Check:** test/sample-plugin.test.js runs the sample in a worker now. The browser page and the Obsidian harness load it through their real paths once hosts load outside plug-ins.
 
 ### API-11 Schema @1 is a name suffix, not a version negotiation
 
@@ -1035,7 +1024,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
 
-## Done or accepted (25)
+## Done or accepted (26)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1045,6 +1034,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
+| ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
