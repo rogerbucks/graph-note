@@ -8,6 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { path, read, readJSON } from './repository/repo.js';
 
 // a run inside another test run would report to it, not print its own report; and each case sets its own ceilings
@@ -144,6 +145,26 @@ describe('a test run under the ceiling', () => {
       assert.match(r.stderr, /^run-ceiling: THOUGHTKNOT_TEST_(MEMORY_MB|MINUTES) must be a positive number[^\n]*\n$/);
       assert.ok(!existsSync(join(dir, 'ran')), 'the command was not run');
     }
+  });
+
+  test('a sandbox that refuses ps with EPERM leaves the run to finish under the time and heap ceilings', () => {
+    const dir = scratch({
+      'refuse-ps.mjs':
+        "import { ChildProcess } from 'node:child_process';\n" +
+        'const orig = ChildProcess.prototype.spawn;\n' +
+        'ChildProcess.prototype.spawn = function (options) {\n' +
+        "  if (options?.file === 'ps') throw Object.assign(new Error('spawn EPERM'), { code: 'EPERM' });\n" +
+        '  return orig.call(this, options);\n' +
+        '};\n',
+      'slow.js': "setTimeout(() => { process.stdout.write('done\\n'); process.exit(0); }, 700);\n",
+    });
+    const r = spawnSync(
+      process.execPath,
+      ['--import', pathToFileURL(join(dir, 'refuse-ps.mjs')).href, RUNNER, 'node', 'slow.js'],
+      { cwd: dir, env: CLEAN_ENV, encoding: 'utf8', timeout: 60000 },
+    );
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(r.stdout, 'done\n');
   });
 });
 
