@@ -10,7 +10,7 @@ import { items } from './block-items.ts';
 import { STYLE } from './layout.ts';
 import { quoted } from './lock.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
-import { SHOW_FOR, TREE_ONLY } from './style-checks.ts';
+import { showFor, treeOnly } from './style-checks.ts';
 import {
   ARROWHEADS,
   DIAGRAM_TYPES,
@@ -155,7 +155,7 @@ function shownRefusal(s: ShownWrite): string | null {
 /** Why a property cannot be switched on or off, or null. */
 function showRefusal(s: ShowWrite): string | null {
   if (!s.property) return 'a Show names the property to show';
-  if ([s.kind, s.thing, s.type].filter(Boolean).length !== 1) return SHOW_FOR;
+  if ([s.kind, s.thing, s.type].filter(Boolean).length !== 1) return showFor();
   if (!(INLINE as readonly string[]).includes(s.inline)) return `inline must be ${orList(INLINE)}`;
   if (s.view === '') return 'a view needs a name';
   return null;
@@ -172,7 +172,7 @@ function arrowsRefusal(a: ArrowsWrite): string | null {
 /** Why a diagram type cannot be chosen so, or null. */
 function diagramRefusal(d: DiagramWrite): string | null {
   if (!(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return `type must be ${orList(DIAGRAM_TYPES)}`;
-  if (d.relationship !== undefined && d.type !== 'tree') return TREE_ONLY;
+  if (d.relationship !== undefined && d.type !== 'tree') return treeOnly();
   if (d.relationship === '') return 'a relationship type needs a name';
   if (d.view === '') return 'a view needs a name';
   return null;

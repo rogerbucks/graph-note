@@ -17,6 +17,7 @@ import { settle } from './style-conflicts.ts';
 import { emptyStyle } from './style-graph.ts';
 import type { LegendEntry, Outside, Routing, StyleGraph, StyleScope, StyleTarget, ThingLook } from './style-graph.ts';
 import { isSpace, S } from './whitespace.ts';
+import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
 import type { Written } from './written-things.ts';
 
@@ -92,8 +93,8 @@ function links(texts: string[], blocks: number[], graph: string): Problem[] {
       block,
       line: blanked.slice(0, m.index).split('\n').length,
       severity: 'error',
-      message: 'a link means nothing in a style graph',
-      fix: 'remove the link',
+      message: word('styling.link'),
+      fix: word('styling.link.fix'),
     }));
   });
 }
@@ -124,15 +125,14 @@ export function readStyle(
   const big = textTooLarge(blocks.map((i) => texts[i] ?? ''));
   if (big?.reason === 'too-large')
     return fail(
-      `the style is too large to read (${big.count} ${big.limit === 'text-lines' ? 'lines' : 'bytes'}, over ${big.most}), so the graph is drawn in the locked style`,
-      'make the style smaller',
+      word(big.limit === 'text-lines' ? 'styling.too-large-lines' : 'styling.too-large-bytes', {
+        size: String(big.count),
+        most: String(big.most),
+      }),
+      word('styling.too-large.fix'),
     );
   const g = reading.whole[graph] ?? reading.world[graph];
-  if (!g)
-    return fail(
-      `there is no graph ${graph} in this note to style`,
-      `write graph ${graph}, or style a graph the note has`,
-    );
+  if (!g) return fail(word('styling.no-graph', { graph }), word('styling.no-graph.fix', { graph }));
   const read = readBlocks(texts, [], REREAD_BUDGET, (t) => (styleOf(t) === graph ? 'data' : null));
   const problems = read.problems.filter((p) => p.severity !== 'hint').map((p) => ({ ...p, graph }));
   // where each thing is written: the first block and line that write it
@@ -174,8 +174,8 @@ export function readStyle(
             block,
             line: 1,
             severity: 'warning',
-            message: `this style block takes the data graph ${own}'s name; it needs a name of its own, never a data graph's`,
-            fix: `name it ${graph}_style: // graph: ${graph}_style · STYLE ${graph}`,
+            message: word('styling.named-as-data', { own }),
+            fix: word('styling.named-as-data.fix', { graph }),
           },
         ]
       : [];

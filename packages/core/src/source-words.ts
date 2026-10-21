@@ -17,6 +17,7 @@ import { READING_SOURCE_WORDS } from './reading-source-words.ts';
 import { SERVER_SOURCE_WORDS } from './server-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
 import { SHORTCUT_SOURCE_WORDS } from './shortcut-source-words.ts';
+import { STYLE_SOURCE_WORDS } from './style-source-words.ts';
 
 /** The source words, by key, in UK English: what every translation gives again. */
 export const SOURCE_WORDS = {
@@ -379,10 +380,10 @@ export const SOURCE_WORDS = {
   ...BLOCKS_SOURCE_WORDS,
   // the Obsidian host's own commands and notices (host-source-words.ts)
   ...HOST_SOURCE_WORDS,
-  // the Claude Code mod's pane and /graph command (cc-source-words.ts)
+  // the Claude Code mod's pane and /graph command, and its editor server's answers (cc-, server-source-words.ts)
   ...CC_SOURCE_WORDS,
-  // the editor server's answers to the page, and why it will not start (server-source-words.ts)
   ...SERVER_SOURCE_WORDS,
-  // the core's problems found while reading a note, and their fixes (reading-source-words.ts)
+  // the core's problems found while reading a note or checking its style (reading-, style-source-words.ts)
   ...READING_SOURCE_WORDS,
+  ...STYLE_SOURCE_WORDS,
 } as const;
