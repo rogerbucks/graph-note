@@ -4,6 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { commandContract, exporterContract, sampleExports, storageBackendContract } from '../src/plugins-contract.ts';
+import { SAMPLE_GRAPH, sourceContract, stepContract } from '../src/plugins-contract.ts';
 import { pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS } from '../src/export-data.ts';
 import { memoryStorage } from '../src/note-storage.ts';
@@ -82,5 +83,45 @@ describe('the data export contract', () => {
       'it is named under its plug-in’s own id, and offered under a title on one line',
     ]);
     assert.deepEqual(fails({ ...go, run: undefined }), ['it can be run']);
+  });
+});
+
+/** The names of the checks `checks` fail. */
+const failing = async (checks) => {
+  const out = [];
+  for (const c of checks)
+    try {
+      await c.run();
+    } catch {
+      out.push(c.name);
+    }
+  return out;
+};
+
+describe('the graph source and step contracts', () => {
+  const source = { scheme: 'acme', title: 'Acme', read: async () => SAMPLE_GRAPH };
+  const step = { id: 'acme.db.same', title: 'Same', run: (inputs) => inputs[0] };
+
+  test('a source and a step that keep their promises pass every check', async () => {
+    assert.deepEqual(await failing(sourceContract(source, 'orders')), []);
+    assert.deepEqual(await failing(stepContract(step, 'acme.db')), []);
+  });
+
+  test('a source that gives no graph text, or one past the read limits, fails the check that holds it', async () => {
+    const wanted = ['it gives back a graph’s text for a place, within the read limits'];
+    assert.deepEqual(await failing(sourceContract({ ...source, read: () => 'text' }, 'x')), wanted);
+    const big = { text: 'x\n'.repeat(20_000) };
+    assert.deepEqual(await failing(sourceContract({ ...source, read: () => big }, 'x')), wanted);
+  });
+
+  test('a step not under its plug-in’s id, or one that gives a different graph each time, fails', async () => {
+    let n = 0;
+    const changing = { ...step, run: () => ({ text: `// graph: g${n++}` }) };
+    assert.deepEqual(await failing(stepContract(changing, 'acme.db')), [
+      'it gives back the same graph each time for the same graphs',
+    ]);
+    assert.deepEqual(await failing(stepContract({ ...step, id: 'other.same' }, 'acme.db')), [
+      'it is named under its plug-in’s own id, and offered under a title on one line',
+    ]);
   });
 });

@@ -58,6 +58,32 @@ export interface PluginPanel {
   render(el: PanelRoot): void;
 }
 
+/** A graph as a source or step gives it back: its text, as a .gql file holds it, and its class, if it says one. */
+export interface GivenGraph {
+  text: string;
+  classification?: string;
+}
+
+/** A place graphs are read from that a plug-in adds, such as a database; what it gives back is a joined graph. */
+export interface PluginSource {
+  /** The word it is chosen by, lower case: `acme`. A graph is read from it by a place, as `acme:<target>`. */
+  scheme: string;
+  /** What it is called where it is offered, in the host's language. */
+  title: string;
+  /** The graph at `target`. */
+  read: (target: string) => GivenGraph | Promise<GivenGraph>;
+}
+
+/** A step a plug-in adds that makes a graph from others, such as a merge; what it gives back is a joined graph. */
+export interface PluginStep {
+  /** Its id, under its plug-in's own: `acme.db.merge`. */
+  id: string;
+  /** What it is called where it is offered, in the host's language. */
+  title: string;
+  /** The graph made from `inputs`, each with its text and class. */
+  run: (inputs: readonly GivenGraph[]) => GivenGraph | Promise<GivenGraph>;
+}
+
 /** The host's abilities a plug-in may ask for in its manifest, each given only to one that names it. */
 export const HOST_ABILITIES = ['notice', 'settings', 'secrets', 'files'] as const;
 
@@ -115,5 +141,24 @@ export function panelProblem(c: PluginPanel, pluginId: string, taken: Map<string
   if (taken.has(c.id)) return `the panel "${c.id}" is added already`;
   if (!c.title.trim()) return `the panel "${c.id}" has no title`;
   if (typeof c.render !== 'function') return `the panel "${c.id}" draws nothing`;
+  return null;
+}
+
+/** Why a graph source a plug-in adds is refused, or null when it is accepted. */
+export function sourceProblem(s: PluginSource, taken: Map<string, string>): string | null {
+  if (!WORD.test(s.scheme)) return `the source "${s.scheme}" is not named by a lower-case word`;
+  if (taken.has(s.scheme)) return `the source "${s.scheme}" is already added by ${taken.get(s.scheme)}`;
+  if (!s.title.trim()) return `the source "${s.scheme}" has no title`;
+  if (typeof s.read !== 'function') return `the source "${s.scheme}" reads nothing`;
+  return null;
+}
+
+/** Why a graph step the plug-in `pluginId` adds is refused, or null when it is accepted. */
+export function stepProblem(s: PluginStep, pluginId: string, taken: Map<string, string>): string | null {
+  const word = s.id.startsWith(`${pluginId}.`) ? s.id.slice(pluginId.length + 1) : '';
+  if (!WORD.test(word)) return `the step "${s.id}" is not named ${pluginId}.<word>`;
+  if (taken.has(s.id)) return `the step "${s.id}" is added already`;
+  if (!s.title.trim()) return `the step "${s.id}" has no title`;
+  if (typeof s.run !== 'function') return `the step "${s.id}" does nothing`;
   return null;
 }
