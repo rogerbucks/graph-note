@@ -7,7 +7,7 @@ export default {
   id: 'example.sample',
   version: '1.0.0',
   api: '1.1',
-  uses: ['sources@1.0', 'diagrams@1.0', 'commands@1.0', 'theme@1.0'],
+  uses: ['sources@1.0', 'steps@1.0', 'diagrams@1.0', 'commands@1.0', 'theme@1.0'],
   register(points) {
     points.sources.add({
       scheme: 'sample',
@@ -16,6 +16,20 @@ export default {
         text: `// graph: ${target}\n(start:Step {name: 'Start'}),\n(end:Step {name: 'End'}),\n(start)-[:THEN]->(end)`,
         classification: 'Public',
       }),
+    });
+    points.steps.add({
+      id: 'example.sample.chain',
+      title: 'Chain',
+      // each thing of the first graph given linked to the next, in the order written, by NEXT
+      run: (inputs) => {
+        const things = (inputs[0]?.text ?? '')
+          .split('\n')
+          .filter((line) => /^\(\w+:/.test(line))
+          .map((line) => line.replace(/,$/, ''));
+        const ids = things.map((line) => /^\((\w+)/.exec(line)[1]);
+        const links = ids.slice(1).map((id, i) => `(${ids[i]})-[:NEXT]->(${id})`);
+        return { text: ['// graph: chain', [...things, ...links].join(',\n')].join('\n') };
+      },
     });
     points.diagrams.add({
       type: 'example.sample.row',

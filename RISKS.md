@@ -820,9 +820,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Risk:** PLUGIN_API is '1' and a plug-in built for any other value is refused. So an additive change to the interface would orphan every plug-in unless the version never moves. The registry and two extension points (exports, theme) are in the public API and the wiki. But no host was found that loads a plug-in from outside the bundle, so the contract is untested against a real third party.
 
-**Fix:** Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Obsidian loads one from its plug-ins folder or a link, off until turned on (outside-plugins.ts). Its commands, graph sources and diagram types work there. Left: its steps in Obsidian, and the browser page.
+**Fix:** Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Obsidian loads one from its plug-ins folder or a link, off until turned on (outside-plugins.ts). Its commands, graph sources, diagram types and steps work there. Left: the browser page.
 
-**Check:** test/sample-plugin.test.js runs the sample in a worker. packages/obsidian/test/outside-plugins.test.js loads it through main.js, outside-plugins-sources.test.js draws its source and outside-plugins-diagrams.test.js its diagram type. The browser page is to come.
+**Check:** test/sample-plugin.test.js runs the sample in a worker. packages/obsidian/test/outside-plugins.test.js loads it through main.js. The outside-plugins-sources, -diagrams and -steps tests use its other points there. The browser page is to come.
 
 ### API-11 Schema @1 is a name suffix, not a version negotiation
 

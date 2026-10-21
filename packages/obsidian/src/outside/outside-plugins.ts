@@ -6,8 +6,8 @@
 // - each runs in a worker of its own, sealed before the file's first line runs (packages/core/src/plugin-outside.ts);
 // - its commands join Obsidian's, named as the plug-in names them;
 // - its graph sources are read by a block written `· FROM sample:trip` (plugin_source_from);
-// - its diagram types draw a graph whose style graph chooses one (outside-diagrams.ts). Its other points join as the
-//   host draws them.
+// - its diagram types draw a graph whose style graph chooses one (outside-diagrams.ts);
+// - its steps run from a step block that names one (step-block.ts). Its other points join as the host draws them.
 import { Notice, TFile } from 'obsidian';
 import type { Plugin } from 'obsidian';
 import { outsidePlugin, outsideProblem, pluginRegistry, READ_LIMITS, word } from '@thoughtknot/core';
@@ -15,8 +15,10 @@ import type {
   DiagramSpace,
   GraphShape,
   IsolatedPlugin,
+  JoinedGraph,
   PluginPort,
   PluginRegistry,
+  PluginResult,
   SourceFetched,
 } from '@thoughtknot/core';
 import { pluginWorker } from 'thoughtknot:plugin-worker';
@@ -215,6 +217,17 @@ export class OutsidePlugins {
       const r = await registry.drawDiagram(type, shape, space);
       return r.ok ? { svg: r.value } : { why: r.message };
     }
+    return null;
+  }
+
+  /** The graph the step `id` makes of `inputs`, from the plug-in running that adds it; null when none running does. */
+  async runStep(
+    id: string,
+    inputs: readonly JoinedGraph[],
+    levels: readonly string[],
+  ): Promise<PluginResult<JoinedGraph> | null> {
+    for (const { registry } of this.running.values())
+      if (registry.graphSteps().some((s) => s.id === id)) return registry.runStep(id, inputs, levels);
     return null;
   }
 

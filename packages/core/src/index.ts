@@ -151,6 +151,7 @@ export { runStep, stepOf } from './steps.ts';
 export type { Step as GraphStep, StepFault, StepOutput, StepRun } from './steps.ts';
 export { givenLabel } from './steps-input.ts';
 export type { StepGiven, StepPoint } from './steps-input.ts';
+export { runPluginStep, type RunPluginStep } from './steps-plugin.ts';
 export { DEPARTURES, underStrictness, toStandard, standardBlocks } from './strictness.ts';
 export type { Converted, Departure, Strictness, StrictnessSettings } from './strictness.ts';
 export { OPTIONS, DEFAULT_SETTINGS, settingsFrom, indentText, aiModel } from './settings.ts';
@@ -223,8 +224,7 @@ export type { CompanionInfo } from './export-note.ts';
 export { writeSafely } from './export-write.ts';
 export type { SafeWrite, WriteOps } from './export-write.ts';
 export type { Choice, PaneWrite } from './pane.ts';
-export { completenessReport } from './completeness.ts';
-export type { CompletenessReport, RuleReport } from './completeness.ts';
+export { completenessReport, type CompletenessReport, type RuleReport } from './completeness.ts';
 export {
   DeferredNotDeclared,
   declareDeferred,
