@@ -30,6 +30,8 @@ export default defineConfig([
       // the Claude Code mod runs in its own environment, typed by Claude Code's API. `claude plugin validate`, its own
       // type check and `claude plugin test` check it (packages/claude-code/GUIDE.md)
       'packages/claude-code/mod/',
+      // the desktop app's Rust build, with the scripts Tauri writes into it
+      'packages/app/src-tauri/',
     ],
   },
   ...obsidianmd.configs.recommended,
@@ -63,7 +65,8 @@ export default defineConfig([
     // and none of Obsidian's DOM helpers. So the rules that exist for Obsidian's popout windows and its `createEl`
     // family mean nothing there (packages/claude-code/GUIDE.md). Every other rule holds, the ones against HTML strings
     // among them.
-    files: ['packages/claude-code/page/**/*.ts'],
+    // The desktop app's pages are the same kind of page, in the app's own window (packages/app/GUIDE.md).
+    files: ['packages/claude-code/page/**/*.ts', 'packages/app/src/**/*.ts'],
     rules: { 'obsidianmd/prefer-create-el': 'off', 'obsidianmd/no-global-this': 'off' },
   },
   {

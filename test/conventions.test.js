@@ -14,7 +14,7 @@ import { exists, read, readJSON, path, walk, ROOT } from './repository/repo.js';
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
 
-const PACKAGES = ['packages/core', 'packages/graph-spec', 'packages/obsidian', 'packages/claude-code'];
+const PACKAGES = ['packages/core', 'packages/graph-spec', 'packages/obsidian', 'packages/claude-code', 'packages/app'];
 const PYTHON = 'python/graph_spec';
 const CODE = /\.(ts|js|mjs)$/;
 /** A package's folders of code: its source, its command-line tools, the browser harness, the editor's server and page. */

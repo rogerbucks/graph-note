@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The main window may call the app's seven folder commands and Tauri's core events, nothing else.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "allow-pick-folder",
+    "allow-read-dir",
+    "allow-read-text",
+    "allow-write-text",
+    "allow-remove-file",
+    "allow-make-dir",
+    "allow-write-new"
+  ]
+}

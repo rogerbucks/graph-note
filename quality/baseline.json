@@ -33,7 +33,9 @@
     "journey_steps_obsidian": 9,
     "journey_interactions_obsidian": 9,
     "journey_steps_claude_code": 6,
-    "journey_interactions_claude_code": 6
+    "journey_interactions_claude_code": 6,
+    "journey_steps_app": 6,
+    "journey_interactions_app": 6
   },
   "details": {
     "instructions": {
