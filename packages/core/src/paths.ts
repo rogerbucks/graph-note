@@ -303,6 +303,7 @@ function missingStep(reading: PathReading, graph: string, path: WalkedPath, x: G
     block: p.block,
     line: p.line,
     severity: p.severity,
+    kind: 'broken-links',
     message: `the path ${path.title} steps through ${x.key}, which is not in graph ${graph}${said}`,
     fix: near.length
       ? `change ${x.key} to ${or(near)}, remove the step, or restore ${x.key}`
