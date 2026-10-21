@@ -3,6 +3,7 @@
 // page last had. It uses the page's own token, which is the only key that writes. The server compares the version under
 // its lock and refuses a stale one (409), keeping what was sent as a draft. Claude's key reaches no route this file
 // calls.
+import { word } from '../../core/src/words.ts';
 
 /** A line of the change stream: the note as it is now, or why it is no longer sent. */
 export type FollowLine = { version: string; text: string } | { gone: string };
@@ -37,8 +38,8 @@ export function noteCalls(token: string, fetcher: typeof fetch) {
         ...(theirs ? { theirs: { text: theirs.text, version: theirs.version } } : {}),
         why:
           reply.status === 409
-            ? 'The note changed while you were deciding, so nothing was written. It is shown again as it now is.'
-            : `The editor server said ${reply.status}, so nothing was written.`,
+            ? word('page.changed-while-deciding')
+            : word('page.write-refused', { status: reply.status }),
       };
     },
     /** Keeps what was typed as the note's draft, outside the vault; an empty text clears it. Resolves to whether it was kept. */

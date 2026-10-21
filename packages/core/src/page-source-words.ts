@@ -1,6 +1,6 @@
 // The browser page's own words, in UK English (editor spec §42, words_catalogue). They are its changes and review
-// sections and its landmarks, which only the page shows (packages/claude-code/page). source-words.ts keeps them with
-// every other word.
+// sections, its landmarks, and what it says of the note, the server and an export. Only the page shows them
+// (packages/claude-code/page). source-words.ts keeps them with every other word.
 
 /** The browser page's own words, by key, in UK English. */
 export const PAGE_SOURCE_WORDS = {
@@ -45,4 +45,33 @@ export const PAGE_SOURCE_WORDS = {
   'review.none': 'The repository has no pull requests or commits to review.',
   'page.menu': 'Menu',
   'page.note': 'The note',
+  'page.open-from-link': 'Open this page from the link Claude Code gave: it carries what the editor needs.',
+  'page.not-written': 'Nothing was written: {why}',
+  'page.note-gone': 'The note is no longer shown: {why}',
+  'page.note-changed': 'The note changed, and is shown again as it now is.',
+  'page.follow-stopped': 'The editor stopped sending changes to the note.',
+  'page.changed-while-deciding':
+    'The note changed while you were deciding, so nothing was written. It is shown again as it now is.',
+  'page.write-refused': 'The editor server said {status}, so nothing was written.',
+  'page.server-said': 'The editor server said {status}.',
+  'page.server-said-why': 'The editor server said {status}: {why}',
+  'page.note-deleted':
+    'The note was deleted while you were typing. What you typed is kept as a draft by the editor, and is offered again if the note comes back.',
+  'page.note-not-open': 'the note is not open',
+  'page.block-changed': 'the block has changed since the pane read it',
+  'page.no-proposal': 'the note holds no proposal {id}',
+  'page.no-graph': 'No graph in this note.',
+  'page.too-large': 'This note is too large to read here.',
+  'page.text-only': 'This graph is shown as text only: it is over what is drawn here.',
+  'page.alt': '{graph}: {things}, {links}',
+  'page.things': { one: '{count} thing', other: '{count} things' },
+  'page.links': { one: '{count} link', other: '{count} links' },
+  'page.text-version': 'Text version of graph {graph}',
+  'page.no-worker': 'The layout worker could not be started, so the graph is shown as text.',
+  'page.export-not-sent': 'The export could not be sent to the editor: {why}. Nothing was saved.',
+  'page.export-stopped': 'The export was stopped before the layout finished. Nothing was saved. Try again.',
+  'page.export-not-made': 'The export was not made: {why}. Nothing was saved.',
+  'page.too-large-png':
+    'The drawing is too large to draw as a PNG here ({width} by {height}), even across pages; export it as SVG.',
+  'page.png-too-large': 'the image is too large for this browser to draw as a PNG; export it as SVG',
 } as const;

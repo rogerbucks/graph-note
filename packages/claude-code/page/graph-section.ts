@@ -7,14 +7,13 @@ import { gqlBlocks } from '../../core/src/blocks.ts';
 import { readNote } from '../../core/src/drawing.ts';
 import type { LayoutRunner } from '../../core/src/layout-worker.ts';
 import { TEXT_VERSION_ID, textVersionSection } from './text-version.ts';
+import { word } from '../../core/src/words.ts';
 
 /** What the page says for a note with no graph in it. */
-export const NO_GRAPH = 'No graph in this note.';
+export const noGraph = (): string => word('page.no-graph');
 
 /** The query that says the system is in its dark scheme. */
 export const DARK = '(prefers-color-scheme: dark)';
-
-const counted = (n: number, noun: string) => `${n} ${noun}${n === 1 ? '' : 's'}`;
 
 /** Draws the first graph of `note` into `root`, and keeps it drawn in the scheme the system is in. */
 export async function showGraph(
@@ -27,9 +26,13 @@ export async function showGraph(
   const reading = readNote(gqlBlocks(note).map((b) => b.text));
   const [drawing] = reading.graphs.values();
   const say = (text: string) => root.replaceChildren(Object.assign(doc.createElement('p'), { textContent: text }));
-  if (!drawing) return say(reading.tooLarge ? 'This note is too large to read here.' : NO_GRAPH);
+  if (!drawing) return say(reading.tooLarge ? word('page.too-large') : noGraph());
 
-  const alt = `${drawing.graph}: ${counted(drawing.boxes.length, 'thing')}, ${counted(drawing.links.length, 'link')}`;
+  const alt = word('page.alt', {
+    graph: drawing.graph,
+    things: word('page.things', { count: drawing.boxes.length }),
+    links: word('page.links', { count: drawing.links.length }),
+  });
   const words = textVersionSection(doc, drawing);
   const picture = doc.createElement('div');
   picture.setAttribute('class', 'gn-drawing');
@@ -44,7 +47,7 @@ export async function showGraph(
       if ('reason' in drawn)
         return void picture.replaceChildren(
           Object.assign(doc.createElement('p'), {
-            textContent: 'This graph is shown as text only: it is over what is drawn here.',
+            textContent: word('page.text-only'),
           }),
         );
       if (shown) win.URL.revokeObjectURL(shown);
