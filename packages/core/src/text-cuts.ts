@@ -31,3 +31,12 @@ export function trimChars(text: string, chars: string): string {
   while (end > start && chars.includes(text[end - 1] ?? '')) end--;
   return text.slice(start, end);
 }
+
+/** Where the quoted string that starts at `at` ends, just after its closing quote. -1 when it is not closed. */
+export function quoteEnd(text: string, at: number): number {
+  for (let i = at + 1; i < text.length; i++) {
+    if (text[i] === '\\') i++;
+    else if (text[i] === "'") return i + 1;
+  }
+  return -1;
+}

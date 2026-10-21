@@ -11,6 +11,7 @@ import { isRefusedKind, isReservedName, kindRefusal, nameRefusal } from './reser
 import { isSpace, trimStart } from './whitespace.ts';
 import { word } from './words.ts';
 import type { WordKey } from './words.ts';
+import { quoteEnd } from './text-cuts.ts';
 
 /** The five kinds of view (spec §7): a hand-picked set, everything near a thing, how one thing reaches another, only some kinds, a walked path. */
 export const VIEW_KINDS = ['picked', 'near', 'reaches', 'kinds', 'path'] as const;
@@ -68,14 +69,6 @@ class Fault extends Error {
 
 const TOKEN = /(\d+)|([A-Za-z_][A-Za-z0-9_]*)|(->)|([()[\]{}:,.=|;-])/y;
 
-/** Where the quoted string that starts at `at` ends, just after its closing quote. -1 when it is not closed. */
-function quoteEnd(text: string, at: number): number {
-  for (let i = at + 1; i < text.length; i++) {
-    if (text[i] === '\\') i++;
-    else if (text[i] === "'") return i + 1;
-  }
-  return -1;
-}
 const ESCAPES: Record<string, string> = {
   n: '\n',
   r: '\r',
