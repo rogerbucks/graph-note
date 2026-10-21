@@ -135,6 +135,21 @@ A fix to a security risk raised from 20 Oct 2026 carries three things:
 `node scripts/risk-register.mjs --check` fails a fixed security risk that names no rule, or names a file that is gone.
 So deleting a rule stops the release until a person puts it back or replaces it.
 
+### Each change, before it merges
+
+GitHub's code scanning stops a pull request only for a problem the pull request adds. So CI's `code-scan` job runs the
+same scan on all the code, and `scripts/code-scan.mjs` fails on any security problem it finds (#849). Its log names
+each kind and how many, never the file or the line, as the repository is public.
+
+To see where, run the scan yourself:
+
+1. Download `codeql-bundle-linux64.tar.zst` from the `github/codeql-action` releases, and unpack it.
+2. `codeql database create db --language=javascript --source-root .`
+3. `codeql database analyze db codeql/javascript-queries:codeql-suites/javascript-code-scanning.qls
+   --format=sarif-latest --output=out/javascript.sarif`
+4. `node scripts/code-scan.mjs out`, or open the file. Built files such as `main.js` are not in a checkout, so leave
+   them out of the folder you scan.
+
 ## Accessibility walk-through, every release
 
 The spec (§11) says every interface, in every host, meets WCAG 2.2 Level AA. A new host meets it before its first

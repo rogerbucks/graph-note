@@ -664,6 +664,8 @@ These test behaviour across modules, or the repository itself, so they are named
   - It wakes Claude only when a comment names Sara, at most once a day. Claude writes a draft and has no GitHub tools.
   - Only the post job may write, and only to discussions. It checks out nothing and runs no code of the repository.
   - Only the owner, members and collaborators wake it. A separate job checks the draft from a fresh checkout of main.
+- `test/code-scanning-fixes.test.js` — the code scanning alerts of #849, each fixed at its cause (risks SEC-11 to
+  SEC-15). Each slow pattern is timed on text made to slow it, and each one-pass removal is fed nested pieces.
 - `test/claude-workflows.test.js` — every workflow that runs Claude (risk TRUST-5). A comment wakes Claude only when
   its author is the owner, a member or a collaborator. No step after Claude, in Claude's own job, runs repository code.
   A file outside the checkout that Claude must read sits in a folder named by `--add-dir`.

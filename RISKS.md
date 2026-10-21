@@ -1024,7 +1024,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
 
-## Done or accepted (26)
+## Done or accepted (31)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1054,3 +1054,8 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-14 | Plug-ins run with the host's full powers | done | #882; kept out by `packages/core/test/plugins-isolated.test.js` |
 | TRUST-15 | A plug-in given secrets could read every secret, AI keys too | done | #856; kept out by `packages/core/test/plugins-limits.test.js` |
 | TRUST-16 | The files ability reaches every note, whatever its class | done | #867; kept out by `packages/core/test/plugins-limits.test.js` |
+| SEC-11 | Patterns that run slow on text made for them | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-12 | Comments and tags taken out in one pass | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-13 | A test checked a web address by part of its text | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-14 | A name in a graph could reach an object's prototype | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-15 | Page code built from text without escaping | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |

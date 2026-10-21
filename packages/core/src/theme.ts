@@ -6,6 +6,7 @@
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { STYLE } from './layout.ts';
 import { PALETTES } from './palette.ts';
+import { removeAll } from './text-cuts.ts';
 import type { Palette } from './palette.ts';
 
 /**
@@ -67,7 +68,8 @@ export function themed(svg: string, kinds: string[], readings: string[], palette
   const ls = STYLE.caption_letter_spacing * STYLE.kind_font_size,
     spacing = `<text letter-spacing="${fixed(ls, 2)}" `;
   // the kind caption is in capitals: tracked out a little, as capitals need, and kept centred
-  svg = svg.replace(/(<text[^>]*fill="#0000fe"[^>]*>)([^<]*)<\/text>/g, (_, open: string, caption: string) => {
+  svg = svg.replace(/(<text\b[^>]*>)([^<]*)<\/text>/g, (whole: string, open: string, caption: string) => {
+    if (!open.includes('fill="#0000fe"')) return whole;
     let tag = open;
     const n = [...caption].length;
     if (tag.includes('text-anchor="start"'))
@@ -86,7 +88,8 @@ export function themed(svg: string, kinds: string[], readings: string[], palette
     }
     return style.length ? tag.replace(' ', ` style="${style.join(';')}" `) : tag;
   });
-  svg = svg.replace(/<\?xml[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>|<!--[\s\S]*?-->|<title>[\s\S]*?<\/title>/g, '');
+  // taken out until none is left: one pass could join the pieces round a removed part into a new one
+  svg = removeAll(svg, /<\?xml[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>|<!--[\s\S]*?-->|<title>[\s\S]*?<\/title>/g);
   const m = /<svg width="([\d.]+)pt" height="([\d.]+)pt"/.exec(svg);
   if (m)
     svg = svg.replace(

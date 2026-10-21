@@ -66,7 +66,16 @@ class Fault extends Error {
   }
 }
 
-const TOKEN = /('(?:[^'\\]|\\[\s\S])*')|(\d+)|([A-Za-z_][A-Za-z0-9_]*)|(->)|([()[\]{}:,.=|;-])/y;
+const TOKEN = /(\d+)|([A-Za-z_][A-Za-z0-9_]*)|(->)|([()[\]{}:,.=|;-])/y;
+
+/** Where the quoted string that starts at `at` ends, just after its closing quote. -1 when it is not closed. */
+function quoteEnd(text: string, at: number): number {
+  for (let i = at + 1; i < text.length; i++) {
+    if (text[i] === '\\') i++;
+    else if (text[i] === "'") return i + 1;
+  }
+  return -1;
+}
 const ESCAPES: Record<string, string> = {
   n: '\n',
   r: '\r',
@@ -100,20 +109,19 @@ function lex(query: string): Tok[] {
       at++;
       continue;
     }
+    // a quoted string is read by hand, one character at a time, so a long unclosed one costs no more than its length
+    if (text[at] === "'") {
+      const end = quoteEnd(text, at);
+      if (end < 0) throw new Fault(word('views.profile.unclosed', { start: text.slice(at, at + 12).trim() }));
+      out.push({ kind: 'str', text: unquote(text.slice(at, end)) });
+      at = end;
+      continue;
+    }
     TOKEN.lastIndex = at;
     const m = TOKEN.exec(text);
-    if (!m)
-      throw new Fault(
-        text[at] === "'"
-          ? word('views.profile.unclosed', { start: text.slice(at, at + 12).trim() })
-          : word('views.profile.symbol', { symbol: text[at] ?? '' }),
-      );
+    if (!m) throw new Fault(word('views.profile.symbol', { symbol: text[at] ?? '' }));
     at = TOKEN.lastIndex;
-    out.push(
-      m[1] !== undefined
-        ? { kind: 'str', text: unquote(m[1]) }
-        : { kind: m[2] !== undefined ? 'num' : m[3] !== undefined ? 'word' : 'sym', text: m[0] },
-    );
+    out.push({ kind: m[1] !== undefined ? 'num' : m[2] !== undefined ? 'word' : 'sym', text: m[0] });
   }
   return out;
 }

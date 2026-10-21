@@ -8,7 +8,11 @@ function lensBuckets(g, rule) {
   );
   if (!m) return null;
   const [, v, label, whens, other] = m,
-    arms = [...whens.matchAll(/WHEN (.*?) THEN '([^']*)'\s*/g)].map((a) => [a[1], a[2]]);
+    // each arm read on its own, anchored, so text with many WHENs and no THEN costs no more than its length
+    arms = whens
+      .split(/(?=WHEN )/)
+      .map((arm) => /^WHEN (.*?) THEN '([^']*)'\s*$/.exec(arm))
+      .map((a) => (a ? [a[1], a[2]] : ['', '']));
   if (arms.map(([c, b]) => `WHEN ${c} THEN '${b}'`).join(' ') !== whens.trim().replace(/\s+/g, ' ')) return null;
   const test = (cond, p) => {
     for (const part of cond.split(/\s+AND\s+/)) {

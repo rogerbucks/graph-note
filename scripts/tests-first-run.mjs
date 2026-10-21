@@ -95,8 +95,13 @@ function runJs(dir, file) {
  * (`why`). A test lost without a word would be a test the check never saw.
  */
 export function fromJunit(whole) {
-  // the reporter writes t.diagnostic() text as comments, and turns `--` inside one into `&#45;&#45;`, so none ends early
-  const report = whole.replace(/<!--[\s\S]*?-->/g, '');
+  // the reporter writes t.diagnostic() text as comments, and turns `--` inside one into `&#45;&#45;`, so none ends early.
+  // Removed until none is left, as one pass could join the pieces round a removed comment into a new one
+  let report = whole;
+  for (let before = ''; report !== before;) {
+    before = report;
+    report = report.replace(/<!--[\s\S]*?-->/g, '');
+  }
   const passed = [],
     failed = [],
     suites = [],

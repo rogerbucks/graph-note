@@ -231,6 +231,29 @@ jobs:
       - name: Every commit that changed a test is recorded
         run: node scripts/tests-first.mjs --complete
 
+  # The code scan's security problems, checked on every change before it merges (#849, scripts/code-scan.mjs). GitHub's
+  # code scanning stops a pull request only for a problem it adds. This fails on any in the code at all, as the release
+  # does. It runs GitHub's own scan with its default queries, and sends nothing: GitHub's code scanning still reports.
+  code-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          languages: javascript-typescript
+          build-mode: none
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          upload: never
+          output: code-scan
+      - run: node scripts/code-scan.mjs code-scan
+
   # Fit to be public, and kept so (spec §13): no secret and nothing confidential or personal in any commit of the
   # checked-out history (HEAD: main and the pull request's own commits, not another branch's, such as a bot's), every
   # commit from a no-reply address, and a stranger's fresh clone sets up and builds from the README's steps alone. The
