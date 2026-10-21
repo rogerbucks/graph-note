@@ -151,7 +151,8 @@ Wave 6.
     secrets under its own id (TRUST-15).
   - The files ability reached every note, whatever its class. Fixed: it now goes through the note gate. A plug-in sees
     only notes at or below the ceiling the person set, and its changes wait for the person (TRUST-16).
-  - One version string covers every extension point (API-10, ARCH-12).
+  - One version string covered every extension point. Fixed: the interface and each point are major.minor, and a
+    point that moves on refuses only the plug-ins that use it (API-10, ARCH-12).
 
 ### B10. Joined graphs and the Python library
 
@@ -278,7 +279,9 @@ Today every plug-in ships with ThoughtKnot. Before a host loads one it did not s
   - Panels, data exports and AI providers cannot run apart yet: a panel needs the page, and the other two answer at
     once.
 - The files ability goes through the note gate (TRUST-16). Done.
-- Each extension point has its own version (API-10).
+- Each extension point has its own version (API-10). Done in the core: `packages/core/src/plugin-versions.ts`. A
+  sample plug-in outside the packages runs in a worker in CI and passes each contract. Still to come: each host's own
+  way to load one.
 
 ## Boundaries still to come
 

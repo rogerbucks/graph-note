@@ -175,6 +175,7 @@ export { CORE_EXPORTS, DATA_FORMATS, dataText, exportedData, isDataFormat } from
 export type { DataFormat } from './export-data.ts';
 export type { DataInfo, ExportedData } from './export-data-model.ts';
 export { EXTENSION_POINTS, HOST_ABILITIES, PLUGIN_API, PLUGIN_TIME_LIMIT, pluginRegistry } from './plugins.ts';
+export { POINT_VERSIONS } from './plugins.ts';
 export { currentLocale, DEFAULT_LOCALE, formatCount, formatDay, formatInstant } from './locale-formats.ts';
 export { formatList, formatSize, setLocale, sortedForReader } from './locale-formats.ts';
 export type { DataExporter, ExtensionPoint, ExtensionPoints, ThoughtKnotPlugin, PluginRegistry } from './plugins.ts';

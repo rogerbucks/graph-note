@@ -954,6 +954,17 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     `stopped()` lists it. A host may set its own limit and clock (`RegistryOptions`). The time is read after the call
     returns, so a call that never returns is not stopped here. A plug-in run apart is (TRUST-14, below).
 
+#### Versions of the interface and its points
+
+`plugin-versions.ts` holds `PLUGIN_API` and `POINT_VERSIONS`, each major.minor (plugin_point_versions, API-10):
+
+- A plug-in built for the same major and a minor no higher loads (`versionFits`).
+- A manifest may name each point with its version, `diagrams@1.0`. One with none counts as `@1.0`.
+- A point that moves to a new major refuses only the plug-ins that use it, naming that point. A host may set its own
+  point versions (`RegistryOptions.pointVersions`).
+- The sample plug-in outside the packages, `examples/sample-plugin`, runs in a worker in CI and passes each contract
+  (`test/sample-plugin.test.js`).
+
 #### A plug-in run apart, in a worker
 
 A host loads a plug-in it did not ship only in a worker (trust_plugin_isolated, TRUST-14). The core holds both sides

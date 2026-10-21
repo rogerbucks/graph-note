@@ -134,6 +134,7 @@ export const VALUES = [
   'PLUGIN_API',
   'PLUGIN_TIME_LIMIT',
   'PNG_MIN_SCALE',
+  'POINT_VERSIONS',
   'PSEUDO_LANGUAGES',
   'PaneSession',
   'PathAutoplay',

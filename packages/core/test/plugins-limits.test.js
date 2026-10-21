@@ -32,7 +32,7 @@ describe('a plug-in’s manifest and limits', () => {
   for (const [what, over, why] of [
     ['an id that is not dotted words', { id: 'Acme' }, /its id must be dotted lower-case words/],
     ['a version that is not major.minor.patch', { version: '1.0' }, /its version "1.0" is not major.minor.patch/],
-    ['another version of the interface', { api: '2' }, /built for version 2 of the interface, not 1/],
+    ['another version of the interface', { api: '2' }, /built for version 2 of the interface, and this host has 1.1/],
     ['an extension point that does not exist', { uses: ['exports', 'telepathy'] }, /do not exist: telepathy/],
   ])
     test(`${what} is refused, saying why, and nothing is installed`, () => {

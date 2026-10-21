@@ -9,6 +9,7 @@ import type { ExtensionPoint, ThoughtKnotPlugin } from './plugins.ts';
 import type { HostAbilities } from './plugin-points.ts';
 import type { NoteStorage } from './note-storage.ts';
 import type { ThemeToken } from './theme-tokens.ts';
+import { pointOf } from './plugin-versions.ts';
 
 /** One thing a plug-in added, as data: its point, its own fields, and the handle its calls go to. */
 export interface Added {
@@ -117,7 +118,8 @@ export function servePlugin(scope: PluginScope, plugin: ThoughtKnotPlugin): void
     },
   });
   const points: Record<string, unknown> = {};
-  for (const p of plugin.uses) {
+  const used = plugin.uses.map((u) => pointOf(u).point as ExtensionPoint);
+  for (const p of used) {
     if (p === 'theme')
       points.theme = { core: [], add: (t: ThemeToken) => added.push({ point: p, fields: { ...t }, handle: 0 }) };
     else if (p === 'storage') {
@@ -144,7 +146,7 @@ export function servePlugin(scope: PluginScope, plugin: ThoughtKnotPlugin): void
   if (named.length) points.host = Object.freeze(host);
   const { id, version, api, uses, abilities } = plugin;
   const manifest = { id, version, api, uses: [...uses], ...(abilities ? { abilities: [...abilities] } : {}) };
-  const refused = plugin.uses.filter((p) => !ISOLATED_POINTS.includes(p));
+  const refused = used.filter((p) => !ISOLATED_POINTS.includes(p));
   try {
     if (refused.length) throw new Error(`a plug-in run apart cannot add to ${refused.join(', ')} yet`);
     plugin.register(Object.freeze(points));

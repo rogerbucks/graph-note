@@ -22,7 +22,16 @@ flowchart LR
    and VS Code.
 5. If your code throws while running, ThoughtKnot catches it and names your plug-in. A drawing is never left blank.
 
-The interface is version <!-- wiki:plugin-api -->. A plug-in built for another version is refused.
+The interface is version <!-- wiki:plugin-api -->. It and each extension point carry a version, major.minor:
+
+- A plug-in built for the same major and a minor no higher loads. Any other is refused.
+- Name each point with the version you built for, such as `exports@1.0`. A point named with no version counts as
+  `@1.0`.
+- When one point moves to a new major, only plug-ins that use it are refused, and the message names that point.
+
+A sample plug-in sits outside the packages, in
+[`examples/sample-plugin`](https://github.com/rogerbucks/thoughtknot/tree/main/examples/sample-plugin). CI runs it the
+way a host runs one it did not ship: in a worker, held to each point's contract.
 
 ## Extension points
 

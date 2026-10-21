@@ -1535,10 +1535,11 @@
       "impact": "low",
       "decision": "fix-later",
       "fix": "In P1 (Wave 6) version each extension point in the manifest (exports@1, theme@1). Refuse only the point whose version a plug-in does not match.",
-      "check": "plugins.test.js: a plug-in built for exports@1 still loads after theme moves to @2.",
+      "check": "packages/core/test/plugin-versions.test.js: a plug-in built for exports@1 still loads after the theme moves to @2.",
       "paths": [
-        "packages/core/src/plugins.ts",
+        "packages/core/src/plugin-versions.ts",
         "packages/core/src/plugins-contract.ts",
+        "packages/core/src/plugins.ts",
         "wiki/Writing-a-plug-in.md"
       ],
       "effort": "hours",
@@ -1547,8 +1548,12 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "prevented_by": [
+        "packages/core/test/plugin-versions.test.js"
+      ],
+      "done_in": "#885"
     },
     {
       "id": "UX-1",
@@ -2970,11 +2975,13 @@
       "likelihood": "medium",
       "impact": "medium",
       "decision": "fix-later",
-      "fix": "In Wave 6 make `api` a major.minor pair, where the host accepts an equal major and lower-or-equal minor. Ship one out-of-tree sample plug-in that CI loads through each host's real path.",
-      "check": "A CI step builds the sample plug-in and runs plugins-contract.ts against it in the browser page and the Obsidian harness.",
+      "fix": "Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version. A sample plug-in outside the packages runs in a worker in CI and passes each contract. Left: each host loads an outside plug-in through its real path, the browser page and Obsidian.",
+      "check": "test/sample-plugin.test.js runs the sample in a worker now. The browser page and the Obsidian harness load it through their real paths once hosts load outside plug-ins.",
       "paths": [
-        "packages/core/src/plugins.ts",
+        "examples/sample-plugin/plugin.js",
+        "packages/core/src/plugin-versions.ts",
         "packages/core/src/plugins-contract.ts",
+        "packages/core/src/plugins.ts",
         "wiki/Writing-a-plug-in.md"
       ],
       "effort": "days",
