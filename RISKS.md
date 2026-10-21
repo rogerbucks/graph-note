@@ -1073,4 +1073,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-2 | MultiEdit and other write tools are not hooked | done | #836; kept out by `packages/claude-code/test/data-guard.test.js` |
 | TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | done | #836; kept out by `test/working-group-workflow.test.js`, `test/claude-workflows.test.js` |
 | TRUST-15 | A plug-in given secrets could read every secret, AI keys too | done | #856; kept out by `packages/core/test/plugins-limits.test.js` |
-| TRUST-16 | The files ability reaches every note, whatever its class | done | #PR; kept out by `packages/core/test/plugins-limits.test.js` |
+| TRUST-16 | The files ability reaches every note, whatever its class | done | #867; kept out by `packages/core/test/plugins-limits.test.js` |
