@@ -6,38 +6,45 @@
 // by default it goes to no model.
 import { matrixRefusal } from './ai-matrix.ts';
 import type { MatrixInput } from './ai-matrix.ts';
+import { formatList } from './locale-formats.ts';
 import type { AiModel } from './settings.ts';
+import { word } from './words.ts';
+import type { WordKey } from './words.ts';
+import gs from '@thoughtknot/graph-spec';
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 const rank = (levels: string[], level: string) => levels.findIndex((l) => same(l, level));
 
 /** How a note's level is said: as classified, or, for a note with none, as the level it counts as. */
 export const levelSaid = (level: string, unlabelled: boolean): string =>
-  unlabelled ? `This note has no classification, so it counts as ${level}` : `This note is classified ${level}`;
+  word(unlabelled ? 'ai.level.unlabelled' : 'ai.level.classified', { level });
 
-/** Why a note of `level` may not be sent to `model`, or null when it may; `unlabelled` when it counts as that level. */
+/**
+ * Why a note of `level` may not be sent to `model`, or null when it may; `unlabelled` when it counts as that level.
+ * `reachable` says whether some ceiling could reach the level: the highest and an unknown one have no model to offer.
+ */
 function aboveCeiling(
   level: string,
   unlabelled: boolean,
   model: AiModel,
   levels: string[],
   matrix?: MatrixInput | null,
-): string | null {
+): { why: string; reachable: boolean } | null {
   const at = rank(levels, level),
     top = levels.length - 1;
-  if (at === -1)
-    return `This note is classified "${level}", which is not one of the classifications set (${levels.join(', ')}), so it counts as above every ceiling and is not sent.`;
-  if (at === top)
-    return `${levelSaid(levels[top] ?? level, unlabelled)}, the highest classification set: nothing at it is ever sent to any model.`;
+  if (at === -1) return { why: word('ai.ceiling.unknown', { level, levels: levels.join(', ') }), reachable: false };
+  const said = levelSaid(levels[at] ?? level, unlabelled);
+  if (at === top) return { why: word('ai.ceiling.highest', { said }), reachable: false };
   // a row picked in the model's settings replaces its ceiling (model_ceiling); with none, the ceiling stands
-  if (model.matrixRow)
-    return matrixRefusal(levels[at] ?? level, levelSaid(levels[at] ?? level, unlabelled), model, matrix, levels);
   const ceiling = rank(levels, model.ceiling);
-  if (ceiling === -1)
-    return `${model.name}’s ceiling, ${model.ceiling}, is no longer one of the classifications set: choose it again in the model’s settings before anything is sent to it.`;
-  return at > ceiling
-    ? `${levelSaid(levels[at] ?? level, unlabelled)}, above ${model.name}’s ceiling, ${levels[ceiling]}, so it is not sent to ${model.name}.`
-    : null;
+  const why = model.matrixRow
+    ? matrixRefusal(levels[at] ?? level, said, model, matrix, levels)
+    : ceiling === -1
+      ? word('ai.ceiling.gone', { model: model.name, ceiling: model.ceiling })
+      : at > ceiling
+        ? word('ai.ceiling.above', { said, model: model.name, ceiling: levels[ceiling] ?? '' })
+        : null;
+  return why === null ? null : { why, reachable: true };
 }
 
 /** Whether a note may be sent to a model: yes, or why not and the models that are cleared for it. */
@@ -62,79 +69,39 @@ export function clearance(
 ): Clearance {
   const counted = level === null || !level.trim();
   const as = counted ? unlabelled : level;
-  const why = aboveCeiling(as, counted, model, levels, matrix);
-  if (!why) return { cleared: true };
+  const above = aboveCeiling(as, counted, model, levels, matrix);
+  if (!above) return { cleared: true };
   const others = models.filter((m) => m !== model && !aboveCeiling(as, counted, m, levels, matrix)).map((m) => m.name);
   // only a level a ceiling can reach has a model to offer: the highest and an unknown one have none
-  const offer = /highest|not one of the classifications/.test(why)
+  const offer = !above.reachable
     ? ''
     : others.length
-      ? ` ${others.join(', ')} ${others.length === 1 ? 'is' : 'are'} cleared for ${as}: send to ${others.length === 1 ? 'it' : 'one of them'} instead.`
-      : ` No model set up is cleared for ${as}.`;
-  const change = counted
-    ? ' Give the note a classification (a classification property in its front matter), or choose a lower level under Unlabelled notes count as, in the AI models settings.'
-    : '';
-  return { refused: `${why}${offer}${change}`, cleared: offer ? others : [] };
+      ? word('ai.ceiling.cleared', { count: others.length, models: formatList(others), level: as })
+      : word('ai.ceiling.none-cleared', { level: as });
+  const change = counted ? word('ai.ceiling.change') : '';
+  return { refused: [above.why, offer, change].filter(Boolean).join(' '), cleared: offer ? others : [] };
 }
 
-const luhn = (digits: string) => {
-  let sum = 0;
-  for (let i = 0; i < digits.length; i++) {
-    let d = Number(digits[digits.length - 1 - i]);
-    if (i % 2 === 1) d = d * 2 > 9 ? d * 2 - 9 : d * 2;
-    sum += d;
-  }
-  return sum % 10 === 0;
+/** Each kind of secret, as the graph spec library names it, by the key it is said by here. */
+const KINDS: Record<string, WordKey> = {
+  'a private key': 'ai.credential.private',
+  'an access key': 'ai.credential.access',
+  'an API key': 'ai.credential.api',
+  'a token': 'ai.credential.token',
+  'a password or secret': 'ai.credential.password',
+  'a card number': 'ai.credential.card',
 };
-
-// A secret's name, ending the name a value is given under. In snake_case (user_password, db_secret) it is bounded by
-// what is not a letter or digit. It is never bounded by \b, for which an underscore is part of the word. In camelCase
-// (smtpPassword, apiKey) it starts with a capital after a lower-case letter or digit. A bare `key` is an ordinary word
-// (key: 'primary'), so only a name ending in _key or Key is a secret's. A real key under a bare name is still found by
-// its value's shape.
-const SECRET_NAMES = [
-  // the character before is matched, not looked behind at: a lookbehind is a syntax error on iOS before 16.4
-  /(?:^|[^A-Za-z0-9])(?:pass(?:word|wd|phrase|code)?|pwd|pin|secret|token|credentials?)(?![A-Za-z0-9])/i,
-  /_key(?![A-Za-z0-9])/i,
-  /[a-z0-9](?:Pass(?:word|wd|phrase|code)?|Pwd|Pin|Secret|Token|Key|Credentials?)(?![A-Za-z0-9])/,
-];
-// then a text of four characters or more, given to it with a colon or an equals sign
-const SECRET_VALUE = String.raw`["']?\s*[:=]\s*["'][^"'\s]{4,}`;
-
-// The kinds of credential looked for, each by its shape: general patterns, never anyone's own.
-const CREDENTIALS: { what: string; test: (line: string) => boolean }[] = [
-  { what: 'a private key', test: (l) => /-----BEGIN [A-Z ]*PRIVATE KEY/.test(l) },
-  { what: 'an access key', test: (l) => /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/.test(l) },
-  {
-    what: 'an API key',
-    test: (l) =>
-      /\bsk-[A-Za-z0-9_-]{16,}/.test(l) ||
-      /\bAIza[0-9A-Za-z_-]{30,}/.test(l) ||
-      /\bgh[pousr]_[A-Za-z0-9]{30,}/.test(l) ||
-      /\bgithub_pat_\w{20,}/.test(l) ||
-      /\bxox[abeprs]-[A-Za-z0-9-]{10,}/.test(l),
-  },
-  { what: 'a token', test: (l) => /\beyJ[\w-]{8,}\.eyJ[\w-]{8,}\.[\w-]{8,}/.test(l) },
-  {
-    what: 'a password or secret',
-    test: (l) => SECRET_NAMES.some((name) => new RegExp(`${name.source}${SECRET_VALUE}`, name.flags).test(l)),
-  },
-  {
-    what: 'a card number',
-    test: (l) =>
-      [...l.matchAll(/(?:^|[^\w.-])([2-6](?:[ -]?\d){12,18})(?![\w.-])/g)].some(([, m]) =>
-        luhn((m ?? '').replace(/[ -]/g, '')),
-      ),
-  },
-];
 
 /**
  * The kinds of credential `text` holds, each once and in words (never the text that matched). It finds `secrets`, such
  * as the key of the model asked, wherever they are written.
  */
 export function credentialsIn(text: string, secrets: readonly string[] = []): string[] {
-  const found = new Set<string>();
-  for (const line of text.split('\n')) for (const c of CREDENTIALS) if (c.test(line)) found.add(c.what);
-  if (secrets.some((s) => s.length >= 8 && text.includes(s))) found.add('the key of a model set up here');
-  return [...found];
+  // the shapes are the graph spec library's, so the editor and every reader find the same (editor spec §51)
+  const found = gs.secretsIn(text).map((kind) => {
+    const key = KINDS[kind];
+    return key ? word(key) : kind;
+  });
+  if (secrets.some((s) => s.length >= 8 && text.includes(s))) found.push(word('ai.credential.model-key'));
+  return [...new Set(found)];
 }

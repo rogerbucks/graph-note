@@ -5,7 +5,7 @@
 // leave the vault is refused. Each is said with the core's words.
 import type { App } from 'obsidian';
 import { TFile } from 'obsidian';
-import { imageLink } from '@thoughtknot/core';
+import { imageLink, word } from '@thoughtknot/core';
 import type { FoundImage, ImageSource } from '@thoughtknot/core/display/images/image-source';
 
 /** The type each image file is read as, by its extension. */
@@ -33,7 +33,7 @@ export function vaultImages(
       if (!image) return null;
       if ('refused' in image) return { why: image.refused };
       const file = metadataCache.getFirstLinkpathDest(image.link, notePath);
-      if (!(file instanceof TFile)) return { why: `${image.link} is not in the vault` };
+      if (!(file instanceof TFile)) return { why: word('images.not-in-vault', { link: image.link }) };
       return {
         name: file.name,
         path: file.path,

@@ -4,7 +4,7 @@
 // they would without callouts. A callout is only added over the finished SVG, within its viewBox, and its words are
 // text, never HTML. Its look is the style sheet's alone (`thoughtknot-callout-*`); the full note shows in the thing's
 // details.
-import { hitAreas } from '@thoughtknot/core';
+import { hitAreas, word } from '@thoughtknot/core';
 import type { Drawn, GraphDrawing, Shape } from '@thoughtknot/core';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -123,7 +123,7 @@ export function markCallouts(svg: SVGSVGElement, drawn: Drawn, d: GraphDrawing):
       class: 'thoughtknot-callout',
       'data-for': n.of,
       role: 'note',
-      'aria-label': `Note: ${words}`,
+      'aria-label': word('callout.label', { words }),
     });
     g.appendChild(make('line', { class: 'thoughtknot-callout-line', x1: from.x, y1: from.y, x2: to.x, y2: to.y }));
     g.appendChild(make('rect', { class: 'thoughtknot-callout-box', ...rect, rx: 3 }));

@@ -30,10 +30,23 @@ const own = (g, a, by) =>
 // {graph, id, against, by}; null when it is not one.
 function changesetHeader(block) {
   const first = block.split('\n').find((line) => line.trim()) || '';
-  const m = /^\s*\/\/\s*graph:\s*(\S+)\s*·\s*CHANGE SET\s+(\S+)\s*·\s*against\s+([0-9a-f]{16})\s*·\s*by\s+(\S+)/.exec(
-    first,
-  );
+  const m =
+    /^\s*\/\/\s*graph:\s*(\S+)\s*·\s*CHANGE SET\s+(\S+)\s*·\s*against\s+(?:sha-256-64:)?([0-9a-f]{16})\s*·\s*by\s+(\S+)/.exec(
+      first,
+    );
   return m ? { graph: m[1], id: m[2], against: m[3], by: m[4] } : null;
+}
+const NAMED_STATE = 'the state it was made against names its algorithm: against sha-256-64:<digits> (editor spec §51)';
+// whether a change set's header names the algorithm of the state it was made against (spec_hashes_named)
+const stateNamed = (block) => /·\s*against\s+sha-256-64:/.test(block.split('\n').find((line) => line.trim()) || '');
+const SESSION = 'its author is the session that sent it, not a name written in its header (editor spec §51)';
+// Who wrote a set is the session that sent it, never the name in its header (editor spec §51, spec_author_from_session).
+// The header's author becomes the session's, and the name it wrote is kept as `claimed`. True when they agree.
+function fromSession(h, session) {
+  if (h.by === session) return true;
+  h.claimed = h.by;
+  h.by = session;
+  return false;
 }
 const stateOf = (g) => {
   const pj = (p) => {
@@ -68,14 +81,17 @@ function refreshSection20(store, name) {
 }
 // A change set dry-run against its base, the blocks loaded in order; it writes nothing. Returns each check as
 // [label, ok], the header (with its changes, warnings and §20 refreshes) and the state hash it would produce. It stops
-// at a failure that makes the later checks meaningless, with after null; sw turns named checks off.
-function checkChangeset(base, block, matrix, sw = new Set()) {
+// at a failure that makes the later checks meaningless, with after null; sw turns named checks off. session is the
+// author id of the session that sent the set, when the host knows it (fromSession).
+function checkChangeset(base, block, matrix, sw = new Set(), session = null) {
   const res = [],
     add = (label, ok) => res.push([label, !!ok]);
   block = block.replace(/\r\n/g, '\n'); // a line ends at LF in the reader; CRLF text is read as LF text
   const h = changesetHeader(block);
   add('the change set names its graph, its id, the state it was made against, and its author', h);
   if (!h) return { results: res, header: null, after: null };
+  if (session !== null) add(SESSION, fromSession(h, session));
+  add(NAMED_STATE, stateNamed(block));
   const parts = splitChangeset(block);
   add(
     'it passes the dialect linter (§24 H1)',

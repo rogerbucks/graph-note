@@ -7,6 +7,7 @@ import gs from '@thoughtknot/graph-spec';
 import { blankText } from './block-items.ts';
 import type { ChangeOp } from './proposals.ts';
 import { trim } from './whitespace.ts';
+import { word } from './words.ts';
 
 /** The statement that makes a change, as a change set holds it: the item for an addition, else a SET or a DELETE. */
 export function statementOf(c: ChangeOp): string {
@@ -82,10 +83,8 @@ export function readStatement(text: string): ChangeOp | { refused: string } {
     return { op: 'remove-link', from: c.from ?? '', type: c.type ?? '', to: c.to ?? '', ...ends };
   }
   const keys = Object.keys(c.set ?? {});
-  if (c.op === 'set-link')
-    return { refused: 'a SET of a link’s property is not one the editor lists: edit it in the text' };
-  if (keys.length !== 1)
-    return { refused: 'a SET gives one property: write each as its own statement, as `SET thing.key = value`' };
+  if (c.op === 'set-link') return { refused: word('proposing.statement.link-set') };
+  if (keys.length !== 1) return { refused: word('proposing.statement.one-set') };
   // the value as it is written: what follows the = of the one assignment, in the text with its strings blanked
   const at = /\bSET\s+[A-Za-z_]\w*\s*\.\s*[A-Za-z_]\w*\s*=/i.exec(blankText(text));
   const value = at ? trim(text.slice(at.index + at[0].length)) : '';

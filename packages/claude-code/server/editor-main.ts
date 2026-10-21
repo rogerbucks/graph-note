@@ -8,7 +8,7 @@
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { EditorProcessOptions } from './editor-process.ts';
-import { settingsFrom } from '@thoughtknot/core';
+import { settingsFrom, word } from '@thoughtknot/core';
 import { matrixRowsFrom } from '@thoughtknot/core/hosts/matrix-table';
 import type { GateSettings } from '@thoughtknot/core';
 import { storeGate } from './editor-gate.ts';
@@ -60,7 +60,7 @@ export function gateSettings(raw: string | undefined): GateSettings {
  */
 export async function pageFiles(here = dirname(fileURLToPath(import.meta.url))): Promise<PageAssets> {
   const files = await loadPageAssets(join(here, basename(here) === 'bin' ? '../page' : '../mod/page'));
-  if (!files.has('/')) throw new Error('The editor page is not built: run `npm run build` for the ThoughtKnot mod.');
+  if (!files.has('/')) throw new Error(word('server.page-not-built'));
   return files;
 }
 
@@ -73,7 +73,7 @@ export async function optionsFromEnvironment(
   if (!vault) return {};
   const note = env[EDITOR_ENVIRONMENT.note];
   const drafts = env[EDITOR_ENVIRONMENT.drafts];
-  if (!note || !drafts) throw new Error('It was given a vault but not the note to open, or the folder for drafts.');
+  if (!note || !drafts) throw new Error(word('server.no-note-or-drafts'));
   // the gate is always in: with no settings given it is the defaults, the strictest
   const confirmed = env[EDITOR_ENVIRONMENT.confirmed] || null;
   const settings = gateSettings(env[EDITOR_ENVIRONMENT.settings]);

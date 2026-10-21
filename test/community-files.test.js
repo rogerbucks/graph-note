@@ -73,3 +73,24 @@ test('AGENTS.md lists the rules for a pull request: merge commits, the regenerat
   assert.match(list, /auto-merge/);
   for (const command of REGENERATING) assert.ok(list.includes(command), `names ${command}`);
 });
+
+// Asks to an AI agent wait in the working group's discussion, #825, and were being missed (spec §13,
+// agents_read_asks; issue #846). So every session reads its own there first.
+test('AGENTS.md tells each session to read its asks in discussion #825 before new work (Roger, 21 Oct 2026)', () => {
+  const agents = read('AGENTS.md');
+  const top = agents.slice(0, agents.indexOf('\n## ', agents.indexOf('\n## ') + 1));
+  assert.match(top, /discussions\/825/);
+  assert.match(top, /To \[your name\]/);
+  assert.match(top, /before new work/i);
+  assert.match(read('docs/agents/ROLES.md'), /discussions\/825/);
+});
+
+// How posts say who wrote them and who acts (spec §13, roles_from_to): "From [writer]:" and "To [name]:", no
+// signature at the bottom (Roger, 21 Oct 2026).
+test('ROLES.md uses "From" and "To" lines with no signature', () => {
+  const roles = read('docs/agents/ROLES.md');
+  assert.match(roles, /\*\*From \[writer\]:\*\*/);
+  assert.match(roles, /\*\*To \[name\]:\*\*/);
+  assert.match(roles, /no signature/i);
+  assert.doesNotMatch(roles, /signs its comments/);
+});

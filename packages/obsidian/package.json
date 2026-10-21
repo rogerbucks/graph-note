@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@thoughtknot/core": "0.7.1",
-    "@viz-js/viz": "3.31.0"
+    "@viz-js/viz": "3.31.0",
+    "sql.js": "1.14.2"
   },
   "devDependencies": {
     "@codemirror/state": "6.5.0",

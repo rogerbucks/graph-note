@@ -7,6 +7,8 @@ import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
 import type { Problem } from './note-reading.ts';
 import type { LegendChoice } from './untangle-saved.ts';
+import { formatList } from './locale-formats.ts';
+import { word } from './words.ts';
 
 /** The four words a nudge may be (§6, four_nudge_words). */
 export const NUDGE_WORDS = ['beside', 'before', 'group', 'direction'] as const;
@@ -50,6 +52,20 @@ export type ArrowheadsChoice = (typeof ARROWHEADS)[number];
 export const DIAGRAM_TYPES = ['network', 'tree', 'flow', 'radial', 'lanes', 'timeline', 'table'] as const;
 /** One of the diagram types. */
 export type DiagramType = (typeof DIAGRAM_TYPES)[number];
+
+/**
+ * The plug-in a diagram type is named under, and the type's own word, or null when it is not one (§15,
+ * plugin_diagram_type_named). A plug-in's type is its id, dotted lower-case words, then a dot and a word:
+ * `acme.charts.sankey` is `sankey` of the plug-in `acme.charts`.
+ */
+export function pluginTypeOf(name: string): { plugin: string; word: string } | null {
+  const at = name.lastIndexOf('.');
+  const plugin = name.slice(0, at),
+    own = name.slice(at + 1);
+  return at > 0 && /^[a-z0-9]+(?:[.-][a-z0-9]+)+$/.test(plugin) && /^[a-z][a-z0-9-]*$/.test(own)
+    ? { plugin, word: own }
+    : null;
+}
 
 /**
  * How a link moves to show flow (§7, links_show_flow). Dashes run along its arrow, a dot travels along it, or it is
@@ -163,6 +179,8 @@ export interface Arrows {
  */
 export interface Diagram {
   type: DiagramType;
+  /** A diagram type a plug-in adds, by its whole name (`pluginTypeOf`). Where none draws it, `type` is a network. */
+  plugin?: string;
   /** The view it is chosen for; none, the whole graph. */
   view?: string;
   /** For a tree: the relationship type whose links are its branches; none, the one that makes the best tree. */
@@ -342,9 +360,8 @@ export function styleProblem(
   return { graph, block: at.block, line: at.line, severity: 'error', message, fix, ...edit };
 }
 
-/** Words joined as a sentence lists them: "a, b or c". */
-export const orList = (xs: readonly string[]): string =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`;
+/** Words joined as a choice in the reader's locale: "a, b or c" in UK English. */
+export const orList = (xs: readonly string[]): string => formatList([...xs], 'disjunction');
 
 /**
  * The fix for a word that is not one of `among`. It is the nearest by edit distance, always when `always` is set (a
@@ -359,6 +376,12 @@ export function wordFix(written: string, among: readonly string[], always = fals
     if (d < best) [best, nearest] = [d, w];
   }
   if (nearest !== undefined && (always || best <= Math.max(2, Math.floor(written.length / 2))))
-    return { fix: `change ${written} to ${nearest}`, nearest };
-  return { fix: `change ${written} to ${among.length > 2 ? 'one of ' : ''}${orList(among)}` };
+    return { fix: word('styling.change-to', { written, to: nearest }), nearest };
+  const list = orList(among);
+  return {
+    fix:
+      among.length > 2
+        ? word('styling.change-to-one-of', { written, among: list })
+        : word('styling.change-to', { written, to: list }),
+  };
 }

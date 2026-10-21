@@ -42,6 +42,10 @@ from graphspec.rules.canonical_json import (
     jcs,
     norm,
 )
+from graphspec.rules.named_hashes import (
+    is_named,
+    named,
+)
 from graphspec.rules.schema_types import (
     SPEC_EDGES,
     SPEC_MARKERS,

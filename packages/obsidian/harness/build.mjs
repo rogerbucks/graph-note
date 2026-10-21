@@ -18,7 +18,8 @@ await esbuild.build({
   platform: 'browser',
   target: 'es2022',
   alias: { obsidian: join(here, 'obsidian-shim.js') },
-  loader: { '.md': 'text' },
+  // the SQLite engine of Import is held inside the bundle, as the plugin's build holds it (spec §20)
+  loader: { '.md': 'text', '.wasm': 'binary' },
   // the layout worker's own bundle, made as the plugin's build makes it (spec §9, layout_contained)
   plugins: [layoutWorker],
   logLevel: 'warning',

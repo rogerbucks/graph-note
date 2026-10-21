@@ -12,7 +12,7 @@ import { withFlow, withRunners } from './export-motion.ts';
 import { animationSaid, withPictures, withStillPictures } from './export-pictures.ts';
 import type { PictureLoad, PictureLoaded } from './export-pictures.ts';
 import { flowLegend, reversedLinks } from './link-flow.ts';
-import { PATH_LEGEND, animationFits, pathBody, pathPlan, pathSubtitle, withPath } from './path-animation.ts';
+import { animationFits, pathBody, pathLegend, pathPlan, pathSubtitle, withPath } from './path-animation.ts';
 import type { Device, ExportWalk, TooLargeToAnimate } from './path-animation.ts';
 import { framed, saidDate } from './export-frame.ts';
 import type { LegendItem } from './export-frame.ts';
@@ -25,6 +25,7 @@ import type { Palette } from './palette.ts';
 import { chosen, directions } from './render.ts';
 import type { Drawn, Engine } from './render.ts';
 import type { ExportTheme } from './settings.ts';
+import { lookTag, lookTags } from './look-tags.ts';
 import { legendOf, lookOf } from './style.ts';
 import type { StyleGraph, ThingLook } from './style-graph.ts';
 import { styledDrawing } from './style-source.ts';
@@ -119,13 +120,13 @@ function legendItems(scope: ExportScope, drawing: GraphDrawing, info: ExportInfo
   const looks = style && scope.view !== undefined ? legendOf(style, { view: scope.view }) : [];
   const items: LegendItem[] = [
     ...kinds.map((kind) => ({ label: kind, ...chip(hues[kind] ?? '', p) })),
-    ...looks.map((e) => ({
-      label: e.means,
+    ...looks.map((e, i) => ({
+      label: `${lookTag(i)} ${e.means}`,
       fill: hueColour(e.colour, 'line', p),
       stroke: hueColour(e.colour, 'line', p),
     })),
     ...flowLegend(drawing.flow ?? []).map((e) => ({ label: e.words, fill: p.page ?? 'none', stroke: p.text })),
-    ...(walk ? [{ label: PATH_LEGEND, fill: p.page ?? 'none', stroke: p.text }] : []),
+    ...(walk ? [{ label: pathLegend(), fill: p.page ?? 'none', stroke: p.text }] : []),
   ];
   return items;
 }
@@ -239,7 +240,11 @@ function framedImage(
   const looked = marked(
     drawn.svg,
     drawing.boxes.map((b) => b.key),
-    { faded: scope.faded, looks: looksOf(scope, info.style) },
+    {
+      faded: scope.faded,
+      looks: looksOf(scope, info.style),
+      tags: info.style && scope.view !== undefined ? lookTags(legendOf(info.style, { view: scope.view })) : undefined,
+    },
     palette,
   );
   // the pictures on boxes embedded, moving in an SVG within their limits, and what was done with each said (§16, §18)

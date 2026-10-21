@@ -70,6 +70,8 @@ export const options = {
   format: 'cjs',
   target: 'es2022',
   external: ['obsidian', '@codemirror/*', '@lezer/*'],
+  // the SQLite engine of Import (spec §20) is held inside main.js, so it is never fetched
+  loader: { '.wasm': 'binary' },
   legalComments: 'inline',
   sourcemap: false,
   minify: false,

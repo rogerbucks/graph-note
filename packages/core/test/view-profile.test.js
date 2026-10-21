@@ -1,9 +1,13 @@
 // The view profile (editor spec §7): the five shapes of query a view may be are read into a description of the view.
 // Anything else is refused with a message that says what is allowed. Each shape's query is also one Grafeo runs. The
 // forms were run in Grafeo on 11 Oct 2026 (a choice of kinds is written after IS, as Grafeo reads it).
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseView, VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, VIEW_NAMES } from '../src/view-profile.ts';
+import { parseView, VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, viewName } from '../src/view-profile.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const FIVE =
   /hand-picked set of things.*everything near a thing.*how one thing reaches another.*only some kinds.*a walked path/s;
@@ -13,7 +17,7 @@ describe('the five shapes', () => {
   test('the profile names exactly five kinds, each with a form of its own', () => {
     assert.deepEqual([...VIEW_KINDS], ['picked', 'near', 'reaches', 'kinds', 'path']);
     assert.deepEqual(Object.keys(VIEW_FORMS), [...VIEW_KINDS]);
-    assert.deepEqual(Object.keys(VIEW_NAMES), [...VIEW_KINDS]);
+    assert.equal(new Set(VIEW_KINDS.map(viewName)).size, VIEW_KINDS.length, 'each kind named in words of its own');
     assert.deepEqual(VIEW_LIMITS, { near: 3, steps: 6 });
   });
 
@@ -140,7 +144,7 @@ describe('what is refused, and what the refusal says', () => {
       assert.equal(typeof r.refused, 'string', 'refused, not read');
       assert.match(r.refused, reason);
       assert.match(r.refused, FIVE, 'names the five shapes in words');
-      assert.ok(r.refused.includes(`The nearest is ${VIEW_NAMES[nearest]}: ${VIEW_FORMS[nearest]}`), r.refused);
+      assert.ok(r.refused.includes(`The nearest is ${viewName(nearest)}: ${VIEW_FORMS[nearest]}`), r.refused);
     });
   }
 
@@ -216,6 +220,30 @@ describe('what is refused, and what the refusal says', () => {
       ).join(rnd() < 0.5 ? ' ' : '');
       const r = parseView(text);
       assert.ok('kind' in r || typeof r.refused === 'string', JSON.stringify(text));
+    }
+  });
+});
+
+describe('the profile’s words', () => {
+  // proves: words_catalogue
+  test('a refusal, its reason and the five kinds are said in the person’s language', () => {
+    setLanguage('en-XA');
+    for (const kind of VIEW_KINDS) assert.ok(isPseudoWord(viewName(kind)), kind);
+    const queries = [
+      '',
+      'RETURN n',
+      "MATCH (n {id: 'a'})-[]->{1,2}(m) RETURN n, m",
+      "MATCH (n {id: 'a'})-[]-{1,9}(m) RETURN n, m",
+      'MATCH (n:Person|Team) RETURN n',
+      "MATCH (n) WHERE n.id IN ['a'] RETURN n LIMIT",
+      'MATCH (match) RETURN match',
+      "MATCH (n) WHERE n.id IN ['a] RETURN n",
+    ];
+    for (const query of queries) {
+      // the line is a catalogue word, and so is the reason it starts with
+      const { refused } = parseView(query);
+      assert.ok(refused.startsWith('⟦⟦'), refused);
+      assert.ok(!/A view query|The nearest|Expected|found/.test(refused), refused);
     }
   });
 });

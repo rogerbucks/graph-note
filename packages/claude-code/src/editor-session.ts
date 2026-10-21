@@ -5,7 +5,7 @@
 // never undoes over another program's change. Once one has changed the block, the writes made before it are no longer
 // undone. Undo says so instead. The typing history starts again from the block as reloaded, so it cannot bring theirs
 // back. Host-free: the page sends what `write` and `undo` give, and passes back what the server answers.
-import { PaneSession, TextHistory, type Change, type TextState } from '@thoughtknot/core';
+import { PaneSession, TextHistory, word, type Change, type TextState } from '@thoughtknot/core';
 
 /** What a change on disk did to the page: nothing to its block, the block drawn again, or a conflict with what is typed. */
 export type Redraw = 'unchanged' | 'reloaded' | 'conflict';
@@ -19,9 +19,7 @@ export type ToWrite =
   | { ok: false; reason: string; draft?: string; edit?: true; history?: true; stopped?: true };
 
 /** Undo's refusal once another program has changed the block. */
-export const UNDO_OVER_THEIRS =
-  'Another program changed this graph block since your last change here, so undoing now would undo its change too. ' +
-  'Nothing was undone.';
+export const undoOverTheirs = (): string => word('cc.undo-over-theirs');
 
 const caretAtEnd = (text: string): TextState => ({ text, start: text.length, end: text.length });
 
@@ -133,11 +131,11 @@ export class EditorSession {
     // (block_followed_not_its_copy)
     const why = this.pane.stepRefusal(way);
     // a refusal for the history needs no draft: nothing typed is lost (`history`, as the pane's own are marked)
-    if (why) return { ok: false, reason: this.pane.stopped ? why : UNDO_OVER_THEIRS, history: true };
+    if (why) return { ok: false, reason: this.pane.stopped ? why : undoOverTheirs(), history: true };
     const can = way === 'undo' ? this.pane.canUndo() : this.pane.canRedo();
     if (!can) return { ok: true, note: this.note, against, unchanged: true };
     if ((way === 'undo' ? this.undoable : this.redoable) === 0)
-      return { ok: false, reason: UNDO_OVER_THEIRS, history: true };
+      return { ok: false, reason: undoOverTheirs(), history: true };
     const w = way === 'undo' ? this.pane.undo(this.note) : this.pane.redo(this.note);
     if (!w.ok) return w;
     this.note = w.note;

@@ -8,6 +8,7 @@ import { graphOf, isSharedSchema } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import type { NoteReading } from './note-reading.ts';
 import { N, S } from './whitespace.ts';
+import { word } from './words.ts';
 
 /** A schema block's picture: the graph it is drawn as, and that graph read, ready to draw. */
 export interface SchemaPicture {
@@ -94,7 +95,9 @@ function pictureText(graph: string, schema: Graph, data: Graph | undefined): str
     ...[...kinds].map(([name, i]) => `(${i}:Kind {name: ${q(name)}})`),
     ...[...types]
       .filter(([t]) => !used.has(t))
-      .map(([, t]) => `(${t.id}:Relationship {name: ${q(`${t.reading} (not used yet)`)}})`),
+      .map(
+        ([, t]) => `(${t.id}:Relationship {name: ${q(word('reading.schema.unused-type', { reading: t.reading }))}})`,
+      ),
     ...[...joins].sort(byCode).map((j) => {
       const [a, type, b] = JSON.parse(j) as string[];
       return `(${a})-[:${type}]->(${b})`;

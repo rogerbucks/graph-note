@@ -36,7 +36,7 @@ edges:
 ## X1 — a claim the model may add
 
 ```gql
-// graph: loanbook · CHANGE SET change:L3/owns-a-car · against dd3144ba4ac8f570 · by model:drafter
+// graph: loanbook · CHANGE SET change:L3/owns-a-car · against sha-256-64:dd3144ba4ac8f570 · by model:drafter
 MATCH (L3:Loan {id: 'loan:L3'}) MATCH (drafter:Model {id: 'model:drafter'})
 INSERT (car:Claim {id: 'claim:L3/owns-a-car', claimed_property: 'other_assets', claimed_value: 'a car'}),
  (car)-[:ABOUT {role: 'subject'}]->(L3),
@@ -46,7 +46,7 @@ INSERT (car:Claim {id: 'claim:L3/owns-a-car', claimed_property: 'other_assets', 
 ## X2 — made against an old state
 
 ```gql
-// graph: loanbook · CHANGE SET change:L3/owns-a-car-stale · against 9025e298b7671a15 · by model:drafter
+// graph: loanbook · CHANGE SET change:L3/owns-a-car-stale · against sha-256-64:9025e298b7671a15 · by model:drafter
 MATCH (L3:Loan {id: 'loan:L3'}) MATCH (drafter:Model {id: 'model:drafter'})
 INSERT (car:Claim {id: 'claim:L3/owns-a-car', claimed_property: 'other_assets', claimed_value: 'a car'}),
  (car)-[:ABOUT {role: 'subject'}]->(L3),
@@ -56,7 +56,7 @@ INSERT (car:Claim {id: 'claim:L3/owns-a-car', claimed_property: 'other_assets', 
 ## X3 — a fact asserted by a model
 
 ```gql
-// graph: loanbook · CHANGE SET change:L3/model-repayment · against dd3144ba4ac8f570 · by model:drafter
+// graph: loanbook · CHANGE SET change:L3/model-repayment · against sha-256-64:dd3144ba4ac8f570 · by model:drafter
 MATCH (L3:Loan {id: 'loan:L3'})
 INSERT (pay:Event {id: 'ev:L3/model-repayment', kind: 'Repayment', at: DATE '2026-12-20'}), (pay)-[:APPLIES_TO]->(L3)
 ```
@@ -64,7 +64,7 @@ INSERT (pay:Event {id: 'ev:L3/model-repayment', kind: 'Repayment', at: DATE '202
 ## X4 — a decision recorded by a model
 
 ```gql
-// graph: judgements · CHANGE SET change:L3/model-decision · against 152080b7113e2f35 · by model:drafter
+// graph: judgements · CHANGE SET change:L3/model-decision · against sha-256-64:bda7bec443351f36 · by model:drafter
 MATCH (r_L3:Ref {id: 'ref:loanbook/loan:L3'}) MATCH (r_drafter:Ref {id: 'ref:loanbook/model:drafter'})
 INSERT (d:Decision {id: 'decision:L3-model', title: 'Write off loan L3', statement: 'Write off loan L3', rationale: 'drafted and decided by the model', at: DATE '2026-12-15'}),
  (d)-[:ABOUT]->(r_L3), (d)-[:DECIDED_BY]->(r_drafter)
@@ -73,14 +73,14 @@ INSERT (d:Decision {id: 'decision:L3-model', title: 'Write off loan L3', stateme
 ## X5 — an edit to a record already there
 
 ```gql
-// graph: loanbook · CHANGE SET change:L3/missed-date · against dd3144ba4ac8f570 · by model:drafter
+// graph: loanbook · CHANGE SET change:L3/missed-date · against sha-256-64:dd3144ba4ac8f570 · by model:drafter
 MATCH (missed:Event {id: 'ev:L3/missed'}) SET missed.at = DATE '2026-11-15'
 ```
 
 ## X6 — an assessment made in someone else's name
 
 ```gql
-// graph: loanbook · CHANGE SET change:L3/as-alice · against dd3144ba4ac8f570 · by model:drafter
+// graph: loanbook · CHANGE SET change:L3/as-alice · against sha-256-64:dd3144ba4ac8f570 · by model:drafter
 MATCH (L3:Loan {id: 'loan:L3'}) MATCH (alice:Person {id: 'person:alice'})
 INSERT (car:Claim {id: 'claim:L3/owns-a-car', claimed_property: 'other_assets', claimed_value: 'a car'}),
  (car)-[:ABOUT {role: 'subject'}]->(L3),
@@ -90,7 +90,7 @@ INSERT (car:Claim {id: 'claim:L3/owns-a-car', claimed_property: 'other_assets', 
 ## X7 — a fact a person may add
 
 ```gql
-// graph: loanbook · CHANGE SET change:L3/alice-repayment · against dd3144ba4ac8f570 · by person:alice
+// graph: loanbook · CHANGE SET change:L3/alice-repayment · against sha-256-64:dd3144ba4ac8f570 · by person:alice
 MATCH (L3:Loan {id: 'loan:L3'})
 INSERT (pay:Event {id: 'ev:L3/repayment-dec', kind: 'Repayment', at: DATE '2026-12-20'}), (pay)-[:APPLIES_TO]->(L3)
 ```
@@ -98,7 +98,7 @@ INSERT (pay:Event {id: 'ev:L3/repayment-dec', kind: 'Repayment', at: DATE '2026-
 ## X8 — a dialect trap
 
 ```gql
-// graph: loanbook · CHANGE SET change:L3/zoned · against dd3144ba4ac8f570 · by model:drafter
+// graph: loanbook · CHANGE SET change:L3/zoned · against sha-256-64:dd3144ba4ac8f570 · by model:drafter
 MATCH (L3:Loan {id: 'loan:L3'}) MATCH (drafter:Model {id: 'model:drafter'})
 INSERT (car:Claim {id: 'claim:L3/owns-a-car', claimed_property: 'other_assets', claimed_value: 'a car'}),
  (car)-[:ABOUT {role: 'subject'}]->(L3),
@@ -108,7 +108,7 @@ INSERT (car:Claim {id: 'claim:L3/owns-a-car', claimed_property: 'other_assets', 
 ## X9 — a type the graph does not declare
 
 ```gql
-// graph: loanbook · CHANGE SET change:L3/evidence · against dd3144ba4ac8f570 · by model:drafter
+// graph: loanbook · CHANGE SET change:L3/evidence · against sha-256-64:dd3144ba4ac8f570 · by model:drafter
 MATCH (norec:Claim {id: 'claim:L3/no-recovery'}) MATCH (drafter:Model {id: 'model:drafter'})
 INSERT (ev:Evidence {id: 'evidence:L3/call-notes', text: 'borrower said they had nothing left to sell'}), (norec)-[:SUPPORTED_BY]->(ev), (ev)-[:FROM]->(drafter)
 ```
@@ -116,7 +116,7 @@ INSERT (ev:Evidence {id: 'evidence:L3/call-notes', text: 'borrower said they had
 ## X10 — a new assessment of an existing claim
 
 ```gql
-// graph: loanbook · CHANGE SET change:L3/reassess · against dd3144ba4ac8f570 · by model:drafter
+// graph: loanbook · CHANGE SET change:L3/reassess · against sha-256-64:dd3144ba4ac8f570 · by model:drafter
 MATCH (norec:Claim {id: 'claim:L3/no-recovery'}) MATCH (drafter:Model {id: 'model:drafter'})
 INSERT (a:Assessment {id: 'assess:L3/no-recovery/3', at: DATE '2026-12-20', likelihood: 'very-likely'}), (a)-[:ASSESSES]->(norec), (a)-[:BY]->(drafter)
 ```
@@ -127,9 +127,9 @@ Every state hash above is computed, never typed (§24 rule 4), by `zzSupport/_sc
 
 ```yaml
 # fill — computed values (§24 H2)
-AGAINST_LB: {state_of: loanbook, load: [Judgement test — writing off loan L3#The data], value: dd3144ba4ac8f570, uses: 8}
-AGAINST_J: {state_of: judgements, load: [Judgement test — writing off loan L3#The data, Judgement test — writing off loan L3#The judgements, Judgement test — writing off loan L3#Types for servings, Judgement test — writing off loan L3#The serving], value: 152080b7113e2f35, uses: 1}
-AGAINST_PAID: {state_of: loanbook, load: [Judgement test — writing off loan L3#The data, Judgement test — writing off loan L3#Later — a part payment arrives], value: 9025e298b7671a15, uses: 1}
+AGAINST_LB: {state_of: loanbook, load: [Judgement test — writing off loan L3#The data], value: 'sha-256-64:dd3144ba4ac8f570', uses: 8}
+AGAINST_J: {state_of: judgements, load: [Judgement test — writing off loan L3#The data, Judgement test — writing off loan L3#The judgements, Judgement test — writing off loan L3#Types for servings, Judgement test — writing off loan L3#The serving], value: 'sha-256-64:bda7bec443351f36', uses: 1}
+AGAINST_PAID: {state_of: loanbook, load: [Judgement test — writing off loan L3#The data, Judgement test — writing off loan L3#Later — a part payment arrives], value: 'sha-256-64:9025e298b7671a15', uses: 1}
 ```
 
 ## Conformance case

@@ -2,7 +2,7 @@
 // engine runs as a process through node, DOT in and SVG out (bin/render-process.ts). When node is missing it is said in
 // words. So the pane shows the graph as text with the reason, never a blank drawing. Any other failure says what it
 // was.
-import { LAYOUT_LIMITS } from '@thoughtknot/core';
+import { LAYOUT_LIMITS, word } from '@thoughtknot/core';
 
 /** What a process gave back, as the host's `$.process.run` resolves it. */
 export interface ProcessResult {
@@ -29,9 +29,7 @@ export const LAYOUT_TIMEOUT_MS = 2 * LAYOUT_LIMITS.ms + 5000;
 export const VERSION_TIMEOUT_MS = 5000;
 
 /** What the pane says when node cannot be started. */
-export const NODE_MISSING =
-  'Graphviz runs through Node.js, and node could not be started. Install Node.js 24 or later (nodejs.org), make sure ' +
-  '`node` is on the path Claude Code starts with, and run /graph again. The graph is shown as text meanwhile.';
+export const nodeMissing = (): string => word('cc.node-missing');
 
 const SAID_MAX = 200;
 const cut = (s: string) => (s.length > SAID_MAX ? `${s.slice(0, SAID_MAX - 1)}…` : s);
@@ -48,11 +46,11 @@ const NOT_THERE = /ENOENT|not found|no such file|cannot find/i;
 async function whyRefused(run: RunProcess, err: unknown): Promise<string> {
   try {
     const version = await run(['node', '--version'], '', VERSION_TIMEOUT_MS);
-    if (version.exitCode === 127) return NODE_MISSING;
+    if (version.exitCode === 127) return nodeMissing();
   } catch (probe) {
-    return NOT_THERE.test(messageOf(probe)) ? NODE_MISSING : `Could not run node: ${messageOf(probe)}`;
+    return NOT_THERE.test(messageOf(probe)) ? nodeMissing() : word('cc.node-failed', { why: messageOf(probe) });
   }
-  return `Graphviz did not finish: ${messageOf(err)}`;
+  return word('cc.graphviz-unfinished', { why: messageOf(err) });
 }
 
 /** Lays out each DOT source with the core's engine, run by node from the mod at `root`. */
@@ -64,9 +62,14 @@ export async function layOut(dots: string[], root: string, run: RunProcess): Pro
     return { why: await whyRefused(run, err) };
   }
   // a shell or env wrapper says "command not found" with 127
-  if (ran.exitCode === 127) return { why: NODE_MISSING };
-  if (ran.exitCode !== 0) return { why: `Graphviz failed: ${firstLines(ran.stderr) || `exit code ${ran.exitCode}`}` };
-  if (ran.isStdoutTruncated) return { why: 'The drawing was too large to hand back from Graphviz.' };
+  if (ran.exitCode === 127) return { why: nodeMissing() };
+  if (ran.exitCode !== 0)
+    return {
+      why: word('cc.graphviz-failed', {
+        why: firstLines(ran.stderr) || word('cc.exit-code', { code: ran.exitCode }),
+      }),
+    };
+  if (ran.isStdoutTruncated) return { why: word('cc.graphviz-too-large') };
   let svgs: unknown;
   try {
     svgs = JSON.parse(ran.stdout);
@@ -74,6 +77,6 @@ export async function layOut(dots: string[], root: string, run: RunProcess): Pro
     svgs = null;
   }
   if (!Array.isArray(svgs) || svgs.length !== dots.length || !svgs.every((s) => typeof s === 'string'))
-    return { why: 'Graphviz gave no drawing: its output was not one SVG for each layout.' };
+    return { why: word('cc.graphviz-no-drawing') };
   return { svgs };
 }

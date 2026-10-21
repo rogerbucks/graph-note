@@ -89,7 +89,7 @@ export function pageStates(open) {
     'a notice shown': async () => {
       const page = open(withNote);
       await drawn(page);
-      browserHost(page.window).notice('Exported two files.');
+      browserHost(page.window).notice('Two files were written.');
       return page;
     },
     'a menu open': async () => {
@@ -120,7 +120,8 @@ export function pageStates(open) {
       browserHost(page.window).menu(
         [
           { title: 'Export as SVG', icon: 'download', onClick() {} },
-          { title: 'Copy the address', icon: 'copy', onClick() {} },
+          // not "Copy the address": that is a catalogue word now (cc.editor.copy), so the test languages' check would flag it
+          { title: 'Copy its address', icon: 'copy', onClick() {} },
         ],
         { x: 20, y: 20 },
         doc,

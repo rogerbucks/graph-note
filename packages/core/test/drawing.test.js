@@ -224,7 +224,7 @@ describe('which blocks are graphs', () => {
       '// graph: g · QUERY\nMATCH (n) RETURN n',
       '// graph: s · SCHEMA s@1\n(a:T)',
       '// graph: g · excerpt\n(a:T)',
-      '// graph: g · CHANGE SET c1 · against 0123456789abcdef · by ann\n(a:T)',
+      '// graph: g · CHANGE SET c1 · against sha-256-64:0123456789abcdef · by ann\n(a:T)',
       'MATCH (n) RETURN n',
       '',
       '// graph: not-one-word\n(a)',

@@ -4,6 +4,7 @@
 // made. It is made again with every drawing, so it is always the graph as the note now holds it.
 import { textVersion } from '../../core/src/help.ts';
 import type { GraphDrawing } from '../../core/src/note-reading.ts';
+import { word } from '../../core/src/words.ts';
 
 /** The id of the section, which the drawing's image names as its description. */
 export const TEXT_VERSION_ID = 'gn-text-version';
@@ -12,7 +13,7 @@ export const TEXT_VERSION_ID = 'gn-text-version';
 export function textVersionSection(doc: Document, drawing: GraphDrawing): HTMLElement {
   const heading = doc.createElement('h2');
   heading.setAttribute('id', `${TEXT_VERSION_ID}-heading`);
-  heading.textContent = `Text version of graph ${drawing.graph}`;
+  heading.textContent = word('page.text-version', { graph: drawing.graph });
   const list = doc.createElement('ul');
   for (const line of textVersion(drawing)) {
     const item = doc.createElement('li');

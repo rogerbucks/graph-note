@@ -7,6 +7,8 @@
 //   (`O_NOFOLLOW`), never truncating or appending. So a file already there, a link among them, is never written to.
 // - A name already taken gives the next number, the same for every file of the export. A name is only a name.
 // - All of the files or none. One that cannot be written takes away those made before it.
+import { word } from '@thoughtknot/core';
+import type { WordKey } from '@thoughtknot/core';
 import { constants, promises as fs } from 'node:fs';
 import type { FileHandle } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -51,16 +53,16 @@ const UNSAFE = '/\\:*?"<>|';
 
 /** Why `name` is not a file name an export may have, or null: only a name, never a path, with an ending of an export's. */
 export function nameProblem(name: unknown): string | null {
-  if (typeof name !== 'string' || name === '') return 'A file needs a name.';
+  if (typeof name !== 'string' || name === '') return word('server.export.no-name');
   const shown = JSON.stringify(name).slice(0, 60);
-  if (Buffer.byteLength(name) > NAME_BYTES) return `${shown} is too long for a file name.`;
+  if (Buffer.byteLength(name) > NAME_BYTES) return word('server.export.name-too-long', { name: shown });
   if ([...name].some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127 || UNSAFE.includes(c)))
-    return `${shown} is more than a name: a file name has no separator, control character or any of ${UNSAFE}.`;
+    return word('server.export.not-a-name', { name: shown, unsafe: UNSAFE });
   if (name.includes('..') || name.startsWith('.') || name.endsWith('.') || name.endsWith(' '))
-    return `${shown} is not a name an export may have: no .., no leading dot, no trailing dot or space.`;
+    return word('server.export.bad-name', { name: shown });
   const dot = name.lastIndexOf('.');
   if (dot < 1 || !(ENDINGS as readonly string[]).includes(name.slice(dot + 1)))
-    return `${shown} does not end in one of ${ENDINGS.map((e) => `.${e}`).join(', ')}.`;
+    return word('server.export.bad-ending', { name: shown, endings: ENDINGS.map((e) => `.${e}`).join(', ') });
   return null;
 }
 
@@ -70,21 +72,28 @@ export const numbered = (name: string, n: number): string => {
   return `${name.slice(0, dot)}-${n}${name.slice(dot)}`;
 };
 
-const CAUSES: Record<string, string> = {
-  ENOSPC: 'the disk is full',
-  EACCES: 'permission was refused',
-  EPERM: 'permission was refused',
-  EROFS: 'the folder cannot be written to',
-  ENAMETOOLONG: 'the file name is too long',
-  EMFILE: 'too many files are open',
+/** The key of the words for each failure the system names by its code. */
+const CAUSES: Record<string, WordKey> = {
+  ENOSPC: 'write.cause.full',
+  EACCES: 'write.cause.refused',
+  EPERM: 'write.cause.refused',
+  EROFS: 'write.cause.read-only',
+  ENAMETOOLONG: 'write.cause.long-name',
+  EMFILE: 'server.export.many-open',
 };
 
 const codeOf = (e: unknown): string => (e && typeof e === 'object' && 'code' in e ? String(e.code) : '');
 
+/** Why a write failed, in words that complete "could not be written: …". */
+const causeOf = (e: unknown): string => {
+  const key = CAUSES[codeOf(e)];
+  return key ? word(key) : e instanceof Error ? e.message : word('server.export.failed');
+};
+
 const failed = (e: unknown): Made => ({
   ok: false,
   status: 500,
-  why: `The export could not be written: ${CAUSES[codeOf(e)] ?? (e instanceof Error ? e.message : 'it failed')}. Nothing was saved.`,
+  why: word('server.export.not-written', { why: causeOf(e) }),
 });
 
 const refused = (why: string): Made => ({ ok: false, status: 403, why });
@@ -93,7 +102,7 @@ const refused = (why: string): Made => ({ ok: false, status: 403, why });
 async function exportDirectory(vault: string, folder: string, ops: ExportFs): Promise<{ dir: string } | Made> {
   const parts = folder.split('/').filter((p) => p !== '');
   if (parts.some((p) => p.startsWith('.') || p.includes('\0') || p.includes('\\')))
-    return refused('The export folder is, or is in, a hidden folder, which an export never uses.');
+    return refused(word('server.export.hidden-folder'));
   let at = vault;
   for (const part of parts) {
     at = join(at, part);
@@ -106,14 +115,11 @@ async function exportDirectory(vault: string, folder: string, ops: ExportFs): Pr
       stat = await ops.lstat(at);
     }
     const found = stat as { isDirectory(): boolean; isSymbolicLink(): boolean };
-    if (found.isSymbolicLink())
-      return refused(`${part} in the export folder is a link, and a link is never followed. Nothing was saved.`);
-    if (!found.isDirectory())
-      return refused(`${part} in the export folder is a file, not a folder. Nothing was saved.`);
+    if (found.isSymbolicLink()) return refused(word('server.export.link', { part }));
+    if (!found.isDirectory()) return refused(word('server.export.file-not-folder', { part }));
   }
   const expected = join(vault, ...parts);
-  if ((await ops.realpath(expected)) !== expected)
-    return refused('The export folder leads outside the vault, so nothing was saved.');
+  if ((await ops.realpath(expected)) !== expected) return refused(word('server.export.outside'));
   return { dir: expected };
 }
 
@@ -192,7 +198,7 @@ export async function writeNewFiles(
     return {
       ok: false,
       status: 409,
-      why: `Earlier exports hold the first ${MOST_NUMBERS} numbers of these names, so nothing was saved. Move some away.`,
+      why: word('server.export.numbers-used', { most: MOST_NUMBERS }),
     };
   } catch (e) {
     return failed(e);

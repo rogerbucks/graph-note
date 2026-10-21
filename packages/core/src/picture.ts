@@ -12,15 +12,13 @@ import type { GraphDrawing, Problem } from './note-reading.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import type { Picture, StyleGraph } from './style-graph.ts';
 import { reader } from './style-reader.ts';
+import { word } from './words.ts';
 
 /** The side of the square kept for a picture, in Graphviz's points. */
 export const PICTURE_SIZE = 48;
 
 /** The colour the square kept for a picture is filled with: one no theme gives, so the host finds it and only it. */
 export const PICTURE_MARK = '#0005fe';
-
-/** What a Picture is for: one kind, or one thing. */
-export const PICTURE_FOR = 'a Picture is for one kind or one thing';
 
 /** A box drawn with a picture: its index among the drawing's boxes, its key, and the property and value naming the image. */
 export interface PictureBox {
@@ -39,19 +37,20 @@ export function pictureOf(raw: RawThing, names: StyledNames, out: Problem[]): Pi
     before = out.length;
   const has = (k: string) => raw.props[k] !== undefined;
   const targets = ['kind', 'thing'].filter(has).length;
-  if (!has('property')) r.missing('a Picture names the property that holds its image', "add property: '<name>'");
-  else if (targets > 1) r.report(PICTURE_FOR, 'remove one of them');
-  else if (!targets) r.missing(PICTURE_FOR, "add kind: '<Kind>' or thing: '<id>'");
+  // a Picture is for one kind, or one thing
+  if (!has('property')) r.missing(word('styling.picture.property'), word('styling.add-property'));
+  else if (targets > 1) r.report(word('styling.picture.for'), word('styling.remove-one'));
+  else if (!targets) r.missing(word('styling.picture.for'), word('styling.picture.add-target'));
   else {
-    const kind = r.name('kind', names.kinds, 'a kind'),
-      thing = r.name('thing', names.things, 'a thing', 'the id of a thing');
+    const kind = r.name('kind', names.kinds, word('styling.what.kind')),
+      thing = r.name('thing', names.things, word('styling.what.thing'), word('styling.what.thing-id'));
     const of = kind ? { kind } : thing ? { thing } : null;
     if (of) {
       const property = r.name(
         'property',
         names.properties(of),
-        `a property of ${kind ?? thing ?? ''}`,
-        'a property it has',
+        word('styling.what.property-of', { of: kind ?? thing ?? '' }),
+        word('styling.what.property-it-has'),
       );
       const view = r.text('view');
       if (property && out.length === before)

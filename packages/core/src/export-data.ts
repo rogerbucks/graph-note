@@ -100,7 +100,8 @@ export const CORE_EXPORTS: ThoughtKnotPlugin = {
   },
 };
 
-const BUILT_IN = pluginRegistry();
+// the core's own exports are trusted to finish, so no time limit stops them on a large graph
+const BUILT_IN = pluginRegistry({ timeLimit: Infinity });
 BUILT_IN.register(CORE_EXPORTS);
 
 /** The data written in `format`: a GQL block, a CSV table or a GraphML document. Throws, saying why, where it cannot be. */

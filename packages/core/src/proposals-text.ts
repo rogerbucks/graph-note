@@ -10,7 +10,7 @@
 // change is in the graph and a rejected one is nowhere. Both are kept as decisions in the judgement graph
 // (`proposals-judgement.ts`). So the block holds only what still waits.
 //
-//   // graph: reader · CHANGE SET cs1 · against 05d75fdcbdb1d37b · by ada
+//   // graph: reader · CHANGE SET cs1 · against sha-256-64:05d75fdcbdb1d37b · by ada
 //   // proposed: 2026-10-13T09:00:00Z
 //   // read: reader; Notes/Devices
 //   //@ reason: a smaller one for a pocket
@@ -24,6 +24,7 @@ import { groupOf } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';
 import { readStatement, statementOf } from './proposals-statements.ts';
 import { trim } from './whitespace.ts';
+import { word } from './words.ts';
 
 /** The graph and the id a change set's first line names; null for a block that is not a change set. */
 export function changeSetId(block: string): { graph: string; id: string } | null {
@@ -42,7 +43,7 @@ export const oneWord = (s: string): string => s.replace(/[\s,]+/g, '_');
 export function changeSetText(p: Proposal): string {
   const { by, at, read, basis } = p.provenance;
   const out = [
-    `// graph: ${p.graph} · CHANGE SET ${p.id} · against ${basis} · by ${by.name}`,
+    `// graph: ${p.graph} · CHANGE SET ${p.id} · against ${gs.named(basis)} · by ${by.name}`,
     ...(at ? [`// proposed: ${at}`] : []),
     ...(read.length ? [`// read: ${read.join('; ')}`] : []),
   ];
@@ -85,17 +86,9 @@ const metaOf = (lines: readonly string[], re: RegExp): string | undefined =>
  */
 export function readChangeSet(block: string): ChangeSetRead | { refused: string } {
   const h = gs.changesetHeader(block);
-  if (!h)
-    return {
-      refused:
-        'this is not a change set: its first line reads `// graph: <graph> · CHANGE SET <id> · against <state> · by <author>`',
-    };
+  if (!h) return { refused: word('proposing.text.not-change-set') };
   const lines = block.split('\n');
-  if (lines.some((l) => OLD.test(trim(l))))
-    return {
-      refused:
-        'this change set is in the editor’s old form, where removals, ids and decisions were comments that other tools skip, so a rejected change stayed live. It is not read: remove the block and ask for the proposal again',
-    };
+  if (lines.some((l) => OLD.test(trim(l)))) return { refused: word('proposing.text.old-form') };
   const parts = gs.splitChangeset(block);
   // the comments directly above a line, up to the first line that is not one: its group and reason
   const tagsAbove = (line: number): { group?: string; reason?: string } => {

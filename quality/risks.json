@@ -1190,12 +1190,12 @@
       "likelihood": "high",
       "impact": "high",
       "decision": "fix-later",
-      "fix": "In Wave 6 (L1) lift EditorNote plus a small NoteStore (read, write-if-unchanged, watch, list, draft) into core as the named storage interface. Write packages/core/test/storage-contract.test.js. Run the vault, the page store and a plain-folder backend against it before the Tauri app starts.",
+      "fix": "In Wave 6 (L1) lift EditorNote plus a small NoteStore (read, write-if-unchanged, watch, list, draft) into core as the named storage interface. Write test/storage-contract.test.js. Run the vault, the page store and a plain-folder backend against it before the Tauri app starts.",
       "check": "storage-contract.test.js in the suite, listed in CONTRIBUTING.md, with every backend registered; the requirement flips to written only with all three.",
       "paths": [
         "packages/core/src/display/editor/editor-note.ts",
         "packages/core/src/store.ts",
-        "packages/core/test/storage-contract.test.js",
+        "test/storage-contract.test.js",
         "packages/claude-code/server/**",
         "packages/obsidian/src/block-editor/**"
       ],
@@ -1535,10 +1535,11 @@
       "impact": "low",
       "decision": "fix-later",
       "fix": "In P1 (Wave 6) version each extension point in the manifest (exports@1, theme@1). Refuse only the point whose version a plug-in does not match.",
-      "check": "plugins.test.js: a plug-in built for exports@1 still loads after theme moves to @2.",
+      "check": "packages/core/test/plugin-versions.test.js: a plug-in built for exports@1 still loads after the theme moves to @2.",
       "paths": [
-        "packages/core/src/plugins.ts",
+        "packages/core/src/plugin-versions.ts",
         "packages/core/src/plugins-contract.ts",
+        "packages/core/src/plugins.ts",
         "wiki/Writing-a-plug-in.md"
       ],
       "effort": "hours",
@@ -1547,8 +1548,12 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "prevented_by": [
+        "packages/core/test/plugin-versions.test.js"
+      ],
+      "done_in": "#885"
     },
     {
       "id": "UX-1",
@@ -2970,11 +2975,14 @@
       "likelihood": "medium",
       "impact": "medium",
       "decision": "fix-later",
-      "fix": "In Wave 6 make `api` a major.minor pair, where the host accepts an equal major and lower-or-equal minor. Ship one out-of-tree sample plug-in that CI loads through each host's real path.",
-      "check": "A CI step builds the sample plug-in and runs plugins-contract.ts against it in the browser page and the Obsidian harness.",
+      "fix": "Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version, and a sample plug-in passes each contract in a worker. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Left: the browser page and Obsidian each load one from a plug-ins folder.",
+      "check": "test/sample-plugin.test.js runs the sample in a worker now. The browser page and the Obsidian harness load it through their real paths once hosts load outside plug-ins.",
       "paths": [
-        "packages/core/src/plugins.ts",
+        "packages/core/src/plugin-outside.ts",
+        "examples/sample-plugin/plugin.js",
+        "packages/core/src/plugin-versions.ts",
         "packages/core/src/plugins-contract.ts",
+        "packages/core/src/plugins.ts",
         "wiki/Writing-a-plug-in.md"
       ],
       "effort": "days",
@@ -3388,6 +3396,475 @@
       },
       "status": "done",
       "done_in": "#618"
+    },
+    {
+      "id": "TRUST-1",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "Claude can loosen its own gate by editing vault files",
+      "risk": "The gate takes Claude's row from the matrix note and each note's class from its front matter. Both are vault files. The write guard covers only the data folder and the open note, so Claude can edit them and lower its own gate.",
+      "evidence": [
+        "packages/claude-code/src/editor-matrix.ts:17-37",
+        "packages/claude-code/src/data-guard.ts:198-205",
+        "packages/claude-code/src/data-guard.ts:270-281"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "Guard writes to the matrix note named in the settings, as the data folder is guarded. Refuse a write by Claude that changes or removes a note's classification line, and send it to a proposal card instead.",
+      "check": "packages/claude-code/test/gate-guard.test.js: a Write, Edit, MultiEdit, other file tool or Bash call that changes the matrix note or a classification line is refused.",
+      "paths": [
+        "packages/claude-code/src/data-guard.ts",
+        "packages/claude-code/src/editor-matrix.ts",
+        "packages/claude-code/mod/hooks/register.tsx"
+      ],
+      "effort": "days",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "done",
+      "prevented_by": [
+        "packages/claude-code/test/gate-guard.test.js"
+      ],
+      "done_in": "#836"
+    },
+    {
+      "id": "TRUST-2",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "MultiEdit and other write tools are not hooked",
+      "risk": "The guard knows MultiEdit, but the mod hooks only Write, Edit, NotebookEdit and Bash. A tool the guard does not know passes. So MultiEdit, or a file tool from another server, can write the data folder or the open note.",
+      "evidence": [
+        "packages/claude-code/mod/hooks/register.tsx:70",
+        "packages/claude-code/src/data-guard.ts:18-23",
+        "packages/claude-code/src/data-guard.ts:285"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "Hook MultiEdit too. Judge any tool whose input holds a file_path, path or notebook_path field, not only the named ones.",
+      "check": "packages/claude-code/test/data-guard.test.js: MultiEdit and an unknown tool with a file_path, path or notebook_path are judged, and the mod hooks every tool with no list.",
+      "paths": [
+        "packages/claude-code/src/data-guard.ts",
+        "packages/claude-code/mod/hooks/register.tsx"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "done",
+      "prevented_by": [
+        "packages/claude-code/test/data-guard.test.js"
+      ],
+      "done_in": "#836"
+    },
+    {
+      "id": "TRUST-3",
+      "role": "Trust model review",
+      "area": "supply-chain",
+      "title": "The stable release builds and publishes in one job",
+      "risk": "The release job runs npm ci and npm test while it holds contents, id-token and attestations write. An install script or test could ask for a signing token or change main.js before it is attested. The nightly already builds apart from publishing.",
+      "evidence": [
+        ".github/workflows/release.yml:134-154"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Split the release in two. A job with read access builds and uploads the files. A second job with the write permissions attests and publishes them, running no npm.",
+      "check": "test/workflows.test.js: no job that runs npm ci or npm test holds id-token, attestations or contents write.",
+      "paths": [
+        ".github/workflows/release.yml"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 6 · Host, storage and plug-in contracts"
+    },
+    {
+      "id": "TRUST-4",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "GitHub titles and messages reach Claude's pane unfenced",
+      "risk": "Pull request titles, authors and commit messages are third-party text. They go to the changes view, which Claude reads, with no credential scan and no data fence. Files with no class count as the lowest, so outside files reach Claude too.",
+      "evidence": [
+        "packages/claude-code/server/editor-changes.ts:60-65",
+        "packages/claude-code/server/github-reader.ts:168-190",
+        "packages/claude-code/server/editor-gate.ts:42"
+      ],
+      "likelihood": "medium",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Scan item text for credentials and mark it as outside data in the pane, inside the fence of spec_secrets_and_fences. Let the settings give repository files with no class a stricter default.",
+      "check": "packages/claude-code/test/editor-changes.test.js: a title holding a credential is refused and item text is drawn inside the data fence.",
+      "paths": [
+        "packages/claude-code/server/editor-changes.ts",
+        "packages/claude-code/server/github-reader.ts",
+        "packages/claude-code/server/editor-gate.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 6 · Host, storage and plug-in contracts"
+    },
+    {
+      "id": "TRUST-5",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "Any commenter can wake the working-group agent, which writes its own checker",
+      "risk": "A discussion comment wakes Claude with its token and the Write tool. The script that checks Claude's answer then runs from the same folder Claude could write. So an injected comment could skip the check and get any text posted.",
+      "evidence": [
+        ".github/workflows/working-group.yml:13-14",
+        ".github/workflows/working-group.yml:110",
+        ".github/workflows/working-group.yml:135-141"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "Wake it only for comments by the owner or members. Run the checker from a clean checkout of main in a later job that Claude's job cannot write, and drop Write from its tools.",
+      "check": "test/working-group-workflow.test.js and test/claude-workflows.test.js: every Claude workflow woken by a comment filters by author association, and no step after Claude in its own job runs repository code.",
+      "paths": [
+        ".github/workflows/working-group.yml",
+        "scripts/working-group.mjs"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "done",
+      "prevented_by": [
+        "test/working-group-workflow.test.js",
+        "test/claude-workflows.test.js"
+      ],
+      "done_in": "#836"
+    },
+    {
+      "id": "TRUST-6",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "Python fill recipes read outside the folder and inject into the query",
+      "risk": "A recipe in a note names files joined onto the vault or the standards folder with no containment check. Its basis id is pasted into the query text. So a note can read or hash any file, and add query syntax.",
+      "evidence": [
+        "python/graph_spec/src/graphspec/engine/documents/fill.py:51",
+        "python/graph_spec/src/graphspec/engine/documents/fill.py:86",
+        "python/graph_spec/src/graphspec/engine/documents/fill.py:104"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Resolve each recipe path by real path and refuse one outside its folder. Check the basis id against the id rule, or pass it as a query parameter.",
+      "check": "python/graph_spec/tests/test_fill.py: a recipe naming ../ or an id with a quote is refused with the reason.",
+      "paths": [
+        "python/graph_spec/src/graphspec/engine/documents/fill.py"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 6 · Host, storage and plug-in contracts"
+    },
+    {
+      "id": "TRUST-7",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "Nothing cleans the drawing before it enters the page",
+      "risk": "The engine escapes labels, and that is the only guard. The SVG is put into the live page in Obsidian, which has no content policy, and handed raw to the pane. One escaping bug would run script with full access.",
+      "evidence": [
+        "packages/core/src/display/graph-view/drawing-svg.ts:28",
+        "packages/claude-code/mod/hooks/register.tsx:258",
+        "packages/graph-spec/src/graph-layout.js:32-37"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Pass the SVG through an allowlist before it is shown: SVG elements and attributes only, no script, foreignObject, event attributes or links other than in-page.",
+      "check": "packages/core/test/drawing-svg.test.js: an SVG holding script, an on attribute or a javascript: link is drawn without them.",
+      "paths": [
+        "packages/core/src/display/graph-view/drawing-svg.ts",
+        "packages/claude-code/mod/hooks/register.tsx"
+      ],
+      "effort": "days",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 6 · Host, storage and plug-in contracts"
+    },
+    {
+      "id": "TRUST-8",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "A database import has no size or time limit",
+      "risk": "The import reads the whole file and runs the query on the main thread with no time limit. It caps rows only once all are in memory. A large file or a looping query hangs Obsidian. Imported values are not held to the note's class.",
+      "evidence": [
+        "packages/obsidian/src/databases/import.ts:109",
+        "packages/obsidian/src/databases/sqlite.ts:25-36",
+        "packages/obsidian/src/main.ts:264"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Refuse a file above the read limit and stop a query after a time limit. Stop reading at the row limit, and scan the values for credentials.",
+      "check": "packages/obsidian/test/databases.test.js refuses a file over the limit, a looping query and a credential in a value.",
+      "paths": [
+        "packages/obsidian/src/databases/**"
+      ],
+      "effort": "days",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "TRUST-9",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "The Python class reader is looser than the core gate",
+      "risk": "The Python reader takes the first classification line anywhere in the file, not only in front matter, and has no unknown case. So the two readers can give one note different classes.",
+      "evidence": [
+        "python/graph_spec/src/graphspec/engine/documents/classification.py:71-76",
+        "packages/core/src/claude-gate.ts:84-114"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Read the class only from front matter and refuse an unknown or doubled one, as the core does. Share the fixtures.",
+      "check": "python/graph_spec/tests/test_classification.py runs the core gate's classification fixtures and agrees on each.",
+      "paths": [
+        "python/graph_spec/src/graphspec/engine/documents/classification.py"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 6 · Host, storage and plug-in contracts"
+    },
+    {
+      "id": "TRUST-10",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "git log still reads the repository's own settings",
+      "risk": "The server turns off hooks and fsmonitor, but still reads the vault repository's config. A setting such as log.showSignature with gpg.program could start a program when the history is listed. Untested.",
+      "evidence": [
+        "packages/claude-code/server/note-history.ts:39-51",
+        "packages/claude-code/server/note-history.ts:97"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Add -c log.showSignature=false and -c gpg.program= to each git call, or set GIT_CONFIG_GLOBAL and pass only the settings needed.",
+      "check": "packages/claude-code/test/note-history.test.js: a repository whose gpg.program writes a file lists its history. The file is never written.",
+      "paths": [
+        "packages/claude-code/server/note-history.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 6 · Host, storage and plug-in contracts"
+    },
+    {
+      "id": "TRUST-11",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "/graph checks the note, then reads it again to draw",
+      "risk": "The gate reads the note, then the drawing reads it a second time. Text that changes in between is drawn without being checked.",
+      "evidence": [
+        "packages/claude-code/mod/hooks/register.tsx:126",
+        "packages/claude-code/mod/hooks/register.tsx:142"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Read the note once and pass the same text to the gate and to the drawing.",
+      "check": "packages/claude-code/test/register.test.js: the text drawn is the text the gate saw.",
+      "paths": [
+        "packages/claude-code/mod/hooks/register.tsx"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "TRUST-12",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "The gate settings and the confirmed digest travel in the environment",
+      "risk": "The server gets its gate settings and the digest of a note the person confirmed through its environment. Another process of the same user can read them, or start the server with its own.",
+      "evidence": [
+        "packages/claude-code/src/editor-launch.ts:287-294"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Send the settings and the digest on stdin with the proposer key, and read nothing gate-related from the environment.",
+      "check": "packages/claude-code/test/editor-launch.test.js: the server's environment holds no gate setting or digest.",
+      "paths": [
+        "packages/claude-code/src/editor-launch.ts",
+        "packages/claude-code/src/editor-settings-env.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "TRUST-13",
+      "role": "Trust model review",
+      "area": "privacy",
+      "title": "Shared schemas sent to an AI skip their own class",
+      "risk": "The AI scope takes in the vault's shared schemas, but only the class of the note being asked about is checked. A schema kept in a note of a higher class can be sent.",
+      "evidence": [
+        "packages/core/src/ai-scope.ts:94-98",
+        "packages/obsidian/src/ai/ai.ts:44"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-later",
+      "fix": "Hold each schema to the class of the note it came from. Leave out one above the ceiling, and show the reason.",
+      "check": "packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.",
+      "paths": [
+        "packages/core/src/ai-scope.ts",
+        "packages/obsidian/src/ai/ai.ts"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-20",
+        "commit": "eea817ef31c268a777aef172b478a33ca0855b4f"
+      },
+      "status": "open",
+      "wave": "Wave 11 · Slice 8 permissions, AI and export"
+    },
+    {
+      "id": "TRUST-14",
+      "role": "Trust model review",
+      "area": "security",
+      "title": "Plug-ins run with the host's full powers",
+      "risk": "A plug-in runs in the same process as the host, so it can reach the network and the host's calls whatever its manifest says. Its time is read only after a call returns, so a call that never returns, or work it starts and leaves running, is not stopped. No host loads outside plug-ins yet, so this matters once one does.",
+      "evidence": [
+        "packages/core/src/plugins.ts:169-187"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Do this before any host loads a plug-in it did not ship. Run plug-ins in a worker that gets only the extension points, and stop one that runs too long.",
+      "check": "packages/core/test/plugins-isolated.test.js: a plug-in that loops or never answers is stopped and named, its worker has no network, and it reaches only the host abilities it names.",
+      "paths": [
+        "packages/core/src/plugins.ts",
+        "packages/core/src/plugin-isolated.ts",
+        "packages/core/src/plugin-serve.ts"
+      ],
+      "effort": "weeks",
+      "raised": "2026-10-20",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "f8c22fd3b5d812eacf92b4cad07e76532683e993"
+      },
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "prevented_by": [
+        "packages/core/test/plugins-isolated.test.js"
+      ],
+      "done_in": "#882"
+    },
+    {
+      "id": "TRUST-15",
+      "role": "Trust model review",
+      "area": "security",
+      "raised": "2026-10-21",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "f8c22fd3b5d812eacf92b4cad07e76532683e993"
+      },
+      "title": "A plug-in given secrets could read every secret, AI keys too",
+      "risk": "The secrets ability handed a plug-in the host's whole secret store. Any plug-in that named it could read the key of every AI model the person set up, and the secrets of every other plug-in.",
+      "evidence": [
+        "packages/core/src/plugins.ts:195"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "Give each plug-in only the secrets named under its own id, such as acme.one.token. Any other name gives null, and the host is never asked for it.",
+      "check": "packages/core/test/plugins-limits.test.js: a plug-in asking for an AI key, another plug-in's secret or a name that only starts like its id gets null, and the host is asked for none of them.",
+      "paths": [
+        "packages/core/src/plugins.ts"
+      ],
+      "effort": "hours",
+      "status": "done",
+      "prevented_by": [
+        "packages/core/test/plugins-limits.test.js"
+      ],
+      "done_in": "#856"
+    },
+    {
+      "id": "TRUST-16",
+      "role": "Trust model review",
+      "area": "security",
+      "raised": "2026-10-21",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "f8c22fd3b5d812eacf92b4cad07e76532683e993"
+      },
+      "title": "The files ability reaches every note, whatever its class",
+      "risk": "A plug-in given the files ability reads and writes every note through the host's storage. Nothing checks a note's class, so a plug-in can read a note the person keeps from AI and from other people.",
+      "evidence": [
+        "packages/core/src/plugins.ts:196",
+        "packages/core/src/plugin-points.ts:77"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Do this before a host loads an outside plug-in. Give the files ability through the note gate. A plug-in reads only notes at or below a ceiling the person sets for it. Its writes go to a proposal card.",
+      "check": "packages/core/test/plugins-limits.test.js: a plug-in lists and reads only notes at or below its ceiling. A write it makes waits for the person.",
+      "paths": [
+        "packages/core/src/plugins.ts",
+        "packages/core/src/plugin-points.ts",
+        "packages/core/src/plugin-files.ts"
+      ],
+      "effort": "days",
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "prevented_by": [
+        "packages/core/test/plugins-limits.test.js"
+      ],
+      "done_in": "#867"
     }
   ]
 }

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/db-import.test.js",
+  "test": "an import is a copy written as text (db_import_on_request) > a note of many blank lines is read in one pass, never slowly (CodeQL, polynomial regular expression)",
+  "seen_failing_first": false,
+  "evidence": "A guard for a CodeQL finding: V8 runs the old regular expression fast enough here, so the test keeps the one-pass reading from slipping back rather than failing first."
+}

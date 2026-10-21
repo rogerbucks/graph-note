@@ -13,7 +13,6 @@
 //   node scripts/public-readiness.mjs --settings --apply   set each one that differs.
 //   node scripts/public-readiness.mjs --make-public --yes  --history over every branch and tag, then make it public.
 // A pull request's run uses --setup-since. Main and the release run everything.
-//
 // Exits 1 and lists each problem by place and kind. What matched is never printed, so a CI log cannot leak it.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -21,6 +20,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { freshCloneProblems, setupInputsChangedSince } from './fresh-clone.mjs';
 import { messageProblems, problemsIn } from './history-text-problems.mjs';
+import { privateLinkProblems } from './private-links.mjs';
 import { signOffProblems } from './sign-off.mjs';
 import { DESCRIPTION, HOMEPAGE, topicsSetting } from './repo-profile.mjs';
 
@@ -340,7 +340,7 @@ function main(argv) {
   const problems = [];
   // Making the repository public publishes every branch and tag, so that gate reads them all.
   if (flag('--history') || flag('--make-public'))
-    for (const check of [historyProblems, signOffProblems])
+    for (const check of [historyProblems, signOffProblems, privateLinkProblems])
       problems.push(...check(ROOT, { refs: flag('--make-public') ? ['--all'] : ['HEAD'] }));
   // --setup-since <base>, for a pull request: the fresh clone only when a setup input changed
   const since = argv.includes('--setup-since') ? argv[argv.indexOf('--setup-since') + 1] : undefined;
@@ -361,7 +361,7 @@ function main(argv) {
     return 1;
   }
   if (flag('--history'))
-    console.log('history: nothing confidential, personal or secret; each commit no-reply and signed off');
+    console.log('history: nothing confidential, personal or secret; each commit no-reply, signed off, no private link');
   if (flag('--setup') || changed.length)
     console.log("setup: the README's steps set up a fresh clone, and the documents name no machine");
   else if (since) console.log('setup: the documents name no machine, and no setup input changed');

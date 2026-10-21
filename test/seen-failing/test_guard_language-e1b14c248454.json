@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_guard_language.py",
+  "test": "GuardLanguage.test_an_allowed_guard_reads_nothing_outside_the_context_it_is_given",
+  "seen_failing_first": false,
+  "evidence": "The Python library already read guards as the language says, and the JavaScript checker did not. This test holds the Python side to the shared table, and its twin in packages/graph-spec/test/guards.test.mjs was seen failing first."
+}

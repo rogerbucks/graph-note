@@ -36,7 +36,7 @@ process.stdin.on('end', () => {
   }
   for (const c of q.changesets || []) {
     try {
-      const r = C.checkChangeset(c.base, c.block, q.matrix, sw);
+      const r = C.checkChangeset(c.base, c.block, q.matrix, sw, c.session ?? null);
       out.changesets.push({
         failed: r.results
           .filter((x) => !x[1])

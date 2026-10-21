@@ -385,7 +385,7 @@ describe('cs-rejected-out: a rejected addition leaves the live graph, and the re
   });
 
   test('the old form is refused, saying so, and nothing is decided', () => {
-    const old = `// graph: reader · CHANGE SET cs1 · against ${BASIS} · by ada\n//@ change: c1\n//@ remove: thing alice`;
+    const old = `// graph: reader · CHANGE SET cs1 · against sha-256-64:${BASIS} · by ada\n//@ change: c1\n//@ remove: thing alice`;
     const r = ProposalReview.fromChangeSet(old, NOTE_WITH_ADA);
     assert.match(r.refused, /old form/);
   });

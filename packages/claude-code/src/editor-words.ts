@@ -2,6 +2,8 @@
 // the pane's answer, the command line, and who may say yes. None holds the address, the token or the note's text
 // (cc_transcript_clean).
 import { notePath } from './graph-view.ts';
+import type { SpawnedEnd } from './editor-spawn.ts';
+import { word } from '@thoughtknot/core';
 
 /**
  * What `/graph edit` came to: the note it opened, or why it could not. A note held back by the gate says so in `held`.
@@ -14,11 +16,9 @@ export type EditOutcome =
   { ok: true; title: string; reused: boolean } | { ok: false; why: string; held?: 'asks' | 'refused' };
 
 /** What a `confirm` from anything but the person typing is told. */
-export const NOT_THE_PERSON =
-  'Only the person typing can say yes to opening a note above the level set for Claude: a command from anything else is refused.';
+export const notThePerson = (): string => word('cc.editor.not-the-person');
 /** What an `edit` of a note above the level, from anything but the person typing, is told. */
-export const NOT_THE_PERSON_ASKING =
-  'Only the person typing can say yes to that, and this command did not come from them, so it is not opened.';
+export const notThePersonAsking = (): string => word('cc.editor.not-the-person-asking');
 
 /**
  * Whether a command came from the person typing in the composer: the host's `origin.kind` is exactly `composer`. A
@@ -31,14 +31,12 @@ export function fromPerson(origin: unknown): boolean {
 /** The words of the pane's answer: which note, and nothing of the address, the token or the note's text. */
 export function sayEdit(outcome: EditOutcome): string {
   if (outcome.ok) {
-    const open = outcome.reused ? 'The editor is already open for' : 'The editor is ready for';
-    return `${open} ${outcome.title}. The link to open in the browser pane is in the Graph editor pane, and is not shown here.`;
+    return word(outcome.reused ? 'cc.editor.already-open' : 'cc.editor.ready', { title: outcome.title });
   }
   const why = /[.!?]$/.test(outcome.why) ? outcome.why : `${outcome.why}.`;
-  if (outcome.held === 'asks')
-    return `${why} Nothing was opened or shown. Say /graph confirm to open it anyway; anything else leaves it closed.`;
-  if (outcome.held === 'refused') return `${why} Nothing was opened or shown.`;
-  return `The editor was not started: ${why} The drawing /graph gives is shown instead.`;
+  if (outcome.held === 'asks') return word('cc.editor.asks', { why });
+  if (outcome.held === 'refused') return word('cc.editor.refused', { why });
+  return word('cc.editor.not-started', { why });
 }
 
 /** Whether the arguments are `/graph confirm`, the user's yes to the question the last `/graph edit` asked. */
@@ -46,9 +44,21 @@ export function confirmArgs(args: string): boolean {
   return args.trim() === 'confirm';
 }
 
+/** How a process ended, as said in brackets: by its signal, else its exit code. */
+export const sayEndCode = (end: SpawnedEnd): string =>
+  end.code === null
+    ? word('cc.editor.signal', { signal: end.signal ?? word('cc.editor.signal-unknown') })
+    : word('cc.exit-code', { code: end.code });
+
+/** Why a server's process ended, in words: by its signal, else with its exit code. */
+export const sayEnded = (end: SpawnedEnd): string =>
+  end.signal
+    ? word('cc.editor.ended-by', { signal: end.signal })
+    : word('cc.editor.exited', { code: String(end.code) });
+
 /** The words for a server that has stopped, with the reason. */
 export function sayStopped(reason: string): string {
-  return `The editor stopped: ${reason}.`;
+  return word('cc.editor.stopped', { reason });
 }
 
 /** The note named after `/graph edit`, or null when the arguments are not that command; '' when no note was named. */

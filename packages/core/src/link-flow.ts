@@ -15,18 +15,13 @@ import type { RawThing, StyledNames } from './style-checks.ts';
 import { FLOW_MOTIONS, orList } from './style-graph.ts';
 import type { Flow, StyleGraph } from './style-graph.ts';
 import { reader } from './style-reader.ts';
+import { word } from './words.ts';
 
 /** A way a link moves, still aside. */
 export type Moving = Exclude<Flow['motion'], 'still'>;
 
 /** The icon on a moving link's label, one for each way it moves: what it means is in the legend. */
 export const FLOW_ICONS: Record<Moving, string> = { dashes: '⇢', dot: '•' };
-
-/** How each way of moving is said in words, in a legend and to a screen reader. */
-export const FLOW_WORDS: Record<Moving, string> = { dashes: 'moving dashes', dot: 'a moving dot' };
-
-/** What a Flow that moves links lacks when it does not say what the movement means (motion_not_alone). */
-export const MEANS_NEEDED = 'a link that moves must say what its movement means, so it is never told by movement alone';
 
 /** A link that moves: its index in the order the source draws the links, how it moves, and what that means. */
 export interface FlowLink {
@@ -52,15 +47,23 @@ export function flowOf(raw: RawThing, names: StyledNames, out: Problem[]): Flow 
   const r = reader(raw, names, out),
     before = out.length;
   if (raw.props.motion === undefined) {
-    r.missing('a Flow says how its links move', `add motion: ${orList(FLOW_MOTIONS.map((w) => `'${w}'`))}`);
+    r.missing(
+      word('styling.flow.missing'),
+      word('styling.flow.add', { among: orList(FLOW_MOTIONS.map((w) => `'${w}'`)) }),
+    );
     return null;
   }
-  const motion = r.word('motion', FLOW_MOTIONS, `motion must be ${orList(FLOW_MOTIONS)}`);
-  const type = r.name('type', names.types, 'a relationship type'),
+  const motion = r.word(
+    'motion',
+    FLOW_MOTIONS,
+    word('styling.must-be', { key: 'motion', among: orList(FLOW_MOTIONS) }),
+  );
+  const type = r.name('type', names.types, word('styling.what.type')),
     view = r.text('view'),
     means = r.text('means');
   if (motion && motion !== 'still' && !means && out.length === before)
-    r.missing(MEANS_NEEDED, "add means: '<what the movement means>'");
+    // what a Flow that moves links lacks when it does not say what the movement means (motion_not_alone)
+    r.missing(word('styling.flow.means-needed'), word('styling.flow.means.fix'));
   if (!motion || out.length !== before) return null;
   return {
     motion,
@@ -156,7 +159,8 @@ export function reversedLinks(drawing: GraphDrawing, rankdir: string): number[] 
 }
 
 /** A moving link as a screen reader hears it, after its reading: the movement, and what it means. */
-export const flowSaid = (f: Pick<FlowLink, 'motion' | 'means'>): string => `${FLOW_WORDS[f.motion]}: ${f.means}`;
+export const flowSaid = (f: Pick<FlowLink, 'motion' | 'means'>): string =>
+  word(f.motion === 'dashes' ? 'styling.flow.dashes' : 'styling.flow.dot', { means: f.means });
 
 /** The legend of the links that move: each movement and meaning once, in the order first drawn, with its icon. */
 export function flowLegend(flow: readonly FlowLink[]): FlowLegendEntry[] {

@@ -2,12 +2,16 @@
 // name is in the style of the graph's names and never one of them (name_from_text, suggested_name_unique). The thing is
 // then written as text, after the block's last item, and nothing else in the block changes. A name of the user's own is
 // held to the same rules.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import gs from '@thoughtknot/graph-spec';
 import { addThing, suggestName } from '../src/add-thing.ts';
 import { readNote } from '../src/drawing.ts';
 import { nameFromText } from '../src/name-suggestions.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const BLOCK = `// graph: reader
 (question:Question {title: 'Which device?'}),
@@ -82,6 +86,20 @@ describe('adding a thing', () => {
     assert.match(refused('3d'), /one word/);
     assert.match(refused('match'), /language keeps/);
     assert.equal(added(addThing(reading, 'reader', BLOCK, { text: 'Small reader', name: '  ' })).name, 'small_reader');
+  });
+
+  test('why a thing is not added is said in the person’s language, with the name they gave', () => {
+    setLanguage('en-XA');
+    const refused = (thing) => addThing(reading, 'reader', BLOCK, thing).refused;
+    const taken = refused({ text: 'Small reader', name: 'Large_Reader' });
+    assert.ok(isPseudoWord(taken), taken);
+    assert.match(taken, /Large_Reader/);
+    for (const why of [
+      refused({ text: '' }),
+      refused({ text: 'x', kind: 'Path' }),
+      refused({ text: 'x', name: 'match' }),
+    ])
+      assert.ok(isPseudoWord(why), why);
   });
 
   test('the kind is optional, and one word', () => {

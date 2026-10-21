@@ -210,14 +210,14 @@ Checked against WCAG 2.2, Apple's and Microsoft's design guidance and common des
 | Empty states | Yes (`empty_view`, `empty_export`, `empty_block_start`) | — |
 | Undo | Yes (`undo_everything` and others) | — |
 | Plain-language messages | Yes (`ux_copy_auto`) | — |
-| Theme tokens for the interface | Partly (drawing only) | `ui_theme_tokens`, `plugin_theme_tokens` |
-| High contrast and forced colours | No | `forced_colours` |
-| Text enlarged to 200 per cent | No | `text_scaling` |
-| Colour never the only signal | Partly (focus only) | `colour_never_alone` |
-| Progress for long waits | Partly (layout time limit) | `progress_shown` |
-| First-run help | Measured, not offered | `first_run_help` |
-| Keyboard shortcuts listed | No | `shortcuts_listed` |
-| Printing | No | `print_ready` |
+| Theme tokens for the interface | Yes for the interface, built 20 Oct 2026. A plug-in's own tokens wait for the hosts to load plug-ins (Wave 6) | `ui_theme_tokens`, `plugin_theme_tokens` |
+| High contrast and forced colours | Yes | `forced_colours` |
+| Text enlarged to 200 per cent | Yes | `text_scaling` |
+| Colour never the only signal | Yes, built 20 Oct 2026 | `colour_never_alone` |
+| Progress for long waits | Yes, built 20 Oct 2026 | `progress_shown` |
+| First-run help | Yes, built 20 Oct 2026 | `first_run_help` |
+| Keyboard shortcuts listed | Yes, built 20 Oct 2026 | `shortcuts_listed` |
+| Printing | Yes, built 20 Oct 2026 | `print_ready` |
 
 ## The build order
 

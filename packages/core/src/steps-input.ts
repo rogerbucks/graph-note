@@ -3,11 +3,13 @@
 // never to a copy. Each input is checked against what its point says it takes before the step runs. The inputs are read
 // together as one graph, a thing by its id, for the rule to match.
 import type { Graph } from '@thoughtknot/graph-spec';
+import { formatList } from './locale-formats.ts';
 import type { NoteReading } from './note-reading.ts';
 import type { StepGraph } from './steps-match.ts';
 import { evaluate } from './view-evaluate.ts';
 import { parseView } from './view-profile.ts';
 import { viewsOf } from './views.ts';
+import { sourceWord, word } from './words.ts';
 
 /** What a step takes at one named point: the kinds of things and the types of links what is given there must hold. */
 export interface StepPoint {
@@ -22,15 +24,16 @@ export interface StepGiven {
   view?: string;
 }
 
-/** An input as the step takes it: its point, what was given in words, and the graph (or part of one) it is. */
+/**
+ * An input as the step takes it: its point, and what was given in words. `label` is in the reader's language. `read`
+ * is in UK English, as the change set records it in the note. Then comes the graph, or the part of one, it is.
+ */
 export interface StepInput {
   point: string;
   label: string;
+  read: string;
   graph: StepGraph;
 }
-
-const and = (xs: readonly string[]) =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
 
 /** The things and links of `ids` and `links` in a graph of the reading: their kinds and properties as read. */
 function partOf(g: Graph, ids: string[], links: [string, string, string][]): StepGraph {
@@ -42,16 +45,24 @@ function partOf(g: Graph, ids: string[], links: [string, string, string][]): Ste
   return { things, links };
 }
 
-/** What a given graph or view is in words: "graph team", "view near_ada of team". */
-export const givenLabel = (g: StepGiven): string => (g.view ? `view ${g.view} of ${g.graph}` : `graph ${g.graph}`);
+/** What a given graph or view is in words, in the reader's language: "graph team", "view near_ada of team". */
+export const givenLabel = (g: StepGiven): string =>
+  g.view ? word('steps.given.view', { view: g.view, graph: g.graph }) : word('steps.given.graph', { graph: g.graph });
+
+/** The same words in UK English, whatever the reader's language: they are written into a change set's bytes. */
+const givenRead = (g: StepGiven): string =>
+  g.view
+    ? sourceWord('steps.given.view', { view: g.view, graph: g.graph })
+    : sourceWord('steps.given.graph', { graph: g.graph });
 
 /** One input from what was given at a point, as the reading draws it; or why it cannot be one. */
 function inputOf(point: string, given: StepGiven, reading: NoteReading, texts: readonly string[]): StepInput | string {
   const label = givenLabel(given),
-    at = `${label}, given at ${point},`;
+    read = givenRead(given),
+    at = { given: label, point };
   const drawing = reading.graphs.get(given.graph),
     g = reading.world[given.graph];
-  if (!drawing || !g) return `${at} is not in this note.`;
+  if (!drawing || !g) return word('steps.input.not-in-note', at);
   const edges = (indexes: Iterable<number>) =>
     [...indexes].flatMap((i): [string, string, string][] => {
       const l = drawing.links[i];
@@ -61,6 +72,7 @@ function inputOf(point: string, given: StepGiven, reading: NoteReading, texts: r
     return {
       point,
       label,
+      read,
       graph: partOf(
         g,
         drawing.boxes.map((b) => b.key),
@@ -68,13 +80,13 @@ function inputOf(point: string, given: StepGiven, reading: NoteReading, texts: r
       ),
     };
   const view = viewsOf([...texts]).find((v) => v.graph === given.graph && v.name === given.view);
-  if (!view) return `There is no view ${given.view} of ${given.graph} in this note, to give at ${point}.`;
-  if (view.fault) return `${at} cannot be used: ${view.fault}.`;
+  if (!view) return word('steps.input.no-view', { view: given.view, graph: given.graph, point });
+  if (view.fault) return word('steps.input.view-fault', { ...at, why: view.fault });
   const spec = parseView(view.query);
-  if ('refused' in spec) return `${at} is refused: ${spec.refused}`;
+  if ('refused' in spec) return word('steps.input.view-refused', { ...at, why: spec.refused });
   const result = evaluate(spec, reading, given.graph);
-  if (result.empty) return `${at} matches nothing: ${result.why ?? ''}`;
-  return { point, label, graph: partOf(g, result.things, edges(result.links)) };
+  if (result.empty) return word('steps.input.view-empty', { ...at, why: result.why ?? '' });
+  return { point, label, read, graph: partOf(g, result.things, edges(result.links)) };
 }
 
 /**
@@ -94,11 +106,11 @@ export function inputsFrom(
     refused: string[] = [],
     inputs: StepInput[] = [];
   for (const point of Object.keys(given))
-    if (!names.includes(point)) refused.push(`The step takes nothing at ${point}: it takes ${and(names)}.`);
+    if (!names.includes(point)) refused.push(word('steps.input.not-taken', { point, points: formatList(names) }));
   for (const p of points) {
     const g = given[p.name];
     if (!g) {
-      refused.push(`Nothing is given at ${p.name}: choose a graph or a view for it.`);
+      refused.push(word('steps.input.nothing-given', { point: p.name }));
       continue;
     }
     const input = inputOf(p.name, g, reading, texts);
@@ -118,16 +130,16 @@ export function inputFaults(points: readonly StepPoint[], inputs: readonly StepI
     const p = points.find((x) => x.name === input.point);
     if (!p) return [];
     const { things, links } = input.graph;
-    if (!things.size) return [`${input.label}, given at ${p.name}, holds nothing.`];
+    if (!things.size) return [word('steps.input.holds-nothing', { given: input.label, point: p.name })];
     const kinds = new Set([...things.values()].flatMap((t) => [...t.kinds])),
       types = new Set(links.map((l) => l[1]));
     return [
       ...p.kinds
         .filter((k) => !kinds.has(k))
-        .map((k) => `${p.name} takes (:${k}) things, and ${input.label} holds none.`),
+        .map((kind) => word('steps.input.no-kind', { point: p.name, kind, given: input.label })),
       ...p.types
         .filter((t) => !types.has(t))
-        .map((t) => `${p.name} takes [:${t}] links, and ${input.label} holds none.`),
+        .map((type) => word('steps.input.no-type', { point: p.name, type, given: input.label })),
     ];
   });
 }

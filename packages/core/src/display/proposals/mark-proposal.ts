@@ -1,7 +1,7 @@
 // A proposal laid over the drawing (spec §17, proposal_shown_not_applied). Each box and link the proposal adds, changes
 // or removes is marked on the SVG Graphviz drew, so the layout stays the Python library's. It is marked by a line style
 // and a word, and said so to screen readers, never by colour alone.
-import { MARK_WORDS } from '@thoughtknot/core';
+import { markWord, word } from '@thoughtknot/core';
 import type { MarkKind, Marks } from '@thoughtknot/core';
 import { cornerOf } from '../graph-view/parked';
 
@@ -21,7 +21,7 @@ export function markProposal(svg: SVGSVGElement, marks: Marks): void {
     const mark = marks.boxes.get(g.getAttribute('data-key') ?? '');
     if (!mark) continue;
     g.classList.add('thoughtknot-proposed', `is-${mark.kind}`);
-    say(g, `${MARK_WORDS[mark.kind].toLowerCase()} by the proposal`);
+    say(g, word('proposal.marked', { mark: markWord(mark.kind, true) }));
     const at = cornerOf(g);
     if (!at) continue;
     const text = g.appendChild(activeDocument.createElementNS(SVG, 'text'));
@@ -29,12 +29,12 @@ export function markProposal(svg: SVGSVGElement, marks: Marks): void {
     text.setAttribute('x', String(at.right - 4));
     text.setAttribute('y', String(at.top + 10));
     text.setAttribute('text-anchor', 'end');
-    text.textContent = `${SIGNS[mark.kind]} ${MARK_WORDS[mark.kind].toLowerCase()}`;
+    text.textContent = `${SIGNS[mark.kind]} ${markWord(mark.kind, true)}`;
   }
   for (const g of Array.from(svg.querySelectorAll('g.edge[data-link]'))) {
     const mark = marks.links.get(Number(g.getAttribute('data-link')));
     if (!mark) continue;
     g.classList.add('thoughtknot-proposed', `is-${mark.kind}`);
-    say(g, `${MARK_WORDS[mark.kind].toLowerCase()} by the proposal`);
+    say(g, word('proposal.marked', { mark: markWord(mark.kind, true) }));
   }
 }

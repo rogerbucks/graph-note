@@ -12,6 +12,7 @@ import {
   PALETTES,
   readNote,
   tooLarge,
+  word,
 } from '@thoughtknot/core';
 import type { Palette, Refusal } from '@thoughtknot/core';
 import type { Laid } from './graphviz-process.ts';
@@ -31,28 +32,25 @@ export interface GraphView {
 export const SVG_MAX = 131072;
 
 /** What the pane says for a note with no graph. */
-export const NO_GRAPH = 'No graph in this note.';
+export const noGraph = (): string => word('cc.no-graph');
 
 /** What the pane says for a note whose graph blocks hold nothing yet. */
-export const EMPTY_GRAPH = 'The graph in this note has nothing in it yet.';
+export const emptyGraph = (): string => word('cc.empty-graph');
 
-const INSTEAD = 'It is shown as text instead.';
+const instead = () => word('cc.instead');
 
 /** Why a graph is over the layout limits, in words. */
 function refusalWords(r: Refusal): string {
-  if (r.reason !== 'too-large') return `Not drawn. ${INSTEAD}`;
+  if (r.reason !== 'too-large') return word('cc.not-drawn', { instead: instead() });
   const n = formatCount;
   if (r.limit === 'text-bytes' || r.limit === 'text-lines') {
-    const unit = r.limit === 'text-bytes' ? 'bytes' : 'lines';
-    return `Too large to read: the graph blocks here hold ${n(r.count)} ${unit}, and at most ${n(r.most)} are read.`;
+    const unit = word(r.limit === 'text-bytes' ? 'cc.unit.bytes' : 'cc.unit.lines');
+    return word('cc.too-large-to-read', { size: n(r.count), unit, most: n(r.most) });
   }
-  const what =
-    r.limit === 'source' ? 'bytes of drawing instructions' : r.limit === 'word' ? 'characters in a word' : r.limit;
-  return `Too large to draw: this graph has ${r.atLeast ? 'at least ' : ''}${n(r.count)} ${what}, and at most ${n(r.most)} are drawn. ${INSTEAD}`;
+  const what = r.limit === 'source' ? word('cc.unit.source') : r.limit === 'word' ? word('cc.unit.word') : r.limit;
+  const size = r.atLeast ? word('cc.at-least', { size: n(r.count) }) : n(r.count);
+  return word('cc.too-large-to-draw', { size, what, most: n(r.most), instead: instead() });
 }
-
-/** A count and its noun, in the singular for one. */
-const counted = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 /** The view of a note's first graph, laid out by `lay` and themed in `palette`. */
 export async function viewOf(
@@ -64,19 +62,25 @@ export async function viewOf(
   const reading = readNote(blocks.map((b) => b.text));
   if (reading.tooLarge) {
     const why = refusalWords(reading.tooLarge);
-    return { title: 'Too large', alt: why, lines: [why], why };
+    return { title: word('cc.title.too-large'), alt: why, lines: [why], why };
   }
   const [drawing] = reading.graphs.values();
   if (!drawing) {
     const errors = reading.problems.filter((p) => p.severity === 'error');
-    if (!errors.length && blocks.length) return { title: 'Empty', alt: EMPTY_GRAPH, lines: [EMPTY_GRAPH] };
-    if (!errors.length) return { title: 'No graph', alt: NO_GRAPH, lines: [NO_GRAPH] };
-    const alt = 'The graph could not be read.';
+    if (!errors.length && blocks.length)
+      return { title: word('cc.title.empty'), alt: emptyGraph(), lines: [emptyGraph()] };
+    if (!errors.length) return { title: word('cc.title.no-graph'), alt: noGraph(), lines: [noGraph()] };
+    const alt = word('cc.not-read');
     const at = (p: (typeof errors)[number]) => (blocks[p.block]?.line ?? 0) + p.line;
-    return { title: 'Not read', alt, lines: [alt, ...errors.map((p) => `Line ${at(p)}: ${p.message}`)] };
+    const lines = errors.map((p) => word('cc.problem-line', { line: at(p), message: p.message }));
+    return { title: word('cc.title.not-read'), alt, lines: [alt, ...lines] };
   }
 
-  const alt = `${drawing.graph}: ${counted(drawing.boxes.length, 'thing')}, ${counted(drawing.links.length, 'link')}`;
+  const alt = word('cc.alt', {
+    graph: drawing.graph,
+    things: word('cc.things', { count: drawing.boxes.length }),
+    links: word('cc.links', { count: drawing.links.length }),
+  });
   const asText = {
     title: drawing.graph,
     alt,
@@ -90,7 +94,7 @@ export async function viewOf(
   if ('why' in drawn) return { ...asText, why: drawn.why };
   const { svg } = chosen(laid, drawn.svgs, palette);
   if (svg.length > SVG_MAX)
-    return { ...asText, why: `The drawing is too large for a pane (over ${SVG_MAX} characters). ${INSTEAD}` };
+    return { ...asText, why: word('cc.too-large-for-pane', { most: SVG_MAX, instead: instead() }) };
   return { ...asText, svg };
 }
 

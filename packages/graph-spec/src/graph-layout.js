@@ -180,13 +180,18 @@ round — are ported here exactly, each proved against Python by the layout test
     }
     // a kind that only receives links and is not the graph's main destination is laid out on the far side
     const reach = new Map(kinds.map((k) => [k, new Set()]));
+    // each pair of kinds a link joins, once: the same reach as going over every link, in far fewer steps
+    const pairs = new Map();
+    for (const [s, , d] of edges) {
+      const from = of.get(s),
+        to = of.get(d);
+      if (from && to) pairs.set(`${from}\u0000${to}`, [from, to]);
+    }
     for (let n = 0; n < kinds.length; n++) {
-      for (const [s, , d] of edges) {
-        if (of.get(s) && of.get(d)) {
-          const r = reach.get(of.get(s));
-          r.add(of.get(d));
-          for (const x of reach.get(of.get(d))) r.add(x);
-        }
+      for (const [from, to] of pairs.values()) {
+        const r = reach.get(from);
+        r.add(to);
+        for (const x of reach.get(to)) r.add(x);
       }
     }
     const sinks = kinds.filter(

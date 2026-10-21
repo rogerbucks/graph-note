@@ -20,6 +20,16 @@ const fileLink = (path) => `[\`${path}\`](${REPO}/blob/main/${path})`;
 export const POINT_ABOUT = {
   exports: 'A data export: a format offered in Export, with its title, file extension, media type and writer.',
   theme: 'Colours of its own, named under its id, in light and dark, each meeting the locked contrast.',
+  storage: 'A place notes are kept, such as a server or a cloud drive, that passes the note storage contract.',
+  commands: 'A command a person runs from the host’s command list, named under its id.',
+  panels: 'A panel shown beside a graph, drawn right to left in a right-to-left host, with logical sides only.',
+  sources:
+    'A place graphs are read from, such as a database. Its graph is held as a joined graph: untrusted, and strictest when unlabelled.',
+  steps:
+    'A step that makes a graph from others, named under its id. Its graph keeps the lowest trust and strictest class it was given.',
+  ai: 'An AI service’s request shape. It only shapes the body and reads the reply; the core keeps the gate and the person’s yes, and the host the key.',
+  diagrams:
+    'A diagram type, named under its id, that a style graph chooses. It gives back boxes, lines and text as data, and the core draws them.',
 };
 
 /** Where a requirement stands, as a mark and words: in the latest release, on main only, being built, or planned. */
@@ -185,7 +195,9 @@ export function developerFills(dev, board, states, latest) {
     'plugin-points': pointsTable(dev.points),
     'plugin-checks':
       `**Every data export** (\`exporterContract\`):\n\n${checksList(dev.exporterChecks)}\n\n` +
-      `**Every theme colour** (\`themeTokenContract\`):\n\n${checksList(dev.tokenChecks)}`,
+      `**Every theme colour** (\`themeTokenContract\`):\n\n${checksList(dev.tokenChecks)}\n\n` +
+      `**Every storage** (\`storageBackendContract\`):\n\n${checksList(dev.storageChecks)}\n\n` +
+      `**Every command** (\`commandContract\`):\n\n${checksList(dev.commandChecks)}`,
     'built-in-plugins': builtInTable(dev.builtIns),
     'host-members': hostTable(hostMembers(dev.hostSource)),
     'host-checks': checksList(dev.hostChecks),
@@ -238,18 +250,23 @@ export function referencePage(dev, latest) {
  */
 export async function developerFacts() {
   const { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } = await import('../packages/core/src/plugins.ts');
-  const { exporterContract, themeTokenContract } = await import('../packages/core/src/plugins-contract.ts');
+  const contracts = await import('../packages/core/src/plugins-contract.ts');
+  const { commandContract, exporterContract, storageBackendContract, themeTokenContract } = contracts;
   const { HOST_CONTRACT_VERSION, hostContract } = await import('../packages/core/src/display/host-contract.ts');
   const { THEME_TOKENS } = await import('../packages/core/src/theme-tokens.ts');
   const { CORE_EXPORTS } = await import('../packages/core/src/export-data.ts');
+  const { memoryStorage } = await import('../packages/core/src/note-storage.ts');
+  const { CORE_STORAGE } = await import('../packages/core/src/core-storage.ts');
   const { STANDARD_SCHEMAS } = await import('../packages/core/src/standard-schemas.ts');
   const text = (rel) => readFileSync(join(ROOT, rel), 'utf8');
-  const builtIns = [CORE_EXPORTS].map((p) => {
+  const builtIns = [CORE_EXPORTS, CORE_STORAGE].map((p) => {
     const registry = pluginRegistry();
     registry.register(p);
     const adds = [
       ...registry.exporters().map((e) => `${e.title} export`),
       ...registry.themeTokens().map((t) => t.name),
+      ...registry.storages().map((b) => `${b.title} storage`),
+      ...registry.commands().map((c) => `${c.title} command`),
     ];
     return { id: p.id, version: p.version, uses: p.uses, adds };
   });
@@ -268,6 +285,8 @@ export async function developerFacts() {
     pluginApi: PLUGIN_API,
     exporterChecks: exporterContract(exporter).map((c) => c.name),
     tokenChecks: themeTokenContract(token, 'x.y').map((c) => c.name),
+    storageChecks: storageBackendContract({ name: 'x', title: 'X', open: memoryStorage }).map((c) => c.name),
+    commandChecks: commandContract({ id: 'x.y.z', title: 'X', run: () => {} }, 'x.y').map((c) => c.name),
     builtIns,
     hostSource: text('packages/core/src/display/host.ts'),
     hostChecks: hostContract(() => {

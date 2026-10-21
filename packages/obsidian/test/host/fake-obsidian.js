@@ -80,6 +80,8 @@ export function fakeObsidian(state = {}) {
       this.path = path;
       this.name = path.split('/').pop();
       this.extension = path.split('.').pop() ?? 'md';
+      // its name without the ending, as Obsidian gives it
+      this.basename = this.name.replace(/\.[^.]*$/, '');
     }
     // its size in bytes, as Obsidian keeps it without reading the file
     get stat() {

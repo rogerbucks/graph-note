@@ -11,6 +11,7 @@ import { NameBook } from './name-book.ts';
 import { keptWord } from './name-suggestions.ts';
 import type { NoteReading } from './note-reading.ts';
 import { S, trim } from './whitespace.ts';
+import { word } from './words.ts';
 import { TEXT_KEYS, writtenIn } from './written-things.ts';
 
 /** A thing to add: its text (asked for first), the name to give it instead of the suggested one, and its kind. */
@@ -27,8 +28,6 @@ export type ThingAdded = { text: string; name: string } | { refused: string };
 
 const WORD = /^[A-Za-z_]\w*$/;
 const HIDDEN = new Set<string>(gs.SCHEMA_LABELS);
-const PATH_KIND =
-  'Path is the kind a recorded path takes, and a path needs its steps: record a path, or choose another kind';
 const oneLine = (s: string) => trim(s.replace(new RegExp(`${S}+`, 'g'), ' '));
 
 /** Every name the graph has, with its kind, as the note was read and as the block is now typed: written or only mentioned. */
@@ -73,7 +72,7 @@ function undeclared(reading: NoteReading, graph: string, kind: string): string |
   const schema = g?.labelled('ElementType').length ? g : gs.schemaFor(reading.whole, graph)[1];
   const types = schema ? schema.labelled('ElementType').map((i) => schema.p(i)) : [];
   if (!kind || !types.length || types.some((t) => t.kind === 'node' && t.name === kind)) return null;
-  return `graph ${graph} is locked and its schema does not declare ${kind}: declare it in the schema first`;
+  return word('editing.add.undeclared', { graph, kind });
 }
 
 /**
@@ -92,25 +91,23 @@ export function addThing(reading: NoteReading, graph: string, block: string, thi
   const text = oneLine(thing.text),
     kind = trim(thing.kind ?? ''),
     given = trim(thing.name ?? '');
-  if (!text) return { refused: 'give the thing its text first: its name is suggested from it' };
-  if (graphOfBlock(block) !== graph)
-    return { refused: `this block is not in graph ${graph}: add the thing where it is` };
-  if (kind && !WORD.test(kind)) return { refused: 'the kind must be one word: letters, digits and underscores' };
+  if (!text) return { refused: word('editing.add.text-first') };
+  if (graphOfBlock(block) !== graph) return { refused: word('editing.add.other-graph', { graph }) };
+  if (kind && !WORD.test(kind)) return { refused: word('editing.kind-word') };
   // a schema label makes a thing the graph keeps out of its drawing, so it would be "added" and never seen
-  if (HIDDEN.has(kind)) return { refused: `${kind} is a label the graph keeps for its schema: choose another kind` };
+  if (HIDDEN.has(kind)) return { refused: word('editing.add.schema-label', { kind }) };
   // a Path is read as a recorded path, and one with no steps reads back as broken
-  if (kind === 'Path') return { refused: PATH_KIND };
+  if (kind === 'Path') return { refused: word('editing.add.path-kind') };
   const why = undeclared(reading, graph, kind);
   if (why) return { refused: why };
   const book = namesOf(reading, graph, block);
-  if (given && !WORD.test(given))
-    return { refused: 'a name is one word: letters, digits and underscores, and it starts with a letter' };
-  if (given && keptWord(given)) return { refused: `${given} is a word the language keeps: choose another name` };
+  if (given && !WORD.test(given)) return { refused: word('editing.add.name-word') };
+  if (given && keptWord(given)) return { refused: word('editing.add.kept-word', { name: given }) };
   if (given && [...book.names().keys()].some((n) => n.toLowerCase() === given.toLowerCase()))
-    return { refused: `${given} is already a name in graph ${graph}: choose another` };
+    return { refused: word('editing.name-taken', { name: given, graph }) };
   const all = items(block);
   if (all.length && all.every((it) => /^(SET|MATCH)\b/i.test(block.slice(it.from, it.to))))
-    return { refused: 'the block holds only a SET or MATCH: add the thing in a block of its own' };
+    return { refused: word('editing.add.only-set') };
   const name = given || book.name(text, kind || undefined);
   const key = keyFor(reading, graph, kind);
   return { text: appended(block, [`(${name}${kind ? `:${kind}` : ''} {${key}: ${quoted(text)}})`]), name };

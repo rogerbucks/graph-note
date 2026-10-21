@@ -27,7 +27,7 @@ import {
 
 const SEMVER = /^\d+\.\d+\.\d+$/;
 const EXACT = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
-const RUNTIME_ALLOWED = new Set(['@viz-js/viz']);
+const RUNTIME_ALLOWED = new Set(['@viz-js/viz', 'sql.js']); // two WebAssembly engines inside the bundle (§13, §20)
 // The one addition spec §13 allows, for the browser host alone (§26, cc_one_renderer): a Markdown renderer.
 const MARKDOWN_RENDERER = 'marked';
 // The one place that may reach the network: sending to an AI the user has set up.
@@ -146,7 +146,7 @@ describe('the supply chain', () => {
       );
   });
 
-  test('the only runtime dependencies are the Graphviz WebAssembly engine and, for the browser host alone, one Markdown renderer', () => {
+  test('the only runtime dependencies are the Graphviz and SQLite WebAssembly engines and, for the browser host alone, one Markdown renderer', () => {
     const workspaceNames = new Set(jsPackages().map((p) => readJSON(`${p}/package.json`).name));
     for (const p of jsPackages()) {
       const deps = Object.keys(readJSON(`${p}/package.json`).dependencies ?? {});
@@ -239,13 +239,11 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only thirteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
+  test('only fifteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
-        if (!perms) continue;
-        const writes = permissionValues(perms).some((v) => /write/.test(v));
-        if (!writes) continue;
+        if (!perms || !permissionValues(perms).some((v) => /write/.test(v))) continue;
         // the three other writers may touch nothing else. One locks pull request conversations. One leaves the build
         // status comment on a pull request, with read access to what it reads (test/build-status-workflow.test.js)
         const given = perms
@@ -262,8 +260,10 @@ describe('GitHub Actions', () => {
         const only = (file, job, wanted) => f.endsWith(file) && name === job && [...given].sort().join() === wanted;
         // one mirrors the requirements into their issues on a push to main (test/github-project-workflow.test.js)
         const mirror = only('/project-mirror.yml', 'mirror', 'contents: read,issues: write');
-        // one leaves Claude's review on a pull request (test/claude-review-workflow.test.js)
-        const review = only('/claude-review.yml', 'review', 'contents: read,pull-requests: write');
+        // Claude's review on a pull request, and Sara's replies in the working group discussion (their own tests)
+        const review =
+          only('/claude-review.yml', 'review', 'contents: read,pull-requests: write') ||
+          (/\/working-group(-reply)?\.yml$/.test(f) && name === 'post' && given.join() === 'discussions: write');
         // the wiki, its review issue, the nightly and the home page run no repository code (their own tests say so)
         const wiki = only('/wiki.yml', 'publish', 'contents: write') || only('/wiki.yml', 'report', 'issues: write');
         const nightly =

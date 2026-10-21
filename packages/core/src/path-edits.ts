@@ -5,6 +5,7 @@
 import { blankText, items, lineIndex } from './block-items.ts';
 import type { Problem } from './note-reading.ts';
 import { ownedAbove } from './note-lines.ts';
+import { word } from './words.ts';
 
 type Edit = { span: { line: number; character: number; end: number }; text: string };
 
@@ -83,7 +84,7 @@ export function removal(
   return {
     replace: { written: text.slice(it.from, end), with: [''] },
     span: { line: lineOf(it.from) - 1, character: it.from - start, end: end - start },
-    fixTitle: 'Remove the step',
+    fixTitle: word('paths.remove-step'),
     also: [...comma, ...notes, ...stepsAfter(text, dropped)],
   };
 }

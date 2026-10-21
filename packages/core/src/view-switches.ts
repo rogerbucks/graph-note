@@ -13,6 +13,8 @@ import { linksOf } from './style.ts';
 import type { OnOff, StyleGraph } from './style-graph.ts';
 import { drawnGroups, foldPlan } from './untangle-fold.ts';
 import type { Folding } from './untangle-fold.ts';
+import { word } from './words.ts';
+import type { WordKey } from './words.ts';
 
 /** The four switches, in the order the View menu lists them. */
 export const VIEW_SWITCHES = ['labels', 'hubs', 'groups', 'merge'] as const;
@@ -21,13 +23,16 @@ export type ViewSwitch = (typeof VIEW_SWITCHES)[number];
 /** Each switch, on or off. */
 export type ViewSwitches = Record<ViewSwitch, boolean>;
 
-/** Each switch as the View menu names it. */
-export const SWITCH_NAMES: Record<ViewSwitch, string> = {
-  labels: 'Labels by zoom',
-  hubs: 'Busy hubs folded',
-  groups: 'Groups folded',
-  merge: 'Parallel links merged',
-};
+/** The word each switch is named by: its setting's name, which the settings page says too. */
+const SWITCH_WORDS = {
+  labels: 'settings.labels-by-zoom.name',
+  hubs: 'settings.fold-hubs.name',
+  groups: 'settings.fold-groups.name',
+  merge: 'settings.merge-links.name',
+} as const satisfies Record<ViewSwitch, WordKey>;
+
+/** Each switch as the View menu names it, in the reader's language. */
+export const switchName = (s: ViewSwitch): string => word(SWITCH_WORDS[s]);
 
 /** The setting that holds each switch's default (view_switch_defaults). */
 export const SWITCH_SETTINGS = {

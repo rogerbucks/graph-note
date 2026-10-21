@@ -5,8 +5,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { gqlBlocks, readNote, loadEngine, PALETTES, LAYOUT_LIMITS, READ_LIMITS } from '@thoughtknot/core';
-import { viewOf, PANE_PALETTE, notePath, SVG_MAX, NO_GRAPH, EMPTY_GRAPH } from '../src/graph-view.ts';
-import { NODE_MISSING } from '../src/graphviz-process.ts';
+import { viewOf, PANE_PALETTE, notePath, SVG_MAX, noGraph, emptyGraph } from '../src/graph-view.ts';
+import { nodeMissing } from '../src/graphviz-process.ts';
 
 const NOTE = readFileSync(new URL('../../../test-vault/Sample graph note.md', import.meta.url), 'utf8');
 const [DRAWING] = readNote(gqlBlocks(NOTE).map((b) => b.text)).graphs.values();
@@ -36,9 +36,9 @@ describe('a drawn graph', () => {
 
 describe('never a blank pane', () => {
   test('when node is missing, the reason and the graph as text', async () => {
-    const view = await viewOf(NOTE, async () => ({ why: NODE_MISSING }), PALETTES.dark);
+    const view = await viewOf(NOTE, async () => ({ why: nodeMissing() }), PALETTES.dark);
     assert.equal(view.svg, undefined);
-    assert.equal(view.why, NODE_MISSING);
+    assert.equal(view.why, nodeMissing());
     assert.equal(view.lines.length, DRAWING.links.length + 1);
   });
 
@@ -63,14 +63,14 @@ describe('never a blank pane', () => {
 
   test('a note with no graph says so', async () => {
     const view = await viewOf('# Just words\n', graphviz, PALETTES.dark);
-    assert.deepEqual(view, { title: 'No graph', alt: NO_GRAPH, lines: [NO_GRAPH] });
+    assert.deepEqual(view, { title: 'No graph', alt: noGraph(), lines: [noGraph()] });
   });
 
   test('a note too large to read says so, with the limit, never "no graph"', async () => {
     const huge = `\`\`\`gql\n// graph: huge\n${`(t:Thing {name: '${'x'.repeat(READ_LIMITS.bytes)}'})`}\n\`\`\``;
     const view = await viewOf(huge, graphviz, PALETTES.dark);
     assert.match(view.why ?? '', /too large to read/i);
-    assert.notEqual(view.alt, NO_GRAPH);
+    assert.notEqual(view.alt, noGraph());
   });
 
   test('a graph that could not be read says why, with its first problem', async () => {
@@ -83,7 +83,7 @@ describe('never a blank pane', () => {
 
   test('a graph block with nothing in it yet says so, not "no graph"', async () => {
     const view = await viewOf('```gql\n// graph: g\n```', graphviz, PALETTES.dark);
-    assert.deepEqual(view, { title: 'Empty', alt: EMPTY_GRAPH, lines: [EMPTY_GRAPH] });
+    assert.deepEqual(view, { title: 'Empty', alt: emptyGraph(), lines: [emptyGraph()] });
   });
 
   test('one thing and one link are counted in the singular', async () => {

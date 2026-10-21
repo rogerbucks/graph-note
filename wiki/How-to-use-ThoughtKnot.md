@@ -32,6 +32,10 @@ In any note, start a block with three backticks and the word `gql`, then list yo
 
 You do not need to get it perfect. If something is wrong, ThoughtKnot says what, where, and how to fix it (see step 5).
 
+Rather start from something? Write only the `// graph:` line, and press **Start from an example** on the empty drawing.
+A small example is written for you, and a short tour shows what to do next. Skip it whenever you like. The command
+**Show the tour** opens it again.
+
 ## 2. Move around the drawing
 
 The buttons along the top of each drawing:
@@ -110,8 +114,10 @@ changes**. The full details are in the
   until it is saved into the note.
 - **Sharing a note with other tools?** The command **Convert this note to standard GQL** rewrites the shortcuts Graph
   Note allows into the standard form other tools read.
+- **Printing a note?** Each graph is printed whole, in light colours, with its legend. The buttons are left out.
 - **On a phone,** tap where you would click, and pinch to zoom. Everything works offline.
-- **Using only a keyboard?** Every button can be reached with Tab, and Escape closes whatever is open.
+- **Using only a keyboard?** Every button can be reached with Tab, and Escape closes whatever is open. Press ? on a
+  drawing to see every keyboard shortcut. In Obsidian, give the drawing's commands keys of your own in Settings, Hotkeys.
 
 ## Settings
 

@@ -175,10 +175,11 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - The system entry carries both in the drawing's own style sheet, `prefers-color-scheme` choosing. It is for a host
     that cannot say which it shows.
 - `theme-tokens.ts` — the interface's design tokens (editor spec §44, ui_theme_tokens, plugin_theme_tokens).
-  - `THEME_TOKENS` lists each `--gn-*` token of colour, type, spacing, corners and depth with what it is for. These are
-    the only variables the style sheets' rules read.
-  - `OBSIDIAN_TOKEN_MAP` is the one table from Obsidian's theme. It is written out at the top of styles.css for each
-    of the plugin's own elements. The browser page maps its own theme in page.css.
+  - `THEME_TOKENS` lists each `--gn-*` token of colour, type, spacing, corners, depth and motion with what it is for.
+    These are the only variables the style sheets' rules read.
+  - `OBSIDIAN_TOKEN_MAP` is the one table from Obsidian's theme. `obsidianTokenValue` writes each token out at the top of
+    styles.css for each of the plugin's own elements. The browser page maps its own theme in page.css.
+  - `TOKEN_DEFAULTS` gives a token its own value where the theme has none, such as how long a moving dash takes.
   - A plug-in's own colour (`ThemeToken`) is named `--gn-plugin-<its id>-<word>`. It gives `#rrggbb` or `#rgb` for
     light and dark. It must meet `LOCKED_CONTRAST` on the core background it sits on (`TOKEN_BACKGROUNDS`).
   - `themeTokenCss` writes the tokens added as CSS for a host to apply.
@@ -289,7 +290,7 @@ the user saves a view as shown (untangle-saved.ts).
 #### Switches and the details
 
 - `view-switches.ts` — the View menu's four switches (view_switches).
-  - `VIEW_SWITCHES`, `SWITCH_NAMES`.
+  - `VIEW_SWITCHES`, and `switchName`, each switch's name from the catalogue.
   - `startingSwitches`: from the settings' defaults, the style graph's merging and a view's switches saved as shown
     (view_switch_defaults).
   - `labelsHidden` and `LABEL_SCALE`: a link's label under 11 pixels is hidden (untangle_labels).
@@ -468,7 +469,7 @@ own handlers. Nothing here reaches the network.
 - `path-play.ts` — `PathAutoplay`: Play stepping through a path on its own (path_autoplay).
   - It works around a `PathPlayer`, which also says where it is (`index`) and goes back to the first step (`restart`).
   - It goes from the step it is on, one step at the pace set, until the last. The paces are `PATH_PACES` and
-    `DEFAULT_PACE`, said by `paceSaid`.
+    `DEFAULT_PACE`. `paceSaid` says a pace in UK English, as an exported file says it.
   - It can be paused or stopped at any step, and played on from where it paused. A step taken by hand pauses it.
   - The host hands in its timer (`Scheduler`). So the core never waits on a clock, and a host clears it when its card
     goes.
@@ -478,9 +479,10 @@ own handlers. Nothing here reaches the network.
   - `pathBody`: each step's number on its thing, and the dots' runners.
   - `pathCss`: a heavier outline moving from step to step at the pace, round and round, by `step-end` keyframes. Every
     step is outlined when still. All of it is stopped under reduced motion.
-  - `pathSubtitle` says the walk in order.
+  - `pathSubtitle` says the walk in order, and `pathLegend` what the outlines mean. Both are in UK English: they are
+    the file's bytes.
   - `animationFits` refuses one too large for the device (`ANIMATION_LIMITS`: steps, and an estimate of its bytes). It
-    says why and what would make it fit, before anything is laid out (animation_export_fits).
+    says why and what would make it fit, in the reader's language, before anything is laid out (animation_export_fits).
   - `exportWithLayout` gives that refusal back as a `TooLargeToAnimate`.
 - `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`). These are carried as the
   removing fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
@@ -691,6 +693,22 @@ seven `DIAGRAM_TYPES`. style-checks.ts and style-conflicts.ts check a Diagram's 
   link). Also the way in to a graph of more than `LARGE_GRAPH` things (`wayIn`, large_way_in). Also which types scroll
   one way only on a phone (`scrollsOneWay`).
 
+
+#### A plug-in's diagram type
+
+A style graph may choose a type a plug-in adds, named under its id, such as `acme.charts.sankey`
+(plugin_diagram_type_named; `pluginTypeOf`). Where no plug-in draws it, `diagramFor` gives a network, with `plugin`
+saying which plug-in draws it. The Python library reads it alike.
+
+A host that has the plug-in draws it (trust_diagram_type_data; `plugin-diagrams.ts`):
+
+- The plug-in adds a `PluginDiagram` through the `diagrams` point. Its `draw` gets the graph's shape and the space,
+  frozen, and no host ability.
+- It gives back marks as data: boxes, lines and text, each with where it goes. Never markup.
+- The registry's `drawDiagram` checks every mark and draws the SVG itself, escaping every label. A mark outside the
+  space, or of an unknown kind, refuses the drawing, and the host keeps the network.
+- `diagramContract` holds a diagram type to its promises, as the other points' contracts do.
+
 ### Views (spec §2, §7)
 
 A view is a named query block in the note: `// graph: <graph> · QUERY view <name>`, then the query. The reader already
@@ -701,12 +719,13 @@ reads `· QUERY` as a query, and the core draws no query as data. So a view is n
 - `views.ts` — `viewsOf` finds the views of a note, each with its graph, its block and its query text.
   - Some blocks are listed with a `fault`, never skipped. That is a block meant as a view with no name, or a name that
     is not one word. It is also a name already used in its graph.
-  - `readingOf` says a view in plain language ("everything within 2 steps of Alice").
+  - `readingOf` says a view in plain language ("everything within 2 steps of Alice"), in the reader's language.
+  - `sourceReadingOf` says it in UK English, for what is sent to a model or written into a file.
 - `view-profile.ts` — the view profile.
   - `parseView` reads the five shapes of query into a `ViewSpec`. The shapes are a hand-picked set, everything near a
     thing, how one thing reaches another, only some kinds, and a walked path.
   - It refuses anything else with a message that names the five shapes in words. The message shows the nearest one's
-    form (`VIEW_NAMES`, `VIEW_FORMS`).
+    form (`viewName`, `VIEW_FORMS`). Its words come from the catalogue (views-source-words.ts).
   - The queries are ISO GQL that Grafeo runs as written.
   - A thing is named by its `id` property. The reader writes it into every node it gives Grafeo, and the core's world
     keys every node by it.
@@ -782,15 +801,19 @@ data of the note it is written in.
   - It is MATCH one pattern, then INSERT links between things it named. The pattern is things with an optional name,
     kind and properties, joined by up to `MOST_PATTERN_LINKS` links, one way or either.
   - CALL, a function, SET or DELETE and the other writes, RETURN, and anything that reads as code are refused. Each says
-    why and shows `RULE_FORM`.
+    why and shows `RULE_FORM`. The words of steps and paths come from the catalogue (steps-source-words.ts).
   - `ruleTokens` reads a rule once. A text ends at its line, and nothing after the first mark that cannot be read is
     read (spec §9).
 - `steps-match.ts` — every match of the pattern, as GQL matches a path. Each link is used once in a match, and a name
   used twice is the same thing.
   - It is bounded by `MOST_MATCHES` and `MOST_TRIES` (every thing and link looked at, fitting or not). Past them it stops
     and says so (spec §9).
+#### What a step is given
+
 - `steps-input.ts` — what is given at a point: a graph of the note, whole, or a view of one (a queried path among them).
   - It is put to the reading as `evaluate` puts it, never a copy.
+  - `givenLabel` names what is given in the reader's language. Each input's `read` names it in UK English, as the
+    change set records it.
   - `inputFaults` checks each against its point before the step runs: every kind and type it takes held, something
     given.
   - `together` reads the inputs as one graph, a thing by id.
@@ -820,6 +843,12 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - Each look's border, text, line and format become style declarations in the locked blend of its hue, as the pane's
     stylesheet draws them. This is because an image cannot take the stylesheet.
   - Groups are found by Graphviz's numbering (`node1`, `edge1`…) in a single pass.
+- `look-tags.ts` — a numbered tag for each colour a view's looks use (`lookTag`, `lookTags`). Each box or link of that
+  colour carries the tag, and so does the legend. So no look is told by colour alone (§44, colour_never_alone).
+- `shortcuts.ts` — every keyboard shortcut in one list (`SHORTCUTS`, by `SHORTCUT_PLACES`), with its words in
+  `shortcut-source-words.ts`. The drawing's commands are marked, for a host to offer (§44, shortcuts_listed).
+- `first-run.ts` — a first graph from an example (`withExample`), and the steps of its short tour (`TOUR_STEPS`), with
+  their words in `first-run-source-words.ts` (§44, first_run_help).
 - `export-frame.ts` — the frame (`framed`).
   - It holds the image's own background, a title, the reading of a view, and the legend. It also holds a footer with
     the note and the day (`saidDate`, `11 Oct 2026`).
@@ -906,7 +935,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     - the settings options' words in `settings-source-words.ts`;
     - the browser page's own in `page-source-words.ts`;
     - editing's (properties, adding a thing, Edit, kept drafts) in `edit-source-words.ts`;
-    - and the AI dialog's and AI models' in `ai-source-words.ts`.
+    - the AI dialog's and AI models' in `ai-source-words.ts`;
+    - and Import's in `db-source-words.ts`.
 
 #### The plug-in interface
 
@@ -918,9 +948,83 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - Its first point is the data exports (`DataExporter`).
   - Its second, `theme`, hands a plug-in the core's tokens and adds its own (theme-tokens.ts). Each is refused, saying
     why, when it misses its name or the locked contrast. They are listed by `themeTokens()`.
+  - Its third, `storage`, adds a place notes are kept (`StorageBackend`), opened by `openStorage`. The core's own,
+    `CORE_STORAGE` in core-storage.ts, keeps notes in memory.
+  - Its fourth, `commands`, adds a command (`PluginCommand`), named under the plug-in's id and run by `runCommand`.
+  - Its fifth, `panels`, adds a panel (`PluginPanel`), drawn by `showPanel` into an element the host gives.
+  - A manifest also names the host's abilities it uses (`HOST_ABILITIES`): a notice, its own settings, its own secrets
+    and the notes. It is given those alone, as `points.host`. One the host does not offer (`HostOffer`) is refused.
+  - Its secrets are only those named under its id, such as `acme.one.token`. Any other name gives null, so it never
+    reads an AI model's key or another plug-in's (TRUST-15).
+  - A call that runs longer than `PLUGIN_TIME_LIMIT` is named and its answer dropped. Its plug-in is then stopped, and
+    `stopped()` lists it. A host may set its own limit and clock (`RegistryOptions`). The time is read after the call
+    returns, so a call that never returns is not stopped here. A plug-in run apart is (TRUST-14, below).
+
+#### Versions of the interface and its points
+
+`plugin-versions.ts` holds `PLUGIN_API` and `POINT_VERSIONS`, each major.minor (plugin_point_versions, API-10):
+
+- A plug-in built for the same major and a minor no higher loads (`versionFits`).
+- A manifest may name each point with its version, `diagrams@1.0`. One with none counts as `@1.0`.
+- A point that moves to a new major refuses only the plug-ins that use it, naming that point. A host may set its own
+  point versions (`RegistryOptions.pointVersions`).
+- The sample plug-in outside the packages, `examples/sample-plugin`, runs in a worker in CI and passes each contract
+  (`test/sample-plugin.test.js`).
+
+#### A plug-in run apart, in a worker
+
+A host loads a plug-in it did not ship only in a worker (trust_plugin_isolated, TRUST-14). The core holds both sides
+and is handed the port between them, as for layouts:
+
+- `plugin-serve.ts` is the worker's side. `lockDown` takes the network and lasting storage away first. Then
+  `servePlugin` registers the plug-in and says, as data, what it added. `import()` cannot be taken away by name, so
+  the host starts the worker under a content security policy with no network.
+- `plugin-isolated.ts` is the host's side. `isolatedPlugin` makes from that a plug-in the registry installs as any
+  other. Each call goes over the port, timed by the host's clock.
+- A call that loops or never answers ends the worker, and every later call fails at once, naming the plug-in.
+- The worker asks the host for an ability its manifest names, and the registry's checks still apply.
+- It may add to `ISOLATED_POINTS` only. A panel needs the page; a data export and an AI provider answer at once.
+
+#### A plug-in from its file
+
+`plugin-outside.ts` is how a host loads a plug-in it did not ship, from its file (plugin_outside_file, API-10):
+
+- The host reads the file as text. `outsideProblem` refuses a file that holds the word `import`, exports more than
+  its default, or is too long. Such a file never starts a worker.
+- The worker's script is the host's own start and then `outsideBody`, the file itself. Nothing is imported or
+  evaluated to run it, so the plug-in store's rules hold.
+- The start calls `sealOutside`. It runs `lockDown` and then `sealCode`, which takes away `eval`, `Function`, the
+  maker each kind of function reaches, and timers given text. If anything stays, it throws, and the file never runs.
+- `outsidePlugin` checks the file, starts the worker and hands its port to `isolatedPlugin`.
+
+#### What plug-ins add, and what they reach
+
+- `plugin-points.ts` — what a plug-in adds through each point, the host's abilities, and why each is refused.
+- `plugin-files.ts` — the files ability through the note gate (TRUST-16). `gatedFiles` lists and reads only notes at
+  or below the ceiling the person set for the plug-in. A change it makes waits as a proposal (`CHANGE_WAITS`).
+- `core-storage.ts` — `CORE_STORAGE`, the core's memory storage as a plug-in.
+- `plugin-calls.ts` — every call into a plug-in, timed, caught and named. `awaited` times a call whose answer comes
+  later, until it comes.
+- `plugin-sources.ts` — what a graph source or step gives back, held as a `JoinedGraph` (trust_source_joined). It
+  carries its origins. A source's graph starts untrusted; a step's keeps the lowest trust it was given. An unlabelled
+  graph counts as the strictest class, and a step's keeps the strictest class it was given. One past the read limits
+  is refused. The registry reads them with `readGraph` and `runStep`.
+- `plugin-ai.ts` — AI providers (trust_ai_provider_bounded). A provider only shapes the body (`shape`) and reads the
+  reply (`read`). It names where the key goes (`key`), and the host puts it there. `aiProvider` gives one with each
+  call timed and named; `prepareSend` takes it as `provider` for a model whose `provider` names it.
+
+#### The contract suites
+
 - `plugins-contract.ts` — the contract suite of each extension point (plugin_contract_suites).
   - `exporterContract`: the checks a data export is held to on `sampleExports`, which the built-ins pass.
   - `themeTokenContract`: those a theme token is held to: its name, its colours and its contrast in each theme.
+  - `storageBackendContract`: the note storage contract, run on a store the backend opens afresh for each check.
+  - `commandContract`: a command's id, its title on one line, and that it can be run.
+  - `sourceContract` and `stepContract`: a graph source or step gives back a graph's text within the read limits. A
+    step is tried on `SAMPLE_GRAPH` and must give the same graph each time.
+  - `providerContract`: an AI provider shapes text holding what it was asked, the same each time, and reads any reply.
+  - Each title is checked for right-to-left too (plugin_rtl). It must force no direction of its own, so it reads in
+    the host's.
 
 #### The data formats
 
@@ -1062,7 +1166,7 @@ shown over the graph and never written until a person accepts a change. Then it 
   - `notTaken`: a change read back to see it took effect.
   - `newProblems`: what a change leaves wrong that was not before.
   - It is not exported by the entry: only a review writes a change.
-- `proposals-marks.ts` — which boxes and links each change adds, changes or removes. `MARK_WORDS` says it in words, never
+- `proposals-marks.ts` — which boxes and links each change adds, changes or removes. `markWord` says it in words, never
   by colour alone. Each change is read back in plain language as the text pane reads a line (`readBack`).
 - `proposals-review.ts` — `ProposalReview`.
   - `show`: the proposal laid over the graph, with rows, groups, marks, provenance, and whether the graph has moved. It
@@ -1194,6 +1298,14 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
   - `matrixRowsFrom` checks rows handed over as data. It takes none at all if anything in them is not a row.
 - `settings-matrix.ts` — the two options of the matrix, the note that holds it and the table of class names
   (`MATRIX_OPTIONS`).
+#### Databases
+
+- `db-import.ts` — importing from a database (spec §20, §21). The database is a SQLite file in the vault.
+  - `isDbFile` says which vault files are databases: those ending .sqlite, .sqlite3 or .db.
+  - `importedBlock` writes the rows as a GQL block. Each things row is a thing, by its `id` and `kind` columns. Each
+    links row is a link, by `from`, `type` and `to`. Its comment names the file. It keeps no live link. A blob is left
+    out.
+  - A row it cannot write refuses the whole import, with the reason. `withImport` puts the block at the note's end.
 
 #### The Claude gate
 
@@ -1270,7 +1382,7 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
 - It is DOM code, so it has a `tsconfig.json` of its own with the DOM library (`tsc -p packages/core/src/display`). The
   core's own type check leaves it out.
 - It is bundled, never run by Node on its own, so it is not held to erasable TypeScript. `host.ts`, `host-contract.ts`,
-  `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them directly.
+  `panel-contract.ts`, `lifecycle.ts` and `dom-helpers.ts` are, because their tests load them directly.
 - It imports no host. `test/imports.test.js` holds it to the layer, the core by its name and the graph library.
 - The host's part comes in through `host.ts`.
 
@@ -1283,13 +1395,26 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
     text before the parser sees it. It sets the same declarations through the CSSOM, which the policy allows.
   - `installHost` is called once before anything is drawn.
   - `displayHost` is for the layer's own use. It throws `NO_HOST` rather than draw a blank.
+- `panel-contract.ts` — `panelContract`, the checks a plug-in's panel is held to (plugin_contract_suites, plugin_rtl).
+  - It draws the panel into an element set to read right to left, in a page, as a host would.
+  - The panel must keep that direction, force none but `auto`, and style with logical sides only.
 - `host-contract.ts` — `hostContract`, the one contract every host's adapter is held to (editor spec §43,
   hosts_pass_contract).
   - Its checks use no test framework, each throwing with what was wanted.
   - They run against a fresh host and the `HostProbe` through which it shows what it drew.
   - `HOST_CONTRACT_VERSION` is the last entry of `HOST_CONTRACT_VERSIONS`. Each entry pairs a version with a digest
     of how `public-api.json` declares `host.ts`. A change to `DisplayHost` fails a test until a new version is added.
+### Banners and waits
+
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.
+- `progress.ts` — a long wait shown (§44, progress_shown). After a second it shows a bar and the seconds taken. After
+  ten it offers Stop (`waitShown`). A drawing laid out and an export wait through it.
+- `shortcuts-list.ts` — the list of every keyboard shortcut (`listShortcuts`), and the card's own copy that ? shows
+  (`toggleShortcuts`). `graph-view/card-in-use.ts` keeps the card used last, for a host's commands (`cardInUse`).
+- `tour.ts` — the short tour of a first graph, a step at a time, in the card (`showTour`). It can be skipped.
+
+### The edit pane and the rest
+
 - `src/display/editor/` — the edit pane (spec §4, §9; editor spec §26, C9). It is the same one in the Obsidian pane and
   on the browser editor's page.
   - `block-editor.ts` holds `BlockEditor`, a `Lifecycle`. It is the text field over its coloured picture, the problems

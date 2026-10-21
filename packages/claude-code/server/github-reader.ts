@@ -7,6 +7,7 @@
 // - and only when the user asks (Roger, 17 Oct 2026).
 // Every path, number and commit put in an address is checked first. So nothing the repository or the page writes
 // becomes another request.
+import { word } from '@thoughtknot/core';
 import { execFile } from 'node:child_process';
 import type { ChangedFile, ReviewItem } from '@thoughtknot/core';
 import { originOf } from './note-history.ts';
@@ -58,11 +59,9 @@ const PASSED = [
 const REPO = /^[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
 const SHA = /^[0-9a-f]{40}$/;
 const NUMBER = /^[1-9][0-9]{0,8}$/;
-const NO_GH =
-  'Reviewing pull requests here needs GitHub’s command line, gh: install it and sign in with `gh auth login`, then ask again.';
-const NOT_ON_GITHUB =
-  'This note’s repository has no remote named origin on github.com, so there are no pull requests to review here.';
-const NOT_READ = 'GitHub could not be read with gh: check `gh auth status`, and that you can see this repository.';
+const noGh = (): string => word('server.github.no-gh');
+const notOnGithub = (): string => word('server.github.no-origin');
+const notRead = (): string => word('server.github.not-read');
 
 /** The repository `owner/name` of a git remote's address on github.com; null for any other. */
 export function repositoryOf(remote: string): string | null {
@@ -78,7 +77,7 @@ export function repositoryOf(remote: string): string | null {
 async function repoOf(real: string): Promise<GitHubRead<string>> {
   const remote = await originOf(real);
   const repo = remote === null ? null : repositoryOf(remote);
-  return repo ? { ok: true, value: repo } : { ok: false, why: NOT_ON_GITHUB };
+  return repo ? { ok: true, value: repo } : { ok: false, why: notOnGithub() };
 }
 
 /** Runs gh's API for `endpoint`, read only; its output, or why it failed. */
@@ -101,7 +100,7 @@ function gh(endpoint: string, raw = false): Promise<GitHubRead<string>> {
       { env, timeout: GH_TIMEOUT_MS, maxBuffer: BODY_LIMIT, encoding: 'utf8', windowsHide: true },
       (error, stdout) => {
         if (!error) return done({ ok: true, value: stdout });
-        done({ ok: false, why: (error as { code?: unknown }).code === 'ENOENT' ? NO_GH : NOT_READ });
+        done({ ok: false, why: (error as { code?: unknown }).code === 'ENOENT' ? noGh() : notRead() });
       },
     );
   });
@@ -114,7 +113,7 @@ async function json(endpoint: string): Promise<GitHubRead<unknown>> {
   try {
     return { ok: true, value: JSON.parse(r.value) };
   } catch {
-    return { ok: false, why: NOT_READ };
+    return { ok: false, why: notRead() };
   }
 }
 
@@ -196,12 +195,12 @@ export const GH_READER: GitHubReader = {
     if (!at.ok) return at;
     const repo = at.value;
     if (item.kind === 'pull') {
-      if (!NUMBER.test(item.id)) return { ok: false, why: 'No such pull request.' };
+      if (!NUMBER.test(item.id)) return { ok: false, why: word('server.github.no-pull') };
       const pull = await json(`repos/${repo}/pulls/${item.id}`);
       if (!pull.ok) return pull;
       const base = text(field(field(pull.value, 'base'), 'sha')),
         head = text(field(field(pull.value, 'head'), 'sha'));
-      if (!SHA.test(base) || !SHA.test(head)) return { ok: false, why: NOT_READ };
+      if (!SHA.test(base) || !SHA.test(head)) return { ok: false, why: notRead() };
       // compared from where the branch left its base, as GitHub shows a pull request's changes
       const compared = await json(`repos/${repo}/compare/${base}...${head}`);
       if (!compared.ok) return compared;
@@ -209,7 +208,7 @@ export const GH_READER: GitHubReader = {
       const value = await filesBetween(repo, SHA.test(from) ? from : base, head, field(compared.value, 'files'));
       return { ok: true, value };
     }
-    if (!SHA.test(item.id)) return { ok: false, why: 'No such commit.' };
+    if (!SHA.test(item.id)) return { ok: false, why: word('server.github.no-commit') };
     const commit = await json(`repos/${repo}/commits/${item.id}`);
     if (!commit.ok) return commit;
     const parents = field(commit.value, 'parents');

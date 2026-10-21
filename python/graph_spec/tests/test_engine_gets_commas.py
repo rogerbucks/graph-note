@@ -111,7 +111,8 @@ def changeset_parts(base_body, change_body):
     """A base text, and a change set against that base as it stands, by an author it holds."""
     base = [("g", f"// graph: g\n{base_body}")]
     against = canon_loaded(corrected(f"// graph: g\n{base_body}").split("\n", 1)[1])[0][:16]
-    return base, f"// graph: g · CHANGE SET cs1 · against {against} · by a\n{change_body}"
+    head = f"// graph: g · CHANGE SET cs1 · against sha-256-64:{against} · by a"
+    return base, f"{head}\n{change_body}"
 
 
 class Recording:

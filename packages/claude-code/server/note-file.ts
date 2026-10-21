@@ -4,6 +4,8 @@
 // - It is written to a new temporary file beside it, flushed to the disk, then renamed into place. So the note on disk
 //   is always the old one whole or the new one whole.
 // On any failure the temporary file is removed.
+import { word } from '@thoughtknot/core';
+import type { WordKey } from '@thoughtknot/core';
 import { createHash, randomBytes } from 'node:crypto';
 import { constants, promises as fs } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
@@ -61,28 +63,26 @@ export async function readNoteFile(real: string): Promise<NoteText> {
   try {
     file = await fs.open(real, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
   } catch {
-    return { ok: false, why: 'The note is no longer there.' };
+    return { ok: false, why: word('server.note.not-there') };
   }
   try {
     const stat = await file.stat();
-    if (!stat.isFile()) return { ok: false, why: 'The note is no longer a file.' };
+    if (!stat.isFile()) return { ok: false, why: word('server.note.not-file') };
     // the path still leads nowhere but itself. So no folder swapped for a link since it was checked is read through
     // (`lstat` alone follows such a folder as `open` did). Then the file opened is the one at the path now
     if ((await fs.realpath(real).catch(() => null)) !== real)
-      return { ok: false, why: 'The note’s folder was moved or replaced.' };
+      return { ok: false, why: word('server.note.folder-moved') };
     const there = await fs.lstat(real).catch(() => null);
     if (!there || there.dev !== stat.dev || there.ino !== stat.ino)
-      return { ok: false, why: 'The note changed place while it was read.' };
-    if (stat.size > BODY_LIMIT)
-      return { ok: false, why: `The note is larger than a note may be: ${BODY_LIMIT} bytes.` };
+      return { ok: false, why: word('server.note.moved-while-read') };
+    if (stat.size > BODY_LIMIT) return { ok: false, why: word('server.note.too-large', { most: BODY_LIMIT }) };
     const bytes = new Uint8Array(await file.readFile());
-    if (bytes.length > BODY_LIMIT)
-      return { ok: false, why: `The note is larger than a note may be: ${BODY_LIMIT} bytes.` };
+    if (bytes.length > BODY_LIMIT) return { ok: false, why: word('server.note.too-large', { most: BODY_LIMIT }) };
     let text: string;
     try {
       text = DECODER.decode(bytes);
     } catch {
-      return { ok: false, why: 'The note is not UTF-8 text.' };
+      return { ok: false, why: word('server.note.not-text') };
     }
     return { ok: true, text, version: versionOf(bytes), mode: stat.mode & 0o777 };
   } finally {
@@ -90,20 +90,22 @@ export async function readNoteFile(real: string): Promise<NoteText> {
   }
 }
 
-const CAUSES: Record<string, string> = {
-  ENOSPC: 'the disk is full',
-  EDQUOT: 'the disk is full',
-  EACCES: 'permission was refused',
-  EPERM: 'permission was refused',
-  EROFS: 'the folder cannot be written to',
-  ENOENT: 'the folder is not there',
-  EBUSY: 'the file is in use by another program',
+/** The key of the words for each failure the system names by its code. */
+const CAUSES: Record<string, WordKey> = {
+  ENOSPC: 'write.cause.full',
+  EDQUOT: 'write.cause.full',
+  EACCES: 'write.cause.refused',
+  EPERM: 'write.cause.refused',
+  EROFS: 'write.cause.read-only',
+  ENOENT: 'write.cause.no-folder',
+  EBUSY: 'write.cause.in-use',
 };
 
 /** Why a write failed, in words that complete "could not be written: …". */
 function causeOf(e: unknown): string {
   const code = e && typeof e === 'object' && 'code' in e ? String(e.code) : '';
-  return CAUSES[code] ?? 'the system gave no reason it can say';
+  const key = CAUSES[code];
+  return key ? word(key) : word('server.note.no-reason');
 }
 
 /** The refusal of a rename whose folder is no longer the one checked. */
@@ -130,7 +132,7 @@ export async function writeAtomically(
     return { ok: true, version: versionOf(text) };
   } catch (e) {
     await files.remove(temp).catch(() => {});
-    const cause = e instanceof Error && e.message === FOLDER_MOVED ? 'its folder was moved or replaced' : causeOf(e);
-    return { ok: false, why: `It could not be written: ${cause}. The note is as it was.` };
+    const cause = e instanceof Error && e.message === FOLDER_MOVED ? word('server.note.folder-replaced') : causeOf(e);
+    return { ok: false, why: word('server.note.not-written', { cause }) };
   }
 }

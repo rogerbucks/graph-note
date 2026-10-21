@@ -1,0 +1,6 @@
+{
+  "file": "test/print.test.js",
+  "test": "a drawn card can be printed whole > its drawing keeps the frame of the whole graph, so it scales to the page",
+  "seen_failing_first": false,
+  "evidence": "A guard: the drawn SVG already kept Graphviz's viewBox. The print rules that scale it to the page rely on it, so the test holds it there."
+}

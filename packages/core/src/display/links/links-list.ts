@@ -4,7 +4,7 @@
 // shown as text (safe_to_click). One that names nothing is marked broken, with its fixes (broken_links_problems). They
 // are Create the note and Change it to what it most likely meant. A thing's attachments show by name and type
 // (attachments_at_a_glance).
-import { linkTo, refusedWords } from '@thoughtknot/core';
+import { linkTo, refusedWords, word } from '@thoughtknot/core';
 import type { Attachment, BrokenLink, FoundLink, PlacedLink } from '@thoughtknot/core';
 import type { LeftAt, LinkHost } from './link-types';
 
@@ -26,7 +26,7 @@ export function linkAnchor(
   const a = parent.createEl('a', {
     text,
     cls: ['thoughtknot-link', vault ? 'is-internal' : 'is-external'],
-    attr: { href: link.opens, 'aria-label': vault ? `Open ${link.opens}` : `Open ${link.opens}, outside Obsidian` },
+    attr: { href: link.opens, 'aria-label': word(vault ? 'links.open' : 'links.open-outside', { target: link.opens }) },
   });
   followAnchor(a, link, host, where);
   return a;
@@ -97,7 +97,7 @@ export type WriteBlock = ((block: number, was: string, now: string) => Promise<s
 function fixes(li: HTMLElement, a: HTMLElement, broken: BrokenLink, s: LinksShown): void {
   const { host, texts, write, meant } = s;
   a.addClass('is-unresolved');
-  li.appendText(' — names nothing');
+  li.appendText(word('links.names-nothing'));
   if (s.readOnly()) return;
   const row = li.createDiv({ cls: 'thoughtknot-link-fixes' });
   const fixed = () => {
@@ -106,7 +106,7 @@ function fixes(li: HTMLElement, a: HTMLElement, broken: BrokenLink, s: LinksShow
   };
   if (broken.link.kind === 'note')
     row
-      .createEl('button', { text: `Create the note ${broken.link.target}`, attr: { type: 'button' } })
+      .createEl('button', { text: word('links.create', { target: broken.link.target }), attr: { type: 'button' } })
       .addEventListener('click', () => void host.create(broken.link.target)?.then((made) => made && fixed()));
   const at = broken.problem.block,
     was = texts[at];
@@ -114,7 +114,7 @@ function fixes(li: HTMLElement, a: HTMLElement, broken: BrokenLink, s: LinksShow
     const now = was === undefined ? null : meant(broken, m);
     if (!write || now === null || was === undefined) continue;
     row
-      .createEl('button', { text: `Change it to [[${m}]]`, attr: { type: 'button' } })
+      .createEl('button', { text: word('links.change', { target: m }), attr: { type: 'button' } })
       .addEventListener('click', () => void write(at, was, now)?.then((why) => (why ? undefined : fixed())));
   }
 }
@@ -136,7 +136,7 @@ export interface LinksShown {
 /** The links a box or link holds, each a link, and a thing's attachments, by name and type. */
 export function renderLinks(el: HTMLElement, held: PlacedLink[], attachments: Attachment[], s: LinksShown): void {
   if (held.length) {
-    el.createEl('h4', { text: 'Links' });
+    el.createEl('h4', { text: word('links.title') });
     const ul = el.createEl('ul', { cls: 'thoughtknot-link-list' });
     for (const { property, link } of held) {
       const li = ul.createEl('li');
@@ -151,7 +151,7 @@ export function renderLinks(el: HTMLElement, held: PlacedLink[], attachments: At
     }
   }
   if (!attachments.length) return;
-  el.createEl('h4', { text: `Attachments (${attachments.length})` });
+  el.createEl('h4', { text: word('links.attachments', { count: attachments.length }) });
   const ul = el.createEl('ul', { cls: 'thoughtknot-attachment-list' });
   for (const f of attachments) {
     const li = ul.createEl('li');

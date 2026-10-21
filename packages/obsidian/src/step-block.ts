@@ -8,6 +8,7 @@
 import { Notice, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
+  formatList,
   givenLabel,
   gqlBlocks,
   graphOfBlock,
@@ -25,8 +26,7 @@ import { renderCode } from '@thoughtknot/core/display/code';
 import { readOnlyHere, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import { editInPane } from './edit-in-pane';
 
-const and = (xs: readonly string[]) =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
+const and = (xs: readonly string[]) => formatList([...xs]);
 
 /** What can be given at a point: each graph the note's blocks write, whole, then each view of one, by its words. */
 function choicesIn(texts: readonly string[]): StepGiven[] {
@@ -79,7 +79,7 @@ async function run(
     const now = gqlBlocks(note)
       .map((b, i) => stepOf(b.text, i))
       .find((s) => s?.graph === step.graph && s.name === step.name);
-    const r = runStep(note, now ?? { ...step, fault: 'it is not in the note any more' }, given, {
+    const r = runStep(note, now ?? { ...step, fault: word('blocks.step-gone') }, given, {
       at: new Date().toISOString(),
       shared,
     });

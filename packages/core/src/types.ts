@@ -9,12 +9,12 @@
 // (`graphspec/style/diagram_types.py`). It is held to this byte for byte (type_both_renderers).
 import type { Graph } from '@thoughtknot/graph-spec';
 import type { DiagramPlan, GraphDrawing } from './note-reading.ts';
-import { DIAGRAM_TYPES } from './style-graph.ts';
+import { DIAGRAM_TYPES, pluginTypeOf } from './style-graph.ts';
 import type { Diagram, DiagramType, StyleGraph } from './style-graph.ts';
 import { centreOf, dayOf, loopIn, shapeOf } from './types-shape.ts';
 import type { GraphShape } from './types-shape.ts';
 
-export { DIAGRAM_TYPES, shapeOf };
+export { DIAGRAM_TYPES, pluginTypeOf, shapeOf };
 export type { DiagramType, GraphShape };
 
 /** Whether a type fits, and, when it does not, why, in words naming the things at fault. */
@@ -42,6 +42,8 @@ export interface DiagramChoice {
   stopped?: { type: DiagramType; why: string; nearest: DiagramType };
   /** How Graphviz lays the drawn type out; none for a network or a table. */
   plan?: DiagramPlan;
+  /** When the type chosen is a plug-in's that nothing here draws: its name, its plug-in, and why it is a network. */
+  plugin?: { type: string; plugin: string; why: string };
 }
 
 /** More things than this are too many to read in one drawing (§15, large_way_in). */
@@ -295,6 +297,11 @@ export function diagramFor(
 ): DiagramChoice {
   const d = chosenDiagram(style, view);
   if (!d) return { drawn: 'network' };
+  const own = d.plugin === undefined ? null : pluginTypeOf(d.plugin);
+  if (d.plugin !== undefined && own) {
+    const why = `the diagram type ${d.plugin} comes from the plug-in ${own.plugin}, which is not here, so the graph is drawn as a network`;
+    return { drawn: 'network', plugin: { type: d.plugin, plugin: own.plugin, why } };
+  }
   const shape = shapeOf(drawing, g, style.nudges),
     fits = typeFits(shape, d.relationship),
     fit = fits.find((f) => f.type === d.type) as TypeFit;

@@ -15,6 +15,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readmeSteps } from '../scripts/fresh-clone.mjs';
 import { messageProblems } from '../scripts/history-text-problems.mjs';
+import { PRIVATE_LINKS_FROM, privateLinkProblems } from '../scripts/private-links.mjs';
 import { SIGN_OFF_FROM, signOffProblems } from '../scripts/sign-off.mjs';
 import {
   historyProblems,
@@ -540,8 +541,35 @@ describe('every commit since the cut-off is signed off by a person', () => {
   });
 
   test('CI runs it, and CONTRIBUTING.md says whose sign-off a commit Claude writes carries', () => {
-    assert.match(read('scripts/public-readiness.mjs'), /\[historyProblems, signOffProblems\]/);
+    assert.match(read('scripts/public-readiness.mjs'), /\[historyProblems, signOffProblems\b/);
     const roger = 'Signed-off-by: Roger Bucks <264575592+rogerbucks@users.noreply.github.com>';
     assert.ok(read('CONTRIBUTING.md').includes(roger));
+  });
+});
+
+// No private session links in a commit (spec §13, no_private_links). Asked for by Eve, the working group's advisor.
+describe('no commit since the cut-off holds a private session link', () => {
+  const late = { GIT_AUTHOR_DATE: '2026-11-01T12:00:00Z', GIT_COMMITTER_DATE: '2026-11-01T12:00:00Z' };
+  const early = { GIT_AUTHOR_DATE: '2026-10-01T12:00:00Z', GIT_COMMITTER_DATE: '2026-10-01T12:00:00Z' };
+  const session = ['https://claude.ai/code', 'session_01abc'].join('/');
+
+  test('the cut-off is a date on or after the rule was set', () => {
+    assert.ok(new Date(PRIVATE_LINKS_FROM) >= new Date('2026-10-21T00:00:00Z'));
+  });
+
+  test('a session trailer or a session link is refused; a public link and an older commit are not', () => {
+    const { dir, commit } = repository();
+    commit('a.txt', 'a\n', `Old\n\nClaude-Session: ${session}`, early);
+    commit('b.txt', 'b\n', 'Clean\n\nSee https://github.com/someone/thing/pull/1', late);
+    assert.deepEqual(privateLinkProblems(dir, { from: '2026-10-21T00:00:00Z' }), []);
+    commit('c.txt', 'c\n', `Change\n\nClaude-Session: ${session}`, late);
+    commit('d.txt', 'd\n', `Change, from ${session}`, late);
+    const problems = privateLinkProblems(dir, { from: '2026-10-21T00:00:00Z' });
+    assert.deepEqual(rules(problems), ['private link', 'private link']);
+    assert.match(problems[0].where, /^commit [0-9a-f]{8}$/);
+  });
+
+  test('CI runs it with the other history checks', () => {
+    assert.match(read('scripts/public-readiness.mjs'), /\[historyProblems, signOffProblems, privateLinkProblems\]/);
   });
 });

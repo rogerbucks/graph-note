@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "GitHub Actions > only fourteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, Sara’s working group reply, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes",
+  "seen_failing_first": false,
+  "evidence": "A renamed test: it lets one more writer job through. On the parent, working-group.yml does not exist, so the allowance has nothing to refuse and passes. That job's exact permissions are proved by test/working-group-workflow.test.js, which failed first."
+}

@@ -29,6 +29,7 @@ import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@thoughtknot/co
 import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
+import { waitShown } from '@thoughtknot/core/display/progress';
 import { renderStyleBlock } from './style-block';
 import { renderViewBlock, writeStyle, writeViewBlock } from './view-block';
 import { renderProposalBlock } from './proposals/proposal-block';
@@ -36,6 +37,7 @@ import { renderSourceBlock } from './sources/sources';
 import { renderStepBlock } from './step-block';
 import { renderSchemaBlock } from './schema-block';
 import { graphCard } from './graph-card';
+import { renderEmpty, takeTour } from './first-run';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
 import { diagramShown, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
 import { readOnlyHere, settlePlacements, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
@@ -87,12 +89,12 @@ async function writeBlock(
   now: string,
 ): Promise<string | null> {
   const file = plugin.app.vault.getAbstractFileByPath(path);
-  if (!(file instanceof TFile)) return 'The note is not there any more, so nothing was written.';
+  if (!(file instanceof TFile)) return word('blocks.note-gone');
   let refused: string | null = null;
   await plugin.app.vault.process(file, (note) => {
     const r = replaceBlock(note, { line: fence - 1, text: was }, now);
     if (r.ok) return r.note;
-    refused = 'The block has changed since it was drawn, so nothing was written.';
+    refused = word('blocks.changed');
     return note;
   });
   return refused;
@@ -237,20 +239,7 @@ export async function renderBlock(
       renderCode(root, source);
       return;
     }
-    const empty = root.createDiv({ cls: 'thoughtknot-empty' });
-    empty.createEl('p', {
-      text: word('editor.empty-graph', { graph }),
-    });
-    const edit = empty.createEl('button', {
-      text: word('editor.edit'),
-      attr: { 'aria-label': word('editor.edit'), type: 'button' },
-    });
-    edit.addEventListener('click', () => {
-      void plugin.openEditor(target);
-    });
-    whenPlaced(root, () => {
-      if (readOnly(root)) edit.remove(); // reading view is read-only (spec §3)
-    });
+    renderEmpty(plugin, root, target, source, readOnly); // with an example to start from (§44, first_run_help)
     return;
   }
 
@@ -261,13 +250,22 @@ export async function renderBlock(
   let drawn: Drawn | Refusal | null;
   try {
     // a graph drawn as a table is the plugin's own table, never laid out (§15)
-    drawn = diagram?.table ? tableDrawn(diagram.table) : await laidOut(owner);
+    const laid = diagram?.table
+      ? tableDrawn(diagram.table)
+      : await waitShown(root, word('progress.drawing'), () => laidOut(owner));
+    if (laid === 'stopped') {
+      // a layout the person stopped (§44, progress_shown): its graph is shown as text, and its result is not used
+      root.createDiv({ cls: 'thoughtknot-banner', attr: { role: 'status' }, text: word('progress.drawing-stopped') });
+      renderCode(root, source);
+      return;
+    }
+    drawn = laid;
   } catch (e) {
     console.error('ThoughtKnot could not draw', graph, e);
     root.createDiv({
       cls: 'thoughtknot-banner',
       attr: { role: 'alert' },
-      text: 'The drawing engine could not start, so this graph is shown as text. Any drawing generated earlier in this note may be stale.',
+      text: word('blocks.engine-failed'),
     });
     renderCode(root, source);
     return;
@@ -336,8 +334,7 @@ export async function renderBlock(
           void plugin.editHere(target, slot).then(() => {
             if (at) plugin.inlineFor(target.path, target.line)?.reveal(at);
           });
-        else
-          new Notice('This drawing is not on the page yet, so it cannot be edited here; edit it in the pane instead.');
+        else new Notice(word('blocks.not-on-page'));
       },
       onDoneEditing: () => {
         void plugin.inlineFor(target.path, target.line)?.done();
@@ -350,6 +347,7 @@ export async function renderBlock(
       editing: () => plugin.inlineFor(target.path, target.line),
       onSelect: (chosen) => plugin.inlineFor(target.path, target.line)?.reveal(chosen),
       writeBlock: (n, was, now) => writeBlock(plugin, target.path, blocks[n]?.line ?? 0, was, now),
+      tour: takeTour(), // the first drawing after an example opens the tour (§44, first_run_help)
       ...(info ? {} : { readOnly: () => true }),
     }),
   );

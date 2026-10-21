@@ -3,6 +3,7 @@
 // - The plugin's own temporary file is removed when a write fails, so none is left among the notes. It goes where the
 //   person's deleted files go, as Obsidian's guidelines require.
 // - Each export gets a name of its own, so an earlier one is never overwritten.
+import { word } from '@thoughtknot/core';
 import { TFile } from 'obsidian';
 import type { WriteOps } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
@@ -27,7 +28,7 @@ export function vaultOps(plugin: ThoughtKnotPlugin): WriteOps {
     },
     rename: async (from, to) => {
       const source = at(from);
-      if (!(source instanceof TFile)) throw new Error(`there is no ${from} to move`);
+      if (!(source instanceof TFile)) throw new Error(word('write.no-source', { name: from }));
       await vault.rename(source, to);
     },
     remove: async (path) => {

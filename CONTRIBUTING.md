@@ -214,6 +214,10 @@ These test behaviour across modules, or the repository itself, so they are named
   labels or values is read from its first strong letter. It is set apart from the words around it
   (`unicode-bidi: plaintext`). Each is an element the layer makes (editor spec §42, bidi_labels; partial until the
   drawing and the exports join it).
+- `packages/core/test/words-in-code.test.js` — the display layer's code holds no words a person reads: each comes
+  from the catalogue by key (editor spec §42, words_catalogue). The few kept are listed, each with why.
+- `packages/core/test/locale-bytes.test.js` — the editor writes the same bytes in every setting. No language, locale
+  or direction changes an edit, an export's data or the layout source (editor spec §42, locale_never_changes_bytes).
 - `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
 - `packages/core/test/view-parity.test.js` — every view of the shared table (`python/graph_spec/tests/view_cases.json`)
   is found in its note, read, and returns the things the table gives. Every query outside the view profile gets the
@@ -354,6 +358,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/obsidian/test/remote-images.test.js` — an image from outside the vault, in a thing's details or a note
   embedded there, is a link with a Load image button. Only pressing it loads that image (editor spec §18,
   remote_images_asked).
+- `packages/obsidian/test/database.test.js` — Import offers the vault's SQLite files, with nothing to set up. It reads
+  one only when pressed, on desktop and mobile, with no network. It writes the rows into the note as text that keeps no
+  live link (editor spec §20, db_import_on_request; §21, settings_db_connections).
 - `packages/obsidian/test/inline.test.js` — editing in place in the drawing's card.
 - `packages/obsidian/test/views-many.test.js` — several views of one graph, in one note or in several. Each is drawn
   from the one data set where it is written, and none copies it. A view of a graph written in another note says which
@@ -362,6 +369,18 @@ These test behaviour across modules, or the repository itself, so they are named
 ### The graph format library
 
 - `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.
+- `packages/graph-spec/test/changesets.test.mjs` — a change set's author is the session that sent it, never the name in
+  its header (editor spec §51, spec_author_from_session; GS4). A header naming anyone else fails, and the set is checked
+  as the session's.
+- `packages/graph-spec/test/limits.test.mjs` — the reader, the check and a join stop at stated limits. Each limit is on
+  size, nesting or join size, with a clear refusal (editor spec §51, spec_read_limits; GS4; `limit-cases.json`).
+- `packages/graph-spec/test/guards.test.mjs` — a guard is read in the guard language, `requirements/guard-language.md`,
+  and anything else is refused (editor spec §51, spec_guard_language; GS4; `guard-cases.json`).
+- `packages/graph-spec/test/serving.test.mjs` — a secret is found by its shape in any value of a graph. The editor finds
+  it the same way (editor spec §51, spec_secrets_and_fences; GS4; `secret-cases.json`).
+- `packages/graph-spec/test/hashes.test.mjs` — every hash names its algorithm, as `requirements/hashes.md` says, and a
+  bare one is refused. A judgement or a serving edited after its hash was made is reported (editor spec §51,
+  spec_hashes_named; GS4; `hash-cases.json`).
 - `packages/graph-spec/test/commas.test.mjs` — both readers read a missing comma the same way, and write it into the same corrected text.
 - `packages/graph-spec/test/escapes.test.mjs` — both readers read quoted text's escapes as GQL does. They refuse one GQL
   does not name, with the fix that doubles the backslash, and quote a text alike (req:3.gql-escapes; one table,
@@ -389,10 +408,20 @@ These test behaviour across modules, or the repository itself, so they are named
   `problem-codes.json` gives it, the same as the JavaScript reader's. The blocks of `problem-code-cases.json` are
   refused with the same codes (editor spec §42, problem_codes).
 - `python/graph_spec/tests/test_escapes.py` — the Python reader answers `escape-cases.json` as the JavaScript one does, and what the engine writes for Grafeo keeps a text's escapes (req:3.gql-escapes).
+### The Python library: ids, limits and layout
+
 - `python/graph_spec/tests/test_id_once_engine.py` — every route to the engine reads the block with the reader first.
   So no id reaches it twice in a graph (req:3.engine-reads-first, req:3.id-once).
 - `python/graph_spec/tests/test_ids_engine.py` — every route to the engine refuses a SET of a node's id. It also
   refuses a node id that is not text, read by the reader first (req:3.set-keeps-id, req:3.id-is-text).
+- `python/graph_spec/tests/test_guard_language.py` — every Python reader of a guard answers `guard-cases.json` as the
+  JavaScript one does (editor spec §51, spec_guard_language).
+- `python/graph_spec/tests/test_serving_fences.py` — the view server refuses a secret and a graph not granted. No graph
+  text can close its fence (editor spec §51, spec_secrets_and_fences).
+- `python/graph_spec/tests/test_limits.py` — the Python library stops at the limits of `limit-cases.json`, as the
+  JavaScript one does (editor spec §51, spec_read_limits).
+- `python/graph_spec/tests/test_hashes_named.py` — the Python library and Grafeo answer `hash-cases.json` as the
+  JavaScript one does. Both refuse a change set made against a bare state (editor spec §51, spec_hashes_named).
 - `python/graph_spec/tests/test_layout_source.py` — the Graphviz source is the one written before the move.
 - `python/graph_spec/tests/test_licences.py` — every Python package carries an allowed licence.
 - `python/graph_spec/tests/test_parity.py` — the Python library gives the JavaScript library's answers.
@@ -404,6 +433,11 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ### Colours and direction
 
+- `test/print.test.js` — a printed note (editor spec §44, print_ready). Each graph is drawn whole, in the host's
+  light print colours, with its legends and without the card's controls.
+- `test/colour-alone.test.js` — no meaning is carried by colour alone (editor spec §44, colour_never_alone). An error
+  is told from a warning by its sign and its line as well as its colour. Each colour of a view's looks has a numbered
+  tag. It is on its boxes, its links and the legend, on the card and in an export.
 - `test/forced-colours.test.js` — every view in forced colours and with more contrast asked for (editor spec §44,
   forced_colours).
   - Each sheet gives every colour token its system colour (`FORCED_TOKEN_COLOURS`). For more contrast, secondary text
@@ -414,6 +448,13 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/host-adapters.test.js` — every host's real adapter passes the one host contract of
   `packages/core/src/display/host-contract.ts` (editor spec §43, hosts_pass_contract). Obsidian's is built as the plugin
   builds it, and the browser page's runs in a DOM. It is partial until the standalone app and VS Code join it.
+- `test/storage-contract.test.js` — every note storage backend passes the one storage contract of
+  `packages/core/src/storage-contract.ts` (editor spec §41, storage_contract). The backends are an Obsidian vault, a
+  plain folder and a VS Code workspace, and memory. A new backend joins the list in this file. Encryption, sync and
+  history plug in as layers (`layered` in `note-storage.ts`), and a backend with layers on passes too.
+- `test/sample-plugin.test.js` — the sample plug-in outside the packages, `examples/sample-plugin`, runs as a host
+  runs one it did not ship (API-10). It loads in a real thread with no network, and each thing it adds passes its
+  point's contract over the port.
 - `test/rtl.test.js` — the style sheets say sides by reading direction (`margin-inline-start`, `inset-inline-end`,
   `text-align: start`), so the interface mirrors in a right-to-left language. The only rules on a physical side are
   those placed at a point measured on the screen, each listed with why. Each view's root reads in the host's direction
@@ -433,7 +474,8 @@ These test behaviour across modules, or the repository itself, so they are named
   - Every rule of `styles.css` and the browser page's `page.css` reads a `--gn-*` token (`THEME_TOKENS`) or an
     element's own measure, never a host's variable.
   - Each sheet maps its host's theme to every token in one block. Obsidian's does so by the core's table
-    (`OBSIDIAN_TOKEN_MAP`), and the page's from the theme it is built with.
+    (`obsidianTokenValue`), and the page's from the theme it is built with.
+  - Every animation takes its time and easing from a motion token.
   - No token takes a name the drawing's own colours use.
 - `test/text-scaling.test.js` — text scales to 200 per cent with nothing lost (editor spec §44, text_scaling). Every
   text of the interface is sized by a token or its parent's size, never in pixels or points. The drawing's own marks
@@ -445,6 +487,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/import-graph.test.js` — the import graph, and the tests that reach a changed file through it. It covers imports
   by path and by package name, and a file or folder a test names to build or walk. It also covers how
   `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
+- `test/layers.test.js` — each layer imports only the layers below it, as `requirements/architecture.gql` says. It
+  reads every import of the shipped code (editor spec §43, layers_checked; `node scripts/layers.mjs`).
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/build-status.test.js` — the build status's pure part. It covers the requirements a pull request moves, found
   from the tests it newly marks written. It also covers the stage an event gives, which value may replace which, and the
@@ -608,11 +652,20 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/github-project-workflow.test.js` — the workflow that runs that mirror. It is woken by a push to main alone, and
   `issues: write` is its one write permission. One run goes at a time and none is cancelled. Main is checked out with
   nothing installed, the one command runs, and the project secret is given only to it.
+
+### Claude's workflows
+
 - `test/claude-review-workflow.test.js` — the workflow that leaves Claude's review on a pull request.
   - It is woken by a pull request, never `pull_request_target`. It is skipped for forks, drafts and Dependabot.
   - `pull-requests: write` is its one write permission. The token is given only to the step that checks it and to the
     action.
   - No checkout keeps credentials, and the review approves, pushes and edits nothing.
+- `test/working-group-workflow.test.js` — the workflow that lets Sara keep up with the working group discussion.
+  - It wakes Claude only when a comment names Sara, at most once a day. Claude writes a draft and has no GitHub tools.
+  - Only the post job may write, and only to discussions. It checks out nothing and runs no code of the repository.
+  - Only the owner, members and collaborators wake it. A separate job checks the draft from a fresh checkout of main.
+- `test/claude-workflows.test.js` — every workflow that runs Claude (risk TRUST-5). A comment wakes Claude only when
+  its author is the owner, a member or a collaborator. No step after Claude, in Claude's own job, runs repository code.
 - `test/github-project-blocks.test.js` — that mirror's blocked-by links. Each open question's issue blocks the issues
   of the requirements it blocks, made once. A link the requirements dropped is removed, and a person's is kept. A
   refusal by GitHub is a warning, with the issues and project still mirrored.
@@ -641,8 +694,12 @@ These test behaviour across modules, or the repository itself, so they are named
   the tag before anything is installed, and every other job waits for it (editor spec §13, release_from_main).
 - `test/ai-disclosed.test.js` — the AI use disclosed in the README. Content goes only to models the user sets up, only
   when the user sends it. The one exception to no network use is stated precisely (spec §19, ai_disclosed).
+### Being public, and pull requests
+
 - `test/public-readiness.test.js` — fit to be public and kept so. It covers a clean history, and a fresh clone set up
   from the README alone. It also covers GitHub settings that let only a collaborator contribute.
+- `test/pr-checks.test.js` — what an AI agent's pull request must say: a `Requirements:` line, its label, no private
+  session link, and a test seen failing first. It also covers the workflow that checks this, and the template.
 - `test/repository-scans.test.js` — the source scans behind the one network exception. The AI send module is found
   however it is imported, and Obsidian's `request(` is taken for a request. Every timer and event is found.
 
@@ -754,6 +811,8 @@ These test behaviour across modules, or the repository itself, so they are named
   (editor spec §12, tests_self_contained, test_files_generated). The images it makes decode and move: the GIF's
   compressed data, the APNG's frames, the WebP's lossless frames, the SVG and the PDF.
 - `test/test-vault.test.js` — the test vault: dummy notes tied to requirements, nothing Obsidian writes committed, each session clean.
+- `test/trust-model.test.js` — the trust model (editor spec §54). The wiki page names every actor and boundary. Each gap
+  is a risk in the register, and every file that opens a boundary is on the page.
 - `test/test-status-partial.test.js` — the third test status, `partial`: a test whose file is there but does not yet
   prove every rule its record covers. It needs its file like a written one. It leaves its requirement unproved in
   `--done`, and the reason says partial. It may be flipped to only from planned, and to written; every backward move is
@@ -872,6 +931,8 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ### Pointer targets, reflow and whitespace
 
+- `test/chrome.test.js` — the headless Chrome these checks share (`scripts/chrome.mjs`). It asks Chrome for its
+  first page again while the list is empty, as Chrome answers before that page opens.
 - `test/a11y-targets-reflow.test.js` — pointer targets and reflow in a real Chrome (spec §41,
   a11y_targets_reflow_auto; SC 2.5.8, 1.4.10).
   - It runs every view of every host. That is the Obsidian harness in the user guide's states, and the browser page

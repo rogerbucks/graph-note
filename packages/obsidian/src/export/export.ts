@@ -17,7 +17,6 @@ import {
   PATH_PACES,
   PathPlayer,
   animationFits,
-  paceSaid,
   companionNote,
   dataText,
   exportPlan,
@@ -28,6 +27,7 @@ import {
   pathsOf,
   readNote,
   readStyle,
+  word,
   writeSafely,
 } from '@thoughtknot/core';
 import type {
@@ -39,6 +39,7 @@ import type {
   NoteReading,
   WriteOps,
 } from '@thoughtknot/core';
+import { paceOffered } from '@thoughtknot/core/display/export/export-form';
 import type { ExportAsk, ExportOutcome } from '@thoughtknot/core/display/export/export-types';
 import { exportRefusalWords } from '@thoughtknot/core/hosts/refusal-words';
 import type ThoughtKnotPlugin from '../main';
@@ -89,13 +90,14 @@ function playedWalk(
   scope: ExportScope,
 ): ExportWalk | { stopped: string } {
   const path = pathsOf(reading, graph).find((p) => p.id === asked.id);
-  if (!path || PathPlayer.refusal(path))
-    return { stopped: `The path ${asked.id} is not in the note with a step to play, so nothing was exported.` };
-  if (format !== 'svg')
-    return { stopped: 'A played path is exported as an animated SVG only. Nothing was saved. Choose SVG.' };
+  if (!path || PathPlayer.refusal(path)) return { stopped: word('exporting.no-path', { id: asked.id }) };
+  if (format !== 'svg') return { stopped: word('exporting.svg-only') };
   if (!(PATH_PACES as readonly number[]).includes(asked.pace))
     return {
-      stopped: `The animated SVG was not made: ${asked.pace} is not a pace a path plays at. Nothing was saved. Choose one of ${PATH_PACES.map(paceSaid).join(', ').toLowerCase()}.`,
+      stopped: word('exporting.bad-pace', {
+        pace: asked.pace,
+        paces: PATH_PACES.map(paceOffered).join(', ').toLowerCase(),
+      }),
     };
   const large = animationFits(
     { steps: path.steps.length, things: scope.drawing.boxes.length, links: scope.drawing.links.length },
@@ -109,13 +111,13 @@ export async function exportGraph(plugin: ThoughtKnotPlugin, ask: ExportAsk): Pr
   try {
     return await exporting(plugin, ask);
   } catch (e) {
-    return said({ stopped: `The export could not be made: ${(e as Error).message}` });
+    return said({ stopped: word('exporting.failed', { why: (e as Error).message }) });
   }
 }
 
 async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<ExportOutcome> {
   const file = plugin.app.vault.getAbstractFileByPath(ask.path);
-  if (!(file instanceof TFile)) return said({ stopped: 'The note is not there any more, so nothing was exported.' });
+  if (!(file instanceof TFile)) return said({ stopped: word('exporting.no-note') });
   const text = await plugin.app.vault.read(file);
   const texts = gqlBlocks(text).map((b) => b.text);
   const reading = readNote(texts);
@@ -177,7 +179,7 @@ async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<Exp
       go,
       paged: (pages) => {
         const again = planned(pages, true);
-        if (!('go' in again)) throw new Error('the plan changed while the pages were drawn');
+        if (!('go' in again)) throw new Error(word('exporting.plan-changed'));
         return again.go;
       },
     });
@@ -185,7 +187,10 @@ async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<Exp
     files = made.files;
     animation = made.animation ? ` ${made.animation}` : '';
   }
-  const name = files.length === 1 ? go.fileName : `${go.fileName} on ${files.length} pages`;
+  // stopped while it was made: nothing is written or shared, and the form has said so (§44, progress_shown)
+  if (ask.signal?.aborted) return { stopped: word('progress.export-stopped') };
+  const name =
+    files.length === 1 ? go.fileName : word('exporting.on-pages', { name: go.fileName, count: files.length });
   if (sheet) {
     const shared = files.map(
       (f) =>
@@ -194,13 +199,13 @@ async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<Exp
     const run = async (): Promise<ExportOutcome> => {
       try {
         await sheet.share({ files: shared, title: go.fileName });
-        return said({ done: `Shared ${name}.${animation}` });
+        return said({ done: `${word('exporting.shared', { name })}${animation}` });
       } catch (e) {
         const cancelled = e instanceof Error && e.name === 'AbortError';
         return said({
           stopped: cancelled
-            ? 'Not shared: the share sheet was closed. Nothing was saved.'
-            : `Not shared: ${(e as Error).message}. Nothing was saved.`,
+            ? word('exporting.share-closed')
+            : word('exporting.share-failed', { why: (e as Error).message }),
         });
       }
     };
@@ -239,9 +244,8 @@ async function takenAway(ops: WriteOps, paths: string[]): Promise<string> {
       left.push(path);
     }
   }
-  if (!left.length) return paths.length ? ' None of its pages was kept.' : ' Nothing was saved.';
-  const them = left.length === 1 ? 'it' : 'them';
-  return ` ${left.join(', ')} could not be taken away again: delete ${them} by hand.`;
+  if (!left.length) return ` ${word(paths.length ? 'exporting.no-page-kept' : 'exporting.nothing-saved')}`;
+  return ` ${word(left.length === 1 ? 'exporting.left' : 'exporting.left-many', { paths: left.join(', ') })}`;
 }
 
 /**
@@ -259,14 +263,15 @@ async function intoVault(plugin: ThoughtKnotPlugin, x: VaultExport): Promise<Exp
   for (const [i, f] of files.entries()) {
     const written = await writeSafely(paths[i] ?? f.path, f.bytes, ops);
     if (!written.ok) {
-      const before = written.why.replace(/ Nothing was saved\.$/, '');
+      const before = written.left ? written.why : word('write.failed', { cause: written.cause });
       return { stopped: `${before}${await takenAway(ops, paths.slice(0, i))}` };
     }
   }
   const [first = ''] = paths;
-  const kept = first === files[0]?.path ? '' : ` An earlier export of that name was kept.`;
-  const where = Platform.isMobile ? ' in the vault, as this phone cannot share a file of this kind' : '';
-  const what = files.length === 1 ? first : `${files.length} pages, ${first} to ${paths.at(-1) ?? ''}`;
+  const kept = first === files[0]?.path ? '' : ` ${word('exporting.earlier-kept')}`;
+  const inVault = Platform.isMobile;
+  const what =
+    files.length === 1 ? first : word('exporting.pages', { count: files.length, first, last: paths.at(-1) ?? '' });
   if (x.companion) {
     // beside the file, under its name: a single file's own, as written; a paged image's, the name the pages share
     const notePath = files.length === 1 ? first.replace(/\.[^./]+$/, '.md') : x.companion;
@@ -280,10 +285,9 @@ async function intoVault(plugin: ThoughtKnotPlugin, x: VaultExport): Promise<Exp
     });
     const note = await writeSafely(freePaths(plugin, [notePath])[0] ?? notePath, text, ops);
     if (!note.ok) {
-      const why = note.why.replace(/^The export could not be written: /, '').replace(/\. Nothing was saved\.$/, '');
-      const saved = x.data ? 'data was' : files.length === 1 ? 'image was' : 'pages were';
-      return { done: `The ${saved} saved at ${what}${where}, but its companion note could not be written: ${why}.` };
+      const saved = x.data ? 'data' : files.length === 1 ? 'image' : 'pages';
+      return { done: word(`exporting.note-failed.${saved}${inVault ? '-vault' : ''}`, { what, cause: note.cause }) };
     }
   }
-  return { done: `Exported ${what}${where ? `, saved${where}` : ''}.${kept}` };
+  return { done: `${word(inVault ? 'exporting.done-in-vault' : 'exporting.done', { what })}${kept}` };
 }

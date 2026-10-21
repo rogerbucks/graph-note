@@ -1,9 +1,9 @@
 /* ThoughtKnot — styles for the drawing and the edit pane. Colours come from the theme, so light and dark both work. */
 
 /* The design tokens (editor spec §44, ui_theme_tokens): Obsidian's theme mapped to the --gn-* tokens every rule below
-   reads, by the core's one table (packages/core/src/theme-tokens.ts, OBSIDIAN_TOKEN_MAP). They are worked out on each
-   of the plugin's own elements, every one with a class of ours. So each reads Obsidian's variables where it is, as its
-   rules did before. A theme that sets them anew inside a sidebar or a modal is followed there. No element of Obsidian's
+   reads, by the core's one table (packages/core/src/theme-tokens.ts). Obsidian has no variable for some, such as how
+   long a dash takes to run: those keep the core's own value. They are worked out on each of the plugin's own elements,
+   every one with a class of ours. So each reads Obsidian's variables where it is, as its rules did before. A theme that sets them anew inside a sidebar or a modal is followed there. No element of Obsidian's
    own is touched. The browser page reads the same variables of its own theme (theme-css.ts). */
 .thoughtknot,
 [class^='thoughtknot-'],
@@ -67,6 +67,12 @@
   --gn-radius-m: var(--radius-m);
   --gn-radius-l: var(--radius-l);
   --gn-cursor-link: var(--cursor-link);
+  --gn-motion-dash: 1s;
+  --gn-motion-dot: 2s;
+  --gn-motion-step: 1s;
+  --gn-motion-pulse: 1.2s;
+  --gn-ease-even: linear;
+  --gn-ease-soft: var(--anim-motion-smooth, ease-in-out);
 }
 
 /* Forced colours and more contrast (editor spec §44, forced_colours). The system may force its own colours, such as a
@@ -235,6 +241,11 @@
 .thoughtknot-svg .is-overdue .thoughtknot-later-mark {
   fill: var(--gn-text-error);
   font-weight: var(--gn-font-weight-semibold);
+}
+/* A look colour's tag (§44, colour_never_alone): the same tag is on each box or link of that colour and in the legend. */
+.thoughtknot-svg .thoughtknot-look-tag {
+  font-size: 10px;
+  fill: var(--gn-text-normal);
 }
 /* A view (spec §7):
    - what is outside it is faded, and said so to screen readers;
@@ -805,7 +816,7 @@ details.thoughtknot-style > summary {
    the dashes, the icons, the outline and the words stay. */
 .thoughtknot-svg .thoughtknot-flow-dashes > path {
   stroke-dasharray: 6 4;
-  animation: thoughtknot-flow-dashes 1s linear infinite;
+  animation: thoughtknot-flow-dashes var(--gn-motion-dash) var(--gn-ease-even) infinite;
 }
 .thoughtknot-svg .thoughtknot-flow-back.thoughtknot-flow-dashes > path {
   animation-direction: reverse;
@@ -821,20 +832,20 @@ details.thoughtknot-style > summary {
   pointer-events: none;
 }
 .thoughtknot-svg path.thoughtknot-flow-runner {
-  animation: thoughtknot-flow-dot 2s linear infinite;
+  animation: thoughtknot-flow-dot var(--gn-motion-dot) var(--gn-ease-even) infinite;
 }
 .thoughtknot-svg .thoughtknot-flow-back > path.thoughtknot-flow-runner {
   animation-direction: reverse;
 }
 .thoughtknot-svg path.thoughtknot-path-runner {
   stroke: var(--gn-accent);
-  animation: thoughtknot-flow-dot var(--thoughtknot-run, 1s) ease-in-out 1 forwards;
+  animation: thoughtknot-flow-dot var(--thoughtknot-run, var(--gn-motion-step)) var(--gn-ease-soft) 1 forwards;
 }
 .thoughtknot-svg path.thoughtknot-path-runner-back {
   animation-direction: reverse;
 }
 .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
-  animation: thoughtknot-step-pulse 1.2s ease-in-out infinite alternate;
+  animation: thoughtknot-step-pulse var(--gn-motion-pulse) var(--gn-ease-soft) infinite alternate;
 }
 @keyframes thoughtknot-flow-dashes {
   to {
@@ -1174,6 +1185,64 @@ pre.thoughtknot-code {
   border-inline-start: 3px solid var(--gn-text-error);
   background: var(--gn-bg-alt);
   margin-bottom: var(--gn-space-2);
+}
+/* A long wait (§44, progress_shown): a bar and how long it has taken, then Stop, on one line under what waits. */
+.thoughtknot-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-2);
+  color: var(--gn-text-muted);
+}
+.thoughtknot-progress progress {
+  inline-size: 8em;
+  accent-color: var(--gn-accent);
+}
+/* Every keyboard shortcut (§44, shortcuts_listed): a table for each place, keys first. In a card it sits under the
+   bar, with its Close button; in Obsidian's dialog it is the dialog's content. */
+.thoughtknot-shortcuts {
+  padding: var(--gn-space-2);
+  background: var(--gn-bg-alt);
+  margin-bottom: var(--gn-space-2);
+}
+.thoughtknot-shortcuts button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.thoughtknot-shortcuts table {
+  border-collapse: collapse;
+  margin-block: var(--gn-space-2);
+}
+.thoughtknot-shortcuts caption {
+  text-align: start;
+  font-weight: 600;
+}
+.thoughtknot-shortcuts th,
+.thoughtknot-shortcuts td {
+  text-align: start;
+  padding-block: 2px;
+  padding-inline-end: var(--gn-space-2);
+}
+.thoughtknot-shortcuts th {
+  font-family: var(--gn-font-mono);
+  font-weight: normal;
+}
+/* The short tour of a first graph (§44, first_run_help): a step's words, then its buttons on one row. */
+.thoughtknot-tour {
+  padding: var(--gn-space-2);
+  background: var(--gn-bg-alt);
+  margin-bottom: var(--gn-space-2);
+}
+.thoughtknot-tour-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-2);
+}
+.thoughtknot-tour button,
+.thoughtknot-empty button {
+  min-width: 44px;
+  min-height: 44px;
 }
 /* A graph over a size or time limit, shown as text: the banner's icon beside its words (spec §9, layout_contained). */
 .thoughtknot-refusal {
@@ -1646,10 +1715,13 @@ pre.thoughtknot-code {
   text-decoration-skip-ink: none;
   text-underline-offset: 3px;
 }
+/* An error is told from a warning by its line as well as its colour (§44, colour_never_alone). A hint's is dotted. */
 .thoughtknot-problem.is-error {
+  text-decoration-style: wavy;
   text-decoration-color: var(--gn-text-error);
 }
 .thoughtknot-problem.is-warning {
+  text-decoration-style: dashed;
   text-decoration-color: var(--gn-text-warning);
 }
 .thoughtknot-problem.is-hint {
@@ -1658,6 +1730,9 @@ pre.thoughtknot-code {
 }
 .thoughtknot-line-sign {
   color: color-mix(in srgb, var(--gn-text-warning) 50%, var(--gn-text-normal));
+}
+.thoughtknot-line-sign.is-error {
+  color: color-mix(in srgb, var(--gn-text-error) 50%, var(--gn-text-normal));
 }
 .thoughtknot-readback {
   color: var(--gn-text-muted);
@@ -2077,4 +2152,47 @@ pre.thoughtknot-code {
 }
 .thoughtknot-quick-note p {
   margin: 0;
+}
+
+/* A printed note (§44, print_ready). Obsidian prints in its light theme. Each card reads the theme's variables, so
+   it is printed in the same light colours, and the drawing too. The card asks for light system colours as well, and for
+   its colours to be printed, not dropped. Each drawing is drawn whole, scaled to the page's width: not cut by its
+   frame, nor moved or zoomed as it was on screen. The card's controls are left out, as paper cannot press them. Its
+   legends stay, so every colour and mark still says what it means. */
+@media print {
+  .thoughtknot {
+    color-scheme: light;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .thoughtknot button,
+  .thoughtknot-bar,
+  .thoughtknot-card-tools,
+  .thoughtknot-details,
+  .thoughtknot-mini-map,
+  .thoughtknot-pointer,
+  .thoughtknot-find,
+  .thoughtknot-filter,
+  .thoughtknot-quick-info,
+  .thoughtknot-edit-slot,
+  .thoughtknot-shortcuts,
+  .thoughtknot-tour {
+    display: none !important;
+  }
+  .thoughtknot-viewport {
+    height: auto !important;
+    overflow: visible;
+    break-inside: avoid;
+  }
+  .thoughtknot-svg {
+    position: static;
+    transform: none;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 100vh;
+  }
+  .thoughtknot-table {
+    position: static;
+    transform: none;
+  }
 }

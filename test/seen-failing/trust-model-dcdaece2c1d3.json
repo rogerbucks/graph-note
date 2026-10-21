@@ -1,0 +1,6 @@
+{
+  "file": "test/trust-model.test.js",
+  "test": "the trust model kept current > fails when a new boundary is missing from the page",
+  "seen_failing_first": false,
+  "evidence": "It checks the scan itself: a new network import matches a pattern and is not on the page. That holds before the page exists, so it cannot fail first."
+}

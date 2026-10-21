@@ -3,12 +3,18 @@
 // whether they are merged into trunks (Links). What is sound is kept. Each fault is a problem on its line with its fix,
 // and the thing is left out.
 import type { Problem } from './note-reading.ts';
-import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, ROUTINGS, orList } from './style-graph.ts';
+import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, ROUTINGS, orList, pluginTypeOf } from './style-graph.ts';
 import type { Arrows, Diagram, Links } from './style-graph.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import { reader } from './style-reader.ts';
+import { word } from './words.ts';
 
 const inView = (view: string | undefined) => (view === undefined ? {} : { view });
+/** That `key` must be one of `among`. */
+const mustBe = (key: string, among: readonly string[]) => word('styling.must-be', { key, among: orList(among) });
+/** The words of `among` as GQL writes them, each in quotes. */
+const quoted = (among: readonly string[]) => orList(among.map((w) => `'${w}'`));
+const aType = () => word('styling.what.type');
 
 /**
  * Where arrowheads are hidden or shown, checked (§15). It is show or hide, for every link or the links of a
@@ -18,18 +24,18 @@ export function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arr
   const r = reader(raw, names, out),
     before = out.length;
   if (raw.props.arrowheads === undefined) {
-    r.missing('an Arrows says show or hide', `add arrowheads: ${orList(ARROWHEADS.map((w) => `'${w}'`))}`);
+    r.missing(word('styling.arrows.missing'), word('styling.arrows.add', { among: quoted(ARROWHEADS) }));
     return null;
   }
-  const arrowheads = r.word('arrowheads', ARROWHEADS, `arrowheads must be ${orList(ARROWHEADS)}`);
-  const type = r.name('type', names.types, 'a relationship type'),
+  const arrowheads = r.word('arrowheads', ARROWHEADS, mustBe('arrowheads', ARROWHEADS));
+  const type = r.name('type', names.types, aType()),
     view = r.text('view');
   if (!arrowheads || out.length !== before) return null;
   return { arrowheads, ...inView(view), ...(type === undefined ? {} : { type }), at: raw.at };
 }
 
 /** What a Diagram's relationship is for (§15): the branches of a tree, and nothing else. */
-export const TREE_ONLY = 'a relationship is chosen only for a tree';
+export const treeOnly = () => word('styling.diagram.tree-only');
 
 /**
  * The diagram type chosen, checked (§15, type_remembered). It is one of the types, in the whole graph or a view, whose
@@ -39,16 +45,27 @@ export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Di
   const r = reader(raw, names, out),
     before = out.length;
   if (raw.props.type === undefined) {
-    r.missing('a Diagram names its type', `add type: ${orList(DIAGRAM_TYPES.map((w) => `'${w}'`))}`);
+    r.missing(word('styling.diagram.missing'), word('styling.diagram.add', { among: quoted(DIAGRAM_TYPES) }));
     return null;
   }
-  const type = r.word('type', DIAGRAM_TYPES, '$ is not a diagram type');
-  const relationship = r.name('relationship', names.types, 'a relationship type'),
+  // a type a plug-in adds is named under its id, and drawn as a network where no plug-in draws it
+  const written = raw.props.type,
+    plugin = typeof written === 'string' && pluginTypeOf(written) ? written : undefined;
+  const type = plugin
+    ? 'network'
+    : r.word('type', DIAGRAM_TYPES, (w) => word('styling.diagram.unknown', { written: w }));
+  const relationship = r.name('relationship', names.types, aType()),
     view = r.text('view');
   if (type && relationship !== undefined && type !== 'tree')
-    r.report(TREE_ONLY, "remove relationship, or make it type: 'tree'");
+    r.report(treeOnly(), word('styling.diagram.tree-only.fix'));
   if (!type || out.length !== before) return null;
-  return { type, ...inView(view), ...(relationship === undefined ? {} : { relationship }), at: raw.at };
+  return {
+    type,
+    ...(plugin ? { plugin } : {}),
+    ...inView(view),
+    ...(relationship === undefined ? {} : { relationship }),
+    at: raw.at,
+  };
 }
 
 /**
@@ -59,11 +76,13 @@ export function linksOf(raw: RawThing, names: StyledNames, out: Problem[]): Link
   const r = reader(raw, names, out),
     before = out.length;
   if (raw.props.routing === undefined && raw.props.merge === undefined) {
-    r.missing('a Links sets routing or merge', `add routing: ${orList(ROUTINGS.map((w) => `'${w}'`))}, or merge: 'on'`);
+    r.missing(word('styling.links.missing'), word('styling.links.add', { among: quoted(ROUTINGS) }));
     return null;
   }
-  const routing = r.word('routing', ROUTINGS, `$ is not a routing: links are ${orList(ROUTINGS)}`);
-  const merge = r.word('merge', ON_OFF, `merge must be ${orList(ON_OFF)}`),
+  const routing = r.word('routing', ROUTINGS, (written) =>
+    word('styling.links.routing-unknown', { written, among: orList(ROUTINGS) }),
+  );
+  const merge = r.word('merge', ON_OFF, mustBe('merge', ON_OFF)),
     view = r.text('view');
   if (out.length !== before) return null;
   return {

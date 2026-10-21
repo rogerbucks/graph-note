@@ -5,18 +5,24 @@
 // exactly that, good for one send only (never_in_background). `sendPrepared` sends it through the transport the host
 // hands in; the core itself reaches no network. It puts the key in only as it goes (keys_kept_secret). It records the
 // send whatever comes of it (record_every_send). It says plainly when the model cannot be reached or refuses
-// (ai_unreachable). It gives an answer back as a proposal, never an edit (answers_are_proposals).
+// (ai_unreachable). It gives an answer back as a proposal, never an edit (answers_are_proposals). A model may name an AI
+// provider a plug-in adds (plugin-ai.ts, trust_ai_provider_bounded). It only shapes the body and reads the reply; all
+// else here holds as for any model.
 import { proposalFrom } from './ai-answer.ts';
 import { clearance, credentialsIn, levelSaid } from './ai-ceiling.ts';
 import { aiReady, endpointProblem } from './ai-choice.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
-import { askedText, changesIn, readReply, requestBody } from './ai-request.ts';
+import { INSTRUCTIONS, askedText, changesIn, readReply, requestBody } from './ai-request.ts';
+import { keyHeader } from './plugin-ai.ts';
+import type { AiProvider } from './plugin-ai.ts';
 import type { MatrixRow } from './ai-matrix.ts';
 import { aiScope } from './ai-scope.ts';
 import type { ScopeChoice } from './ai-scope.ts';
+import { formatList } from './locale-formats.ts';
 import { basisOf } from './proposals-basis.ts';
 import type { Proposal } from './proposals.ts';
 import type { AiModel, Settings } from './settings.ts';
+import { word } from './words.ts';
 
 export { aiReady } from './ai-choice.ts';
 
@@ -54,6 +60,8 @@ export interface SendAsk {
   shared?: string[];
   /** The rows of the vault's destination matrix, as the host read them; a model with a row picked is held to its row. */
   matrix?: MatrixRow[];
+  /** The AI provider the model names, as the host's plug-ins give it (`aiProvider`); none for the one wire format. */
+  provider?: AiProvider;
 }
 
 /** A send made ready: everything that will go, and where, for the user to see before saying yes. */
@@ -76,6 +84,8 @@ export interface PreparedSend {
   scope: SendScope;
   /** The state of the graph sent: a proposal from the answer is made against it. */
   basis: string;
+  /** The AI provider that shaped the body and reads the reply, when the model names one. */
+  provider?: AiProvider;
 }
 
 /** What a send held, as its record keeps it: the kind of choice and the counts. */
@@ -126,39 +136,55 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   const ready = aiReady(settings);
   if ('off' in ready) return { refused: ready.off };
   const found = settings.aiModels.find((m) => m.name === ask.model);
-  if (!found) return { refused: `No model named ${ask.model} is set up.` };
+  if (!found) return { refused: word('ai.send.no-model', { model: ask.model }) };
   // a copy, so what is shown, said yes to and sent stays as it was shown whatever the settings do meanwhile
   const model = { ...found };
   const address = endpointProblem(model.endpoint);
-  if (address) return { refused: `${model.name} cannot be sent to: ${address}` };
-  if (!model.model.trim()) return { refused: `${model.name} names no model: set it in the model’s settings.` };
+  if (address) return { refused: word('ai.send.address', { model: model.name, why: address }) };
+  if (!model.model.trim()) return { refused: word('ai.send.no-model-name', { model: model.name }) };
   const matrix = { rows: ask.matrix ?? [], classMap: settings.aiClassMap };
   const cleared = clearance(ask.level, model, settings.classifications, ready.ready, settings.aiUnlabelled, matrix);
   if ('refused' in cleared) return cleared;
+  const provider = model.provider ? ask.provider : undefined;
+  if (model.provider && provider?.name !== model.provider)
+    return { refused: word('ai.send.no-provider', { model: model.name, provider: model.provider }) };
   const scope = aiScope(ask.note, ask.choice, ask.shared);
   if ('refused' in scope) return scope;
+  let body: string;
+  try {
+    const asked = askedText(scope, ask.question);
+    body = provider
+      ? provider.shape({ model: model.model, instructions: INSTRUCTIONS, asked })
+      : requestBody(model, scope, ask.question);
+  } catch (e) {
+    return { refused: e instanceof Error ? e.message : String(e) };
+  }
   // everything that goes is looked over as written, before it is put in the request. That is the address, and the whole
-  // message (the graph's name, what was chosen in words, its GQL and the question)
-  const held = credentialsIn(`${model.endpoint}\n${askedText(scope, ask.question)}`, ask.secrets);
-  if (held.length)
-    return {
-      refused: `What would be sent holds what looks like ${held.join(' and ')}, so nothing is sent. Leave out what holds it, or take it out of the note or the model’s address.`,
-    };
+  // message (the graph's name, what was chosen in words, its GQL and the question). The body a provider shaped is
+  // looked over too, as it may add to what it was given
+  const held = credentialsIn(`${model.endpoint}\n${askedText(scope, ask.question)}\n${body}`, ask.secrets);
+  if (held.length) return { refused: word('ai.send.credential', { held: formatList(held) }) };
+  const at = { model: model.name, name: model.model, address: model.endpoint.trim() };
   return {
     model,
     to: model.endpoint.trim(),
-    body: requestBody(model, scope, ask.question),
+    body,
     headersShown: {
       'Content-Type': 'application/json',
-      ...(model.keyName ? { Authorization: `Bearer (the key named ${model.keyName} in the app’s secret store)` } : {}),
+      ...(model.keyName
+        ? Object.fromEntries([keyHeader(provider, word('ai.send.key-shown', { key: model.keyName }))])
+        : {}),
     },
     summary: [
-      `To ${model.name} (${model.model}), at ${model.endpoint.trim()}, ${model.matrixRow ? `held to the matrix row ${model.matrixRow}` : `whose ceiling is ${model.ceiling}`}.`,
-      model.keyName
-        ? `It is sent with the key named ${model.keyName} in the app’s secret store, put in only as the request goes.`
-        : 'No key is sent.',
-      `From ${ask.notePath}. ${ask.level?.trim() ? levelSaid(ask.level, false) : levelSaid(settings.aiUnlabelled, true)}.`,
-      `What is sent: ${scope.said}, and your question.`,
+      model.matrixRow
+        ? word('ai.summary.to-row', { ...at, row: model.matrixRow })
+        : word('ai.summary.to-ceiling', { ...at, ceiling: model.ceiling }),
+      model.keyName ? word('ai.summary.key', { key: model.keyName }) : word('ai.summary.no-key'),
+      word('ai.summary.from', {
+        path: ask.notePath,
+        level: ask.level?.trim() ? levelSaid(ask.level, false) : levelSaid(settings.aiUnlabelled, true),
+      }),
+      word('ai.summary.what', { said: scope.shown }),
     ],
     note: ask.notePath,
     level: ask.level,
@@ -166,6 +192,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
     said: scope.said,
     scope: { kind: scope.kind, things: scope.things.length, links: scope.links },
     basis: basisOf(ask.note, scope.graph, ask.shared),
+    ...(provider && { provider }),
   };
 }
 
@@ -195,20 +222,13 @@ export async function sendPrepared(
   deps: SendDeps,
 ): Promise<SendResult> {
   const meant = yes ? given.get(yes) : undefined;
-  if (!yes || meant === undefined)
-    return {
-      refused:
-        'Nothing was sent: it is sent only when you say yes to exactly what you were shown, and a yes is used once, never again.',
-    };
-  if (meant !== exactly(p))
-    return { refused: 'Nothing was sent: what would be sent is not what you said yes to. Look at it again.' };
+  if (!yes || meant === undefined) return { refused: word('ai.send.no-yes') };
+  if (meant !== exactly(p)) return { refused: word('ai.send.changed') };
   if (p.model.keyName && !deps.key)
-    return {
-      refused: `Nothing was sent: the key named ${p.model.keyName} is not in the app’s secret store. Choose it again in ${p.model.name}’s settings.`,
-    };
+    return { refused: word('ai.send.no-key', { key: p.model.keyName, model: p.model.name }) };
   given.delete(yes);
   const key = p.model.keyName ? deps.key : null;
-  const hide = (s: string) => (key ? s.split(key).join('[the key]') : s);
+  const hide = (s: string) => (key ? s.split(key).join(word('ai.send.hidden-key')) : s);
   const at = (deps.now ?? (() => new Date()))()
     .toISOString()
     .replace(/\.\d+Z$/, 'Z');
@@ -223,7 +243,7 @@ export async function sendPrepared(
     outcome: 'failed',
   };
   const failed = (why: string): SendResult => {
-    const said = `${hide(why)} Nothing was changed.`;
+    const said = word('ai.send.failed', { why: hide(why) });
     return { record: { ...record, why: said }, failed: said };
   };
   let reply: TransportReply;
@@ -231,21 +251,26 @@ export async function sendPrepared(
     reply = await deps.transport({
       url: p.to,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(key ? { Authorization: `Bearer ${key}` } : {}) },
+      headers: { 'Content-Type': 'application/json', ...(key ? Object.fromEntries([keyHeader(p.provider, key)]) : {}) },
       body: p.body,
     });
   } catch (e) {
     // the key is taken out before the message is cut short, so no part of it is left to say
     const said = hide(e instanceof Error ? e.message : String(e));
-    return failed(
-      `${p.model.name} could not be reached at ${p.to} (${said.length > 200 ? `${said.slice(0, 200)}…` : said}).`,
-    );
+    const why = said.length > 200 ? `${said.slice(0, 200)}…` : said;
+    return failed(word('ai.send.unreachable', { model: p.model.name, address: p.to, why }));
   }
-  const read = readReply(reply.status, hide(reply.text));
-  if ('refused' in read) return failed(`${p.model.name} refused the request (${read.refused}).`);
+  let read;
+  try {
+    read = p.provider
+      ? p.provider.read({ status: reply.status, text: hide(reply.text) })
+      : readReply(reply.status, hide(reply.text));
+  } catch (e) {
+    return failed(hide(e instanceof Error ? e.message : String(e)));
+  }
+  if ('refused' in read) return failed(word('ai.send.refused', { model: p.model.name, why: read.refused }));
   const changes = 'content' in read ? changesIn(read.content) : read;
-  const cannot = (why: string) =>
-    failed(`${p.model.name} answered, but not with changes this editor can read: ${why}.`);
+  const cannot = (why: string) => failed(word('ai.send.unread', { model: p.model.name, why }));
   if (!Array.isArray(changes)) return cannot(changes.unread);
   const proposal = proposalFrom(changes, {
     id: record.id,

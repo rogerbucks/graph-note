@@ -1,0 +1,6 @@
+{
+  "file": "test/policy.test.js",
+  "test": "the supply chain > the only runtime dependencies are the Graphviz and SQLite WebAssembly engines and, for the browser host alone, one Markdown renderer",
+  "seen_failing_first": false,
+  "evidence": "A renamed test: it widens the allowed set to sql.js, which held true before sql.js was added."
+}

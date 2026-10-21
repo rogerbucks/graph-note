@@ -7,7 +7,9 @@
 import { nearest } from './estimates.ts';
 import type { StyledNames } from './style-checks.ts';
 import { orList, wordFix } from './style-graph.ts';
+import { nameFix } from './style-reader.ts';
 import type { ThingReader } from './style-reader.ts';
+import { word } from './words.ts';
 
 /** What a legend's line may be saved as: brought forward, the rest faded; or hidden. A line as it is is not saved. */
 export const LEGEND_CHOICES = ['forward', 'hidden'] as const;
@@ -20,10 +22,11 @@ export interface LegendChoice {
   state: LegendChoiceState;
 }
 
-/** What a legend may choose, before the colon of its id. */
-const WHAT: Record<string, string> = { kind: 'a kind', type: 'a relationship type' };
-const UNREADABLE = 'is not a legend choice: write kind:<Kind> or type:<TYPE>, then forward or hidden';
-const UNREADABLE_FIX = 'write it as kind:<Kind> forward or type:<TYPE> hidden, or remove it';
+/** What a legend may choose, before the colon of its id, and how it is said. */
+const WHAT: Record<string, () => string> = {
+  kind: () => word('styling.what.kind'),
+  type: () => word('styling.what.type'),
+};
 
 /** A text with its leading and trailing spaces taken off, character by character (never a regular expression). */
 function spaced(s: string): string {
@@ -52,10 +55,10 @@ export function legendRefusal(choices: readonly LegendChoice[]): string | null {
   const seen = new Set<string>();
   for (const c of choices) {
     if (!idParts(c.id) || c.id.includes(' ') || c.id.includes(','))
-      return `${c.id} is not a legend's line: a legend saves kind:<Kind> or type:<TYPE>`;
+      return word('styling.legend.not-a-line', { id: c.id });
     if (!(LEGEND_CHOICES as readonly string[]).includes(c.state))
-      return `a legend's line is saved ${orList(LEGEND_CHOICES)}, not ${c.state}`;
-    if (seen.has(c.id)) return `${c.id} is chosen twice in the legend`;
+      return word('styling.legend.saved-as', { among: orList(LEGEND_CHOICES), state: c.state });
+    if (seen.has(c.id)) return word('styling.legend.twice', { id: c.id });
     seen.add(c.id);
   }
   return null;
@@ -78,27 +81,25 @@ export function legendChecked(r: ThingReader, names: StyledNames): LegendChoice[
     const parts = entry.split(' ').filter(Boolean);
     const id = parts[0] ?? '',
       parsed = parts.length === 2 ? idParts(id) : null;
-    if (!entry) r.report('the legend has an empty choice between its commas', 'remove the extra comma');
-    else if (!parsed) r.report(`${entry} ${UNREADABLE}`, UNREADABLE_FIX);
+    if (!entry) r.report(word('styling.legend.empty'), word('styling.legend.empty.fix'));
+    else if (!parsed) r.report(word('styling.legend.unreadable', { entry }), word('styling.legend.unreadable.fix'));
     else {
       const state = parts[1] ?? '';
       const among = parsed.what === 'kind' ? names.kinds : names.types;
       if (!(LEGEND_CHOICES as readonly string[]).includes(state))
         r.report(
-          `${state} is not a legend choice's state: ${orList(LEGEND_CHOICES)}`,
+          word('styling.legend.state-unknown', { state, among: orList(LEGEND_CHOICES) }),
           wordFix(state, LEGEND_CHOICES).fix,
         );
       else if (!among.has(parsed.name)) {
         const near = nearest(parsed.name, among),
           by = !near ? [] : 'one' in near ? [near.one] : near.several,
-          what = WHAT[parsed.what] ?? '';
+          what = WHAT[parsed.what]?.() ?? '';
         r.report(
-          `${parsed.name} is not ${what} in graph ${names.graph}`,
-          by.length
-            ? `change ${parsed.name} to ${by.length > 1 ? 'the one you mean: ' : ''}${orList(by)}`
-            : `write ${what} in graph ${names.graph}, or remove it`,
+          word('styling.not-in-graph', { written: parsed.name, what, graph: names.graph }),
+          nameFix(parsed.name, by, what, names.graph),
         );
-      } else if (seen.has(id)) r.report(`${id} is chosen twice in the legend`, 'keep one of them');
+      } else if (seen.has(id)) r.report(word('styling.legend.twice', { id }), word('styling.legend.twice.fix'));
       else {
         seen.add(id);
         kept.push({ id, state: state as LegendChoiceState });

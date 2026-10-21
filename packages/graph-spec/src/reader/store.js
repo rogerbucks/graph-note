@@ -2,6 +2,7 @@
 'use strict';
 
 const { ProfileError } = require('./profile-error.js');
+const { withinItems } = require('./limits.js');
 const { header, tokens } = require('./tokens.js');
 const { Parser } = require('./parser.js');
 const { S, N, trim } = require('./whitespace.js');
@@ -263,6 +264,7 @@ class Store {
       // never an id: the parser refuses a SET of one (§3, req:3.set-keeps-id), so the index stays good
       graph.nodes.get(bound[v]).props[key] = val;
     }
+    withinItems(g, graph.nodes.size + graph.edges.length);
     return g;
   }
 }

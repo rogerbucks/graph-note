@@ -5,13 +5,19 @@
 // - The drafts follow their note when it is renamed or moved, edited or not. Their ids are unchanged.
 // - Drafts kept before ids were are given one when first read.
 // - One command writes every draft, once each, into a new note. So a draft whose note was deleted is never out of reach.
+import { word } from '@thoughtknot/core';
 import { Notice } from 'obsidian';
 import type ThoughtKnotPlugin from './main';
 import type { Drafts } from './main';
 import { freePath } from './export/vault-write';
 
-/** The command that recovers every kept draft into a new note. */
-export const RECOVER_COMMAND = { id: 'recover-drafts', name: 'Recover kept drafts into a new note' };
+/** The command that recovers every kept draft into a new note: its name is said in the language when it is asked. */
+export const RECOVER_COMMAND = {
+  id: 'recover-drafts',
+  get name(): string {
+    return word('host.command.recover');
+  },
+};
 
 /**
  * A new draft's id, a random version-4 UUID: never one given before. The web view may have no crypto.randomUUID, as on
@@ -77,7 +83,7 @@ export async function recoverDrafts(plugin: ThoughtKnotPlugin): Promise<void> {
   const byId = new Map(Object.entries(plugin.drafts()).map(([key, d]) => [d.id, [key, d] as const]));
   const kept = [...byId.values()];
   if (!kept.length) {
-    new Notice('No drafts are kept.');
+    new Notice(word('host.no-drafts'));
     return;
   }
   const parts = kept.map(([key, d]) => {
@@ -93,8 +99,8 @@ export async function recoverDrafts(plugin: ThoughtKnotPlugin): Promise<void> {
     await plugin.app.vault.create(path, `# Kept drafts\n\n${intro}\n${parts.join('\n')}\n`);
   } catch (e) {
     // as on a Mac, where a note named only in another case is the same file: said, and the drafts stay kept
-    new Notice(`The kept drafts could not be written into ${path}: ${(e as Error).message} They stay kept.`);
+    new Notice(word('host.drafts-failed', { path, why: (e as Error).message }));
     return;
   }
-  new Notice(`${kept.length} kept draft${kept.length === 1 ? '' : 's'} written into ${path}.`);
+  new Notice(word('host.drafts-written', { count: kept.length, path }));
 }

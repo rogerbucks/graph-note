@@ -2,13 +2,23 @@
 export { gqlBlocks, gqlSpans, graphOfBlock, isSharedSchema, namesSharedSchema, styleOf } from './blocks.ts';
 export { readNote } from './drawing.ts';
 export { blockItems } from './block-items.ts';
-export { hops } from './estimates.ts';
 export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
+export { historyLayer, layered, memoryStorage } from './note-storage.ts';
+export { CORE_STORAGE } from './core-storage.ts';
+export { CHANGE_WAITS, gatedFiles } from './plugin-files.ts';
+export type { FilesOffer, ProposedNoteChange } from './plugin-files.ts';
+export { notePath, noteVersion, refusal, REFUSED } from './note-storage.ts';
+export type { ChangeLog, NoteStorage, StorageLayer, StoredChange } from './note-storage.ts';
+export type { StoredNote, WriteOptions, WriteOutcome } from './note-storage.ts';
+export { storageContract } from './storage-contract.ts';
+export type { StorageCheck } from './storage-contract.ts';
+export { DIRECTORY, workspaceStorage } from './workspace-storage.ts';
+export type { WorkspaceFiles } from './workspace-storage.ts';
 export type { Span } from './blocks.ts';
 export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote } from './note-reading.ts';
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
-export { explain, distance } from './estimates.ts';
+export { explain, distance, hops } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
 export { estimateFix } from './estimate-fix.ts';
 export type { EstimateFix } from './estimate-fix.ts';
@@ -18,6 +28,11 @@ export { mirrored, inReadingDirection, shownAsRead } from './drawing-direction.t
 export { PALETTES, THEME_COLOURS, fixedPalette } from './palette.ts';
 export type { Palette, ThemeColours } from './palette.ts';
 export { readStyle, outsideOf, lookOf, legendOf } from './style.ts';
+export { lookTag, lookTags } from './look-tags.ts';
+export { SHORTCUTS, SHORTCUT_PLACES } from './shortcuts.ts';
+export type { Shortcut, ShortcutPlace } from './shortcuts.ts';
+export { TOUR_STEPS, withExample } from './first-run.ts';
+export type { TourStep } from './first-run.ts';
 export type { StyleReading } from './style.ts';
 export { ARROWHEADS, FLOW_MOTIONS, FORMATS, INLINE, LINES, NUDGE_WORDS, OUTSIDE, STYLE_HUES } from './style-graph.ts';
 export type {
@@ -62,16 +77,8 @@ export type { ImageAt, Start } from './image-limits.ts';
 export { animationSaid } from './export-pictures.ts';
 export type { LoadedImage, PictureLoad, UnreadImage } from './export-pictures.ts';
 export { styleEdit } from './style-edit.ts';
-export {
-  DIAGRAM_TYPES,
-  LARGE_GRAPH,
-  diagramFor,
-  diagramOffer,
-  nearestType,
-  shapeOf,
-  suggestType,
-  typeFits,
-} from './types.ts';
+export { DIAGRAM_TYPES, LARGE_GRAPH, diagramFor, diagramOffer, nearestType } from './types.ts';
+export { pluginTypeOf, shapeOf, suggestType, typeFits } from './types.ts';
 export type { DiagramChoice, DiagramOffer, DiagramType, GraphShape, Suggestion, TypeFit } from './types.ts';
 export { scrollsOneWay, tableOf, wayIn } from './types-table.ts';
 export type { DiagramTable } from './types-table.ts';
@@ -126,7 +133,7 @@ export { ANIMATION_LIMITS, animationFits } from './path-animation.ts';
 export type { Device, ExportWalk, TooLargeToAnimate } from './path-animation.ts';
 export { viewsOf, readingOf } from './views.ts';
 export type { NamedView } from './views.ts';
-export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, VIEW_NAMES, parseView } from './view-profile.ts';
+export { VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, parseView, viewName } from './view-profile.ts';
 export { addView, makeView } from './view-write.ts';
 export type { ViewArgs, ViewKind, ViewRefusal, ViewSpec } from './view-profile.ts';
 export { evaluate } from './view-evaluate.ts';
@@ -167,27 +174,27 @@ export type { PngPage } from './export-pages.ts';
 export { CORE_EXPORTS, DATA_FORMATS, dataText, exportedData, isDataFormat } from './export-data.ts';
 export type { DataFormat } from './export-data.ts';
 export type { DataInfo, ExportedData } from './export-data-model.ts';
-export { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from './plugins.ts';
-export {
-  currentLocale,
-  DEFAULT_LOCALE,
-  formatCount,
-  formatDay,
-  formatInstant,
-  formatList,
-  formatSize,
-  setLocale,
-  sortedForReader,
-} from './locale-formats.ts';
-export type {
-  DataExporter,
-  ExtensionPoint,
-  ExtensionPoints,
-  ThoughtKnotPlugin,
-  PluginRegistry,
-  PluginResult,
-} from './plugins.ts';
-export { exporterContract, sampleExports, themeTokenContract } from './plugins-contract.ts';
+export { EXTENSION_POINTS, HOST_ABILITIES, PLUGIN_API, PLUGIN_TIME_LIMIT, pluginRegistry } from './plugins.ts';
+export { POINT_VERSIONS } from './plugins.ts';
+export { currentLocale, DEFAULT_LOCALE, formatCount, formatDay, formatInstant } from './locale-formats.ts';
+export { formatList, formatSize, setLocale, sortedForReader } from './locale-formats.ts';
+export type { DataExporter, ExtensionPoint, ExtensionPoints, ThoughtKnotPlugin, PluginRegistry } from './plugins.ts';
+export type { PluginCommand, PluginResult, RegistryOptions, StorageBackend, StoppedPlugin } from './plugins.ts';
+export type { HostAbilities, HostAbility, HostOffer, PanelRoot, PluginPanel } from './plugins.ts';
+export type { GivenGraph, PluginSource, PluginStep } from './plugins.ts';
+export { TRUST_LEVELS } from './plugin-sources.ts';
+export type { GraphOrigin, JoinedGraph, Trust } from './plugin-sources.ts';
+export { commandContract, exporterContract, sampleExports, storageBackendContract } from './plugins-contract.ts';
+export { SAMPLE_GRAPH, providerContract, sourceContract, stepContract } from './plugins-contract.ts';
+export type { AiProvider, ProviderReading, ProviderRequest } from './plugin-ai.ts';
+export { diagramContract, themeTokenContract } from './plugins-contract.ts';
+export { isolatedPlugin } from './plugin-isolated.ts';
+export type { IsolatedOptions, IsolatedPlugin, PluginPort } from './plugin-isolated.ts';
+export { OUTSIDE_CHARACTERS, outsideBody, outsidePlugin } from './plugin-outside.ts';
+export { outsideProblem, sealCode, sealOutside } from './plugin-outside.ts';
+export { ISOLATED_POINTS, LOCKED_AWAY, lockDown, servePlugin } from './plugin-serve.ts';
+export type { Added, FromPlugin, PluginScope, ToPlugin } from './plugin-serve.ts';
+export type { DiagramGiven, DiagramMark, DiagramSpace, MarkPoint, PluginDiagram } from './plugin-diagrams.ts';
 export { OBSIDIAN_TOKEN_MAP, THEME_TOKENS, themeTokenCss } from './theme-tokens.ts';
 export type { ThemeToken, ThemeTokenUse } from './theme-tokens.ts';
 export {
@@ -260,9 +267,9 @@ export type {
 } from './proposals.ts';
 export { NO_BASIS, basisOf } from './proposals-basis.ts';
 export type { Stale } from './proposals-basis.ts';
-export { MARK_WORDS } from './proposals-marks.ts';
+export { markWord } from './proposals-marks.ts';
 export type { ChangeMark, MarkKind, Marks } from './proposals-marks.ts';
-export { CHANGE_LOOKS, NO_CHANGES, changesText, changesView, markedChanges } from './changes-view.ts';
+export { CHANGE_LOOKS, changesText, changesView, markedChanges, noChanges } from './changes-view.ts';
 export type { ChangeLine, ChangesShown } from './changes-view.ts';
 export { REVIEW_LEVELS, ReviewItems, asNote, groupSaid, reviewLevels, workstreamsFrom } from './github-review-items.ts';
 export type {
@@ -340,18 +347,20 @@ export { BUSY_HUB, foldsHiding } from './untangle-fold.ts';
 export type { Folding } from './untangle-fold.ts';
 export {
   LABEL_SCALE,
-  SWITCH_NAMES,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
   ViewState,
   labelsHidden,
   startingSwitches,
+  switchName,
 } from './view-switches.ts';
 export type { Fold, ViewSwitch, ViewSwitches } from './view-switches.ts';
 export { linksOf } from './style.ts';
 export type { Links, OnOff, Routing } from './style-graph.ts';
 export type { DrawingHeightSetting, MiniMapSetting, SwitchSetting } from './settings.ts';
 export { tallestOf } from './settings-aids.ts';
+export { importedBlock, isDbFile, withImport } from './db-import.ts';
+export type { DbImported, DbRow } from './db-import.ts';
 export {
   applyChanges,
   attachmentType,

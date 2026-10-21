@@ -3,7 +3,7 @@
 // them back as the plugin reads them. So a missing or out-of-range one is its default. They are read only. `GET
 // /api/settings` answers, a write is refused, and the page has nothing to change them with. No AI model is passed on,
 // as Claude is the only AI the browser editor offers (cc_claude_only). None of a model's address or key is held here.
-import { settingsFrom } from '@thoughtknot/core';
+import { settingsFrom, word } from '@thoughtknot/core';
 import type { ApiHandler } from './start-server.ts';
 
 /** The settings as the page is told them, from the JSON the mod handed over; none, or unreadable, is the defaults. */
@@ -20,8 +20,8 @@ export function pageSettings(raw: string | undefined): ReturnType<typeof setting
 /** `inner`, with `settings` answered here, read only. */
 export function withSettings(raw: string | undefined, inner: ApiHandler | undefined): ApiHandler {
   return (request) => {
-    if (request.path !== 'settings') return inner ? inner(request) : { status: 404, text: 'Not found.' };
-    if (request.method !== 'GET') return { status: 405, text: 'The settings are read here and never changed.' };
+    if (request.path !== 'settings') return inner ? inner(request) : { status: 404, text: word('server.not-found') };
+    if (request.method !== 'GET') return { status: 405, text: word('server.settings-read-only') };
     return {
       status: 200,
       text: JSON.stringify(pageSettings(raw)),

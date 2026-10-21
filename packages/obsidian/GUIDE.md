@@ -258,6 +258,27 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 - `send.ts` — the one module that reaches the network: the request, with Obsidian's `requestUrl`, never a vendor's
   library. Only the send dialog imports it (`test/policy.test.js`).
 
+### `src/databases/` — importing from a database (spec §20)
+
+- `import.ts` — the command, Import from a database. With no SQLite file in the vault, it is only a notice.
+  - Otherwise it opens a dialog on the note in front, never one in reading view. It asks for the database file, the
+    graph's name, the things query and an optional links query. It works the same on desktop and mobile.
+  - Nothing is read until Import is pressed. Then the file's bytes are read from the vault, on the device.
+  - The rows are written at the end of the note as a graph block (`importedBlock`), through `vault.process`. It is text
+    that keeps no live link. A failure is said in a notice, the note left as it was.
+- `sqlite.ts` — `sqliteQuery`: runs the queries on a SQLite file's bytes, in memory, with sql.js. The engine's
+  WebAssembly is inside main.js, so nothing is fetched.
+  - The database is opened query-only, so a query that writes fails. The file itself is never written.
+  - A query of more than 10,000 rows fails, saying how to narrow it.
+  - The plugin's `queryDatabase` calls it, so a test can stand in its own.
+- `sql-js.d.ts` — the types of the parts of sql.js the import uses.
+- `../commands.ts` — `addAskCommands` adds the commands that reach outside the vault: Ask an AI model, Clear the record
+  of sends, and Import from a database. `addCommands` adds them and the keyboard shortcuts' commands.
+- `../shortcuts.ts` — `addShortcutCommands` adds Show the keyboard shortcuts, and the drawing's own commands: Zoom in,
+  Zoom out, Fit and Full screen. They have no keys until a person gives them some in Hotkeys (§44, shortcuts_listed).
+- `../first-run.ts` — an empty graph's card, with Edit and Start from an example (`renderEmpty`). The drawing after
+  an example opens the tour (`takeTour`), and the command Show the tour opens it again (§44, first_run_help).
+
 ### `src/settings/` — the settings page (spec §21)
 
 - `settings.ts` — `ThoughtKnotSettingTab`: one page in Obsidian's plugin settings, in its declarative form. It is built
@@ -499,6 +520,14 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   where the card is read-only: reading view, an embed, and full screen opened from them. Those named as only reading
   stay open, so a new control that writes is read-only there by default. An option it cannot reach is refused, loudly.
 - `view-options.ts` — what a drawing is given, its links' movement among it (`LinkMotion`).
+
+### `src/storage/` — notes kept in the vault (editor spec §41)
+
+- `vault-storage.ts` — `vaultStorage`, the vault as a backend of the core's one storage interface (`NoteStorage`).
+  - Every read and write goes through the vault's API. A write checks the version it was made against inside
+    `vault.process`, so a change made in between is never written over.
+  - A note removed goes where the person's deleted files go (`fileManager.trashFile`).
+  - The plugin's own code still reads and writes notes directly; it moves onto this backend in a later slice.
 
 ### `src/links/` — links and attachments (spec §18)
 

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/words-in-code.test.js",
+  "test": "the words in the code > the check finds a sentence, a label and a control’s one word, and passes classes, keys and selectors",
+  "seen_failing_first": false,
+  "evidence": "it checks the check itself, on a made-up source; renamed with its group as the check grew past the display layer"
+}

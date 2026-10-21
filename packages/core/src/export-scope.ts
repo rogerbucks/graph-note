@@ -6,7 +6,8 @@ import type { Estimate } from './estimates.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
 import { evaluate } from './view-evaluate.ts';
 import type { ViewSpec } from './view-profile.ts';
-import { readingOf } from './views.ts';
+import { sourceReadingOf } from './views.ts';
+import { word } from './words.ts';
 
 /** What is asked to be exported: a graph, whole, or one of its views, with or without the faded context. */
 export interface ExportRequest {
@@ -74,16 +75,21 @@ export function exportScope(reading: NoteReading, request: ExportRequest): Expor
     why,
   });
   if (!view) {
-    if (!base || !base.boxes.length)
-      return empty(`Graph ${graph} has no things in this note: add some, or pick another graph`);
+    if (!base || !base.boxes.length) return empty(word('export.scope.graph-empty', { graph }));
     return { kind: 'diagram', graph, context: false, drawing: base, faded: { things: [], links: [] }, empty: false };
   }
   const result = evaluate(view.spec, reading, graph);
-  if (result.empty || !base) return empty(`View ${view.name} matches nothing: ${result.why ?? 'change the view'}`);
+  // why there is nothing is said to the person, in their language. The view's reading below goes into the export's bytes
+  if (result.empty || !base)
+    return empty(
+      result.why
+        ? word('export.scope.view-empty', { view: view.name, why: result.why })
+        : word('export.scope.view-empty-plain', { view: view.name }),
+    );
   const things = new Set(result.things),
     links = new Set(result.links),
     text = new Map(base.boxes.map((b) => [b.key, b.text]));
-  const said = readingOf(view.spec, (id) => text.get(id) ?? id);
+  const said = sourceReadingOf(view.spec, (id) => text.get(id) ?? id);
   const scope = { kind: 'view' as const, graph, view: view.name, reading: said, empty: false };
   if (request.context) {
     const guessed = base.estimates.filter((e) => e.kind === 'name');

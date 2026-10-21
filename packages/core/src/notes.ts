@@ -9,14 +9,15 @@ import type { GraphDrawing, Link, Problem, ThingNote } from './note-reading.ts';
 import type { ReadText } from './partial-read.ts';
 import { trimEnd, trimStart } from './whitespace.ts';
 import { writtenIn } from './written-things.ts';
+import { word } from './words.ts';
 
-const SHARED = 'this note is above a line holding more than one thing, so it belongs to none of them',
-  SHARED_FIX = 'put the thing the note is about on a line of its own, directly below the note',
-  LOST = 'this note is not shown, as what it is on could not be read',
-  LOST_FIX = 'fix the problem in this block, and the note is shown again';
-const duplicate = (key: string) =>
-    `this note is on ${key}, which already has a note where it is first written, so this one is not shown`,
-  duplicateFix = (key: string) => `join the two notes into one, above ${key} where it is first written`;
+// what is said of a note that is shown on nothing, each made when said so it is in the language of the moment
+const shared = () => word('reading.note.shared'),
+  sharedFix = () => word('reading.note.shared.fix'),
+  lost = () => word('reading.note.lost'),
+  lostFix = () => word('reading.note.lost.fix');
+const duplicate = (key: string) => word('reading.note.duplicate', { key }),
+  duplicateFix = (key: string) => word('reading.note.duplicate.fix', { key });
 
 /** The id each name in a block stands for. A thing written there, or found by MATCH, with an id of its own has that id.
  * Any other name is its own id (§3: a thing's name is its id). */
@@ -105,7 +106,7 @@ export function addNotes(graphs: Map<string, GraphDrawing>, texts: string[], rea
     const r = read.get(block),
       applied = notesOf(r?.applied),
       meant = notesOf(r?.named);
-    for (const s of applied?.shared ?? []) say(s.lines[0] ?? s.line, 'warning', SHARED, SHARED_FIX);
+    for (const s of applied?.shared ?? []) say(s.lines[0] ?? s.line, 'warning', shared(), sharedFix());
     if (d && r?.applied && applied) attach(d, applied.notes, idsIn(r.applied), block);
     const shown = new Set(applied?.notes.map((n) => n.line));
     if (r && meant) {
@@ -115,11 +116,11 @@ export function addNotes(graphs: Map<string, GraphDrawing>, texts: string[], rea
         const key = 'thing' in n.element ? id(n.element.thing) : null;
         if (key !== null && d?.boxes.find((b) => b.key === key)?.note)
           say(n.lines[0] ?? n.line, 'hint', duplicate(key), duplicateFix(key));
-        else say(n.lines[0] ?? n.line, 'warning', LOST, LOST_FIX);
+        else say(n.lines[0] ?? n.line, 'warning', lost(), lostFix());
       }
     } else if (r) {
       // what was meant cannot be read whole: each note directly above an item the reader left out
-      for (const line of notesAbove(text, r.dropped)) say(line, 'warning', LOST, LOST_FIX);
+      for (const line of notesAbove(text, r.dropped)) say(line, 'warning', lost(), lostFix());
     }
   });
   return problems;

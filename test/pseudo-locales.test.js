@@ -27,7 +27,7 @@ const LANGUAGES = Object.entries(PSEUDO_LANGUAGES);
 const DRAWN_BY_OBSIDIAN = ['the settings page'];
 
 /** The words the code still says itself in each host's views, not yet from the catalogue: lowered as each moves there. */
-const STILL_SAID_BY_CODE = { obsidian: 40, page: 14 };
+const STILL_SAID_BY_CODE = { obsidian: 39, page: 13 };
 
 /** The parts set at a point measured on the screen, by class: these keep a physical side (as in test/rtl.test.js). */
 const PLACED = [
@@ -42,11 +42,13 @@ const PLACED = [
 /**
  * Each catalogue word as a pattern of a whole text. In it, a count stands for a number, and any other placeholder for a
  * name with no stop or comma in it. So a sentence the code says itself is not taken for one: in a test language none
- * shows. A word that is placeholders alone says nothing of its own, so has no pattern.
+ * shows. A word that is placeholders alone says nothing of its own, so has no pattern. Nor has one that is two
+ * placeholders joined by one word, as "{written} to {taken}" is: it matches any text with that word.
  */
 const SOURCE_PATTERNS = Object.entries(SOURCE_WORDS).flatMap(([key, entry]) =>
   (typeof entry === 'string' ? [entry] : Object.values(entry))
     .filter((text) => /[a-zA-Z]/.test(text.replace(/\{[a-zA-Z0-9]+\}/g, '')))
+    .filter((text) => !/^\{[a-zA-Z0-9]+\},? [a-z]+ \{[a-zA-Z0-9]+\}$/.test(text))
     .map((text) => ({
       key,
       pattern: new RegExp(

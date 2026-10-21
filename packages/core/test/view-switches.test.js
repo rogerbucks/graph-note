@@ -2,7 +2,7 @@
 // folded, groups folded and parallel links merged. They start from the plugin's settings, a style graph's merging, and
 // a view's switches saved as shown (view_switch_defaults). A card's state of them folds, opens and saves, changing only
 // the drawing (view_switch_view_only, untangle_data_untouched).
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { DEFAULT_SETTINGS } from '../src/settings.ts';
@@ -10,13 +10,17 @@ import { readStyle } from '../src/style.ts';
 import { styledDrawing } from '../src/style-source.ts';
 import {
   LABEL_SCALE,
-  SWITCH_NAMES,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
   ViewState,
   labelsHidden,
   startingSwitches,
+  switchName,
 } from '../src/view-switches.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const star = (n) =>
   [
@@ -43,7 +47,7 @@ describe('the four switches', () => {
   test('are labels by zoom, busy hubs folded, groups folded and parallel links merged, in that order', () => {
     assert.deepEqual(VIEW_SWITCHES, ['labels', 'hubs', 'groups', 'merge']);
     assert.deepEqual(
-      VIEW_SWITCHES.map((s) => SWITCH_NAMES[s]),
+      VIEW_SWITCHES.map((s) => switchName(s)),
       ['Labels by zoom', 'Busy hubs folded', 'Groups folded', 'Parallel links merged'],
     );
   });
@@ -158,5 +162,13 @@ describe('a card’s state of the switches', () => {
     state.folded(drawing);
     assert.equal(JSON.stringify([drawing, [...reading.graphs], reading.problems]), before);
     assert.equal(drawing.folding, undefined);
+  });
+});
+
+describe('the switches’ names', () => {
+  // proves: words_catalogue
+  test('each switch is named in the person’s language', () => {
+    setLanguage('en-XA');
+    for (const s of VIEW_SWITCHES) assert.ok(isPseudoWord(switchName(s)), s);
   });
 });

@@ -10,6 +10,8 @@ import { S } from './whitespace.ts';
 import { blankText } from './block-items.ts';
 import { BlockPlaces } from './estimate-places.ts';
 import type { Place } from './estimate-places.ts';
+import { formatList } from './locale-formats.ts';
+import { word } from './words.ts';
 
 /** A guess the drawing makes for a near miss (spec §3): what was written, what it was taken to mean, and the fix. */
 export interface Estimate {
@@ -83,14 +85,17 @@ export function nearest(
   return found.length === 1 ? { one: found[0] ?? '', d: best } : { several: found.sort() };
 }
 
-const away = (d: number) =>
-  d === 0 ? 'which differs only in case or underscores' : d === 1 ? 'one letter away' : 'two letters away';
-const either = (xs: string[]) =>
-  xs.length === 2 ? `${xs[0]} and ${xs[1]}` : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
-const andList = (xs: string[]) =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
-const orList = (xs: string[]) =>
-  xs.length === 2 ? `${xs[0]} or ${xs[1]}` : `${xs.slice(0, -1).join(', ')} or ${xs[xs.length - 1]}`;
+/** One change of a list of them, such as "Bob to Bobby". */
+const pair = (written: string, taken: string) => word('reading.estimate.pair', { written, taken });
+
+/** What a near miss was taken to mean, and how far it is from what was written. */
+const takenAs = (f: Correction) =>
+  word(
+    f.d === 0 ? 'reading.estimate.taken-case' : f.d === 1 ? 'reading.estimate.taken-one' : 'reading.estimate.taken-two',
+    { name: f.taken },
+  );
+const andList = (xs: string[]) => formatList(xs);
+const orList = (xs: string[]) => formatList(xs, 'disjunction');
 
 /** One near miss: what was written, what it was taken to mean, and how many letters apart. */
 export interface Correction {
@@ -101,18 +106,20 @@ export interface Correction {
 
 /** The sentence an estimate explains itself with, on a given line: what was written, what it was taken to mean, the fix. */
 export function explain(kind: 'name' | 'type', graph: string, fixes: Correction[], line: number): string {
-  const and = (xs: string[]) =>
-    xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+  const and = andList;
   const many = fixes.length > 1,
     written = and(fixes.map((f) => f.written));
-  const what =
-    kind === 'name'
-      ? `links to ${written}, which ${many ? 'are' : 'is'} not in graph ${graph}`
-      : `uses the relationship ${written}, which is not in graph ${graph}`;
   const taken = many
-    ? fixes.map((f) => `${f.taken}, ${away(f.d)}`).join(', and ')
-    : `${fixes[0]?.taken}, ${away(fixes[0]?.d ?? 1)}`;
-  return `Line ${line} ${what}. ${many ? 'They were' : 'It was'} taken to mean ${taken}. To fix it, change ${and(fixes.map((f) => `${f.written} to ${f.taken}`))}.`;
+    ? fixes.map(takenAs).reduce((first, next) => word('reading.estimate.taken-and', { first, next }))
+    : takenAs({ written: '', taken: `${fixes[0]?.taken}`, d: fixes[0]?.d ?? 1 });
+  const key =
+    kind === 'type'
+      ? 'reading.estimate.explain-type'
+      : many
+        ? 'reading.estimate.explain-names'
+        : 'reading.estimate.explain-name';
+  const changes = and(fixes.map((f) => pair(f.written, f.taken)));
+  return word(key, { line: String(line), written, graph, taken, changes });
 }
 
 /**
@@ -194,8 +201,8 @@ export function estimate(
     const near = nearest(missing, guessable);
     if (!near) continue;
     if ('several' in near) {
-      p.message = `no thing called ${missing} in graph ${graph}; ${either(near.several)} are equally close, so it is not drawn`;
-      p.fix = `change ${missing} to the one you mean: ${orList(near.several)}`;
+      p.message = word('reading.estimate.equally-close', { name: missing, graph, among: andList(near.several) });
+      p.fix = word('reading.estimate.equally-close.fix', { name: missing, among: orList(near.several) });
       p.replace = { written: missing, with: near.several };
       continue;
     }
@@ -229,8 +236,8 @@ export function estimate(
         explain: explain('name', graph, fixes, p.line),
       });
     }
-    p.message = `${missing} is not in graph ${graph}; it is drawn as an estimate of ${near.one}`;
-    p.fix = `change ${missing} to ${near.one}`;
+    p.message = word('reading.estimate.name', { name: missing, graph, taken: near.one });
+    p.fix = word('reading.estimate.change-to', { written: missing, taken: near.one });
     p.replace = { written: missing, with: [near.one] };
     p.severity = 'warning';
     // the fix acts where the path names each word, never on the same word in a text or another link on its line. One
@@ -242,8 +249,9 @@ export function estimate(
       if (at.also.length) p.also = at.also;
       for (const e of mine) e.span = at.place;
       if (words.length > 1) {
-        p.fix = `change ${andList(words.map((w) => `${w.written} to ${w.taken}`))}`;
-        p.fixTitle = `C${p.fix.slice(1)}`;
+        const changes = andList(words.map((w) => pair(w.written, w.taken)));
+        p.fix = word('reading.estimate.change', { changes });
+        p.fixTitle = word('reading.estimate.change.fix-title', { changes });
       }
     }
     out.push(...mine);
@@ -285,8 +293,9 @@ export function estimate(
       block: at.block,
       line: at.line,
       severity: 'warning',
-      message: `${l.type} is not a relationship in graph ${graph}; it is drawn as an estimate of ${near.one}`,
-      fix: `change ${l.type} to ${near.one}`,
+      kind: 'unknown-types',
+      message: word('reading.estimate.type', { type: l.type, graph, taken: near.one }),
+      fix: word('reading.estimate.change-to', { written: l.type, taken: near.one }),
       replace: { written: l.type, with: [near.one] },
       ...(at.span ? { span: at.span } : {}),
     });

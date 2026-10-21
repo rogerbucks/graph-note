@@ -324,6 +324,7 @@ export function aiModel(given: Partial<AiModel> & Record<string, unknown>, class
       matrixRow: text(given.matrixRow).trim(),
       matrixOn: switchesFrom(given.matrixOn),
     }),
+    ...(text(given.provider).trim() && { provider: text(given.provider).trim() }),
   };
 }
 

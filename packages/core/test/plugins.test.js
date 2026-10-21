@@ -1,9 +1,11 @@
 // The plug-in interface (editor spec §43, plugin_interface): one typed, versioned way in, which the built-in data
-// exports use too. A plug-in's own export is offered through it and written beside them.
+// exports and storage use too. A plug-in's own export, storage or command is offered through it beside them.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS, DATA_FORMATS, dataText } from '../src/export-data.ts';
+import { memoryStorage } from '../src/note-storage.ts';
+import { CORE_STORAGE } from '../src/core-storage.ts';
 
 const DATA = { graph: 'g', things: [['a', ['Thing'], { id: 'a', name: 'A' }]], links: [] };
 const INFO = { note: 'A.md', date: '2026-10-17' };
@@ -25,9 +27,80 @@ const NAMES = {
 };
 
 describe('the plug-in interface', () => {
-  test('it is versioned, and its first extension point is the data exports', () => {
-    assert.equal(PLUGIN_API, '1');
-    assert.deepEqual(EXTENSION_POINTS, ['exports', 'theme'], 'the data exports first, then the theme tokens');
+  test('it is versioned, and its extension points are the data exports, the theme, storage, commands, panels, graph sources and steps, and AI providers', () => {
+    assert.equal(PLUGIN_API, '1.1');
+    assert.deepEqual(EXTENSION_POINTS, [
+      'exports',
+      'theme',
+      'storage',
+      'commands',
+      'panels',
+      'sources',
+      'steps',
+      'ai',
+      'diagrams',
+    ]);
+  });
+
+  test('a plug-in’s panel is offered through the registry and drawn into the element the host gives', () => {
+    const registry = pluginRegistry();
+    registry.register({
+      id: 'acme.tags',
+      version: '1.0.0',
+      api: PLUGIN_API,
+      uses: ['panels'],
+      register: (points) =>
+        points.panels.add({ id: 'acme.tags.list', title: 'Tags', render: (el) => (el.drawn = `tags, ${el.dir}`) }),
+    });
+    assert.deepEqual(
+      registry.panels().map((p) => [p.id, p.title]),
+      [['acme.tags.list', 'Tags']],
+    );
+    const el = { dir: 'rtl' };
+    assert.deepEqual(registry.showPanel('acme.tags.list', el), { ok: true, value: undefined });
+    assert.equal(el.drawn, 'tags, rtl');
+    assert.match(registry.showPanel('acme.none', el).message, /No plug-in adds the panel "acme.none"/);
+  });
+
+  test('the built-in storage is added through it, and opens an empty store each time', async () => {
+    const registry = pluginRegistry();
+    registry.register(CORE_STORAGE);
+    assert.deepEqual(registry.plugins(), ['thoughtknot.storage']);
+    assert.deepEqual(
+      registry.storages().map((b) => [b.name, b.title]),
+      [['memory', 'In memory']],
+    );
+    const opened = registry.openStorage('memory');
+    assert.equal(opened.ok, true);
+    await opened.value.write('a.md', 'A', { expected: null });
+    assert.deepEqual(await registry.openStorage('memory').value.list(), [], 'a fresh store, not the last one');
+  });
+
+  test('a plug-in’s storage and commands are offered beside the built-ins and reached through the registry', async () => {
+    const registry = pluginRegistry();
+    const ran = [];
+    registry.register(CORE_STORAGE);
+    registry.register({
+      id: 'acme.drive',
+      version: '1.0.0',
+      api: PLUGIN_API,
+      uses: ['storage', 'commands'],
+      register: (points) => {
+        points.storage.add({ name: 'drive', title: 'Acme Drive', open: () => memoryStorage({ 'a.md': 'A' }) });
+        points.commands.add({ id: 'acme.drive.sync', title: 'Sync with Acme Drive', run: () => ran.push('sync') });
+      },
+    });
+    assert.deepEqual(
+      registry.storages().map((b) => b.name),
+      ['memory', 'drive'],
+    );
+    assert.deepEqual(await registry.openStorage('drive').value.list(), ['a.md']);
+    assert.deepEqual(
+      registry.commands().map((c) => c.id),
+      ['acme.drive.sync'],
+    );
+    assert.deepEqual(registry.runCommand('acme.drive.sync'), { ok: true, value: undefined });
+    assert.deepEqual(ran, ['sync']);
   });
 
   test('the built-in data exports are added through it, as any plug-in’s are', () => {
@@ -51,10 +124,12 @@ describe('the plug-in interface', () => {
     assert.deepEqual(registry.writeData('names', DATA, INFO), { ok: true, value: 'A' });
   });
 
-  test('a format nothing adds is said so, never written', () => {
+  test('a format, storage or command nothing adds is said so, never reached', () => {
     const r = pluginRegistry().writeData('names', DATA, INFO);
     assert.equal(r.ok, false);
     assert.match(r.message, /No plug-in adds the format "names"/);
+    assert.match(pluginRegistry().openStorage('drive').message, /No plug-in adds the storage "drive"/);
+    assert.match(pluginRegistry().runCommand('acme.go').message, /No plug-in adds the command "acme.go"/);
   });
 
   test('what the registry hands out cannot change what it holds', () => {

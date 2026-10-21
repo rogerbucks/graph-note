@@ -20,6 +20,7 @@ import { exportWithLayout, pngSize } from '../../core/src/export.ts';
 import type { ExportInfo, ExportLayout, PngSize } from '../../core/src/export.ts';
 import { exportFailureWords, exportRefusalWords } from '../../core/src/hosts/refusal-words.ts';
 import type { Settings } from '../../core/src/settings.ts';
+import { word } from '../../core/src/words.ts';
 import { readStyle } from '../../core/src/style.ts';
 import type { Exporting } from '../../core/src/display/export/export-form.ts';
 import type { ExportAsk, ExportOutcome } from '../../core/src/display/export/export-types.ts';
@@ -67,7 +68,7 @@ export async function runExport(x: PageExport, ask: ExportAsk): Promise<ExportOu
   try {
     return said(await exporting(x, ask));
   } catch (e) {
-    return said({ stopped: `The export could not be made: ${(e as Error).message}` });
+    return said({ stopped: word('exporting.failed', { why: (e as Error).message }) });
   }
 }
 
@@ -141,9 +142,9 @@ async function exporting(x: PageExport, ask: ExportAsk): Promise<ExportOutcome> 
       if (!layoutFailed) throw e;
       return { stopped: exportFailureWords(e) };
     }
-    if (!image) return { stopped: 'The export was stopped before the layout finished. Nothing was saved. Try again.' };
+    if (!image) return { stopped: word('page.export-stopped') };
     if ('reason' in image) return { stopped: exportRefusalWords(image) };
-    if ('why' in image) return { stopped: `The export was not made: ${image.why}. Nothing was saved.` };
+    if ('why' in image) return { stopped: word('page.export-not-made', { why: image.why }) };
     if (image.animation?.length) animation = ` ${image.animation.join(' ')}`;
     if (format === 'svg') files = [{ name: go.fileName, text: image.svg }];
     else {
@@ -151,19 +152,19 @@ async function exporting(x: PageExport, ask: ExportAsk): Promise<ExportOutcome> 
       if (!pages) {
         const size = pngSize(image.width, image.height);
         return {
-          stopped: `The drawing is too large to draw as a PNG here (${size.width} by ${size.height}), even across pages; export it as SVG.`,
+          stopped: word('page.too-large-png', { width: size.width, height: size.height }),
         };
       }
       if (pages.length === 1)
         files = [{ name: go.fileName, bytes: await x.rasterise(image.svg, pngSize(image.width, image.height)) }];
       else {
         const named = planned(pages.length, true);
-        if (!('go' in named)) throw new Error('the plan changed while the pages were drawn');
+        if (!('go' in named)) throw new Error(word('exporting.plan-changed'));
         files = [];
         // every page is drawn before any is saved, so one that cannot be drawn leaves nothing behind
         for (const [i, page] of pages.entries()) {
           const at = named.go.pages?.[i];
-          if (!at) throw new Error(`page ${i + 1} has no name`);
+          if (!at) throw new Error(word('exporting.page-unnamed', { number: i + 1 }));
           files.push({
             name: at.fileName,
             bytes: await x.rasterise(pageSvg(image.svg, page), pngSize(page.width, page.height)),
@@ -172,15 +173,21 @@ async function exporting(x: PageExport, ask: ExportAsk): Promise<ExportOutcome> 
       }
     }
   }
+  // stopped while it was made: nothing is saved, and the form has said so (§44, progress_shown)
+  if (ask.signal?.aborted) return { stopped: word('progress.export-stopped') };
   const saved = await x.save(files);
   if ('stopped' in saved) return { stopped: saved.stopped };
   const names = saved.written;
   const [first = ''] = names;
-  const kept = first === files[0]?.name ? '' : ' An earlier export of that name was kept.';
+  const kept = first === files[0]?.name ? '' : ` ${word('exporting.earlier-kept')}`;
   const what =
     names.length === 1
       ? inFolder(x.folder, first)
-      : `${names.length} pages, ${inFolder(x.folder, first)} to ${inFolder(x.folder, names.at(-1) ?? '')}`;
+      : word('exporting.pages', {
+          count: names.length,
+          first: inFolder(x.folder, first),
+          last: inFolder(x.folder, names.at(-1) ?? ''),
+        });
   if (go.companion) {
     // beside the file, under its name: a single file's own as saved; a paged image's, the name the pages share
     const noteName = names.length === 1 ? first.replace(/\.[^./]+$/, '.md') : go.companion.fileName;
@@ -194,9 +201,10 @@ async function exporting(x: PageExport, ask: ExportAsk): Promise<ExportOutcome> 
     });
     const note = await x.save([{ name: noteName, text }]);
     if ('stopped' in note) {
-      const saved = held ? 'data was' : names.length === 1 ? 'image was' : 'pages were';
-      return { done: `The ${saved} saved at ${what}, but its companion note could not be written: ${note.stopped}` };
+      const saved = held ? 'data' : names.length === 1 ? 'image' : 'pages';
+      const cause = note.stopped.replace(/\.$/, '');
+      return { done: word(`exporting.note-failed.${saved}`, { what, cause }) };
     }
   }
-  return { done: `Exported ${what}.${kept}${animation}` };
+  return { done: `${word('exporting.done', { what })}${kept}${animation}` };
 }

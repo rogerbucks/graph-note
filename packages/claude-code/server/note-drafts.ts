@@ -3,6 +3,7 @@
 // note's path in it. So a name says nothing of the note, and no draft is ever a file the vault's app would show. Each
 // is written as a note is, by way of a new file renamed into place. It is readable by its owner alone. It is offered
 // again when the note is next opened.
+import { word } from '@thoughtknot/core';
 import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -39,7 +40,7 @@ export class DraftShelf {
    * Node's own, never a note's, so a draft is still kept when the note's write is what failed.
    */
   static async open(folder: string, vault: Vault, files: NoteFiles = NODE_FILES): Promise<DraftShelf> {
-    const refuse = () => new Error('The drafts folder must be outside the vault, in the mod’s own data folder.');
+    const refuse = () => new Error(word('server.drafts-in-vault'));
     const named = resolve(folder);
     const within = (f: string) => inside(vault.real, f) !== null || inside(vault.named, f) !== null;
     if (within(named) || named === vault.real || named === vault.named) throw refuse();

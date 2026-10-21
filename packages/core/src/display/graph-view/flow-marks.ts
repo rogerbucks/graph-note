@@ -3,7 +3,7 @@
 // line itself stays. Each is named for a screen reader with its movement and what it means. The card's legend says each
 // in words beside its icon. The movement is the style sheet's alone, stopped under reduced motion, where the dot is
 // hidden.
-import { flowLegend, flowSaid } from '@thoughtknot/core';
+import { flowLegend, flowSaid, word } from '@thoughtknot/core';
 import type { FlowLink } from '@thoughtknot/core';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -64,7 +64,7 @@ export function renderFlowLegend(root: HTMLElement, flow: readonly FlowLink[], f
   if (!entries.length) return;
   const ul = root.createEl('ul', {
     cls: 'thoughtknot-flow-legend',
-    attr: { 'aria-label': 'What the moving links mean' },
+    attr: { 'aria-label': word('flow.legend') },
   });
   for (const e of entries) {
     const li = ul.createEl('li');

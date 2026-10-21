@@ -1,6 +1,8 @@
 # Guide for AI sessions
 
 Short on purpose. Three AI tools share this repo: [docs/agents/ROLES.md](docs/agents/ROLES.md) says who does what.
+**First, read your asks:** the "To [your name]" lines in [#825](https://github.com/rogerbucks/thoughtknot/discussions/825),
+its owner list too. Do them before new work, or post "Blocked" or "Handoff" saying why not.
 
 ## Run the tests cheaply
 
@@ -25,22 +27,19 @@ On a CI failure, read only the failed job's log: `gh run view <id> --log-failed`
 
 ## Before you open a pull request
 
-- **Merge commits only**, never squash or rebase: the tests-first records name the branch's own commits.
+- **Merge commits only**, never squash or rebase. `pr-checks.yml` checks the rest: a `Requirements:` line, your
+  `agent:` label, no `Claude-Session:` link, and each test in one commit with its code.
 - **Sign off as Roger, never as an AI:** CONTRIBUTING.md, "Signing off your work", gives the exact line. CI checks it.
 - **Rewrite what CI checks.** A test: `node scripts/tests-first.mjs --update`, or `node scripts/tests-first.mjs --excuse`
   for one that passed first. A doc: `node scripts/plain-docs.mjs`. An export: `node scripts/public-api.mjs --update`.
 - **More of the same.** A dependency: `node scripts/notices.mjs`. A slice done: `node scripts/readme-status.mjs --write`.
   A fixed sleep removed: `node scripts/fixed-sleeps.mjs --tighten`.
-- **Approval.** Mark it ready first: a draft runs part of CI. Roger's "all good" then approves: auto-merge, merge commit.
+- **Merging.** Mark it ready. Once its full CI run is green, turn on auto-merge, as a merge commit. No "all good" needed.
 
 ## Guards
 
 A guard or hook that refuses a command means stop and ask the owner. Never reach the same result by another tool,
 wording or route. The one exception: when the refusal itself says how to do it allowably, do exactly that and say so.
-
-## The test vault
-
-`scripts/reset-test-vault.mjs` restores `test-vault/`; run it before and after any session in the test vault.
 
 ## Where things live
 
@@ -51,6 +50,7 @@ wording or route. The one exception: when the refusal itself says how to do it a
 - [python/graph_spec/GUIDE.md](python/graph_spec/GUIDE.md) — the Python library.
 - Tests mirror the code: `src/zoom.ts` is tested in `test/zoom.test.js`. Tests that span modules sit in the root `test/`.
 - `scripts/` — tools that run from the command line: the quiet runners, `tests-first.mjs`, `check-classification.mjs`.
+- `test-vault/` — run `scripts/reset-test-vault.mjs` before and after any session in it, to restore it.
 
 ## Files never to read
 

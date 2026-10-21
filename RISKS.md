@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (83)
+## Open (92)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -48,7 +48,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | ARCH-9 | The JavaScript library is private TypeScript sources in an archive | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | ARCH-10 | Three decisions that cost most if left after their wave | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
-| ARCH-12 | Plug-in API is one version string for all future extension points | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
 | UX-2 | Half the manual walk-through could run on the existing Chrome harness | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | UX-3 | Many user-facing sentences bypass the word catalogue and its checks | ●●● | ●●○ | fix-later (Wave 7 · Language, theming and the standalone app) | days |
 | UX-4 | No busy state while a layout runs, and a silent stop after failures | ●●○ | ●●● | fix-later (Wave 7 · Language, theming and the standalone app) | days |
@@ -92,6 +91,16 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-8 | No MCP server or SKILL.md exposes the graph format | ●●● | ●●○ | fix-later (Wave 23 · Held: Claude presents and decides in Claude Code) | weeks |
 | AI-9 | Planned AI waves are ordered against value and risk | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | AI-10 | Text to graph has no quality measure in its plan | ●●● | ●●○ | fix-later (Wave 19 · Held: text to graph with AI) | days |
+| TRUST-3 | The stable release builds and publishes in one job | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
+| TRUST-4 | GitHub titles and messages reach Claude's pane unfenced | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
+| TRUST-6 | Python fill recipes read outside the folder and inject into the query | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
+| TRUST-7 | Nothing cleans the drawing before it enters the page | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
+| TRUST-8 | A database import has no size or time limit | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
+| TRUST-9 | The Python class reader is looser than the core gate | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
+| TRUST-10 | git log still reads the repository's own settings | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
+| TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 
 ## Each open risk
 
@@ -397,11 +406,11 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 ### ARCH-2 Storage interface exists only as EditorNote, with no contract suite
 
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/display/editor/editor-note.ts`, `packages/core/src/store.ts`, `packages/core/test/storage-contract.test.js`, `packages/claude-code/server/**`, `packages/obsidian/src/block-editor/**`.
+**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/display/editor/editor-note.ts`, `packages/core/src/store.ts`, `test/storage-contract.test.js`, `packages/claude-code/server/**`, `packages/obsidian/src/block-editor/**`.
 
 **Risk:** Sync (Wave 13), the encrypted store (W30) and the GitHub backend (Wave 22) are all planned as 'one more backend of the storage interface'. But that interface has no file and no contract test. It has two hand-written implementations. Whoever adds the third backend inherits the differences between the first two.
 
-**Fix:** In Wave 6 (L1) lift EditorNote plus a small NoteStore (read, write-if-unchanged, watch, list, draft) into core as the named storage interface. Write packages/core/test/storage-contract.test.js. Run the vault, the page store and a plain-folder backend against it before the Tauri app starts.
+**Fix:** In Wave 6 (L1) lift EditorNote plus a small NoteStore (read, write-if-unchanged, watch, list, draft) into core as the named storage interface. Write test/storage-contract.test.js. Run the vault, the page store and a plain-folder backend against it before the Tauri app starts.
 
 **Check:** storage-contract.test.js in the suite, listed in CONTRIBUTING.md, with every backend registered; the requirement flips to written only with all three.
 
@@ -484,16 +493,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Decide before: (1) the storage and full host contract before Wave 7 H1. Give L1 its own wave rather than sharing Wave 6 with T1 and P1. (2) Format version and identity (ARCH-4, ARCH-6) before Wave 9, and certainly before Wave 13 CRDT. (3) A published, versioned surface for the display layer (today excluded from public-api.json) before Wave 8 VS Code consumes it from a webview.
 
 **Check:** Each decision is a written requirement with a test flipped to written before the named wave starts; scripts/check-requirements.mjs --done lists them.
-
-### ARCH-12 Plug-in API is one version string for all future extension points
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/plugins.ts`, `packages/core/src/plugins-contract.ts`, `wiki/Writing-a-plug-in.md`.
-
-**Risk:** PLUGIN_API '1' covers exports and theme only; storage, AI providers, diagram types and steps are to 'join one at a time'. Each addition either bumps the one number and refuses every existing plug-in, or ships unversioned.
-
-**Fix:** In P1 (Wave 6) version each extension point in the manifest (exports@1, theme@1). Refuse only the point whose version a plug-in does not match.
-
-**Check:** plugins.test.js: a plug-in built for exports@1 still loads after theme moves to @2.
 
 ### UX-2 Half the manual walk-through could run on the existing Chrome harness
 
@@ -817,13 +816,13 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 ### API-10 Plug-in API version is one string, no host loads third parties
 
-**Who found it:** API design expert. **Where:** `packages/core/src/plugins.ts`, `packages/core/src/plugins-contract.ts`, `wiki/Writing-a-plug-in.md`.
+**Who found it:** API design expert. **Where:** `packages/core/src/plugin-outside.ts`, `examples/sample-plugin/plugin.js`, `packages/core/src/plugin-versions.ts`, `packages/core/src/plugins-contract.ts`, `packages/core/src/plugins.ts`, `wiki/Writing-a-plug-in.md`.
 
 **Risk:** PLUGIN_API is '1' and a plug-in built for any other value is refused. So an additive change to the interface would orphan every plug-in unless the version never moves. The registry and two extension points (exports, theme) are in the public API and the wiki. But no host was found that loads a plug-in from outside the bundle, so the contract is untested against a real third party.
 
-**Fix:** In Wave 6 make `api` a major.minor pair, where the host accepts an equal major and lower-or-equal minor. Ship one out-of-tree sample plug-in that CI loads through each host's real path.
+**Fix:** Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version, and a sample plug-in passes each contract in a worker. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Left: the browser page and Obsidian each load one from a plug-ins folder.
 
-**Check:** A CI step builds the sample plug-in and runs plugins-contract.ts against it in the browser page and the Obsidian harness.
+**Check:** test/sample-plugin.test.js runs the sample in a worker now. The browser page and the Obsidian harness load it through their real paths once hosts load outside plug-ins.
 
 ### API-11 Schema @1 is a name suffix, not a version negotiation
 
@@ -925,7 +924,107 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** scripts/quality-check.mjs refuses a release when text-to-graph recall or precision drops below the baseline without a reason in quality/accepted.json.
 
-## Done or accepted (19)
+### TRUST-3 The stable release builds and publishes in one job
+
+**Who found it:** Trust model review. **Where:** `.github/workflows/release.yml`.
+
+**Risk:** The release job runs npm ci and npm test while it holds contents, id-token and attestations write. An install script or test could ask for a signing token or change main.js before it is attested. The nightly already builds apart from publishing.
+
+**Fix:** Split the release in two. A job with read access builds and uploads the files. A second job with the write permissions attests and publishes them, running no npm.
+
+**Check:** test/workflows.test.js: no job that runs npm ci or npm test holds id-token, attestations or contents write.
+
+### TRUST-4 GitHub titles and messages reach Claude's pane unfenced
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/server/editor-changes.ts`, `packages/claude-code/server/github-reader.ts`, `packages/claude-code/server/editor-gate.ts`.
+
+**Risk:** Pull request titles, authors and commit messages are third-party text. They go to the changes view, which Claude reads, with no credential scan and no data fence. Files with no class count as the lowest, so outside files reach Claude too.
+
+**Fix:** Scan item text for credentials and mark it as outside data in the pane, inside the fence of spec_secrets_and_fences. Let the settings give repository files with no class a stricter default.
+
+**Check:** packages/claude-code/test/editor-changes.test.js: a title holding a credential is refused and item text is drawn inside the data fence.
+
+### TRUST-6 Python fill recipes read outside the folder and inject into the query
+
+**Who found it:** Trust model review. **Where:** `python/graph_spec/src/graphspec/engine/documents/fill.py`.
+
+**Risk:** A recipe in a note names files joined onto the vault or the standards folder with no containment check. Its basis id is pasted into the query text. So a note can read or hash any file, and add query syntax.
+
+**Fix:** Resolve each recipe path by real path and refuse one outside its folder. Check the basis id against the id rule, or pass it as a query parameter.
+
+**Check:** python/graph_spec/tests/test_fill.py: a recipe naming ../ or an id with a quote is refused with the reason.
+
+### TRUST-7 Nothing cleans the drawing before it enters the page
+
+**Who found it:** Trust model review. **Where:** `packages/core/src/display/graph-view/drawing-svg.ts`, `packages/claude-code/mod/hooks/register.tsx`.
+
+**Risk:** The engine escapes labels, and that is the only guard. The SVG is put into the live page in Obsidian, which has no content policy, and handed raw to the pane. One escaping bug would run script with full access.
+
+**Fix:** Pass the SVG through an allowlist before it is shown: SVG elements and attributes only, no script, foreignObject, event attributes or links other than in-page.
+
+**Check:** packages/core/test/drawing-svg.test.js: an SVG holding script, an on attribute or a javascript: link is drawn without them.
+
+### TRUST-8 A database import has no size or time limit
+
+**Who found it:** Trust model review. **Where:** `packages/obsidian/src/databases/**`.
+
+**Risk:** The import reads the whole file and runs the query on the main thread with no time limit. It caps rows only once all are in memory. A large file or a looping query hangs Obsidian. Imported values are not held to the note's class.
+
+**Fix:** Refuse a file above the read limit and stop a query after a time limit. Stop reading at the row limit, and scan the values for credentials.
+
+**Check:** packages/obsidian/test/databases.test.js refuses a file over the limit, a looping query and a credential in a value.
+
+### TRUST-9 The Python class reader is looser than the core gate
+
+**Who found it:** Trust model review. **Where:** `python/graph_spec/src/graphspec/engine/documents/classification.py`.
+
+**Risk:** The Python reader takes the first classification line anywhere in the file, not only in front matter, and has no unknown case. So the two readers can give one note different classes.
+
+**Fix:** Read the class only from front matter and refuse an unknown or doubled one, as the core does. Share the fixtures.
+
+**Check:** python/graph_spec/tests/test_classification.py runs the core gate's classification fixtures and agrees on each.
+
+### TRUST-10 git log still reads the repository's own settings
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/server/note-history.ts`.
+
+**Risk:** The server turns off hooks and fsmonitor, but still reads the vault repository's config. A setting such as log.showSignature with gpg.program could start a program when the history is listed. Untested.
+
+**Fix:** Add -c log.showSignature=false and -c gpg.program= to each git call, or set GIT_CONFIG_GLOBAL and pass only the settings needed.
+
+**Check:** packages/claude-code/test/note-history.test.js: a repository whose gpg.program writes a file lists its history. The file is never written.
+
+### TRUST-11 /graph checks the note, then reads it again to draw
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/mod/hooks/register.tsx`.
+
+**Risk:** The gate reads the note, then the drawing reads it a second time. Text that changes in between is drawn without being checked.
+
+**Fix:** Read the note once and pass the same text to the gate and to the drawing.
+
+**Check:** packages/claude-code/test/register.test.js: the text drawn is the text the gate saw.
+
+### TRUST-12 The gate settings and the confirmed digest travel in the environment
+
+**Who found it:** Trust model review. **Where:** `packages/claude-code/src/editor-launch.ts`, `packages/claude-code/src/editor-settings-env.ts`.
+
+**Risk:** The server gets its gate settings and the digest of a note the person confirmed through its environment. Another process of the same user can read them, or start the server with its own.
+
+**Fix:** Send the settings and the digest on stdin with the proposer key, and read nothing gate-related from the environment.
+
+**Check:** packages/claude-code/test/editor-launch.test.js: the server's environment holds no gate setting or digest.
+
+### TRUST-13 Shared schemas sent to an AI skip their own class
+
+**Who found it:** Trust model review. **Where:** `packages/core/src/ai-scope.ts`, `packages/obsidian/src/ai/ai.ts`.
+
+**Risk:** The AI scope takes in the vault's shared schemas, but only the class of the note being asked about is checked. A schema kept in a note of a higher class can be sent.
+
+**Fix:** Hold each schema to the class of the note it came from. Leave out one above the ceiling, and show the reason.
+
+**Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
+
+## Done or accepted (26)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -935,6 +1034,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
+| ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
@@ -948,3 +1048,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-1 | In Claude Code the proposal route is optional, not mandatory | done | #618 |
 | AI-3 | Note text enters prompts with no data boundary or injection test | done | #618 |
 | AI-11 | Consent is per send, but residency and retention are unsaid | done | #618 |
+| TRUST-1 | Claude can loosen its own gate by editing vault files | done | #836; kept out by `packages/claude-code/test/gate-guard.test.js` |
+| TRUST-2 | MultiEdit and other write tools are not hooked | done | #836; kept out by `packages/claude-code/test/data-guard.test.js` |
+| TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | done | #836; kept out by `test/working-group-workflow.test.js`, `test/claude-workflows.test.js` |
+| TRUST-14 | Plug-ins run with the host's full powers | done | #882; kept out by `packages/core/test/plugins-isolated.test.js` |
+| TRUST-15 | A plug-in given secrets could read every secret, AI keys too | done | #856; kept out by `packages/core/test/plugins-limits.test.js` |
+| TRUST-16 | The files ability reaches every note, whatever its class | done | #867; kept out by `packages/core/test/plugins-limits.test.js` |

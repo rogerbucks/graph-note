@@ -6,6 +6,7 @@ import type { World } from '@thoughtknot/graph-spec';
 import { firstLine, graphOfBlock } from './blocks.ts';
 import type { Problem } from './note-reading.ts';
 import { N, S } from './whitespace.ts';
+import { word } from './words.ts';
 
 const NAMES = new RegExp(`·${S}*schema${S}+(${N}+)`);
 const base = (name: string) => name.replace(/@[^@]*$/, '');
@@ -29,10 +30,10 @@ export function missingSchemas(world: World, texts: string[]): Problem[] {
       block,
       line: 1,
       severity: 'warning',
-      message: `the schema ${name} is not in the vault or the standard schemas, so the types of ${graph} are not checked`,
+      message: word('reading.schema.missing', { name, graph }),
       fix: others.length
-        ? `name a version there is: ${others.join(', ')}`
-        : `write a block whose graph line says SCHEMA ${name}, or take "· schema ${name}" out of the graph line`,
+        ? word('reading.schema.missing.version', { versions: others.join(', ') })
+        : word('reading.schema.missing.fix', { name }),
       ...(others.length
         ? { replace: { written: name, with: others }, span: { line: 0, character, end: character + name.length } }
         : {}),

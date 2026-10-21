@@ -64,7 +64,7 @@ describe('views and style blocks in the editing view', () => {
 describe('a change set in the editing view', () => {
   // a proposal (editor spec §17) is drawn over the graph blocks of its note, so its card redraws with them
   test('gets the plugin’s own widget, drawn as a proposal over its graph with the changes to decide, in Live Preview only', async () => {
-    const changes = `// graph: reader · CHANGE SET cs1 · against 0123456789abcdef · by ada\n(small:Option {name: 'Small reader'})`;
+    const changes = `// graph: reader · CHANGE SET cs1 · against sha-256-64:0123456789abcdef · by ada\n(small:Option {name: 'Small reader'})`;
     const note = ['# Reader', '', fence(READER), '', fence(changes), '', fence(QUERY), ''].join('\n');
     const env = await load({ files: { [PATH]: note } });
     try {

@@ -11,13 +11,12 @@ import {
   standardBlocks,
   startingSwitches,
   SWITCH_SETTINGS,
-  toStandard,
   VIEW_SWITCHES,
   ViewState,
   withStandardSchemas,
+  word,
 } from '@thoughtknot/core';
 import type {
-  Converted,
   Drawn,
   Engine,
   ExportTheme,
@@ -31,7 +30,7 @@ import type {
   Settings,
   StyleGraph,
 } from '@thoughtknot/core';
-import { AI_COMMAND, CLEAR_SENDS_COMMAND, SENDS_KEPT, askAi, clearAiSends } from './ai/ai';
+import { SENDS_KEPT, addCommands, sqliteQuery } from './commands';
 import { exportGraph, type ExportAsk, type ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
 import { installObsidianHost } from './display-host';
@@ -51,7 +50,7 @@ import { graphBlocks } from './live-preview';
 import { InlineEditors } from './inline-editors';
 import { followRename, recoverDrafts, RECOVER_COMMAND, withIds } from './drafts';
 import type { KeptDraft } from '@thoughtknot/core/display/editor/editor-note';
-import { noteToRewrite, stillToRewrite } from './reading-view';
+import { convertToStandard } from './convert';
 import { followLinks } from './links/rename-follow';
 import { HOVER_SOURCE } from './links/link-host';
 
@@ -88,7 +87,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.addSettingTab(new ThoughtKnotSettingTab(this.app, this));
     this.addCommand({
       id: 'convert-to-standard',
-      name: 'Convert this note to standard GQL',
+      name: word('host.command.convert'),
       callback: () => this.convertToStandard(),
     });
     // the drafts kept follow their note when it is renamed or moved, edited or not, and can all be recovered (spec §9)
@@ -97,9 +96,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followLinks(this, f, old)));
     this.registerHoverLinkSource(HOVER_SOURCE, { display: 'ThoughtKnot', defaultMod: true });
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
-    // nothing is sent unless the user opens this, chooses, sees exactly what goes and presses Send (§19)
-    this.addCommand({ ...AI_COMMAND, callback: () => askAi(this) });
-    this.addCommand({ ...CLEAR_SENDS_COMMAND, callback: () => clearAiSends(this) });
+    addCommands(this); // the shortcuts' (§44); nothing is sent to an AI or read from a database until Send or Import
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
@@ -112,10 +109,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     } catch (e) {
       // Only one plugin may draw a code block language. Say which setting to change, rather than fail quietly.
       console.error('ThoughtKnot could not take gql blocks', e);
-      new Notice(
-        'Another plugin already draws gql blocks, so graphs cannot be drawn. Update or turn off the gql-highlight plugin, then reload Obsidian.',
-        0,
-      );
+      new Notice(word('host.taken'), 0);
     }
   }
 
@@ -187,34 +181,9 @@ export default class ThoughtKnotPlugin extends Plugin {
     return state;
   }
 
-  /** Converts the note in front back to standard GQL (spec §21), checked by the standard checker before it is written. */
-  async convertToStandard(): Promise<void> {
-    // the note in the pane in front, unless that pane is in reading view, which never changes a note (spec §3)
-    const to = 'to convert it to standard GQL';
-    const front = noteToRewrite(this.app.workspace, to);
-    if (!front) return;
-    const { file } = front;
-    const checked = toStandard(await this.app.vault.read(file));
-    if (!checked.ok) {
-      new Notice(`Not converted: ${checked.reason}`);
-      return;
-    }
-    if (!checked.changed) {
-      new Notice('This note is already standard GQL.');
-      return;
-    }
-    // the pane in front is asked again now, after the waiting: one switched to reading view meanwhile is not written
-    if (!stillToRewrite(this.app.workspace, front, to)) return;
-    // written against the note as it is when written, and checked again there: said only when it was written
-    let written: Converted = checked;
-    await this.app.vault.process(file, (now) => {
-      written = toStandard(now);
-      return written.ok ? written.note : now;
-    });
-    const done = written as Converted;
-    if (!done.ok) new Notice(`Not converted: the note changed meanwhile, and ${done.reason}`);
-    else if (!done.changed) new Notice('This note is already standard GQL.');
-    else new Notice(`Converted ${done.changed} departure${done.changed === 1 ? '' : 's'} to standard GQL.`);
+  /** Converts the note in front back to standard GQL (spec §21): convert.ts. */
+  convertToStandard(): Promise<void> {
+    return convertToStandard(this);
   }
 
   /**
@@ -225,7 +194,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     const file = this.app.vault.getFileByPath(path);
     if (!file) return [];
     const given = standardBlocks(gqlBlocks(await this.app.vault.cachedRead(file)).map((b) => b.text));
-    if (given.left.length) throw new Error(`block ${(given.left[0] ?? 0) + 1} could not be made standard GQL`);
+    if (given.left.length) throw new Error(word('host.block-not-standard', { number: (given.left[0] ?? 0) + 1 }));
     return given.blocks;
   }
 
@@ -262,6 +231,8 @@ export default class ThoughtKnotPlugin extends Plugin {
     return engineOnThePage();
   }
 
+  /** Runs an import's queries on the bytes of a SQLite file in the vault: a test may stand in its own. */
+  queryDatabase = sqliteQuery;
   /** The Graphviz engine on the page's own thread, started once, the first time a graph is laid out there. */
   graphviz(): Promise<Engine> {
     this.engine ??= this.loadEngine();

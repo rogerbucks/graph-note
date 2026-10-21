@@ -2,7 +2,7 @@
 // whose real path, links settled, is inside the vault's real path is read. Anything else is refused with a plain
 // reason, and gives no rows. So the row clears nothing, and both gates (the mod's and the server's) fail closed and say
 // why.
-import { matchClass } from '@thoughtknot/core';
+import { matchClass, word } from '@thoughtknot/core';
 import type { GateSettings } from '@thoughtknot/core';
 import { matrixRows } from '@thoughtknot/core/hosts/matrix-table';
 import { insideVault } from './editor-paths.ts';
@@ -17,22 +17,20 @@ export interface MatrixReads {
 export async function withMatrix(settings: GateSettings, vault: string, reads: MatrixReads): Promise<GateSettings> {
   const refused = (matrixProblem: string): GateSettings => ({ ...settings, matrix: [], matrixProblem });
   const path = insideVault(vault, settings.aiMatrixNote ?? '');
-  if (path === null)
-    return refused('The matrix note named in the settings is not a path inside the vault, so it is not read.');
-  if (!reads.realPath)
-    return refused('This host cannot tell whether the matrix note is inside the vault, so it is not read.');
+  if (path === null) return refused(word('cc.matrix.outside-settings'));
+  if (!reads.realPath) return refused(word('cc.matrix.cannot-tell'));
   try {
     const [inVault, inNote] = [await reads.realPath(vault), await reads.realPath(path)];
     const sep = inVault.includes('\\') && !inVault.includes('/') ? '\\' : '/';
     if (!inNote.startsWith(inVault.endsWith(sep) ? inVault : `${inVault}${sep}`))
-      return refused('The matrix note is, by its real path, outside the vault, so it is not read.');
+      return refused(word('cc.matrix.outside-real'));
   } catch {
-    return refused('The real path of the matrix note could not be found, so it is not read.');
+    return refused(word('cc.matrix.no-real-path'));
   }
   const known = (name: string) => matchClass(name, settings.classifications, settings.aiClassMap ?? {}) !== null;
   try {
     return { ...settings, matrix: matrixRows(await reads.read(path), known) };
   } catch {
-    return refused('The matrix note could not be read.');
+    return refused(word('cc.matrix.unreadable'));
   }
 }

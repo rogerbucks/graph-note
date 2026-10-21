@@ -9,7 +9,16 @@
 // it is not shown, saying why; or, a photograph, it is shown from the vault's own address. An image is only ever shown
 // by an image element, never put inline. An SVG attachment put in the page would run as part of it. Each card counts
 // what moves on it, its details among it, and lets every image go with it.
-import { IMAGE_LIMITS, LIMITS_SAID, imageFacts, imagesOf, neverMoves, playRefusal, startOf } from '@thoughtknot/core';
+import {
+  IMAGE_LIMITS,
+  imageFacts,
+  imagesOf,
+  LIMITS_SAID,
+  neverMoves,
+  playRefusal,
+  startOf,
+  word,
+} from '@thoughtknot/core';
 import type { ImageFacts, PictureBox, Start } from '@thoughtknot/core';
 import type { FoundImage, ImageSource } from '../images/image-source';
 import { STILL_PIXELS } from '../images/still-frame';
@@ -25,7 +34,6 @@ export interface CardImages {
 }
 
 /** What a paused image says. */
-const PAUSED = 'Paused. Press Play to move it.';
 
 /** Whether an event came from an image's control, which a tap or a key on is never one on the drawing. */
 export const onImageControl = (target: EventTarget | null): boolean =>
@@ -90,7 +98,7 @@ export class AnimatedImage {
       this.bytes = await this.found.read();
       return true;
     } catch (e) {
-      this.view.say(`${this.found.name} could not be read: ${(e as Error).message}`);
+      this.view.say(word('images.unreadable', { name: this.found.name, why: (e as Error).message }));
       this.view.show(null, 'still');
       return false;
     }
@@ -122,7 +130,7 @@ export class AnimatedImage {
     if (this.playing) {
       this.card.moving--;
       this.playing = false;
-      void this.hold(PAUSED, false);
+      void this.hold(word('images.paused'), false);
       return;
     }
     const refused = playRefusal(start, this.card.moving);
@@ -172,7 +180,7 @@ export class AnimatedImage {
     }
     if (this.playing || this.gone) return;
     this.view.show(this.still, 'still');
-    if (!this.still) this.view.say(`${why} Its first frame cannot be drawn on this device.`);
+    if (!this.still) this.view.say(word('images.no-first-frame', { why }));
   }
 }
 
@@ -199,7 +207,8 @@ export function placePictures(svg: Element, card: MovingImages): void {
     const square = g && squareIn(g);
     if (!square) continue;
     const found = images.source.find(p.value);
-    if (!found || 'why' in found) refusedPicture(square, found ? found.why : `${p.value} names no image`);
+    if (!found || 'why' in found)
+      refusedPicture(square, found ? found.why : word('images.names-none', { value: p.value }));
     else made.push([pictureView(square, found.name), found]);
   }
   void startAll(card, 'boxes', made);
@@ -214,13 +223,14 @@ export function renderImages(el: HTMLElement, props: Record<string, unknown>, ca
   const images = card.images,
     named = imagesOf(props);
   if (!images || !named.length) return;
-  el.createEl('h4', { text: 'Images' });
+  el.createEl('h4', { text: word('images.title') });
   const list = el.createDiv({ cls: 'thoughtknot-images' });
   const made: [ImageView, FoundImage][] = [];
   for (const n of named) {
     const caption = `${n.property}: ${n.value}`;
     const found = images.source.find(n.value);
-    if (!found || 'why' in found) refusedFigure(list, caption, found ? found.why : `${n.value} names no image`);
+    if (!found || 'why' in found)
+      refusedFigure(list, caption, found ? found.why : word('images.names-none', { value: n.value }));
     else made.push([figureView(list, `${n.property}: ${found.name}`, found.name), found]);
   }
   void startAll(card, 'details', made);

@@ -10,6 +10,8 @@ import { readNote } from './drawing.ts';
 import { READ_LIMITS } from './layout-limits.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
 import { S, trim } from './whitespace.ts';
+import { formatList } from './locale-formats.ts';
+import { word } from './words.ts';
 
 /** Where a graph's data is written: a .gql file, or a note, by the place written after FROM; and the block that says so. */
 export interface Source {
@@ -91,23 +93,13 @@ export function sourceOf(text: string, block = 0): Source | SourceFault | null {
     written = trim(PLACE.exec(lines[at] ?? '')?.[1] ?? ''),
     target = placeOf(written);
   const fault = (f: string): SourceFault => ({ graph, block, fault: f });
-  if (!graph || !NAME.test(graph))
-    return fault(`the graph name '${graph ?? ''}' is not one word: use letters, digits and underscores only`);
-  if (!target) return fault('say where the graph is written after FROM: a .gql file, or a note as [[Note]]');
-  if (outsideVault(target))
-    return fault(
-      `${target} is not a place inside the vault: write its path from the vault’s root, with no leading slash, drive, .. or folder starting with a dot`,
-    );
+  if (!graph || !NAME.test(graph)) return fault(word('reading.source.name-not-word', { graph: graph ?? '' }));
+  if (!target) return fault(word('reading.source.no-place'));
+  if (outsideVault(target)) return fault(word('reading.source.outside', { target }));
   const last = target.split('/').at(-1) ?? '';
   const kind = /\.gql$/i.test(last) ? 'file' : /\.md$/i.test(last) || !last.includes('.') ? 'note' : null;
-  if (!kind)
-    return fault(
-      `a graph is drawn from a .gql file or a note, and ${target} is neither: write FROM path/to/file.gql or FROM [[Note]]`,
-    );
-  if (lines.slice(at + 1).some(holds))
-    return fault(
-      `a block drawn from ${target} holds nothing of its own, so its data is never copied here: move these lines into ${target}, or take out · FROM`,
-    );
+  if (!kind) return fault(word('reading.source.neither', { target }));
+  if (lines.slice(at + 1).some(holds)) return fault(word('reading.source.holds-lines', { target }));
   return { graph, kind, target, block };
 }
 
@@ -125,10 +117,10 @@ export function sourceFor(texts: readonly string[], graph: string): Source | Sou
 }
 
 /** A source in words, as a sentence begins with it: "The file Graphs/trip.gql", "The note Trip plan". */
-export const sourceName = (s: Source): string => `The ${s.kind} ${s.target}`;
+export const sourceName = (s: Source): string =>
+  word(s.kind === 'file' ? 'reading.source.file' : 'reading.source.note', { target: s.target });
 
-const and = (xs: readonly string[]) =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
+const and = (xs: readonly string[]) => formatList([...xs]);
 
 /** Why a source cannot be drawn: the reason, with the sentence. */
 function refuse(source: Source, why: SourceRefusal['why'], refused: string): SourceRefusal {
@@ -152,28 +144,25 @@ const fileBlock = (text: string) =>
  */
 export function readSource(source: Source, fetched: Fetched, shared: string[] = []): SourceRead | SourceRefusal {
   const name = sourceName(source),
-    { graph, kind } = source,
-    cannot = `so graph ${graph} cannot be drawn from it`;
+    { graph, kind } = source;
   if ('missing' in fetched) {
     const elsewhere = fetched.elsewhere ?? [];
     if (!elsewhere.length)
       return refuse(
         source,
         'missing',
-        `${name} is not in the vault, ${cannot}: check the place written after FROM, or put the ${kind} back.`,
+        word(kind === 'file' ? 'reading.source.missing-file' : 'reading.source.missing-note', { name, graph }),
       );
+    const one = elsewhere.length === 1,
+      places = and(elsewhere);
     const there =
-      elsewhere.length === 1
-        ? `a ${kind} of that name is at ${elsewhere[0]}`
-        : `${kind}s of that name are at ${and(elsewhere)}`;
-    return refuse(
-      source,
-      'moved',
-      `${name} is not there any more: ${there}. If it was moved, write FROM ${elsewhere[0]} in this block.`,
-    );
+      kind === 'file'
+        ? word(one ? 'reading.source.file-elsewhere' : 'reading.source.files-elsewhere', { places })
+        : word(one ? 'reading.source.note-elsewhere' : 'reading.source.notes-elsewhere', { places });
+    return refuse(source, 'moved', word('reading.source.moved', { name, there, place: `${elsewhere[0]}` }));
   }
   if ('unreadable' in fetched)
-    return refuse(source, 'unreadable', `${name} could not be read (${fetched.unreadable}), ${cannot}.`);
+    return refuse(source, 'unreadable', word('reading.source.unreadable', { name, why: fetched.unreadable, graph }));
   if ('tooLarge' in fetched) {
     // never read: over the bytes a note's graph blocks may hold, said as they are (spec §9, layout_contained)
     const most = READ_LIMITS.bytes;
@@ -184,28 +173,20 @@ export function readSource(source: Source, fetched: Fetched, shared: string[] = 
   const blocks = kind === 'file' ? [{ text: fileBlock(fetched.text), line: 0 }] : gqlBlocks(fetched.text);
   const texts = blocks.map((b) => b.text);
   if (kind === 'file' && graphOf(texts[0] ?? '') === null)
-    return refuse(
-      source,
-      'no-graph',
-      `${name} does not start with a graph line: write // graph: ${graph} as its first line, ${cannot} until then.`,
-    );
+    return refuse(source, 'no-graph', word('reading.source.no-graph-line', { name, graph }));
   const reading = readNote(texts, undefined, shared);
   const own = texts.some((t) => graphOfBlock(t) === graph);
   if (!reading.tooLarge && !own && !reading.graphs.has(graph)) {
     const inner = sourceFor(texts, graph);
     if (inner && 'target' in inner)
-      return refuse(
-        source,
-        'no-graph',
-        `${name} draws graph ${graph} from ${inner.target} itself, so it holds none to draw: write FROM ${inner.target} here.`,
-      );
+      return refuse(source, 'no-graph', word('reading.source.drawn-elsewhere', { name, graph, target: inner.target }));
     const held = [...new Set(texts.flatMap((t) => graphOfBlock(t) ?? []))];
     return refuse(
       source,
       'no-graph',
       held.length
-        ? `${name} holds no graph called ${graph}: it holds ${and(held)}. Write the graph's own name after // graph:, or point FROM at the place that holds ${graph}.`
-        : `${name} holds no graph at all, ${cannot}.`,
+        ? word('reading.source.other-graphs', { name, graph, held: and(held) })
+        : word('reading.source.no-graph', { name, graph }),
     );
   }
   return { source, from: fetched.found, texts, lines: blocks.map((b) => b.line), reading };

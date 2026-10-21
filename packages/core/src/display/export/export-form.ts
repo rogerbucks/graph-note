@@ -8,6 +8,7 @@
 import { DEFAULT_PACE, PATH_PACES, isDataFormat, word } from '@thoughtknot/core';
 import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@thoughtknot/core';
 import { button } from '../graph-view/view-bar';
+import { waitShown } from '../progress';
 import type { ExportAsk, ExportOutcome } from './export-types';
 // (ExportOutcome's share holds the tap's own action: see export.ts)
 
@@ -150,8 +151,9 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
       ? { walk: { id: scope.slice('path:'.length), pace: Number(pace?.value ?? DEFAULT_PACE) } }
       : {};
     try {
-      show(
-        await x.run({
+      const done = await waitShown(el, word('progress.exporting'), (signal) =>
+        x.run({
+          signal,
           path: x.path,
           graph: x.graph,
           ...((scope === 'view' || scope === 'context') && x.view
@@ -163,6 +165,7 @@ export function openExportForm(parent: HTMLElement, x: Exporting): void {
           confirmed,
         }),
       );
+      show(done === 'stopped' ? { stopped: word('progress.export-stopped') } : done);
     } finally {
       busy = false;
       it.disabled = false;

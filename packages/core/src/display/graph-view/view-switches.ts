@@ -6,20 +6,20 @@
 // offered and works in reading view too (view_switch_view_only). It says in words when the graph could not be redrawn.
 import {
   OPTIONS,
-  SWITCH_NAMES,
   SWITCH_SETTINGS,
   VIEW_SWITCHES,
   edgesOf,
   foldsHiding,
   labelsHidden,
   optionSaid,
+  switchName,
   word,
 } from '@thoughtknot/core';
 
 /** A switch's name in the person's language: its setting's, which the settings page says too. */
 const nameOf = (s: ViewSwitch): string => {
   const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
-  return o ? optionSaid(o).name : SWITCH_NAMES[s];
+  return o ? optionSaid(o).name : switchName(s);
 };
 import type { Drawn, GraphDrawing, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
@@ -166,17 +166,17 @@ export class ViewSwitching {
 
   /** Lays the graph out again as the switches now fold it, and has the card put it in place; or says why not. */
   private async redraw(then?: () => void): Promise<void> {
-    this.menu.say('Drawing again…');
+    this.menu.say(word('redraw.drawing'));
     let next: Awaited<ReturnType<SwitchesShown['relayout']>>;
     try {
       next = await this.o.relayout(this.owner);
     } catch {
-      this.menu.say('The drawing engine could not draw it so; it is shown as it was.');
+      this.menu.say(word('redraw.failed'));
       return;
     }
     if (!next) return; // a newer layout for this card was asked for
     if ('reason' in next) {
-      this.menu.say('Drawn so, the graph is over a size or time limit, so it is shown as it was.');
+      this.menu.say(word('redraw.too-big'));
       return;
     }
     this.drawnAs = this.now();

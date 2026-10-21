@@ -2,7 +2,8 @@
 'use strict';
 
 const { same } = require('../values/times.js');
-const { resolve } = require('./judgements.js');
+const { resolve, servingHash } = require('./judgements.js');
+const { digitsOf } = require('../hashing/named.js');
 const { proposersOf } = require('./proposers.js');
 
 // §24 servings
@@ -49,6 +50,10 @@ function servedRules(w, jg, matrix) {
       const ms = proposersOf(w, g, p, resolve);
       return !ms.some((m) => m.labels.has('Model')) || g.out(p, 'USED').some((e) => g.has(e[2], 'Serving'));
     }),
+  ]);
+  out.push([
+    '§24 H3 rule 5: no serving is edited — each content hash, covering what it served, still matches (rule:serving-hash@1)',
+    g.labelled('Serving').every((s) => digitsOf(g.p(s).content_hash) === servingHash(w, jg, s)),
   ]);
   return out;
 }

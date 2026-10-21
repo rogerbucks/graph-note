@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/words-in-code.test.js",
+  "test": "the words in the code > the check finds the words written between the tags of a TSX file",
+  "seen_failing_first": false,
+  "evidence": "It tests the check itself, which this same test commit taught to read TSX, so it could not fail against the code before it."
+}

@@ -16,4 +16,6 @@ export interface AiModel {
   matrixRow?: string;
   /** The conditional classes of that row the user switched on for this model, as the matrix names them. */
   matrixOn?: MatrixSwitch[];
+  /** The AI provider a plug-in adds that shapes its requests, by name; with none, the one wire format. */
+  provider?: string;
 }

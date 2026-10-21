@@ -48,6 +48,7 @@ test('the plugin loads on the shim, and reads the vault as it does in Obsidian',
     platform: 'browser',
     target: 'es2022',
     alias: { obsidian: `${harness}/obsidian-shim.js` },
+    loader: { '.wasm': 'binary' },
     plugins: [layoutWorker],
     logLevel: 'silent',
   });

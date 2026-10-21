@@ -4,6 +4,7 @@
 const { norm } = require('../values/times.js');
 const { byKey } = require('../values/order.js');
 const { jcs, hash16, basisHash } = require('../hashing/canonical-json.js');
+const { NAMED_RULE, digitsOf, unnamedHashes } = require('../hashing/named.js');
 const { bandRank } = require('./certainty.js');
 const { viewAt, below } = require('./paths.js');
 const { lensBuckets } = require('./lenses.js');
@@ -32,21 +33,26 @@ function currentDecisions(w, jg) {
     .filter((d) => !g.inc(d, 'SUPERSEDES').some((e) => g.has(e[0], 'Decision')))
     .sort();
 }
-function judgementHash(w, jg, d) {
+// The content hash that seals node `id` of judgement graph jg: its own properties and every link it states, under
+// `key`. rule:judgement-hash@1 seals a Decision under 'decision', rule:serving-hash@1 a Serving under 'serving'.
+function sealHash(w, jg, id, key) {
   const g = w[jg],
-    p = g.p(d),
-    dec = {};
-  for (const [k, v] of Object.entries(p)) if (k !== 'content_hash' && k !== 'review') dec[k] = norm(v);
+    p = g.p(id),
+    own = {};
+  for (const [k, v] of Object.entries(p)) if (k !== 'content_hash' && k !== 'review') own[k] = norm(v);
   const edges = g
-    .out(d)
+    .out(id)
     .map(([, t, x, e]) => {
       const o = {};
       for (const k of Object.keys(e).sort()) o[k] = norm(e[k]);
       return [t, x, o];
     })
     .sort(byKey(jcs));
-  return hash16({ decision: dec, edges });
+  return hash16({ [key]: own, edges });
 }
+const judgementHash = (w, jg, d) => sealHash(w, jg, d, 'decision');
+// rule:serving-hash@1: the content hash that seals a Serving, over what it records and every item it served
+const servingHash = (w, jg, s) => sealHash(w, jg, s, 'serving');
 // rule:judgement-review@1: {decision id: sorted reasons} for each current Decision — basis-moved, needs-engine,
 // assumption-weakened, shape-changed; an empty list means none. A lens pin whose rule needs an engine gives
 // needs-engine — never silence. `sw` switches parts of the rule off ('lens-pins', 'assumption-bands').
@@ -65,7 +71,7 @@ function review(w, jg, sw = new Set()) {
           got = lz ? lensBuckets(lg, lg.p(lz).rule_gql) : null;
         if (got === null) why.add('needs-engine');
         else if (got[b.ref] !== b.e.bucket) why.add('basis-moved');
-      } else if (b.ty === 'RESTS_ON' && (sup || basisHash(p, b.e.reads) !== b.e.hash)) why.add('basis-moved');
+      } else if (b.ty === 'RESTS_ON' && (sup || basisHash(p, b.e.reads) !== digitsOf(b.e.hash))) why.add('basis-moved');
       if (
         b.ty === 'ASSUMES' &&
         (p.status === 'refuted' ||
@@ -145,12 +151,13 @@ function judgementsRules(w, jg) {
   ]);
   out.push([
     '§23 rule 7: no judgement is edited — each content hash, covering its pins, still matches (rule:judgement-hash@1)',
-    ds.every((d) => g.p(d).content_hash === judgementHash(w, jg, d)),
+    ds.every((d) => digitsOf(g.p(d).content_hash) === judgementHash(w, jg, d)),
   ]);
+  out.push([NAMED_RULE, !unnamedHashes(g).length]);
   return out;
 }
 
 /** The warnings for a proposal whose proposer is named in the old form, through ASSOCIATED_WITH on its activity (§23 rule 6). */
 const proposerWarnings = (w, jg) => proposerWarningsOf(w, jg, resolve);
 
-module.exports = { resolve, review, whyLayer, judgementsRules, proposerWarnings };
+module.exports = { resolve, review, whyLayer, judgementsRules, proposerWarnings, servingHash };

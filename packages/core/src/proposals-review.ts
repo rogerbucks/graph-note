@@ -27,6 +27,7 @@ import type { ChangeRow, DecideOptions, Person, ProposalShown, Reviewed, Which }
 import { changeSetText, readChangeSet } from './proposals-text.ts';
 import { changeIdOf } from './proposals-statements.ts';
 import type { NoteReading } from './note-reading.ts';
+import { word } from './words.ts';
 
 /** An accept or reject as it can be taken back: the sessions that wrote, what the note recorded, and how it stood. */
 interface Step {
@@ -62,7 +63,7 @@ export class ProposalReview {
     if ('refused' in r) return r;
     const done = note ? decidedIn(note, r.graph, r.id) : [];
     const { inputs, at } = inOrder(done, r.changes);
-    if (!inputs.length) return { refused: 'this change set holds no change' };
+    if (!inputs.length) return { refused: word('proposing.review.empty') };
     const proposal = makeProposal({
       id: r.id,
       graph: r.graph,
@@ -137,14 +138,16 @@ export class ProposalReview {
     const all = this.proposal.changes;
     if ('group' in which) {
       const group = all.filter((c) => c.group === which.group);
-      return group.length ? group.filter((c) => this.state(c.id) === 'pending') : `no group called ${which.group}`;
+      return group.length
+        ? group.filter((c) => this.state(c.id) === 'pending')
+        : word('proposing.review.no-group', { group: which.group });
     }
     if ('all' in which) return all.filter((c) => this.state(c.id) === 'pending');
     const chosen = new Set<string>();
     for (const id of which) {
       const d = this.decided.get(id);
-      if (!all.some((c) => c.id === id)) return `no change ${id} in this proposal`;
-      if (d) return `${id} was already ${d.state} by ${d.by}`;
+      if (!all.some((c) => c.id === id)) return word('proposing.review.no-change', { id });
+      if (d) return word(`proposing.review.already-${d.state}`, { id, who: d.by });
       chosen.add(id);
     }
     return all.filter((c) => chosen.has(c.id));
@@ -199,11 +202,8 @@ export class ProposalReview {
       const into = applyChange(laid, graph, c);
       const dupe = namesOf(c).writes.find((n) => have.has(n));
       const lack = state === 'pending' ? lacking(c, have, this.waiting()) : null;
-      const reason = !into.ok
-        ? into.reason
-        : dupe
-          ? `${dupe} is already a name in graph ${graph}: choose another`
-          : lack;
+      const taken = dupe && word('proposing.review.name-taken', { name: dupe, graph });
+      const reason = !into.ok ? into.reason : taken || lack;
       if (state === 'pending' && reason) blocked.set(c.id, reason);
       if ((c.op === 'add' || c.op === 'set') && !reason) {
         if (state === 'pending' && into.ok) laid = into.texts;
@@ -287,7 +287,7 @@ export class ProposalReview {
     for (const c of chosen) {
       if (satisfied.has(c)) continue;
       const r = applyChange(texts, graph, c);
-      if (!r.ok) return refuse(`${c.id} cannot be written: ${r.reason}`);
+      if (!r.ok) return refuse(word('proposing.review.cannot-write', { id: c.id, why: r.reason }));
       texts = r.texts;
     }
     let out = note;
@@ -307,10 +307,10 @@ export class ProposalReview {
     for (const c of chosen) {
       if (satisfied.has(c)) continue;
       const missed = notTaken(after, graph, c);
-      if (missed) return refuse(`${c.id} did not take effect: ${missed}`);
+      if (missed) return refuse(word('proposing.review.not-taken', { id: c.id, why: missed }));
     }
     const fresh = newProblems(beforeReading, after, graph)[0];
-    if (fresh) return refuse(`it would leave the graph with a problem: ${fresh.message}`);
+    if (fresh) return refuse(word('proposing.review.new-problem', { problem: fresh.message }));
     // the change set as the note holds it must pass the graph spec's own check. None that fails is written (after the
     // edit's own checks, which say more). A proposal held only in memory is checked as the editor would write it
     const unchecked = checkRefusal(checkProposal(note, this.heldText(note), this.shared), 'seen');
@@ -356,7 +356,7 @@ export class ProposalReview {
     sessions: PaneSession[],
   ): Reviewed {
     const recorded = this.record(note, next, decided, chosen);
-    if (!recorded) return refuse('the decision could not be recorded: the note has nowhere to write it');
+    if (!recorded) return refuse(word('proposing.review.nowhere'));
     this.steps.push({ sessions, recorded, proposal: this.proposal, decided: this.decided });
     this.proposal = next;
     this.decided = decided;
@@ -367,14 +367,13 @@ export class ProposalReview {
   undo(note: string): Reviewed {
     // the step stays until it has been taken back: an undo that cannot be made leaves it there to be made again
     const step = this.steps.at(-1);
-    if (!step) return refuse('nothing to undo');
+    if (!step) return refuse(word('proposing.review.nothing-to-undo'));
     const back = takeBack(note, step.recorded);
     if (!back.ok) return refuse(back.reason);
     let out = back.note;
     // every block written is asked first: one changed since is refused before any session is undone, so the step stays whole
     const now = textsOf(out);
-    if (step.sessions.some((s) => !now.includes(s.ref.text)))
-      return refuse('the block has changed since the decision was made, so it cannot be undone');
+    if (step.sessions.some((s) => !now.includes(s.ref.text))) return refuse(word('proposing.undo.block-changed'));
     for (const session of [...step.sessions].reverse()) {
       const w = session.undo(out);
       if (!w.ok) return refuse(w.reason);
