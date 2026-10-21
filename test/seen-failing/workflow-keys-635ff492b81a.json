@@ -1,0 +1,6 @@
+{
+  "file": "test/workflow-keys.test.js",
+  "test": "the key check finds a key named twice in one map, and not the same key in two maps",
+  "seen_failing_first": false,
+  "evidence": "It tests the test's own key reader, which is new with this commit, so there was no reader before it to fail against."
+}
