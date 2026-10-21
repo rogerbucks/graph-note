@@ -149,8 +149,9 @@ export function appFetch(options: AppApiOptions, inner?: typeof fetch): typeof f
     }
     try {
       return await answer(request.method, pathname.slice('/api/'.length), request.headers, await request.text());
-    } catch (e) {
-      return json(500, { why: e instanceof Error ? e.message : String(e) });
+    } catch {
+      // as the editor server answers a call that failed: in words, never the error itself
+      return json(500, { why: word('server.no-answer') });
     }
   };
 }

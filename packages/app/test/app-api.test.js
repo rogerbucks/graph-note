@@ -8,6 +8,7 @@ import { serverCalls } from '../../claude-code/page/server-calls.ts';
 import { noteCalls } from '../../claude-code/page/note-calls.ts';
 import { exportCalls } from '../../claude-code/page/export-calls.ts';
 import { appFetch, FOLLOW_EVERY_MS } from '../src/app-api.ts';
+import { word } from '../../core/src/words.ts';
 
 const NOTE = 'Plans/trip.md';
 
@@ -104,6 +105,18 @@ test("an export goes beside the note, and its files are handed to be written as 
   // a note not in the folder, or an app that cannot write exports, has none
   await assert.rejects(exports.target('nowhere.md'));
   await assert.rejects(exportCalls('app', app().fetcher).target(NOTE));
+});
+
+test('a call that fails is answered in words, and the error itself is never sent', async () => {
+  const storage = memoryStorage();
+  storage.read = async () => {
+    throw new Error('secret token-1234 at read (place.rs:42)');
+  };
+  const reply = await appFetch({ storage })(`/api/notes/${encodeURIComponent(NOTE)}`);
+  assert.equal(reply.status, 500);
+  const text = await reply.text();
+  assert.doesNotMatch(text, /secret|token-1234|place\.rs/);
+  assert.equal(JSON.parse(text).why, word('server.no-answer'));
 });
 
 test("only the editor's own calls are answered here; every other address goes to the window's fetch", async () => {

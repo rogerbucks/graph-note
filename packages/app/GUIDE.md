@@ -52,7 +52,7 @@ Rust (src-tauri/)
 ```
 npm run build --workspace packages/app        # the window's files, into packages/app/dist
 cd packages/app/src-tauri && cargo test       # the folder checks
-cd packages/app/src-tauri && cargo run -- ~/Notes
+cd packages/app/src-tauri && cargo run -- path/to/notes
 ```
 
 On Linux the build needs WebKitGTK 4.1 (`libwebkit2gtk-4.1-dev`). The tests in `test/` run with the rest of the
