@@ -17,7 +17,7 @@ export function repeatedKeys(text) {
     if (blockAbove >= 0 && indent > blockAbove) return;
     blockAbove = -1;
     let rest = line.slice(indent);
-    maps = maps.filter((m) => m.indent < indent || (m.indent === indent && !rest.startsWith('- ')));
+    maps = maps.filter((m) => m.indent <= indent);
     // a list item opens a new map for the keys after its dash
     while (rest.startsWith('- ')) {
       indent += 2;
@@ -40,6 +40,8 @@ test('the key check finds a key named twice in one map, and not the same key in 
   assert.deepEqual(repeatedKeys('jobs:\n  a:\n    needs: x\n  b:\n    needs: x\n'), []);
   assert.deepEqual(repeatedKeys('steps:\n  - uses: a\n    with: 1\n  - uses: b\n    with: 2\n'), []);
   assert.deepEqual(repeatedKeys('run: |\n  a: 1\n  a: 1\nnext: 2\n'), []);
+  // a list at the same indent as the key that holds it, as YAML allows
+  assert.deepEqual(repeatedKeys('steps:\n- uses: a\n- uses: b\nsteps: 2\n'), ['4: steps']);
 });
 
 test('no workflow names a key twice in one map, so GitHub can read every workflow file', () => {
