@@ -699,6 +699,15 @@ A style graph may choose a type a plug-in adds, named under its id, such as `acm
 (plugin_diagram_type_named; `pluginTypeOf`). Where no plug-in draws it, `diagramFor` gives a network, with `plugin`
 saying which plug-in draws it. The Python library reads it alike.
 
+A host that has the plug-in draws it (trust_diagram_type_data; `plugin-diagrams.ts`):
+
+- The plug-in adds a `PluginDiagram` through the `diagrams` point. Its `draw` gets the graph's shape and the space,
+  frozen, and no host ability.
+- It gives back marks as data: boxes, lines and text, each with where it goes. Never markup.
+- The registry's `drawDiagram` checks every mark and draws the SVG itself, escaping every label. A mark outside the
+  space, or of an unknown kind, refuses the drawing, and the host keeps the network.
+- `diagramContract` holds a diagram type to its promises, as the other points' contracts do.
+
 ### Views (spec §2, §7)
 
 A view is a named query block in the note: `// graph: <graph> · QUERY view <name>`, then the query. The reader already

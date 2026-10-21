@@ -8,6 +8,9 @@ import type { DataExporter, GivenGraph, PluginCommand, PluginSource, PluginStep,
 import { joinedGraph } from './plugin-sources.ts';
 import { providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
+import { diagramProblem, marksOf } from './plugin-diagrams.ts';
+import type { DiagramSpace, PluginDiagram } from './plugin-diagrams.ts';
+import type { GraphShape } from './types-shape.ts';
 import { storageContract } from './storage-contract.ts';
 import type { StorageCheck } from './storage-contract.ts';
 import {
@@ -262,5 +265,51 @@ export function providerContract(p: AiProvider): PluginCheck[] {
       },
     },
     readsInHostDirection(p.name, p.title),
+  ];
+}
+
+/** The shapes every diagram type is tried on: none, and the sample graph's two cities and their link. */
+const SAMPLE_SHAPES: Record<string, GraphShape> = {
+  empty: { things: [], links: [] },
+  small: {
+    things: [
+      { key: 'paris', text: 'Paris', kinds: ['City'] },
+      { key: 'rome', text: 'Rome', kinds: ['City'] },
+    ],
+    links: [{ from: 'paris', type: 'TO', to: 'rome' }],
+  },
+};
+const SAMPLE_SPACE: DiagramSpace = Object.freeze({ width: 400, height: 300 });
+
+/** Every check a diagram type of the plug-in `pluginId` is held to (trust_diagram_type_data). */
+export function diagramContract(d: PluginDiagram, pluginId: string): StorageCheck[] {
+  const title = readsInHostDirection(d.type, d.title);
+  const drawn = async (shape: GraphShape) => d.draw(Object.freeze({ shape, space: SAMPLE_SPACE }));
+  return [
+    {
+      name: 'it is named under its plug-in’s own id, as a style graph chooses it, and offered under a title on one line',
+      run: async () => {
+        const why = diagramProblem(d, pluginId, new Map());
+        if (why) fail(d.type, 'a diagram type the registry accepts', why);
+      },
+    },
+    {
+      name: 'it gives back marks as data, inside the space it was given, for an empty graph and a small one',
+      run: async () => {
+        for (const [name, shape] of Object.entries(SAMPLE_SHAPES)) {
+          const marks = marksOf(await drawn(shape), SAMPLE_SPACE);
+          if (typeof marks === 'string') fail(`${d.type} on ${name}`, 'boxes, lines and text in the space', marks);
+        }
+      },
+    },
+    {
+      name: 'it gives back the same marks each time for the same graph',
+      run: async () => {
+        const a: unknown = await drawn(SAMPLE_SHAPES.small as GraphShape);
+        const b: unknown = await drawn(SAMPLE_SHAPES.small as GraphShape);
+        if (JSON.stringify(a) !== JSON.stringify(b)) fail(d.type, 'the same marks twice', [a, b]);
+      },
+    },
+    { name: title.name, run: async () => title.run() },
   ];
 }

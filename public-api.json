@@ -519,8 +519,19 @@
           "plugin?: { type: string; plugin: string; why: string; } | undefined",
           "stopped?: { type: DiagramType; why: string; nearest: DiagramType; } | undefined"
         ],
+        "diagramContract": [
+          "value: (d: PluginDiagram, pluginId: string) => StorageCheck[]"
+        ],
         "diagramFor": [
           "value: (drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>, style: TypeStyle, g?: Graph, view?: string) => DiagramChoice"
+        ],
+        "DiagramGiven": [
+          "interface",
+          "shape: GraphShape",
+          "space: DiagramSpace"
+        ],
+        "DiagramMark": [
+          "type = { kind: 'box'; x: number; y: number; width: number; height: number; label?: string; thing?: string; } | { kind: 'line'; points: MarkPoint[]; arrow?: boolean; thing?: string; } | { kind: 'text'; x: number; y: number; text: string; thing?: string; }"
         ],
         "diagramOffer": [
           "value: (drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>, style: TypeStyle, g?: Graph, view?: string) => DiagramOffer"
@@ -533,6 +544,11 @@
         ],
         "DiagramPlan": [
           "type = { type: 'tree'; tree: number[]; } | { type: 'flow'; } | { type: 'radial'; centre: string; } | { type: 'lanes'; lanes: [string, string[]][]; groups?: [string, string[]][]; } | { type: 'timeline'; dates: string[][]; }"
+        ],
+        "DiagramSpace": [
+          "interface",
+          "height: number",
+          "width: number"
         ],
         "DiagramTable": [
           "interface",
@@ -754,15 +770,16 @@
           "value: (scope: ExportScope, layout: ExportLayout, info: ExportInfo) => Promise<ExportImage | Refusal | TooLargeToAnimate | null>"
         ],
         "EXTENSION_POINTS": [
-          "value: readonly ['exports', 'theme', 'storage', 'commands', 'panels', 'sources', 'steps', 'ai']"
+          "value: readonly ['exports', 'theme', 'storage', 'commands', 'panels', 'sources', 'steps', 'ai', 'diagrams']"
         ],
         "ExtensionPoint": [
-          "type = 'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai'"
+          "type = 'diagrams' | 'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai'"
         ],
         "ExtensionPoints": [
           "interface",
           "ai?: { add: (provider: AiProvider) => void; } | undefined",
           "commands?: { add: (command: PluginCommand) => void; } | undefined",
+          "diagrams?: { add: (diagram: PluginDiagram) => void; } | undefined",
           "exports?: { add: (exporter: DataExporter) => void; } | undefined",
           "host?: Partial<HostAbilities> | undefined",
           "panels?: { add: (panel: PluginPanel) => void; } | undefined",
@@ -1492,6 +1509,9 @@
         "MarkKind": [
           "type = 'add' | 'change' | 'remove'"
         ],
+        "MarkPoint": [
+          "type = [number, number]"
+        ],
         "Marks": [
           "interface",
           "boxes: Map<string, ChangeMark>",
@@ -1970,6 +1990,12 @@
           "run: () => void",
           "title: string"
         ],
+        "PluginDiagram": [
+          "interface",
+          "draw: (given: DiagramGiven) => readonly DiagramMark[] | Promise<readonly DiagramMark[]>",
+          "title: string",
+          "type: string"
+        ],
         "PluginPanel": [
           "interface",
           "id: string",
@@ -1984,6 +2010,8 @@
           "aiProvider: (name: string) => AiProvider | undefined",
           "aiProviders: () => AiProvider[]",
           "commands: () => PluginCommand[]",
+          "diagramTypes: () => PluginDiagram[]",
+          "drawDiagram: (type: string, shape: GraphShape, space: DiagramSpace) => Promise<PluginResult<string>>",
           "exporter: (format: string) => DataExporter | undefined",
           "exporters: () => DataExporter[]",
           "graphSources: () => PluginSource[]",
@@ -2916,7 +2944,7 @@
           "api: string",
           "id: string",
           "register: (points: ExtensionPoints) => void",
-          "uses: Array<'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai'>",
+          "uses: Array<'diagrams' | 'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai'>",
           "version: string"
         ],
         "Threshold": [

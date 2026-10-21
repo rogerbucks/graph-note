@@ -28,6 +28,8 @@ export const POINT_ABOUT = {
   steps:
     'A step that makes a graph from others, named under its id. Its graph keeps the lowest trust and strictest class it was given.',
   ai: 'An AI service’s request shape. It only shapes the body and reads the reply; the core keeps the gate and the person’s yes, and the host the key.',
+  diagrams:
+    'A diagram type, named under its id, that a style graph chooses. It gives back boxes, lines and text as data, and the core draws them.',
 };
 
 /** Where a requirement stands, as a mark and words: in the latest release, on main only, being built, or planned. */
