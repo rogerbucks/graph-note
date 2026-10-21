@@ -1,7 +1,6 @@
-// No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). The
-// areas are the display layer, the Obsidian host, the browser page, the Claude Code mod, its /graph command and its
-// editor server. Each is added as its words move. Each word comes from
-// the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
+// No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). Those
+// areas are the hosts, the display layer and the core's reading problems. Each is added as its words move. Each word
+// comes from the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
 // The few kept in the code are listed, each with why.
@@ -22,6 +21,21 @@ const AREAS = [
   'packages/claude-code/server/',
   'packages/claude-code/bin/',
   'packages/claude-code/mod/hooks/register.tsx',
+  // the core's problems found while reading a note
+  'packages/core/src/partial-read.ts',
+  'packages/core/src/estimates.ts',
+  'packages/core/src/help.ts',
+  'packages/core/src/name-gaps.ts',
+  'packages/core/src/notes.ts',
+  'packages/core/src/links.ts',
+  'packages/core/src/blocks.ts',
+  'packages/core/src/schema-checks.ts',
+  'packages/core/src/schema-names.ts',
+  'packages/core/src/sources.ts',
+  'packages/core/src/strictness.ts',
+  'packages/core/src/suggested-names.ts',
+  'packages/core/src/image-links.ts',
+  'packages/core/src/schema-picture.ts',
 ];
 
 /** The files of the areas, as paths from the repository's root. */
@@ -94,6 +108,17 @@ const KEPT = {
     '{op: "remove-link", from, type, to}, each with an optional "reason". Names are one word. You cannot add a Person, ',
     'a Model or a Step. "read" lists what you read, if you say so.',
   ],
+  // the departures in UK English, held equal to their settings words by settings-words.test.js
+  'packages/core/src/strictness.ts': [
+    'A missing comma',
+    'A pattern may end its line without the comma standard GQL needs before the next one.',
+    'A comma with nothing after it',
+    'The last pattern of a block may end with a comma, as while the next one is being typed.',
+    'A link type without its colon',
+    'A link may name its type without the colon, such as [KNOWS], when the graph has one type of that name.',
+  ],
+  // the schema's picture is GQL, written as the graph's own text
+  'packages/core/src/schema-picture.ts': ["({}:Meta:ElementType {name: {}, kind: {}, origin: 'source'{}})"],
   // a marker the note's writer throws and catches again, never shown
   'packages/claude-code/server/note-file.ts': ['folder moved'],
 };
