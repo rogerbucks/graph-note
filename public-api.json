@@ -503,6 +503,7 @@
         "Diagram": [
           "interface",
           "at: StyleAt",
+          "plugin?: string | undefined",
           "relationship?: string | undefined",
           "type: 'network' | 'tree' | 'flow' | 'radial' | 'lanes' | 'timeline' | 'table'",
           "view?: string | undefined"
@@ -515,6 +516,7 @@
           "chosen?: 'network' | 'tree' | 'flow' | 'radial' | 'lanes' | 'timeline' | 'table' | undefined",
           "drawn: 'network' | 'tree' | 'flow' | 'radial' | 'lanes' | 'timeline' | 'table'",
           "plan?: DiagramPlan | undefined",
+          "plugin?: { type: string; plugin: string; why: string; } | undefined",
           "stopped?: { type: DiagramType; why: string; nearest: DiagramType; } | undefined"
         ],
         "diagramFor": [
@@ -2013,6 +2015,9 @@
           "id: string",
           "run: (inputs: readonly GivenGraph[]) => GivenGraph | Promise<GivenGraph>",
           "title: string"
+        ],
+        "pluginTypeOf": [
+          "value: (name: string) => { plugin: string; word: string; } | null"
         ],
         "PluralWords": [
           "type = Partial<Record<Intl.LDMLPluralRule, string>> & { other: string; }"

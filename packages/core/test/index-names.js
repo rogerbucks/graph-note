@@ -364,6 +364,7 @@ export const VALUES = [
   'placesFor',
   'playRefusal',
   'pluginRegistry',
+  'pluginTypeOf',
   'pngPages',
   'pngSize',
   'pointerTo',

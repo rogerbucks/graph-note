@@ -78,7 +78,8 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
     (untangle_legend). Applying them is the plugin's alone, and graph_svg draws none.
   - `diagram_types` — which diagram types fit a graph and why not, the one drawn, and each laid out (the core's
     `types.ts` and graph-layout.js `typedSource`). The one drawn is the chosen one while it fits, else a network, with
-    the nearest that fits.
+    the nearest that fits. A type a plug-in adds, such as `acme.charts.sankey` (`words.plugin_type_of`), is drawn as a
+    network, naming its plug-in (plugin_diagram_type_named).
   - In `diagram_types`, the table is the plugin's to draw. So here it is drawn as a network, and `render_args` says so
     on stderr.
   - `nudges` — the nudges written into the source.

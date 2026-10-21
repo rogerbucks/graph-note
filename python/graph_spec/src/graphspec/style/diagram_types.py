@@ -16,7 +16,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from graphspec.style.inline import value_text
-from graphspec.style.words import DIAGRAM_TYPES, DIRECTIONS, LOCKED
+from graphspec.style.words import DIAGRAM_TYPES, DIRECTIONS, LOCKED, plugin_type_of
 
 # More things than this are too many to read in one drawing (§15, large_way_in).
 LARGE_GRAPH = 50
@@ -296,6 +296,16 @@ def diagram_for(
     d = chosen_diagram(diagrams, view)
     if d is None:
         return {"drawn": "network"}
+    own = plugin_type_of(d["plugin"]) if "plugin" in d else None
+    if own:
+        why = (
+            f"the diagram type {d['plugin']} comes from the plug-in {own['plugin']}, "
+            "which is not here, so the graph is drawn as a network"
+        )
+        return {
+            "drawn": "network",
+            "plugin": {"type": d["plugin"], "plugin": own["plugin"], "why": why},
+        }
     shape = shape_of(parts, nudges)
     fits = type_fits(shape, d.get("relationship"))
     fit = next(f for f in fits if f["type"] == d["type"])

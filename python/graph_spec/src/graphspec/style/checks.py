@@ -30,6 +30,7 @@ from graphspec.style.words import (
     SAVED_SWITCHES,
     STYLE_KINDS,
     or_list,
+    plugin_type_of,
     replace_first,
     style_problem,
     unknown_keys,
@@ -206,7 +207,10 @@ def _diagram_of(raw, names, out):
         add = "add type: " + or_list([f"'{w}'" for w in DIAGRAM_TYPES])
         r.missing("a Diagram names its type", add)
         return None
-    typ = r.word("type", DIAGRAM_TYPES, "$ is not a diagram type")
+    # a type a plug-in adds is named under its id, and drawn as a network where none draws it
+    written = props["type"]
+    plugin = written if isinstance(written, str) and plugin_type_of(written) else None
+    typ = "network" if plugin else r.word("type", DIAGRAM_TYPES, "$ is not a diagram type")
     relationship = r.name("relationship", names["types"], "a relationship type")
     view = r.text("view")
     if typ and relationship is not None and typ != "tree":
@@ -215,6 +219,7 @@ def _diagram_of(raw, names, out):
         return None
     return {
         "type": typ,
+        **({} if plugin is None else {"plugin": plugin}),
         **({} if view is None else {"view": view}),
         **({} if relationship is None else {"relationship": relationship}),
         "at": raw["at"],

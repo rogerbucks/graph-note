@@ -77,16 +77,8 @@ export type { ImageAt, Start } from './image-limits.ts';
 export { animationSaid } from './export-pictures.ts';
 export type { LoadedImage, PictureLoad, UnreadImage } from './export-pictures.ts';
 export { styleEdit } from './style-edit.ts';
-export {
-  DIAGRAM_TYPES,
-  LARGE_GRAPH,
-  diagramFor,
-  diagramOffer,
-  nearestType,
-  shapeOf,
-  suggestType,
-  typeFits,
-} from './types.ts';
+export { DIAGRAM_TYPES, LARGE_GRAPH, diagramFor, diagramOffer, nearestType } from './types.ts';
+export { pluginTypeOf, shapeOf, suggestType, typeFits } from './types.ts';
 export type { DiagramChoice, DiagramOffer, DiagramType, GraphShape, Suggestion, TypeFit } from './types.ts';
 export { scrollsOneWay, tableOf, wayIn } from './types-table.ts';
 export type { DiagramTable } from './types-table.ts';

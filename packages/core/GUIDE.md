@@ -692,6 +692,13 @@ seven `DIAGRAM_TYPES`. style-checks.ts and style-conflicts.ts check a Diagram's 
   link). Also the way in to a graph of more than `LARGE_GRAPH` things (`wayIn`, large_way_in). Also which types scroll
   one way only on a phone (`scrollsOneWay`).
 
+
+#### A plug-in's diagram type
+
+A style graph may choose a type a plug-in adds, named under its id, such as `acme.charts.sankey`
+(plugin_diagram_type_named; `pluginTypeOf`). Where no plug-in draws it, `diagramFor` gives a network, with `plugin`
+saying which plug-in draws it. The Python library reads it alike.
+
 ### Views (spec §2, §7)
 
 A view is a named query block in the note: `// graph: <graph> · QUERY view <name>`, then the query. The reader already

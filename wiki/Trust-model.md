@@ -243,6 +243,9 @@ keeps up.
 - **What it gets:** the graph and the space to draw in. No host ability: no notes, secrets or settings.
 - **What it gives back:** shapes as data, such as boxes, lines, text and where each goes. Never markup.
 - **Who draws:** the core draws the shapes and escapes every label, as in B6. A label holding markup shows as text.
+- **The graph-format rule.** Done: a style graph names a plug-in's type under its id, such as `acme.charts.sankey`.
+  Where no plug-in draws it, the core and the Python library both draw a network, naming the plug-in
+  (`plugin_diagram_type_named`).
 
 ### Graph sources and graph steps
 
