@@ -4,12 +4,13 @@
 // - turning one on keeps the file's SHA-256. A file that changes after is turned off and said, so the code that runs is
 //   only ever the code the person turned on;
 // - each runs in a worker of its own, sealed before the file's first line runs (packages/core/src/plugin-outside.ts);
-// - its commands join Obsidian's, named as the plug-in names them. Today a plug-in from outside adds commands; its
-//   other points join as the host draws them.
+// - its commands join Obsidian's, named as the plug-in names them;
+// - its graph sources are read by a block written `· FROM sample:trip` (plugin_source_from). Its other points join as
+//   the host draws them.
 import { Notice, TFile } from 'obsidian';
 import type { Plugin } from 'obsidian';
-import { outsidePlugin, outsideProblem, pluginRegistry, word } from '@thoughtknot/core';
-import type { IsolatedPlugin, PluginPort, PluginRegistry } from '@thoughtknot/core';
+import { outsidePlugin, outsideProblem, pluginRegistry, READ_LIMITS, word } from '@thoughtknot/core';
+import type { IsolatedPlugin, PluginPort, PluginRegistry, SourceFetched } from '@thoughtknot/core';
 import { pluginWorker } from 'thoughtknot:plugin-worker';
 import { fetchPluginFile } from './outside-link';
 
@@ -174,6 +175,22 @@ export class OutsidePlugins {
     for (const c of registry.commands())
       this.owner.addCommand({ id: c.id, name: c.title, callback: () => void registry.runCommand(c.id) });
     this.running.set(name, { iso, registry, commands });
+  }
+
+  /**
+   * The graph at `target` of the source `scheme`, from the plug-in running that adds it, as the core reads a source.
+   * `levels` are the classes set. With no plug-in on that adds it, it is missing.
+   */
+  async readGraph(scheme: string, target: string, levels: readonly string[]): Promise<SourceFetched> {
+    const found = `${scheme}:${target}`;
+    for (const { registry } of this.running.values()) {
+      if (!registry.graphSources().some((s) => s.scheme === scheme)) continue;
+      const r = await registry.readGraph(scheme, target, levels);
+      if (!r.ok) return { found, unreadable: r.message };
+      const size = new TextEncoder().encode(r.value.text).length;
+      return size > READ_LIMITS.bytes ? { found, tooLarge: size } : { found, text: r.value.text };
+    }
+    return { missing: true };
   }
 
   /** The commands of the plug-in in file `name`, while it runs. */

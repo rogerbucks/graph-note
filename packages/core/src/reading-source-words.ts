@@ -111,6 +111,10 @@ export const READING_SOURCE_WORDS = {
     'a block drawn from {target} holds nothing of its own, so its data is never copied here: move these lines into {target}, or take out · FROM',
   'reading.source.file': 'The file {target}',
   'reading.source.note': 'The note {target}',
+  'reading.source.plugin': 'The plug-in source {target}',
+  'reading.source.no-plugin':
+    'No plug-in that is turned on reads {scheme}: sources, so graph {graph} cannot be drawn from it: turn on the plug-in that adds it, in the settings.',
+  'reading.source.no-plugin-place': 'write the place the source {scheme} reads after {scheme}:, such as {scheme}:trip',
   'reading.source.missing-file':
     '{name} is not in the vault, so graph {graph} cannot be drawn from it: check the place written after FROM, or put the file back.',
   'reading.source.missing-note':
