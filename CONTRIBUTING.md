@@ -924,6 +924,8 @@ These test behaviour across modules, or the repository itself, so they are named
 
 ### Pointer targets, reflow and whitespace
 
+- `test/chrome.test.js` — the headless Chrome these checks share (`scripts/chrome.mjs`). It asks Chrome for its
+  first page again while the list is empty, as Chrome answers before that page opens.
 - `test/a11y-targets-reflow.test.js` — pointer targets and reflow in a real Chrome (spec §41,
   a11y_targets_reflow_auto; SC 2.5.8, 1.4.10).
   - It runs every view of every host. That is the Obsidian harness in the user guide's states, and the browser page
