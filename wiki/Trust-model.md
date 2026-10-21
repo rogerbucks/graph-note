@@ -141,8 +141,8 @@ Wave 6.
 - **Controls:** A version check, and only the extension points and host abilities the manifest names. Settings and
   secrets are the plug-in's own, kept apart from the others'. Objects are frozen. Errors are caught and named. A call
   over the time limit stops its plug-in.
-- **Code:** `packages/core/src/plugins.ts`, with `packages/core/src/plugin-points.ts` and
-  `packages/core/src/plugin-files.ts`.
+- **Code:** `packages/core/src/plugins.ts`, with `plugin-points.ts`, `plugin-calls.ts`, `plugin-files.ts` and
+  `plugin-sources.ts` beside it.
 - **Gaps:**
   - A plug-in runs in the host's process, so it can reach the network whatever its manifest says. A call that never
     returns is not stopped, as the time is read after it returns (TRUST-14).
@@ -249,6 +249,9 @@ For the graph source and step extension points (`trust_source_joined`).
   (`spec_read_limits`). An unlabelled one counts as the strictest class, as an unlabelled note does.
 - **A step changes a graph, nothing more.** What it gives back keeps the strictest class and the lowest trust of what
   went in.
+- **Built.** `packages/core/src/plugin-sources.ts` holds each graph as a `JoinedGraph`. The test is
+  `packages/core/test/plugins-sources.test.js`. A step is given only each graph's text and class, never where it came
+  from. A source whose answer never comes is not stopped yet: that waits for TRUST-14.
 
 ### Before any outside plug-in loads
 

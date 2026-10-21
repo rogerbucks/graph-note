@@ -23,6 +23,10 @@ export const POINT_ABOUT = {
   storage: 'A place notes are kept, such as a server or a cloud drive, that passes the note storage contract.',
   commands: 'A command a person runs from the host’s command list, named under its id.',
   panels: 'A panel shown beside a graph, drawn right to left in a right-to-left host, with logical sides only.',
+  sources:
+    'A place graphs are read from, such as a database. Its graph is held as a joined graph: untrusted, and strictest when unlabelled.',
+  steps:
+    'A step that makes a graph from others, named under its id. Its graph keeps the lowest trust and strictest class it was given.',
 };
 
 /** Where a requirement stands, as a mark and words: in the latest release, on main only, being built, or planned. */

@@ -944,6 +944,12 @@ The host does what needs a canvas, the file system or a dialog; the core decides
 - `plugin-files.ts` — the files ability through the note gate (TRUST-16). `gatedFiles` lists and reads only notes at
   or below the ceiling the person set for the plug-in. A change it makes waits as a proposal (`CHANGE_WAITS`).
 - `core-storage.ts` — `CORE_STORAGE`, the core's memory storage as a plug-in.
+- `plugin-calls.ts` — every call into a plug-in, timed, caught and named. `awaited` times a call whose answer comes
+  later, until it comes.
+- `plugin-sources.ts` — what a graph source or step gives back, held as a `JoinedGraph` (trust_source_joined). It
+  carries its origins. A source's graph starts untrusted; a step's keeps the lowest trust it was given. An unlabelled
+  graph counts as the strictest class, and a step's keeps the strictest class it was given. One past the read limits
+  is refused. The registry reads them with `readGraph` and `runStep`.
 
 #### The contract suites
 
@@ -952,6 +958,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - `themeTokenContract`: those a theme token is held to: its name, its colours and its contrast in each theme.
   - `storageBackendContract`: the note storage contract, run on a store the backend opens afresh for each check.
   - `commandContract`: a command's id, its title on one line, and that it can be run.
+  - `sourceContract` and `stepContract`: a graph source or step gives back a graph's text within the read limits. A
+    step is tried on `SAMPLE_GRAPH` and must give the same graph each time.
   - Each title is checked for right-to-left too (plugin_rtl). It must force no direction of its own, so it reads in
     the host's.
 

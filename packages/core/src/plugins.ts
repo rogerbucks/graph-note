@@ -5,33 +5,24 @@
 // first extension point is the data exports, and the second the theme tokens (§44, plugin_theme_tokens). A plug-in
 // inherits the core's design tokens and may add colours of its own, each meeting the locked contrast (theme-tokens.ts).
 // The third is note storage (§41, storage_contract), and the fourth the commands a person runs. A call over the time
-// limit is named and its answer dropped. Its plug-in is stopped, so it never holds a drawing up again.
-// Diagram types, graph steps and sources and AI providers join them one at a time. Each comes with its own contract
+// limit is named and its answer dropped. Its plug-in is stopped, so it never holds a drawing up again. Then come panels,
+// and graph sources and steps, whose graphs are held as joined graphs (plugin-sources.ts, trust_source_joined).
+// Diagram types and AI providers join them one at a time. Each comes with its own contract
 // suite (plugins-contract.ts).
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { NoteStorage } from './note-storage.ts';
 import { backendProblem, commandProblem, exporterProblem, panelProblem } from './plugin-points.ts';
+import { HOST_ABILITIES, sourceProblem, stepProblem } from './plugin-points.ts';
+import type { DataExporter, PluginSource, PluginStep, HostAbilities, HostAbility } from './plugin-points.ts';
+import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './plugin-points.ts';
+import { heldGraph, stepInputs } from './plugin-sources.ts';
+import type { JoinedGraph } from './plugin-sources.ts';
+import { pluginCalls } from './plugin-calls.ts';
+import type { PluginResult } from './plugin-calls.ts';
 import { gatedFiles } from './plugin-files.ts';
 import type { FilesOffer } from './plugin-files.ts';
-import { HOST_ABILITIES } from './plugin-points.ts';
-import type {
-  DataExporter,
-  HostAbilities,
-  HostAbility,
-  PanelRoot,
-  PluginCommand,
-  PluginPanel,
-} from './plugin-points.ts';
-import type { StorageBackend } from './plugin-points.ts';
-export type {
-  DataExporter,
-  HostAbilities,
-  HostAbility,
-  PanelRoot,
-  PluginCommand,
-  PluginPanel,
-} from './plugin-points.ts';
-export type { StorageBackend } from './plugin-points.ts';
+export type { DataExporter, HostAbilities, HostAbility, PanelRoot, PluginCommand } from './plugin-points.ts';
+export type { PluginSource, PluginStep, GivenGraph, PluginPanel, StorageBackend } from './plugin-points.ts';
 export { HOST_ABILITIES } from './plugin-points.ts';
 import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
 import type { ThemeToken } from './theme-tokens.ts';
@@ -40,7 +31,7 @@ import type { ThemeToken } from './theme-tokens.ts';
 export const PLUGIN_API = '1';
 
 /** The extension points a plug-in may use, as its manifest names them. */
-export const EXTENSION_POINTS = ['exports', 'theme', 'storage', 'commands', 'panels'] as const;
+export const EXTENSION_POINTS = ['exports', 'theme', 'storage', 'commands', 'panels', 'sources', 'steps'] as const;
 
 /** One of the extension points. */
 export type ExtensionPoint = (typeof EXTENSION_POINTS)[number];
@@ -53,6 +44,8 @@ export interface ExtensionPoints {
   storage?: { add: (backend: StorageBackend) => void };
   commands?: { add: (command: PluginCommand) => void };
   panels?: { add: (panel: PluginPanel) => void };
+  sources?: { add: (source: PluginSource) => void };
+  steps?: { add: (step: PluginStep) => void };
   /** The host's abilities the manifest names, and no other (plugin_manifest_limits). */
   host?: Partial<HostAbilities>;
 }
@@ -73,8 +66,7 @@ export interface ThoughtKnotPlugin {
   register: (points: ExtensionPoints) => void;
 }
 
-/** The answer of a call into a plug-in: its value, or what went wrong and whose it was. */
-export type PluginResult<T> = { ok: true; value: T } | { ok: false; plugin: string; message: string };
+export type { PluginResult } from './plugin-calls.ts';
 
 const ID = /^[a-z0-9]+(?:[.-][a-z0-9]+)+$/;
 const SEMVER = /^\d+\.\d+\.\d+$/;
@@ -143,6 +135,18 @@ export interface PluginRegistry {
   panels: () => PluginPanel[];
   /** Draws the panel `id` into `el`, or says what went wrong and whose plug-in it was. */
   showPanel: (id: string, el: PanelRoot) => PluginResult<undefined>;
+  /** Every graph source added, in the order added. */
+  graphSources: () => PluginSource[];
+  /** The graph at `target` of the source `scheme`, held as a joined graph, or why not. `levels`: the classes set. */
+  readGraph: (scheme: string, target: string, levels: readonly string[]) => Promise<PluginResult<JoinedGraph>>;
+  /** Every graph step added, in the order added. */
+  graphSteps: () => PluginStep[];
+  /** The graph the step `id` makes from `inputs`, held as a joined graph, or why not. `levels`: the classes set. */
+  runStep: (
+    id: string,
+    inputs: readonly JoinedGraph[],
+    levels: readonly string[],
+  ) => Promise<PluginResult<JoinedGraph>>;
   /** The plug-ins stopped for running too long, and why; nothing of theirs is called again. */
   stopped: () => StoppedPlugin[];
 }
@@ -155,6 +159,9 @@ interface Shelf<T> {
 
 const shelf = <T>(): Shelf<T> => ({ items: [], owner: new Map() });
 
+/** Why something a plug-in adds to a point is refused, given the plug-in's id and who added each name so far. */
+type Problem<T> = (t: T, pluginId: string, taken: Map<string, string>) => string | null;
+
 /** A registry with no plug-ins installed yet. */
 export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const { host = {}, timeLimit = PLUGIN_TIME_LIMIT, now = Date.now } = options;
@@ -166,28 +173,10 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const backends = shelf<StorageBackend>();
   const commands = shelf<PluginCommand>();
   const panels = shelf<PluginPanel>();
-  const stopped = new Map<string, string>();
+  const sources = shelf<PluginSource>();
+  const steps = shelf<PluginStep>();
+  const { guarded, awaited, stopped } = pluginCalls(now, timeLimit);
   const core = Object.freeze(Object.keys(THEME_TOKENS));
-  /** The answer of `call`, made by `plugin`'s `what`, timed, caught and named. A call over the limit stops the plug-in. */
-  const guarded = <T>(plugin: string, what: string, call: () => T): PluginResult<T> => {
-    const stop = stopped.get(plugin);
-    if (stop !== undefined) return { ok: false, plugin, message: `${what} of ${plugin} was not run: ${stop}` };
-    const start = now();
-    let value: T;
-    try {
-      value = call();
-    } catch (err) {
-      const why = err instanceof Error ? err.message : String(err);
-      return { ok: false, plugin, message: `${what} of ${plugin} failed: ${why}` };
-    }
-    const took = now() - start;
-    if (took > timeLimit) {
-      const why = `the plug-in was stopped, as ${what} took ${Math.round(took)} ms, over the ${timeLimit} ms allowed`;
-      stopped.set(plugin, why);
-      return { ok: false, plugin, message: `${what} of ${plugin} ran too long: ${why}.` };
-    }
-    return { ok: true, value };
-  };
   /** The abilities `named` from the host's offer, frozen, or why one cannot be given. */
   const granted = (named: HostAbility[], pluginId: string): Partial<HostAbilities> | string => {
     const missing = named.filter((a) => (a === 'settings' ? !host.settingsFor : !host[a]));
@@ -253,33 +242,64 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
             addedTokens.push({ ...t });
           },
         });
-      if (plugin.uses.includes('storage'))
-        points.storage = {
-          add: (b) => {
-            const why = backendProblem(b, new Map([...backends.owner, ...addedBackends.owner]));
-            if (why) refuse(why);
-            addedBackends.owner.set(b.name, plugin.id);
-            addedBackends.items.push({ ...b });
-          },
-        };
-      if (plugin.uses.includes('commands'))
-        points.commands = {
-          add: (c) => {
-            const why = commandProblem(c, plugin.id, new Map([...commands.owner, ...addedCommands.owner]));
-            if (why) refuse(why);
-            addedCommands.owner.set(c.id, plugin.id);
-            addedCommands.items.push({ ...c });
-          },
-        };
-      if (plugin.uses.includes('panels'))
-        points.panels = {
-          add: (c) => {
-            const why = panelProblem(c, plugin.id, new Map([...panels.owner, ...addedPanels.owner]));
-            if (why) refuse(why);
-            addedPanels.owner.set(c.id, plugin.id);
-            addedPanels.items.push({ ...c, render: c.render.bind(c) });
-          },
-        };
+      /** A point whose additions are checked by `problem` against all added so far, and kept aside on `mine`. */
+      const onShelf = <T>(
+        mine: Shelf<T>,
+        all: Shelf<T>,
+        key: (t: T) => string,
+        problem: Problem<T>,
+        copy: (t: T) => T,
+      ) => ({
+        add: (t: T) => {
+          const why = problem(t, plugin.id, new Map([...all.owner, ...mine.owner]));
+          if (why) refuse(why);
+          mine.owner.set(key(t), plugin.id);
+          mine.items.push(copy(t));
+        },
+      });
+      const uses = (p: ExtensionPoint) => plugin.uses.includes(p);
+      const addedSources = shelf<PluginSource>();
+      const addedSteps = shelf<PluginStep>();
+      if (uses('storage'))
+        points.storage = onShelf(
+          addedBackends,
+          backends,
+          (b) => b.name,
+          (b, _, t) => backendProblem(b, t),
+          (b) => ({ ...b }),
+        );
+      if (uses('commands'))
+        points.commands = onShelf(
+          addedCommands,
+          commands,
+          (c) => c.id,
+          commandProblem,
+          (c) => ({ ...c }),
+        );
+      if (uses('panels'))
+        points.panels = onShelf(
+          addedPanels,
+          panels,
+          (c) => c.id,
+          panelProblem,
+          (c) => ({ ...c, render: c.render.bind(c) }),
+        );
+      if (uses('sources'))
+        points.sources = onShelf(
+          addedSources,
+          sources,
+          (c) => c.scheme,
+          (c, _, t) => sourceProblem(c, t),
+          (c) => ({ ...c }),
+        );
+      if (uses('steps'))
+        points.steps = onShelf(
+          addedSteps,
+          steps,
+          (c) => c.id,
+          stepProblem,
+          (c) => ({ ...c }),
+        );
       if (given && typeof given !== 'string') points.host = given;
       try {
         plugin.register(Object.freeze(points));
@@ -299,6 +319,8 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       keep(addedBackends, backends, (b) => b.name, plugin.id);
       keep(addedCommands, commands, (c) => c.id, plugin.id);
       keep(addedPanels, panels, (c) => c.id, plugin.id);
+      keep(addedSources, sources, (c) => c.scheme, plugin.id);
+      keep(addedSteps, steps, (c) => c.id, plugin.id);
     },
     plugins: () => [...installed],
     exporters: () => [...exporters],
@@ -330,6 +352,24 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       const c = panels.items.find((x) => x.id === id);
       if (!c) return { ok: false, plugin: '', message: `No plug-in adds the panel "${id}".` };
       return guarded(panels.owner.get(id) ?? '', `The panel ${c.title}`, () => void c.render(el));
+    },
+    graphSources: () => sources.items.map((c) => ({ ...c })),
+    async readGraph(scheme, target, levels) {
+      const c = sources.items.find((x) => x.scheme === scheme);
+      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the source "${scheme}".` };
+      const plugin = sources.owner.get(scheme) ?? '',
+        what = `The source ${c.title}`;
+      const r = await awaited(plugin, what, () => c.read(target));
+      return heldGraph(plugin, what, r, `${scheme}:${target}`, [], levels);
+    },
+    graphSteps: () => steps.items.map((c) => ({ ...c })),
+    async runStep(id, inputs, levels) {
+      const c = steps.items.find((x) => x.id === id);
+      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the step "${id}".` };
+      const plugin = steps.owner.get(id) ?? '',
+        what = `The step ${c.title}`;
+      const r = await awaited(plugin, what, () => c.run(stepInputs(inputs)));
+      return heldGraph(plugin, what, r, `step ${id}`, inputs, levels);
     },
     stopped: () => [...stopped].map(([plugin, why]) => ({ plugin, why })),
   };

@@ -4,7 +4,8 @@
 // for right-to-left too (plugin_rtl). A title forces no direction of its own, so it reads in the host's. A host shows
 // each one isolated, so a name keeps its own direction beside it.
 import type { DataInfo, ExportedData } from './export-data-model.ts';
-import type { DataExporter, PluginCommand, StorageBackend } from './plugins.ts';
+import type { DataExporter, GivenGraph, PluginCommand, PluginSource, PluginStep, StorageBackend } from './plugins.ts';
+import { joinedGraph } from './plugin-sources.ts';
 import { storageContract } from './storage-contract.ts';
 import type { StorageCheck } from './storage-contract.ts';
 import {
@@ -159,5 +160,61 @@ export function themeTokenContract(t: ThemeToken, pluginId: string): PluginCheck
     },
     contrast('light'),
     contrast('dark'),
+  ];
+}
+
+/** The graph every step is tried on, with its class. */
+export const SAMPLE_GRAPH: GivenGraph = Object.freeze({
+  text: "// graph: trip\n(paris:City {name: 'Paris'}),\n(rome:City {name: 'Rome'}),\n(paris)-[:TO]->(rome)",
+  classification: 'Public',
+});
+
+/** The check that what a source or step gave back is held as a joined graph: text, within the read limits. */
+const heldAs = (what: string, given: unknown) => {
+  const g = joinedGraph(given, { plugin: '', place: what }, [], ['Public', 'Restricted']);
+  if (typeof g === 'string') fail(what, 'a graph’s text, within the read limits', g);
+};
+
+/** Every check a graph source is held to; `target` is a place it can read, as its own tests have one. */
+export function sourceContract(s: PluginSource, target: string): StorageCheck[] {
+  const title = readsInHostDirection(s.scheme, s.title);
+  return [
+    {
+      name: 'it is chosen by a lower-case word, and offered under a title on one line',
+      run: async () => {
+        if (!/^[a-z][a-z0-9-]*$/.test(s.scheme)) fail(s.scheme, 'a lower-case word', s.scheme);
+        if (!s.title.trim() || /[\r\n]/.test(s.title)) fail(s.scheme, 'a title on one line', s.title);
+      },
+    },
+    {
+      name: 'it gives back a graph’s text for a place, within the read limits',
+      run: async () => heldAs(`${s.scheme}:${target}`, await s.read(target)),
+    },
+    { name: title.name, run: async () => title.run() },
+  ];
+}
+
+/** Every check a graph step of the plug-in `pluginId` is held to, tried on the sample graph. */
+export function stepContract(s: PluginStep, pluginId: string): StorageCheck[] {
+  const [named, , title] = commandContract({ id: s.id, title: s.title, run: () => {} }, pluginId) as [
+    PluginCheck,
+    PluginCheck,
+    PluginCheck,
+  ];
+  return [
+    { name: named.name, run: async () => named.run() },
+    {
+      name: 'it gives back a graph’s text for a graph it is given, within the read limits',
+      run: async () => heldAs(s.id, await s.run(Object.freeze([SAMPLE_GRAPH]))),
+    },
+    {
+      name: 'it gives back the same graph each time for the same graphs',
+      run: async () => {
+        const a: unknown = await s.run(Object.freeze([SAMPLE_GRAPH]));
+        const b: unknown = await s.run(Object.freeze([SAMPLE_GRAPH]));
+        if (JSON.stringify(a) !== JSON.stringify(b)) fail(s.id, 'the same graph twice', [a, b]);
+      },
+    },
+    { name: title.name, run: async () => title.run() },
   ];
 }

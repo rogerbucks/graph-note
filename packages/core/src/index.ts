@@ -188,7 +188,11 @@ export { formatList, formatSize, setLocale, sortedForReader } from './locale-for
 export type { DataExporter, ExtensionPoint, ExtensionPoints, ThoughtKnotPlugin, PluginRegistry } from './plugins.ts';
 export type { PluginCommand, PluginResult, RegistryOptions, StorageBackend, StoppedPlugin } from './plugins.ts';
 export type { HostAbilities, HostAbility, HostOffer, PanelRoot, PluginPanel } from './plugins.ts';
+export type { GivenGraph, PluginSource, PluginStep } from './plugins.ts';
+export { TRUST_LEVELS } from './plugin-sources.ts';
+export type { GraphOrigin, JoinedGraph, Trust } from './plugin-sources.ts';
 export { commandContract, exporterContract, sampleExports, storageBackendContract } from './plugins-contract.ts';
+export { SAMPLE_GRAPH, sourceContract, stepContract } from './plugins-contract.ts';
 export { themeTokenContract } from './plugins-contract.ts';
 export { OBSIDIAN_TOKEN_MAP, THEME_TOKENS, themeTokenCss } from './theme-tokens.ts';
 export type { ThemeToken, ThemeTokenUse } from './theme-tokens.ts';
