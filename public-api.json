@@ -178,6 +178,9 @@
         "CHANGE_LOOKS": [
           "value: Record<MarkKind, ThingLook>"
         ],
+        "CHANGE_WAITS": [
+          "value: 'the change waits for the person to accept it'"
+        ],
         "ChangedFile": [
           "interface",
           "after: string | null",
@@ -762,6 +765,14 @@
           "lines: Array<DiffLine> | null",
           "path: string"
         ],
+        "FilesOffer": [
+          "interface",
+          "ceilingFor?: ((pluginId: string) => string | undefined) | undefined",
+          "levels: ReadonlyArray<string>",
+          "propose: (change: ProposedNoteChange) => void",
+          "store: NoteStorage",
+          "unlabelled: string"
+        ],
         "find": [
           "value: (reading: NoteReading, graph: string, query: string, limit?: number) => Found[]"
         ],
@@ -901,6 +912,9 @@
         "Gate": [
           "type = { open: true; } | { ask: string; } | { refuse: string; }"
         ],
+        "gatedFiles": [
+          "value: (offer: FilesOffer, pluginId: string) => NoteStorage"
+        ],
         "GateSettings": [
           "type = Pick<Settings, 'classifications' | 'aiUnlabelled'> & { aiModels: readonly AiModel[]; matrix?: MatrixRow[]; aiClassMap?: Record<string, string>; aiMatrixNote?: string; matrixProblem?: string; }"
         ],
@@ -1014,7 +1028,7 @@
         ],
         "HostOffer": [
           "interface",
-          "files?: NoteStorage | undefined",
+          "files?: FilesOffer | undefined",
           "notice?: ((message: string) => void) | undefined",
           "secrets?: { get: (name: string) => string | null | Promise<string | null>; } | undefined",
           "settingsFor?: ((pluginId: string) => HostAbilities['settings']) | undefined"
@@ -2095,6 +2109,12 @@
         ],
         "ProposedChange": [
           "type = ChangeOp & { id: string; group: string; reason?: string; }"
+        ],
+        "ProposedNoteChange": [
+          "interface",
+          "path: string",
+          "plugin: string",
+          "text: string | null"
         ],
         "Proposer": [
           "interface",

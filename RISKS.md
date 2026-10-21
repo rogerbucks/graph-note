@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (95)
+## Open (94)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -103,7 +103,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-14 | Plug-ins run with the host's full powers | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
-| TRUST-16 | The files ability reaches every note, whatever its class | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 
 ## Each open risk
 
@@ -1047,17 +1046,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/plugins.test.js: a plug-in that loops is stopped and named, and one cannot reach the host's file or network calls.
 
-### TRUST-16 The files ability reaches every note, whatever its class
-
-**Who found it:** Trust model review. **Where:** `packages/core/src/plugins.ts`, `packages/core/src/plugin-points.ts`.
-
-**Risk:** A plug-in given the files ability reads and writes every note through the host's storage. Nothing checks a note's class, so a plug-in can read a note the person keeps from AI and from other people.
-
-**Fix:** Do this before a host loads an outside plug-in. Give the files ability through the note gate. A plug-in reads only notes at or below a ceiling the person sets for it. Its writes go to a proposal card.
-
-**Check:** packages/core/test/plugins-limits.test.js: a plug-in lists and reads only notes at or below its ceiling. A write it makes waits for the person.
-
-## Done or accepted (23)
+## Done or accepted (24)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1084,3 +1073,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-2 | MultiEdit and other write tools are not hooked | done | #836; kept out by `packages/claude-code/test/data-guard.test.js` |
 | TRUST-5 | Any commenter can wake the working-group agent, which writes its own checker | done | #836; kept out by `test/working-group-workflow.test.js`, `test/claude-workflows.test.js` |
 | TRUST-15 | A plug-in given secrets could read every secret, AI keys too | done | #856; kept out by `packages/core/test/plugins-limits.test.js` |
+| TRUST-16 | The files ability reaches every note, whatever its class | done | #867; kept out by `packages/core/test/plugins-limits.test.js` |

@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { commandContract, exporterContract, sampleExports, storageBackendContract } from '../src/plugins-contract.ts';
 import { pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS } from '../src/export-data.ts';
-import { CORE_STORAGE, memoryStorage } from '../src/note-storage.ts';
+import { memoryStorage } from '../src/note-storage.ts';
+import { CORE_STORAGE } from '../src/core-storage.ts';
 
 const registry = pluginRegistry();
 registry.register(CORE_EXPORTS);

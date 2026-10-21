@@ -211,7 +211,7 @@ describe('a plug-in’s manifest and limits', () => {
   });
 
   test('a plug-in is given only the host abilities its manifest names, with settings kept for it alone', () => {
-    const files = memoryStorage();
+    const files = { store: memoryStorage(), levels: ['public', 'secret'], unlabelled: 'secret', propose: () => {} };
     const kept = {};
     const host = {
       notice: () => {},
@@ -223,7 +223,7 @@ describe('a plug-in’s manifest and limits', () => {
     const registry = pluginRegistry({ host });
     registry.register(plugin({ uses: [], abilities: ['settings', 'files'], register: (p) => (given = p) }));
     assert.deepEqual(Object.keys(given.host).sort(), ['files', 'settings']);
-    assert.equal(given.host.files, files);
+    assert.equal(typeof given.host.files.read, 'function', 'the notes, through the note gate');
     assert.equal(given.host.secrets, undefined, 'no secret it did not ask for');
     assert.ok(Object.isFrozen(given.host));
     return given.host.settings.save({ on: true }).then(() => assert.deepEqual(kept, { 'acme.one': { on: true } }));
@@ -282,6 +282,69 @@ describe('a plug-in’s manifest and limits', () => {
       ok: false,
       plugin: 'acme.one',
       message: 'The panel List of acme.one failed: no room',
+    });
+  });
+
+  describe('the files ability goes through the note gate (TRUST-16)', () => {
+    const LEVELS = ['public', 'internal', 'confidential', 'secret'];
+    const NOTES = {
+      'open.md': '---\nclassification: public\n---\nfor anyone',
+      'team.md': '---\nclassification: internal\n---\nfor the team',
+      'deal.md': '---\nclassification: confidential\n---\nthe deal',
+      'keys.md': '---\nclassification: secret\n---\nthe keys',
+      'bare.md': 'no class at all',
+      'odd.md': '---\nclassification: [public, secret]\n---\na class that cannot be read',
+      'strange.md': '---\nclassification: galactic\n---\na class not set',
+    };
+    /** The notes plug-in acme.one is given, with a ceiling of `ceiling` and unlabelled notes counted as `unlabelled`. */
+    const gated = (ceiling, unlabelled = 'secret') => {
+      const proposed = [];
+      const store = memoryStorage(NOTES);
+      const files = { store, levels: LEVELS, unlabelled, propose: (c) => proposed.push(c) };
+      if (ceiling !== undefined) files.ceilingFor = (id) => (id === 'acme.one' ? ceiling : undefined);
+      let given;
+      pluginRegistry({ host: { files } }).register(
+        plugin({ uses: [], abilities: ['files'], register: (p) => (given = p) }),
+      );
+      return { notes: given.host.files, proposed, store };
+    };
+
+    test('a plug-in lists and reads only notes at or below its ceiling', async () => {
+      const { notes } = gated('internal');
+      assert.deepEqual(await notes.list(), ['open.md', 'team.md']);
+      assert.equal((await notes.read('team.md')).text, NOTES['team.md']);
+      for (const hidden of ['deal.md', 'keys.md', 'bare.md', 'odd.md', 'strange.md'])
+        assert.equal(await notes.read(hidden), null, `${hidden} is as if it were not there`);
+    });
+
+    test('with no ceiling set it sees only the lowest class, and never the highest even when let', async () => {
+      assert.deepEqual(await gated().notes.list(), ['open.md']);
+      assert.deepEqual(await gated('secret').notes.list(), ['deal.md', 'open.md', 'team.md']);
+    });
+
+    test('a note with no class counts as the class set for unlabelled notes', async () => {
+      assert.deepEqual(await gated('internal', 'internal').notes.list(), ['bare.md', 'open.md', 'team.md']);
+    });
+
+    test('a write or a removal it makes waits for the person, and the note stays as it was', async () => {
+      const { notes, proposed, store } = gated('internal');
+      const wrote = await notes.write('open.md', 'changed', {});
+      assert.deepEqual(wrote, {
+        ok: false,
+        reason: 'the change waits for the person to accept it',
+        current: await notes.read('open.md'),
+      });
+      const removed = await notes.remove('team.md', {});
+      assert.equal(removed.ok, false);
+      await notes.write('keys.md', 'overwrite', {});
+      assert.deepEqual(proposed, [
+        { plugin: 'acme.one', path: 'open.md', text: 'changed' },
+        { plugin: 'acme.one', path: 'team.md', text: null },
+        { plugin: 'acme.one', path: 'keys.md', text: 'overwrite' },
+      ]);
+      assert.equal((await store.read('open.md')).text, NOTES['open.md']);
+      assert.equal((await store.read('keys.md')).text, NOTES['keys.md'], 'nothing is written without the person');
+      assert.equal((await notes.write('keys.md', 'x', {})).current, null, 'and a hidden note stays hidden');
     });
   });
 });
