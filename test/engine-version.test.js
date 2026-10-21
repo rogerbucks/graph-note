@@ -393,7 +393,7 @@ describe('watching the published advisories without changing anything', () => {
   /** OSV answers `osv` about Graphviz and nothing about the wrapper; NVD answers `nvd`. */
   const answering = (osv, nvd = { vulnerabilities: [] }) => ({
     fetch: async (url, init) => {
-      if (String(url).includes('nvd.nist.gov')) return reply(nvd);
+      if (new URL(String(url)).hostname === 'services.nvd.nist.gov') return reply(nvd);
       return reply(String(init?.body).includes('"GIT"') ? osv : {});
     },
   });

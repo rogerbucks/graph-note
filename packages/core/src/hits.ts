@@ -54,9 +54,10 @@ function pathPoints(d: string): Pt[] {
 /** The boxes and links of a drawing, with the areas a tap can land on, in the units of its viewBox. */
 export function hitAreas(svg: string): HitAreas {
   const vb = nums(attr(/<svg\b[^>]*>/.exec(svg)?.[0] ?? '', 'viewBox') ?? '0 0 0 0');
-  const transform = attr(/<g\b[^>]*class="graph"[^>]*>/.exec(svg)?.[0] ?? '', 'transform') ?? '';
-  const [sx = 1, sy = sx] = nums(/scale\(([^)]*)\)/.exec(transform)?.[1] ?? '1');
-  const [tx = 0, ty = 0] = nums(/translate\(([^)]*)\)/.exec(transform)?.[1] ?? '0 0');
+  const graph = [...svg.matchAll(/<g\b[^>]*>/g)].find((g) => g[0].includes('class="graph"'));
+  const transform = attr(graph?.[0] ?? '', 'transform') ?? '';
+  const [sx = 1, sy = sx] = nums(/scale\(([^()]*)\)/.exec(transform)?.[1] ?? '1');
+  const [tx = 0, ty = 0] = nums(/translate\(([^()]*)\)/.exec(transform)?.[1] ?? '0 0');
   const place = ([x, y]: Pt): Pt => [sx * (x + tx), sy * (y + ty)];
   const shapes: Shape[] = [];
   // a link merged into a trunk (§25) is drawn as two lines: its own, `edgeN`, and the one to the trunk, `edgeN_tail`

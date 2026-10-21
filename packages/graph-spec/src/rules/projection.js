@@ -24,6 +24,9 @@ function iso(v) {
     '+10:00'
   );
 }
+// A key set as the object's own, even `__proto__`, so a name in a graph never changes an object's prototype.
+const put = (o, k, v) =>
+  Object.defineProperty(o, k, { value: v, enumerable: true, writable: true, configurable: true });
 // §18 the flat projection: [blocks, rels].
 // - blocks: one per node. Each has id, type (its labels) and attributes. It also has a list of targets per
 //   relationship type without properties, keyed by the type in lower case.
@@ -41,18 +44,20 @@ function project(g) {
         throw new Error(
           `refused: §18 — ${i}.type is reserved: the flat projection uses type for a node's labels; rename the property`,
         );
-      if (k !== 'id' && p[k] !== null && p[k] !== undefined) b[k] = iso(p[k]);
+      if (k !== 'id' && p[k] !== null && p[k] !== undefined) put(b, k, iso(p[k]));
     }
-    blocks[i] = b;
+    put(blocks, i, b);
   }
   for (const [s, t, d, p] of g.edges) {
     if (Object.keys(p).length) {
       const r = { from: s, relationship: t, to: d };
-      for (const k of Object.keys(p).sort()) if (p[k] !== null) r[k] = iso(p[k]);
+      for (const k of Object.keys(p).sort()) if (p[k] !== null) put(r, k, iso(p[k]));
       rels.push(r);
       continue;
     }
-    (blocks[s][t.toLowerCase()] = blocks[s][t.toLowerCase()] || []).push(d);
+    const key = t.toLowerCase();
+    if (Object.hasOwn(blocks[s], key)) blocks[s][key].push(d);
+    else put(blocks[s], key, [d]);
   }
   for (const b of Object.values(blocks))
     for (const [k, v] of Object.entries(b)) if (Array.isArray(v) && k !== 'type') v.sort();

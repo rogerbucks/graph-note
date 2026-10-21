@@ -122,11 +122,21 @@ export async function checkHarness(built, { chrome, views = SHOTS } = {}) {
   }
 }
 
+/**
+ * A text as JavaScript for the page to run. JSON gives a quoted string. The characters that could end a script or a
+ * line in a page are written as escapes too.
+ */
+export const jsText = (text) =>
+  JSON.stringify(String(text)).replace(
+    /[<>/\u2028\u2029]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
+  );
+
 const press = (label) =>
-  `[...document.querySelectorAll('button')].find((b) => b.textContent.trim() === ${JSON.stringify(label)}).click()`;
+  `[...document.querySelectorAll('button')].find((b) => b.textContent.trim() === ${jsText(label)}).click()`;
 
 const tab = (label) =>
-  `[...document.querySelectorAll('[role=tab]')].find((t) => t.textContent.trim() === ${JSON.stringify(label)}).click()`;
+  `[...document.querySelectorAll('[role=tab]')].find((t) => t.textContent.trim() === ${jsText(label)}).click()`;
 
 /**
  * The Claude Code host's views: the note opened, then each of the choosers under its graph opened. At a phone's width
