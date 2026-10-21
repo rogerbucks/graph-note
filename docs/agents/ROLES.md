@@ -129,6 +129,9 @@ it for her:
 - **When it runs:** on each new comment in the discussion, and each morning at 07:30 UTC to catch up.
 - **When Claude wakes:** only when a comment names Sara since her last one. A cheap check runs first, with no AI.
 - **The pace:** at most one comment from Sara a day, as the kick-off asks. The morning run picks up what is left.
+- **Replying from any session:** a session cannot post to a discussion itself. So it starts
+  `.github/workflows/working-group-reply.yml` with its reply and the comment it answers. The reply is checked the same
+  way, then posted (Roger, 21 Oct 2026).
 - **Who posts:** GitHub's Actions bot, opening "**From Sara:**". A bot's comment wakes no workflow, so she never
   answers herself.
 - **The cost:** Roger's Claude quota, through the same token as Claude's review (`CLAUDE_CODE_OAUTH_TOKEN`).
