@@ -10,6 +10,7 @@ import { placeholdersOf, sayWords, setLanguage, SOURCE_LANGUAGE } from '../src/w
 import { SOURCE_WORDS } from '../src/source-words.ts';
 import { isPseudoWord } from '../src/pseudo-words.ts';
 import { readerKeys, readerValues, readerWords } from '../src/reader-words.ts';
+import { DEFAULT_LOCALE, setLocale } from '../src/locale-formats.ts';
 import { readNote } from '../src/drawing.ts';
 import { dataKind } from '../src/blocks.ts';
 import { readStatement } from '../src/proposals-statements.ts';
@@ -18,7 +19,10 @@ const json = (rel) => JSON.parse(readFileSync(new URL(rel, import.meta.url), 'ut
 const TABLE = json('../../graph-spec/src/reader/problem-codes.json');
 const CASES = json('../../graph-spec/test/problem-code-cases.json');
 
-afterEach(() => setLanguage(SOURCE_LANGUAGE));
+afterEach(() => {
+  setLanguage(SOURCE_LANGUAGE);
+  setLocale(DEFAULT_LOCALE);
+});
 
 /** A sample value for each placeholder of a code: a number for `count`, else a word of its own name. */
 const sampleOf = (c) =>
@@ -140,5 +144,45 @@ describe('editor spec §42: the reader’s problems, said in a test language', (
     assert.ok('refused' in refused);
     assert.doesNotMatch(refused.refused, /DETACH is followed|write DETACH DELETE v$/);
     assert.ok(isPseudoWord(refused.refused), refused.refused);
+  });
+});
+
+describe('editor spec §42: the reader’s lists and numbers, in the person’s locale', () => {
+  const bareType = {
+    code: 'GN302',
+    msg: '[k] has no colon, and graph g has relationship types A, B and C, which differ only by case',
+    fix: 'write the one meant with its colon, such as [:A]',
+  };
+
+  test('GN302’s types are joined the locale’s way, with no “and” of its own', () => {
+    assert.equal(readerWords(bareType).message, bareType.msg);
+    setLocale('ja');
+    const between = new Intl.ListFormat('ja', { type: 'conjunction' }).formatToParts(['a', 'b', 'c', 'd'])[1]?.value;
+    assert.equal(between, '、');
+    assert.equal(
+      readerWords(bareType).message,
+      '[k] has no colon, and graph g has relationship types A、B and C, which differ only by case',
+    );
+  });
+
+  test('a limit and a size are grouped as the locale groups digits', () => {
+    const tooBig = {
+      code: 'GN601',
+      msg: 'the block is 1234567 characters long, over the limit of 1000000',
+      fix: 'split it into smaller graphs, each in its own block',
+    };
+    assert.equal(readerWords(tooBig).message, 'the block is 1,234,567 characters long, over the limit of 1,000,000');
+    setLocale('de');
+    assert.equal(readerWords(tooBig).message, 'the block is 1.234.567 characters long, over the limit of 1.000.000');
+    const join = {
+      code: 'GN604',
+      msg: 'a join of 1065 documents is over the limit of 1064',
+      fix: 'join at most 1064 documents at a time, then join the results',
+    };
+    assert.deepEqual(readerWords(join), {
+      message: 'a join of 1.065 documents is over the limit of 1.064',
+      fix: 'join at most 1.064 documents at a time, then join the results',
+    });
+    assert.deepEqual(readerValues(join), { count: 1065, limit: '1064' });
   });
 });

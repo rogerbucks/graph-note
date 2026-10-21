@@ -4,12 +4,26 @@
 // - then the user's own models, each by its address, the one set up for the purpose first.
 import type { AiModel, Settings } from './settings.ts';
 import { word } from './words.ts';
+import type { WordKey } from './words.ts';
 
 /**
  * The purposes a model may be set up for, as the spec names them; a model may be given any other. They are the values
  * a person types and the send dialog compares with, so they stay as the spec writes them.
  */
 export const AI_PURPOSES = ['Research questions', 'Proposing changes', 'Restricted processing'];
+
+/** The catalogue's word for each of the spec's purposes, in the order of AI_PURPOSES. */
+const PURPOSE_KEYS: readonly WordKey[] = ['ai.purpose.research', 'ai.purpose.proposing', 'ai.purpose.restricted'];
+
+/**
+ * A model's purpose, as the person reads it. One of the spec's purposes is said in the person's language. Any other
+ * is the person's own words, so it is said as they wrote it. What is saved stays the same.
+ */
+export function purposeWords(purpose: string): string {
+  const at = AI_PURPOSES.findIndex((p) => same(p, purpose));
+  const key = PURPOSE_KEYS[at];
+  return key ? word(key) : purpose;
+}
 
 /** The host's own AI, where the host has one: offered before any model set up here. */
 export interface HostAi {
