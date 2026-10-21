@@ -143,6 +143,15 @@ const KEPT = {
   'packages/core/src/schema-picture.ts': ["({}:Meta:ElementType {name: {}, kind: {}, origin: 'source'{}})"],
   // a marker the note's writer throws and catches again, never shown
   'packages/claude-code/server/note-file.ts': ['folder moved'],
+  // the groups a change takes when none is named: compared to write a `//@ group:` line, and kept in the judgement block
+  'packages/core/src/proposals.ts': ['Removed things', 'Removed {} links', 'New {} links'],
+  // the reason of the proposer's declaration, written into the change set as its `//@ reason:` line
+  'packages/core/src/proposals-author.ts': [
+    'declares who proposed this, so that the graph spec’s check knows its author',
+  ],
+  // the first line of a change set and of a judgement block, written into the note: its bytes, never translated
+  'packages/core/src/proposals-text.ts': ['// graph: {} · CHANGE SET {} · against {} · by {}'],
+  'packages/core/src/proposals-judgement.ts': ['// graph: judgements\n{}'],
 };
 
 /** The calls whose strings pick elements of the page, never words: `querySelector('a, b')` and the like. */

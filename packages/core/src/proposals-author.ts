@@ -12,6 +12,7 @@ import { DECIDER_DEFAULT } from './proposals-judgement.ts';
 import type { Person } from './proposals-shown.ts';
 import { makeProposal, valueGql } from './proposals.ts';
 import type { Proposal, ProposedChange } from './proposals.ts';
+import { word } from './words.ts';
 
 const WORD = /^[A-Za-z_]\w*$/;
 
@@ -40,13 +41,13 @@ export const declaresProposer = (p: Proposal, c: ProposedChange): boolean =>
 /** Why this is not a person who decides, or null: a person gives a name, and what proposed a change cannot accept it. */
 export function notAPerson(p: Proposal, by: unknown): string | null {
   const name = typeof (by as Person | null)?.name === 'string' ? (by as Person).name.trim() : '';
-  if (!name) return 'a person decides: say who is deciding';
+  if (!name) return word('proposing.decider.unnamed');
   const { name: proposer, kind } = p.provenance.by;
   // the same name in any case is the same proposer, as written. A proposer's name is one word. So no label with a space
   // is taken for it. One called the_reader is none for the label "the reader".
   // ("you" is what the person at the keyboard is called when the settings name nobody: it is never taken for a proposer)
   const same = name.toLowerCase() === proposer.toLowerCase() && name !== DECIDER_DEFAULT;
-  return same && kind !== 'person' ? `${proposer} proposed this, and is not a person: a person decides` : null;
+  return same && kind !== 'person' ? word('proposing.decider.proposer', { proposer }) : null;
 }
 
 /**
@@ -83,8 +84,7 @@ export function rejectedWith(
   const declaration = waiting.find((c) => declaresProposer(p, c));
   if (!declaration) return chosen;
   const left = waiting.filter((c) => c !== declaration && !chosen.includes(c));
-  if (chosen.includes(declaration))
-    return left.length ? `${DECLARES}: reject the changes that wait too, or accept one of them` : chosen;
+  if (chosen.includes(declaration)) return left.length ? word('proposing.declaration.waits') : chosen;
   return left.length ? chosen : [declaration, ...chosen];
 }
 

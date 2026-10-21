@@ -12,6 +12,7 @@ import { withDecisions, withoutDecisions } from './proposals-judgement.ts';
 import type { Decision, ToRecord, Written } from './proposals-judgement.ts';
 import type { Proposal } from './proposals.ts';
 import { replaceBlock } from './store.ts';
+import { word } from './words.ts';
 
 /**
  * What a decision wrote: the change set as it was and became, and the judgement block's write. Both are null for a
@@ -59,8 +60,7 @@ export function takeBack(note: string, rec: Recorded): { ok: true; note: string 
   if (!j.ok) return j;
   if (!rec.home) return j;
   const home = gqlSpans(j.note).find((s) => s.text === rec.home?.after);
-  if (!home)
-    return { ok: false, reason: 'the change set has changed since the decision was made, so it cannot be undone' };
+  if (!home) return { ok: false, reason: word('proposing.undo.change-set-changed') };
   const r = replaceBlock(j.note, { line: home.open, text: home.text }, rec.home.before);
   return r.ok ? { ok: true, note: r.note } : { ok: false, reason: r.reason };
 }

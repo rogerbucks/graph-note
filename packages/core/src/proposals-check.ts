@@ -7,6 +7,7 @@ import { items } from './block-items.ts';
 import { dataKind, gqlSpans } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import type { ProposerKind } from './proposals.ts';
+import { word } from './words.ts';
 
 /** What the check said of a proposal: each thing it checked, and whether the proposal passes every one. */
 export interface ProposalCheck {
@@ -34,7 +35,7 @@ export function checkProposal(note: string, block: string, shared: readonly stri
   // the last change rejected, and leaves it with no known author to ask for
   const parts = gs.splitChangeset(block);
   if (!parts.changes.length && !items(parts.additions).length)
-    return { passed: true, results: [{ label: 'nothing waits in it, so there is nothing to check', ok: true }] };
+    return { passed: true, results: [{ label: word('proposing.check.nothing-waits'), ok: true }] };
   try {
     const { results } = gs.checkChangeset(baseOf(note, shared), block);
     return { passed: results.every(([, ok]) => ok), results: results.map(([label, ok]) => ({ label, ok })) };
@@ -42,7 +43,7 @@ export function checkProposal(note: string, block: string, shared: readonly stri
     if (!(e instanceof gs.ProfileError)) throw e;
     return {
       passed: false,
-      results: [{ label: `the note’s graphs load for the check (line ${e.line}: ${e.msg})`, ok: false }],
+      results: [{ label: word('proposing.check.cannot-load', { line: String(e.line), why: e.msg }), ok: false }],
     };
   }
 }
@@ -55,9 +56,7 @@ const MOVED = /^it was made against the graph as it stands/;
  */
 export function checkRefusal(check: ProposalCheck, moved: 'seen' | 'counts'): string | null {
   const failed = check.results.filter((r) => !r.ok && !(moved === 'seen' && MOVED.test(r.label)));
-  return failed.length
-    ? `the graph spec’s check of this change set fails: ${failed.map((r) => r.label).join('; ')}`
-    : null;
+  return failed.length ? word('proposing.check.fails', { failed: failed.map((r) => r.label).join('; ') }) : null;
 }
 
 /** What the note's graphs say a proposer is: a Model, a Person or a graph Step; otherwise nothing is said. */
