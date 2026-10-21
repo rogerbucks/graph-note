@@ -31,7 +31,8 @@ import type ThoughtKnotPlugin from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { graphCard } from './graph-card';
 import { aidsOf } from '@thoughtknot/core/display/graph-view/viewer-aids';
-import { diagramShown, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
+import { diagramShown, pictureDrawn, tableDrawn } from '@thoughtknot/core/display/graph-view/type-strip';
+import { withPicture } from './outside/outside-diagrams';
 import type { ViewShown } from '@thoughtknot/core/display/graph-view/view-strip';
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
@@ -236,17 +237,28 @@ export async function renderViewBlock(
         word('blocks.view-saved', { name: v.name }),
       ),
   };
-  // the diagram types for this view (§15): choosing one writes it for the view alone
-  const diagram = diagramShown(drawing, style, g, v.name, (change, done) => {
-    void writeStyle(plugin, ctx.sourcePath, v.graph, { diagram: change }, done);
-  });
+  // the diagram types for this view (§15): choosing one writes it for the view alone.
+  // A type a plug-in from outside adds is drawn by that plug-in, when one turned on adds it (outside-diagrams.ts).
+  const diagram = await withPicture(
+    plugin.outside,
+    diagramShown(drawing, style, g, v.name, (change, done) => {
+      void writeStyle(plugin, ctx.sourcePath, v.graph, { diagram: change }, done);
+    }),
+    drawing,
+    g,
+    style.nudges,
+  );
   let drawn;
   // Styled as this view (§7, §14, §15). That is its nudges, and the properties, arrowheads, type and moving links
   // chosen for it or the whole graph. Folded as its View menu says (§25).
   const styled = styledDrawing(drawing, style, g, v.name);
   const laidOut = (by?: object) => plugin.layout(state.folded(styled), by);
   try {
-    drawn = diagram.table ? tableDrawn(diagram.table) : await laidOut(owner);
+    drawn = diagram.table
+      ? tableDrawn(diagram.table)
+      : diagram.picture
+        ? pictureDrawn(diagram.picture)
+        : await laidOut(owner);
   } catch (e) {
     // a view whose drawing cannot be laid out shows its text and why, never a blank card
     console.error('ThoughtKnot could not draw view', v.name, e);
@@ -290,7 +302,7 @@ export async function renderViewBlock(
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
       diagram,
-      ...(diagram.table ? {} : { switches: { state, relayout: (by: object) => laidOut(by) } }),
+      ...(diagram.table || diagram.picture ? {} : { switches: { state, relayout: (by: object) => laidOut(by) } }),
       motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },
       // its links shown and followed as the graph's are (§18); a broken one is reported on the graph's own card
       links: { ...linkHost(plugin, ctx.sourcePath, v.graph), broken: [] },

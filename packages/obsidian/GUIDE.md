@@ -116,6 +116,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   Obsidian's while it runs. A link is fetched once with `requestUrl`, checked and kept in the folder, off.
 - Its graph sources are read by a block written `· FROM sample:trip` (plugin_source_from). `readGraph` asks the
   plug-in running that adds the source. With none on, the block says so.
+- `outside-diagrams.ts` — `withPicture`: a card whose style graph chooses a plug-in's diagram type, such as
+  `example.sample.row`, shows the core's picture of the marks that plug-in gave. With none on, it is a network.
 - `plugin-worker-entry.ts` — what runs first in that worker: the core's `sealOutside`. `esbuild.config.mjs` bundles it
   into the function `pluginWorker` of the module `thoughtknot:plugin-worker` (typed in `plugin-worker.d.ts`).
 - `outside-settings.ts` — the section on the settings page: a switch for each file, and the link with its Add.
