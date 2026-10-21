@@ -16,7 +16,10 @@ const sentence = (t: string): string => {
 };
 /** A problem in words: its note line and what is wrong, then the fix, as its own sentence (spec §41, ux_copy_auto). */
 export const problemText = (p: ShownProblem): string =>
-  `Line ${p.noteLine}: ${p.message}${/[.!?…]$/.test(p.message.trim()) ? '' : '.'} ${sentence(p.fix)}`;
+  word('problems.at-line', {
+    line: String(p.noteLine),
+    message: `${p.message}${/[.!?…]$/.test(p.message.trim()) ? '' : '.'} ${sentence(p.fix)}`,
+  });
 const sign = (p: Problem) => (p.severity === 'hint' ? 'ℹ Hint' : p.severity === 'warning' ? '⚠ Warning' : '✖ Error');
 /** Errors first, then warnings, then hints. */
 const RANK = { error: 0, warning: 1, hint: 2 };

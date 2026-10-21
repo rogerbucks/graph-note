@@ -42,11 +42,13 @@ const PLACED = [
 /**
  * Each catalogue word as a pattern of a whole text. In it, a count stands for a number, and any other placeholder for a
  * name with no stop or comma in it. So a sentence the code says itself is not taken for one: in a test language none
- * shows. A word that is placeholders alone says nothing of its own, so has no pattern.
+ * shows. A word that is placeholders alone says nothing of its own, so has no pattern. Nor has one that is two
+ * placeholders joined by one word, as "{written} to {taken}" is: it matches any text with that word.
  */
 const SOURCE_PATTERNS = Object.entries(SOURCE_WORDS).flatMap(([key, entry]) =>
   (typeof entry === 'string' ? [entry] : Object.values(entry))
     .filter((text) => /[a-zA-Z]/.test(text.replace(/\{[a-zA-Z0-9]+\}/g, '')))
+    .filter((text) => !/^\{[a-zA-Z0-9]+\},? [a-z]+ \{[a-zA-Z0-9]+\}$/.test(text))
     .map((text) => ({
       key,
       pattern: new RegExp(

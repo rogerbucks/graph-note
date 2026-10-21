@@ -64,6 +64,18 @@ export async function run(send, expression) {
 }
 
 /**
+ * Removes a Chrome profile folder, trying again for two seconds while Chrome's helpers still write to it. A folder still
+ * busy after that (ENOTEMPTY or EBUSY) is left in the temporary folder for the system to clear. Any other error is thrown.
+ */
+export function removeProfile(profile, remove = rmSync) {
+  try {
+    remove(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+  } catch (e) {
+    if (e?.code !== 'ENOTEMPTY' && e?.code !== 'EBUSY') throw e;
+  }
+}
+
+/**
  * Starts a headless Chrome on a fresh profile, its page `width` by `height` CSS pixels at `scale`.
  * - send speaks the DevTools protocol.
  * - run runs a line of script in the page.
@@ -93,11 +105,7 @@ export async function startChrome({ chrome, width = 1400, height = 1000, scale =
     await exited;
     // Chrome's helpers may still write to the profile for a moment after it exits, so its removal is tried again for two
     // seconds. A profile still busy after that is left in the temporary folder, which is no reason to fail a check.
-    try {
-      rmSync(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
-    } catch {
-      // left for the system to clear
-    }
+    removeProfile(profile);
   };
   try {
     const { send, close } = await devtools(port);

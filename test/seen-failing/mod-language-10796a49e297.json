@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/mod-language.test.js",
+  "test": "the language of the mod > the /graph command’s words follow the system’s language, set before the command is registered",
+  "seen_failing_first": false,
+  "evidence": "It proves the language following that the mod and server already did (PRs #855, #862, #863), asked for by review as proof."
+}

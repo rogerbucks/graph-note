@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/words-in-code.test.js",
+  "test": "the words in the code > the check finds a short template that is a sentence: a word, its values and a stop",
+  "seen_failing_first": false,
+  "evidence": "The check it tests lives in this test file, so the new rule came with the test; it cannot fail against the code before it."
+}

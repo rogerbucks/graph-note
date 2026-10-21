@@ -38,6 +38,8 @@ export const READING_SOURCE_WORDS = {
   'reading.estimate.equally-close':
     'no thing called {name} in graph {graph}; {among} are equally close, so it is not drawn',
   'reading.estimate.equally-close.fix': 'change {name} to the one you mean: {among}',
+  'reading.estimate.pair': '{written} to {taken}',
+  'reading.estimate.taken-and': '{first}, and {next}',
   'reading.estimate.name': '{name} is not in graph {graph}; it is drawn as an estimate of {taken}',
   'reading.estimate.type': '{type} is not a relationship in graph {graph}; it is drawn as an estimate of {taken}',
   // the help that finds and fixes problems (help.ts)
@@ -48,6 +50,13 @@ export const READING_SOURCE_WORDS = {
   'reading.near-kind.fix': 'Change {kind} to {near}, or keep {kind} if it is a new kind.',
   'reading.not-in-graph': '{name} (not in the graph)',
   'reading.estimated-link': 'Estimated, not written: {from} {reading} {to}.',
+  // each pattern read back in plain language, and the graph as sentences for screen readers (help.ts)
+  'reading.back.set': '{thing}: {property} is {value}',
+  'reading.back.kind-a': '{thing} is a {kind}',
+  'reading.back.kind-an': '{thing} is an {kind}',
+  'reading.text.graph': 'Graph {graph}: {things}, {links}.',
+  'reading.text.things': { one: '{count} thing', other: '{count} things' },
+  'reading.text.links': { one: '{count} link', other: '{count} links' },
   // a thing written without a name or without text (name-gaps.ts)
   'reading.no-name': 'this thing has no name; suggested: {name}',
   'reading.no-name.fix': 'add the name {name} after the (, or write one of your own',

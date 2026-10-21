@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/main-language.test.js",
+  "test": "the command names in Obsidian’s language > the convert command is named in the test language when Obsidian is in it, and in UK English when in English",
+  "seen_failing_first": false,
+  "evidence": "It proves the Obsidian command names already followed the language (PR #853), asked for by review as proof."
+}

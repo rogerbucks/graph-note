@@ -14,6 +14,7 @@ import type { Target } from './inspector.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
 import { attachmentType, linkTo, linksIn } from './link-scan.ts';
 import type { FoundLink } from './link-scan.ts';
+import { formatList } from './locale-formats.ts';
 import { word } from './words.ts';
 
 export { attachmentType, leavingWords, linkKind, linkTo, linksIn, refusedWords } from './link-scan.ts';
@@ -125,7 +126,7 @@ function likelyMeant(link: FoundLink, names: readonly string[]): string[] {
   return found.sort();
 }
 
-const orList = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`);
+const orList = (xs: string[]) => formatList(xs, 'disjunction');
 /** A name written where a Markdown link's destination is: percent signs first, then spaces and brackets, percent-encoded. */
 const asWritten = (link: FoundLink, name: string) =>
   link.markdown

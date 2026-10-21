@@ -8,6 +8,7 @@ import { blankText } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
 import type { Problem } from './note-reading.ts';
 import { S, trim, trimEnd } from './whitespace.ts';
+import { formatList } from './locale-formats.ts';
 import { word } from './words.ts';
 
 // a thing and its kinds, and a link's type, read with whitespace as GQL names it (graph spec §3), as the reader reads them
@@ -16,7 +17,7 @@ const THING = new RegExp(`\\(${S}*([A-Za-z_]\\w*)${S}*((?::${S}*[A-Za-z_]\\w*${S
   LINK_TYPE = new RegExp(`-\\[${S}*:${S}*([A-Za-z_]\\w*)`, 'g');
 
 /** Words as a list: "a", "a and b", "a, b and c". */
-const listed = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
+const listed = (xs: string[]) => formatList(xs);
 
 /**
  * A schema whose types its GraphMeta does not declare, as a graph locked by an earlier build is. In graph spec model

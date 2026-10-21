@@ -10,6 +10,7 @@ import { readNote } from './drawing.ts';
 import { READ_LIMITS } from './layout-limits.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
 import { S, trim } from './whitespace.ts';
+import { formatList } from './locale-formats.ts';
 import { word } from './words.ts';
 
 /** Where a graph's data is written: a .gql file, or a note, by the place written after FROM; and the block that says so. */
@@ -119,8 +120,7 @@ export function sourceFor(texts: readonly string[], graph: string): Source | Sou
 export const sourceName = (s: Source): string =>
   word(s.kind === 'file' ? 'reading.source.file' : 'reading.source.note', { target: s.target });
 
-const and = (xs: readonly string[]) =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
+const and = (xs: readonly string[]) => formatList([...xs]);
 
 /** Why a source cannot be drawn: the reason, with the sentence. */
 function refuse(source: Source, why: SourceRefusal['why'], refused: string): SourceRefusal {

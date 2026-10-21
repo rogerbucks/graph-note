@@ -14,6 +14,7 @@
 // The note open in the editor is guarded the same way (cc_claude_proposes, risk AI-1). Claude changes it only by the
 // propose tool, so the user sees each change on the card first. Its own writing calls, of every tool above, that
 // reach the note are refused, and the refusal points to that tool. For Bash, the note's file name alone counts too.
+import { word } from '@thoughtknot/core';
 
 /** The tools whose target is a file path, and the field that holds it. */
 const FILE_TOOLS: Readonly<Record<string, 'file_path' | 'notebook_path'>> = {
@@ -46,29 +47,21 @@ export function pathOf(tool: string, input: ToolInput): string | null {
 /** The most words of a command that are looked up as paths, each a process to start. */
 const MAX_WORDS = 40;
 
+// The refusals are said when made, in the language set then. Claude Code shows them in the chat, so the person may read them.
+
 /** The refusal, in words: it names no path, command or text of the call. */
-export const DATA_FOLDER_REFUSAL =
-  'thoughtknot: this is the mod’s data folder, which holds the settings (settings.json) that decide what Claude ' +
-  'may open, so Claude may not write to it. The user changes these settings, by editing settings.json in the ' +
-  'thoughtknot plugin data folder (CLAUDE_PLUGIN_DATA, or else the plugins data folder under their Claude config ' +
-  'folder). Nothing was changed.';
+export const dataFolderRefusal = (): string =>
+  word('cc.refusal.data-folder', { settings: 'settings.json', variable: 'CLAUDE_PLUGIN_DATA' });
 
 /** The refusal when the guard could not tell where a path leads, so it cannot say the call leaves the folder alone. */
-export const CHECK_FAILED_REFUSAL =
-  'thoughtknot: this call was refused because the guard for the mod’s data folder could not check where it ' +
-  'leads (node could not be run, or did not answer). Nothing was changed. Try again, or ask the user.';
+export const checkFailedRefusal = (): string => word('cc.refusal.data-check-failed');
 
 /** The refusal on the note open in the editor: it names the propose tool, and no path or text of the call. */
-export const OPEN_NOTE_REFUSAL =
-  'thoughtknot: this note is open in the ThoughtKnot editor, so Claude may not change it with its own tools. ' +
-  'Propose the change with the propose tool (mcp__thoughtknot__propose) instead: the user accepts or rejects it on ' +
-  'the card. Reading the note with Read stays allowed. Nothing was changed.';
+export const openNoteRefusal = (): string => word('cc.refusal.open-note', { tool: 'mcp__thoughtknot__propose' });
 
 /** The refusal when the open note's guard could not tell where a path leads. */
-export const NOTE_CHECK_FAILED_REFUSAL =
-  'thoughtknot: this call was refused because the guard for the note open in the ThoughtKnot editor could not check ' +
-  'where it leads (node could not be run, or did not answer). Nothing was changed. Propose the change with the ' +
-  'propose tool (mcp__thoughtknot__propose), or ask the user.';
+export const noteCheckFailedRefusal = (): string =>
+  word('cc.refusal.note-check-failed', { tool: 'mcp__thoughtknot__propose' });
 
 /** What the guard asks of the host: the folder, the home and working folders, and a real-path call. */
 export interface GuardPorts {
@@ -219,8 +212,8 @@ interface Kept {
 /** The data folder, as the guard keeps it: `CLAUDE_PLUGIN_DATA` and `plugins/data` name it too. */
 const dataKept = (ports: GuardPorts): Kept => ({
   target: ports.data,
-  refusal: DATA_FOLDER_REFUSAL,
-  failed: CHECK_FAILED_REFUSAL,
+  refusal: dataFolderRefusal(),
+  failed: checkFailedRefusal(),
   spelt: ['CLAUDE_PLUGIN_DATA'],
   pluginsData: true,
 });
@@ -293,8 +286,8 @@ export async function guardOpenNote(tool: string, input: ToolInput, ports: OpenN
   if (!note) return null;
   const kept = {
     target: note,
-    refusal: OPEN_NOTE_REFUSAL,
-    failed: NOTE_CHECK_FAILED_REFUSAL,
+    refusal: openNoteRefusal(),
+    failed: noteCheckFailedRefusal(),
     spelt: [],
     word: note.slice(note.lastIndexOf('/') + 1),
   };

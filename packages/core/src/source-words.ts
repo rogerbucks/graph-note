@@ -140,6 +140,7 @@ export const SOURCE_WORDS = {
     one: 'Recording: {count} step, the last {name}. Tap the boxes of the walk in order.',
     other: 'Recording: {count} steps, the last {name}. Tap the boxes of the walk in order.',
   },
+  'walk.box-steps': '{label}, step {steps}',
   'walk.not-editing': 'The block is no longer being edited, so the path cannot be written.',
   'walk.written': {
     one: 'The path {title} was written, with {count} step.',

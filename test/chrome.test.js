@@ -2,7 +2,7 @@
 // its first page is open, with an empty list. So the list is asked again until a page is there.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { firstPage } from '../scripts/chrome.mjs';
+import { firstPage, removeProfile } from '../scripts/chrome.mjs';
 
 const noWait = async () => {};
 
@@ -24,5 +24,17 @@ describe('the first page of a headless Chrome', () => {
       firstPage(async () => [], { tries: 3, wait: noWait }),
       /Chrome opened no page/,
     );
+  });
+});
+
+describe('the profile of a headless Chrome, removed when it stops', () => {
+  const failing = (code) => () => {
+    throw Object.assign(new Error(code), { code });
+  };
+
+  test('is left for the system when it is still busy, and any other error is thrown', () => {
+    assert.doesNotThrow(() => removeProfile('/tmp/profile', failing('ENOTEMPTY')));
+    assert.doesNotThrow(() => removeProfile('/tmp/profile', failing('EBUSY')));
+    assert.throws(() => removeProfile('/tmp/profile', failing('EACCES')), { code: 'EACCES' });
   });
 });

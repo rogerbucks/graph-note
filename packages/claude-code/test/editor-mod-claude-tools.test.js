@@ -26,7 +26,7 @@ async function openOnPlan() {
 // loaded in each test, so a guard that is not there fails its tests one by one
 const guard = () => import('../src/data-guard.ts');
 const guardOpenNote = async (...args) => (await guard()).guardOpenNote(...args);
-const denied = async (answer) => assert.equal(answer, (await guard()).OPEN_NOTE_REFUSAL);
+const denied = async (answer) => assert.equal(answer, (await guard()).openNoteRefusal());
 const allowed = (answer) => assert.equal(answer, null);
 
 describe('Claude’s own tools are refused on the note open in the editor (cc_claude_proposes)', () => {
@@ -43,9 +43,9 @@ describe('Claude’s own tools are refused on the note open in the editor (cc_cl
   test('a tool.call Edit on the open note’s path is denied, and the refusal points to the propose tool', async () => {
     const { where, ports } = await openOnPlan();
     await denied(await guardOpenNote('Edit', { file_path: where.plan }, ports));
-    const { OPEN_NOTE_REFUSAL } = await guard();
-    assert.match(OPEN_NOTE_REFUSAL, /mcp__thoughtknot__propose/);
-    assert.match(OPEN_NOTE_REFUSAL, /Nothing was changed/);
+    const refusal = (await guard()).openNoteRefusal();
+    assert.match(refusal, /mcp__thoughtknot__propose/);
+    assert.match(refusal, /Nothing was changed/);
   });
 
   test('Write, MultiEdit and NotebookEdit are denied too, by a relative path, a link or a different case', async () => {

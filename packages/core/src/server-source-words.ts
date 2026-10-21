@@ -10,6 +10,8 @@ export const SERVER_SOURCE_WORDS = {
   'server.change-not-listed': 'No such change listed for this note.',
   'server.yes-not-covering': '{ask} The yes it was given does not cover this text.',
   'server.page-not-built': 'The editor page is not built: run `npm run build` for the ThoughtKnot mod.',
+  'server.no-page.title': 'ThoughtKnot editor',
+  'server.no-page': 'The ThoughtKnot editor is not here yet.',
   'server.no-note-or-drafts': 'It was given a vault but not the note to open, or the folder for drafts.',
   'server.orphaned': 'the process that started it has already exited, so nothing would stop it',
   'server.takes-no-argument': 'it takes no argument, and was given {argument}',

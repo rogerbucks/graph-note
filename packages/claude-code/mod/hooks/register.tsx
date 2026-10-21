@@ -13,7 +13,7 @@ import type { EngineInterface, Register } from 'claude-code';
 
 import type { GraphView } from '../types';
 import {
-  DATA_FOLDER_REFUSAL,
+  dataFolderRefusal,
   EditorLauncher,
   guardDataFolder,
   guardGateFiles,
@@ -185,7 +185,7 @@ export const register: Register = (on) => {
         ...ports,
       }));
     return refusal === null ? next(e) : { deny: refusal };
-  }).catch(($, e, next) => (next.called ? next(e) : { deny: DATA_FOLDER_REFUSAL }));
+  }).catch(($, e, next) => (next.called ? next(e) : { deny: dataFolderRefusal() }));
 
   on('session.start', async ($, e, next) => {
     await $.command.register({ name: 'graph', description: word('cc.command') });
