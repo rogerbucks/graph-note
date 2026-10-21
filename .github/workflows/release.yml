@@ -88,7 +88,6 @@ jobs:
           enable-cache: false
       - run: node scripts/public-readiness.mjs --history --setup
   release-notes:
-    needs: on-main
     # the notes the release writes, checked before anything is built: they must tell users what the library changed
     needs: on-main
     runs-on: ubuntu-latest
