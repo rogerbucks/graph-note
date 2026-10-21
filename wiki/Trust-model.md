@@ -289,7 +289,9 @@ Before a host loads a plug-in it did not ship, these must be fixed:
   `ThoughtKnot plug-ins`, or from a link fetched once, when the person presses Add
   (`packages/obsidian/src/outside/outside-link.ts`). Each stays off until the person turns it on, and turns off
   again if its file changes. Its commands join Obsidian's, and a block written `· FROM sample:trip` draws a graph
-  from its source. That graph is outside data, held as a joined graph (trust_source_joined). Still to come: the browser page.
+  from its source. That graph is outside data, held as a joined graph (trust_source_joined).
+- A step block can name a plug-in's step. What it gives back is held the same way. Then it is offered as a proposal
+  for a person to accept.
 
 ## Boundaries still to come
 

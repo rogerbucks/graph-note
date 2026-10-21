@@ -46,10 +46,17 @@ export const STEPS_SOURCE_WORDS = {
     one: 'the rule matches {loose}, which no point says it takes: add it to a // takes line',
     other: 'the rule matches {loose}, which no point says it takes: add them to a // takes line',
   },
+  'steps.fault.plugin-rule':
+    'the step {name} is a plug-in’s, which its plug-in runs: write only what it takes, as // takes <point>: (:Kind), and no rule',
   'steps.fault.taken': 'another step of graph {graph} is already called {step}',
   // why a step does not run, or gives nothing new (steps.ts)
   'steps.run.cannot': 'Step {step} cannot run: {why}',
   'steps.run.cannot-unnamed': 'Step without a name cannot run: {why}',
+  'steps.run.by-plugin': 'Step {step} is a plug-in’s, so only the plug-in that adds it runs it.',
+  'steps.run.no-plugin':
+    'Step {step} cannot run: no plug-in that is turned on adds it. Turn on the plug-in that does, in the settings.',
+  'steps.run.plugin-failed': 'Step {step} did not run: {why}',
+  'steps.run.plugin-gave': 'given by the plug-in step {step}',
   'steps.run.no-graph':
     'graph {graph} is not written in this note, so the step has nowhere to propose its output: run it in the note that holds {graph}.',
   'steps.run.too-many': {

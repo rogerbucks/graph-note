@@ -74,6 +74,7 @@ export const TYPES_LATE = [
   'Reviewed',
   'Routing',
   'RuleReport',
+  'RunPluginStep',
   'RunnerOptions',
   'SafeWrite',
   'Scheduler',
