@@ -269,8 +269,8 @@ For the graph source and step extension points (`trust_source_joined`).
 Today every plug-in ships with ThoughtKnot. Before a host loads one it did not ship, these must be fixed:
 
 - Plug-ins run apart from the host, in a worker, and one that runs too long is stopped (TRUST-14). Done in the core:
-  `packages/core/src/plugin-isolated.ts` is the host's side and `plugin-serve.ts` the worker's. The test is
-  `packages/core/test/plugins-isolated.test.js`.
+  `packages/core/src/plugin-isolated.ts` is the host's side and `packages/core/src/plugin-serve.ts` the worker's. The
+  test is `packages/core/test/plugins-isolated.test.js`.
   - The worker loses the network before the plug-in's code runs. A host loads a plug-in it did not ship only this way.
   - `import()` cannot be taken away by name, so the host starts the worker under a content security policy that
     allows no network.
