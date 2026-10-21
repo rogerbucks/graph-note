@@ -2,7 +2,8 @@
 // takes no argument. The mod hands it the vault, the note and the folder for drafts in its environment
 // (editor-main.ts). It serves the note store. With none it serves no API. editor-process.ts says how it starts, hands
 // its address over and stops. A note or folder it is refused says why on stderr and exits with code 2, before it
-// listens anywhere.
+// listens anywhere. It says its words in the system's language, as the mod does.
+import { followSystemLanguage } from '../src/mod-language.ts';
 import { runEditorProcess, type EditorProcessOptions } from './editor-process.ts';
 import { EDITOR_ENVIRONMENT, optionsFromEnvironment } from './editor-main.ts';
 
@@ -22,6 +23,7 @@ function firstLine(): Promise<string> {
   });
 }
 
+followSystemLanguage();
 let options: EditorProcessOptions | undefined;
 try {
   // the environment says only that a key is coming on standard input (`stdin`); the key is never in it

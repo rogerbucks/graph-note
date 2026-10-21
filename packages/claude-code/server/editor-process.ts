@@ -6,6 +6,7 @@
 //   The token is in the fragment, which a browser never sends. It is written nowhere else.
 // - It stops on the first of an idle period, its input closing, its parent exiting or a stop signal. It says why on
 //   stderr, and exits.
+import { word } from '@thoughtknot/core';
 import type { PageAssets } from './page-assets.ts';
 import { startEditorServer, type ApiHandler } from './start-server.ts';
 import { watchSession } from './session-watch.ts';
@@ -36,8 +37,8 @@ function refuse(why: string): never {
 export async function runEditorProcess(args: string[], options: EditorProcessOptions = {}): Promise<void> {
   process.stdout.on('error', () => {});
   process.stderr.on('error', () => {});
-  if (process.ppid === 1) refuse('the process that started it has already exited, so nothing would stop it');
-  if (args.length) refuse(`it takes no argument, and was given ${args[0]}`);
+  if (process.ppid === 1) refuse(word('server.orphaned'));
+  if (args.length) refuse(word('server.takes-no-argument', { argument: args[0] as string }));
   const server = await startEditorServer({
     ...(options.api ? { api: options.api } : {}),
     ...(options.drain ? { drain: options.drain } : {}),

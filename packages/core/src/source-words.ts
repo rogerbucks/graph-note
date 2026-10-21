@@ -13,6 +13,7 @@ import { EXPORT_SOURCE_WORDS } from './export-source-words.ts';
 import { FIRST_RUN_SOURCE_WORDS } from './first-run-source-words.ts';
 import { HOST_SOURCE_WORDS } from './host-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
+import { SERVER_SOURCE_WORDS } from './server-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
 import { SHORTCUT_SOURCE_WORDS } from './shortcut-source-words.ts';
 
@@ -379,4 +380,6 @@ export const SOURCE_WORDS = {
   ...HOST_SOURCE_WORDS,
   // the Claude Code mod's pane and /graph command (cc-source-words.ts)
   ...CC_SOURCE_WORDS,
+  // the editor server's answers to the page, and why it will not start (server-source-words.ts)
+  ...SERVER_SOURCE_WORDS,
 } as const;

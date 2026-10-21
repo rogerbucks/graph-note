@@ -3,6 +3,7 @@
 // - the process that started it exiting, seen as the parent changing;
 // - a stop signal, which is how `/graph stop` ends it.
 // It keeps no file to be found by, so nothing is left behind.
+import { word } from '@thoughtknot/core';
 import { fstatSync } from 'node:fs';
 
 /** How often the process checks that the one that started it is still there. */
@@ -31,12 +32,12 @@ export function watchSession(stop: (reason: string) => void, watch: { input: boo
   };
   for (const signal of STOP_SIGNALS) process.on(signal, () => once(signal));
   if (watch.input && inputIsHeld()) {
-    process.stdin.on('end', () => once('the session ended'));
-    process.stdin.on('error', () => once('the session ended'));
+    process.stdin.on('end', () => once(word('server.session-ended')));
+    process.stdin.on('error', () => once(word('server.session-ended')));
     process.stdin.resume();
   }
   const parent = process.ppid;
   setInterval(() => {
-    if (process.ppid !== parent) once('the process that started it exited');
+    if (process.ppid !== parent) once(word('server.parent-exited'));
   }, PARENT_CHECK_MS).unref();
 }
