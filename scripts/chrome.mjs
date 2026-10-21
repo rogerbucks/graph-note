@@ -19,15 +19,23 @@ export function findChrome(given, which = (n) => execFileSync('which', [n], { en
   throw new Error('no Chrome found: give one with --chrome PATH');
 }
 
+/**
+ * Chrome's first page, from `list`, its list of pages. The list is asked again, up to `tries` times, while it cannot be
+ * read or holds no page yet: Chrome answers with an empty list before its first page is open.
+ */
+export async function firstPage(list, { tries = 100, wait = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+  for (let i = 0; i < tries; i++) {
+    const pages = await list().catch(() => null);
+    const page = Array.isArray(pages) ? pages.find((p) => p.type === 'page') : undefined;
+    if (page) return page;
+    await wait(100);
+  }
+  throw new Error('Chrome opened no page');
+}
+
 /** A DevTools session on Chrome's first page: send(method, params) resolves with the result, or throws its error. */
 async function devtools(port) {
-  let pages;
-  for (let i = 0; i < 100 && !pages; i++)
-    pages = await fetch(`http://127.0.0.1:${port}/json/list`)
-      .then((r) => r.json())
-      .catch(() => new Promise((r) => setTimeout(r, 100)));
-  const page = (pages ?? []).find((p) => p.type === 'page');
-  if (!page) throw new Error('Chrome opened no page');
+  const page = await firstPage(() => fetch(`http://127.0.0.1:${port}/json/list`).then((r) => r.json()));
   const ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((done, fail) => ((ws.onopen = done), (ws.onerror = fail)));
   let id = 0;
@@ -83,7 +91,13 @@ export async function startChrome({ chrome, width = 1400, height = 1000, scale =
   const stop = async () => {
     browser.kill();
     await exited;
-    rmSync(profile, { recursive: true, force: true, maxRetries: 3 });
+    // Chrome's helpers may still write to the profile for a moment after it exits, so its removal is tried again for two
+    // seconds. A profile still busy after that is left in the temporary folder, which is no reason to fail a check.
+    try {
+      rmSync(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+    } catch {
+      // left for the system to clear
+    }
   };
   try {
     const { send, close } = await devtools(port);
