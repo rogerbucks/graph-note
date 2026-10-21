@@ -702,7 +702,8 @@
       "trust_diagram_type_data",
       "trust_source_joined",
       "trust_plugin_isolated",
-      "plugin_point_versions"
+      "plugin_point_versions",
+      "plugin_outside_file"
     ]
   },
   "U1": {

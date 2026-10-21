@@ -1,12 +1,14 @@
 // The sample plug-in outside the packages (examples/sample-plugin, API-10), run as a host runs one it did not ship:
-// - in a real thread, as a browser's Worker is, with the network taken away first;
+// - from its file's text alone, in a real thread as a browser's Worker is, sealed before the file runs;
 // - installed through the registry, with the version of each point it names checked;
 // - each thing it adds held to its point's contract (packages/core/src/plugins-contract.ts), over the port.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
 import { pluginRegistry } from '../packages/core/src/plugins.ts';
-import { isolatedPlugin } from '../packages/core/src/plugin-isolated.ts';
+import { outsidePlugin } from '../packages/core/src/plugin-outside.ts';
 import {
   commandContract,
   diagramContract,
@@ -15,22 +17,20 @@ import {
 } from '../packages/core/src/plugins-contract.ts';
 
 const CLOCK = { setTimeout: (run, ms) => setTimeout(run, ms), clearTimeout: (t) => clearTimeout(t) };
-const SAMPLE = new URL('../examples/sample-plugin/plugin.js', import.meta.url).href;
-const SERVE = new URL('../packages/core/src/plugin-serve.ts', import.meta.url).href;
+const SAMPLE = new URL('../examples/sample-plugin/plugin.js', import.meta.url);
+const OUTSIDE_PATH = fileURLToPath(new URL('../packages/core/src/plugin-outside.ts', import.meta.url));
 
-/** A real thread that loads the sample, takes the network away, and serves it; the host's port to it. */
-function sampleThread() {
+/**
+ * A real thread whose script is a host's start, then the plug-in's body, as a browser's Worker from a Blob would be.
+ * Its start seals the whole global scope; the host's port to it.
+ */
+function outsideThread(body) {
   const w = new Worker(
     `const { parentPort } = require('node:worker_threads');
-     const scope = { onmessage: null, postMessage: (m) => parentPort.postMessage(m) };
-     parentPort.on('message', (data) => scope.onmessage?.({ data }));
-     (async () => {
-       const { lockDown, servePlugin } = await import(${JSON.stringify(SERVE)});
-       const { default: plugin } = await import(${JSON.stringify(SAMPLE)});
-       const kept = lockDown(globalThis);
-       if (kept.length) throw new Error('the network was kept: ' + kept.join(', '));
-       servePlugin(scope, plugin);
-     })().catch((e) => parentPort.postMessage({ failed: e.message }));`,
+     globalThis.postMessage = (m) => parentPort.postMessage(m);
+     parentPort.on('message', (data) => globalThis.onmessage?.({ data }));
+     const thoughtknotServe = require(${JSON.stringify(OUTSIDE_PATH)}).sealOutside(globalThis);
+     ${body}`,
     { eval: true },
   );
   const port = { onmessage: null, onerror: null };
@@ -43,7 +43,7 @@ function sampleThread() {
 
 describe('the sample plug-in, run as a host runs one it did not ship (API-10)', () => {
   test('loads in a worker, and each thing it adds passes its point’s contract', async () => {
-    const iso = await isolatedPlugin(sampleThread(), { clock: CLOCK });
+    const iso = await outsidePlugin(readFileSync(SAMPLE, 'utf8'), outsideThread, { clock: CLOCK });
     const registry = pluginRegistry();
     registry.register(iso.plugin);
     assert.deepEqual(registry.plugins(), ['example.sample']);
@@ -71,7 +71,7 @@ describe('the sample plug-in, run as a host runs one it did not ship (API-10)', 
   });
 
   test('its manifest names the version of each point it uses', async () => {
-    const { default: plugin } = await import(SAMPLE);
+    const { default: plugin } = await import(SAMPLE.href);
     for (const use of plugin.uses) assert.match(use, /^[a-z]+@\d+\.\d+$/, use);
   });
 });

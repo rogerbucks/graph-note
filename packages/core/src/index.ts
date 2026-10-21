@@ -190,6 +190,8 @@ export type { AiProvider, ProviderReading, ProviderRequest } from './plugin-ai.t
 export { diagramContract, themeTokenContract } from './plugins-contract.ts';
 export { isolatedPlugin } from './plugin-isolated.ts';
 export type { IsolatedOptions, IsolatedPlugin, PluginPort } from './plugin-isolated.ts';
+export { OUTSIDE_CHARACTERS, outsideBody, outsidePlugin } from './plugin-outside.ts';
+export { outsideProblem, sealCode, sealOutside } from './plugin-outside.ts';
 export { ISOLATED_POINTS, LOCKED_AWAY, lockDown, servePlugin } from './plugin-serve.ts';
 export type { Added, FromPlugin, PluginScope, ToPlugin } from './plugin-serve.ts';
 export type { DiagramGiven, DiagramMark, DiagramSpace, MarkPoint, PluginDiagram } from './plugin-diagrams.ts';

@@ -979,6 +979,18 @@ and is handed the port between them, as for layouts:
 - The worker asks the host for an ability its manifest names, and the registry's checks still apply.
 - It may add to `ISOLATED_POINTS` only. A panel needs the page; a data export and an AI provider answer at once.
 
+#### A plug-in from its file
+
+`plugin-outside.ts` is how a host loads a plug-in it did not ship, from its file (plugin_outside_file, API-10):
+
+- The host reads the file as text. `outsideProblem` refuses a file that holds the word `import`, exports more than
+  its default, or is too long. Such a file never starts a worker.
+- The worker's script is the host's own start and then `outsideBody`, the file itself. Nothing is imported or
+  evaluated to run it, so the plug-in store's rules hold.
+- The start calls `sealOutside`. It runs `lockDown` and then `sealCode`, which takes away `eval`, `Function`, the
+  maker each kind of function reaches, and timers given text. If anything stays, it throws, and the file never runs.
+- `outsidePlugin` checks the file, starts the worker and hands its port to `isolatedPlugin`.
+
 #### What plug-ins add, and what they reach
 
 - `plugin-points.ts` — what a plug-in adds through each point, the host's abilities, and why each is refused.
