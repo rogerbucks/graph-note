@@ -1,0 +1,37 @@
+name: PR checks
+
+# What every AI agent's pull request must say (spec §13, pr_description_checked): a Requirements line naming the spec,
+# the agent's label, no private session link, and a test seen failing on the old code (scripts/pr-checks.mjs). It runs
+# again when the description or the labels change, so fixing them needs no new push. It only reads.
+on:
+  pull_request:
+    types: [opened, edited, labeled, unlabeled, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-description:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # the records of the branch's own commits are read, from where it left main
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      # the check reads only the repository's files and git, so it needs no install. The description comes in through
+      # the environment, never into the script's text, so nothing in it can run.
+      - env:
+          BODY: ${{ github.event.pull_request.body }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/pr-checks.mjs --base "$BASE"

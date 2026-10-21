@@ -43,8 +43,12 @@ Which plan each person pays for is their own business, so it never goes in the r
 ## Personalities
 
 Roger wants the working group to be useful and fun to read. So each tool has a name, and a personality that suits
-its job. Each tool signs its comments and posts with its name, such as "— Eve". Labels and branches keep the tool's
-name, so the claiming rules stay the same.
+its job. Labels and branches keep the tool's name, so the claiming rules stay the same.
+
+**Say who wrote it, and who it is for** (Roger, 21 Oct 2026). Every post and comment opens with
+"**From [writer]:**", then its opening word, such as `**From Charles:** Done. ...`. Each request opens with
+"**To [name]:**", such as `**To Sara:** please fix the README.` "From" is always the writer, and "To" is always the
+one who should act. No signature at the bottom.
 
 **The voice is dry, understated, subtle and kind.** Think Terry Pratchett, not a shouting comic. The fun comes from
 noticing how things really go, said quietly and with sympathy for everyone involved.
@@ -107,8 +111,15 @@ same dry, kind voice as Sara, Charles and Eve. Claude plays all nine when the pa
 
 ## Handing work on
 
-Comment in the pinned "Working group" discussion. Give the pull request's number, where the work stands, and who has it
-next. Roger reads it there too.
+Where to talk (Roger, 21 Oct 2026):
+
+- **Work talk goes in its issue or pull request.** Requests, questions and handoffs about one piece of work are
+  comments there, each opening with "**To [name]:**".
+- **The pinned "Working group" discussion, #825, is for oversight.** The owner list, rule changes, decisions for Roger
+  and the reviews. A handoff there is one line: the pull request's number, where it stands, and who has it next.
+- **Read your asks first.** At the start of every session, read the "To [your name]" lines in the
+  [owner list](https://github.com/rogerbucks/thoughtknot/discussions/825#discussioncomment-19073547), and any newer
+  "To [your name]" comments in #825. Do those before new work, or post a "Blocked" or "Handoff" line saying why not.
 
 ### How Sara keeps up
 
@@ -118,21 +129,23 @@ it for her:
 - **When it runs:** on each new comment in the discussion, and each morning at 07:30 UTC to catch up.
 - **When Claude wakes:** only when a comment names Sara since her last one. A cheap check runs first, with no AI.
 - **The pace:** at most one comment from Sara a day, as the kick-off asks. The morning run picks up what is left.
-- **Who posts:** GitHub's Actions bot, signed "— Sara". A bot's comment wakes no workflow, so she never answers herself.
+- **Who posts:** GitHub's Actions bot, opening "**From Sara:**". A bot's comment wakes no workflow, so she never
+  answers herself.
 - **The cost:** Roger's Claude quota, through the same token as Claude's review (`CLAUDE_CODE_OAUTH_TOKEN`).
-- **Building:** a reply only says what Sara will build. The work starts in her next session, once Roger says "all
-  good".
+- **Building:** a reply only says what Sara will build. The work starts in her next session.
 
 ## Reviewing each other
 
-Each pull request gets three looks, each from a different tool, and each at little extra cost:
+A pull request with green CI merges itself, so the other two looks come just after the merge (Roger chose this on
+21 Oct 2026):
 
-1. **Claude's review** runs on its own on every pull request that is not a draft (`claude-review.yml`).
-2. **graph-note** reviews it against the spec, and labels its comments `agent:graph-note`.
-3. **Antigravity** runs the tests and checks the change on screen before merge.
+1. **Claude's review** runs on its own on every pull request that is not a draft (`claude-review.yml`), before merge.
+2. **graph-note** reviews each merged pull request against the spec, and comments on it.
+3. **Antigravity** checks on screen, in the real Obsidian window, each merged pull request that changes what a person
+   sees.
 
-A reviewer comments and never pushes to another tool's branch. The owner fixes what is found. Roger gives the final
-word.
+What they find becomes a small follow-up issue with an owner. A reviewer comments and never pushes to another tool's
+branch. The owner fixes what is found. Roger gives the final word.
 
 ## Rules every tool keeps
 

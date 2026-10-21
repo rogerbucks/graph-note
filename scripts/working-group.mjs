@@ -19,8 +19,10 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Sara posts with the workflow's own token, so her comments come from GitHub's Actions bot and end with her name.
+// Sara posts with the workflow's own token, so her comments come from GitHub's Actions bot and open with her name:
+// "**From Sara:**" (Roger, 21 Oct 2026). Her older comments ended "— Sara" instead, and still count as hers.
 const BOT = /^github-actions(\[bot\])?$/;
+const OPENS = /^\s*\*\*From Sara:\*\*/;
 const SIGNED = /(^|\n)— Sara\s*$/;
 const NAMED = /\bSara\b/;
 // An @ pings a GitHub account. Everyone here posts from Roger's account, so only Roger is ever pinged.
@@ -53,7 +55,7 @@ export function items(discussion) {
 }
 
 const login = (item) => item.author?.login ?? '';
-const isSara = (item) => BOT.test(login(item)) && SIGNED.test(item.body ?? '');
+const isSara = (item) => BOT.test(login(item)) && (OPENS.test(item.body ?? '') || SIGNED.test(item.body ?? ''));
 const day = (date) => new Date(date).toISOString().slice(0, 10);
 
 /**
@@ -78,7 +80,8 @@ export function checkReply({ body, replyTo }, discussion) {
   const problems = [];
   const tops = new Set((discussion?.comments?.nodes ?? []).map((c) => c.id));
   if (!tops.has(replyTo)) problems.push(`reply-to "${replyTo}" is not a top-level comment of this discussion`);
-  if (!SIGNED.test(body)) problems.push('the reply is not signed "— Sara" on its last line');
+  if (!OPENS.test(body)) problems.push('the reply does not open with "**From Sara:**"');
+  if (SIGNED.test(body)) problems.push('the reply ends with a signature: "From Sara" at the start says who wrote it');
   for (const [, , name] of body.matchAll(MENTION)) {
     if (name !== 'rogerbucks') problems.push(`the reply pings @${name}: write names without the @ sign`);
   }
