@@ -1,5 +1,5 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). The
-// areas are the display layer and the Obsidian host; each is added as its words move. Each word comes from
+// areas are the display layer, the Obsidian host and the browser page; each is added as its words move. Each word comes from
 // the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
@@ -12,7 +12,12 @@ import ts from 'typescript';
 const ROOT = new URL('../../../', import.meta.url);
 
 /** The folders and files whose words come from the catalogue, from the repository's root. */
-const AREAS = ['packages/core/src/display/', 'packages/core/src/export-write.ts', 'packages/obsidian/src/'];
+const AREAS = [
+  'packages/core/src/display/',
+  'packages/core/src/export-write.ts',
+  'packages/obsidian/src/',
+  'packages/claude-code/page/',
+];
 
 /** The files of the areas, as paths from the repository's root. */
 const files = () =>
@@ -51,6 +56,7 @@ const KEPT = {
   'packages/core/src/display/graph-view/drawing-svg.ts': ['color-mix(in srgb, red 50%, blue)'],
   // the elements that can take the focus, as a selector kept in a constant
   'packages/core/src/display/graph-view/full-screen.ts': ['a[href], button, input, select, textarea, [tabindex]'],
+  'packages/claude-code/page/keyboard.ts': ['a[href], button, input, select, textarea, [tabindex]'],
 };
 
 /** The calls whose strings pick elements of the page, never words: `querySelector('a, b')` and the like. */

@@ -51,7 +51,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
   if (skip) skipLink(doc, skip);
   const say = (text: string) => root.replaceChildren(Object.assign(doc.createElement('p'), { textContent: text }));
   const { token, note } = takeFragment(win);
-  if (!token || !note) return say('Open this page from the link Claude Code gave: it carries what the editor needs.');
+  if (!token || !note) return say(word('page.open-from-link'));
   try {
     const calls = serverCalls(token, win.fetch.bind(win));
     const exports = exportCalls(token, win.fetch.bind(win));
@@ -138,7 +138,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     // the user's accept or reject: the core's review on the note, written by the page's own version-checked write
     const decideOn: Decide = async (id, action, which, staleSeen) => {
       const done = decide(page.text, id, action, which, settings.decider, staleSeen);
-      if (!done.ok) return `Nothing was written: ${done.reason}`;
+      if (!done.ok) return word('page.not-written', { why: done.reason });
       const w = await page.writeWhole(done.note);
       if (!w.ok) {
         if (!w.theirs) {
@@ -186,13 +186,13 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
       .follow(note, (line) => {
         if ('gone' in line) {
           page.feed(line);
-          return announce(`The note is no longer shown: ${line.gone}`);
+          return announce(word('page.note-gone', { why: line.gone }));
         }
         if (line.version === page.version) return;
         page.feed(line);
-        announce('The note changed, and is shown again as it now is.');
+        announce(word('page.note-changed'));
       })
-      .catch(() => announce('The editor stopped sending changes to the note.'));
+      .catch(() => announce(word('page.follow-stopped')));
   } catch (e) {
     say(e instanceof Error ? e.message : String(e));
   }

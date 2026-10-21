@@ -18,10 +18,10 @@ import { EditorSession } from '../src/editor-session.ts';
 import type { ToWrite } from '../src/editor-session.ts';
 import type { FollowLine, Written } from './note-calls.ts';
 import type { NoteReply } from './server-calls.ts';
+import { word } from '../../core/src/words.ts';
 
 /** What is said when the note is deleted while what was typed is not yet written. */
-export const DELETED_ON_PAGE =
-  'The note was deleted while you were typing. What you typed is kept as a draft by the editor, and is offered again if the note comes back.';
+export const deletedOnPage = (): string => word('page.note-deleted');
 
 /** The page's calls on one note. */
 export interface PageNoteCalls {
@@ -40,7 +40,9 @@ let drafts = 0;
 
 /** The note the page edits, by the id the server gave: its block's session, its writes, its drafts. */
 export class PageNote implements EditorNote {
-  readonly deletedMessage = DELETED_ON_PAGE;
+  get deletedMessage(): string {
+    return deletedOnPage();
+  }
   path = '';
   session: PaneSession | null = null;
   private es: EditorSession | null = null;
@@ -181,7 +183,7 @@ export class PageNote implements EditorNote {
   declareDeferred(indent: string): Promise<DeclaredDeferred> {
     return this.queued(async () => {
       const s = this.session;
-      if (!s) throw new Error('the note is not open');
+      if (!s) throw new Error(word('page.note-not-open'));
       const { texts, index } = s.texts(this.seen.text);
       const here = declareDeferredBlock(texts, s.graph, indent);
       if (here.block === index) return { text: here.text, whole: s.reading(this.seen.text).whole[s.graph] };
@@ -250,7 +252,7 @@ export class PageNote implements EditorNote {
     }
     if (sent.theirs) {
       this.feed(sent.theirs);
-      return { reason: 'the block has changed since the pane read it', draft: typed };
+      return { reason: word('page.block-changed'), draft: typed };
     }
     if (sent.status === 410) this.gone = true;
     return { reason: sent.status === 410 ? NOTE_DELETED : sent.why, draft: typed };

@@ -385,9 +385,9 @@ export function accessCases({ at, ROOT, LAYER }) {
       });
       assert.deepEqual(lines(failed.root), await expected(ONE));
       assert.match(failed.root.textContent, /The layout stopped\./);
-      const { NO_GRAPH } = await page('graph-section.ts');
+      const { noGraph } = await page('graph-section.ts');
       const none = await shown('plain');
-      assert.equal(none.root.textContent, NO_GRAPH);
+      assert.equal(none.root.textContent, noGraph());
     });
 
     test('the page redraws the words whenever the note changes: a decision or a change on disk', () => {

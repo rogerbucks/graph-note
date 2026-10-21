@@ -5,6 +5,7 @@
 // The page names no folder or path of its own. The server writes the files only as new ones in the export folder. It
 // answers the names they were given (a number is added to one that was taken). The token is the one the page holds,
 // passed in. Every address is from the server's root.
+import { word } from '../../core/src/words.ts';
 
 /** One file of an export: its name alone, with its text or its bytes. */
 export interface SavedFile {
@@ -35,7 +36,7 @@ export function exportCalls(token: string, fetcher: typeof fetch) {
     /** Where an export of the note goes. */
     target: async (id: string): Promise<ExportTarget> => {
       const reply = await fetcher(`/api/export/${encodeURIComponent(id)}`, { headers });
-      if (!reply.ok) throw new Error(`The editor server said ${reply.status}: ${await reply.text()}`);
+      if (!reply.ok) throw new Error(word('page.server-said-why', { status: reply.status, why: await reply.text() }));
       return (await reply.json()) as ExportTarget;
     },
     /** Hands the files over to be written as new files; never rejects: a refusal is said in words. */
@@ -55,7 +56,7 @@ export function exportCalls(token: string, fetcher: typeof fetch) {
         return { written: ((await reply.json()) as { written: string[] }).written };
       } catch (e) {
         return {
-          stopped: `The export could not be sent to the editor: ${e instanceof Error ? e.message : String(e)}. Nothing was saved.`,
+          stopped: word('page.export-not-sent', { why: e instanceof Error ? e.message : String(e) }),
         };
       }
     },

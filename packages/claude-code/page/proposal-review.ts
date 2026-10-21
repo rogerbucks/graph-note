@@ -10,6 +10,7 @@ import { deciderName } from '../../core/src/proposals-judgement.ts';
 import { ProposalReview } from '../../core/src/proposals-review.ts';
 import type { ProposalShown, Reviewed, Which } from '../../core/src/proposals-shown.ts';
 import { changeSetId } from '../../core/src/proposals-text.ts';
+import { word } from '../../core/src/words.ts';
 
 /** One proposal as the card shows it. */
 export interface Card {
@@ -24,7 +25,7 @@ export interface Card {
 /** The review of the change set `id` in the note, or why it cannot be read. */
 function reviewOf(note: string, id: string): ProposalReview | { refused: string } {
   const span = gqlSpans(note).find((s) => changeSetId(s.text)?.id === id);
-  return span ? ProposalReview.fromChangeSet(span.text, note) : { refused: `the note holds no proposal ${id}` };
+  return span ? ProposalReview.fromChangeSet(span.text, note) : { refused: word('page.no-proposal', { id }) };
 }
 
 /** The proposals in the note that still have a change waiting, each shown over the note with nothing written. */

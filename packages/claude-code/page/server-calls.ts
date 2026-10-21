@@ -8,6 +8,7 @@ import type { Settings } from '../../core/src/settings.ts';
 import type { PageVersion } from './changes-section.ts';
 import type { PageItemFiles } from './review-section.ts';
 import type { ReviewItem } from '../../core/src/github-review-items.ts';
+import { word } from '../../core/src/words.ts';
 
 /** What the server gives for a note: its text, its version and any draft kept for it, with the version it was typed against. */
 export interface NoteReply {
@@ -27,14 +28,15 @@ export function takeFragment(win: Window): { token: string; note: string } {
 export function serverCalls(token: string, fetcher: typeof fetch) {
   const get = async (path: string): Promise<unknown> => {
     const reply = await fetcher(`/api/${path}`, { headers: { authorization: `Bearer ${token}` } });
-    if (!reply.ok) throw new Error(`The editor server said ${reply.status}: ${await reply.text()}`);
+    if (!reply.ok) throw new Error(word('page.server-said-why', { status: reply.status, why: await reply.text() }));
     return reply.json();
   };
   // an answer the server explains with a `why` is said in its words
   const explained = async (path: string): Promise<unknown> => {
     const reply = await fetcher(`/api/${path}`, { headers: { authorization: `Bearer ${token}` } });
     const body = (await reply.json().catch(() => ({}))) as { why?: unknown };
-    if (!reply.ok) throw new Error(typeof body.why === 'string' ? body.why : `The editor server said ${reply.status}.`);
+    if (!reply.ok)
+      throw new Error(typeof body.why === 'string' ? body.why : word('page.server-said', { status: reply.status }));
     return body;
   };
   const id = (note: string) => `notes/${encodeURIComponent(note)}`;
