@@ -1,5 +1,5 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). The
-// areas are the display layer and parts of the Obsidian host; each is added as its words move. Each word comes from
+// areas are the display layer and the Obsidian host; each is added as its words move. Each word comes from
 // the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
@@ -12,22 +12,7 @@ import ts from 'typescript';
 const ROOT = new URL('../../../', import.meta.url);
 
 /** The folders and files whose words come from the catalogue, from the repository's root. */
-const AREAS = [
-  'packages/core/src/display/',
-  'packages/core/src/export-write.ts',
-  'packages/obsidian/src/export/',
-  'packages/obsidian/src/images/',
-  'packages/obsidian/src/links/',
-  'packages/obsidian/src/proposals/',
-  'packages/obsidian/src/sources/',
-  'packages/obsidian/src/block.ts',
-  'packages/obsidian/src/view-block.ts',
-  'packages/obsidian/src/reading-view.ts',
-  'packages/obsidian/src/inline-editors.ts',
-  'packages/obsidian/src/step-block.ts',
-  'packages/obsidian/src/schema-block.ts',
-  'packages/obsidian/src/live-preview.ts',
-];
+const AREAS = ['packages/core/src/display/', 'packages/core/src/export-write.ts', 'packages/obsidian/src/'];
 
 /** The files of the areas, as paths from the repository's root. */
 const files = () =>
@@ -50,6 +35,16 @@ const KEPT = {
   'packages/core/src/display/editor/editor-note.ts': ['the note was deleted'],
   // the fields a person types in, as a selector kept in a constant
   'packages/obsidian/src/live-preview.ts': ['input, textarea, select, [contenteditable="true"]'],
+  // the note the drafts are recovered into: words written into a note are its bytes, never translated
+  'packages/obsidian/src/drafts.ts': [
+    '\n## {}, graph {}\n\nKept {}, as draft {}.\n\n{}\n{}\n{}',
+    'What was typed in a graph and could not be written, as ThoughtKnot kept it.',
+    '# Kept drafts\n\n{}\n{}\n',
+  ],
+  // compared with the purpose a person typed for each model in the settings, never shown
+  'packages/obsidian/src/ai/send-dialog.ts': ['Proposing changes'],
+  // said once in the console, for a developer
+  'packages/obsidian/src/layout-worker/layout-worker.ts': '*',
   // said to a developer whose card option cannot be made read-only, in the console
   'packages/core/src/display/graph-view/read-only.ts': '*',
   // a colour the code asks the browser whether it can mix, never shown

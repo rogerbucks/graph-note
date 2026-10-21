@@ -11,7 +11,12 @@ import type ThoughtKnotPlugin from '../main';
 import { noteToRewrite } from '../reading-view';
 
 /** The command's id and name. */
-export const IMPORT_COMMAND = { id: 'import-from-database', name: 'Import from a database' };
+export const IMPORT_COMMAND = {
+  id: 'import-from-database',
+  get name(): string {
+    return word('host.command.import');
+  },
+};
 
 /** Opens the import dialog on the note in front; or says why not: no database file is in the vault. */
 export function importFromDatabase(plugin: ThoughtKnotPlugin): void {
@@ -24,7 +29,7 @@ export function importFromDatabase(plugin: ThoughtKnotPlugin): void {
     return;
   }
   // the rows are written into the note, so a note in reading view is refused, as any command that writes is
-  const front = noteToRewrite(plugin.app.workspace, 'to import into it');
+  const front = noteToRewrite(plugin.app.workspace, word('host.to-import'));
   if (front) new ImportDialog(plugin, front.file, files).open();
 }
 

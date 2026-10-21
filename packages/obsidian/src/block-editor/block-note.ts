@@ -15,6 +15,7 @@ import {
   indentText,
   lockBlock,
   namesSharedSchema,
+  word,
 } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import type { DeclaredDeferred } from '@thoughtknot/core/display/graph-view/view-options';
@@ -24,11 +25,13 @@ import type { EditorNote, KeptDraft, Refused, Reread } from '@thoughtknot/core/d
 import { lockInNote, stepNote, writeThroughEditor, writeThroughVault } from './note-writing';
 
 /** What is said when the note being edited is deleted while what was typed is not yet written. */
-export const DELETED_MESSAGE = `The note was deleted while you were typing. What you typed is kept as a draft: the command "${RECOVER_COMMAND.name}" writes it into a note.`;
+export const deletedMessage = (): string => word('host.note-deleted', { command: RECOVER_COMMAND.name });
 
 /** The note a block editor edits, and its session on one block of it: the vault's, written safely (spec §4, §9). */
 export class BlockNote implements EditorNote {
-  readonly deletedMessage = DELETED_MESSAGE;
+  get deletedMessage(): string {
+    return deletedMessage();
+  }
   /** The note's path. */
   path = '';
   /** The note's text, as last read or written. */
@@ -129,7 +132,7 @@ export class BlockNote implements EditorNote {
   async declareDeferred(indent: string): Promise<DeclaredDeferred> {
     const s = this.session,
       file = this.file();
-    if (!s || !file) throw new Error('the note is not open');
+    if (!s || !file) throw new Error(word('host.note-not-open'));
     const { texts, index } = s.texts(this.text);
     const here = declareDeferredBlock(texts, s.graph, indent);
     if (here.block === index) return { text: here.text, whole: s.reading(this.text).whole[s.graph] };
@@ -162,7 +165,7 @@ export class BlockNote implements EditorNote {
       vault.on('rename', (f, old) => this.renamed(f.path, old)),
       vault.on('delete', (f) => {
         if (!this.isOrHolds(f.path)) return;
-        if (this.session?.dirty) new Notice(DELETED_MESSAGE);
+        if (this.session?.dirty) new Notice(deletedMessage());
         on.deleted();
       }),
     ];

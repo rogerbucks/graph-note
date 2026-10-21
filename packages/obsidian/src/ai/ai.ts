@@ -4,17 +4,27 @@
 // offer first (host_ai_first), so only the models set up in the settings are offered. And the command that clears the
 // record of sends (record_every_send), which keeps only the last ones and never the text sent.
 import { Notice } from 'obsidian';
-import { aiReady } from '@thoughtknot/core';
+import { aiReady, word } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { classificationInText, classificationOf, higherClassification } from '../export/classification';
 import { noteToRewrite } from '../reading-view';
 import { SendDialog } from './send-dialog';
 
 /** The command's id and name. */
-export const AI_COMMAND = { id: 'ask-ai-model', name: 'Ask an AI model to propose changes' };
+export const AI_COMMAND = {
+  id: 'ask-ai-model',
+  get name(): string {
+    return word('host.command.ask-ai');
+  },
+};
 
 /** The command that clears the record of sends: its id and name. */
-export const CLEAR_SENDS_COMMAND = { id: 'clear-ai-sends', name: 'Clear the record of sends to AI models' };
+export const CLEAR_SENDS_COMMAND = {
+  id: 'clear-ai-sends',
+  get name(): string {
+    return word('host.command.clear-sends');
+  },
+};
 
 /** How many sends the record keeps: the oldest is let go when one more is recorded. */
 export const SENDS_KEPT = 200;
@@ -27,7 +37,7 @@ export async function askAi(plugin: ThoughtKnotPlugin): Promise<void> {
     return;
   }
   // the proposal is written into the note, so a note in reading view is refused, as any command that writes is
-  const front = noteToRewrite(plugin.app.workspace, 'to ask an AI model about its graph');
+  const front = noteToRewrite(plugin.app.workspace, word('host.to-ask-ai'));
   if (!front) return;
   const text = await plugin.app.vault.read(front.file);
   // read from the text being sent as well as the metadata cache, which can be behind it. The higher is taken. Read
@@ -47,5 +57,5 @@ export async function askAi(plugin: ThoughtKnotPlugin): Promise<void> {
 /** Clears the record of sends, saying how many were let go. */
 export async function clearAiSends(plugin: ThoughtKnotPlugin): Promise<void> {
   const n = await plugin.clearAiSends();
-  new Notice(`Cleared the record of ${n} send${n === 1 ? '' : 's'} to AI models.`);
+  new Notice(word('host.sends-cleared', { count: n }));
 }
