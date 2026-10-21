@@ -1,5 +1,5 @@
 // No words the person reads are written in the code of the areas done so far (editor spec §42, words_catalogue). Those
-// areas are the hosts, the display layer and the core's reading problems. Each is added as its words move. Each word
+// areas are the hosts, the display layer and the core's reading and style problems. Each is added as its words move. Each word
 // comes from the catalogue by key, so a translation reaches it. The check reads every string the code holds. It
 // flags any that reads as words. That is two plain words with a space, or a word that starts a control's text, name
 // or hint.
@@ -36,6 +36,16 @@ const AREAS = [
   'packages/core/src/suggested-names.ts',
   'packages/core/src/image-links.ts',
   'packages/core/src/schema-picture.ts',
+  // the core's problems found while checking a style graph
+  'packages/core/src/style-checks.ts',
+  'packages/core/src/style-choice-checks.ts',
+  'packages/core/src/style-conflicts.ts',
+  'packages/core/src/style-graph.ts',
+  'packages/core/src/style-reader.ts',
+  'packages/core/src/style.ts',
+  'packages/core/src/link-flow.ts',
+  'packages/core/src/picture.ts',
+  'packages/core/src/untangle-saved.ts',
 ];
 
 /** The files of the areas, as paths from the repository's root. */
