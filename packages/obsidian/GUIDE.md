@@ -104,7 +104,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 - those words are the core's `hosts/refusal-words.ts`, shared with the browser editor's page. They come in two voices:
   the banner's, and the notice of an export stopped for the same reason ("what happened: why. Nothing was saved. What to
   do."). They also cover a layout that failed: the worker or its engine raised an error, and its reason is put in
-  brackets.
+  brackets. The host hands in the core's `word`, `formatCount` and `formatSize`, so they are said in the reader's
+  language.
 
 ### `src/outside/` — plug-ins from outside ThoughtKnot (spec §54, plugin_outside_file)
 

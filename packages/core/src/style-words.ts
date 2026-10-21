@@ -7,6 +7,7 @@ import type { Problem } from './note-reading.ts';
 import { STYLE_KEYS, article, orList, styleProblem } from './style-graph.ts';
 import type { Frame, StyleAt, StyleKind } from './style-graph.ts';
 import { trim } from './whitespace.ts';
+import { word } from './words.ts';
 
 /**
  * A problem for each key written on a thing of `kind` that the style graph does not know, on the key itself
@@ -34,10 +35,13 @@ export function unknownKeys(
       return styleProblem(
         graph,
         at,
-        `${k} is not a key ${article(kind)} ${kind} uses`,
-        by.length
-          ? `change ${k} to ${by.length > 1 ? 'the one you mean: ' : ''}${orList(by)}`
-          : `remove ${k}, or use one of ${orList(known)}`,
+        // the kind is the style graph's own label, such as Look or Arrows, so it takes the article English gives it
+        word(article(kind) === 'an' ? 'styling.key-unknown.an' : 'styling.key-unknown.a', { key: k, kind }),
+        by.length > 1
+          ? word('styling.change-to-meant', { written: k, among: orList(by) })
+          : by.length
+            ? word('styling.change-to', { written: k, to: orList(by) })
+            : word('styling.key.fix', { key: k, among: orList(known) }),
         { ...(by.length ? { replace: { written: k, with: by } } : {}), ...(span ? { span } : {}) },
       );
     });
@@ -51,8 +55,8 @@ export interface FrameFault {
   clean?: string;
 }
 
-const FOUR = "frame must be four numbers, 'x,y,width,height'";
-const EXAMPLE = "write it as frame: '0,0,300,200'";
+/** What a frame that is not four numbers says, and its fix, in the reader's language. */
+const four = (): FrameFault => ({ message: word('styling.frame.four'), fix: word('styling.frame.four.fix') });
 /**
  * A number as a frame is written, by `styleEdit` or by hand. It is an optional sign, digits with an optional dot (`5.`)
  * or a dot and digits (`.5`), and an optional exponent. Never hexadecimal (`0x10`), which `Number` would read.
@@ -67,24 +71,21 @@ const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
  * without them. If that is still not four numbers the fault says so, and the fix is still to remove the strays.
  */
 export function readFrame(written: unknown): { frame: Frame } | FrameFault {
-  if (typeof written !== 'string') return { message: FOUR, fix: EXAMPLE };
+  if (typeof written !== 'string') return four();
   const kept = written
     .split(',')
     .map(trim)
     .filter((part) => part !== '');
-  if (!kept.length || !kept.every((part) => NUMBER.test(part) && Number.isFinite(Number(part))))
-    return { message: FOUR, fix: EXAMPLE };
+  if (!kept.length || !kept.every((part) => NUMBER.test(part) && Number.isFinite(Number(part)))) return four();
   const clean = kept.join(','),
-    four = kept.length === 4;
+    numbers = kept.length === 4;
   if (clean !== written)
     return {
-      message: `frame '${written}' has a stray comma or space${four ? '' : ', and is not four numbers'}`,
-      fix: four
-        ? `change it to '${clean}'`
-        : `remove the stray comma or space, giving '${clean}', then write four numbers, 'x,y,width,height'`,
+      message: word(numbers ? 'styling.frame.stray' : 'styling.frame.stray-not-four', { written }),
+      fix: word(numbers ? 'styling.frame.stray.fix' : 'styling.frame.stray-not-four.fix', { clean }),
       clean,
     };
-  if (!four) return { message: FOUR, fix: EXAMPLE };
+  if (!numbers) return four();
   const [x = 0, y = 0, width = 0, height = 0] = kept.map(Number);
   return { frame: { x, y, width, height } };
 }

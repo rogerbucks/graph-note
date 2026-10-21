@@ -6,6 +6,7 @@ import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
 import { blankText, items, lineAt } from './block-items.ts';
 import { graphOfBlock } from './blocks.ts';
+import { formatList } from './locale-formats.ts';
 import { quoted } from './lock.ts';
 import { nameFromText } from './name-suggestions.ts';
 import type { NoteReading, Problem } from './note-reading.ts';
@@ -13,6 +14,7 @@ import { removal } from './path-edits.ts';
 import { acceptNameFirst } from './suggested-names.ts';
 import { S, trim } from './whitespace.ts';
 import { writtenIn } from './written-things.ts';
+import { word } from './words.ts';
 import type { Written } from './written-things.ts';
 
 /** What the path functions read of a note: its graphs as drawn, its problems, its graphs as read and the blocks as written. */
@@ -73,18 +75,16 @@ export class PathRecorder {
 const HIDDEN = new Set<string>(gs.SCHEMA_LABELS);
 // a title is one line: a line break in it, of any kind, is a space
 const LINE_BREAKS = new RegExp(`[\\n\\r${String.fromCodePoint(0x2028, 0x2029)}]+`, 'g');
-const and = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
-const or = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} or ${xs.at(-1)}`);
 
 /** Why a title and steps cannot be written as a path in the graph `g`, else null. */
 function refusal(reading: PathReading, graph: string, g: Graph, title: string, steps: string[]): string | null {
-  if (!title) return 'a path needs a title: give it one before it is written';
-  if (!steps.length) return 'a path with no steps is not written: tap the boxes of the walk in order first';
+  if (!title) return word('paths.refused.no-title');
+  if (!steps.length) return word('paths.refused.no-steps');
   for (const key of steps) {
     const labels = g.nodes.get(key)?.[0];
-    if (!labels) return `${key} is not in graph ${graph}, so it cannot be a step`;
+    if (!labels) return word('paths.refused.not-in-graph', { thing: key, graph });
     const bar = [...labels].find((l) => l === 'Path' || l === 'Concept' || HIDDEN.has(l));
-    if (bar) return `${key} is a ${bar}, which a step cannot be: a path's steps are facts`;
+    if (bar) return word('paths.refused.not-a-fact', { thing: key, kind: bar });
   }
   // a step drawn under a suggested name would write that name without its fix (§4, unnamed_drawn_suggested)
   const first = acceptNameFirst(reading, graph, steps);
@@ -96,7 +96,7 @@ function refusal(reading: PathReading, graph: string, g: Graph, title: string, s
   const has = (kind: string, name: string) => types.some((t) => t.kind === kind && t.name === name);
   const lacking = [...(has('node', 'Path') ? [] : ['Path']), ...(has('edge', 'STEP') ? [] : ['STEP'])];
   return lacking.length
-    ? `graph ${graph} is locked and its schema does not declare ${and(lacking)}: declare ${lacking.length > 1 ? 'them' : 'it'} in the schema first`
+    ? word('paths.refused.locked', { graph, lacking: formatList(lacking), count: lacking.length })
     : null;
 }
 
@@ -118,14 +118,14 @@ export function pathBlock(
   indent = '    ',
 ): PathBlock {
   const g = reading.whole[graph] ?? reading.world[graph];
-  if (!g) return { refused: `there is no graph ${graph} to write a path in` };
+  if (!g) return { refused: word('paths.refused.no-graph', { graph }) };
   const name = trim(title.replace(LINE_BREAKS, ' '));
   const why = refusal(reading, graph, g, name, steps);
   if (why) return { refused: why };
   const all = items(block),
     last = all.at(-1);
   if (last && /^(SET|MATCH|INSERT)\b/i.test(blankText(block.slice(last.from, last.to)))) {
-    return { refused: 'the block ends with a SET or MATCH: write the path in a block of its own' };
+    return { refused: word('paths.refused.block-ends') };
   }
   const taken = new Map<string, string>();
   for (const w of [reading.world[graph], g])
@@ -228,7 +228,7 @@ export class PathPlayer {
 
   /** Why a path cannot be played — it has no steps, so there is no story — or null when it can. */
   static refusal(path: WalkedPath): string | null {
-    return path.steps.length ? null : `the path ${path.title} has no steps`;
+    return path.steps.length ? null : word('paths.no-steps', { path: path.title });
   }
 
   /** The step now on. A missing step is stopped on like any other. */
@@ -282,7 +282,10 @@ export class PathPlayer {
 
   private sentenceAt(i: number): string {
     const step = this.path.steps[i] as PathStep;
-    return `Step ${i + 1} of ${this.path.steps.length}: ${step.missing ? `missing. ${step.key} is not in the graph.` : step.text}`;
+    const at = { step: String(i + 1), steps: String(this.path.steps.length) };
+    return step.missing
+      ? word('paths.step-missing', { ...at, thing: step.key })
+      : word('paths.step', { ...at, text: step.text });
   }
 }
 
@@ -291,12 +294,13 @@ function missingStep(reading: PathReading, graph: string, path: WalkedPath, x: G
   const p = x.problem;
   // a near miss drawn as an estimate keeps its change; a report made here before has its own edit, which is no estimate
   const near = p.replace?.written === x.key ? p.replace.with : [];
-  const said =
+  const what = { path: path.title, thing: x.key, graph };
+  const message =
     near.length === 1
-      ? `; it is drawn as an estimate of ${near[0]}`
+      ? word('paths.missing-step.estimate', { ...what, near: near[0] ?? '' })
       : near.length > 1
-        ? `; ${and(near)} are equally close, so it is not drawn`
-        : '';
+        ? word('paths.missing-step.tied', { ...what, near: formatList(near) })
+        : word('paths.missing-step', what);
   const edit = near.length ? { replace: p.replace } : removal(reading.texts[p.block] ?? '', p.line, p.dropped ?? '');
   return {
     graph,
@@ -304,10 +308,10 @@ function missingStep(reading: PathReading, graph: string, path: WalkedPath, x: G
     line: p.line,
     severity: p.severity,
     kind: 'broken-links',
-    message: `the path ${path.title} steps through ${x.key}, which is not in graph ${graph}${said}`,
+    message,
     fix: near.length
-      ? `change ${x.key} to ${or(near)}, remove the step, or restore ${x.key}`
-      : `remove the step, or restore ${x.key}`,
+      ? word('paths.missing-step.fix-near', { thing: x.key, near: formatList(near, 'disjunction') })
+      : word('paths.missing-step.fix', { thing: x.key }),
     ...(p.dropped === undefined ? {} : { dropped: p.dropped }),
     ...edit,
   };
@@ -351,8 +355,8 @@ export function pathProblems(reading: PathReading, graph?: string): Problem[] {
         block,
         line: thing ? lineAt(reading.texts[block] ?? '', thing.open) : 1,
         severity: 'warning',
-        message: `the path ${path.title} has no steps`,
-        fix: 'record its steps by tapping boxes in order, or remove the path',
+        message: word('paths.no-steps', { path: path.title }),
+        fix: word('paths.no-steps.fix'),
       });
     }
   }

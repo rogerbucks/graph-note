@@ -1,18 +1,24 @@
 // A proposal checked by the graph spec's own change-set check (editor spec §17, proposals_checked). The change set, as
 // the note holds it, is run against the note's other graphs by `checkChangeset`. Every line of its answer is kept to be
-// shown. The same check names the proposer's kind: a Model or a Person in the note's graphs, which is all the graph
-// says of it.
+// shown, in the person's language, with the key of its word (check-words.ts). The same check names the proposer's
+// kind: a Model or a Person in the note's graphs, which is all the graph says of it.
 import gs from '@thoughtknot/graph-spec';
 import { items } from './block-items.ts';
 import { dataKind, gqlSpans } from './blocks.ts';
+import { checkWords } from './check-words.ts';
 import { readNote } from './drawing.ts';
 import type { ProposerKind } from './proposals.ts';
+import { readerWords } from './reader-words.ts';
 import { word } from './words.ts';
+import type { WordKey } from './words.ts';
 
-/** What the check said of a proposal: each thing it checked, and whether the proposal passes every one. */
+/**
+ * What the check said of a proposal: each thing it checked, and whether the proposal passes every one. Each line is
+ * in the person's language, with the key of its word, or null for a line the core does not know.
+ */
 export interface ProposalCheck {
   passed: boolean;
-  results: { label: string; ok: boolean }[];
+  results: { label: string; ok: boolean; id: string | null }[];
 }
 
 /** The blocks a change set is checked against: the note's graphs and schemas (never a change set, a query or a style). */
@@ -35,27 +41,41 @@ export function checkProposal(note: string, block: string, shared: readonly stri
   // the last change rejected, and leaves it with no known author to ask for
   const parts = gs.splitChangeset(block);
   if (!parts.changes.length && !items(parts.additions).length)
-    return { passed: true, results: [{ label: word('proposing.check.nothing-waits'), ok: true }] };
+    return {
+      passed: true,
+      results: [{ label: word('proposing.check.nothing-waits'), ok: true, id: 'proposing.check.nothing-waits' }],
+    };
   try {
     const { results } = gs.checkChangeset(baseOf(note, shared), block);
-    return { passed: results.every(([, ok]) => ok), results: results.map(([label, ok]) => ({ label, ok })) };
+    const said = results.map(([label, ok]) => {
+      const { id, said: words } = checkWords(label);
+      return { label: words, ok, id };
+    });
+    return { passed: results.every(([, ok]) => ok), results: said };
   } catch (e) {
     if (!(e instanceof gs.ProfileError)) throw e;
     return {
       passed: false,
-      results: [{ label: word('proposing.check.cannot-load', { line: String(e.line), why: e.msg }), ok: false }],
+      results: [
+        {
+          label: word('proposing.check.cannot-load', { line: String(e.line), why: readerWords(e).message }),
+          ok: false,
+          id: 'proposing.check.cannot-load',
+        },
+      ],
     };
   }
 }
 
-const MOVED = /^it was made against the graph as it stands/;
+/** The key of the line that says the graph has moved since the set was made. */
+const MOVED: WordKey = 'check.made-against-now';
 
 /**
  * Why a proposal must not be accepted or written, or null: the check failed, saying which lines. `moved: 'seen'` leaves out
  * the line that says the graph has moved since, which the stale notice has already said and the person has read.
  */
 export function checkRefusal(check: ProposalCheck, moved: 'seen' | 'counts'): string | null {
-  const failed = check.results.filter((r) => !r.ok && !(moved === 'seen' && MOVED.test(r.label)));
+  const failed = check.results.filter((r) => !r.ok && !(moved === 'seen' && r.id === MOVED));
   return failed.length ? word('proposing.check.fails', { failed: failed.map((r) => r.label).join('; ') }) : null;
 }
 

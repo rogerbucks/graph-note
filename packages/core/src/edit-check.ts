@@ -6,6 +6,7 @@
 // may be another's.
 import { dataKind, graphOf } from './blocks.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
+import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
 
 /** The names a block's text writes or names: each thing's name, and an id given as a property. */
@@ -71,5 +72,5 @@ export function editRefusal(
     texts.flatMap((t, i) => (i !== index && typeof dataKind(t) === 'string' && graphOf(t) === graph ? given(t) : [])),
   );
   const taken = keys.find((n) => own.includes(n) && (elsewhere.has(n) || own.filter((x) => x === n).length > 1));
-  return taken ? `${taken} is already a name in graph ${graph}: choose another` : null;
+  return taken ? word('editing.name-taken', { name: taken, graph }) : null;
 }

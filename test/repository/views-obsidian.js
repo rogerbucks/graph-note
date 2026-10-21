@@ -261,7 +261,8 @@ export const OBSIDIAN = {
     const { env, el } = await shownBlock(noteOf(walk), 0);
     clock(env);
     labelled(el, word('walk.play', { title: 'Sunday walk' })).click();
-    assert.match(el.querySelector('.thoughtknot-walk [aria-live]').textContent, /Step 1 of 2/);
+    const said = word('paths.step', { step: '1', steps: '2', text: 'Home' });
+    assert.equal(el.querySelector('.thoughtknot-walk [aria-live]').textContent, said);
     return { env, el };
   },
   'adding a thing, while editing in place': async () => {

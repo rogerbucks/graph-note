@@ -7,6 +7,7 @@ import type { NoteReading } from './note-reading.ts';
 import { blockItems } from './block-items.ts';
 import { hops } from './estimates.ts';
 import { quoted } from './lock.ts';
+import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
 
 /** The kinds of value the document profile holds. It holds no lists. */
@@ -24,26 +25,26 @@ export function parseValue(type: PropType | 'list', input: string): Parsed {
     case 'number':
       return /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(v)
         ? { ok: true, gql: v }
-        : { ok: false, error: 'expected a number, such as 12 or 3.5' };
+        : { ok: false, error: word('editing.value.number') };
     case 'date': {
       const ok =
         /^\d{4}-\d\d-\d\d$/.test(v) &&
         !Number.isNaN(Date.parse(`${v}T00:00:00Z`)) &&
         new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
-      return ok ? { ok: true, gql: `DATE '${v}'` } : { ok: false, error: 'expected a date, written YYYY-MM-DD' };
+      return ok ? { ok: true, gql: `DATE '${v}'` } : { ok: false, error: word('editing.value.date') };
     }
     case 'datetime': {
       const m = /^\d{4}-\d\d-\d\d[T ]\d\d:\d\d(:\d\d(\.\d{1,6})?)?(Z|[+-]\d\d:?\d\d)?$/.exec(v);
-      if (!m) return { ok: false, error: 'expected a date and time, written YYYY-MM-DDTHH:MM:SS+HH:MM' };
-      if (!m[3]) return { ok: false, error: 'an instant needs its offset, such as +10:00 or Z' };
+      if (!m) return { ok: false, error: word('editing.value.datetime') };
+      if (!m[3]) return { ok: false, error: word('editing.value.offset') };
       return { ok: true, gql: `DATETIME '${v}'` };
     }
     case 'boolean':
       return /^(true|false)$/i.test(v)
         ? { ok: true, gql: v.toUpperCase() }
-        : { ok: false, error: 'expected true or false' };
+        : { ok: false, error: word('editing.value.boolean') };
     case 'list':
-      return { ok: false, error: 'the document profile holds no lists: write one property for each value' };
+      return { ok: false, error: word('editing.value.list') };
   }
 }
 
@@ -198,7 +199,7 @@ function mapOf(block: string, graph: string, t: Target): MapAt {
     if (!m || m.index === undefined)
       return {
         ok: false,
-        reason: `${t.thing} is not written in this block: edit it where it is written, in graph ${graph}`,
+        reason: word('editing.not-in-block', { thing: t.thing, graph }),
       };
     if (m[2]) {
       open = m.index + m[0].indexOf(m[2]);
@@ -206,7 +207,8 @@ function mapOf(block: string, graph: string, t: Target): MapAt {
     } else at = m.index + m[0].replace(/\s*\)$/, '').length;
   } else {
     const m = linkBrackets(b)[t.link];
-    if (!m || m.index === undefined) return { ok: false, reason: `this block has no link number ${t.link + 1}` };
+    if (!m || m.index === undefined)
+      return { ok: false, reason: word('editing.no-link-number', { number: String(t.link + 1) }) };
     if (m[1]) {
       open = m.index + m[0].indexOf(m[1]);
       close = open + m[1].length - 1;
@@ -231,7 +233,7 @@ function mapOf(block: string, graph: string, t: Target): MapAt {
 }
 
 const ONE_WORD = /^[A-Za-z_]\w*$/;
-const notHere = (key: string) => `${key} is not written in its pattern here: change it where it is written`;
+const notHere = (key: string) => word('editing.property.not-in-pattern', { key });
 
 /**
  * Sets a property in the pattern of this block that writes the thing. Or it sets it in the brackets of the block's
@@ -239,9 +241,8 @@ const notHere = (key: string) => `${key} is not written in its pattern here: cha
  * changes. A property set elsewhere (by SET, or in another block) cannot be removed here, and says so.
  */
 export function setProperty(block: string, graph: string, t: Target, key: string, gql: string | null): Edit {
-  if ('thing' in t && key === 'id')
-    return { ok: false, reason: 'the id is the thing’s name: rename the thing instead' };
-  if (!ONE_WORD.test(key)) return { ok: false, reason: 'a property name is one word: letters, digits and underscores' };
+  if ('thing' in t && key === 'id') return { ok: false, reason: word('editing.property.id') };
+  if (!ONE_WORD.test(key)) return { ok: false, reason: word('editing.property.word') };
   const map = mapOf(block, graph, t);
   if (!map.ok) return map;
   const { open, close, at, entries } = map;
@@ -292,12 +293,11 @@ export function setProperty(block: string, graph: string, t: Target, key: string
  * already has is refused, as renaming onto it would lose that property's value.
  */
 export function renameProperty(block: string, graph: string, t: Target, from: string, to: string): Edit {
-  if ('thing' in t && (from === 'id' || to === 'id'))
-    return { ok: false, reason: 'the id is the thing’s name: rename the thing instead' };
-  if (!ONE_WORD.test(to)) return { ok: false, reason: 'a property name is one word: letters, digits and underscores' };
+  if ('thing' in t && (from === 'id' || to === 'id')) return { ok: false, reason: word('editing.property.id') };
+  if (!ONE_WORD.test(to)) return { ok: false, reason: word('editing.property.word') };
   const map = mapOf(block, graph, t);
   if (!map.ok) return map;
-  if (map.entries.some((x) => x.key === to)) return { ok: false, reason: `it already has a property called ${to}` };
+  if (map.entries.some((x) => x.key === to)) return { ok: false, reason: word('properties.taken', { name: to }) };
   const e = map.entries.find((x) => x.key === from);
   if (!e) return { ok: false, reason: notHere(from) };
   const k = e.from + block.slice(e.from, e.colon).indexOf(from);

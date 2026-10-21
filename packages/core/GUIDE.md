@@ -290,7 +290,7 @@ the user saves a view as shown (untangle-saved.ts).
 #### Switches and the details
 
 - `view-switches.ts` — the View menu's four switches (view_switches).
-  - `VIEW_SWITCHES`, `SWITCH_NAMES`.
+  - `VIEW_SWITCHES`, and `switchName`, each switch's name from the catalogue.
   - `startingSwitches`: from the settings' defaults, the style graph's merging and a view's switches saved as shown
     (view_switch_defaults).
   - `labelsHidden` and `LABEL_SCALE`: a link's label under 11 pixels is hidden (untangle_labels).
@@ -469,7 +469,7 @@ own handlers. Nothing here reaches the network.
 - `path-play.ts` — `PathAutoplay`: Play stepping through a path on its own (path_autoplay).
   - It works around a `PathPlayer`, which also says where it is (`index`) and goes back to the first step (`restart`).
   - It goes from the step it is on, one step at the pace set, until the last. The paces are `PATH_PACES` and
-    `DEFAULT_PACE`, said by `paceSaid`.
+    `DEFAULT_PACE`. `paceSaid` says a pace in UK English, as an exported file says it.
   - It can be paused or stopped at any step, and played on from where it paused. A step taken by hand pauses it.
   - The host hands in its timer (`Scheduler`). So the core never waits on a clock, and a host clears it when its card
     goes.
@@ -479,9 +479,10 @@ own handlers. Nothing here reaches the network.
   - `pathBody`: each step's number on its thing, and the dots' runners.
   - `pathCss`: a heavier outline moving from step to step at the pace, round and round, by `step-end` keyframes. Every
     step is outlined when still. All of it is stopped under reduced motion.
-  - `pathSubtitle` says the walk in order.
+  - `pathSubtitle` says the walk in order, and `pathLegend` what the outlines mean. Both are in UK English: they are
+    the file's bytes.
   - `animationFits` refuses one too large for the device (`ANIMATION_LIMITS`: steps, and an estimate of its bytes). It
-    says why and what would make it fit, before anything is laid out (animation_export_fits).
+    says why and what would make it fit, in the reader's language, before anything is laid out (animation_export_fits).
   - `exportWithLayout` gives that refusal back as a `TooLargeToAnimate`.
 - `path-edits.ts` — a step taken out numbers the later steps of its path again (`stepsAfter`). These are carried as the
   removing fix's further edits (`Problem.also`), so the path keeps §22's steps 1 to n.
@@ -651,7 +652,7 @@ own image decoding. The core says what it is and what it may do. No library deco
   - An SVG has no frames to count. It has a pixel size only when its root gives one in pixels. Otherwise its size on
     disk alone holds it to the limits.
   - An AVIF's size is not read either.
-- `image-limits.ts` — the limits an animated image moves within (`IMAGE_LIMITS`, said in `LIMITS_SAID`).
+- `image-limits.ts` — the limits an animated image moves within (`IMAGE_LIMITS`, said by `limitsSaid`).
   - They are size on disk, pixels a frame, frames, and how many move at once in one drawing.
   - An image over the size on disk is never read, and is not shown, saying why.
   - `startOf` says how an image starts:
@@ -718,12 +719,13 @@ reads `· QUERY` as a query, and the core draws no query as data. So a view is n
 - `views.ts` — `viewsOf` finds the views of a note, each with its graph, its block and its query text.
   - Some blocks are listed with a `fault`, never skipped. That is a block meant as a view with no name, or a name that
     is not one word. It is also a name already used in its graph.
-  - `readingOf` says a view in plain language ("everything within 2 steps of Alice").
+  - `readingOf` says a view in plain language ("everything within 2 steps of Alice"), in the reader's language.
+  - `sourceReadingOf` says it in UK English, for what is sent to a model or written into a file.
 - `view-profile.ts` — the view profile.
   - `parseView` reads the five shapes of query into a `ViewSpec`. The shapes are a hand-picked set, everything near a
     thing, how one thing reaches another, only some kinds, and a walked path.
   - It refuses anything else with a message that names the five shapes in words. The message shows the nearest one's
-    form (`VIEW_NAMES`, `VIEW_FORMS`).
+    form (`viewName`, `VIEW_FORMS`). Its words come from the catalogue (views-source-words.ts).
   - The queries are ISO GQL that Grafeo runs as written.
   - A thing is named by its `id` property. The reader writes it into every node it gives Grafeo, and the core's world
     keys every node by it.
@@ -799,15 +801,19 @@ data of the note it is written in.
   - It is MATCH one pattern, then INSERT links between things it named. The pattern is things with an optional name,
     kind and properties, joined by up to `MOST_PATTERN_LINKS` links, one way or either.
   - CALL, a function, SET or DELETE and the other writes, RETURN, and anything that reads as code are refused. Each says
-    why and shows `RULE_FORM`.
+    why and shows `RULE_FORM`. The words of steps and paths come from the catalogue (steps-source-words.ts).
   - `ruleTokens` reads a rule once. A text ends at its line, and nothing after the first mark that cannot be read is
     read (spec §9).
 - `steps-match.ts` — every match of the pattern, as GQL matches a path. Each link is used once in a match, and a name
   used twice is the same thing.
   - It is bounded by `MOST_MATCHES` and `MOST_TRIES` (every thing and link looked at, fitting or not). Past them it stops
     and says so (spec §9).
+#### What a step is given
+
 - `steps-input.ts` — what is given at a point: a graph of the note, whole, or a view of one (a queried path among them).
   - It is put to the reading as `evaluate` puts it, never a copy.
+  - `givenLabel` names what is given in the reader's language. Each input's `read` names it in UK English, as the
+    change set records it.
   - `inputFaults` checks each against its point before the step runs: every kind and type it takes held, something
     given.
   - `together` reads the inputs as one graph, a thing by id.
@@ -884,8 +890,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - A PNG, or one past a limit, is reduced to its first frame.
   - One that cannot be had, or was never read (`UnreadImage`, over the size limit: left out), is drawn as a dashed frame.
   - Only an image type of a fixed list is written before the bytes, which must be base64. An image is never put inline.
-  - `ExportImage.animation` says what was done with each animated image, a line each. The frame says it too
-    (`animationSaid`).
+  - `ExportImage.animation` says what was done with each animated image, a line each, in the reader's language. The
+    frame says it too, in UK English, as it is the file's bytes (`animationSaid` with `sourceWord`).
 - `export-pages.ts` — `pngPages`: an image too large for one sharp PNG on the device, split into a grid of pages.
   - Each page is at twice natural size or more, within the device's pixels, and no side over `PNG_MOST_SIDE` (32,767
     device pixels).
@@ -906,6 +912,9 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - `dataText` writes it in one of `DATA_FORMATS`. These are the built-in exports `CORE_EXPORTS` adds through the
     plug-in interface.
   - No layout is asked for.
+
+#### The reader's words and formats
+
 - `locale-formats.ts` — what is shown, in the reader's locale (editor spec §42, locale_formats, locale_sorting).
   - `formatCount`, `formatSize`, `formatDay`, `formatInstant`, `formatList` and `sortedForReader` work through the
     platform's Intl.
@@ -913,8 +922,8 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - They are never used for what is written into a note, an export's data or the layout source
     (locale_never_changes_bytes). So an order written into text, as `github-review-items.ts` writes its groups, keeps
     one collation.
-  - `hosts/refusal-words.ts` still says its counts in UK English, as a host-side module may import only types from the
-    core.
+  - `hosts/refusal-words.ts` imports only types from the core, as a host-side module must. So the host hands in
+    `word`, `formatCount` and `formatSize` (its `Say`), and the refusals are said in the reader's language.
 - `words.ts` and `source-words.ts` — the words the person reads, by key (editor spec §42, words_catalogue,
   language_follows_host, translations_as_files).
   - `word(key, values)` says one in the current language. Its `{name}` placeholders are filled, and its plural form is
@@ -930,7 +939,12 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     - the browser page's own in `page-source-words.ts`;
     - editing's (properties, adding a thing, Edit, kept drafts) in `edit-source-words.ts`;
     - the AI dialog's and AI models' in `ai-source-words.ts`;
-    - and Import's in `db-source-words.ts`.
+    - Import's in `db-source-words.ts`;
+    - the drawing's (diagram types, layout refusals, animated images, links leaving the vault, completeness) in
+      `drawing-source-words.ts`;
+    - and the plug-ins' calls that fail in `plugins-source-words.ts`.
+  - Every word a person reads in the core and the hosts comes from here. words-in-code.test.js checks every file, and
+    lists the few strings kept in the code, each with why (words-in-code-areas.js, words-in-code-kept.js).
 
 #### The plug-in interface
 
@@ -1160,7 +1174,7 @@ shown over the graph and never written until a person accepts a change. Then it 
   - `notTaken`: a change read back to see it took effect.
   - `newProblems`: what a change leaves wrong that was not before.
   - It is not exported by the entry: only a review writes a change.
-- `proposals-marks.ts` — which boxes and links each change adds, changes or removes. `MARK_WORDS` says it in words, never
+- `proposals-marks.ts` — which boxes and links each change adds, changes or removes. `markWord` says it in words, never
   by colour alone. Each change is read back in plain language as the text pane reads a line (`readBack`).
 - `proposals-review.ts` — `ProposalReview`.
   - `show`: the proposal laid over the graph, with rows, groups, marks, provenance, and whether the graph has moved. It

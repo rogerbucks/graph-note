@@ -1,11 +1,19 @@
 // What an export holds (editor spec §16): the whole diagram, or a view. A view holds only what is in it, unless the
 // faded context is asked for. Then it holds the whole graph with what is outside the view marked to be faded. A graph
 // or view with nothing in it is said to be empty, never drawn as a blank.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { exportScope } from '../src/export-scope.ts';
 import { drawingSource } from '../src/layout.ts';
+import { setLocale } from '../src/locale-formats.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => {
+  setLanguage(SOURCE_LANGUAGE);
+  setLocale('en-GB');
+});
 
 // links 0..4 in the order written
 const TEAM = `// graph: team · SOURCE
@@ -194,5 +202,18 @@ describe('nothing to export', () => {
   test('a view with the context asked for is still empty when the view matches nothing', () => {
     const view = { name: 'robots', spec: { kind: 'kinds', kinds: ['Robot'] } };
     assert.equal(exportScope(team, { graph: 'team', view, context: true }).empty, true);
+  });
+});
+
+describe('an export’s scope in the person’s language', () => {
+  // proves: words_catalogue, locale_never_changes_bytes
+  test('why there is nothing to export is said in the person’s language; the view’s reading stays in UK English', () => {
+    const near = { name: 'around_bob', spec: { kind: 'near', id: 'bob', depth: 1 } };
+    const robots = { name: 'robots', spec: { kind: 'kinds', kinds: ['Robot'] } };
+    setLanguage('en-XA');
+    setLocale('ar-EG');
+    const empty = [exportScope(team, { graph: 'elsewhere' }), exportScope(team, { graph: 'team', view: robots })];
+    for (const { why } of empty) assert.ok(isPseudoWord(why) && why.startsWith('⟦'), why);
+    assert.equal(exportScope(team, { graph: 'team', view: near }).reading, 'everything within 1 step of Bob');
   });
 });

@@ -1,12 +1,16 @@
 // Writing to the style graph (editor spec §2, §6, §7). A nudge, a look, a view's fade or hide and how a view was shown
 // are written as text into the graph's style block. That block is made after the graph's last block when there is none.
 // They are never written into a data block, so the data reads exactly as before.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { gqlBlocks, gqlSpans, styleOf } from '../src/blocks.ts';
 import { readNote } from '../src/drawing.ts';
 import { outsideOf, readStyle } from '../src/style.ts';
 import { styleEdit } from '../src/style-edit.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const TRIP = `// graph: trip
 (home:Place {name: 'Home'}),
@@ -200,5 +204,20 @@ describe('what is never written', () => {
       [{ shown: { view: 'v', zoom: 1, x: 0, y: 0, selected: '' } }, 'selected must name a thing'],
     ];
     for (const [change, refused] of refusals) assert.deepEqual(styleEdit(NOTE, 'trip', change), { refused });
+  });
+
+  test('why a style change is refused is said in the person’s language', () => {
+    setLanguage('en-XA');
+    const changes = [
+      { nudge: { word: 'near', thing: 'home', other: 'park' } },
+      { outside: { view: '', outside: 'hide' } },
+      { look: { view: 'v', thing: 'home', line: 'wavy' } },
+      { shown: { view: 'v', zoom: Infinity, x: 0, y: 0 } },
+    ];
+    for (const change of changes) {
+      const { refused } = styleEdit(NOTE, 'trip', change);
+      assert.ok(isPseudoWord(refused), refused);
+    }
+    assert.ok(isPseudoWord(styleEdit(NOTE, 'nowhere', changes[0]).refused));
   });
 });

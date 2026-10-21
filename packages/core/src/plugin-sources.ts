@@ -11,6 +11,7 @@ import { textTooLarge } from './layout-limits.ts';
 import type { NoteReading } from './note-reading.ts';
 import type { PluginResult } from './plugin-calls.ts';
 import type { GivenGraph } from './plugin-points.ts';
+import { word } from './words.ts';
 
 /** How far a graph is trusted, lowest first: `own` is the person's own notes; `trusted` a source they named trusted. */
 export const TRUST_LEVELS = ['untrusted', 'trusted', 'own'] as const;
@@ -52,8 +53,8 @@ export function joinedGraph(
   const { text, classification } = given as GivenGraph;
   const over = textTooLarge([text]);
   if (over && 'count' in over) {
-    const unit = over.limit === 'text-bytes' ? 'bytes' : 'lines';
-    return `it is ${over.count} ${unit}, over the ${over.most} a graph may be`;
+    const values = { size: String(over.count), most: String(over.most) };
+    return word(over.limit === 'text-bytes' ? 'plugins.graph.bytes' : 'plugins.graph.lines', values);
   }
   const strictest = levels.length - 1;
   const rankOf = (level: string) => {
@@ -84,7 +85,9 @@ export function heldGraph(
   const g = joinedGraph(r.value, { plugin, place }, inputs, levels);
   if (typeof g !== 'string') return { ok: true, value: g };
   const message =
-    g === NO_TEXT ? `${what} of ${plugin} gave no graph text.` : `${what} of ${plugin} was refused: ${g}.`;
+    g === NO_TEXT
+      ? word('plugins.graph.no-text', { what, plugin })
+      : word('plugins.graph.refused', { what, plugin, why: g });
   return { ok: false, plugin, message };
 }
 

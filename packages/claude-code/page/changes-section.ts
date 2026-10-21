@@ -6,7 +6,7 @@
 //   colours.
 // - The same changes are listed in words beside it.
 // The repository's commit subjects are shown as text, never as markup.
-import { changesView, markedChanges, NO_CHANGES } from '../../core/src/changes-view.ts';
+import { changesView, markedChanges, noChanges } from '../../core/src/changes-view.ts';
 import type { ChangesShown } from '../../core/src/changes-view.ts';
 import type { GraphDrawing } from '../../core/src/note-reading.ts';
 import { PALETTES } from '../../core/src/palette.ts';
@@ -51,7 +51,7 @@ export function changesFigure(
   const doc = win.document;
   const list = doc.createElement('ul');
   list.setAttribute('id', listId);
-  if (!shown.changes.length) list.append(Object.assign(doc.createElement('li'), { textContent: NO_CHANGES }));
+  if (!shown.changes.length) list.append(Object.assign(doc.createElement('li'), { textContent: noChanges() }));
   for (const c of shown.changes) {
     const item = doc.createElement('li');
     item.setAttribute('class', `gn-change is-${c.mark}`);

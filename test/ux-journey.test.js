@@ -93,7 +93,9 @@ describe('every host: the first-run journey, its counts held', () => {
 
   test('every host has its journey: a new host with none fails', () => {
     // the packages that are libraries draw no interface of their own (as test/wcag.test.js reads them)
-    const hosts = readdirSync(`${ROOT}/packages`).filter((p) => !['core', 'graph-spec'].includes(p));
+    const hosts = readdirSync(`${ROOT}/packages`).filter(
+      (p) => !p.startsWith('.') && !['core', 'graph-spec'].includes(p),
+    );
     assert.deepEqual(hosts.sort(), Object.keys(HOSTS).sort());
     assert.deepEqual(Object.keys(JOURNEYS).sort(), Object.keys(HOSTS).sort());
   });

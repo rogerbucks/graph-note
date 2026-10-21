@@ -7,12 +7,17 @@ import type { NoteReading } from './note-reading.ts';
 import { namesOf } from './proposals-apply.ts';
 import { statementOf } from './proposals-statements.ts';
 import type { ProposedChange } from './proposals.ts';
+import { word } from './words.ts';
 
 /** What a change does to what it marks: adds it, changes it or removes it. */
 export type MarkKind = 'add' | 'change' | 'remove';
 
-/** The mark said in a word: never left to colour alone. */
-export const MARK_WORDS: Record<MarkKind, string> = { add: 'Added', change: 'Changed', remove: 'Removed' };
+/**
+ * The mark said in a word, in the reader's language: never left to colour alone. It starts with a capital, as a line
+ * starts. With `within`, it is the word as it is said within a sentence.
+ */
+export const markWord = (kind: MarkKind, within = false): string =>
+  word(within ? `proposal.mark.${kind}-within` : `proposal.mark.${kind}`);
 
 /** A mark on a box or a link, and the changes that put it there. */
 export interface ChangeMark {
@@ -94,5 +99,5 @@ export function saidOf(reading: NoteReading, graph: string, c: ProposedChange): 
           ? `(${c.from})-[:${c.type}]->(${c.to})`
           : `(${c.thing}${kind(c.thing) ? `:${kind(c.thing)}` : ''})`;
   const said = [...readBack(reading, graph, text).entries()].sort(([a], [b]) => a - b).map(([, s]) => s);
-  return `${MARK_WORDS[markOf(c)]}: ${said.length ? said.join('; ') : text}`;
+  return word(`proposal.said.${markOf(c)}`, { change: said.length ? said.join('; ') : text });
 }

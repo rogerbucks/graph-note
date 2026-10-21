@@ -6,7 +6,6 @@
 // - A decision or a refusal is announced in the page's status region.
 // - After a decision, focus returns to the heading of the card.
 // The review itself is the core's (proposal-review.ts). The card only shows its rows and passes the user's choice on.
-import { MARK_WORDS } from '../../core/src/proposals-marks.ts';
 import type { Which } from '../../core/src/proposals-shown.ts';
 import type { Card } from './proposal-review.ts';
 import { word } from '../../core/src/words.ts';
@@ -57,24 +56,20 @@ export function showCards(root: HTMLElement, cards: Card[], decide: Decide, anno
     for (const row of card.rows) {
       const item = el('li');
       const who = row.decision ? word('proposal.decided-by', { who: row.decision.by }) : '';
-      item.append(
-        el('span', `${MARK_WORDS[row.mark]}: `),
-        el('span', row.said),
-        el('span', ` (${word(STATE_WORDS[row.state])}${who})`),
-      );
+      // the row's words start with its mark, "Added:", "Changed:" or "Removed:", from the catalogue
+      item.append(el('span', row.said), el('span', ` (${word(STATE_WORDS[row.state])}${who})`));
       if (row.reason) item.append(el('p', word('proposal.reason', { reason: row.reason })));
       if (row.blocked) item.append(el('p', word('proposal.blocked', { why: row.blocked })));
       if (row.state === 'pending') {
-        const named = `${MARK_WORDS[row.mark].toLowerCase()}: ${row.said}`;
         item.append(
           button(
             word('proposal.accept'),
-            word('proposal.accept-change', { change: named }),
+            word('proposal.accept-change', { change: row.said }),
             [row.id],
             'accept',
             row.blocked !== null || failed.length > 0,
           ),
-          button(word('proposal.reject'), word('proposal.reject-change', { change: named }), [row.id], 'reject'),
+          button(word('proposal.reject'), word('proposal.reject-change', { change: row.said }), [row.id], 'reject'),
         );
       }
       list.append(item);

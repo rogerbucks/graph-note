@@ -35,9 +35,9 @@
 // flowLegend, flowSaid, reversedLinks` and their types, 14 Oct 2026). A path played on its own and exported as an
 // animated SVG (`PathAutoplay, PATH_PACES, DEFAULT_PACE, paceSaid, animationFits, ANIMATION_LIMITS` and their types, 14
 // Oct 2026). The View menu's folding, merging and routing (`ViewState, startingSwitches, labelsHidden, foldsHiding,
-// linksOf, VIEW_SWITCHES, SWITCH_NAMES, SWITCH_SETTINGS, LABEL_SCALE, BUSY_HUB` and their types, 14 Oct 2026). Animated
+// linksOf, VIEW_SWITCHES, switchName, SWITCH_SETTINGS, LABEL_SCALE, BUSY_HUB` and their types, 14 Oct 2026). Animated
 // images and pictures on boxes (`imageFacts, imageLink, imagesOf, neverMoves, IMAGE_EXTENSIONS, IMAGE_LIMITS,
-// LIMITS_SAID, REDUCED_WORDS, pastLimit, playRefusal, startOf, PICTURE_MARK, PICTURE_SIZE, pictureFor, picturesFor,
+// limitsSaid, reducedWords, pastLimit, playRefusal, startOf, PICTURE_MARK, PICTURE_SIZE, pictureFor, picturesFor,
 // animationSaid` and their types, 14 Oct 2026). The host loads the files, and the core says what each can do. Links and
 // attachments (`linksIn, linkKind, linkTo, linksHeld, attachmentsOf, noteOf, brokenLinks, withMeant, renamedLinks,
 // applyChanges, safeMarkdown, leavingWords, refusedWords, attachmentType` and their types, 15 Oct 2026). An embedded
@@ -48,7 +48,7 @@
 // mini_map_setting) came with the viewer aids on 16 Oct 2026. What the browser editor may show Claude came on 16 Oct
 // 2026 (`claudeGate, noteClassification, classificationOf, sha256, CLAUDE, Gate, GateSettings, NoteClassification`,
 // cc_classified_asks and cc_credential_never). The changes view (`changesView, changesText, markedChanges,
-// CHANGE_LOOKS, NO_CHANGES, ChangeLine, ChangesShown`, changes_view) came on 17 Oct 2026. The review items
+// CHANGE_LOOKS, noChanges, ChangeLine, ChangesShown`, changes_view) came on 17 Oct 2026. The review items
 // (`ReviewItems, reviewLevels, asNote, groupSaid, workstreamsFrom, REVIEW_LEVELS, lineDiff, DIFF_LIMIT` and their
 // types, github_review_items) came the same day. The plug-in interface (`pluginRegistry, PLUGIN_API, EXTENSION_POINTS,
 // CORE_EXPORTS, exporterContract, sampleExports` and their types, plugin_interface) came on 17 Oct 2026 as well. The
@@ -112,16 +112,13 @@ export const VALUES = [
   'LARGE_GRAPH',
   'LAYOUT_LIMITS',
   'LEGEND_CHOICES',
-  'LIMITS_SAID',
   'LINES',
   'LOCKED_AWAY',
   'LayoutRunner',
   'LegendFilter',
-  'MARK_WORDS',
   'MAX_SCALE',
   'MOVE_MS',
   'NO_BASIS',
-  'NO_CHANGES',
   'NUDGE_WORDS',
   'OBSIDIAN_TOKEN_MAP',
   'OPTIONS',
@@ -144,7 +141,6 @@ export const VALUES = [
   'ProposalReview',
   'READABLE_SCALE',
   'READ_LIMITS',
-  'REDUCED_WORDS',
   'REFUSED',
   'REVIEW_LEVELS',
   'ReviewItems',
@@ -157,7 +153,6 @@ export const VALUES = [
   'STEP',
   'STYLE',
   'STYLE_HUES',
-  'SWITCH_NAMES',
   'SWITCH_SETTINGS',
   'THEME_COLOURS',
   'THEME_TOKENS',
@@ -173,7 +168,6 @@ export const VALUES = [
   'VIEW_FORMS',
   'VIEW_KINDS',
   'VIEW_LIMITS',
-  'VIEW_NAMES',
   'VIEW_SWITCHES',
   'ViewState',
   'Zoom',
@@ -301,6 +295,7 @@ export const VALUES = [
   'layoutSource',
   'leavingWords',
   'legendOf',
+  'limitsSaid',
   'lineDiff',
   'lineInSource',
   'linkChange',
@@ -325,6 +320,7 @@ export const VALUES = [
   'makeList',
   'makeProposal',
   'makeView',
+  'markWord',
   'markedChanges',
   'matchClass',
   'matrixGrants',
@@ -344,6 +340,7 @@ export const VALUES = [
   'neighbourhoodWords',
   'neverMoves',
   'nextAlong',
+  'noChanges',
   'noteClassification',
   'noteOf',
   'notePath',
@@ -389,6 +386,7 @@ export const VALUES = [
   'readSource',
   'readStyle',
   'readingOf',
+  'reducedWords',
   'refusal',
   'refusedWords',
   'remoteImagesIn',

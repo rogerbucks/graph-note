@@ -4,7 +4,7 @@
 // numbered and the order said in words (motion_reduced_respected, motion_not_alone). It is refused before it starts
 // when it is too large for the device, saying why and what would make it fit (animation_export_fits). Spans
 // path-animation.ts and export.ts.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { loadEngine } from '../src/engine.ts';
@@ -15,6 +15,14 @@ import { ANIMATION_LIMITS, animationBytes, animationFits, pathPlan } from '../sr
 import { unscoped } from './sheet-scope.js';
 import { pathsOf } from '../src/paths.ts';
 import { chosen, directions } from '../src/render.ts';
+import { setLocale } from '../src/locale-formats.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => {
+  setLanguage(SOURCE_LANGUAGE);
+  setLocale('en-GB');
+});
 
 const engine = await loadEngine();
 
@@ -176,5 +184,30 @@ describe('an animated SVG too large for the device is refused before it starts',
     const fits = await exportWithLayout(scope, layout, { ...info({ path: tour, pace: 1000 }), device: 'phone' });
     assert.equal(asked, 1);
     assert.match(fits.svg, /thoughtknot-step-/);
+  });
+});
+
+describe('an animated SVG’s words in the person’s language', () => {
+  const sized = (steps, things = 10, links = 10) => ({ steps, things, links });
+
+  // proves: words_catalogue, locale_never_changes_bytes
+  test('why it is too large is said in the person’s language, and what the file says of its path in UK English', () => {
+    const english = texts(exported(2000)).join(' ');
+    setLanguage('en-XA');
+    setLocale('ar-EG');
+    const refusals = [
+      animationFits(sized(ANIMATION_LIMITS.phone.steps + 1), 'phone'),
+      animationFits(sized(ANIMATION_LIMITS.desktop.steps + 1), 'desktop'),
+      animationFits(sized(10, 2000, 2000), 'phone'),
+      animationFits(sized(10, 20000, 20000), 'desktop'),
+    ];
+    for (const { why, fix } of refusals) {
+      assert.ok(isPseudoWord(why), why);
+      assert.ok(isPseudoWord(fix), fix);
+    }
+    const said = texts(exported(2000)).join(' ');
+    assert.equal(said, english);
+    for (const words of ['Played step by step, 2 seconds a step', 'Outlined and numbered'])
+      assert.ok(said.includes(words), said);
   });
 });

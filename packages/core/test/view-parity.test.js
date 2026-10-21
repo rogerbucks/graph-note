@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { readNote } from '../src/drawing.ts';
 import { evaluate } from '../src/view-evaluate.ts';
-import { parseView, VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, VIEW_NAMES } from '../src/view-profile.ts';
+import { parseView, VIEW_FORMS, VIEW_KINDS, VIEW_LIMITS, viewName } from '../src/view-profile.ts';
 import { viewsOf } from '../src/views.ts';
 
 const TABLE = JSON.parse(
@@ -99,7 +99,7 @@ describe('a query outside the view profile', () => {
     for (const { query, nearest, reason } of TABLE.refused)
       assert.deepEqual(
         parseView(query),
-        { refused: `${reason}. ${TABLE.allowed}. The nearest is ${VIEW_NAMES[nearest]}: ${VIEW_FORMS[nearest]}` },
+        { refused: `${reason}. ${TABLE.allowed}. The nearest is ${viewName(nearest)}: ${VIEW_FORMS[nearest]}` },
         JSON.stringify(query),
       );
     assert.deepEqual(new Set(TABLE.refused.map((r) => r.nearest)), new Set(VIEW_KINDS), 'a refusal nearest each kind');

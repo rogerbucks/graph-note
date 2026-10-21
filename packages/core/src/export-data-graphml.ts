@@ -16,6 +16,7 @@ import type { Value } from '@thoughtknot/graph-spec';
 import { saidDate } from './export-frame.ts';
 import { kindOf, numberText, oneLine, timeText } from './export-data-model.ts';
 import type { DataInfo, ExportedData, ValueKind } from './export-data-model.ts';
+import { word } from './words.ts';
 import { notXml, noteComment } from './xml-comment.ts';
 
 /** What a key's description says of a day or an instant, which GraphML's types have no word for. */
@@ -36,20 +37,18 @@ const escaped = (s: string) => s.replace(/[&<>"\r]/g, (c) => MARKS[c] ?? c);
 /** Text in an attribute, escaped so XML neither ends it nor makes its whitespace spaces. */
 const attribute = (s: string) => s.replace(/[&<>"\r\t\n]/g, (c) => IN_ATTRIBUTE[c] ?? c);
 
-/** Refuses a text XML cannot hold, saying where it is and what to export instead. */
-function holdable(text: string, where: string): string {
+/** Refuses a text XML cannot hold, saying where it is and what to export instead, in the reader's language. */
+function holdable(text: string, where: () => string): string {
   const bad = [...text].find(notXml);
   if (bad !== undefined) {
     const code = (bad.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0');
-    throw new Error(
-      `${where} holds a character GraphML cannot hold (U+${code}), so it cannot be exported as GraphML without losing it: export it as a GQL block or as CSV, which hold it`,
-    );
+    throw new Error(word('export.graphml.not-held', { where: where(), code }));
   }
   return text;
 }
 
 /** A value as the text of a data element. */
-function valueText(v: Value, kind: ValueKind, where: string): string {
+function valueText(v: Value, kind: ValueKind, where: () => string): string {
   if (kind === 'text') return escaped(holdable(v as string, where));
   if (kind === 'number') return numberText(v as number);
   if (kind === 'boolean') return v ? 'true' : 'false';
@@ -65,11 +64,16 @@ export function graphmlText(data: ExportedData, info: DataInfo): string {
     return keys.get(k)?.id ?? '';
   };
   const datum = (key: string, text: string) => `<data key="${key}">${text}</data>`;
-  const propsOf = (domain: 'node' | 'edge', props: Record<string, Value>, whose: string) =>
+  const propsOf = (domain: 'node' | 'edge', props: Record<string, Value>, whose: (name: string) => string) =>
     Object.entries(props).flatMap(([name, v]) => {
       if (domain === 'node' && name === 'id') return [];
       const kind = kindOf(v);
-      return [datum(keyOf(domain, name, kind), valueText(v, kind, `${whose}’s ${name}`))];
+      return [
+        datum(
+          keyOf(domain, name, kind),
+          valueText(v, kind, () => whose(name)),
+        ),
+      ];
     });
   const place = new Map(data.things.map(([id], i) => [id, `n${i + 1}`]));
   const fadedThings = new Set(data.faded?.things ?? []),
@@ -81,14 +85,15 @@ export function graphmlText(data: ExportedData, info: DataInfo): string {
   const noted = (note: string | undefined, line: string) =>
     note === undefined ? line : `    ${noteComment(note)}\n${line}`;
   const nodes = data.things.map(([id, kinds, props]) => {
-    const whose = `Thing ${holdable(id, `A thing’s id, ${JSON.stringify(id)},`)}`;
+    holdable(id, () => word('export.graphml.thing-id', { id: JSON.stringify(id) }));
+    const whose = (name: string) => word('export.graphml.thing-property', { id, name });
     const own = [datum('id', escaped(id)), datum('labels', kinds.join(';')), ...faded(fadedThings.has(id))];
     const line = `    <node id="${place.get(id)}">${[...own, ...propsOf('node', props, whose)].join('')}</node>`;
     return noted(thingNotes.get(id), line);
   });
   const edges = data.links.map(([from, type, to, props], i) => {
     const own = [datum('type', type), ...faded(fadedLinks.has(i))];
-    const whose = `The link ${from} ${type} ${to}`;
+    const whose = (name: string) => word('export.graphml.link-property', { from, type, to, name });
     const line = `    <edge source="${place.get(from)}" target="${place.get(to)}">${[...own, ...propsOf('edge', props, whose)].join('')}</edge>`;
     return noted(linkNotes.get(i), line);
   });

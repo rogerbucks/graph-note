@@ -95,10 +95,12 @@ describe('the two packages, built and installed from their files', () => {
     const app = join(dir, 'app');
     mkdirSync(app);
     writeFileSync(join(app, 'package.json'), JSON.stringify({ name: 'app', private: true, type: 'module' }));
+    const env = { ...process.env };
+    delete env.npm_config_allow_scripts;
     execFileSync(
       NPM,
       ['install', '--offline', '--no-audit', '--no-fund', '--ignore-scripts', ...built.map(({ file }) => file)],
-      { cwd: app, stdio: 'pipe' },
+      { cwd: app, env, stdio: 'pipe' },
     );
     const program = (typed) =>
       [

@@ -95,4 +95,14 @@ export const PROPOSAL_SOURCE_WORDS = {
     'this is not a change set: its first line reads `// graph: <graph> · CHANGE SET <id> · against <state> · by <author>`',
   'proposing.text.old-form':
     'this change set is in the editor’s old form, where removals, ids and decisions were comments that other tools skip, so a rejected change stayed live. It is not read: remove the block and ask for the proposal again',
+  // what a change does to what it marks, said in a word and in a line, never by colour alone (proposals-marks.ts)
+  'proposal.mark.add': 'Added',
+  'proposal.mark.change': 'Changed',
+  'proposal.mark.remove': 'Removed',
+  'proposal.mark.add-within': 'added',
+  'proposal.mark.change-within': 'changed',
+  'proposal.mark.remove-within': 'removed',
+  'proposal.said.add': 'Added: {change}',
+  'proposal.said.change': 'Changed: {change}',
+  'proposal.said.remove': 'Removed: {change}',
 } as const;

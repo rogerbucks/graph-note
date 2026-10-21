@@ -5,8 +5,11 @@
 // The reader already reads `· QUERY` as a query block. The core draws no query as data (blocks.ts `dataKind`), so a
 // view is never drawn as a graph of its own.
 import gs from '@thoughtknot/graph-spec';
+import { formatList } from './locale-formats.ts';
 import type { ViewSpec } from './view-profile.ts';
 import { N, S, trim } from './whitespace.ts';
+import { SOURCE_LANGUAGE, sourceWord, word } from './words.ts';
+import type { WordKey, WordValues } from './words.ts';
 
 /**
  * A view found in a note: its name, the graph it is of, the block it is written in and its query text. The block is
@@ -50,37 +53,57 @@ export function viewsOf(texts: string[]): NamedView[] {
     if (!name) return;
     const written = name[1] ?? '';
     let fault: string | undefined;
-    if (!written) fault = 'a view needs a name: write it after view, as QUERY view <name>';
-    else if (!ONE_WORD.test(written))
-      fault = `the view name '${written}' is not one word: use letters, digits and underscores only`;
-    else if (taken.has(`${graph}/${written}`)) fault = `another view of graph ${graph} is already called ${written}`;
+    if (!written) fault = word('views.fault.no-name');
+    else if (!ONE_WORD.test(written)) fault = word('views.fault.not-one-word', { name: written });
+    else if (taken.has(`${graph}/${written}`)) fault = word('views.fault.taken', { graph, view: written });
     taken.add(`${graph}/${written}`);
     out.push({ name: written, graph, block, query: lines.slice(at + 1).join('\n'), ...(fault ? { fault } : {}) });
   });
   return out;
 }
 
-const and = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
-const steps = (n: number) => `${n} step${n === 1 ? '' : 's'}`;
+/** How a reading says its words and joins a list: in the reader's language, or in UK English for bytes. */
+interface Saying {
+  say: (key: WordKey, values?: WordValues) => string;
+  and: (xs: string[]) => string;
+}
 
-/**
- * A view in plain language (views_by_tapping). Examples: "Alice, Bob and Carol, picked by hand"; "everything within 2
- * steps of Alice"; "how Alice reaches Dan, in up to 6 steps"; "only Person and Team"; "the walked path Tour, in order".
- * `textOf` gives a thing's text as the drawing shows it; the kinds are named as they are written.
- */
-export function readingOf(view: ViewSpec, textOf: (id: string) => string): string {
+const READER: Saying = { say: word, and: (xs) => formatList(xs) };
+const SOURCE: Saying = {
+  say: sourceWord,
+  and: (xs) => new Intl.ListFormat(SOURCE_LANGUAGE, { style: 'long', type: 'conjunction' }).format(xs),
+};
+
+/** A view in plain language, said as `saying` says its words. */
+function reading(view: ViewSpec, textOf: (id: string) => string, { say, and }: Saying): string {
   switch (view.kind) {
     case 'picked':
-      return view.ids.length ? `${and(view.ids.map(textOf))}, picked by hand` : 'no things picked by hand yet';
+      return view.ids.length
+        ? say('views.reading.picked', { things: and(view.ids.map(textOf)) })
+        : say('views.reading.none-picked');
     case 'near':
-      return `everything within ${steps(view.depth)} of ${textOf(view.id)}`;
+      return say('views.reading.near', { count: view.depth, thing: textOf(view.id) });
     case 'reaches': {
-      const [from, to] = [textOf(view.from), textOf(view.to)];
-      return `how ${from} reaches ${to}${view.directed ? '' : ', in either direction'}, in up to ${steps(view.steps)}`;
+      const ends = { from: textOf(view.from), to: textOf(view.to), count: view.steps };
+      return say(view.directed ? 'views.reading.reaches' : 'views.reading.reaches-either', ends);
     }
     case 'kinds':
-      return `only ${and(view.kinds)}`;
+      return say('views.reading.kinds', { kinds: and(view.kinds) });
     case 'path':
-      return `the walked path ${textOf(view.path)}, in order`;
+      return say('views.reading.path', { path: textOf(view.path) });
   }
 }
+
+/**
+ * A view in plain language, in the reader's language (views_by_tapping). Examples: "Alice, Bob and Carol, picked by
+ * hand"; "everything within 2 steps of Alice"; "how Alice reaches Dan, in up to 6 steps"; "only Person and Team". Or
+ * "the walked path Tour, in order". `textOf` gives a thing's text as the drawing shows it. The kinds are named as written.
+ */
+export const readingOf = (view: ViewSpec, textOf: (id: string) => string): string => reading(view, textOf, READER);
+
+/**
+ * The same reading in UK English, whatever the reader's language. It is for what is sent to a model, written into a
+ * change set or written into an export. Those bytes never change with the reader (locale_never_changes_bytes).
+ */
+export const sourceReadingOf = (view: ViewSpec, textOf: (id: string) => string): string =>
+  reading(view, textOf, SOURCE);

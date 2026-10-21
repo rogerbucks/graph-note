@@ -8,6 +8,7 @@
 //   every animation in the plugin's styles stops.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
+import { isPseudoWord } from '@thoughtknot/core';
 import { build, load, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show, styles } from './host/view-notes.js';
@@ -288,6 +289,19 @@ describe('a played path exported as an animated SVG', () => {
       });
       assert.match(out.stopped, /3 is not a pace a path plays at/);
       assert.deepEqual(written(env, '.svg'), []);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  // proves: words_catalogue
+  test('the paces it offers in that refusal are said in the person’s language', async () => {
+    const { env } = await playing(WALKED, { language: 'en-XA' });
+    try {
+      const ask = { path: PATH, graph: 'trip', format: 'svg', theme: 'light', walk: { id: 'tour', pace: 3 } };
+      const out = await env.plugin.exportGraph(ask);
+      assert.ok(isPseudoWord(out.stopped), out.stopped);
+      assert.doesNotMatch(out.stopped, /seconds? a step/);
     } finally {
       env.uninstall();
     }

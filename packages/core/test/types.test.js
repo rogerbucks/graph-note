@@ -4,7 +4,7 @@
 // type that fits. It draws the graph as a network meanwhile, never wrongly. A graph of more than 50 things is offered
 // the table or a view as the way in. Spans types.ts (what fits, the suggestion, the choice) and types-table.ts (the
 // table and the way in). Also graph-layout.js (each type's source) and render.ts (the directions laid out).
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { loadEngine } from '../src/engine.ts';
@@ -23,6 +23,10 @@ import {
   typeFits,
 } from '../src/types.ts';
 import { scrollsOneWay, tableOf, wayIn } from '../src/types-table.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const ORG = `// graph: org
 (ada:Person {name: 'Ada'}),
@@ -560,5 +564,20 @@ describe('only the types that fit are offered', () => {
     assert.deepEqual(fitting(TRIP), ['network', 'tree', 'flow', 'radial', 'timeline', 'table']);
     assert.deepEqual(fitting(LOOP), ['network', 'radial', 'table']);
     assert.deepEqual(fitting(TEAMS), ['network', 'tree', 'flow', 'radial', 'lanes', 'table']);
+  });
+});
+
+describe('what the diagram types say, in the person’s language', () => {
+  // proves: words_catalogue
+  test('why each type does not fit, why one is suggested, and the way in to a large graph are said in it', () => {
+    setLanguage('en-XA');
+    const whys = [ORG, TRIP, LOOP, TEAMS, LONE].flatMap((data) =>
+      Object.values(fitsOf(data)).flatMap((f) => (f.why ? [f.why] : [])),
+    );
+    const { plain, g } = shown(LOOP);
+    const shape = shapeOf(plain, g);
+    const said = [...whys, suggestType(typeFits(shape), shape).because, wayIn(LARGE_GRAPH + 1).say];
+    assert.ok(whys.length > 4, 'some types do not fit');
+    for (const words of said) assert.ok(isPseudoWord(words), words);
   });
 });

@@ -31,6 +31,17 @@ export const STYLE_SOURCE_WORDS = {
   'styling.add-id': "add {key}: '<id>'",
   'styling.add-property': "add property: '<name>'",
   'styling.add-view-name': "add view: '<the view's name>'",
+  // a key a style thing does not use, and a frame that is not four numbers (style-words.ts)
+  'styling.key-unknown.a': '{key} is not a key a {kind} uses',
+  'styling.key-unknown.an': '{key} is not a key an {kind} uses',
+  'styling.key.fix': 'remove {key}, or use one of {among}',
+  'styling.frame.four': "frame must be four numbers, 'x,y,width,height'",
+  'styling.frame.four.fix': "write it as frame: '0,0,300,200'",
+  'styling.frame.stray': "frame '{written}' has a stray comma or space",
+  'styling.frame.stray.fix': "change it to '{clean}'",
+  'styling.frame.stray-not-four': "frame '{written}' has a stray comma or space, and is not four numbers",
+  'styling.frame.stray-not-four.fix':
+    "remove the stray comma or space, giving '{clean}', then write four numbers, 'x,y,width,height'",
   // a style thing that is no kind a style graph holds (style-checks.ts)
   'styling.kind-unknown': '{label} is not a kind of thing a style graph holds: {kinds}',
   'styling.kind-one': 'a thing of a style graph is one of {kinds}',

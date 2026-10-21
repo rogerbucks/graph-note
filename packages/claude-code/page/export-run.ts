@@ -21,10 +21,14 @@ import type { ExportInfo, ExportLayout, PngSize } from '../../core/src/export.ts
 import { exportFailureWords, exportRefusalWords } from '../../core/src/hosts/refusal-words.ts';
 import type { Settings } from '../../core/src/settings.ts';
 import { word } from '../../core/src/words.ts';
+import { formatCount, formatSize } from '../../core/src/locale-formats.ts';
 import { readStyle } from '../../core/src/style.ts';
 import type { Exporting } from '../../core/src/display/export/export-form.ts';
 import type { ExportAsk, ExportOutcome } from '../../core/src/display/export/export-types.ts';
 import type { Saved, SavedFile } from './export-calls.ts';
+
+/** How the refusals are said: the core's words and numbers, in the reader's language. */
+const SAY = { word, formatCount, formatSize };
 
 /** What an export on the page is made from. */
 export interface PageExport {
@@ -83,7 +87,7 @@ function classification(text: string): string | null {
 async function exporting(x: PageExport, ask: ExportAsk): Promise<ExportOutcome> {
   const texts = gqlBlocks(x.text).map((b) => b.text);
   const reading = readNote(texts);
-  if (reading.tooLarge) return { stopped: exportRefusalWords(reading.tooLarge) };
+  if (reading.tooLarge) return { stopped: exportRefusalWords(reading.tooLarge, SAY) };
   const scope = exportScope(reading, {
     graph: ask.graph,
     ...(ask.view ? { view: ask.view } : {}),
@@ -140,10 +144,10 @@ async function exporting(x: PageExport, ask: ExportAsk): Promise<ExportOutcome> 
       image = await exportWithLayout(scope, layout, info);
     } catch (e) {
       if (!layoutFailed) throw e;
-      return { stopped: exportFailureWords(e) };
+      return { stopped: exportFailureWords(e, SAY) };
     }
     if (!image) return { stopped: word('page.export-stopped') };
-    if ('reason' in image) return { stopped: exportRefusalWords(image) };
+    if ('reason' in image) return { stopped: exportRefusalWords(image, SAY) };
     if ('why' in image) return { stopped: word('page.export-not-made', { why: image.why }) };
     if (image.animation?.length) animation = ` ${image.animation.join(' ')}`;
     if (format === 'svg') files = [{ name: go.fileName, text: image.svg }];

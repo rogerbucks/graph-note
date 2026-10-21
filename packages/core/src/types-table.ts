@@ -61,7 +61,7 @@ export function wayIn(things: number): { count: number; say: string } | null {
   if (things <= LARGE_GRAPH) return null;
   return {
     count: things,
-    say: `This graph has ${things} things, too many to read in one drawing: open it as a table, or make a view of the part you need.`,
+    say: word('diagram.way-in', { count: things }),
   };
 }
 

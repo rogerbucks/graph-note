@@ -6,6 +6,7 @@
 import { pluginTypeOf } from './style-graph.ts';
 import type { GraphShape } from './types-shape.ts';
 import type { PluginCalls, PluginResult } from './plugin-calls.ts';
+import { word } from './words.ts';
 
 /** The space a diagram is drawn in, in pixels. */
 export interface DiagramSpace {
@@ -159,14 +160,15 @@ export async function drawnDiagram(
   space: DiagramSpace,
   awaited: PluginCalls['awaited'],
 ): Promise<PluginResult<string>> {
-  const what = `The diagram type ${d.title}`;
+  const what = word('plugins.what.diagram', { title: d.title });
   const size = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0;
   if (!size(space.width) || !size(space.height))
-    return { ok: false, plugin, message: `${what} of ${plugin} was not drawn: the space has no width and height.` };
+    return { ok: false, plugin, message: word('plugins.diagram.no-space', { what, plugin }) };
   const given = diagramGiven(shape, space);
   const r = await awaited(plugin, what, () => d.draw(given));
   if (!r.ok) return r;
   const marks = marksOf(r.value, given.space);
-  if (typeof marks === 'string') return { ok: false, plugin, message: `${what} of ${plugin} was not drawn: ${marks}.` };
+  if (typeof marks === 'string')
+    return { ok: false, plugin, message: word('plugins.diagram.not-drawn', { what, plugin, why: marks }) };
   return { ok: true, value: marksSvg(marks, given.space) };
 }

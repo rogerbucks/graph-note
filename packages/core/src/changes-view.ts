@@ -9,9 +9,9 @@ import { marked } from './export-marks.ts';
 import { valueText } from './inline-properties.ts';
 import type { Box, GraphDrawing, Link, NoteReading } from './note-reading.ts';
 import type { Palette } from './palette.ts';
-import { MARK_WORDS } from './proposals-marks.ts';
 import type { MarkKind, Marks } from './proposals-marks.ts';
 import type { ThingLook } from './style-graph.ts';
+import { word } from './words.ts';
 
 /** One change, listed: what it did, to a thing or a link, said in a sentence, and each property it changed. */
 export interface ChangeLine {
@@ -44,8 +44,8 @@ export const CHANGE_LOOKS: Record<MarkKind, ThingLook> = {
   remove: { hue: 'red', line: 'dotted', format: 'italic' },
 };
 
-/** The sentence when nothing changed. */
-export const NO_CHANGES = 'No changes between these versions.';
+/** The sentence when nothing changed, in the reader's language. */
+export const noChanges = (): string => word('editing.no-changes');
 
 const textsOf = (note: string) => gqlBlocks(note).map((b) => b.text);
 const said = (v: Value) => (typeof v === 'string' ? v : valueText(v));
@@ -56,12 +56,20 @@ function propertyChanges(before: Record<string, Value>, after: Record<string, Va
   const out: string[] = [];
   for (const [k, v] of Object.entries(after)) {
     const was = before[k];
-    if (was === undefined) out.push(`${k} added: ${said(v)}`);
-    else if (!same(was, v)) out.push(`${k}: ${said(was)} → ${said(v)}`);
+    if (was === undefined) out.push(word('editing.changes.property-added', { key: k, value: said(v) }));
+    else if (!same(was, v))
+      out.push(word('editing.changes.property-changed', { key: k, was: said(was), now: said(v) }));
   }
-  for (const [k, v] of Object.entries(before)) if (after[k] === undefined) out.push(`${k} removed: ${said(v)}`);
+  for (const [k, v] of Object.entries(before))
+    if (after[k] === undefined) out.push(word('editing.changes.property-removed', { key: k, value: said(v) }));
   return out;
 }
+
+/** A thing's kind changed: what it was and what it is, `none` for no kind. */
+const kindChange = (was: string, now: string) => {
+  const none = word('editing.changes.no-kind');
+  return word('editing.changes.kind-changed', { was: was || none, now: now || none });
+};
 
 const linkKey = (l: Link) => `${l.from}\u0000${l.type}\u0000${l.to}`;
 
@@ -95,13 +103,17 @@ export function changesView(before: string, after: string, graph: string, shared
   const removedBoxes = a.boxes.filter((x) => !newKeys.has(x.key));
   const boxes: Box[] = [...b.boxes, ...removedBoxes];
   const textOf = (key: string) => boxes.find((x) => x.key === key)?.text ?? key;
-  const kindOf = (x: Box) => (x.kind ? ` (${x.kind})` : '');
+  // a thing is said with its kind, when it has one
+  const saidThing = (mark: MarkKind, x: Box) =>
+    x.kind
+      ? word(`editing.changes.${mark}-kind`, { thing: x.text, kind: x.kind })
+      : word(`proposal.said.${mark}`, { change: x.text });
   const oldProps = (key: string) => old.world[graph]?.p(key) ?? {};
   const newProps = (key: string) => now.world[graph]?.p(key) ?? {};
   const thing = (mark: MarkKind, x: Box, details: string[] = []) => {
     const id = `thing:${x.key}`;
     marks.boxes.set(x.key, { kind: mark, ids: [id] });
-    changes.push({ id, mark, on: 'thing', said: `${MARK_WORDS[mark]}: ${x.text}${kindOf(x)}`, details });
+    changes.push({ id, mark, on: 'thing', said: saidThing(mark, x), details });
   };
   for (const x of b.boxes) {
     const y = oldBoxes.get(x.key);
@@ -110,7 +122,7 @@ export function changesView(before: string, after: string, graph: string, shared
       continue;
     }
     const details = [
-      ...(y.kind !== x.kind ? [`kind: ${y.kind || 'none'} → ${x.kind || 'none'}`] : []),
+      ...(y.kind !== x.kind ? [kindChange(y.kind, x.kind)] : []),
       ...propertyChanges(oldProps(x.key), newProps(x.key)),
     ];
     if (details.length) thing('change', x, details);
@@ -132,7 +144,7 @@ export function changesView(before: string, after: string, graph: string, shared
     const id = `link:${n}`;
     marks.links.set(n, { kind: mark, ids: [id] });
     const sentence = `${textOf(l.from)} ${l.reading || l.type} ${textOf(l.to)}`;
-    changes.push({ id, mark, on: 'link', said: `${MARK_WORDS[mark]}: ${sentence}`, details });
+    changes.push({ id, mark, on: 'link', said: word(`proposal.said.${mark}`, { change: sentence }), details });
   };
   b.links.forEach((l, n) => {
     const at = unmatched.get(linkKey(l))?.shift();
@@ -162,7 +174,7 @@ export function changesView(before: string, after: string, graph: string, shared
 
 /** The changes listed as text, one line each, a change's details indented below it; or that nothing changed. */
 export function changesText(shown: ChangesShown): string {
-  if (!shown.changes.length) return NO_CHANGES;
+  if (!shown.changes.length) return noChanges();
   return shown.changes.flatMap((c) => [c.said, ...c.details.map((d) => `  ${d}`)]).join('\n');
 }
 

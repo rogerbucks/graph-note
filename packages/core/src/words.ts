@@ -129,6 +129,19 @@ export const currentLanguage = (): string => language;
 export const word = (key: WordKey, values?: WordValues): string =>
   sayWords(words[key] ?? SOURCE_WORDS[key], values, words[key] === undefined ? SOURCE_LANGUAGE : language);
 
+/**
+ * The word kept as `key` in UK English, whatever the language and locale, its numbers in plain digits. It is for what
+ * is written into a note, a file or a change set. Those bytes never change with the reader (locale_never_changes_bytes).
+ */
+export function sourceWord(key: WordKey, values: WordValues = {}): string {
+  const entry: Words = SOURCE_WORDS[key];
+  const form =
+    typeof entry === 'string'
+      ? entry
+      : (entry[new Intl.PluralRules(SOURCE_LANGUAGE).select(values.count ?? 0)] ?? entry.other);
+  return sayWords(form, Object.fromEntries(Object.entries(values).map(([k, v]) => [k, String(v)])));
+}
+
 /** The languages written right to left, for a runtime that cannot say a language's direction itself. */
 const RIGHT_TO_LEFT = new Set([
   'ar',

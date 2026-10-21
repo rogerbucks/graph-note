@@ -121,16 +121,20 @@ function main(argv) {
       );
     }
     if (windows || child.pid === undefined) return;
-    execFile('ps', ['-A', '-o', 'pgid=,rss='], { maxBuffer: 1 << 24 }, (error, out) => {
-      if (error || stopped) return;
-      const mb = Math.round(groupMemoryKb(out, child.pid) / 1024);
-      if (mb > limits.memoryMb)
-        stop(
-          `${STOPPED} at ${mb} MB of memory, over its ${limits.memoryMb} MB ceiling. ` +
-            `A test is probably growing without bound; if the run really needs more, set THOUGHTKNOT_TEST_MEMORY_MB ` +
-            `(default ${DEFAULT_MEMORY_MB}).`,
-        );
-    });
+    try {
+      execFile('ps', ['-A', '-o', 'pgid=,rss='], { maxBuffer: 1 << 24 }, (error, out) => {
+        if (error || stopped) return;
+        const mb = Math.round(groupMemoryKb(out, child.pid) / 1024);
+        if (mb > limits.memoryMb)
+          stop(
+            `${STOPPED} at ${mb} MB of memory, over its ${limits.memoryMb} MB ceiling. ` +
+              `A test is probably growing without bound; if the run really needs more, set THOUGHTKNOT_TEST_MEMORY_MB ` +
+              `(default ${DEFAULT_MEMORY_MB}).`,
+          );
+      });
+    } catch {
+      /* a sandbox that refuses ps keeps the time and heap ceilings */
+    }
   }, POLL_MS);
 
   return new Promise((resolve) => {

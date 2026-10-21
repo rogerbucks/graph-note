@@ -1,9 +1,13 @@
 // Writing a view (editor spec §7 views_by_tapping, §2 views_in_the_note). It covers the query for a view built by
 // tapping, and the block it is stored as. Whatever is written is a query the profile reads back to the same view.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseView, VIEW_FORMS } from '../src/view-profile.ts';
-import { viewBlock, viewQuery } from '../src/view-write.ts';
+import { addView, makeView, viewBlock, viewQuery } from '../src/view-write.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const LINE_SEPARATOR = String.fromCharCode(0x2028),
   PARAGRAPH_SEPARATOR = String.fromCharCode(0x2029);
@@ -112,5 +116,26 @@ describe('the block a view is stored as', () => {
     assert.throws(() => viewBlock('team', 'my-view', 'q'), RangeError);
     assert.throws(() => viewBlock('team', '', 'q'), RangeError);
     assert.throws(() => viewBlock('reader-choice', 'v', 'q'), /the graph name 'reader-choice' is not one word/);
+  });
+});
+
+describe('why a view cannot be written, in the person’s language', () => {
+  // proves: words_catalogue
+  test('a view no query can say, and one the note cannot take, are refused in the person’s language', () => {
+    setLanguage('en-XA');
+    const note = "# Team\n\n```gql\n// graph: team\n(alice:Person {name: 'Alice'})\n```\n";
+    const friends = viewBlock('team', 'friends', VIEW_FORMS.picked);
+    const refusals = [
+      makeView('team', 'mine', { kind: 'kinds', kinds: [] }),
+      makeView('team', 'mine', { kind: 'kinds', kinds: ['two words'] }),
+      makeView('team', 'mine', { kind: 'kinds', kinds: ['Group'] }),
+      makeView('team', 'my view', { kind: 'picked', ids: ['alice'] }),
+      makeView('my-team', 'mine', { kind: 'picked', ids: ['alice'] }),
+      addView(note, 'team', 'not a view'),
+      addView(addView(note, 'team', friends).note, 'team', friends),
+    ];
+    for (const { refused } of refusals) assert.ok(isPseudoWord(refused), refused);
+    // the block is the note's bytes, so it is written the same in every language
+    assert.equal(friends, `// graph: team · QUERY view friends\n${VIEW_FORMS.picked}`);
   });
 });

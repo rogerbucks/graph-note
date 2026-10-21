@@ -11,6 +11,7 @@ import type { DataFormat } from './export-data.ts';
 import type { ExportScope } from './export-scope.ts';
 import { vaultFolder } from './vault-folder.ts';
 import type { Settings } from './settings.ts';
+import { word } from './words.ts';
 
 /** What the plan is made from. */
 export interface ExportPlanInput {
@@ -90,14 +91,11 @@ function question(input: ExportPlanInput): string | null {
   const { classifications: levels, exportAsksAbove: level } = input.settings;
   const at = levels.findIndex((l) => same(l, given)),
     limit = levels.findIndex((l) => same(l, level));
-  const ask = 'Export it anyway?';
-  if (at === -1)
-    return `${input.note} is classified "${given}", which is not one of the classifications set (${levels.join(', ')}), so it counts as above every level, ${level} included. ${ask}`;
-  if (limit === -1)
-    return `${input.note} is classified ${given}, and the level set for asking before an export, ${level}, is no longer one of the classifications, so every classified note is asked about. ${ask}`;
-  return at > limit
-    ? `${input.note} is classified ${given}, above ${level}, the level set for asking before an export. ${ask}`
-    : null;
+  const values = { note: input.note, given, level };
+  const ask = (said: string) => [said, word('export.ask.anyway')].join(' ');
+  if (at === -1) return ask(word('export.ask.unknown', { ...values, levels: levels.join(', ') }));
+  if (limit === -1) return ask(word('export.ask.level-gone', values));
+  return at > limit ? ask(word('export.ask.above', values)) : null;
 }
 
 /**
@@ -108,7 +106,8 @@ function question(input: ExportPlanInput): string | null {
  */
 export function exportPlan(input: ExportPlanInput): ExportDecision {
   const { scope, format, settings } = input;
-  if (scope.empty) return { nothing: `There is nothing to export: ${lowerFirst(scope.why ?? 'the scope is empty')}` };
+  if (scope.empty)
+    return { nothing: word('export.nothing', { why: lowerFirst(scope.why ?? word('export.scope-empty')) }) };
   const ask = input.confirmed ? null : question(input);
   if (ask) return { ask };
   const parts = input.note.split('/'),

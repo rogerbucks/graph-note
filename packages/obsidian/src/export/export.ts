@@ -17,12 +17,13 @@ import {
   PATH_PACES,
   PathPlayer,
   animationFits,
-  paceSaid,
   companionNote,
   dataText,
   exportPlan,
   exportScope,
   exportedData,
+  formatCount,
+  formatSize,
   gqlBlocks,
   isDataFormat,
   pathsOf,
@@ -40,6 +41,7 @@ import type {
   NoteReading,
   WriteOps,
 } from '@thoughtknot/core';
+import { paceOffered } from '@thoughtknot/core/display/export/export-form';
 import type { ExportAsk, ExportOutcome } from '@thoughtknot/core/display/export/export-types';
 import { exportRefusalWords } from '@thoughtknot/core/hosts/refusal-words';
 import type ThoughtKnotPlugin from '../main';
@@ -96,7 +98,7 @@ function playedWalk(
     return {
       stopped: word('exporting.bad-pace', {
         pace: asked.pace,
-        paces: PATH_PACES.map(paceSaid).join(', ').toLowerCase(),
+        paces: PATH_PACES.map(paceOffered).join(', ').toLowerCase(),
       }),
     };
   const large = animationFits(
@@ -122,7 +124,8 @@ async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<Exp
   const texts = gqlBlocks(text).map((b) => b.text);
   const reading = readNote(texts);
   // a note over the text limit is never read (layout_contained), so there is nothing to draw: say why, never "nothing to export"
-  if (reading.tooLarge) return said({ stopped: exportRefusalWords(reading.tooLarge) });
+  if (reading.tooLarge)
+    return said({ stopped: exportRefusalWords(reading.tooLarge, { word, formatCount, formatSize }) });
   const scope = exportScope(reading, {
     graph: ask.graph,
     ...(ask.view ? { view: ask.view } : {}),

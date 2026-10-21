@@ -2,8 +2,10 @@
 // first because the note is classified above the configured level. A go comes with a file name that is safe on every
 // platform. Nothing is written by this; the host
 // writes only on a go.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 import { readNote } from '../src/drawing.ts';
 import { exportPlan } from '../src/export-plan.ts';
 import { exportScope } from '../src/export-scope.ts';
@@ -41,6 +43,8 @@ const plan = (over = {}) =>
     ...over,
   });
 const SETTINGS = (over) => settingsFrom({ ...DEFAULT_SETTINGS, ...over });
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 describe('going ahead', () => {
   // proves: export_two_scopes
@@ -350,5 +354,23 @@ describe('the data, and an image across pages', () => {
         for (const name of [go.fileName, ...(go.pages ?? []).map((p) => p.fileName)])
           assert.ok(bytes(name) + '.part'.length <= 200, `${name}: ${bytes(name)} bytes`);
       }
+  });
+});
+
+describe('what the plan says, in the person’s language', () => {
+  // proves: words_catalogue
+  test('that there is nothing to export, and each question asked first, are said in it', () => {
+    setLanguage('en-XA');
+    const said = [
+      plan({ scope: nothing }).nothing,
+      plan({ scope: { ...diagram, empty: true, why: undefined } }).nothing,
+      plan({ noteClassification: 'Confidential', settings: SETTINGS({ exportAsksAbove: 'Internal' }) }).ask,
+      plan({ noteClassification: 'Top secret', settings: SETTINGS({ exportAsksAbove: 'Restricted' }) }).ask,
+      plan({
+        noteClassification: 'Internal',
+        settings: { ...DEFAULT_SETTINGS, exportAsksAbove: 'Gone' },
+      }).ask,
+    ];
+    for (const words of said) assert.ok(isPseudoWord(words), words);
   });
 });

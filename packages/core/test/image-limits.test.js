@@ -4,9 +4,13 @@
 // - Past a limit it is shown as its first frame, saying why. Playing it is refused with the same reason
 //   (animated_image_limited).
 // - Only so many move at once in one drawing.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { IMAGE_LIMITS, LIMITS_SAID, playRefusal, startOf } from '../src/image-limits.ts';
+import { IMAGE_LIMITS, limitsSaid, pastLimit, playRefusal, reducedWords, startOf } from '../src/image-limits.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE, sourceWord } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const moving = (o = {}) => ({ format: 'gif', animated: true, frames: 12, width: 40, height: 30, ...o });
 const MB = 1024 * 1024;
@@ -16,7 +20,7 @@ describe('the limits are stated', () => {
   test('in one sentence: size on disk, size of a frame, frames, and how many move at once', () => {
     assert.deepEqual(IMAGE_LIMITS, { bytes: 5 * MB, pixels: 2_000_000, frames: 500, moving: 6 });
     assert.equal(
-      LIMITS_SAID,
+      limitsSaid(),
       'An animated image moves when it is at most 5 MB, at most 2,000,000 pixels a frame and at most 500 frames, and at most 6 move at once in one drawing.',
     );
   });
@@ -125,6 +129,28 @@ describe('an image that does not move', () => {
         why: '',
         plain: true,
       },
+    );
+  });
+});
+
+describe('what an animated image says, in the person’s language', () => {
+  // proves: words_catalogue
+  test('the limits, why an image is still or waits, and why Play is refused are said in it; a file’s words stay UK English', () => {
+    setLanguage('en-XA');
+    const past = { facts: moving({ frames: 900 }), size: 2000, reduced: false, moving: 0 };
+    const said = [
+      limitsSaid(),
+      reducedWords(),
+      startOf({ facts: moving(), size: 2000, reduced: true, moving: 0 }).why,
+      startOf(past).why,
+      startOf({ facts: null, size: 6 * MB, reduced: false, moving: 0 }).why,
+      startOf({ facts: moving(), size: 2000, reduced: false, moving: IMAGE_LIMITS.moving }).why,
+      playRefusal(startOf(past), 0),
+    ];
+    for (const words of said) assert.ok(isPseudoWord(words), words);
+    assert.equal(
+      pastLimit({ facts: moving({ frames: 900 }), size: 2000 }, sourceWord),
+      'it has 900 frames, over the 500 an animated image may have',
     );
   });
 });

@@ -32,6 +32,7 @@ export { HOST_ABILITIES } from './plugin-points.ts';
 import { THEME_TOKENS, themeTokenProblem } from './theme-tokens.ts';
 import { POINT_VERSIONS, pointsUsed } from './plugin-versions.ts';
 import type { ThemeToken } from './theme-tokens.ts';
+import { word } from './words.ts';
 
 export { PLUGIN_API, POINT_VERSIONS } from './plugin-versions.ts';
 
@@ -325,46 +326,48 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     exporter: (format) => exporters.find((e) => e.format === format),
     writeData(format, data, info) {
       const e = exporters.find((x) => x.format === format);
-      if (!e) return { ok: false, plugin: '', message: `No plug-in adds the format "${format}".` };
+      if (!e) return { ok: false, plugin: '', message: word('plugins.none.format', { name: format }) };
       const plugin = owner.get(format) ?? '';
-      const written = guarded(plugin, `The export ${e.title}`, () => e.write(data, info));
+      const written = guarded(plugin, word('plugins.what.export', { title: e.title }), () => e.write(data, info));
       if (written.ok && typeof written.value !== 'string')
-        return { ok: false, plugin, message: `The export ${e.title} of ${plugin} gave no text.` };
+        return { ok: false, plugin, message: word('plugins.export-no-text', { title: e.title, plugin }) };
       return written;
     },
     storages: () => backends.items.map((b) => ({ ...b })),
     openStorage(name) {
       const b = backends.items.find((x) => x.name === name);
-      if (!b) return { ok: false, plugin: '', message: `No plug-in adds the storage "${name}".` };
-      return guarded(backends.owner.get(name) ?? '', `The storage ${b.title}`, () => b.open());
+      if (!b) return { ok: false, plugin: '', message: word('plugins.none.storage', { name }) };
+      return guarded(backends.owner.get(name) ?? '', word('plugins.what.storage', { title: b.title }), () => b.open());
     },
     commands: () => commands.items.map((c) => ({ ...c })),
     runCommand(id) {
       const c = commands.items.find((x) => x.id === id);
-      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the command "${id}".` };
-      return guarded(commands.owner.get(id) ?? '', `The command ${c.title}`, () => void c.run());
+      if (!c) return { ok: false, plugin: '', message: word('plugins.none.command', { name: id }) };
+      const what = word('plugins.what.command', { title: c.title });
+      return guarded(commands.owner.get(id) ?? '', what, () => void c.run());
     },
     panels: () => panels.items.map((c) => ({ ...c })),
     showPanel(id, el) {
       const c = panels.items.find((x) => x.id === id);
-      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the panel "${id}".` };
-      return guarded(panels.owner.get(id) ?? '', `The panel ${c.title}`, () => void c.render(el));
+      if (!c) return { ok: false, plugin: '', message: word('plugins.none.panel', { name: id }) };
+      const what = word('plugins.what.panel', { title: c.title });
+      return guarded(panels.owner.get(id) ?? '', what, () => void c.render(el));
     },
     graphSources: () => sources.items.map((c) => ({ ...c })),
     async readGraph(scheme, target, levels) {
       const c = sources.items.find((x) => x.scheme === scheme);
-      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the source "${scheme}".` };
+      if (!c) return { ok: false, plugin: '', message: word('plugins.none.source', { name: scheme }) };
       const plugin = sources.owner.get(scheme) ?? '',
-        what = `The source ${c.title}`;
+        what = word('plugins.what.source', { title: c.title });
       const r = await awaited(plugin, what, () => c.read(target));
       return heldGraph(plugin, what, r, `${scheme}:${target}`, [], levels);
     },
     graphSteps: () => steps.items.map((c) => ({ ...c })),
     async runStep(id, inputs, levels) {
       const c = steps.items.find((x) => x.id === id);
-      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the step "${id}".` };
+      if (!c) return { ok: false, plugin: '', message: word('plugins.none.step', { name: id }) };
       const plugin = steps.owner.get(id) ?? '',
-        what = `The step ${c.title}`;
+        what = word('plugins.what.step', { title: c.title });
       const r = await awaited(plugin, what, () => c.run(stepInputs(inputs)));
       return heldGraph(plugin, what, r, `step ${id}`, inputs, levels);
     },
@@ -376,7 +379,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     diagramTypes: () => diagrams.items.map((c) => ({ ...c })),
     async drawDiagram(type, shape, space) {
       const c = diagrams.items.find((x) => x.type === type);
-      if (!c) return { ok: false, plugin: '', message: `No plug-in adds the diagram type "${type}".` };
+      if (!c) return { ok: false, plugin: '', message: word('plugins.none.diagram', { name: type }) };
       return drawnDiagram(diagrams.owner.get(type) ?? '', c, shape, space, awaited);
     },
     stopped: () => [...stopped].map(([plugin, why]) => ({ plugin, why })),

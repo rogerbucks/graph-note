@@ -9,6 +9,7 @@ import type { ExtensionPoints, ThoughtKnotPlugin } from './plugins.ts';
 import type { HostAbilities } from './plugin-points.ts';
 import type { NoteStorage } from './note-storage.ts';
 import type { Added, FromPlugin, ToPlugin } from './plugin-serve.ts';
+import { word } from './words.ts';
 
 /** The host's end of a worker, shaped as a browser's Worker is. */
 export interface PluginPort {
@@ -54,23 +55,27 @@ export function isolatedPlugin(port: PluginPort, options: IsolatedOptions): Prom
   let host: Partial<HostAbilities> | null = null;
   let why: string | null = null;
   let next = 1;
-  const stop = (reason = 'it was stopped by the host') => {
+  // why it was stopped is said to the person, in their language, by every call that fails after it
+  const stop = (reason = word('plugins.isolated.by-host')) => {
     if (why !== null) return;
     why = reason;
     port.onmessage = null;
     port.terminate();
     for (const w of waiting.values()) {
       clock.clearTimeout(w.timer);
-      w.reject(new Error(`the plug-in was stopped, as ${reason}`));
+      w.reject(new Error(word('plugins.isolated.stopped', { why: reason })));
     }
     waiting.clear();
   };
   /** The answer of the call to `handle`, timed by the host's clock; the plug-in is stopped when it is too late. */
   const call = (handle: number, args: unknown[]): Promise<unknown> => {
-    if (why !== null) return Promise.reject(new Error(`the plug-in was stopped, as ${why}`));
+    if (why !== null) return Promise.reject(new Error(word('plugins.isolated.stopped', { why })));
     const n = next++;
     return new Promise((resolve, reject) => {
-      const timer = clock.setTimeout(() => stop(`a call ran over the ${timeLimit} ms allowed`), timeLimit);
+      const timer = clock.setTimeout(
+        () => stop(word('plugins.isolated.slow-call', { most: String(timeLimit) })),
+        timeLimit,
+      );
       waiting.set(n, { resolve, reject, timer });
       port.postMessage({ call: n, handle, args });
     });
@@ -98,7 +103,7 @@ export function isolatedPlugin(port: PluginPort, options: IsolatedOptions): Prom
     }, startLimit);
     port.onerror = (e) => {
       clock.clearTimeout(startTimer);
-      stop(`its worker failed: ${said(e)}`);
+      stop(word('plugins.isolated.worker-failed', { why: said(e) }));
       reject(new Error(`The plug-in's worker failed: ${said(e)}`));
     };
     port.onmessage = ({ data }) => {

@@ -6,20 +6,27 @@
 import { AI_SOURCE_WORDS } from './ai-source-words.ts';
 import { BLOCKS_SOURCE_WORDS } from './blocks-source-words.ts';
 import { CC_SOURCE_WORDS } from './cc-source-words.ts';
+import { CHECK_SOURCE_WORDS } from './check-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
 import { DISPLAY_SOURCE_WORDS } from './display-source-words.ts';
+import { DRAWING_SOURCE_WORDS } from './drawing-source-words.ts';
 import { EDIT_SOURCE_WORDS } from './edit-source-words.ts';
+import { EDITING_SOURCE_WORDS } from './editing-source-words.ts';
 import { EXPORT_SOURCE_WORDS } from './export-source-words.ts';
 import { FIRST_RUN_SOURCE_WORDS } from './first-run-source-words.ts';
 import { HOST_SOURCE_WORDS } from './host-source-words.ts';
 import { PAGE_SOURCE_WORDS } from './page-source-words.ts';
+import { PLUGINS_SOURCE_WORDS } from './plugins-source-words.ts';
 import { PROPOSAL_CARD_SOURCE_WORDS } from './proposal-card-source-words.ts';
 import { PROPOSAL_SOURCE_WORDS } from './proposal-source-words.ts';
+import { READER_SOURCE_WORDS } from './reader-source-words.ts';
 import { READING_SOURCE_WORDS } from './reading-source-words.ts';
 import { SERVER_SOURCE_WORDS } from './server-source-words.ts';
 import { SETTINGS_SOURCE_WORDS } from './settings-source-words.ts';
 import { SHORTCUT_SOURCE_WORDS } from './shortcut-source-words.ts';
+import { STEPS_SOURCE_WORDS } from './steps-source-words.ts';
 import { STYLE_SOURCE_WORDS } from './style-source-words.ts';
+import { VIEWS_SOURCE_WORDS } from './views-source-words.ts';
 
 /** The source words, by key, in UK English: what every translation gives again. */
 export const SOURCE_WORDS = {
@@ -296,6 +303,7 @@ export const SOURCE_WORDS = {
   ...DB_SOURCE_WORDS,
   // the words of editing (edit-source-words.ts)
   ...EDIT_SOURCE_WORDS,
+  ...EDITING_SOURCE_WORDS,
   // the browser page's own words (page-source-words.ts)
   ...PAGE_SOURCE_WORDS,
   // each option of the settings page, by its key (settings-source-words.ts)
@@ -318,8 +326,20 @@ export const SOURCE_WORDS = {
   // the core's problems found while reading a note or checking its style (reading-, style-source-words.ts)
   ...READING_SOURCE_WORDS,
   ...STYLE_SOURCE_WORDS,
+  // the graph spec reader's own problems, a message and a fix for each code (reader-source-words.ts)
+  ...READER_SOURCE_WORDS,
+  // the graph spec's change-set check: each line it says of a proposal (check-source-words.ts)
+  ...CHECK_SOURCE_WORDS,
   // a proposal's card and a graph step's card (proposal-card-source-words.ts)
   ...PROPOSAL_CARD_SOURCE_WORDS,
   // the core's proposals: their checks, refusals and where they came from (proposal-source-words.ts)
   ...PROPOSAL_SOURCE_WORDS,
+  // the core's views: their kinds, their readings and why one is refused (views-source-words.ts)
+  ...VIEWS_SOURCE_WORDS,
+  // the core's graph steps and walked paths: their refusals, problems and animation (steps-source-words.ts)
+  ...STEPS_SOURCE_WORDS,
+  // the core's drawing: its diagram types, layout limits, animated images, links and rules (drawing-source-words.ts)
+  ...DRAWING_SOURCE_WORDS,
+  // what the plug-ins' calls say when one fails (plugins-source-words.ts)
+  ...PLUGINS_SOURCE_WORDS,
 } as const;

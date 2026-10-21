@@ -6,7 +6,7 @@
 // - a PNG, which cannot move, reduces each to its first frame;
 // - one past a limit is reduced too;
 // - the export says, for each animated image, which it did.
-import { test, describe } from 'node:test';
+import { afterEach, test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { loadEngine } from '../src/engine.ts';
@@ -19,6 +19,11 @@ import { PICTURE_MARK } from '../src/picture.ts';
 import { chosen, directions } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
 import { gif, png } from './image-bytes.js';
+import { animationSaid } from '../src/export-pictures.ts';
+import { isPseudoWord } from '../src/pseudo-words.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+
+afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
 const engine = await loadEngine();
 
@@ -163,5 +168,20 @@ describe('a picture that cannot be drawn', () => {
     const image = await exported('svg', [PETS, STYLE], null);
     assert.equal((image.svg.match(/thoughtknot-picture-missing/g) ?? []).length, 3);
     assert.equal(image.animation, undefined);
+  });
+});
+
+describe('what an export says of its animated images, in the person’s language', () => {
+  // proves: words_catalogue
+  test('the notice says each line in it, and the image’s own frame keeps them in UK English', async () => {
+    setLanguage('en-XA');
+    const image = await exported('svg');
+    assert.equal(image.animation.length, 2);
+    for (const line of [...image.animation, animationSaid(image.animation)]) assert.ok(isPseudoWord(line), line);
+    assert.match(
+      image.svg,
+      /Animated images: Tom: tom\.gif kept moving, and still under reduced motion; Rex: rex\.gif/,
+    );
+    assert.match(image.svg, /as it has 600 frames, over the 500 an animated image may have/);
   });
 });
