@@ -39,6 +39,7 @@ export const TYPES_LATE = [
   'ProposalInput',
   'ProposalShown',
   'ProposedChange',
+  'ProposedNoteChange',
   'Proposer',
   'ProposerKind',
   'Provenance',

@@ -141,13 +141,15 @@ Wave 6.
 - **Controls:** A version check, and only the extension points and host abilities the manifest names. Settings and
   secrets are the plug-in's own, kept apart from the others'. Objects are frozen. Errors are caught and named. A call
   over the time limit stops its plug-in.
-- **Code:** `packages/core/src/plugins.ts`, with `packages/core/src/plugin-points.ts`.
+- **Code:** `packages/core/src/plugins.ts`, with `packages/core/src/plugin-points.ts` and
+  `packages/core/src/plugin-files.ts`.
 - **Gaps:**
   - A plug-in runs in the host's process, so it can reach the network whatever its manifest says. A call that never
     returns is not stopped, as the time is read after it returns (TRUST-14).
   - The secrets ability gave the whole secret store, AI keys too. Fixed in this review: a plug-in now reads only
     secrets under its own id (TRUST-15).
-  - The files ability reaches every note, whatever its class (TRUST-16).
+  - The files ability reached every note, whatever its class. Fixed: it now goes through the note gate. A plug-in sees
+    only notes at or below the ceiling the person set, and its changes wait for the person (TRUST-16).
   - One version string covers every extension point (API-10, ARCH-12).
 
 ### B10. Joined graphs and the Python library
@@ -253,7 +255,7 @@ For the graph source and step extension points (`trust_source_joined`).
 Today every plug-in ships with ThoughtKnot. Before a host loads one it did not ship, these must be fixed:
 
 - Plug-ins run apart from the host, in a worker, and one that runs too long is stopped (TRUST-14).
-- The files ability goes through the note gate (TRUST-16).
+- The files ability goes through the note gate (TRUST-16). Done.
 - Each extension point has its own version (API-10).
 
 ## Boundaries still to come

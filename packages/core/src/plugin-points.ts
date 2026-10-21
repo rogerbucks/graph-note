@@ -74,6 +74,7 @@ export interface HostAbilities {
   settings: { load: () => Promise<unknown>; save: (value: unknown) => Promise<void> };
   /** The plug-in's own secrets, each read by its name under the plug-in's id: `acme.one.token`. */
   secrets: { get: (name: string) => string | null | Promise<string | null> };
+  /** The notes at or below the ceiling the person set for the plug-in; its changes wait for the person. */
   files: NoteStorage;
 }
 

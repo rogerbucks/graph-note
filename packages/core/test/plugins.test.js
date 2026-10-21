@@ -4,7 +4,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { EXTENSION_POINTS, PLUGIN_API, pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS, DATA_FORMATS, dataText } from '../src/export-data.ts';
-import { CORE_STORAGE, memoryStorage } from '../src/note-storage.ts';
+import { memoryStorage } from '../src/note-storage.ts';
+import { CORE_STORAGE } from '../src/core-storage.ts';
 
 const DATA = { graph: 'g', things: [['a', ['Thing'], { id: 'a', name: 'A' }]], links: [] };
 const INFO = { note: 'A.md', date: '2026-10-17' };

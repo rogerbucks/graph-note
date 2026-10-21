@@ -11,6 +11,8 @@
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { NoteStorage } from './note-storage.ts';
 import { backendProblem, commandProblem, exporterProblem, panelProblem } from './plugin-points.ts';
+import { gatedFiles } from './plugin-files.ts';
+import type { FilesOffer } from './plugin-files.ts';
 import { HOST_ABILITIES } from './plugin-points.ts';
 import type {
   DataExporter,
@@ -85,7 +87,8 @@ export interface HostOffer {
   notice?: HostAbilities['notice'];
   settingsFor?: (pluginId: string) => HostAbilities['settings'];
   secrets?: HostAbilities['secrets'];
-  files?: HostAbilities['files'];
+  /** The notes, given to each plug-in through the note gate (plugin-files.ts, TRUST-16). */
+  files?: FilesOffer;
 }
 
 /**
@@ -193,7 +196,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
     if (named.includes('notice')) out.notice = host.notice;
     if (named.includes('settings')) out.settings = host.settingsFor?.(pluginId);
     if (named.includes('secrets') && host.secrets) out.secrets = ownSecrets(host.secrets, pluginId);
-    if (named.includes('files')) out.files = host.files;
+    if (named.includes('files') && host.files) out.files = gatedFiles(host.files, pluginId);
     return Object.freeze(out);
   };
   /** Moves what a plug-in added onto the registry's own shelf, once all of it was accepted. */

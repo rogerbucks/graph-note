@@ -927,7 +927,7 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - Its second, `theme`, hands a plug-in the core's tokens and adds its own (theme-tokens.ts). Each is refused, saying
     why, when it misses its name or the locked contrast. They are listed by `themeTokens()`.
   - Its third, `storage`, adds a place notes are kept (`StorageBackend`), opened by `openStorage`. The core's own,
-    `CORE_STORAGE` in note-storage.ts, keeps notes in memory.
+    `CORE_STORAGE` in core-storage.ts, keeps notes in memory.
   - Its fourth, `commands`, adds a command (`PluginCommand`), named under the plug-in's id and run by `runCommand`.
   - Its fifth, `panels`, adds a panel (`PluginPanel`), drawn by `showPanel` into an element the host gives.
   - A manifest also names the host's abilities it uses (`HOST_ABILITIES`): a notice, its own settings, its own secrets
@@ -937,7 +937,16 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - A call that runs longer than `PLUGIN_TIME_LIMIT` is named and its answer dropped. Its plug-in is then stopped, and
     `stopped()` lists it. A host may set its own limit and clock (`RegistryOptions`). The time is read after the call
     returns, so a call that never returns is not stopped yet (TRUST-14).
+
+#### What plug-ins add, and what they reach
+
 - `plugin-points.ts` — what a plug-in adds through each point, the host's abilities, and why each is refused.
+- `plugin-files.ts` — the files ability through the note gate (TRUST-16). `gatedFiles` lists and reads only notes at
+  or below the ceiling the person set for the plug-in. A change it makes waits as a proposal (`CHANGE_WAITS`).
+- `core-storage.ts` — `CORE_STORAGE`, the core's memory storage as a plug-in.
+
+#### The contract suites
+
 - `plugins-contract.ts` — the contract suite of each extension point (plugin_contract_suites).
   - `exporterContract`: the checks a data export is held to on `sampleExports`, which the built-ins pass.
   - `themeTokenContract`: those a theme token is held to: its name, its colours and its contrast in each theme.

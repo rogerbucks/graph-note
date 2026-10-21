@@ -8,7 +8,8 @@ import assert from 'node:assert/strict';
 import { commandContract, exporterContract, storageBackendContract } from '../src/plugins-contract.ts';
 import { pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS } from '../src/export-data.ts';
-import { CORE_STORAGE, memoryStorage } from '../src/note-storage.ts';
+import { memoryStorage } from '../src/note-storage.ts';
+import { CORE_STORAGE } from '../src/core-storage.ts';
 import { JSDOM } from 'jsdom';
 import { panelContract } from '../src/display/panel-contract.ts';
 

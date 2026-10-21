@@ -248,7 +248,8 @@ export async function developerFacts() {
   const { HOST_CONTRACT_VERSION, hostContract } = await import('../packages/core/src/display/host-contract.ts');
   const { THEME_TOKENS } = await import('../packages/core/src/theme-tokens.ts');
   const { CORE_EXPORTS } = await import('../packages/core/src/export-data.ts');
-  const { CORE_STORAGE, memoryStorage } = await import('../packages/core/src/note-storage.ts');
+  const { memoryStorage } = await import('../packages/core/src/note-storage.ts');
+  const { CORE_STORAGE } = await import('../packages/core/src/core-storage.ts');
   const { STANDARD_SCHEMAS } = await import('../packages/core/src/standard-schemas.ts');
   const text = (rel) => readFileSync(join(ROOT, rel), 'utf8');
   const builtIns = [CORE_EXPORTS, CORE_STORAGE].map((p) => {
