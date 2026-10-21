@@ -121,7 +121,11 @@ export const runCommands = (text) =>
 // sentence such as "refused the request (HTTP 503)" is not taken for one
 const NETWORK =
   /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\brequestUrl\b|\brequest\(|\bEventSource\b|\bsendBeacon\b/;
-export const findsNetwork = (code) => NETWORK.test(code);
+/**
+ * Whether code reaches the network. The worker that runs a plug-in apart names the network's calls in one list,
+ * `LOCKED_AWAY`, only to take them away (TRUST-14). That list alone is left out; the rest of the code is scanned.
+ */
+export const findsNetwork = (code) => NETWORK.test(code.replace(/export const LOCKED_AWAY = \[[^\]]*\] as const;/, ''));
 
 export const findsHotkeys = (code) => /\bhotkeys\s*:/.test(code);
 

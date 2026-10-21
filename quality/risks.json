@@ -3777,9 +3777,11 @@
       "impact": "high",
       "decision": "fix-later",
       "fix": "Do this before any host loads a plug-in it did not ship. Run plug-ins in a worker that gets only the extension points, and stop one that runs too long.",
-      "check": "packages/core/test/plugins.test.js: a plug-in that loops is stopped and named, and one cannot reach the host's file or network calls.",
+      "check": "packages/core/test/plugins-isolated.test.js: a plug-in that loops or never answers is stopped and named, its worker has no network, and it reaches only the host abilities it names.",
       "paths": [
-        "packages/core/src/plugins.ts"
+        "packages/core/src/plugins.ts",
+        "packages/core/src/plugin-isolated.ts",
+        "packages/core/src/plugin-serve.ts"
       ],
       "effort": "weeks",
       "raised": "2026-10-20",
@@ -3787,8 +3789,12 @@
         "date": "2026-10-21",
         "commit": "f8c22fd3b5d812eacf92b4cad07e76532683e993"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "prevented_by": [
+        "packages/core/test/plugins-isolated.test.js"
+      ],
+      "done_in": "#882"
     },
     {
       "id": "TRUST-15",

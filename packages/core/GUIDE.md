@@ -952,7 +952,21 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     reads an AI model's key or another plug-in's (TRUST-15).
   - A call that runs longer than `PLUGIN_TIME_LIMIT` is named and its answer dropped. Its plug-in is then stopped, and
     `stopped()` lists it. A host may set its own limit and clock (`RegistryOptions`). The time is read after the call
-    returns, so a call that never returns is not stopped yet (TRUST-14).
+    returns, so a call that never returns is not stopped here. A plug-in run apart is (TRUST-14, below).
+
+#### A plug-in run apart, in a worker
+
+A host loads a plug-in it did not ship only in a worker (trust_plugin_isolated, TRUST-14). The core holds both sides
+and is handed the port between them, as for layouts:
+
+- `plugin-serve.ts` is the worker's side. `lockDown` takes the network and lasting storage away first. Then
+  `servePlugin` registers the plug-in and says, as data, what it added. `import()` cannot be taken away by name, so
+  the host starts the worker under a content security policy with no network.
+- `plugin-isolated.ts` is the host's side. `isolatedPlugin` makes from that a plug-in the registry installs as any
+  other. Each call goes over the port, timed by the host's clock.
+- A call that loops or never answers ends the worker, and every later call fails at once, naming the plug-in.
+- The worker asks the host for an ability its manifest names, and the registry's checks still apply.
+- It may add to `ISOLATED_POINTS` only. A panel needs the page; a data export and an AI provider answer at once.
 
 #### What plug-ins add, and what they reach
 

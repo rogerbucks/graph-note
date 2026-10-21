@@ -144,8 +144,9 @@ Wave 6.
 - **Code:** `packages/core/src/plugins.ts`, with `plugin-points.ts`, `plugin-calls.ts`, `plugin-files.ts` and
   `plugin-sources.ts` and `plugin-ai.ts` beside it.
 - **Gaps:**
-  - A plug-in runs in the host's process, so it can reach the network whatever its manifest says. A call that never
-    returns is not stopped, as the time is read after it returns (TRUST-14).
+  - A plug-in ran in the host's process, so it could reach the network whatever its manifest said. A call that never
+    returned was not stopped. Fixed: a plug-in a host did not ship runs in a worker, and the host's clock stops it
+    (TRUST-14).
   - The secrets ability gave the whole secret store, AI keys too. Fixed in this review: a plug-in now reads only
     secrets under its own id (TRUST-15).
   - The files ability reached every note, whatever its class. Fixed: it now goes through the note gate. A plug-in sees
@@ -261,13 +262,21 @@ For the graph source and step extension points (`trust_source_joined`).
   went in.
 - **Built.** `packages/core/src/plugin-sources.ts` holds each graph as a `JoinedGraph`. The test is
   `packages/core/test/plugins-sources.test.js`. A step is given only each graph's text and class, never where it came
-  from. A source whose answer never comes is not stopped yet: that waits for TRUST-14.
+  from. A source whose answer never comes is stopped when its plug-in runs apart, in a worker (TRUST-14).
 
 ### Before any outside plug-in loads
 
 Today every plug-in ships with ThoughtKnot. Before a host loads one it did not ship, these must be fixed:
 
-- Plug-ins run apart from the host, in a worker, and one that runs too long is stopped (TRUST-14).
+- Plug-ins run apart from the host, in a worker, and one that runs too long is stopped (TRUST-14). Done in the core:
+  `packages/core/src/plugin-isolated.ts` is the host's side and `packages/core/src/plugin-serve.ts` the worker's. The
+  test is `packages/core/test/plugins-isolated.test.js`.
+  - The worker loses the network before the plug-in's code runs. A host loads a plug-in it did not ship only this way.
+  - `import()` cannot be taken away by name, so the host starts the worker under a content security policy that
+    allows no network.
+  - Each call is timed by the host's clock, so one that loops or never answers stops its plug-in.
+  - Panels, data exports and AI providers cannot run apart yet: a panel needs the page, and the other two answer at
+    once.
 - The files ability goes through the note gate (TRUST-16). Done.
 - Each extension point has its own version (API-10).
 

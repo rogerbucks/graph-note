@@ -1,7 +1,8 @@
 // The source scans the repository policy relies on for the one network exception (spec §13, §19), tested on their own:
 // - the AI send module, found however it is reached;
 // - Obsidian's older request function, taken for a request;
-// - every timer and event found that could send in the background.
+// - every timer and event found that could send in the background;
+// - the list of the network's calls a plug-in's worker takes away, which is not a request (TRUST-14).
 // test/policy.test.js runs them over the source.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -29,4 +30,10 @@ test('the scans of the send module find it however it is reached, and every time
   ])
     assert.ok(findsBackground(code), code);
   assert.equal(findsBackground('b.onClick(() => send())'), false);
+});
+
+test('the list a plug-in’s worker takes away is not a request, but a call beside it still is', () => {
+  const lockDown = "export const LOCKED_AWAY = [\n  'fetch',\n  'WebSocket',\n] as const;";
+  assert.equal(findsNetwork(lockDown), false);
+  assert.ok(findsNetwork(`${lockDown}\nawait fetch(url);`));
 });

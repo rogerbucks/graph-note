@@ -1,7 +1,8 @@
 // Every call into a plug-in, timed, caught and named (editor spec §43, plugin_manifest_limits). A call that throws is
 // named with its plug-in, never let through to blank a drawing. A call over the time limit is named and its answer
 // dropped. Its plug-in is stopped, so nothing of it is called again. A call whose answer comes later is timed until it
-// comes. One that never answers is not stopped here: that waits for plug-ins running apart, in a worker (TRUST-14).
+// comes. One that never answers is not stopped here. A plug-in run apart, in a worker, is stopped by the host's clock
+// (plugin-isolated.ts).
 
 /** The answer of a call into a plug-in: its value, or what went wrong and whose it was. */
 export type PluginResult<T> = { ok: true; value: T } | { ok: false; plugin: string; message: string };

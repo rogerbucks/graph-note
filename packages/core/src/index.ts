@@ -187,6 +187,10 @@ export { commandContract, exporterContract, sampleExports, storageBackendContrac
 export { SAMPLE_GRAPH, providerContract, sourceContract, stepContract } from './plugins-contract.ts';
 export type { AiProvider, ProviderReading, ProviderRequest } from './plugin-ai.ts';
 export { diagramContract, themeTokenContract } from './plugins-contract.ts';
+export { isolatedPlugin } from './plugin-isolated.ts';
+export type { IsolatedOptions, IsolatedPlugin, PluginPort } from './plugin-isolated.ts';
+export { ISOLATED_POINTS, LOCKED_AWAY, lockDown, servePlugin } from './plugin-serve.ts';
+export type { Added, FromPlugin, PluginScope, ToPlugin } from './plugin-serve.ts';
 export type { DiagramGiven, DiagramMark, DiagramSpace, MarkPoint, PluginDiagram } from './plugin-diagrams.ts';
 export { OBSIDIAN_TOKEN_MAP, THEME_TOKENS, themeTokenCss } from './theme-tokens.ts';
 export type { ThemeToken, ThemeTokenUse } from './theme-tokens.ts';

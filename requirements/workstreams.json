@@ -700,7 +700,8 @@
       "trust_ai_provider_bounded",
       "plugin_diagram_type_named",
       "trust_diagram_type_data",
-      "trust_source_joined"
+      "trust_source_joined",
+      "trust_plugin_isolated"
     ]
   },
   "U1": {

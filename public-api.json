@@ -30,6 +30,12 @@
           "zoomIn: () => void",
           "zoomOut: () => void"
         ],
+        "Added": [
+          "interface",
+          "fields: Record<string, unknown>",
+          "handle: number",
+          "point: 'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai' | 'diagrams'"
+        ],
         "addThing": [
           "value: (reading: NoteReading, graph: string, block: string, thing: NewThing) => ThingAdded"
         ],
@@ -773,7 +779,7 @@
           "value: readonly ['exports', 'theme', 'storage', 'commands', 'panels', 'sources', 'steps', 'ai', 'diagrams']"
         ],
         "ExtensionPoint": [
-          "type = 'diagrams' | 'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai'"
+          "type = 'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai' | 'diagrams'"
         ],
         "ExtensionPoints": [
           "interface",
@@ -939,6 +945,9 @@
           "width: number",
           "x: number",
           "y: number"
+        ],
+        "FromPlugin": [
+          "type = { manifest: Omit<ThoughtKnotPlugin, 'register'>; added: Added[]; } | { failed: string; } | { reply: number; value?: unknown; error?: string; } | { ask: number; ability: string; method: string; args: unknown[]; }"
         ],
         "Gate": [
           "type = { open: true; } | { ask: string; } | { refuse: string; }"
@@ -1164,6 +1173,24 @@
         ],
         "isDraft": [
           "value: (reading: NoteReading, graph: string) => boolean"
+        ],
+        "ISOLATED_POINTS": [
+          "value: ReadonlyArray<'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai' | 'diagrams'>"
+        ],
+        "IsolatedOptions": [
+          "interface",
+          "clock: Clock",
+          "startLimit?: number | undefined",
+          "timeLimit?: number | undefined"
+        ],
+        "isolatedPlugin": [
+          "value: (port: PluginPort, options: IsolatedOptions) => Promise<IsolatedPlugin>"
+        ],
+        "IsolatedPlugin": [
+          "interface",
+          "plugin: ThoughtKnotPlugin",
+          "stop: (why?: string) => void",
+          "stopped: () => string | null"
         ],
         "isPseudoWord": [
           "value: (text: string) => boolean"
@@ -1453,6 +1480,12 @@
         ],
         "lockBlock": [
           "value: (reading: NoteReading, graph: string, today: string, indent?: string) => string"
+        ],
+        "lockDown": [
+          "value: (scope: object) => string[]"
+        ],
+        "LOCKED_AWAY": [
+          "value: readonly ['fetch', 'XMLHttpRequest', 'WebSocket', 'WebTransport', 'EventSource', 'RTCPeerConnection', 'BroadcastChannel', 'importScripts', 'indexedDB', 'caches', 'Worker', 'SharedWorker']"
         ],
         "Look": [
           "interface",
@@ -2002,6 +2035,13 @@
           "render: (el: PanelRoot) => void",
           "title: string"
         ],
+        "PluginPort": [
+          "interface",
+          "onerror: ((event: unknown) => void) | null",
+          "onmessage: ((event: { data: FromPlugin; }) => void) | null",
+          "postMessage: (message: ToPlugin) => void",
+          "terminate: () => void"
+        ],
         "pluginRegistry": [
           "value: (options?: RegistryOptions) => PluginRegistry"
         ],
@@ -2031,6 +2071,11 @@
         ],
         "PluginResult": [
           "type = { ok: true; value: T; } | { ok: false; plugin: string; message: string; }"
+        ],
+        "PluginScope": [
+          "interface",
+          "onmessage: ((event: { data: ToPlugin; }) => void) | null",
+          "postMessage: (message: FromPlugin) => void"
         ],
         "PluginSource": [
           "interface",
@@ -2455,6 +2500,9 @@
         ],
         "serveLayouts": [
           "value: (scope: LayoutScope, load: () => Promise<Engine>) => void"
+        ],
+        "servePlugin": [
+          "value: (scope: PluginScope, plugin: ThoughtKnotPlugin) => void"
         ],
         "setDirection": [
           "value: (to: 'ltr' | 'rtl') => void"
@@ -2944,7 +2992,7 @@
           "api: string",
           "id: string",
           "register: (points: ExtensionPoints) => void",
-          "uses: Array<'diagrams' | 'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai'>",
+          "uses: Array<'exports' | 'theme' | 'storage' | 'commands' | 'panels' | 'sources' | 'steps' | 'ai' | 'diagrams'>",
           "version: string"
         ],
         "Threshold": [
@@ -2992,6 +3040,9 @@
           "interface",
           "fix: string",
           "why: string"
+        ],
+        "ToPlugin": [
+          "type = { call: number; handle: number; args: unknown[]; } | { answered: number; value?: unknown; error?: string; }"
         ],
         "toStandard": [
           "value: (note: string) => Converted"
