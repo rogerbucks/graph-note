@@ -1774,8 +1774,20 @@
         "OUTSIDE": [
           "value: readonly ['fade', 'hide']"
         ],
+        "OUTSIDE_CHARACTERS": [
+          "value: 2000000"
+        ],
+        "outsideBody": [
+          "value: (code: string) => string"
+        ],
         "outsideOf": [
           "value: (style: StyleGraph, view: string) => Outside"
+        ],
+        "outsidePlugin": [
+          "value: (code: string, start: (body: string) => PluginPort, options: IsolatedOptions) => Promise<IsolatedPlugin>"
+        ],
+        "outsideProblem": [
+          "value: (code: string) => string | null"
         ],
         "paceSaid": [
           "value: (ms: number) => string"
@@ -2458,6 +2470,12 @@
         ],
         "scrollsOneWay": [
           "value: (type: DiagramType, phone: boolean, width: number, room: number) => boolean"
+        ],
+        "sealCode": [
+          "value: (scope: object) => string[]"
+        ],
+        "sealOutside": [
+          "value: (scope: PluginScope & object) => (plugin: unknown) => void"
         ],
         "SendAsk": [
           "interface",

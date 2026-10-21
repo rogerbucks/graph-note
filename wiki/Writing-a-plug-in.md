@@ -76,6 +76,9 @@ registry.register(textList);
 
 - **Its id** is dotted lower-case words, such as `acme.text-list`. Use your own name first, so no two plug-ins clash.
 - **Its version** is major.minor.patch.
+- **Its file** is one file. It exports only the plug-in, written `export default` at the start of a line. It holds no
+  `import`, not even in a comment, so bundle what you need into it. A host refuses any other file before running it.
+- **No code from text.** `eval`, `Function` and timers given text are taken away before the file's first line runs.
 - **Its writer** gives the same text every time for the same graph, and never changes the graph it is given.
 - **Its colours**, if it adds any, are named `--gn-plugin-<your-id>-<word>`. Each gives a light and a dark colour that
   meets the locked contrast on the background it sits on.

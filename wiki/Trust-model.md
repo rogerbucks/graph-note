@@ -280,8 +280,12 @@ Today every plug-in ships with ThoughtKnot. Before a host loads one it did not s
     once.
 - The files ability goes through the note gate (TRUST-16). Done.
 - Each extension point has its own version (API-10). Done in the core: `packages/core/src/plugin-versions.ts`. A
-  sample plug-in outside the packages runs in a worker in CI and passes each contract. Still to come: each host's own
-  way to load one.
+  sample plug-in outside the packages runs in a worker in CI and passes each contract.
+- A host loads an outside plug-in from one file that imports nothing (API-10). Done in the core:
+  `packages/core/src/plugin-outside.ts`. A file that holds the word `import` never starts a worker. The worker's own
+  start takes away the network and every way to make code from text, and only then does the file run. Still to come:
+  the browser page and Obsidian each load one from a plug-ins folder or a web link. Each loads only once the person
+  turns it on.
 
 ## Boundaries still to come
 
