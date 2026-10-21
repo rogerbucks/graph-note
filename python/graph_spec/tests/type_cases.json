@@ -1,5 +1,5 @@
 {
-  "about": "Graphs whose style graph chooses a diagram type (editor spec §15: diagram_type_set, type_only_when_fits, tree_fits, timeline_fits, type_stops_fitting, type_both_renderers; §6: radial_spoke_order), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same answer for whether each type fits and why not, the same type drawn (or, when the chosen type no longer fits, the same why and the same nearest type, and a network drawn), and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_types.py does the same from the Python side.",
+  "about": "Graphs whose style graph chooses a diagram type (editor spec §15: diagram_type_set, type_only_when_fits, tree_fits, timeline_fits, type_stops_fitting, type_both_renderers, plugin_diagram_type_named; §6: radial_spoke_order), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same answer for whether each type fits and why not, the same type drawn (or, when the chosen type no longer fits, the same why and the same nearest type, and a network drawn), and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_types.py does the same from the Python side.",
   "cases": [
     {
       "name": "a tree along one relationship: its links forward, a link drawn backwards in a network laid out forward, the others free",
@@ -285,6 +285,22 @@
           "(d2:Diagram {type: 'radial', view: 'round'}),",
           "(n1:Nudge {word: 'group', thing: 'ann', group: 'Desk'}),",
           "(n2:Nudge {word: 'group', thing: 'ops', group: 'Desk'})"
+        ]
+      ]
+    },
+    {
+      "name": "a diagram type a plug-in adds, which nothing here draws: drawn as a network, naming its plug-in; a name not under a plug-in's id refused",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(paris:City {name: 'Paris'}),",
+          "(rome:City {name: 'Rome'}),",
+          "(paris)-[:TO]->(rome)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(d1:Diagram {type: 'acme.charts.sankey'}),",
+          "(d2:Diagram {type: 'Acme.Sankey', view: 'odd'})"
         ]
       ]
     }

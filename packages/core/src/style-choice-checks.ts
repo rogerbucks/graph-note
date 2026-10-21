@@ -3,7 +3,7 @@
 // whether they are merged into trunks (Links). What is sound is kept. Each fault is a problem on its line with its fix,
 // and the thing is left out.
 import type { Problem } from './note-reading.ts';
-import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, ROUTINGS, orList } from './style-graph.ts';
+import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, ROUTINGS, orList, pluginTypeOf } from './style-graph.ts';
 import type { Arrows, Diagram, Links } from './style-graph.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import { reader } from './style-reader.ts';
@@ -48,13 +48,24 @@ export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Di
     r.missing(word('styling.diagram.missing'), word('styling.diagram.add', { among: quoted(DIAGRAM_TYPES) }));
     return null;
   }
-  const type = r.word('type', DIAGRAM_TYPES, (written) => word('styling.diagram.unknown', { written }));
+  // a type a plug-in adds is named under its id, and drawn as a network where no plug-in draws it
+  const written = raw.props.type,
+    plugin = typeof written === 'string' && pluginTypeOf(written) ? written : undefined;
+  const type = plugin
+    ? 'network'
+    : r.word('type', DIAGRAM_TYPES, (w) => word('styling.diagram.unknown', { written: w }));
   const relationship = r.name('relationship', names.types, aType()),
     view = r.text('view');
   if (type && relationship !== undefined && type !== 'tree')
     r.report(treeOnly(), word('styling.diagram.tree-only.fix'));
   if (!type || out.length !== before) return null;
-  return { type, ...inView(view), ...(relationship === undefined ? {} : { relationship }), at: raw.at };
+  return {
+    type,
+    ...(plugin ? { plugin } : {}),
+    ...inView(view),
+    ...(relationship === undefined ? {} : { relationship }),
+    at: raw.at,
+  };
 }
 
 /**

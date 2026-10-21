@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from collections.abc import Sequence
 
 from graphspec.style.near_names import distance, nearest, utf16_units
@@ -28,6 +29,21 @@ ARROWHEADS = ("show", "hide")
 # The diagram types (§15, diagram_type_set): what fits each, and how each is laid out, is in
 # graphspec/style/diagram_types.py.
 DIAGRAM_TYPES = ("network", "tree", "flow", "radial", "lanes", "timeline", "table")
+_PLUGIN_ID = re.compile(r"[a-z0-9]+(?:[.-][a-z0-9]+)+")
+_OWN_WORD = re.compile(r"[a-z][a-z0-9-]*")
+
+
+def plugin_type_of(name: str) -> dict[str, str] | None:
+    """The plug-in a diagram type is named under, and the type's own word, or None when it is
+    not one (§15, plugin_diagram_type_named): its id, dotted lower-case words, then a dot and a
+    word, so `acme.charts.sankey` is `sankey` of `acme.charts`. As the core's pluginTypeOf."""
+    at = name.rfind(".")
+    plugin, own = name[:at], name[at + 1 :]
+    if at > 0 and _PLUGIN_ID.fullmatch(plugin) and _OWN_WORD.fullmatch(own):
+        return {"plugin": plugin, "word": own}
+    return None
+
+
 # How a link moves to show flow (§7, links_show_flow): dashes, a dot, or still. It is still
 # unless a Flow moves it (graphspec/style/flow.py).
 FLOW_MOTIONS = ("dashes", "dot", "still")

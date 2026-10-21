@@ -54,6 +54,20 @@ export const DIAGRAM_TYPES = ['network', 'tree', 'flow', 'radial', 'lanes', 'tim
 export type DiagramType = (typeof DIAGRAM_TYPES)[number];
 
 /**
+ * The plug-in a diagram type is named under, and the type's own word, or null when it is not one (§15,
+ * plugin_diagram_type_named). A plug-in's type is its id, dotted lower-case words, then a dot and a word:
+ * `acme.charts.sankey` is `sankey` of the plug-in `acme.charts`.
+ */
+export function pluginTypeOf(name: string): { plugin: string; word: string } | null {
+  const at = name.lastIndexOf('.');
+  const plugin = name.slice(0, at),
+    own = name.slice(at + 1);
+  return at > 0 && /^[a-z0-9]+(?:[.-][a-z0-9]+)+$/.test(plugin) && /^[a-z][a-z0-9-]*$/.test(own)
+    ? { plugin, word: own }
+    : null;
+}
+
+/**
  * How a link moves to show flow (§7, links_show_flow). Dashes run along its arrow, a dot travels along it, or it is
  * still. Still takes back a movement chosen for a wider place. Links are still unless a Flow moves them (link-flow.ts).
  */
@@ -165,6 +179,8 @@ export interface Arrows {
  */
 export interface Diagram {
   type: DiagramType;
+  /** A diagram type a plug-in adds, by its whole name (`pluginTypeOf`). Where none draws it, `type` is a network. */
+  plugin?: string;
   /** The view it is chosen for; none, the whole graph. */
   view?: string;
   /** For a tree: the relationship type whose links are its branches; none, the one that makes the best tree. */

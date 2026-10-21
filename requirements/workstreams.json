@@ -698,6 +698,7 @@
       "plugin_theme_tokens",
       "plugin_rtl",
       "trust_ai_provider_bounded",
+      "plugin_diagram_type_named",
       "trust_diagram_type_data",
       "trust_source_joined"
     ]
