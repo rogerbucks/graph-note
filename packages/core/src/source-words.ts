@@ -61,6 +61,7 @@ export const SOURCE_WORDS = {
   'bar.full-screen': 'Full screen',
   'bar.close-full-screen': 'Close full screen',
   'bar.export': 'Export',
+  'bar.space': '3D view',
   'bar.edit-here': 'Edit here',
   'bar.done-editing': 'Done editing',
   'bar.edit-in-pane': 'Edit in pane',

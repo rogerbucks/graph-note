@@ -2,7 +2,7 @@
 // The user guide's screenshots (wiki-screens.mjs) and the checks run in a real browser (spec §41:
 // a11y_targets_reflow_auto) share it. Chrome is the one given, or the first of the usual names on the PATH.
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -19,11 +19,17 @@ export function findChrome(given, which = (n) => execFileSync('which', [n], { en
   throw new Error('no Chrome found: give one with --chrome PATH');
 }
 
+/** How often a start is checked on, 100 ms apart: 30 seconds, as a busy test runner can be slow to start Chrome. */
+const START_TRIES = 300;
+
 /**
  * Chrome's first page, from `list`, its list of pages. The list is asked again, up to `tries` times, while it cannot be
  * read or holds no page yet: Chrome answers with an empty list before its first page is open.
  */
-export async function firstPage(list, { tries = 100, wait = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+export async function firstPage(
+  list,
+  { tries = START_TRIES, wait = (ms) => new Promise((r) => setTimeout(r, ms)) } = {},
+) {
   for (let i = 0; i < tries; i++) {
     const pages = await list().catch(() => null);
     const page = Array.isArray(pages) ? pages.find((p) => p.type === 'page') : undefined;
@@ -31,6 +37,32 @@ export async function firstPage(list, { tries = 100, wait = (ms) => new Promise(
     await wait(100);
   }
   throw new Error('Chrome opened no page');
+}
+
+/**
+ * The port Chrome's DevTools took, from the file it writes in its profile once it listens. Chrome is asked for any free
+ * port, so two Chromes started at once never pick the same one. The file is read again, up to `tries` times, until then.
+ */
+export async function portOf(
+  profile,
+  {
+    tries = START_TRIES,
+    wait = (ms) => new Promise((r) => setTimeout(r, ms)),
+    read = () => readFileSync(join(profile, 'DevToolsActivePort'), 'utf8'),
+  } = {},
+) {
+  for (let i = 0; i < tries; i++) {
+    let text = '';
+    try {
+      text = read();
+    } catch {
+      // not written yet
+    }
+    const port = Number.parseInt(text.split('\n')[0] ?? '', 10);
+    if (port > 0) return port;
+    await wait(100);
+  }
+  throw new Error('Chrome opened no DevTools port');
 }
 
 /** A DevTools session on Chrome's first page: send(method, params) resolves with the result, or throws its error. */
@@ -76,6 +108,20 @@ export function removeProfile(profile, remove = rmSync) {
 }
 
 /**
+ * Runs `start` again, up to `attempts` times in all, when Chrome did not come up: it opened no DevTools port or no page.
+ * Each try starts a fresh Chrome. Any other error is thrown at once, as a retry would not help.
+ */
+export async function startAgainIfStuck(start, attempts = 2) {
+  for (let i = 1; ; i++) {
+    try {
+      return await start();
+    } catch (e) {
+      if (i >= attempts || !/^Chrome opened no (page|DevTools port)$/.test(e?.message ?? '')) throw e;
+    }
+  }
+}
+
+/**
  * Starts a headless Chrome on a fresh profile, its page `width` by `height` CSS pixels at `scale`.
  * - send speaks the DevTools protocol.
  * - run runs a line of script in the page.
@@ -83,8 +129,10 @@ export function removeProfile(profile, remove = rmSync) {
  * - stop ends it all.
  * `flags` are more of Chrome's switches, such as those that let it paint with WebGL and WebGPU in software.
  */
-export async function startChrome({ chrome, width = 1400, height = 1000, scale = 2, flags = [] } = {}) {
-  const port = 9300 + Math.floor(Math.random() * 500);
+export const startChrome = (options) => startAgainIfStuck(() => startOnce(options));
+
+/** One try at starting Chrome, as `startChrome` describes. */
+async function startOnce({ chrome, width = 1400, height = 1000, scale = 2, flags = [] } = {}) {
   const profile = mkdtempSync(join(tmpdir(), 'thoughtknot-chrome-'));
   const browser = spawn(
     findChrome(chrome),
@@ -95,7 +143,7 @@ export async function startChrome({ chrome, width = 1400, height = 1000, scale =
       '--no-proxy-server',
       '--hide-scrollbars',
       `--user-data-dir=${profile}`,
-      `--remote-debugging-port=${port}`,
+      '--remote-debugging-port=0',
       ...flags,
       'about:blank',
     ],
@@ -110,7 +158,7 @@ export async function startChrome({ chrome, width = 1400, height = 1000, scale =
     removeProfile(profile);
   };
   try {
-    const { send, close } = await devtools(port);
+    const { send, close } = await devtools(await portOf(profile));
     await send('Page.enable');
     const resize = (w, h = height) =>
       send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: scale, mobile: false });

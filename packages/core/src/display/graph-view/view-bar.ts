@@ -1,5 +1,6 @@
-// A drawing's bar (spec §3). It holds the problems badge, Fit, zoom out, zoom in, Find a thing, Filter by kind or link,
-// View (§25) and Full screen. Where the note is edited, it holds Edit here and Edit in pane; in reading view, Source.
+// A drawing's bar (spec §3). It holds the problems badge, Fit, zoom out and zoom in. Then Find a thing, Filter by kind
+// or link, View (§25), 3D view (§53) and Full screen. Where the note is edited, it holds Edit here and Edit in pane. In reading
+// view, it holds Source.
 // Each control says what it is in words as well as by its icon.
 import { setIcon } from '../host';
 import { parkedCount, word } from '@thoughtknot/core';
@@ -46,6 +47,8 @@ export interface BarActions {
   /** View: opens or closes the View menu's switches, and says which (§25). */
   view: (b: HTMLButtonElement) => void;
   fullScreen: () => void;
+  /** 3D view: the drawing lifted into depth, over the card, until Back to 2D (§53). */
+  space: () => void;
   editHere: () => void;
   toggleSource: (b: HTMLButtonElement) => void;
   /** Export: shows or hides the Export form. */
@@ -106,6 +109,8 @@ export function renderBar(root: HTMLElement, o: ViewOptions, on: BarActions): Ba
     const view = button(bar, word('bar.view'), 'layers', () => on.view(view));
     view.setAttribute('aria-expanded', 'false');
   }
+  // the 3D view only looks, so it is offered wherever the drawing is; a table has no depth to show (§53)
+  if (!o.diagram?.table) button(bar, word('bar.space'), 'box', () => on.space());
   if (mode === 'full') button(bar, word('bar.close-full-screen'), 'minimize', () => o.onClose?.());
   else button(bar, word('bar.full-screen'), 'expand', () => on.fullScreen());
   // Export writes a new file, never the note, so it is offered wherever the drawing is (spec §16)

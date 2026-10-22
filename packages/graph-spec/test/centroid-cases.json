@@ -1,0 +1,555 @@
+{
+  "about": "Shared cases for the centroids of a graph's clusters (editor spec §31). Each step is given the answer of the step before. Both libraries must give each expected answer. Made once by the JavaScript library, wiki/Clusters-design.md step 4.",
+  "cases": [
+    {
+      "name": "atoms sum up into a molecule, and the molecule into a cell",
+      "steps": [
+        {
+          "nodes": [
+            ["atoms", ["Cluster"], {}],
+            ["molecule", ["Cluster"], {}],
+            ["cell", ["Cluster"], {}],
+            ["h", ["Atom"], {}],
+            ["o", ["Atom"], { "likelihood": "likely" }],
+            ["wall", ["Part"], { "likelihood": "unlikely" }]
+          ],
+          "edges": [
+            ["h", "MEMBER_OF", "atoms"],
+            ["o", "MEMBER_OF", "atoms"],
+            ["atoms", "MEMBER_OF", "molecule"],
+            ["molecule", "MEMBER_OF", "cell"],
+            ["wall", "MEMBER_OF", "cell"]
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "centroids": [
+            {
+              "id": "sha-256:4e93fc15e4a7d67c71fdc9e1d6c89eb969b7313e93989af13ef3f72562de61c1",
+              "cluster": "atoms",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Atom": 2 },
+              "certainty": { "low": 77.5, "high": 90 },
+              "settled": true,
+              "basis": [
+                ["h", 1, ["Atom"], null],
+                ["o", 1, ["Atom"], "likely"]
+              ]
+            },
+            {
+              "id": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd",
+              "cluster": "molecule",
+              "kind": "asserted",
+              "members": 1,
+              "weight": 1,
+              "kinds": { "Centroid": 1 },
+              "certainty": { "low": 77.5, "high": 90 },
+              "settled": true,
+              "basis": [["atoms", 1, ["Centroid"], null]]
+            },
+            {
+              "id": "sha-256:9b768c8257331f7229028eb3bf6a819fa9de33337934bb1391b3ca1af78c0544",
+              "cluster": "cell",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Centroid": 1, "Part": 1 },
+              "certainty": { "low": 48.75, "high": 67.5 },
+              "settled": true,
+              "basis": [
+                ["molecule", 1, ["Centroid"], null],
+                ["wall", 1, ["Part"], "unlikely"]
+              ]
+            }
+          ],
+          "recomputed": ["atoms", "molecule", "cell"],
+          "passes": 4,
+          "settled": true
+        }
+      ]
+    },
+    {
+      "name": "an unrelated edit works out no centroid again",
+      "steps": [
+        {
+          "nodes": [
+            ["atoms", ["Cluster"], {}],
+            ["molecule", ["Cluster"], {}],
+            ["cell", ["Cluster"], {}],
+            ["h", ["Atom"], {}],
+            ["o", ["Atom"], { "likelihood": "likely" }],
+            ["wall", ["Part"], { "likelihood": "unlikely" }]
+          ],
+          "edges": [
+            ["h", "MEMBER_OF", "atoms"],
+            ["o", "MEMBER_OF", "atoms"],
+            ["atoms", "MEMBER_OF", "molecule"],
+            ["molecule", "MEMBER_OF", "cell"],
+            ["wall", "MEMBER_OF", "cell"]
+          ]
+        },
+        {
+          "nodes": [
+            ["atoms", ["Cluster"], {}],
+            ["molecule", ["Cluster"], {}],
+            ["cell", ["Cluster"], {}],
+            ["h", ["Atom"], { "name": "Hydrogen" }],
+            ["o", ["Atom"], { "likelihood": "likely" }],
+            ["wall", ["Part"], { "likelihood": "unlikely" }],
+            ["lone", ["Thing"], {}]
+          ],
+          "edges": [
+            ["h", "MEMBER_OF", "atoms"],
+            ["o", "MEMBER_OF", "atoms"],
+            ["atoms", "MEMBER_OF", "molecule"],
+            ["molecule", "MEMBER_OF", "cell"],
+            ["wall", "MEMBER_OF", "cell"]
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "centroids": [
+            {
+              "id": "sha-256:4e93fc15e4a7d67c71fdc9e1d6c89eb969b7313e93989af13ef3f72562de61c1",
+              "cluster": "atoms",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Atom": 2 },
+              "certainty": { "low": 77.5, "high": 90 },
+              "settled": true,
+              "basis": [
+                ["h", 1, ["Atom"], null],
+                ["o", 1, ["Atom"], "likely"]
+              ]
+            },
+            {
+              "id": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd",
+              "cluster": "molecule",
+              "kind": "asserted",
+              "members": 1,
+              "weight": 1,
+              "kinds": { "Centroid": 1 },
+              "certainty": { "low": 77.5, "high": 90 },
+              "settled": true,
+              "basis": [["atoms", 1, ["Centroid"], null]]
+            },
+            {
+              "id": "sha-256:9b768c8257331f7229028eb3bf6a819fa9de33337934bb1391b3ca1af78c0544",
+              "cluster": "cell",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Centroid": 1, "Part": 1 },
+              "certainty": { "low": 48.75, "high": 67.5 },
+              "settled": true,
+              "basis": [
+                ["molecule", 1, ["Centroid"], null],
+                ["wall", 1, ["Part"], "unlikely"]
+              ]
+            }
+          ],
+          "recomputed": ["atoms", "molecule", "cell"],
+          "passes": 4,
+          "settled": true
+        },
+        {
+          "centroids": [
+            {
+              "id": "sha-256:4e93fc15e4a7d67c71fdc9e1d6c89eb969b7313e93989af13ef3f72562de61c1",
+              "cluster": "atoms",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Atom": 2 },
+              "certainty": { "low": 77.5, "high": 90 },
+              "settled": true,
+              "basis": [
+                ["h", 1, ["Atom"], null],
+                ["o", 1, ["Atom"], "likely"]
+              ]
+            },
+            {
+              "id": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd",
+              "cluster": "molecule",
+              "kind": "asserted",
+              "members": 1,
+              "weight": 1,
+              "kinds": { "Centroid": 1 },
+              "certainty": { "low": 77.5, "high": 90 },
+              "settled": true,
+              "basis": [["atoms", 1, ["Centroid"], null]]
+            },
+            {
+              "id": "sha-256:9b768c8257331f7229028eb3bf6a819fa9de33337934bb1391b3ca1af78c0544",
+              "cluster": "cell",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Centroid": 1, "Part": 1 },
+              "certainty": { "low": 48.75, "high": 67.5 },
+              "settled": true,
+              "basis": [
+                ["molecule", 1, ["Centroid"], null],
+                ["wall", 1, ["Part"], "unlikely"]
+              ]
+            }
+          ],
+          "recomputed": [],
+          "passes": 0,
+          "settled": true
+        }
+      ]
+    },
+    {
+      "name": "a member leaving works out every cluster it was in again",
+      "steps": [
+        {
+          "nodes": [
+            ["a", ["Cluster"], {}],
+            ["b", ["Cluster"], {}],
+            ["c", ["Cluster"], {}],
+            ["x", ["Thing"], { "likelihood": "very-likely" }],
+            ["y", ["Thing"], {}]
+          ],
+          "edges": [
+            ["x", "MEMBER_OF", "a"],
+            ["x", "MEMBER_OF", "b"],
+            ["x", "MEMBER_OF", "c"],
+            ["y", "MEMBER_OF", "a"]
+          ]
+        },
+        {
+          "nodes": [
+            ["a", ["Cluster"], {}],
+            ["b", ["Cluster"], {}],
+            ["c", ["Cluster"], {}],
+            ["x", ["Thing"], { "likelihood": "very-likely" }],
+            ["y", ["Thing"], {}]
+          ],
+          "edges": [
+            ["x", "MEMBER_OF", "a"],
+            ["x", "MEMBER_OF", "b"],
+            ["y", "MEMBER_OF", "a"]
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "centroids": [
+            {
+              "id": "sha-256:12e54a7615522b504a83334a9fcaffcf53b2d818bf750c303cac4d489341e7f5",
+              "cluster": "a",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 1.3333333333333333,
+              "kinds": { "Thing": 1.3333333333333333 },
+              "certainty": { "low": 95, "high": 98.75 },
+              "settled": true,
+              "basis": [
+                ["x", 0.3333333333333333, ["Thing"], "very-likely"],
+                ["y", 1, ["Thing"], null]
+              ]
+            },
+            {
+              "id": "sha-256:71ab67101d33f0065fe06bac31066d4d8f0d03e17f02608750498450dac5e3e0",
+              "cluster": "b",
+              "kind": "asserted",
+              "members": 1,
+              "weight": 0.3333333333333333,
+              "kinds": { "Thing": 0.3333333333333333 },
+              "certainty": { "low": 80, "high": 95 },
+              "settled": true,
+              "basis": [["x", 0.3333333333333333, ["Thing"], "very-likely"]]
+            },
+            {
+              "id": "sha-256:11b8144c44eb9675aa9413157c38178904fec0220d6a766a93d11f1ba2513753",
+              "cluster": "c",
+              "kind": "asserted",
+              "members": 1,
+              "weight": 0.3333333333333333,
+              "kinds": { "Thing": 0.3333333333333333 },
+              "certainty": { "low": 80, "high": 95 },
+              "settled": true,
+              "basis": [["x", 0.3333333333333333, ["Thing"], "very-likely"]]
+            }
+          ],
+          "recomputed": ["a", "b", "c"],
+          "passes": 2,
+          "settled": true
+        },
+        {
+          "centroids": [
+            {
+              "id": "sha-256:12e54a7615522b504a83334a9fcaffcf53b2d818bf750c303cac4d489341e7f5",
+              "cluster": "a",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 1.5,
+              "kinds": { "Thing": 1.5 },
+              "certainty": { "low": 93.33333333333333, "high": 98.33333333333333 },
+              "settled": true,
+              "basis": [
+                ["x", 0.5, ["Thing"], "very-likely"],
+                ["y", 1, ["Thing"], null]
+              ]
+            },
+            {
+              "id": "sha-256:71ab67101d33f0065fe06bac31066d4d8f0d03e17f02608750498450dac5e3e0",
+              "cluster": "b",
+              "kind": "asserted",
+              "members": 1,
+              "weight": 0.5,
+              "kinds": { "Thing": 0.5 },
+              "certainty": { "low": 80, "high": 95 },
+              "settled": true,
+              "basis": [["x", 0.5, ["Thing"], "very-likely"]]
+            },
+            {
+              "id": "sha-256:11b8144c44eb9675aa9413157c38178904fec0220d6a766a93d11f1ba2513753",
+              "cluster": "c",
+              "kind": "asserted",
+              "members": 0,
+              "weight": 0,
+              "kinds": {},
+              "certainty": null,
+              "settled": true,
+              "basis": []
+            }
+          ],
+          "recomputed": ["a", "b", "c"],
+          "passes": 2,
+          "settled": true
+        }
+      ]
+    },
+    {
+      "name": "a cycle of two clusters settles",
+      "steps": [
+        {
+          "nodes": [
+            ["A", ["Cluster"], {}],
+            ["B", ["Cluster"], {}],
+            ["x", ["Thing"], { "likelihood": "almost-no-chance" }],
+            ["y", ["Thing"], {}]
+          ],
+          "edges": [
+            ["B", "MEMBER_OF", "A"],
+            ["A", "MEMBER_OF", "B"],
+            ["x", "MEMBER_OF", "A"],
+            ["y", "MEMBER_OF", "B"]
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "centroids": [
+            {
+              "id": "sha-256:b655617154295a0104d54cfb14582379e9084797c3c243560ba349ab37aa89bc",
+              "cluster": "A",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Centroid": 1, "Thing": 1 },
+              "certainty": { "low": 34.00000000024011, "high": 36.66666666689707 },
+              "settled": true,
+              "basis": [
+                ["B", 1, ["Centroid"], null],
+                ["x", 1, ["Thing"], "almost-no-chance"]
+              ]
+            },
+            {
+              "id": "sha-256:61a0c6a70266dcc10472156073ee253c13e5f655c5fb170c6100aeb8c0d36d85",
+              "cluster": "B",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Centroid": 1, "Thing": 1 },
+              "certainty": { "low": 66.9999999997599, "high": 68.33333333310293 },
+              "settled": true,
+              "basis": [
+                ["A", 1, ["Centroid"], null],
+                ["y", 1, ["Thing"], null]
+              ]
+            }
+          ],
+          "recomputed": ["A", "B"],
+          "passes": 38,
+          "settled": true
+        }
+      ]
+    },
+    {
+      "name": "two centroids that swap stop at the most passes, unsettled",
+      "steps": [
+        {
+          "nodes": [
+            ["A", ["Cluster"], {}],
+            ["B", ["Cluster"], {}],
+            ["x", ["Thing"], { "likelihood": "almost-no-chance" }],
+            ["y", ["Thing"], {}]
+          ],
+          "edges": [
+            ["B", "MEMBER_OF", "A"],
+            ["A", "MEMBER_OF", "B"],
+            ["x", "MEMBER_OF", "A"],
+            ["y", "MEMBER_OF", "B"]
+          ]
+        },
+        {
+          "nodes": [
+            ["A", ["Cluster"], {}],
+            ["B", ["Cluster"], {}],
+            ["x", ["Thing"], { "likelihood": "almost-no-chance" }],
+            ["y", ["Thing"], {}]
+          ],
+          "edges": [
+            ["B", "MEMBER_OF", "A"],
+            ["A", "MEMBER_OF", "B"]
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "centroids": [
+            {
+              "id": "sha-256:b655617154295a0104d54cfb14582379e9084797c3c243560ba349ab37aa89bc",
+              "cluster": "A",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Centroid": 1, "Thing": 1 },
+              "certainty": { "low": 34.00000000024011, "high": 36.66666666689707 },
+              "settled": true,
+              "basis": [
+                ["B", 1, ["Centroid"], null],
+                ["x", 1, ["Thing"], "almost-no-chance"]
+              ]
+            },
+            {
+              "id": "sha-256:61a0c6a70266dcc10472156073ee253c13e5f655c5fb170c6100aeb8c0d36d85",
+              "cluster": "B",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Centroid": 1, "Thing": 1 },
+              "certainty": { "low": 66.9999999997599, "high": 68.33333333310293 },
+              "settled": true,
+              "basis": [
+                ["A", 1, ["Centroid"], null],
+                ["y", 1, ["Thing"], null]
+              ]
+            }
+          ],
+          "recomputed": ["A", "B"],
+          "passes": 38,
+          "settled": true
+        },
+        {
+          "centroids": [
+            {
+              "id": "sha-256:b655617154295a0104d54cfb14582379e9084797c3c243560ba349ab37aa89bc",
+              "cluster": "A",
+              "kind": "asserted",
+              "members": 1,
+              "weight": 1,
+              "kinds": { "Centroid": 1 },
+              "certainty": { "low": 34.00000000024011, "high": 36.66666666689707 },
+              "settled": false,
+              "basis": [["B", 1, ["Centroid"], null]]
+            },
+            {
+              "id": "sha-256:61a0c6a70266dcc10472156073ee253c13e5f655c5fb170c6100aeb8c0d36d85",
+              "cluster": "B",
+              "kind": "asserted",
+              "members": 1,
+              "weight": 1,
+              "kinds": { "Centroid": 1 },
+              "certainty": { "low": 66.9999999997599, "high": 68.33333333310293 },
+              "settled": false,
+              "basis": [["A", 1, ["Centroid"], null]]
+            }
+          ],
+          "recomputed": ["A", "B"],
+          "passes": 50,
+          "settled": false
+        }
+      ]
+    },
+    {
+      "name": "no passes leave every changed cluster unsettled",
+      "options": { "passes": 0 },
+      "steps": [
+        {
+          "nodes": [
+            ["atoms", ["Cluster"], {}],
+            ["molecule", ["Cluster"], {}],
+            ["cell", ["Cluster"], {}],
+            ["h", ["Atom"], {}],
+            ["o", ["Atom"], { "likelihood": "likely" }],
+            ["wall", ["Part"], { "likelihood": "unlikely" }]
+          ],
+          "edges": [
+            ["h", "MEMBER_OF", "atoms"],
+            ["o", "MEMBER_OF", "atoms"],
+            ["atoms", "MEMBER_OF", "molecule"],
+            ["molecule", "MEMBER_OF", "cell"],
+            ["wall", "MEMBER_OF", "cell"]
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "centroids": [
+            {
+              "id": "sha-256:4e93fc15e4a7d67c71fdc9e1d6c89eb969b7313e93989af13ef3f72562de61c1",
+              "cluster": "atoms",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Atom": 2 },
+              "certainty": null,
+              "settled": false,
+              "basis": [
+                ["h", 1, ["Atom"], null],
+                ["o", 1, ["Atom"], "likely"]
+              ]
+            },
+            {
+              "id": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd",
+              "cluster": "molecule",
+              "kind": "asserted",
+              "members": 1,
+              "weight": 1,
+              "kinds": { "Centroid": 1 },
+              "certainty": null,
+              "settled": false,
+              "basis": [["atoms", 1, ["Centroid"], null]]
+            },
+            {
+              "id": "sha-256:9b768c8257331f7229028eb3bf6a819fa9de33337934bb1391b3ca1af78c0544",
+              "cluster": "cell",
+              "kind": "asserted",
+              "members": 2,
+              "weight": 2,
+              "kinds": { "Centroid": 1, "Part": 1 },
+              "certainty": null,
+              "settled": false,
+              "basis": [
+                ["molecule", 1, ["Centroid"], null],
+                ["wall", 1, ["Part"], "unlikely"]
+              ]
+            }
+          ],
+          "recomputed": ["atoms", "molecule", "cell"],
+          "passes": 0,
+          "settled": false
+        }
+      ]
+    }
+  ]
+}

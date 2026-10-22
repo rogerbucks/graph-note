@@ -87,4 +87,10 @@ export const DISPLAY_SOURCE_WORDS = {
   'list.add-a': 'Add a {kind}',
   'list.remove': 'Remove {name}',
   'proposal.marked': '{mark} by the proposal',
+  // the 3D view (§53, space-view-panel.ts)
+  'space.name':
+    '3D view of {graph}. Drag to turn, scroll to zoom, double-click a thing to fly to it. Escape goes back.',
+  'space.flatten': 'Back to 2D',
+  'space.height-groups': 'Height: groups',
+  'space.height-links': 'Height: links',
 } as const;

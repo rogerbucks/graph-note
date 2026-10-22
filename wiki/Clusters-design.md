@@ -52,16 +52,19 @@ Each cluster gets one centroid. It is a thing of kind `Centroid`, derived and ne
 - **Its id comes from its cluster's id**, as a named SHA-256 hash (`spec_hashes_named`). So a rebuild gives the same id.
 - **It holds a summary.** The number of members, the kinds they have, and a certainty range.
 - **Each member counts 1/N** in each of its N clusters. A thing in four clusters counts a quarter in each.
+- **Its certainty range is the weighted mean** of its members' ranges. A member's range comes from its likelihood
+  word. A member with no likelihood word states a fact, so its range is 100 to 100.
 - **Centroids can nest.** When a cluster is a member of a bigger one, its centroid counts as one member there. So atoms
   sum up into molecules, and molecules into cells. No domain gets special handling.
 
 ## Keeping centroids up to date
 
 - **Only what changed is worked out again.** An edit that adds or drops a member marks that member's clusters as
-  changed. Their centroids are worked out again, then the clusters above them. Any other edit recomputes nothing.
+  changed. So does a change to a member's kinds or likelihood word, since the centroid would be wrong otherwise. Their centroids are worked out again, then the clusters above them. Any other edit recomputes nothing.
 - **Each centroid is updated at most once a pass.** Passes repeat until no value moves by more than a small amount.
 - **There is a maximum number of passes.** Clusters that are still moving at the maximum are flagged as *unsettled*.
-  An unsettled centroid is never reported as settled, whatever the time budget.
+  An unsettled centroid is never reported as settled, whatever the time budget. A cluster above an unsettled one is
+  unsettled too. An unsettled centroid is worked out again on the next edit.
 - **Cycles are allowed.** Cluster A may sit inside cluster B, and B inside A. A cycle is flagged, never refused. A view
   can hide or highlight the clusters in a cycle.
 - **There is nothing for the person to do.** Clusters and centroids are worked out again by themselves after each edit.
