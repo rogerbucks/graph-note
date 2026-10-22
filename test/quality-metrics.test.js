@@ -12,7 +12,7 @@ import { METRICS, compare, acceptedProblems } from '../scripts/quality-check.mjs
 import { findSecrets, scanRepo, scannedFiles } from '../scripts/quality-secrets.mjs';
 import { measureFast } from '../scripts/quality-metrics.mjs';
 import { testsForChanges } from '../scripts/changed-tests.mjs';
-import { parseJunit, flakyBetween, parseLcov } from '../scripts/quality-suite.mjs';
+import { parseJunit, flakyBetween, parseLcov, unexplainedFailure } from '../scripts/quality-suite.mjs';
 import { exists, read, readJSON, ROOT, block, jobs, runCommands } from './repository/repo.js';
 
 /** The environment of a spawned check outside CI: whatever runs this test, GITHUB_ACTIONS is not set for the child. */
@@ -444,6 +444,23 @@ describe('reading the suite’s reports', () => {
     assert.deepEqual(flakyBetween(both, extra), ['t/a.test.js > s > sometimes there']);
     assert.equal(flakyBetween(both, both, false).length, 1, 'the run itself failed');
     assert.deepEqual(flakyBetween(both, both, true), []);
+  });
+
+  test('a run that failed with no test to blame says why, from its own errors: the ceiling first, else the last line', () => {
+    const stopped = 'run-ceiling: stopped the run after 20 minutes';
+    assert.equal(
+      unexplainedFailure('first', `ok 1\n\n${stopped}\nsomething after\n`),
+      `(the first run failed with no test of its own failing) ${stopped}`,
+    );
+    assert.equal(
+      unexplainedFailure('first', 'warn\nError: Cannot find module x\n'),
+      '(the first run failed with no test of its own failing) Error: Cannot find module x',
+    );
+    assert.equal(unexplainedFailure('second', ''), '(the second run failed with no test of its own failing)');
+    const both = parseJunit(junit([['t/a.test.js', 's', 'steady', true]]), ROOT);
+    assert.deepEqual(flakyBetween(both, both, false, stopped), [
+      `(the second run failed with no test of its own failing) ${stopped}`,
+    ]);
   });
 
   test('line coverage of the files under a folder, as a percentage of their lines', () => {

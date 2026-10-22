@@ -46,14 +46,28 @@ export function parseJunit(xml, root) {
 
 /**
  * The tests whose result differs between two runs, or that ran in only one of them: the flaky ones, by name. A second
- * run that failed (`secondPassed` false) with no test to blame is flaky too, as a line saying so.
+ * run that failed (`secondPassed` false) with no test to blame is flaky too, as a line saying so and why.
  */
-export function flakyBetween(first, second, secondPassed = true) {
+export function flakyBetween(first, second, secondPassed = true, secondStderr = '') {
   const names = new Set([...first.keys(), ...second.keys()]);
   const flaky = [...names].filter((name) => first.get(name) !== second.get(name));
   if (!secondPassed && !flaky.length && ![...second.values()].includes('fail'))
-    flaky.push('(the second run failed with no test of its own failing)');
+    flaky.push(unexplainedFailure('second', secondStderr));
   return flaky;
+}
+
+/**
+ * The line naming a run that failed with no test of its own failing. It quotes the run's own reason when its `stderr`
+ * has one: the ceiling that stopped it, or the last error line. Without it, the failure cannot be told apart.
+ */
+export function unexplainedFailure(which, stderr = '') {
+  const lines = stderr
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const why = lines.find((line) => line.startsWith('run-ceiling:')) ?? lines.at(-1);
+  const said = `(the ${which} run failed with no test of its own failing)`;
+  return why ? `${said} ${why.slice(0, 300)}` : said;
 }
 
 /** The line coverage of the files under a folder, from an lcov report: the files, their lines, those hit, and the share. */
@@ -124,8 +138,8 @@ export function measureSuite(root) {
     const a = parseJunit(readFileSync(one, 'utf8'), root),
       b = parseJunit(readFileSync(two, 'utf8'), root);
     const failing = [...a].filter(([, r]) => r === 'fail').map(([name]) => name);
-    if (!first.passed && !failing.length) failing.push('(the first run failed with no test of its own failing)');
-    const flaky = flakyBetween(a, b, second.passed);
+    if (!first.passed && !failing.length) failing.push(unexplainedFailure('first', first.stderr));
+    const flaky = flakyBetween(a, b, second.passed, second.stderr);
     const coverage = parseLcov(readFileSync(lcov, 'utf8'), 'packages/core/src/');
     return {
       metrics: {
