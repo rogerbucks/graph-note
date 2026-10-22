@@ -555,8 +555,10 @@
 /* The diagram type (spec §15): how the graph is drawn, and Diagram type, which opens the seven types as a panel of
    tiles. A tile is its button and what is said of it. The whole tile takes the click. The one drawn has the accent edge
    and a heavier name, and the suggested one a dashed accent edge. One that does not fit is faint. Each is said in words
-   beside it too, never by colour alone. Every control is a 44-point target. */
+   beside it too, never by colour alone. A timeline's Order and Show sit in a row below. Every control is a 44-point
+   target. */
 .thoughtknot-type-strip,
+.thoughtknot-timeline,
 .thoughtknot-way-in {
   display: flex;
   flex-wrap: wrap;
@@ -565,6 +567,7 @@
   padding: var(--gn-space-1) var(--gn-space-2);
 }
 .thoughtknot-type-strip button,
+.thoughtknot-timeline select,
 .thoughtknot-way-in button,
 .thoughtknot-type-stopped button {
   min-width: 44px;
