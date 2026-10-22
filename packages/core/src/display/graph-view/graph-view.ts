@@ -28,6 +28,7 @@ import type { Target } from './taps';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
 import { drawnApart, renderTypeStrip } from './type-strip';
+import type { TypeLeftAt } from './type-strip';
 import { bindViewportEvents } from './viewport-events';
 import { FullScreen } from './full-screen';
 import { Aids } from './viewer-aids';
@@ -66,6 +67,8 @@ export class GraphView extends Lifecycle {
   private unloaded = false;
   /** Where the legend of moving links is (§7). */
   private legendSlot!: HTMLElement;
+  /** Where a card full screen was as its type changed, for the full-screen card drawn again from this one (§15). */
+  private handOn: TypeLeftAt | undefined;
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super();
@@ -93,6 +96,8 @@ export class GraphView extends Lifecycle {
           mode: 'full',
           onClose: close,
           readOnly: this.readOnly, // full screen opened in reading view is read-only too
+          // full screen drawn again as a new type takes up where it was (§15, type_keeps_place)
+          ...(this.o.diagram ? { diagram: { ...this.o.diagram, kept: () => this.takeHandOn() } } : {}),
         }),
       closed: () => {
         this.viewport.focus();
@@ -170,7 +175,7 @@ export class GraphView extends Lifecycle {
     // a proposal laid over the graph (§17): who proposed it and the changes to accept or reject, which reading view takes away
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
     // how it is drawn, and the diagram types to choose from (§15)
-    if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram));
+    if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, () => this.where()));
     // what its moving links mean, in words beside their icons (§7, motion_not_alone). Only those drawn, never a link
     // folded into a stub or a box (§25). So its slot is filled again whenever the View menu lays the graph out again
     this.legendSlot = root.createDiv({ cls: 'thoughtknot-flow-legend-slot' });
@@ -229,8 +234,11 @@ export class GraphView extends Lifecycle {
     this.zoom = this.across ? new AcrossZoom(size, this.zoomSize(), mode) : new Zoom(size, this.zoomSize(), mode);
     this.zoom.onChange = (v) => this.apply(v);
     this.zoom.onExit = () => this.o.onClose?.();
-    // a view saved as shown is shown so again (§7); a card a link took the tab from, as it was left (§18)
-    const was = view?.shown ?? this.o.links?.cameBack();
+    // a view saved as shown is shown so again (§7); a card a link took the tab from, as it was left (§18).
+    // A card drawn again as a new type is shown as the last one was left (§15, type_keeps_place)
+    const kept = this.o.diagram?.kept?.();
+    if (kept?.full && mode === 'note') this.handOn = kept;
+    const was = kept ?? view?.shown ?? this.o.links?.cameBack();
     if (was?.zoom !== undefined) this.zoom.restore(was.zoom, was.x ?? 0, was.y ?? 0);
     this.apply(this.zoom.view());
     const { viewport, zoom, sel, details, taps, svg, o, fullscreen: full } = this,
@@ -259,15 +267,43 @@ export class GraphView extends Lifecycle {
           slot?.remove();
           this.showEditing(); // Record and Make a view, built before the card was placed, offered no more
           if (was?.selected) this.open({ key: was.selected }); // a view saved as shown opens with its selection here too
+          this.takeUp(kept);
           return;
         }
         source?.remove();
         if (slot) this.o.onReady?.(slot);
         const reopen = this.o.editing?.()?.selected ?? (was?.selected ? { key: was.selected } : null);
         if (reopen) this.open(reopen);
+        this.takeUp(kept);
       },
       () => !gone,
     );
+  }
+
+  /** Where the card is now, kept as its diagram type changes (§15, type_keeps_place). */
+  private where(): TypeLeftAt {
+    const { scale, x, y } = this.zoom.view(),
+      selected = this.details.selectedKey();
+    return { zoom: scale, x, y, ...(selected ? { selected } : {}), ...(this.o.mode === 'full' ? { full: true } : {}) };
+  }
+
+  /** Where a full-screen card was as its type changed, once, for the full-screen card drawn again. */
+  private takeHandOn(): TypeLeftAt | undefined {
+    const at = this.handOn;
+    this.handOn = undefined;
+    return at;
+  }
+
+  /**
+   * Takes up where the last card was as its type changed (§15, type_keeps_place). The thing selected is brought into
+   * view where the new layout put it. Full screen opens again when it was open.
+   */
+  private takeUp(kept: TypeLeftAt | undefined): void {
+    if (!kept) return;
+    const g = kept.selected && this.svg ? boxIn(this.svg, kept.selected) : null,
+      box = g ? this.taps.bounds(g.getAttribute('id') ?? '') : null;
+    if (box) this.zoom.reveal(box);
+    if (this.handOn) this.fullscreen.show();
   }
 
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */
