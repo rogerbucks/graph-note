@@ -266,6 +266,7 @@ export const SOURCE_WORDS = {
   'type.table.as': 'a table',
   'view.matrix': 'Matrix',
   'view.treemap': 'Treemap',
+  'view.chord': 'Chord',
   'type.now-graph': 'The graph is now drawn as {type}.',
   'type.now-view': 'View {view} is now drawn as {type}.',
   'type.drawn': 'Drawn as {type}',
