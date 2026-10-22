@@ -264,6 +264,7 @@ export const SOURCE_WORDS = {
   'type.table': 'Table',
   'type.table.word': 'table',
   'type.table.as': 'a table',
+  'view.list': 'Views',
   'view.matrix': 'Matrix',
   'view.treemap': 'Treemap',
   'view.chord': 'Chord',
