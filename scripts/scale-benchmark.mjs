@@ -22,6 +22,7 @@ import { gqlBlocks } from '../packages/core/src/blocks.ts';
 import { readNote } from '../packages/core/src/drawing.ts';
 import { LAYOUT_LIMITS, tooLarge } from '../packages/core/src/layout-limits.ts';
 import { setNote } from '../packages/core/src/note-edit.ts';
+import { groupsOf } from '../packages/core/src/scale-groups.ts';
 import { SCALE_BUDGETS } from './benchmarks/scale-budgets.mjs';
 import { NOTE } from './make-huge-graph.mjs';
 
@@ -69,6 +70,18 @@ export const STEPS = {
     // over the drawing limit, the card shows the graph's text in place of a drawing (layout_contained)
     return { outcome: refusal ? `refused: over the drawing limit on ${refusal.limit}, shown as text` : 'done' };
   },
+  group({ drawing, times }) {
+    // past the read limit, the groups are found on copies of the V-10 drawing, made outside the time taken
+    const made = drawing ?? copied(times);
+    const start = performance.now();
+    const { groups } = groupsOf(made);
+    const ms = performance.now() - start;
+    const most = Math.max(...groups.map((g) => g.keys.length));
+    return {
+      outcome: `done: ${groups.length} groups, the largest ${most} things${drawing ? '' : ', on copies not read'}`,
+      ms,
+    };
+  },
   pan() {
     return { outcome: 'not built: the overview (way E, step 4)' };
   },
@@ -81,6 +94,18 @@ export const STEPS = {
     return { outcome: reading.tooLarge ? `refused: over the read limit on ${reading.tooLarge.limit}` : 'done' };
   },
 };
+
+/** A drawing of `times` copies of the V-10 drawing, made without reading them, for the steps after reading. */
+function copied(times) {
+  const once = readNote([hugeBlock()]).graphs.get('huge'),
+    boxes = [],
+    links = [];
+  for (let c = 0; c < times; c++) {
+    for (const b of once.boxes) boxes.push({ ...b, key: `${b.key}_c${c}` });
+    for (const l of once.links) links.push({ ...l, from: `${l.from}_c${c}`, to: `${l.to}_c${c}` });
+  }
+  return { ...once, boxes, links, nudges: [] };
+}
 
 /** Megabytes of the heap in use, after collecting garbage when Node was started with --expose-gc. */
 function heapMb() {
@@ -95,13 +120,13 @@ function heapMb() {
 export async function measure(block, times, steps = STEPS, clock = () => performance.now()) {
   const text = grown(block, times);
   const record = { times, bytes: Buffer.byteLength(text), lines: text.split('\n').length, steps: {} };
-  let made = { block: text };
+  let made = { block: text, times };
   for (const [name, step] of Object.entries(steps)) {
     const before = heapMb(),
       start = clock();
     const out = await step(made);
-    const ms = clock() - start;
-    const { outcome, ...rest } = out;
+    // a step that makes what it needs first says itself how long its own work took
+    const { outcome, ms = clock() - start, ...rest } = out;
     made = { ...made, ...rest };
     record.steps[name] = outcome.startsWith('not built')
       ? { outcome, ms: null, mb: null }
