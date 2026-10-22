@@ -20,14 +20,15 @@
 // held by test/accessibility.test.js.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
-import { build, load } from '../packages/obsidian/test/host/load-plugin.js';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { build, load, until } from '../packages/obsidian/test/host/load-plugin.js';
 import { styles } from '../packages/obsidian/test/host/view-notes.js';
 import { editing, row, tapKey } from '../packages/obsidian/test/host/inspector-steps.js';
 import * as cardNotes from '../packages/obsidian/test/host/card-notes.js';
 import { built, cleanUp } from '../packages/claude-code/test/editor-page-support.js';
 import { THEMES, audit, auditView, openWindow, pageFor, obsidianVariables } from './repository/wcag.js';
-import { auditPage, openEditorPage } from './repository/wcag-page.js';
+import { PAGE_NOTE, auditPage, openEditorPage } from './repository/wcag-page.js';
+import { builtApp, cleanUpApp, emptyFolder, openAppEditor, openAppStart } from '../packages/app/test/app-window.js';
 import { OBSIDIAN } from './repository/views-obsidian.js';
 import { pageStates } from './repository/views-page.js';
 
@@ -179,11 +180,55 @@ describe('the browser editor’s page: every state, in both themes', () => {
       });
 });
 
+describe('the desktop app: its first page and its editor, in both themes', () => {
+  let dir;
+  const opened = [];
+  before(async () => {
+    dir = await builtApp();
+  });
+  after(async () => {
+    await Promise.all(opened.map((o) => o.stop()));
+    cleanUpApp();
+  });
+
+  /** A folder holding the note the browser page's checks open. */
+  const notes = () => {
+    const folder = emptyFolder();
+    writeFileSync(`${folder}/Reader.md`, PAGE_NOTE);
+    return folder;
+  };
+  const shown = async (page, ready) => {
+    opened.push(page);
+    await until(() => ready(page.doc), 8000);
+    return page;
+  };
+  const STATES = {
+    'the first page, before a folder is picked': async () =>
+      shown(await openAppStart(null), (doc) => !!doc.querySelector('#gn-app button')),
+    'the first page, listing the notes': async () =>
+      shown(await openAppStart(notes()), (doc) => !!doc.querySelector('#gn-app li a')),
+    'the editor, with its link back to the notes': async () =>
+      shown(await openAppEditor(notes(), 'Reader.md'), (doc) => !!doc.querySelector('.thoughtknot-svg g.node')),
+  };
+
+  for (const [name, state] of Object.entries(STATES))
+    for (const theme of THEMES)
+      test(`${name} meets WCAG 2.2 AA in the ${theme} theme`, async () => {
+        const result = await auditPage(dir, await state(), theme);
+        assert.ok(result.rules >= 5, 'the check ran its rules');
+        assert.deepEqual(found(result), []);
+      });
+});
+
 describe('every host', () => {
   /** The packages that are hosts, which draw an interface: the others are libraries with none. */
   const LIBRARIES = ['core', 'graph-spec'];
   /** The hosts this file checks, with the views it checks of each. */
-  const HOSTS = { obsidian: Object.keys(OBSIDIAN), 'claude-code': ['the browser editor’s page'] };
+  const HOSTS = {
+    obsidian: Object.keys(OBSIDIAN),
+    'claude-code': ['the browser editor’s page'],
+    app: ['the first page', 'the editor in the app'],
+  };
 
   test('has its views checked here before it can be released: a new host with no entry fails', () => {
     const hosts = readdirSync(`${here}packages`).filter((p) => !p.startsWith('.') && !LIBRARIES.includes(p));

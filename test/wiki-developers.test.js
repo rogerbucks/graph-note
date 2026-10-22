@@ -83,7 +83,7 @@ describe('the architecture graph', () => {
     const chart = architectureChart(arch);
     for (const p of arch.parts) assert.match(chart, new RegExp(`${p.id}\\[".*<i>:Part</i>"\\]`));
     for (const i of arch.interfaces) assert.match(chart, new RegExp(`${i.id}\\{\\{".*<i>:Interface</i>"\\}\\}`));
-    assert.match(chart, /class standalone,vscode planned/);
+    assert.match(chart, /class vscode planned/);
   });
 });
 

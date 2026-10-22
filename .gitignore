@@ -7,6 +7,10 @@ dist/
 __pycache__/
 .DS_Store
 
+# The desktop app's Rust build and the schemas Tauri writes beside it (packages/app/src-tauri).
+packages/app/src-tauri/target/
+packages/app/src-tauri/gen/
+
 # The phone spike is built locally, never committed.
 spikes/*/main.js
 

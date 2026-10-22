@@ -15,7 +15,7 @@
 (display_part:Part {name: 'Display layer', path: 'packages/core/src/display', guide: 'packages/core/GUIDE.md'}),
 (obsidian:Part {name: 'Obsidian plugin', path: 'packages/obsidian', guide: 'packages/obsidian/GUIDE.md'}),
 (claude_code:Part {name: 'Browser editor, from Claude Code', path: 'packages/claude-code', guide: 'packages/claude-code/GUIDE.md'}),
-(standalone:Part {name: 'Standalone app (Tauri)', requirement: 'standalone_app'}),
+(standalone:Part {name: 'Standalone app (Tauri)', path: 'packages/app', guide: 'packages/app/GUIDE.md', requirement: 'standalone_app'}),
 (vscode:Part {name: 'VS Code plugin', requirement: 'vscode_plugin'}),
 (built_in_exports:Part {name: 'Built-in data exports', path: 'packages/core/src/export-data.ts', guide: 'packages/core/GUIDE.md'}),
 // ── Interfaces ──

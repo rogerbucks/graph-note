@@ -693,6 +693,8 @@ These test behaviour across modules, or the repository itself, so they are named
   runner for hours (editor spec §13, ci_jobs_time_limited).
 - `test/workflow-keys.test.js` — no workflow names a key twice in one map. GitHub can't read such a file, and shows a
   failed run on every push with no job run (#847).
+- `packages/app/test/app-config.test.js` — the desktop app is shut by default. Its window loads only its own pages,
+  reaches no other origin, and calls only the app's seven folder commands (spec §41, standalone_app).
 - `test/releasing.test.js` — RELEASING.md lists the steps of a release in order and how to go back. It names every
   secret a workflow uses (editor spec §13, release_steps_written).
 - `test/release-prepare.test.js` — one command bumps every file that carries the version, both lockfiles included

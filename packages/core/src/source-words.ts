@@ -4,6 +4,7 @@
 // brought to the catalogue; the plain-language check (ux_copy_auto) reads them here.
 
 import { AI_SOURCE_WORDS } from './ai-source-words.ts';
+import { APP_SOURCE_WORDS } from './app-source-words.ts';
 import { BLOCKS_SOURCE_WORDS } from './blocks-source-words.ts';
 import { CC_SOURCE_WORDS } from './cc-source-words.ts';
 import { CHECK_SOURCE_WORDS } from './check-source-words.ts';
@@ -343,4 +344,6 @@ export const SOURCE_WORDS = {
   ...DRAWING_SOURCE_WORDS,
   // what the plug-ins' calls say when one fails (plugins-source-words.ts)
   ...PLUGINS_SOURCE_WORDS,
+  // the desktop app's own pages: picking a folder and listing its notes (app-source-words.ts)
+  ...APP_SOURCE_WORDS,
 } as const;

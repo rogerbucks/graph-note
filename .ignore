@@ -8,10 +8,12 @@ dist/
 main.js
 packages/claude-code/mod/hooks/graph.js
 packages/claude-code/mod/bin/
+packages/app/src-tauri/target/
 
 # lock files
 package-lock.json
 python/graph_spec/uv.lock
+packages/app/src-tauri/Cargo.lock
 
 # generated records and copies: made by a script, never edited by hand
 test/tests-first/

@@ -4035,6 +4035,36 @@
         "test/code-scan.test.js",
         "scripts/code-scan.mjs"
       ]
+    },
+    {
+      "id": "SEC-16",
+      "role": "Senior security engineer",
+      "area": "security",
+      "raised": "2026-10-22",
+      "reviewed": {
+        "date": "2026-10-22",
+        "commit": "a91bbbe80399c099ddc3c327b1887f4ddc9c41ba"
+      },
+      "title": "The desktop app's Linux build carries glib 0.18, with a known unsoundness",
+      "risk": "Advisory GHSA-wrw7-89jp-8q8g (moderate): an iterator in glib 0.18, VariantStrIter, is unsound. Tauri draws Linux windows with GTK 3, which pins glib 0.18. The fix is in glib 0.20, which needs GTK 4. Tauri has no GTK 4 release yet.",
+      "evidence": [
+        "packages/app/src-tauri/Cargo.lock",
+        "https://github.com/advisories/GHSA-wrw7-89jp-8q8g"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "accept",
+      "fix": "When Tauri supports GTK 4, bump glib to 0.20 or later. Then remove GHSA-wrw7-89jp-8q8g from allow-ghsas in .github/workflows/dependency-review.yml, and close this risk.",
+      "check": "packages/app/test/app-config.test.js: the dependency review allows only GHSA-wrw7-89jp-8q8g, and the test fails once glib 0.18 leaves Cargo.lock, until the allowance is removed.",
+      "paths": [
+        "packages/app/src-tauri/Cargo.toml",
+        "packages/app/src-tauri/Cargo.lock",
+        ".github/workflows/dependency-review.yml"
+      ],
+      "effort": "hours",
+      "status": "accepted",
+      "accepted_by": "Roger, 22 Oct 2026 (decision card on PR #905)",
+      "accepted_reason": "No code in the app's dependencies calls VariantStrIter. It is the Linux build only. No fixed glib works with Tauri yet. Undo when Tauri supports GTK 4."
     }
   ]
 }

@@ -1,6 +1,6 @@
 // The first-run journey's counts (editor spec §41, ux_journey_auto). A person opens a note, reads its graph, edits it,
-// fixes a problem and exports it. Each host scripts that journey (test/repository/journey-obsidian.js and
-// journey-page.js), and every action the person takes goes through a Journey, which counts it.
+// fixes a problem and exports it. Each host scripts that journey: test/repository/journey-obsidian.js, journey-page.js
+// and journey-app.js. Every action the person takes goes through a Journey, which counts it.
 //
 // Two counts are kept, and the quality ratchet holds both (scripts/quality-spec.mjs):
 // - An interaction is one action: a click, a tap, a key, or a piece of text typed into a field.
@@ -17,6 +17,7 @@ export const STAGES = ['open the note', 'read the graph', 'edit it', 'fix a prob
 export const HOSTS = {
   obsidian: { steps: 'journey_steps_obsidian', interactions: 'journey_interactions_obsidian' },
   'claude-code': { steps: 'journey_steps_claude_code', interactions: 'journey_interactions_claude_code' },
+  app: { steps: 'journey_steps_app', interactions: 'journey_interactions_app' },
 };
 
 /** The accessible name of `el`: its label, or the text of what labels it, or its own text. */
