@@ -2975,8 +2975,8 @@
       "likelihood": "medium",
       "impact": "medium",
       "decision": "fix-later",
-      "fix": "Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Obsidian loads one from its plug-ins folder or a link, off until turned on (outside-plugins.ts). Its commands, graph sources, diagram types and steps work there. Left: the browser page.",
-      "check": "test/sample-plugin.test.js runs the sample in a worker. packages/obsidian/test/outside-plugins.test.js loads it through main.js. The outside-plugins-sources, -diagrams and -steps tests use its other points there. The browser page is to come.",
+      "fix": "Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Obsidian loads one from its plug-ins folder or a link, off until turned on (outside-plugins.ts). Its commands, graph sources, diagram types and steps work there. The browser page runs those turned on in Obsidian, sealed and off the network (page-plugins.ts), and draws their diagram types.",
+      "check": "test/sample-plugin.test.js runs the sample in a worker. packages/obsidian/test/outside-plugins.test.js loads it through main.js. The outside-plugins-sources, -diagrams and -steps tests use its other points there. packages/claude-code/test/page-plugins.test.js runs it on the browser page.",
       "paths": [
         "packages/core/src/plugin-outside.ts",
         "packages/obsidian/src/outside/outside-plugins.ts",
@@ -2984,7 +2984,8 @@
         "packages/core/src/plugin-versions.ts",
         "packages/core/src/plugins-contract.ts",
         "packages/core/src/plugins.ts",
-        "wiki/Writing-a-plug-in.md"
+        "wiki/Writing-a-plug-in.md",
+        "packages/claude-code/server/page-plugins.ts"
       ],
       "effort": "days",
       "raised": "2026-10-19",
@@ -2992,8 +2993,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#908"
     },
     {
       "id": "API-11",
