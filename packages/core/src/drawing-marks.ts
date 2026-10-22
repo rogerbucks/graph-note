@@ -298,7 +298,7 @@ export function scaledMarks(marks: readonly DrawMark[], k: number): DrawMark[] {
       return { ...m, ...place, size: m.size * k, ...widest };
     }
     if (m.kind === 'arrowhead') return { ...m, ...place, size: m.size * k, ...outline(m.outline) };
-    return { ...m, ...place, width: m.width * k, height: m.height * k, ...outline(m.outline) };
+    return { ...m, ...place, width: m.width * k, height: m.height * k, ...('outline' in m ? outline(m.outline) : {}) };
   });
 }
 

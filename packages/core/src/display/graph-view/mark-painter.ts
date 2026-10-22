@@ -151,7 +151,8 @@ function paintMark(ctx: CanvasRenderingContext2D, m: DrawMark, camera: Camera, p
     ctx.stroke();
     return;
   }
-  // an arrowhead: a triangle with its tip at (x, y), pointing along `angle` degrees
+  // an arrowhead: a triangle with its tip at (x, y), pointing along `angle` degrees; a board's marks are not painted yet
+  if (m.kind !== 'arrowhead') return;
   const turn = (m.angle * Math.PI) / 180,
     size = m.size * scale,
     tipX = sx(m.x),
