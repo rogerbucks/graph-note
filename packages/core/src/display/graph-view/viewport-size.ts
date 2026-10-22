@@ -28,7 +28,11 @@ export function viewportSize(
   return { width, height: Math.min(drawn.height * Math.min(1, width / drawn.width), most) };
 }
 
-/** The viewport's size to tell the zoom: none at all while the page gives it none, so the zoom keeps its own view. */
+/**
+ * The viewport's size to tell the zoom: none at all while the page gives it none, so the zoom keeps its own view. Full
+ * screen and the pane are as tall as the page makes them. A thing's details can squeeze them to no height. That is no
+ * size too, so closing the details gives back the zoom and place the drawing had (details_keep_view).
+ */
 export function zoomSize(
   viewport: HTMLElement,
   drawn: Size,
@@ -36,5 +40,8 @@ export function zoomSize(
   across: boolean,
   tallest?: number | null,
 ): Size {
-  return viewport.clientWidth ? viewportSize(viewport, drawn, mode, across, tallest) : { width: 0, height: 0 };
+  const squeezed = mode !== 'note' && !viewport.clientHeight;
+  return viewport.clientWidth && !squeezed
+    ? viewportSize(viewport, drawn, mode, across, tallest)
+    : { width: 0, height: 0 };
 }

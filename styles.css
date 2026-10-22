@@ -1134,6 +1134,16 @@ pre.thoughtknot-code {
   flex: 1;
   height: auto;
 }
+/* A thing's details in full screen take at most 40% of it and scroll. They give way first when room is short, so the
+   drawing always keeps at least 30% and stays in sight (§25). */
+.thoughtknot-fullscreen .thoughtknot-view > .thoughtknot-details {
+  flex: 0 1 auto;
+  max-height: 40%;
+  overflow-y: auto;
+}
+.thoughtknot-fullscreen .thoughtknot-view > .thoughtknot-viewport {
+  min-height: 30%;
+}
 
 /* Problems, details and the banner: words and an icon, never colour alone. */
 .thoughtknot-problems summary {
