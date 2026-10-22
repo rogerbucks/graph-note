@@ -321,7 +321,7 @@ def typed_source(dot: str, plan: Mapping | None) -> str:
     lines = dot.split("\n")
     if plan["type"] == "radial":
         root = plan["centre"]
-        lines.insert(2, f'  graph [layout=twopi, root="{root}", overlap=false, splines=true];')
+        lines.insert(2, f'  graph [layout=twopi, root="{root}", overlap=scale, splines=true];')
         return "\n".join(lines)
     tree, out, n = set(plan.get("tree", ())), [], -1
     for line in lines:

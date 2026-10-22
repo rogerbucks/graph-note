@@ -31,6 +31,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { id: 'walk', place: 'drawing', keys: ARROWS },
   { id: 'clear', place: 'drawing', keys: ['Escape'] },
   { id: 'pick-up', place: 'drawing', keys: ['m'] },
+  { id: 'centre', place: 'drawing', keys: ['c'] },
   { id: 'shortcuts', place: 'drawing', keys: ['?'], command: true },
   { id: 'move-choose', place: 'moving', keys: ARROWS },
   { id: 'move-put', place: 'moving', keys: ['Enter'] },

@@ -178,7 +178,7 @@ class Folds(unittest.TestCase):
             [
                 "digraph G {",
                 "  rankdir=LR;",
-                '  graph [layout=twopi, root="a", overlap=false, splines=true];',
+                '  graph [layout=twopi, root="a", overlap=scale, splines=true];',
                 "}",
             ]
         )
@@ -186,7 +186,7 @@ class Folds(unittest.TestCase):
         for routing, splines in (("straight", "line"), ("right-angled", "ortho")):
             routed = routed_source(radial, routing)
             self.assertEqual(re.findall(r"splines=(\w+)", routed), [splines], routing)
-            self.assertIn('  graph [layout=twopi, root="a", overlap=false];', routed, routing)
+            self.assertIn('  graph [layout=twopi, root="a", overlap=scale];', routed, routing)
 
     def test_a_busy_hub_has_more_links_than_the_cores_number(self):
         self.assertEqual(BUSY_HUB, 12)

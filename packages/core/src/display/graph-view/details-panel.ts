@@ -296,7 +296,8 @@ export class DetailsPanel {
       (n) => linkWords(this.o.reading, this.o.graph, n),
       (s) => this.choose(s),
     );
-    if (!this.o.diagram?.table) untangleOffers(el, key, this.actions, this.o.readOnly?.() ? undefined : this.onMove); // read-only: nothing moves
+    if (!this.o.diagram?.table)
+      untangleOffers(el, key, this.actions, this.o.readOnly?.() ? undefined : this.onMove, this.o.diagram); // read-only: nothing moves
     this.readOnlyProperties(
       el,
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),

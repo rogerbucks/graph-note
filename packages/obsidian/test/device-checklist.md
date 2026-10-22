@@ -275,8 +275,14 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
 - [ ] **S-05** Keyboard: Tab to a box and press M. The line at the top says "Put … (1 of …)" and the box it would go by
       is outlined. The arrow keys step through the places; Enter writes the nudge and says "Moved: …"; Escape writes
       nothing. Move… in a box's details does the same. In reading view there is no Move… (move_box_keyboard).
+### A radial drawing
+
 - [ ] **S-06** In a radial drawing, drag a box to just past another one around the centre. The line says "Put … before
       …" or "… after …", never beside, and letting go moves the box round to that place (radial_spoke_order).
+- [ ] **S-07** In a radial drawing, open a box's details and press Put in the centre. The boxes glide to their new
+      rings around it, and the strip says "Centred on …". Back to the usual centre glides them back. Tab to a box and
+      press C: the same. In reading view it is only looked at: "Just looking: not saved." With reduced motion on, the
+      boxes move at once (radial_centre_pick).
 
 ## Views — spec §2, §7
 

@@ -4,7 +4,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { directions } from '../src/render.ts';
+import { directions, draw } from '../src/render.ts';
+import { loadEngine } from '../src/engine.ts';
 import { readStyle } from '../src/style.ts';
 import { styledDrawing } from '../src/style-source.ts';
 import { diagramFor, diagramOffer } from '../src/types.ts';
@@ -47,6 +48,15 @@ describe('a radial drawing around a chosen centre', () => {
       plan: { type: 'radial', centre: 'moon' },
     });
     for (const d of directions(styledDrawing(plain, style, g))) assert.match(d.dot, /layout=twopi, root="moon"/);
+  });
+
+  // proves: radial_centre_chosen
+  test('is drawn around any thing, even one with a single link, whose rings Graphviz once failed to draw', async () => {
+    const engine = await loadEngine();
+    for (const centre of ['sun', 'earth', 'mars', 'moon']) {
+      const { plain, style, g } = shown(SKY, `(d1:Diagram {type: 'radial', centre: '${centre}'})`);
+      assert.match(draw(styledDrawing(plain, style, g), engine).svg, /<svg/, `drawn around ${centre}`);
+    }
   });
 
   // proves: radial_centre_chosen

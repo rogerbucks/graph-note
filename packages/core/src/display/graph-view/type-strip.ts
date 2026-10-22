@@ -7,7 +7,7 @@
 // (plugin_diagram_type_named). Otherwise the strip says which plug-in draws it. In reading view a type chosen is only
 // looked at: drawn at once, never saved, and said so. Where the note is edited, a type looked at can be kept
 // (type_try_reading).
-import { diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
+import { chosenDiagram, diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
   DiagramSpace,
@@ -21,6 +21,7 @@ import type {
   StyleGraph,
 } from '@thoughtknot/core';
 import type { LeftAt } from '../links/link-types';
+import { centreStrip } from './radial-centre';
 import { renderTable, tableSize } from './table-view';
 import { button } from './view-bar';
 export { TypePlace, typeLeftAt } from './type-place';
@@ -47,17 +48,29 @@ export interface DiagramShown extends DiagramOffer {
   leave?: (at: TypeLeftAt) => void;
   /** Where the card was left when its type changed, once; the card drawn as the new type takes it up. */
   kept?: () => TypeLeftAt | undefined;
+  /** In a radial drawing: the thing at its centre, its words, and whether it was picked over the usual centre. */
+  centre?: { key: string; text: string; picked: boolean };
+  /** Puts thing `key` in the centre of the radial drawing, or the usual centre back (null), saved in the style graph. */
+  centreOn?: (key: string | null) => void;
+  /** As `centreOn`, but only looked at, never saved: for reading view (radial_centre_pick). */
+  centreLook?: (key: string | null) => void;
+  /** Set by the strip: `centreOn`, the boxes gliding there; false where nothing can be put in the centre (radial_centre_pick). */
+  putCentre?: (key: string | null) => boolean;
 }
 
 /** Where a card was when its type changed: its zoom, the thing selected, and whether it was full screen. */
 export interface TypeLeftAt extends LeftAt {
   full?: boolean;
+  /** Where each box was on the screen, by its thing's key: the boxes of the card drawn next glide from there. */
+  places?: Map<string, DOMRect>;
 }
 
 /** How a host lets a card look at a type without saving it (type_try_reading). */
 export interface Trying {
   /** The type the card is drawn as from the style graph as saved. */
   saved: DiagramType;
+  /** For a radial drawing saved with a centre picked: that thing's key (radial_centre_chosen). */
+  savedCentre?: string;
   /** Whether the card is drawn as a type only looked at. */
   tried: boolean;
   /** Draws the card as the change, never written; null draws it as saved again. */
@@ -76,6 +89,7 @@ export function withTried(style: StyleGraph, change: DiagramWrite): StyleGraph {
     type: change.type as DiagramType,
     ...(change.view === undefined ? {} : { view: change.view }),
     ...(change.relationship === undefined ? {} : { relationship: change.relationship }),
+    ...(change.centre === undefined ? {} : { centre: change.centre }),
     at: { block: -1, line: 0, id: 'tried' },
   };
   return { ...style, diagrams: [tried, ...style.diagrams.filter((d) => d.view !== change.view)] };
@@ -125,8 +139,36 @@ export function diagramShown(
         ? word('type.now-graph', { type: said(type) })
         : word('type.now-view', { view, type: said(type) }),
     );
+  const plan = offer.choice.plan,
+    centre = plan?.type === 'radial' ? plan.centre : undefined,
+    text = (key: string) => drawing.boxes.find((b) => b.key === key)?.text ?? key;
+  // a centre put in a radial drawing: saved, or looked at in reading view, where it can be (radial_centre_pick)
+  const radial = (key: string | null): DiagramWrite => ({
+    type: 'radial',
+    ...(view === undefined ? {} : { view }),
+    ...(key ? { centre: key } : {}),
+  });
+  const centreOn = (key: string | null) =>
+    write(radial(key), word('type.now-centre', { thing: text(key ?? centreOfUsual()) }));
+  const centreLook = (key: string | null) =>
+    trying?.tryOut(trying.saved === 'radial' && trying.savedCentre === (key ?? undefined) ? null : radial(key));
+  // the usual centre: the one the radial drawing has with none picked
+  const centreOfUsual = () => {
+    const usual = diagramOffer(
+      drawing,
+      { ...style, diagrams: [{ type: 'radial', at: { block: -1, line: 0, id: 'usual' } }] },
+      g,
+    );
+    return usual.choice.plan?.type === 'radial' ? usual.choice.plan.centre : '';
+  };
   return {
     ...offer,
+    ...(centre === undefined
+      ? {}
+      : {
+          centre: { key: centre, text: text(centre), picked: chosenDiagram(style, view)?.centre !== undefined },
+          centreOn,
+        }),
     wayIn: wayIn(drawing.boxes.length),
     ...(offer.choice.drawn === 'table' ? { table: tableOf(drawing, g) } : {}),
     choose,
@@ -135,6 +177,7 @@ export function diagramShown(
           look: (type: DiagramType) => trying.tryOut(type === trying.saved ? null : change(type)),
           tried: trying.tried,
           back: () => trying.tryOut(null),
+          ...(centre === undefined ? {} : { centreLook }),
           keep: () => choose(offer.choice.drawn),
           leave: trying.leave,
           kept: trying.kept,
@@ -255,6 +298,7 @@ export function renderTypeStrip(
     way.createSpan({ text: word('type.way-in', { say: d.wayIn.say }) });
     picks(button(way, word('type.as-table'), 'table', () => pick('table'), word('type.as-table')));
   }
+  writes.push(...centreStrip(root, d, readOnly, where)); // a radial drawing's centre, picked (radial_centre_pick)
   if (d.tried) {
     // a type only looked at: said so, never by colour alone, with the way back and, where the note is edited, to keep it
     const tried = root.createDiv({ cls: 'thoughtknot-type-tried', attr: { role: 'status' } });
