@@ -19,11 +19,17 @@ export function findChrome(given, which = (n) => execFileSync('which', [n], { en
   throw new Error('no Chrome found: give one with --chrome PATH');
 }
 
+/** How often a start is checked on, 100 ms apart: 30 seconds, as a busy test runner can be slow to start Chrome. */
+const START_TRIES = 300;
+
 /**
  * Chrome's first page, from `list`, its list of pages. The list is asked again, up to `tries` times, while it cannot be
  * read or holds no page yet: Chrome answers with an empty list before its first page is open.
  */
-export async function firstPage(list, { tries = 100, wait = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+export async function firstPage(
+  list,
+  { tries = START_TRIES, wait = (ms) => new Promise((r) => setTimeout(r, ms)) } = {},
+) {
   for (let i = 0; i < tries; i++) {
     const pages = await list().catch(() => null);
     const page = Array.isArray(pages) ? pages.find((p) => p.type === 'page') : undefined;
@@ -40,7 +46,7 @@ export async function firstPage(list, { tries = 100, wait = (ms) => new Promise(
 export async function portOf(
   profile,
   {
-    tries = 100,
+    tries = START_TRIES,
     wait = (ms) => new Promise((r) => setTimeout(r, ms)),
     read = () => readFileSync(join(profile, 'DevToolsActivePort'), 'utf8'),
   } = {},
@@ -102,6 +108,20 @@ export function removeProfile(profile, remove = rmSync) {
 }
 
 /**
+ * Runs `start` again, up to `attempts` times in all, when Chrome did not come up: it opened no DevTools port or no page.
+ * Each try starts a fresh Chrome. Any other error is thrown at once, as a retry would not help.
+ */
+export async function startAgainIfStuck(start, attempts = 2) {
+  for (let i = 1; ; i++) {
+    try {
+      return await start();
+    } catch (e) {
+      if (i >= attempts || !/^Chrome opened no (page|DevTools port)$/.test(e?.message ?? '')) throw e;
+    }
+  }
+}
+
+/**
  * Starts a headless Chrome on a fresh profile, its page `width` by `height` CSS pixels at `scale`.
  * - send speaks the DevTools protocol.
  * - run runs a line of script in the page.
@@ -109,7 +129,10 @@ export function removeProfile(profile, remove = rmSync) {
  * - stop ends it all.
  * `flags` are more of Chrome's switches, such as those that let it paint with WebGL and WebGPU in software.
  */
-export async function startChrome({ chrome, width = 1400, height = 1000, scale = 2, flags = [] } = {}) {
+export const startChrome = (options) => startAgainIfStuck(() => startOnce(options));
+
+/** One try at starting Chrome, as `startChrome` describes. */
+async function startOnce({ chrome, width = 1400, height = 1000, scale = 2, flags = [] } = {}) {
   const profile = mkdtempSync(join(tmpdir(), 'thoughtknot-chrome-'));
   const browser = spawn(
     findChrome(chrome),

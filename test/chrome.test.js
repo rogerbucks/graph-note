@@ -2,7 +2,7 @@
 // its first page is open, with an empty list. So the list is asked again until a page is there.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { firstPage, portOf, removeProfile } from '../scripts/chrome.mjs';
+import { firstPage, portOf, removeProfile, startAgainIfStuck } from '../scripts/chrome.mjs';
 
 const noWait = async () => {};
 
@@ -53,5 +53,31 @@ describe("Chrome's DevTools port", () => {
   });
   test('says so when Chrome never writes it', async () => {
     await assert.rejects(portOf('/profile', { read: () => '', wait: noWait, tries: 3 }), /no DevTools port/);
+  });
+});
+
+describe('a Chrome that does not come up', () => {
+  const stuck = (message) => () => Promise.reject(new Error(message));
+
+  test('is started once more, fresh, when it opened no DevTools port or no page', async () => {
+    for (const message of ['Chrome opened no DevTools port', 'Chrome opened no page']) {
+      const tries = [stuck(message), async () => 'chrome'];
+      assert.equal(await startAgainIfStuck(() => tries.shift()()), 'chrome');
+      assert.equal(tries.length, 0);
+    }
+  });
+
+  test('gives up after its tries, with the last reason', async () => {
+    let starts = 0;
+    const start = () => (starts++, Promise.reject(new Error('Chrome opened no page')));
+    await assert.rejects(startAgainIfStuck(start, 2), /Chrome opened no page/);
+    assert.equal(starts, 2);
+  });
+
+  test('is not started again for any other error', async () => {
+    let starts = 0;
+    const start = () => (starts++, Promise.reject(new Error('no Chrome found')));
+    await assert.rejects(startAgainIfStuck(start), /no Chrome found/);
+    assert.equal(starts, 1);
   });
 });
