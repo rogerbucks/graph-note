@@ -1,0 +1,745 @@
+{
+  "about": "Shared cases for the clusters of a graph (editor spec §31). Both libraries must give each expected answer. Made once by the JavaScript library, wiki/Clusters-design.md step 3.",
+  "cases": [
+    {
+      "name": "a written cluster of atoms",
+      "nodes": [
+        ["atoms", ["Cluster"]],
+        ["h", ["Atom"]],
+        ["o", ["Atom"]],
+        ["c", ["Atom"]]
+      ],
+      "edges": [
+        ["h", "MEMBER_OF", "atoms"],
+        ["o", "MEMBER_OF", "atoms"],
+        ["h", "BONDS", "o"]
+      ],
+      "expected": {
+        "all": {
+          "clusters": [
+            {
+              "id": "atoms",
+              "kind": "asserted",
+              "members": ["h", "o"],
+              "confidence": null
+            },
+            {
+              "id": "found:h",
+              "kind": "found",
+              "members": ["h", "o"],
+              "confidence": 1
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "h",
+              "cluster": "atoms",
+              "kind": "asserted",
+              "weight": 0.5
+            },
+            {
+              "thing": "o",
+              "cluster": "atoms",
+              "kind": "asserted",
+              "weight": 0.5
+            },
+            {
+              "thing": "h",
+              "cluster": "found:h",
+              "kind": "found",
+              "weight": 0.5
+            },
+            {
+              "thing": "o",
+              "cluster": "found:h",
+              "kind": "found",
+              "weight": 0.5
+            }
+          ]
+        },
+        "asserted": {
+          "clusters": [
+            {
+              "id": "atoms",
+              "kind": "asserted",
+              "members": ["h", "o"],
+              "confidence": null
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "h",
+              "cluster": "atoms",
+              "kind": "asserted",
+              "weight": 1
+            },
+            {
+              "thing": "o",
+              "cluster": "atoms",
+              "kind": "asserted",
+              "weight": 1
+            }
+          ]
+        },
+        "found": {
+          "clusters": [
+            {
+              "id": "found:h",
+              "kind": "found",
+              "members": ["h", "o"],
+              "confidence": 1
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "h",
+              "cluster": "found:h",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "o",
+              "cluster": "found:h",
+              "kind": "found",
+              "weight": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "a thing in four clusters",
+      "nodes": [
+        ["a", ["Cluster"]],
+        ["b", ["Cluster"]],
+        ["c", ["Cluster"]],
+        ["d", ["Cluster"]],
+        ["x", ["Thing"]],
+        ["y", ["Thing"]]
+      ],
+      "edges": [
+        ["x", "MEMBER_OF", "a"],
+        ["x", "MEMBER_OF", "b"],
+        ["x", "MEMBER_OF", "c"],
+        ["x", "MEMBER_OF", "d"],
+        ["y", "MEMBER_OF", "a"]
+      ],
+      "expected": {
+        "all": {
+          "clusters": [
+            {
+              "id": "a",
+              "kind": "asserted",
+              "members": ["x", "y"],
+              "confidence": null
+            },
+            {
+              "id": "b",
+              "kind": "asserted",
+              "members": ["x"],
+              "confidence": null
+            },
+            {
+              "id": "c",
+              "kind": "asserted",
+              "members": ["x"],
+              "confidence": null
+            },
+            {
+              "id": "d",
+              "kind": "asserted",
+              "members": ["x"],
+              "confidence": null
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "x",
+              "cluster": "a",
+              "kind": "asserted",
+              "weight": 0.25
+            },
+            {
+              "thing": "y",
+              "cluster": "a",
+              "kind": "asserted",
+              "weight": 1
+            },
+            {
+              "thing": "x",
+              "cluster": "b",
+              "kind": "asserted",
+              "weight": 0.25
+            },
+            {
+              "thing": "x",
+              "cluster": "c",
+              "kind": "asserted",
+              "weight": 0.25
+            },
+            {
+              "thing": "x",
+              "cluster": "d",
+              "kind": "asserted",
+              "weight": 0.25
+            }
+          ]
+        },
+        "asserted": {
+          "clusters": [
+            {
+              "id": "a",
+              "kind": "asserted",
+              "members": ["x", "y"],
+              "confidence": null
+            },
+            {
+              "id": "b",
+              "kind": "asserted",
+              "members": ["x"],
+              "confidence": null
+            },
+            {
+              "id": "c",
+              "kind": "asserted",
+              "members": ["x"],
+              "confidence": null
+            },
+            {
+              "id": "d",
+              "kind": "asserted",
+              "members": ["x"],
+              "confidence": null
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "x",
+              "cluster": "a",
+              "kind": "asserted",
+              "weight": 0.25
+            },
+            {
+              "thing": "y",
+              "cluster": "a",
+              "kind": "asserted",
+              "weight": 1
+            },
+            {
+              "thing": "x",
+              "cluster": "b",
+              "kind": "asserted",
+              "weight": 0.25
+            },
+            {
+              "thing": "x",
+              "cluster": "c",
+              "kind": "asserted",
+              "weight": 0.25
+            },
+            {
+              "thing": "x",
+              "cluster": "d",
+              "kind": "asserted",
+              "weight": 0.25
+            }
+          ]
+        },
+        "found": {
+          "clusters": [],
+          "memberships": []
+        }
+      }
+    },
+    {
+      "name": "two triangles joined by one link",
+      "nodes": [
+        ["p", ["Thing"]],
+        ["q", ["Thing"]],
+        ["r", ["Thing"]],
+        ["s", ["Thing"]],
+        ["t", ["Thing"]],
+        ["u", ["Thing"]]
+      ],
+      "edges": [
+        ["p", "LINKS", "q"],
+        ["q", "LINKS", "r"],
+        ["r", "LINKS", "p"],
+        ["s", "LINKS", "t"],
+        ["t", "LINKS", "u"],
+        ["u", "LINKS", "s"],
+        ["r", "LINKS", "s"]
+      ],
+      "expected": {
+        "all": {
+          "clusters": [
+            {
+              "id": "found:p",
+              "kind": "found",
+              "members": ["p", "q", "r"],
+              "confidence": 0.75
+            },
+            {
+              "id": "found:s",
+              "kind": "found",
+              "members": ["s", "t", "u"],
+              "confidence": 0.75
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "p",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "q",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "r",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "s",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "t",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "u",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            }
+          ]
+        },
+        "asserted": {
+          "clusters": [],
+          "memberships": []
+        },
+        "found": {
+          "clusters": [
+            {
+              "id": "found:p",
+              "kind": "found",
+              "members": ["p", "q", "r"],
+              "confidence": 0.75
+            },
+            {
+              "id": "found:s",
+              "kind": "found",
+              "members": ["s", "t", "u"],
+              "confidence": 0.75
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "p",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "q",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "r",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "s",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "t",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "u",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "written and found together",
+      "nodes": [
+        ["team", ["Cluster"]],
+        ["p", ["Person"]],
+        ["q", ["Person"]],
+        ["r", ["Person"]],
+        ["s", ["Person"]],
+        ["t", ["Person"]],
+        ["u", ["Person"]]
+      ],
+      "edges": [
+        ["p", "MEMBER_OF", "team"],
+        ["s", "MEMBER_OF", "team"],
+        ["p", "KNOWS", "q"],
+        ["q", "KNOWS", "r"],
+        ["r", "KNOWS", "p"],
+        ["s", "KNOWS", "t"],
+        ["t", "KNOWS", "u"],
+        ["u", "KNOWS", "s"]
+      ],
+      "expected": {
+        "all": {
+          "clusters": [
+            {
+              "id": "team",
+              "kind": "asserted",
+              "members": ["p", "s"],
+              "confidence": null
+            },
+            {
+              "id": "found:p",
+              "kind": "found",
+              "members": ["p", "q", "r"],
+              "confidence": 1
+            },
+            {
+              "id": "found:s",
+              "kind": "found",
+              "members": ["s", "t", "u"],
+              "confidence": 1
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "p",
+              "cluster": "team",
+              "kind": "asserted",
+              "weight": 0.5
+            },
+            {
+              "thing": "s",
+              "cluster": "team",
+              "kind": "asserted",
+              "weight": 0.5
+            },
+            {
+              "thing": "p",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 0.5
+            },
+            {
+              "thing": "q",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "r",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "s",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 0.5
+            },
+            {
+              "thing": "t",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "u",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            }
+          ]
+        },
+        "asserted": {
+          "clusters": [
+            {
+              "id": "team",
+              "kind": "asserted",
+              "members": ["p", "s"],
+              "confidence": null
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "p",
+              "cluster": "team",
+              "kind": "asserted",
+              "weight": 1
+            },
+            {
+              "thing": "s",
+              "cluster": "team",
+              "kind": "asserted",
+              "weight": 1
+            }
+          ]
+        },
+        "found": {
+          "clusters": [
+            {
+              "id": "found:p",
+              "kind": "found",
+              "members": ["p", "q", "r"],
+              "confidence": 1
+            },
+            {
+              "id": "found:s",
+              "kind": "found",
+              "members": ["s", "t", "u"],
+              "confidence": 1
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "p",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "q",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "r",
+              "cluster": "found:p",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "s",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "t",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            },
+            {
+              "thing": "u",
+              "cluster": "found:s",
+              "kind": "found",
+              "weight": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "a link to a thing that is not a cluster, and a member written twice",
+      "nodes": [
+        ["k", ["Cluster"]],
+        ["m", ["Thing"]],
+        ["n", ["Thing"]]
+      ],
+      "edges": [
+        ["m", "MEMBER_OF", "n"],
+        ["n", "MEMBER_OF", "k"],
+        ["n", "MEMBER_OF", "k"]
+      ],
+      "expected": {
+        "all": {
+          "clusters": [
+            {
+              "id": "k",
+              "kind": "asserted",
+              "members": ["n"],
+              "confidence": null
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "n",
+              "cluster": "k",
+              "kind": "asserted",
+              "weight": 1
+            }
+          ]
+        },
+        "asserted": {
+          "clusters": [
+            {
+              "id": "k",
+              "kind": "asserted",
+              "members": ["n"],
+              "confidence": null
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "n",
+              "cluster": "k",
+              "kind": "asserted",
+              "weight": 1
+            }
+          ]
+        },
+        "found": {
+          "clusters": [],
+          "memberships": []
+        }
+      }
+    },
+    {
+      "name": "a cluster inside a cluster",
+      "nodes": [
+        ["cell", ["Cluster"]],
+        ["water", ["Cluster"]],
+        ["h", ["Atom"]],
+        ["o", ["Atom"]]
+      ],
+      "edges": [
+        ["h", "MEMBER_OF", "water"],
+        ["o", "MEMBER_OF", "water"],
+        ["water", "MEMBER_OF", "cell"],
+        ["o", "MEMBER_OF", "cell"]
+      ],
+      "expected": {
+        "all": {
+          "clusters": [
+            {
+              "id": "cell",
+              "kind": "asserted",
+              "members": ["water", "o"],
+              "confidence": null
+            },
+            {
+              "id": "water",
+              "kind": "asserted",
+              "members": ["h", "o"],
+              "confidence": null
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "water",
+              "cluster": "cell",
+              "kind": "asserted",
+              "weight": 1
+            },
+            {
+              "thing": "o",
+              "cluster": "cell",
+              "kind": "asserted",
+              "weight": 0.5
+            },
+            {
+              "thing": "h",
+              "cluster": "water",
+              "kind": "asserted",
+              "weight": 1
+            },
+            {
+              "thing": "o",
+              "cluster": "water",
+              "kind": "asserted",
+              "weight": 0.5
+            }
+          ]
+        },
+        "asserted": {
+          "clusters": [
+            {
+              "id": "cell",
+              "kind": "asserted",
+              "members": ["water", "o"],
+              "confidence": null
+            },
+            {
+              "id": "water",
+              "kind": "asserted",
+              "members": ["h", "o"],
+              "confidence": null
+            }
+          ],
+          "memberships": [
+            {
+              "thing": "water",
+              "cluster": "cell",
+              "kind": "asserted",
+              "weight": 1
+            },
+            {
+              "thing": "o",
+              "cluster": "cell",
+              "kind": "asserted",
+              "weight": 0.5
+            },
+            {
+              "thing": "h",
+              "cluster": "water",
+              "kind": "asserted",
+              "weight": 1
+            },
+            {
+              "thing": "o",
+              "cluster": "water",
+              "kind": "asserted",
+              "weight": 0.5
+            }
+          ]
+        },
+        "found": {
+          "clusters": [],
+          "memberships": []
+        }
+      }
+    },
+    {
+      "name": "things with no links make no found cluster",
+      "nodes": [
+        ["a", ["Thing"]],
+        ["b", ["Thing"]]
+      ],
+      "edges": [],
+      "expected": {
+        "all": {
+          "clusters": [],
+          "memberships": []
+        },
+        "asserted": {
+          "clusters": [],
+          "memberships": []
+        },
+        "found": {
+          "clusters": [],
+          "memberships": []
+        }
+      }
+    }
+  ]
+}

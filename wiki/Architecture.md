@@ -64,3 +64,5 @@ flowchart LR
 - Who and what each part trusts, where that trust ends, and the gaps found: [trust model](Trust-model).
 - Opening, drawing and moving around a graph of 2,000 to 50,000 things in close to real time, measured:
   [massive graphs design](Massive-graphs-design).
+- Clusters a person writes or an algorithm finds, and the centroids that sum them up, on the big-graph groups engine:
+  [clusters design](Clusters-design).

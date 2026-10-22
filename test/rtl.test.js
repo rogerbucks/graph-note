@@ -14,6 +14,10 @@ const PLACED = {
     '.thoughtknot-table': 'laid over the drawing, whose coordinates are the screen’s',
     '.thoughtknot-svg': 'the drawing itself, moved by the zoom in screen coordinates',
     '.thoughtknot-view > .thoughtknot-details.thoughtknot-sheet': 'set from the drawing’s measured place',
+    '.is-dock-left > .thoughtknot-sheet-resizer':
+      'the bar on the side of a sheet the plugin placed on the left as seen',
+    '.is-dock-right > .thoughtknot-sheet-resizer':
+      'the bar on the side of a sheet the plugin placed on the right as seen',
     '.thoughtknot-viewport > .thoughtknot-pointer': 'set at the point the pointer is',
     '.thoughtknot-quick-info': 'set beside the thing pointed at, measured on the screen',
   },

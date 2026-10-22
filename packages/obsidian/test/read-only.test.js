@@ -93,6 +93,7 @@ describe('a card in reading view shows its details and offers nothing that write
       assert.ok(!d.textContent.includes('Add property'));
       assert.deepEqual(
         pressed(shown.reading, () => tapKey(shown.reading, 'large'), [
+          'Move details',
           'Minimise details',
           'Close details',
           ...LARGE_LINKS,
@@ -141,6 +142,7 @@ describe('a card in reading view shows its details and offers nothing that write
       const link = shown.reading.querySelectorAll('g.edge').find((g) => g.getAttribute('data-link') === '0');
       assert.deepEqual(
         pressed(shown.reading, () => link.dispatch('keydown', { key: 'Enter' }), [
+          'Move details',
           'Minimise details',
           'Close details',
           'Large reader',
@@ -190,6 +192,7 @@ describe('a card in reading view shows its details and offers nothing that write
       tapKey(shown.reading, 'small_reader');
       assert.deepEqual(
         pressed(shown.reading, () => tapKey(shown.reading, 'small_reader'), [
+          'Move details',
           'Minimise details',
           'Close details',
           ...UNTANGLING,
@@ -290,6 +293,7 @@ describe('a card in reading view shows its details and offers nothing that write
         assert.ok(!details(shown.reading).hidden, `${key === ' ' ? 'Space' : key} opens the details`);
         assert.deepEqual(
           pressed(shown.reading, () => box.dispatch('keydown', { key }), [
+            'Move details',
             'Minimise details',
             'Close details',
             ...LARGE_LINKS,
