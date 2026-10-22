@@ -12,10 +12,10 @@ Every number here was measured, not guessed. The scripts are kept in the project
 | Question | Answer |
 |---|---|
 | Why is a big graph slow today? | Two steps. Graphviz lays out every thing at once, and the browser draws every box as SVG. Both slow down faster than the graph grows |
-| What is the fix? | Show groups first, and lay out the inside of a group only when you open it or zoom in. Draw the overview on the graphics chip (WebGL). Save each finished layout so it opens at once next time |
+| What is the fix? | Show groups first, and lay out the inside of a group only when you open it or zoom in. Draw the overview on the graphics chip (WebGPU, else WebGL). Save each finished layout so it opens at once next time |
 | How fast? | 50,000 things: the overview in under a second. Opening a group takes 0.07 to 0.25 seconds. Panning costs under 1 millisecond a frame |
 | What stays the same? | Graphs of up to 2,000 things keep today's drawing, with every feature. An opened group is drawn the same way, as a normal drawing |
-| Recommended | Way E below: groups first, detail on demand, a saved-layout cache, and WebGL for the overview. It reads the marks every diagram type now gives as data |
+| Recommended | Way E below: groups first, detail on demand, a saved-layout cache, and the graphics chip (WebGPU or WebGL) for the overview. It reads the marks every diagram type now gives as data |
 
 ## What was measured
 
@@ -59,6 +59,26 @@ The spatial index (Flatbush) finds what is on screen in well under a millisecond
 A saved layout of 50,000 things is 0.4 MB as numbers, or 0.8 MB as JSON. It loads in 0.15 ms as numbers and 19 ms as
 JSON. So a graph seen before can open without any layout at all.
 
+### Today's code, measured by the scale benchmark
+
+The scale benchmark (`npm run bench:scale`, `scripts/scale-benchmark.mjs`) runs each step the way the hosts run it
+today. It grows the V-10 graph of 2,666 things up to 100 copies. CI runs it on every pull request, and a step over its
+budget fails the run. These are its numbers on one desktop core, on 22 October 2026.
+
+| Size | Open | Draw | Pan | Edit |
+|---|---|---|---|---|
+| 1× (2,666 things, 0.4 MB) | read in 0.4 s | refused, shown as text | not built | 0.7 s |
+| 10× (26,660 things, 4.2 MB) | refused over the read limit, 0.03 s | nothing to draw | not built | refused, 0.3 s |
+| 100× (266,600 things, 43 MB) | refused over the read limit, 0.3 s | nothing to draw | not built | refused, 3.7 s |
+
+Three things it shows:
+
+- **The reader is slow too.** Reading 0.4 MB takes 0.4 seconds. So reading 100 copies whole would take about 40
+  seconds, before any layout. Way E needs a faster reader, and way F reads only a part.
+- **A refusal reads every byte first.** Refusing 43 MB takes 0.3 seconds. It could stop at the limit.
+- **An edit past the limit gives the wrong reason.** It says to move the thing to a line of its own. The real reason is
+  the size, and it takes 3.7 seconds to say so.
+
 ## The ways compared
 
 | Way | What it is | Speed at 50,000 | Keeps today's features | Work | Risk |
@@ -67,7 +87,7 @@ JSON. So a graph seen before can open without any layout at all.
 | B. Draw only what is on screen | Spatial index plus Canvas. Layout is still all at once | Drawing fine; layout still takes minutes | Few: no SVG to tap or style | M | Layout stays the bottleneck |
 | C. Force layout in a worker | ForceAtlas2 in the background, the drawing settling as it runs | 40 s to settle | Few; the look changes from rows to a cloud | M | Loses the ordered, readable look |
 | D. Graphics chip for all | WebGL for every size | Drawing fine; layout still slow | Needs rebuilding: taps, focus, marks, exports | L | Rebuilds what works today |
-| **E. Groups first, detail on demand** | Groups found or named, an overview of groups, a group's inside laid out when opened. Saved layouts. WebGL overview | **Under 1 s, then 0.25 s a group** | **All, inside an opened group** | **M to L** | Groups must make sense to the reader |
+| **E. Groups first, detail on demand** | Groups found or named, an overview of groups, a group's inside laid out when opened. Saved layouts. Overview on the graphics chip | **Under 1 s, then 0.25 s a group** | **All, inside an opened group** | **M to L** | Groups must make sense to the reader |
 | F. Read in parts | Read only the groups on screen from the local store (`scale_in_parts`) | Same as E, less memory | All | L | Needs the local store (Q-05) first |
 
 ## Recommended: way E
@@ -76,11 +96,11 @@ JSON. So a graph seen before can open without any layout at all.
 flowchart LR
   T["Note text<br/>(the only store)"] --> R["Read"]
   R --> G["Find groups<br/>own groups first, else Louvain"]
-  G --> O["Overview: one dot per group<br/>WebGL, under 1 s"]
+  G --> O["Overview: one dot per group<br/>WebGPU or WebGL, under 1 s"]
   O -->|zoom in or open| L["Lay out that group<br/>Graphviz quick, 0.07–0.25 s"]
   L --> M["Marks as data"]
   M --> S["Today's SVG drawing<br/>for the opened group"]
-  M --> W["WebGL layer<br/>for everything else on screen"]
+  M --> W["WebGPU or WebGL layer<br/>for everything else on screen"]
   L --> C[("Saved layout cache<br/>by content hash")]
   C -->|seen before| M
 ```
@@ -97,18 +117,18 @@ flowchart LR
 5. **Saved layouts.** Each laid-out group is saved by a hash of its content, in the local store or the browser's
    storage. Opening a graph seen before skips the layout. An edit lays out again only the group it touched. The note's
    text stays the only store, and the cache can always be thrown away (`text_is_the_store`).
-6. **WebGL for the overview, SVG for detail.** WebGL draws the many marks fast. The opened group keeps SVG, so
+6. **The graphics chip for the overview, SVG for detail.** WebGPU, or WebGL where it is missing, draws the many marks fast. The opened group keeps SVG, so
    nothing that works today is rebuilt.
 
 ### Why marks as data matter
 
 On 22 October 2026 Roger chose marks as data. Every diagram type, built in or from a plug-in, gives its drawing
 as marks: plain data, before any SVG is written. That is what makes way E clean. One set of marks feeds both the SVG drawing
-and the WebGL layer, and the cache saves marks, not SVG. For that, each mark needs:
+and the graphics-chip layer, and the cache saves marks, not SVG. For that, each mark needs:
 
 - a stable id (a thing's key, or a link's key);
 - its geometry as numbers, and its bounding box for the spatial index;
-- a kind and a style token, never raw CSS, so WebGL can draw many at once;
+- a kind and a style token, never raw CSS, so the graphics chip can draw many at once;
 - its text as a separate label, so text can be skipped when zoomed out;
 - its group and its accessible name, so the overview has a screen-reader layer too.
 

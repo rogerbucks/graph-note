@@ -125,6 +125,8 @@ jobs:
       - run: node scripts/check-classification.mjs --all
       # the quick quality metrics (file sizes, secrets) against the baseline; the slow ones are the release's
       - run: node scripts/quality-check.mjs --fast
+      # big graphs: open, draw, pan and edit up to 100 copies of the V-10 graph, each step held to its budget
+      - run: npm run bench:scale
       # a baseline committed worse than the base's needs a reason in quality/accepted.json, as a measured run does
       - env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
