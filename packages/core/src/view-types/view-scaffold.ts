@@ -11,6 +11,7 @@ import { setProperty, type Edit } from '../inspector.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import type { ShapeThing } from '../types-shape.ts';
 import { word } from '../words.ts';
+import { spanOf } from './plan-view.ts';
 import type { ViewType } from './view-types.ts';
 
 /** A field a complete view needs on each thing. `or` names fields that stand in for it, such as `due` for `end`. */
@@ -19,6 +20,10 @@ export interface ViewNeed {
   or?: string[];
   /** Only things of one of these kinds need it. Every thing does when it is left out. */
   kinds?: string[];
+  /** Only things this says yes to need it, judged among all the things drawn. */
+  when?: (t: ShapeThing, things: ShapeThing[]) => boolean;
+  /** Another way the thing already has it, such as a date the view reads as its start. */
+  met?: (t: ShapeThing) => boolean;
 }
 
 /** A field a thing lacks. */
@@ -27,9 +32,28 @@ export interface ViewGap {
   field: string;
 }
 
+/**
+ * Whether `t` is of a kind some dated thing is, so a person or a note in a plan is not asked for dates. When nothing
+ * has a date yet, every thing is asked.
+ */
+function datedKind(t: ShapeThing, things: ShapeThing[]): boolean {
+  const dated = things.filter((o) => o.date !== undefined);
+  return !dated.length || dated.some((o) => o.kinds.some((k) => t.kinds.includes(k)));
+}
+
+/** Whether the plan reads `t` as more than one day, so it has an end. */
+function longer(t: ShapeThing): boolean {
+  const span = spanOf(t);
+  return span !== null && span[0] !== span[1];
+}
+
 /** What each view type needs to be complete. A view type not listed needs nothing more than its things and links. */
 export const VIEW_NEEDS: Partial<Record<ViewType, ViewNeed[]>> = {
-  plan: [{ field: 'start' }, { field: 'end', or: ['due'] }],
+  // as the plan reads its dates (spanOf): any date is a start, and a span of more than one day has an end
+  plan: [
+    { field: 'start', when: datedKind, met: (t) => spanOf(t) !== null },
+    { field: 'end', or: ['due'], when: datedKind, met: longer },
+  ],
 };
 
 /** The size a prompt is drawn at. */
@@ -43,7 +67,8 @@ export function gapsOf(things: ShapeThing[], needs: ViewNeed[]): ViewGap[] {
   return things.flatMap((t) =>
     needs
       .filter((n) => !n.kinds || n.kinds.some((k) => t.kinds.includes(k)))
-      .filter((n) => ![n.field, ...(n.or ?? [])].some((f) => carries(t, f)))
+      .filter((n) => !n.when || n.when(t, things))
+      .filter((n) => !n.met?.(t) && ![n.field, ...(n.or ?? [])].some((f) => carries(t, f)))
       .map((n) => ({ thing: t.key, field: n.field })),
   );
 }

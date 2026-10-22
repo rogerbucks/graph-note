@@ -24,7 +24,10 @@ const shape = {
 const prompts = (marks) => marks.filter((m) => m.style === 'prompt');
 
 test('a view says what a complete version needs, and finds what each thing lacks', () => {
-  assert.deepEqual(VIEW_NEEDS.plan, [{ field: 'start' }, { field: 'end', or: ['due'] }]);
+  assert.deepEqual(
+    VIEW_NEEDS.plan.map((n) => n.field),
+    ['start', 'end'],
+  );
   assert.deepEqual(gapsOf(shape.things, VIEW_NEEDS.plan), [
     { thing: 'test', field: 'end' },
     { thing: 'launch', field: 'start' },
@@ -32,6 +35,24 @@ test('a view says what a complete version needs, and finds what each thing lacks
   ]);
   const only = [{ field: 'cost', kinds: ['Spend'] }];
   assert.deepEqual(gapsOf([...shape.things, thing('fee', {}, ['Spend'])], only), [{ thing: 'fee', field: 'cost' }]);
+});
+
+test('the plan asks only for what it cannot read from the dates a thing has, as it draws them', () => {
+  const things = [
+    thing('due_only', { due: '2026-11-09' }),
+    thing('one_day', { launch: '2026-11-10' }),
+    thing('go_live', { start: '2026-11-02', live: '2026-11-12' }),
+  ];
+  assert.deepEqual(gapsOf(things, VIEW_NEEDS.plan), [{ thing: 'one_day', field: 'end' }]);
+});
+
+test('the plan asks no dates of a kind no dated thing is, but asks every thing when none has a date yet', () => {
+  const ada = thing('ada', {}, ['Person']);
+  assert.deepEqual(gapsOf([thing('build', { start: '2026-11-02', end: '2026-11-06' }), ada], VIEW_NEEDS.plan), []);
+  assert.deepEqual(
+    gapsOf([thing('build'), ada], VIEW_NEEDS.plan).map((g) => g.thing),
+    ['build', 'build', 'ada', 'ada'],
+  );
 });
 
 test('the plan view draws what is there, with each gap as a prompt beside its thing, inside the space', () => {
