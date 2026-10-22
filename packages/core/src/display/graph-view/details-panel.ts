@@ -75,7 +75,6 @@ export class DetailsPanel {
       // the sheet is for view mode, in a note's card. Full screen and the pane show the details in their own place. A
       // panel kept open is in the card, beside or below the drawing, never pinned to the screen (§24)
       on: () => o.mode === 'note' && !o.editing?.()?.session && !o.aids?.detailsOpen,
-      // the host's side pane is for a note's card too, while it is edited as well, but never for a panel kept open
       paneable: () => o.mode === 'note' && !o.aids?.detailsOpen,
       close: () => this.close(),
       moved: () => this.actions?.sheetMoved(),
