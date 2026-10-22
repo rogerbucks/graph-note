@@ -7,16 +7,15 @@
 // - Its edge facing the drawing is a resize bar, dragged or moved with the arrow keys (sheet_resized).
 // - A toggle in its header minimises it to a bar with the thing's name and kind. The toggle also restores the full
 //   details, scrolling within itself and never filling the screen (sheet_min_max).
-// - The place, the size and the state last chosen hold for the rest of the session (sheet_state_remembered).
+// - What was last chosen holds for the session and across restarts (sheet_state_remembered, sheet_layout_kept).
 // - Escape in it closes it (sheet_closed). It says what it covers, so the card keeps the chosen thing clear of it
 //   (sheet_keeps_thing_clear). Its keys are its own: nothing typed in the note is taken.
 // While the block is edited, the details are the inspector, in the card or the side pane.
 import { setIcon, sidePane } from '../host';
-import { coverOf, sheetBounds, sheetSpan, sideways, word } from '@thoughtknot/core';
-import type { Clear, SheetDock } from '@thoughtknot/core';
+import { coverOf, sheetBounds, sheetSpan, sideways, word, type Clear, type SheetDock } from '@thoughtknot/core';
 import { screenOf } from './placement';
 import { SheetResizer } from './sheet-resizer';
-import { InPane, placeButton, placeMenu, remembered, sideOf } from './details-place';
+import { InPane, choose, keepChosen, placeButton, placeMenu, readKept, remembered, sideOf } from './details-place';
 import type { DetailsPlace, SheetState } from './details-place';
 
 /** What the sheet asks of its details. */
@@ -72,6 +71,7 @@ export class DetailsSheet {
     this.el = el;
     this.host = host;
     this.pane = new InPane(el);
+    readKept();
     el.addEventListener('keydown', (e: KeyboardEvent) => this.key(e));
   }
 
@@ -139,7 +139,7 @@ export class DetailsSheet {
 
   /** Moves the open details to `place`, remembered for every set opened after, and keeps the chosen thing clear. */
   private go(place: DetailsPlace): void {
-    remembered.place = place;
+    choose({ place });
     if (!this.host.redraw() && this.body) this.opened(this.body);
     this.host.moved();
   }
@@ -162,6 +162,7 @@ export class DetailsSheet {
       across: () => this.across(),
       span: () => this.span(),
       resize: (px) => this.resize(px),
+      done: keepChosen,
     });
     if (!this.place()) return this.inCard();
     this.apply(remembered.state);
@@ -178,7 +179,7 @@ export class DetailsSheet {
     if (this.body) this.body.hidden = false;
     // left without being asked: closed by the person, the sheet is the place again; or taken by another card's
     this.pane.show((why) => {
-      if (why === 'closed') remembered.place = 'bottom';
+      if (why === 'closed') choose({ place: 'bottom' });
       this.host.close();
     });
   }
@@ -258,7 +259,7 @@ export class DetailsSheet {
 
   /** Minimises or restores the sheet, remembered for every sheet opened after, and keeps the chosen thing clear again. */
   private set(state: SheetState): void {
-    remembered.state = state;
+    choose({ state });
     this.apply(state);
     this.place();
     this.host.moved();

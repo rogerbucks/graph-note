@@ -3386,6 +3386,7 @@
         ],
         "DisplayHost": [
           "interface",
+          "detailsLayout?: { saved: () => unknown; save: (layout: unknown) => void; } | undefined",
           "direction?: (() => 'ltr' | 'rtl') | undefined",
           "icon: (el: HTMLElement, name: string) => void",
           "isPhone: () => boolean",
@@ -3411,6 +3412,9 @@
         ],
         "isPhone": [
           "value: () => boolean"
+        ],
+        "keptLayout": [
+          "value: () => DisplayHost['detailsLayout'] | null"
         ],
         "MenuEntry": [
           "type = MenuRow | 'separator'"

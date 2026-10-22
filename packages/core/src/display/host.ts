@@ -51,6 +51,11 @@ export interface DisplayHost {
   /** A side pane of the host's own for a card's details, where it has one (§25, details_in_host_pane). Not set: none. */
   sidePane?: SidePane;
   /**
+   * Where the details' last place, size and state are kept between sessions, in the host's own data (§25,
+   * sheet_layout_kept). `saved` gives what was kept, or nothing; `save` keeps a plain JSON value. Not set: the session only.
+   */
+  detailsLayout?: { saved: () => unknown; save: (layout: unknown) => void };
+  /**
    * Whether the host's content security policy forbids inline styles (`style-src` without `'unsafe-inline'`), as the
    * browser editor's page does (editor spec §26, cc_csp). The core writes the colours of a drawing as style attributes.
    * Where they are forbidden the layer sets the same declarations through the CSSOM, which the policy allows. No style
@@ -146,6 +151,9 @@ export const isPhone = (): boolean => displayHost().isPhone();
 
 /** The host's side pane for a card's details, or null where it has none, or no host is installed. */
 export const sidePane = (): SidePane | null => installed?.sidePane ?? null;
+
+/** Where the host keeps the details' layout between sessions, or null where it keeps none. */
+export const keptLayout = (): DisplayHost['detailsLayout'] | null => installed?.detailsLayout ?? null;
 
 /** Tells the person something briefly, through the host. */
 export const notice = (message: string): void => displayHost().notice(message);

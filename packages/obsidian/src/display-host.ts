@@ -5,10 +5,14 @@
 import { getLanguage, Menu, Notice, Platform, setIcon } from 'obsidian';
 import type { Plugin } from 'obsidian';
 import { installHost } from '@thoughtknot/core/display/host';
+import type { DisplayHost } from '@thoughtknot/core/display/host';
 import { detailsSidePane } from './details-pane';
 
-/** Installs Obsidian as the host the display layer draws in, with `plugin`'s details pane as its side pane. */
-export function installObsidianHost(plugin: Plugin): void {
+/**
+ * Installs Obsidian as the host the display layer draws in, with `plugin`'s details pane as its side pane. `layout` is
+ * where the details' last place and size are kept, in the plugin's data.
+ */
+export function installObsidianHost(plugin: Plugin, layout: DisplayHost['detailsLayout']): void {
   installHost({
     icon: (el, name) => setIcon(el, name),
     isPhone: () => Platform.isPhone,
@@ -33,5 +37,6 @@ export function installObsidianHost(plugin: Plugin): void {
     },
     language: () => getLanguage(),
     sidePane: detailsSidePane(plugin),
+    detailsLayout: layout,
   });
 }

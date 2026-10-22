@@ -46,6 +46,7 @@
       "sheet_docked",
       "sheet_resized",
       "details_scroll",
+      "sheet_layout_kept",
       "details_in_host_pane",
       "note_open_beside"
     ]

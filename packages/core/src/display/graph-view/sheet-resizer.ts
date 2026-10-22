@@ -17,6 +17,8 @@ export interface ResizerHost {
   span: () => number;
   /** Sizes it to as near `px` as its bounds allow. */
   resize: (px: number) => void;
+  /** A resize is over: the size is kept. */
+  done: () => void;
 }
 
 /** The resize bar of one open sheet. */
@@ -72,6 +74,7 @@ export class SheetResizer {
       g.removeEventListener('pointerup', up);
       g.removeEventListener('pointercancel', up);
       this.sheet.removeClass('is-resizing');
+      this.host.done();
     };
     g.addEventListener('pointermove', move);
     g.addEventListener('pointerup', up);
@@ -94,6 +97,7 @@ export class SheetResizer {
     e.preventDefault();
     e.stopPropagation();
     this.host.resize(to);
+    this.host.done();
   }
 
   /** Says which way the bar lies and how big the sheet is (`span`), as a share of the screen across it. */

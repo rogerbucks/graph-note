@@ -1,7 +1,8 @@
 // Where a card's details go (editor spec §25, sheet_docked and details_in_host_pane). This holds the place button in
 // their header, its menu, and what was last chosen. The places are the bottom, the top or either side of the note's visible
-// part, and the host's own side pane where it has one. What was chosen holds for the rest of the session.
-import { displayHost, setIcon, sidePane } from '../host';
+// part, and the host's own side pane where it has one. What was chosen holds for the rest of the session. Where the
+// host keeps data of its own, it is kept there too, so the details open as they were left after a restart.
+import { displayHost, keptLayout, setIcon, sidePane } from '../host';
 import { SHEET_DOCKS, currentDirection, sideways, word } from '@thoughtknot/core';
 import type { SheetDock } from '@thoughtknot/core';
 
@@ -21,6 +22,33 @@ export const remembered: { state: SheetState; place: DetailsPlace; up: number | 
   up: null,
   across: null,
 };
+
+/** Whether what the host kept has been read yet: once, before the first details open. */
+let read = false;
+
+/** What the host kept of the last place, size and state, read into `remembered` once; anything not valid is left out. */
+export function readKept(): void {
+  if (read) return;
+  read = true;
+  const k = keptLayout()?.saved() as Partial<Record<keyof typeof remembered, unknown>> | null | undefined;
+  if (!k || typeof k !== 'object') return;
+  if (k.state === 'restored' || k.state === 'minimised') remembered.state = k.state;
+  if (k.place === 'pane' || SHEET_DOCKS.includes(k.place as SheetDock)) remembered.place = k.place as DetailsPlace;
+  const share = (v: unknown) => (typeof v === 'number' && v > 0 && v < 1 ? v : null);
+  remembered.up = share(k.up);
+  remembered.across = share(k.across);
+}
+
+/** Keeps what was last chosen where the host keeps its data, when it does. */
+export function keepChosen(): void {
+  keptLayout()?.save({ ...remembered });
+}
+
+/** Chooses a new place or state for every set of details opened after, and keeps it. */
+export function choose(chosen: Partial<typeof remembered>): void {
+  Object.assign(remembered, chosen);
+  keepChosen();
+}
 
 /** The menu's word and icon for each place. A side is named as it is seen, left or right, whichever way the host reads. */
 const PLACES = {

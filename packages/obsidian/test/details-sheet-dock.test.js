@@ -4,12 +4,14 @@
 // - It keeps the size and place set, whatever its details hold: they scroll within it.
 // - The edge facing the drawing is a resize bar, a named separator. It is dragged with a pointer or moved with the
 //   arrow keys, Home and End taking it to its least and most. The size holds for the rest of the session too.
+// - The place, size and state are kept in the plugin's data, so they hold across restarts (sheet_layout_kept).
 // - Details that do not fit scroll within their space: the sheet wherever it sits, the card, or the side pane. The
 //   header with its buttons is kept in sight (details_scroll).
 // The built plugin, against the stand-ins.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { build } from './host/load-plugin.js';
+import { build, load as loadPlugin } from './host/load-plugin.js';
+import { PATH, NOTE, show as showNote } from './host/card-notes.js';
 import { fence, labelled } from './host/notes.js';
 import { rules, winner } from './host/cascade.js';
 import { load, GRAPH, show, styles } from './host/view-notes.js';
@@ -287,5 +289,63 @@ describe('details that do not fit scroll within their space, the header kept in 
       inside = [{ tag: 'div', classes: ['thoughtknot-details'] }, PANE];
     assert.equal(at(head, inside, 'position'), 'sticky');
     assert.equal(at(head, inside, 'top'), '0');
+  });
+});
+
+describe('the place, size and state are kept in the plugin’s data, across restarts', () => {
+  /** The plugin loaded with `data` as its saved data, and its card drawn, with a thing’s details open. */
+  async function opened(data) {
+    const env = await loadPlugin({ files: { [PATH]: NOTE }, data });
+    const el = await showNote(env);
+    tapKey(el, 'large');
+    return { env, el, prop: (k) => details(el).cssProps[`--thoughtknot-sheet-${k}`] };
+  }
+
+  test('a place chosen and a size set are saved with the plugin’s data', async () => {
+    const { env, el } = await opened(null);
+    try {
+      choose(env, el, 'Dock at the top');
+      grip(el).dispatch('keydown', { key: 'ArrowDown' });
+      const kept = env.state.data.detailsLayout;
+      assert.equal(kept.place, 'top');
+      assert.equal(kept.state, 'restored');
+      assert.ok(Math.abs(kept.up - 0.5) < 1e-9, `the share set: ${kept.up}`);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('after a restart, the details open where they were left, as big and as minimised', async () => {
+    const { env, el, prop } = await opened({ detailsLayout: { place: 'top', state: 'minimised', up: 0.3 } });
+    try {
+      assert.ok(details(el).hasClass('is-dock-top'));
+      assert.ok(details(el).hasClass('is-minimised'));
+      labelled(details(el), 'Restore details').click();
+      assert.equal(prop('height'), `${800 * 0.3}px`);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('anything kept that is not a place, a state or a share is left out, and the defaults used', async () => {
+    const { env, el, prop } = await opened({ detailsLayout: { place: 'middle', state: 'huge', up: 5, across: -1 } });
+    try {
+      assert.ok(details(el).hasClass('is-dock-bottom'));
+      assert.ok(!details(el).hasClass('is-minimised'));
+      assert.equal(prop('height'), `${800 * 0.45}px`);
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('the rest of the plugin’s data is kept as it was', async () => {
+    const { env, el } = await opened({ settings: { focusDepth: 2 } });
+    try {
+      choose(env, el, 'Dock on the right');
+      assert.deepEqual(env.state.data.settings, { focusDepth: 2 });
+      assert.equal(env.state.data.detailsLayout.place, 'end');
+    } finally {
+      env.uninstall();
+    }
   });
 });

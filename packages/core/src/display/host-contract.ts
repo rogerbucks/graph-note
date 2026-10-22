@@ -15,7 +15,7 @@ import type { DisplayHost, Host, MenuEntry } from './host.ts';
 export const HOST_CONTRACT_VERSIONS: readonly (readonly [version: number, digest: string])[] = [
   [3, 'efae3cb1b2853709'],
   [4, 'd1cb2bc16a374f29'],
-  [5, 'c1bb193947697ecd'],
+  [5, 'c866c45ac5687bd0'],
 ];
 
 /** The version of the host interface these checks hold a host to: the last one recorded above. */
