@@ -4,6 +4,7 @@
 // - A type the shape does not fit is drawn as a network, as a drawing is (type_stops_fitting), never drawn wrongly.
 // - The direction that fits the space best is kept. The marks are shrunk to fit it, never grown.
 // - A table is a row for each thing: its text, then its kinds.
+// - The view types drawn straight as marks, such as the matrix, come after them (view-types/view-types.ts).
 // The view still shows Graphviz's own SVG (render.ts). These marks are for a host that draws marks itself.
 import { scaledMarks } from './drawing-marks.ts';
 import type { DrawMark } from './drawing-marks.ts';
@@ -16,6 +17,7 @@ import { directions } from './render.ts';
 import { DIAGRAM_TYPES } from './style-graph.ts';
 import type { DiagramType } from './style-graph.ts';
 import { typePlan } from './types.ts';
+import { VIEW_DRAWERS, VIEW_TYPES } from './view-types/view-types.ts';
 import type { GraphShape } from './types-shape.ts';
 import { word } from './words.ts';
 
@@ -109,6 +111,12 @@ export function coreDiagrams(engine: MarksEngine): ThoughtKnotPlugin {
     register: (points) => {
       for (const type of DIAGRAM_TYPES)
         points.diagrams?.add({ type: coreDiagramType(type), title: word(`type.${type}`), draw: drawer(type) });
+      for (const view of VIEW_TYPES)
+        points.diagrams?.add({
+          type: `${CORE_DIAGRAMS_ID}.${view}`,
+          title: word(`view.${view}`),
+          draw: VIEW_DRAWERS[view],
+        });
     },
   };
 }

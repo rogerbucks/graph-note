@@ -8,6 +8,7 @@ import { CORE_DIAGRAMS_ID, coreDiagramType, coreDiagrams } from '../src/core-dia
 import { drawMarksOf } from '../src/drawing-marks.ts';
 import { loadEngine } from '../src/engine.ts';
 import { DIAGRAM_TYPES } from '../src/style-graph.ts';
+import { VIEW_TYPES } from '../src/view-types/view-types.ts';
 
 const engine = await loadEngine();
 const SPACE = { width: 400, height: 300 };
@@ -39,7 +40,7 @@ describe('the built-in diagram types, through the plug-in interface (plugin_inte
     assert.deepEqual(r.plugins(), [CORE_DIAGRAMS_ID]);
     assert.deepEqual(
       r.diagramTypes().map((d) => [d.type, d.title]),
-      DIAGRAM_TYPES.map((t) => [`thoughtknot.diagrams.${t}`, t[0].toUpperCase() + t.slice(1)]),
+      [...DIAGRAM_TYPES, ...VIEW_TYPES].map((t) => [`thoughtknot.diagrams.${t}`, t[0].toUpperCase() + t.slice(1)]),
     );
   });
 

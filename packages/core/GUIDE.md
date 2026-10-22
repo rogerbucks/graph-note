@@ -762,6 +762,15 @@ built-in types give it too: Graphviz lays them out, and the engine reads that la
   gives SVG: drawing marks are written by `layoutSvg` and coloured by the theme.
 - The view still shows Graphviz's own SVG. These marks are what the renderer will draw.
 
+### View types drawn as marks, `src/view-types/` (editor spec §36)
+
+These views are not laid out by Graphviz. Each is a pure function from a graph's shape and a space to drawing marks
+(`drawing-marks.ts`). `core-diagrams.ts` adds each through the plug-in interface, after the diagram types, as
+`thoughtknot.diagrams.<view>` (workstream V2).
+
+- `view-types.ts` — the list, `VIEW_TYPES`, and what draws each, `VIEW_DRAWERS`.
+- `matrix-view.ts` — a row and a column for each thing, and a cell for each pair of things linked.
+
 ### Views (spec §2, §7)
 
 A view is a named query block in the note: `// graph: <graph> · QUERY view <name>`, then the query. The reader already
