@@ -4,11 +4,15 @@
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
 import { matrixMarks } from './matrix-view.ts';
+import { treemapMarks } from './treemap-view.ts';
 
 /** The view types drawn as marks, in the order they are offered. */
-export const VIEW_TYPES = ['matrix'] as const;
+export const VIEW_TYPES = ['matrix', 'treemap'] as const;
 /** One view type drawn as marks. */
 export type ViewType = (typeof VIEW_TYPES)[number];
 
 /** What draws each view type. */
-export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]> = { matrix: matrixMarks };
+export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]> = {
+  matrix: matrixMarks,
+  treemap: treemapMarks,
+};
