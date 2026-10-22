@@ -308,8 +308,8 @@ describe('diagram types: empty and oversized', () => {
     `// graph: big\n${Array.from({ length: n }, (_, i) => `(t${i}:Thing {name: 'Thing ${i}'})`).join(',\n')}`;
 
   // proves: large_way_in
-  test('a graph of more than 50 things says so and offers the table or a view; one of 50 is drawn as it is', () => {
-    for (const n of [51, 400]) {
+  test('a graph of more than 1,000 things says so and offers the table or a view; one of 1,000 is drawn as it is', () => {
+    for (const n of [1001, 1900]) {
       const plain = readNote([things(n)]).graphs.get('big');
       const way = wayIn(plain.boxes.length);
       assert.equal(way.count, n);
@@ -317,7 +317,7 @@ describe('diagram types: empty and oversized', () => {
       const shape = shapeOf(plain);
       assert.equal(suggestType(typeFits(shape), shape).type, 'table');
     }
-    assert.equal(wayIn(readNote([things(50)]).graphs.get('big').boxes.length), null);
+    for (const n of [50, 400, 1000]) assert.equal(wayIn(readNote([things(n)]).graphs.get('big').boxes.length), null);
   });
 
   // proves: type_only_when_fits

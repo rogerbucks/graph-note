@@ -18,8 +18,9 @@ from typing import Any
 from graphspec.style.inline import value_text
 from graphspec.style.words import DIAGRAM_TYPES, DIRECTIONS, LOCKED, plugin_type_of
 
-# More things than this are too many to read in one drawing (§15, large_way_in).
-LARGE_GRAPH = 50
+# More things than this are too many to read in one drawing (§15, large_way_in). It was 50, far too
+# low (Roger, 22 Oct 2026); the editor draws up to 2,000.
+LARGE_GRAPH = 1000
 _NOTHING = "there is nothing here to draw"
 # The types tried, in order, when the chosen one stops fitting; the network fits always.
 _NEAREST = {

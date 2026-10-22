@@ -48,8 +48,11 @@ export interface DiagramChoice {
   plugin?: { type: string; plugin: string; why: string };
 }
 
-/** More things than this are too many to read in one drawing (§15, large_way_in). */
-export const LARGE_GRAPH = 50;
+/**
+ * More things than this are too many to read in one drawing (§15, large_way_in). It was 50, far too low (Roger, 22 Oct
+ * 2026). A graph of up to 2,000 is drawn (layout-limits.ts), and past 1,000 the table and a view are offered beside it.
+ */
+export const LARGE_GRAPH = 1000;
 
 /** The types tried, in order, when the chosen one stops fitting; the network fits always, so it is the last resort. */
 const NEAREST: Record<DiagramType, DiagramType[]> = {
