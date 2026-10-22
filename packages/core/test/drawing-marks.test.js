@@ -85,6 +85,26 @@ describe('drawing marks (plugin_interface)', () => {
     assert.match(why({ ...LINK, to: 42 }), /a link whose to is not a short text/);
   });
 
+  test('a mark may keep the exact outline it was laid out with, its line width and its font, and only finite ones', () => {
+    const outline = {
+      points: [
+        [10, 20],
+        [110, 20],
+        [110, 60],
+        [10, 60],
+      ],
+    };
+    const exact = { ...BOX, outline, lineWidth: 1.6 };
+    const label = { ...LABEL, font: 'Helvetica' };
+    assert.deepEqual(drawMarksOf([exact, label], SPACE), [exact, label]);
+    const why = (m) => drawMarksOf([m], SPACE);
+    assert.match(why({ ...BOX, outline: { points: [[0, NaN]] } }), /outline is not finite points/);
+    const three = outline.points.slice(0, 3);
+    assert.match(why({ ...BOX, outline: { points: three, curve: true } }), /outline is not finite points, or a curve/);
+    assert.match(why({ ...BOX, lineWidth: -1 }), /line width is not a size/);
+    assert.match(why({ ...LABEL, font: 'x;y{}' }), /font is not a family name/);
+  });
+
   test('every id is its own, and a mark sits only in a group that is drawn', () => {
     assert.match(drawMarksOf([BOX, { ...LABEL, id: 'loan' }], SPACE), /mark 2 has the id "loan"/);
     assert.match(drawMarksOf([{ ...BOX, group: 'nowhere' }], SPACE), /the group "nowhere", which no group mark is/);
