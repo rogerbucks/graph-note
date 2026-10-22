@@ -65,6 +65,8 @@ export const CORE_KEPT = {
     'it gave back {} marks, over the {} allowed',
     'mark {} is {}',
   ],
+  // what is wrong with the drawing marks a diagram type gave back: faults of its code, for its developer
+  'packages/core/src/drawing-marks.ts': '*',
   // why an AI provider is refused as it is added, told to its developer
   'packages/core/src/plugin-ai.ts': [
     'the AI provider "{}" is not named by a lower-case word',
