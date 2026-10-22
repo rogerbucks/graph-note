@@ -4051,6 +4051,9 @@
         "packages/app/src-tauri/Cargo.lock",
         "https://github.com/advisories/GHSA-wrw7-89jp-8q8g"
       ],
+      "alerts": [
+        "dependabot/2"
+      ],
       "likelihood": "low",
       "impact": "low",
       "decision": "accept",
