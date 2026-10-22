@@ -774,6 +774,8 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
   The rectangles are laid out squarified (`squarified`), so they stay near square.
 - `chord-view.ts` — each thing on a circle, grouped by kind, and each link a curve across it.
 - `ego-view.ts` — one thing in the middle, and the things one and two links away on rings round it.
+- `force-view.ts` — links pull things together and near things push apart. Its places can be saved, and a warm
+  start from them moves little.
 
 ### Views (spec §2, §7)
 
