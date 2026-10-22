@@ -67,6 +67,15 @@ describe('the nightly workflow', () => {
     assert.match(jobs(text).publish.join('\n'), /needs: build\n/);
   });
 
+  // The whole suite at once, browser drawing included, peaked over the default 4 GB ceiling (22 Oct 2026). CI's shards
+  // and fresh clone got 6 GB; the nightly and the release run the same suite, so they get the same.
+  test('runs the full suite under the memory ceiling CI gives it, as the stable release does', () => {
+    const ceiling = (job) => job.join('\n').match(/THOUGHTKNOT_TEST_MEMORY_MB: (\d+)/)?.[1];
+    const ci = read('.github/workflows/ci.yml').match(/THOUGHTKNOT_TEST_MEMORY_MB: (\d+)/)[1];
+    assert.equal(ceiling(jobs(text).build), ci, 'the nightly build');
+    assert.equal(ceiling(jobs(read('.github/workflows/release.yml')).release), ci, 'the stable release');
+  });
+
   test('carries the assets a release carries, with the nightly version in the manifest', () => {
     const build = runCommands(jobs(text).build.join('\n')).join('\n');
     assert.match(build, /node scripts\/nightly-version\.mjs --date "\$\(date -u \+%Y%m%d\)" --write/);
