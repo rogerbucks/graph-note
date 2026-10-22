@@ -777,6 +777,7 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 - `force-view.ts` — links pull things together and near things push apart. Its places can be saved, and a warm
   start from them moves little.
 - `density-view.ts` — the force layout cut into squares, each shaded by how many things are in it.
+- `block-view.ts` — a block diagram: each thing a block, and links running left to right in right-angled lines.
 
 ### Views (spec §2, §7)
 

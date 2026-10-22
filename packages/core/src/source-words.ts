@@ -270,6 +270,7 @@ export const SOURCE_WORDS = {
   'view.ego': 'Ego',
   'view.force': 'Force',
   'view.density': 'Density',
+  'view.block': 'Block',
   'type.now-graph': 'The graph is now drawn as {type}.',
   'type.now-view': 'View {view} is now drawn as {type}.',
   'type.drawn': 'Drawn as {type}',
