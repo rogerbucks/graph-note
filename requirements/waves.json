@@ -112,11 +112,13 @@
       }
     },
     {
-      "title": "Wave 8 · VS Code plugin",
+      "title": "Wave 8 · Clusters, new views and the VS Code plugin",
       "start": "2026-10-31",
-      "end": "2026-11-02",
+      "end": "2026-11-06",
       "estimate": true,
       "workstreams": [
+        "V3",
+        "V2",
         "H2"
       ],
       "earlier_plan": {
@@ -128,8 +130,8 @@
     },
     {
       "title": "Wave 9 · Slice 6 the mesh",
-      "start": "2026-11-03",
-      "end": "2026-11-09",
+      "start": "2026-11-07",
+      "end": "2026-11-13",
       "estimate": true,
       "workstreams": [
         "W16",
@@ -146,8 +148,8 @@
     },
     {
       "title": "Wave 10 · Slice 7 clusters, lenses and process",
-      "start": "2026-11-10",
-      "end": "2026-11-13",
+      "start": "2026-11-14",
+      "end": "2026-11-16",
       "estimate": true,
       "workstreams": [
         "W20",
@@ -164,8 +166,8 @@
     },
     {
       "title": "Wave 11 · Slice 8 permissions, AI and export",
-      "start": "2026-11-14",
-      "end": "2026-11-17",
+      "start": "2026-11-17",
+      "end": "2026-11-20",
       "estimate": true,
       "workstreams": [
         "W28",
@@ -181,7 +183,7 @@
     },
     {
       "title": "Wave 12 · Slice 8 runs, drawing and profiles",
-      "start": "2026-11-18",
+      "start": "2026-11-21",
       "end": "2026-11-23",
       "estimate": true,
       "workstreams": [
