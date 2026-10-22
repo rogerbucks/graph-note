@@ -3,8 +3,10 @@
 // every group must be small enough to lay out quickly, and make sense to the reader.
 //
 // The groups a person wrote come first:
-// 1. The style graph's groups (spec §25, untangle_groups), when they hold at least half the things. The things left
-//    over are grouped by their links.
+// 1. The style graph's groups (spec §25, untangle_groups), then the clusters written in the graph (editor spec §31).
+//    They come first when together they hold at least half the things. A cluster's group holds the cluster and its members. A thing in
+//    several clusters goes in the first one written, since a group holds each thing once. The things left over are
+//    grouped by their links.
 // 2. Else the things' kinds, when there are from 2 to 200 of them.
 // 3. Else groups found by how things link (louvain.ts), each named after its most linked thing.
 // A group of more than `most` things is split by its own links, and in written order when its links cannot split it.
@@ -19,7 +21,12 @@ export const GROUP_MOST = 500;
 const KINDS_MOST = 200;
 
 /** Where a graph's groups come from. */
-export type GroupedBy = 'style' | 'kind' | 'links';
+export type GroupedBy = 'style' | 'cluster' | 'kind' | 'links';
+
+/** The kind of a cluster a person wrote (graph spec `clusters.js`). */
+const CLUSTER = 'Cluster';
+/** The link that joins a member to its cluster. */
+const MEMBER_OF = 'MEMBER_OF';
 
 /** One group: its id, the words it is shown with, where it came from, and its things' keys in written order. */
 export interface ThingGroup {
@@ -142,6 +149,29 @@ function styleGroups({ drawing, place }: Linked): Map<string, number[]> {
   return groups;
 }
 
+/**
+ * The clusters written in the drawing, in written order, each with its own place and its members' places. A place
+ * already in `taken` is left out, and each place used is added to it, so a thing joins the first cluster written.
+ */
+function clusterGroups({ drawing, place }: Linked, taken: Set<number>): { label: string; places: number[] }[] {
+  const members = new Map<string, number[]>();
+  for (const l of drawing.links) {
+    const from = place.get(l.from);
+    if (l.type !== MEMBER_OF || from === undefined) continue;
+    if (!members.has(l.to)) members.set(l.to, []);
+    members.get(l.to)?.push(from);
+  }
+  const groups: { label: string; places: number[] }[] = [];
+  drawing.boxes.forEach((box, i) => {
+    if (box.kind !== CLUSTER) return;
+    const inside = [...(members.get(box.key) ?? [])].sort((a, b) => a - b);
+    const places = [...new Set([i, ...inside])].filter((p) => !taken.has(p));
+    for (const p of places) taken.add(p);
+    if (places.length) groups.push({ label: box.text || box.key, places });
+  });
+  return groups;
+}
+
 /** Each group's places named: the given label, else "Around" its most linked thing. Two the same are numbered. */
 function named(
   { drawing, degree }: Linked,
@@ -191,17 +221,20 @@ export function groupsOf(drawing: GraphDrawing, most = GROUP_MOST, least = 5): G
   const all = drawing.boxes.map((_, i) => i),
     links = linked(drawing);
   const style = styleGroups(links),
-    styled = [...style.values()].reduce((n, g) => n + g.length, 0);
+    taken = new Set([...style.values()].flat()),
+    clusters = clusterGroups(links, taken);
   const kindCount = new Set(drawing.boxes.map((b) => b.kind)).size;
   let by: GroupedBy;
   let parts: { places: number[]; label?: string; by: GroupedBy }[];
-  if (styled * 2 >= all.length && style.size) {
-    by = 'style';
-    const taken = new Set([...style.values()].flat());
+  if (taken.size * 2 >= all.length && (style.size || clusters.length)) {
+    by = style.size ? 'style' : 'cluster';
     const rest = all.filter((i) => !taken.has(i));
     parts = [
       ...[...style].flatMap(([label, places]) =>
         split(links, places, most, least).map((p) => ({ places: p, label, by: 'style' as const })),
+      ),
+      ...clusters.flatMap(({ label, places }) =>
+        split(links, places, most, least).map((p) => ({ places: p, label, by: 'cluster' as const })),
       ),
       ...pooled(rest.length ? byLinks(links, rest) : [], least)
         .flatMap((p) => split(links, p, most, least))

@@ -1,0 +1,119 @@
+{
+  "about": "Shared cases for clusters inside each other in a cycle (editor spec §31). Both libraries must give each expected answer. Made once by the JavaScript library, wiki/Clusters-design.md step 5.",
+  "cases": [
+    {
+      "name": "clusters nested with no cycle",
+      "nodes": [
+        ["cell", ["Cluster"]],
+        ["molecule", ["Cluster"]],
+        ["h", ["Thing"]]
+      ],
+      "edges": [
+        ["h", "MEMBER_OF", "molecule"],
+        ["molecule", "MEMBER_OF", "cell"]
+      ],
+      "expected": {
+        "cycles": [],
+        "hide": { "shown": ["cell", "molecule", "h"], "highlighted": [] },
+        "highlight": { "shown": ["cell", "molecule", "h"], "highlighted": [] }
+      }
+    },
+    {
+      "name": "two clusters inside each other",
+      "nodes": [
+        ["a", ["Cluster"]],
+        ["b", ["Cluster"]],
+        ["c", ["Cluster"]],
+        ["x", ["Thing"]]
+      ],
+      "edges": [
+        ["a", "MEMBER_OF", "b"],
+        ["b", "MEMBER_OF", "a"],
+        ["x", "MEMBER_OF", "a"],
+        ["a", "MEMBER_OF", "c"]
+      ],
+      "expected": {
+        "cycles": [["a", "b"]],
+        "hide": { "shown": ["c", "x"], "highlighted": [] },
+        "highlight": { "shown": ["a", "b", "c", "x"], "highlighted": ["a", "b"] }
+      }
+    },
+    {
+      "name": "a cluster inside itself",
+      "nodes": [
+        ["self", ["Cluster"]],
+        ["x", ["Thing"]]
+      ],
+      "edges": [
+        ["self", "MEMBER_OF", "self"],
+        ["x", "MEMBER_OF", "self"]
+      ],
+      "expected": {
+        "cycles": [["self"]],
+        "hide": { "shown": ["x"], "highlighted": [] },
+        "highlight": { "shown": ["self", "x"], "highlighted": ["self"] }
+      }
+    },
+    {
+      "name": "a long cycle, and a cluster inside it that is not in it",
+      "nodes": [
+        ["a", ["Cluster"]],
+        ["b", ["Cluster"]],
+        ["c", ["Cluster"]],
+        ["d", ["Cluster"]],
+        ["e", ["Cluster"]]
+      ],
+      "edges": [
+        ["a", "MEMBER_OF", "b"],
+        ["b", "MEMBER_OF", "c"],
+        ["c", "MEMBER_OF", "d"],
+        ["d", "MEMBER_OF", "a"],
+        ["e", "MEMBER_OF", "a"]
+      ],
+      "expected": {
+        "cycles": [["a", "b", "c", "d"]],
+        "hide": { "shown": ["e"], "highlighted": [] },
+        "highlight": { "shown": ["a", "b", "c", "d", "e"], "highlighted": ["a", "b", "c", "d"] }
+      }
+    },
+    {
+      "name": "two cycles apart",
+      "nodes": [
+        ["p", ["Cluster"]],
+        ["q", ["Cluster"]],
+        ["r", ["Cluster"]],
+        ["s", ["Cluster"]]
+      ],
+      "edges": [
+        ["s", "MEMBER_OF", "r"],
+        ["r", "MEMBER_OF", "s"],
+        ["p", "MEMBER_OF", "q"],
+        ["q", "MEMBER_OF", "p"]
+      ],
+      "expected": {
+        "cycles": [
+          ["p", "q"],
+          ["r", "s"]
+        ],
+        "hide": { "shown": [], "highlighted": [] },
+        "highlight": { "shown": ["p", "q", "r", "s"], "highlighted": ["p", "q", "r", "s"] }
+      }
+    },
+    {
+      "name": "a member link to a thing that is not a cluster makes no cycle",
+      "nodes": [
+        ["k", ["Cluster"]],
+        ["t", ["Thing"]]
+      ],
+      "edges": [
+        ["k", "MEMBER_OF", "t"],
+        ["t", "MEMBER_OF", "k"]
+      ],
+      "expected": {
+        "cycles": [],
+        "hide": { "shown": ["k", "t"], "highlighted": [] },
+        "highlight": { "shown": ["k", "t"], "highlighted": [] }
+      }
+    }
+  ]
+}

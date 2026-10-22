@@ -56,6 +56,7 @@ const { views } = require('./views/views.js');
 const { louvain } = require('./clusters/louvain.js');
 const { clustersOf } = require('./clusters/clusters.js');
 const { centroidId, centroidsOf } = require('./clusters/centroids.js');
+const { clusterCycles, cycleView } = require('./clusters/cycles.js');
 
 // The API, its names in the order they have always had; test/graph-spec-check-api.test.mjs holds the list.
 module.exports = {
@@ -134,4 +135,6 @@ module.exports = {
   clustersOf,
   centroidId,
   centroidsOf,
+  clusterCycles,
+  cycleView,
 };

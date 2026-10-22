@@ -6,12 +6,12 @@ import { GROUP_MOST, groupsOf } from '../src/scale-groups.ts';
 import { readNote } from '../src/drawing.ts';
 import { hugeBlock } from '../../../scripts/scale-benchmark.mjs';
 
-/** A drawing of boxes `[key, kind, text]` and links `[from, to]`, with the style graph's `groups` as [label, keys]. */
+/** A drawing of boxes `[key, kind, text]` and links `[from, to, type]`, with the style graph's `groups` as [label, keys]. */
 function drawing(boxes, links, groups = []) {
   return {
     graph: 'g',
     boxes: boxes.map(([key, kind = 'Thing', text = key]) => ({ key, kind, text })),
-    links: links.map(([from, to]) => ({ from, type: 'LINKS', reading: 'links', to })),
+    links: links.map(([from, to, type = 'LINKS']) => ({ from, type, reading: type.toLowerCase(), to })),
     estimates: [],
     nudges: groups.flatMap(([group, keys]) => keys.map((thing) => ({ word: 'group', thing, group, at: {} }))),
   };
@@ -48,6 +48,30 @@ test('the style graph’s groups come first, when they hold at least half the th
     ['links'],
   );
   assert.deepEqual(allKeys(g).sort(), [...keys].sort());
+});
+
+test('the clusters written in the graph come next, each with its members, a thing in two in the first', () => {
+  const d = drawing(
+    [['c1', 'Cluster', 'Atoms'], ['c2', 'Cluster', 'Ions'], ['h'], ['o'], ['n'], ['na'], ['cl']],
+    [
+      ['h', 'c1', 'MEMBER_OF'],
+      ['o', 'c1', 'MEMBER_OF'],
+      ['o', 'c2', 'MEMBER_OF'],
+      ['na', 'c2', 'MEMBER_OF'],
+      ['cl', 'c2', 'MEMBER_OF'],
+      ['n', 'h'],
+    ],
+  );
+  const g = groupsOf(d, 500, 1);
+  assert.equal(g.by, 'cluster');
+  assert.deepEqual(g.groups.slice(0, 2), [
+    { id: 'group:c1', label: 'Atoms', by: 'cluster', keys: ['c1', 'h', 'o'] },
+    { id: 'group:c2', label: 'Ions', by: 'cluster', keys: ['c2', 'na', 'cl'] },
+  ]);
+  assert.deepEqual(
+    g.groups.slice(2).map((x) => [x.by, x.keys]),
+    [['links', ['n']]],
+  );
 });
 
 test('style groups that hold less than half the things give way to kinds', () => {

@@ -91,6 +91,8 @@ const NAMES = [
   'clustersOf',
   'centroidId',
   'centroidsOf',
+  'clusterCycles',
+  'cycleView',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {
