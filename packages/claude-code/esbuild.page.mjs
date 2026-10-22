@@ -5,6 +5,7 @@
 // - `page.css` holds the theme (theme-css.ts) and the display layer's styles. Those are the plugin's styles.css, which
 //   reads the same design tokens. It also holds the page's own styles with the tokens' mapping, and one rule per icon
 //   file.
+// - `plugin-start.txt` is the start of each plug-in worker's script, which seals the worker (page-plugins.ts).
 // - `index.html` and the `icons/` folder are copied.
 // esbuild.config.mjs uses it to put them in the mod. The page's tests use it too.
 import esbuild from 'esbuild';
@@ -12,6 +13,7 @@ import { cpSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'nod
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { themeCss } from './page/theme-css.ts';
+import { PLUGIN_START } from './server/page-assets.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -68,6 +70,20 @@ export async function buildPage(out) {
     format: 'iife',
     legalComments: 'inline',
   });
+  // the start of each plug-in worker's script: one function, run on `self`, that seals it (page/plugin-worker-entry.ts).
+  // It is text, not a page file, so the server reads it by name and serves it only before a plug-in turned on
+  const start = await esbuild.build({
+    ...common,
+    entryPoints: ['page/plugin-worker-entry.ts'],
+    format: 'iife',
+    globalName: 'thoughtknotPluginWorker',
+    legalComments: 'inline',
+    write: false,
+  });
+  writeFileSync(
+    join(out, PLUGIN_START),
+    `function (scope) {\n${start.outputFiles[0].text}\nreturn thoughtknotPluginWorker.serve;\n}`,
+  );
   cpSync(join(here, 'page/icons'), join(out, 'icons'), { recursive: true });
   const icons = readdirSync(join(here, 'page/icons'))
     .filter((f) => f.endsWith('.svg'))

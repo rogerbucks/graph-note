@@ -5,6 +5,7 @@
 // - shows the note's Markdown, rendered with raw HTML off;
 // - shows the edit pane of the Obsidian host beside it. That is the layer's block editor: the drawing with its details,
 //   the text, the problems, Undo, Redo and Lock the graph.
+// The plug-ins turned on in Obsidian run here too, sealed, and may draw the note's graph (page-plugins.ts).
 // What Claude has proposed for the note is a card under the graph, for the user to accept or reject. The page follows
 // the note's changes, so a proposal appears as it lands. Whatever goes wrong is said in words on the page. It is never
 // blank.
@@ -29,6 +30,7 @@ import { textVersionSection } from './text-version.ts';
 import { renderMarkdown } from './markdown.ts';
 import { noteCalls } from './note-calls.ts';
 import { PageNote } from './page-note.ts';
+import { pluginSection, startPlugins } from './page-plugins.ts';
 import { focusCards, showCards } from './proposal-card.ts';
 import type { Decide } from './proposal-card.ts';
 import { decide, proposalsIn } from './proposal-review.ts';
@@ -56,10 +58,11 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
     const calls = serverCalls(token, win.fetch.bind(win));
     const exports = exportCalls(token, win.fetch.bind(win));
     const notes = noteCalls(token, win.fetch.bind(win));
-    const [settings, opened, target] = await Promise.all([
+    const [settings, opened, target, listed] = await Promise.all([
       calls.settings(),
       calls.note(note),
       exports.target(note).catch(() => null),
+      calls.plugins().catch(() => []),
     ]);
     doc.documentElement.dataset.indent = settings.indent;
     const graph = doc.createElement('section');
@@ -125,6 +128,17 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
         .next().value;
       words = first ? graph.appendChild(textVersionSection(doc, first)) : null;
     };
+    // the plug-ins turned on in Obsidian, each in its own sealed worker, and the note's graph by a type one adds
+    // (plugin_outside_page)
+    const plugins = await startPlugins(win, listed);
+    let pluginPart: HTMLElement | null = null;
+    const addPlugins = async () => {
+      const next = await pluginSection(win, plugins, page.text);
+      const shown = pluginPart?.querySelector('img')?.src;
+      if (shown) win.URL.revokeObjectURL(shown);
+      pluginPart?.remove();
+      pluginPart = next && graph.appendChild(next);
+    };
     // everything but the editor, which draws itself from what is typed and from the changes the note tells it of. The
     // keyboard stays on the control it was on when a change on disk draws the page again
     const draw = () =>
@@ -133,7 +147,7 @@ export async function startPage(win: Window & typeof globalThis): Promise<void> 
         showCards(cards, proposalsIn(page.text), decideOn, announce);
         addExportBar();
         addTextVersion();
-        return Promise.resolve();
+        return addPlugins();
       });
     // the user's accept or reject: the core's review on the note, written by the page's own version-checked write
     const decideOn: Decide = async (id, action, which, staleSeen) => {

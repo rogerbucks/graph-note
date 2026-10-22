@@ -8,6 +8,7 @@
 import { diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
+  DiagramSpace,
   DiagramTable,
   DiagramType,
   DiagramWrite,
@@ -30,6 +31,9 @@ export interface DiagramShown extends DiagramOffer {
   /** The drawing as a plug-in's diagram type drew it: the core's SVG of its marks, the type and its size. */
   picture?: PluginPicture;
 }
+
+/** The space a plug-in's diagram type is given to draw in, in pixels, by every host. */
+export const PICTURE_SPACE: DiagramSpace = { width: 960, height: 540 };
 
 /** A graph drawn by a plug-in's diagram type: the SVG the core made of its marks, safe to show, and its size. */
 export interface PluginPicture {

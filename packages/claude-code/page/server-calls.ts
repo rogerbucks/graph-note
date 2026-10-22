@@ -6,6 +6,7 @@
 import { settingsFrom } from '../../core/src/settings.ts';
 import type { Settings } from '../../core/src/settings.ts';
 import type { PageVersion } from './changes-section.ts';
+import type { ListedPlugin } from './page-plugins.ts';
 import type { PageItemFiles } from './review-section.ts';
 import type { ReviewItem } from '../../core/src/github-review-items.ts';
 import { word } from '../../core/src/words.ts';
@@ -55,6 +56,11 @@ export function serverCalls(token: string, fetcher: typeof fetch) {
       (await explained(
         `${id(note)}/reviews/${encodeURIComponent(item.kind)}/${encodeURIComponent(item.id)}`,
       )) as PageItemFiles,
+    /** The plug-ins from outside turned on in Obsidian that the server serves, and those it left out, with why. */
+    plugins: async (): Promise<ListedPlugin[]> => {
+      const { plugins } = ((await get('plugins')) ?? {}) as { plugins?: unknown };
+      return Array.isArray(plugins) ? (plugins as ListedPlugin[]) : [];
+    },
     /** The settings the mod uses, read only. */
     settings: async (): Promise<Settings> => settingsFrom(await get('settings')),
     /** The note the session was opened for. */

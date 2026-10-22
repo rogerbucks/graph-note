@@ -9,6 +9,7 @@
 import gs from '@thoughtknot/graph-spec';
 import { firstLine, gqlBlocks, graphOfBlock, isStepBlock } from './blocks.ts';
 import { readNote } from './drawing.ts';
+import type { NoteReading } from './note-reading.ts';
 import { formatCount, formatList } from './locale-formats.ts';
 import { linkChange, makeProposal, thingChange } from './proposals.ts';
 import type { ChangeInput, Proposal } from './proposals.ts';
@@ -17,19 +18,25 @@ import { changeSetId } from './proposals-text.ts';
 import { inputFaults, inputsFrom, together } from './steps-input.ts';
 import type { StepGiven, StepInput, StepPoint } from './steps-input.ts';
 import { MOST_MATCHES, matchesOf } from './steps-match.ts';
-import type { StepMatch } from './steps-match.ts';
+import type { StepGraph, StepMatch } from './steps-match.ts';
 import { readRule, ruleWords } from './steps-rule.ts';
+import { pluginTypeOf } from './style-graph.ts';
 import type { StepRule } from './steps-rule.ts';
 import { N, S, trim } from './whitespace.ts';
 import { word } from './words.ts';
 
-/** A step found in a note: its name, the graph it proposes into, its block (0-based), its points and its rule. */
+/**
+ * A step found in a note: its name, the graph it proposes into, its block (0-based), its points and its rule. A step a
+ * plug-in adds is named by its id, such as `example.sample.chain`. It holds no rule: `plugin` names the plug-in that
+ * runs it (steps-plugin.ts).
+ */
 export interface Step {
   name: string;
   graph: string;
   block: number;
   points: StepPoint[];
   rule: StepRule;
+  plugin?: string;
 }
 
 /** A block meant as a step that cannot be one, with what to change: it is never run. */
@@ -94,7 +101,8 @@ export function stepOf(text: string, block = 0): Step | StepFault | null {
     name = named[1] ?? '',
     fault = (f: string): StepFault => ({ name, graph: of, block, fault: f });
   if (!name) return fault(word('steps.fault.no-name'));
-  if (!WORD.test(name)) return fault(word('steps.fault.not-one-word', { name }));
+  const own = WORD.test(name) ? null : pluginTypeOf(name);
+  if (!WORD.test(name) && !own) return fault(word('steps.fault.not-one-word', { name }));
   // a step is a short rule. A longer block is refused before its rule is read, so no text pasted or synced into a
   // note can hold the editor (§9)
   if (text.length > MOST_STEP_CHARACTERS)
@@ -112,6 +120,11 @@ export function stepOf(text: string, block = 0): Step | StepFault | null {
     points.push(p);
   }
   if (!points.length) return fault(word('steps.fault.no-points'));
+  // a plug-in's step is run by its plug-in, so the block holds what it takes and no rule of its own
+  if (own) {
+    if (body.some((l) => trim(l) && !trim(l).startsWith('//'))) return fault(word('steps.fault.plugin-rule', { name }));
+    return { name, graph, block, points, rule: { things: [], links: [], insert: [] }, plugin: own.plugin };
+  }
   const rule = readRule(body.filter((l) => !trim(l).startsWith('//')).join('\n'));
   if ('fault' in rule) return fault(rule.fault);
   const words = ruleWords(rule),
@@ -202,6 +215,7 @@ export function runStep(
           : word('steps.run.cannot-unnamed', { why: step.fault }),
       ],
     };
+  if (step.plugin) return { refused: [word('steps.run.by-plugin', { step: step.name })] };
   const shared = options.shared ?? [],
     texts = gqlBlocks(note).map((b) => b.text),
     { name, graph } = step;
@@ -221,14 +235,34 @@ export function runStep(
       const link: [string, string, string] = [at(m, ins.from), ins.type, at(m, ins.to)];
       if (!links.has(link.join(' '))) links.set(link.join(' '), { link, m });
     }
-  const all = [...links.values()];
+  const inserted = [...links.values()].map(({ link, m }) => ({
+    link,
+    reason: `found by step ${name}: ${said(g.links, m)}`,
+  }));
+  return proposedRun({ note, step, texts, reading, inputs, g, found: inserted, at: options.at, shared });
+}
+
+/** What a run that found `found` comes to: the links new to the step's graph proposed, each with its reason, or why not. */
+export function proposedRun(run: {
+  note: string;
+  step: Step;
+  texts: readonly string[];
+  reading: NoteReading;
+  inputs: readonly StepInput[];
+  g: StepGraph;
+  found: readonly { link: [string, string, string]; reason: string }[];
+  at: string;
+  shared: string[];
+}): StepRun {
+  const { note, step, texts, reading, inputs, g, found } = run,
+    { name, graph } = step;
   const output: StepOutput = {
-    things: [...new Set(all.flatMap(({ link }) => [link[0], link[2]]))],
-    links: all.map(({ link }) => link),
+    things: [...new Set(found.flatMap(({ link }) => [link[0], link[2]]))],
+    links: found.map(({ link }) => link),
   };
   const target = reading.world[graph],
     held = new Set(target?.edges.map(([s, t, d]) => [s, t, d].join(' ')) ?? []);
-  const fresh = all.filter(({ link }) => !held.has(link.join(' ')));
+  const fresh = found.filter(({ link }) => !held.has(link.join(' ')));
   if (!fresh.length) return { nothing: word('steps.run.nothing-new', { step: name, graph }), output };
   // an id is written into the change set as a name. Only a plain word is, never text that could write a line of its
   // own
@@ -236,7 +270,7 @@ export function runStep(
   if (odd !== undefined) return { refused: [word('steps.run.odd-id', { step: name, id: JSON.stringify(odd) })] };
   const changes: ChangeInput[] = [],
     added = new Set<string>();
-  for (const { link, m } of fresh) {
+  for (const { link, reason } of fresh) {
     for (const id of [link[0], link[2]])
       if (!target?.nodes.has(id) && !added.has(id)) {
         added.add(id);
@@ -248,16 +282,18 @@ export function runStep(
         const kind = [...(t?.kinds ?? [])][0];
         changes.push(kind ? thingChange(id, kind, Object.fromEntries(scalar)) : { op: 'add', gql: `(${id})` });
       }
-    changes.push(linkChange(link[0], link[1], link[2], {}, { reason: `found by step ${name}: ${said(g.links, m)}` }));
+    changes.push(linkChange(link[0], link[1], link[2], {}, { reason }));
   }
+  // a plug-in step's id is written as one word, as a change set's author is a thing of the graph: example_sample_chain
+  const author = name.replace(/[.-]/g, '_');
   const proposal = makeProposal({
-    id: proposalId(name, texts),
+    id: proposalId(author, texts),
     graph,
-    by: { name, kind: 'step' },
-    at: options.at,
+    by: { name: author, kind: 'step' },
+    at: run.at,
     // the inputs as the change set records them in the note: its bytes, in UK English
     read: inputs.map((i) => `${i.point}: ${i.read}`),
-    basis: basisOf(note, graph, shared),
+    basis: basisOf(note, graph, run.shared),
     changes,
   });
   return 'refused' in proposal ? { refused: [proposal.refused] } : { proposal, output };

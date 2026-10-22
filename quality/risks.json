@@ -2975,8 +2975,8 @@
       "likelihood": "medium",
       "impact": "medium",
       "decision": "fix-later",
-      "fix": "Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Obsidian loads one from its plug-ins folder or a link, off until turned on (outside-plugins.ts). Its commands, graph sources and diagram types work there. Left: its steps in Obsidian, and the browser page.",
-      "check": "test/sample-plugin.test.js runs the sample in a worker. packages/obsidian/test/outside-plugins.test.js loads it through main.js, outside-plugins-sources.test.js draws its source and outside-plugins-diagrams.test.js its diagram type. The browser page is to come.",
+      "fix": "Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Obsidian loads one from its plug-ins folder or a link, off until turned on (outside-plugins.ts). Its commands, graph sources, diagram types and steps work there. The browser page runs those turned on in Obsidian, sealed and off the network (page-plugins.ts), and draws their diagram types.",
+      "check": "test/sample-plugin.test.js runs the sample in a worker. packages/obsidian/test/outside-plugins.test.js loads it through main.js. The outside-plugins-sources, -diagrams and -steps tests use its other points there. packages/claude-code/test/page-plugins.test.js runs it on the browser page.",
       "paths": [
         "packages/core/src/plugin-outside.ts",
         "packages/obsidian/src/outside/outside-plugins.ts",
@@ -2984,7 +2984,8 @@
         "packages/core/src/plugin-versions.ts",
         "packages/core/src/plugins-contract.ts",
         "packages/core/src/plugins.ts",
-        "wiki/Writing-a-plug-in.md"
+        "wiki/Writing-a-plug-in.md",
+        "packages/claude-code/server/page-plugins.ts"
       ],
       "effort": "days",
       "raised": "2026-10-19",
@@ -2992,8 +2993,9 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
-      "wave": "Wave 6 · Host, storage and plug-in contracts"
+      "status": "done",
+      "wave": "Wave 6 · Host, storage and plug-in contracts",
+      "done_in": "#908"
     },
     {
       "id": "API-11",
@@ -3869,6 +3871,173 @@
     },
     {
       "id": "SEC-11",
+      "role": "Code scanning (CodeQL)",
+      "area": "security",
+      "title": "Patterns that run slow on text made for them",
+      "risk": "Nine patterns that read note text, drawings and rules took time growing with the square of the text's length. A note made to slow them could hang the viewer.",
+      "evidence": [
+        "packages/core/src/hits.ts:57",
+        "packages/core/src/theme.ts:70",
+        "packages/core/src/view-profile.ts:104",
+        "packages/graph-spec/src/rules/lenses.js:11"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-now",
+      "fix": "Read each with a pattern that cannot run slow, or with plain string cuts (packages/core/src/text-cuts.ts).",
+      "check": "test/code-scanning-fixes.test.js times each on text made to slow it. CI's code-scan job fails on any such pattern.",
+      "paths": [
+        "packages/core/src/hits.ts",
+        "packages/core/src/theme.ts",
+        "packages/core/src/view-profile.ts",
+        "packages/core/src/export-plan.ts",
+        "packages/core/src/help.ts",
+        "packages/core/src/image-links.ts",
+        "packages/graph-spec/src/rules/lenses.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-21",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "98124929b9c69a1321d37c2e56b03cc7544c2e2a"
+      },
+      "status": "done",
+      "done_in": "#901",
+      "prevented_by": [
+        "test/code-scanning-fixes.test.js",
+        "test/code-scan.test.js",
+        "scripts/code-scan.mjs"
+      ]
+    },
+    {
+      "id": "SEC-12",
+      "role": "Code scanning (CodeQL)",
+      "area": "security",
+      "title": "Comments and tags taken out in one pass",
+      "risk": "Taking out comments or tags in one pass can leave a new one made from the pieces round each removed part. The drawing and the test report each did so.",
+      "evidence": [
+        "packages/core/src/theme.ts:89",
+        "scripts/tests-first-run.mjs:99"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-now",
+      "fix": "Take them out again and again until none is left.",
+      "check": "test/code-scanning-fixes.test.js feeds nested comments. CI's code-scan job fails on any one-pass removal.",
+      "paths": [
+        "packages/core/src/theme.ts",
+        "scripts/tests-first-run.mjs"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-21",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "98124929b9c69a1321d37c2e56b03cc7544c2e2a"
+      },
+      "status": "done",
+      "done_in": "#901",
+      "prevented_by": [
+        "test/code-scanning-fixes.test.js",
+        "test/code-scan.test.js",
+        "scripts/code-scan.mjs"
+      ]
+    },
+    {
+      "id": "SEC-13",
+      "role": "Code scanning (CodeQL)",
+      "area": "security",
+      "title": "A test checked a web address by part of its text",
+      "risk": "A test told the NVD address apart by a piece of its text, which another host can hold. It is a test, but the shape spreads by copying.",
+      "evidence": [
+        "test/engine-version.test.js:396"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-now",
+      "fix": "Compare the address's host name in full.",
+      "check": "CI's code-scan job fails on any address checked by part of its text.",
+      "paths": [
+        "test/engine-version.test.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-21",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "98124929b9c69a1321d37c2e56b03cc7544c2e2a"
+      },
+      "status": "done",
+      "done_in": "#901",
+      "prevented_by": [
+        "test/code-scanning-fixes.test.js",
+        "test/code-scan.test.js",
+        "scripts/code-scan.mjs"
+      ]
+    },
+    {
+      "id": "SEC-14",
+      "role": "Code scanning (CodeQL)",
+      "area": "security",
+      "title": "A name in a graph could reach an object's prototype",
+      "risk": "The flat projection set keys from names in the graph. A relationship or a property named __proto__ changed an object's prototype instead of being kept.",
+      "evidence": [
+        "packages/graph-spec/src/rules/projection.js:55"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-now",
+      "fix": "Set every key from a graph as the object's own property.",
+      "check": "test/code-scanning-fixes.test.js projects a graph with __proto__ names. CI's code-scan job fails on any such assignment.",
+      "paths": [
+        "packages/graph-spec/src/rules/projection.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-21",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "98124929b9c69a1321d37c2e56b03cc7544c2e2a"
+      },
+      "status": "done",
+      "done_in": "#901",
+      "prevented_by": [
+        "test/code-scanning-fixes.test.js",
+        "test/code-scan.test.js",
+        "scripts/code-scan.mjs"
+      ]
+    },
+    {
+      "id": "SEC-15",
+      "role": "Code scanning (CodeQL)",
+      "area": "security",
+      "title": "Page code built from text without escaping",
+      "risk": "The reflow check built code for a page from button labels with JSON alone. A label with a closing script tag or a line separator could break out of it.",
+      "evidence": [
+        "scripts/targets-reflow.mjs:126",
+        "scripts/targets-reflow.mjs:129"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-now",
+      "fix": "Escape the characters that can end a script or a line, after JSON.",
+      "check": "test/code-scanning-fixes.test.js puts a closing script tag in a label. CI's code-scan job fails on any such code.",
+      "paths": [
+        "scripts/targets-reflow.mjs"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-21",
+      "reviewed": {
+        "date": "2026-10-21",
+        "commit": "98124929b9c69a1321d37c2e56b03cc7544c2e2a"
+      },
+      "status": "done",
+      "done_in": "#901",
+      "prevented_by": [
+        "test/code-scanning-fixes.test.js",
+        "test/code-scan.test.js",
+        "scripts/code-scan.mjs"
+      ]
+    },
+    {
+      "id": "SEC-16",
       "role": "Senior security engineer",
       "area": "security",
       "raised": "2026-10-22",

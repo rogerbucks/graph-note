@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (92)
+## Open (91)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -80,7 +80,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-7 | Python public surface is everything, private names included | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-8 | graph-spec is CommonJS-only with a partial d.ts and mixed errors | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| API-10 | Plug-in API version is one string, no host loads third parties | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
 | API-12 | No runnable examples for either library, none in CI | ●●● | ●○○ | fix-later (Wave 8 · VS Code plugin) | hours |
 | AI-2 | Classification gate guards the pane only, not Claude's own reads | ●●● | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -814,16 +813,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** plugins-contract.ts suite for providers: a provider round-trips a fixed question and a fixed reply fixture.
 
-### API-10 Plug-in API version is one string, no host loads third parties
-
-**Who found it:** API design expert. **Where:** `packages/core/src/plugin-outside.ts`, `packages/obsidian/src/outside/outside-plugins.ts`, `examples/sample-plugin/plugin.js`, `packages/core/src/plugin-versions.ts`, `packages/core/src/plugins-contract.ts`, `packages/core/src/plugins.ts`, `wiki/Writing-a-plug-in.md`.
-
-**Risk:** PLUGIN_API is '1' and a plug-in built for any other value is refused. So an additive change to the interface would orphan every plug-in unless the version never moves. The registry and two extension points (exports, theme) are in the public API and the wiki. But no host was found that loads a plug-in from outside the bundle, so the contract is untested against a real third party.
-
-**Fix:** Done in #885: `api` is major.minor, and the host accepts an equal major and a lower or equal minor. Each point has its own version. A host loads one from its file alone (plugin-outside.ts), in a worker sealed first. Obsidian loads one from its plug-ins folder or a link, off until turned on (outside-plugins.ts). Its commands, graph sources and diagram types work there. Left: its steps in Obsidian, and the browser page.
-
-**Check:** test/sample-plugin.test.js runs the sample in a worker. packages/obsidian/test/outside-plugins.test.js loads it through main.js, outside-plugins-sources.test.js draws its source and outside-plugins-diagrams.test.js its diagram type. The browser page is to come.
-
 ### API-11 Schema @1 is a name suffix, not a version negotiation
 
 **Who found it:** API design expert. **Where:** `packages/core/src/standard-schemas.ts`, `packages/core/src/schema-names.ts`.
@@ -1024,7 +1013,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
 
-## Done or accepted (27)
+## Done or accepted (33)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1045,6 +1034,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | FLOW-8 | AI sessions lack the merge and record rules they need | done | #615 |
 | API-3 | Host contract version is a hand-typed number | done | #614 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |
+| API-10 | Plug-in API version is one string, no host loads third parties | done | #908 |
 | AI-1 | In Claude Code the proposal route is optional, not mandatory | done | #618 |
 | AI-3 | Note text enters prompts with no data boundary or injection test | done | #618 |
 | AI-11 | Consent is per send, but residency and retention are unsaid | done | #618 |
@@ -1054,4 +1044,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-14 | Plug-ins run with the host's full powers | done | #882; kept out by `packages/core/test/plugins-isolated.test.js` |
 | TRUST-15 | A plug-in given secrets could read every secret, AI keys too | done | #856; kept out by `packages/core/test/plugins-limits.test.js` |
 | TRUST-16 | The files ability reaches every note, whatever its class | done | #867; kept out by `packages/core/test/plugins-limits.test.js` |
-| SEC-11 | The desktop app's Linux build carries glib 0.18, with a known unsoundness | accepted | Roger, 22 Oct 2026 (decision card on PR #905): No code in the app's dependencies calls VariantStrIter. It is the Linux build only. No fixed glib works with Tauri yet. Undo when Tauri supports GTK 4. |
+| SEC-11 | Patterns that run slow on text made for them | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-12 | Comments and tags taken out in one pass | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-13 | A test checked a web address by part of its text | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-14 | A name in a graph could reach an object's prototype | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-15 | Page code built from text without escaping | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
+| SEC-16 | The desktop app's Linux build carries glib 0.18, with a known unsoundness | accepted | Roger, 22 Oct 2026 (decision card on PR #905): No code in the app's dependencies calls VariantStrIter. It is the Linux build only. No fixed glib works with Tauri yet. Undo when Tauri supports GTK 4. |

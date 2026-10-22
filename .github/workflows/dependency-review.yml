@@ -22,7 +22,7 @@ jobs:
       - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: low
-          # One advisory, accepted by Roger on 22 Oct 2026 (risk SEC-11): glib 0.18 in the desktop app's Linux build.
+          # One advisory, accepted by Roger on 22 Oct 2026 (risk SEC-16): glib 0.18 in the desktop app's Linux build.
           # Tauri pins it through GTK 3. Remove this line when Tauri supports GTK 4 and glib can be bumped.
           allow-ghsas: GHSA-wrw7-89jp-8q8g
           comment-summary-in-pr: never

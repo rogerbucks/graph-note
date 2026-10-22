@@ -9,6 +9,7 @@ import type { GraphDrawing, NoteReading, Problem } from './note-reading.ts';
 import { distance, hops } from './estimates.ts';
 import { tokenize } from './tokens.ts';
 import { word } from './words.ts';
+import { cutAtFirst } from './text-cuts.ts';
 
 /** LSP DiagnosticSeverity. */
 export const SEVERITY = { Error: 1, Warning: 2, Information: 3, Hint: 4 } as const;
@@ -199,7 +200,7 @@ export function diagnostics(
       if (!u || (near[1] && distance(k, near[1][0]) === distance(k, u))) continue;
       const dist = distance(k, u);
       lines.forEach((l, line) => {
-        if (!new RegExp(`:\\s*${k}\\b`).test(l.replace(/\/\/.*$/, ''))) return;
+        if (!new RegExp(`:\\s*${k}\\b`).test(cutAtFirst(l, '//'))) return;
         const range = rangeOf(text, line, k);
         out.push({
           range,

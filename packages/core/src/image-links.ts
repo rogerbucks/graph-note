@@ -5,6 +5,7 @@
 // details, such an image waits for the user to ask for it (remote_images_asked). A place that could leave the vault or reach what it hides is refused, as a graph source's is (sources.ts).
 import { outsideVault } from './sources.ts';
 import { word } from './words.ts';
+import { cutAtFirst } from './text-cuts.ts';
 
 /** The file types an image is known by, by extension, in any case. */
 export const IMAGE_EXTENSIONS: ReadonlySet<string> = new Set([
@@ -51,7 +52,7 @@ export function imageLink(value: unknown): ImageLink | null {
   const written = value.trim(),
     place = LINK.exec(written)?.[1]?.trim() ?? written;
   if (SCHEME.test(place) && !/^[A-Za-z]:[/\\]/.test(place))
-    return isImage(place.replace(/[?#].*$/, '')) || /^data:image\//i.test(place)
+    return isImage(cutAtFirst(place, '?', '#')) || /^data:image\//i.test(place)
       ? { refused: word('reading.image.outside', { written }) }
       : null;
   if (!isImage(place)) return null;

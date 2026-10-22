@@ -4,7 +4,7 @@
 // Nothing runs when the card is drawn. Only Run runs it, against the note as it is then.
 // The core checks the inputs first. What it gives is written beside its graph as a proposal (§17), never into the graph.
 // A person accepts or rejects it. A step that cannot be one says why, with no Run.
-// Reading view, which never changes a note, offers no Run.
+// Reading view, which never changes a note, offers no Run. A step a plug-in adds is run by that plug-in (runOutside).
 import { Notice, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext } from 'obsidian';
 import {
@@ -14,6 +14,7 @@ import {
   graphOfBlock,
   namesSharedSchema,
   noteWithProposal,
+  runPluginStep,
   runStep,
   stepOf,
   viewsOf,
@@ -25,6 +26,7 @@ import type ThoughtKnotPlugin from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { readOnlyHere, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import { editInPane } from './edit-in-pane';
+import { classificationOf } from './export/classification';
 
 const and = (xs: readonly string[]) => formatList([...xs]);
 
@@ -71,8 +73,10 @@ async function run(
 ): Promise<StepRun | null> {
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return null;
-  const texts = gqlBlocks(await plugin.app.vault.cachedRead(file)).map((b) => b.text);
+  const text = await plugin.app.vault.cachedRead(file);
+  const texts = gqlBlocks(text).map((b) => b.text);
   const shared = texts.some(namesSharedSchema) ? await plugin.sharedSchemas() : [];
+  if (step.plugin) return runOutside(plugin, file, text, step, given, shared);
   let outcome: StepRun | null = null;
   await plugin.app.vault.process(file, (note) => {
     // the step as written now, found by its graph and name
@@ -86,6 +90,40 @@ async function run(
     outcome = r;
     if (!('proposal' in r)) return note;
     // a proposal the graph spec's check fails is not written, and the run says so
+    const written = noteWithProposal(note, r.proposal);
+    if (typeof written === 'string') return written;
+    outcome = { refused: [word('step.not-written', { name: step.name, why: written.refused })] };
+    return note;
+  });
+  return outcome;
+}
+
+/**
+ * Runs a plug-in's step (plugin_step_named). The plug-in turned on that adds it is asked, with the inputs as the note is
+ * now and the note's class. Its proposal is then written beside its graph, as any step's is.
+ */
+async function runOutside(
+  plugin: ThoughtKnotPlugin,
+  file: TFile,
+  text: string,
+  step: GraphStep,
+  given: Record<string, StepGiven>,
+  shared: string[],
+): Promise<StepRun> {
+  const levels = plugin.settings.classifications;
+  const level = classificationOf(plugin.app, file, text, levels) ?? levels.at(-1) ?? '';
+  const now = gqlBlocks(text)
+    .map((b, i) => stepOf(b.text, i))
+    .find((s) => s?.graph === step.graph && s.name === step.name) ?? { ...step, fault: word('blocks.step-gone') };
+  const r = await runPluginStep(text, now, given, {
+    at: new Date().toISOString(),
+    level,
+    shared,
+    run: (id, inputs) => plugin.outside.runStep(id, inputs, levels),
+  });
+  if (!('proposal' in r)) return r;
+  let outcome: StepRun = r;
+  await plugin.app.vault.process(file, (note) => {
     const written = noteWithProposal(note, r.proposal);
     if (typeof written === 'string') return written;
     outcome = { refused: [word('step.not-written', { name: step.name, why: written.refused })] };

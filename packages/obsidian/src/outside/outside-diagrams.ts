@@ -3,13 +3,11 @@
 // a space. The card shows the core's picture of the marks it gave back. Otherwise the graph is a network, and
 // the strip says which plug-in draws it, or why it could not.
 import { shapeOf } from '@thoughtknot/core';
-import type { DiagramSpace, GraphDrawing, Nudge } from '@thoughtknot/core';
+import type { GraphDrawing, Nudge } from '@thoughtknot/core';
 import type { NoteReading } from '@thoughtknot/core';
+import { PICTURE_SPACE } from '@thoughtknot/core/display/graph-view/type-strip';
 import type { DiagramShown } from '@thoughtknot/core/display/graph-view/type-strip';
 import type { OutsidePlugins } from './outside-plugins';
-
-/** The space a plug-in's diagram type is given to draw in, in pixels. */
-export const PICTURE_SPACE: DiagramSpace = { width: 960, height: 540 };
 
 /**
  * `diagram` with the picture of `drawing` by the plug-in type its style graph chooses, when a plug-in turned on draws

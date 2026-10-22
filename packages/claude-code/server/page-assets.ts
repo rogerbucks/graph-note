@@ -25,6 +25,12 @@ const TYPES: Record<string, string> = {
   '.svg': 'image/svg+xml',
 };
 
+/**
+ * The file the build makes beside the page with the start of each plug-in worker's script. The page uses no file of its
+ * kind, so it is never served as it is. The server reads it by name and puts it before each plug-in (page-plugins.ts).
+ */
+export const PLUGIN_START = 'plugin-start.txt';
+
 /** The worker's path, the one file served under a policy of its own. */
 export const WORKER_FILE = '/layout-worker.js';
 

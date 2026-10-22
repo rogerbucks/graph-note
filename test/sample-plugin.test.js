@@ -13,6 +13,7 @@ import {
   commandContract,
   diagramContract,
   sourceContract,
+  stepContract,
   themeTokenContract,
 } from '../packages/core/src/plugins-contract.ts';
 
@@ -48,11 +49,13 @@ describe('the sample plug-in, run as a host runs one it did not ship (API-10)', 
     registry.register(iso.plugin);
     assert.deepEqual(registry.plugins(), ['example.sample']);
     const [source] = registry.graphSources();
+    const [step] = registry.graphSteps();
     const [command] = registry.commands();
     const [token] = registry.themeTokens();
     const [diagram] = registry.diagramTypes();
     const checks = [
       ...sourceContract(source, 'trip'),
+      ...stepContract(step, 'example.sample'),
       ...diagramContract(diagram, 'example.sample'),
       ...commandContract(command, 'example.sample'),
       ...themeTokenContract(token, 'example.sample'),
