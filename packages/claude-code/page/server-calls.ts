@@ -57,7 +57,10 @@ export function serverCalls(token: string, fetcher: typeof fetch) {
         `${id(note)}/reviews/${encodeURIComponent(item.kind)}/${encodeURIComponent(item.id)}`,
       )) as PageItemFiles,
     /** The plug-ins from outside turned on in Obsidian that the server serves, and those it left out, with why. */
-    plugins: async (): Promise<ListedPlugin[]> => ((await get('plugins')) as { plugins: ListedPlugin[] }).plugins,
+    plugins: async (): Promise<ListedPlugin[]> => {
+      const { plugins } = ((await get('plugins')) ?? {}) as { plugins?: unknown };
+      return Array.isArray(plugins) ? (plugins as ListedPlugin[]) : [];
+    },
     /** The settings the mod uses, read only. */
     settings: async (): Promise<Settings> => settingsFrom(await get('settings')),
     /** The note the session was opened for. */
