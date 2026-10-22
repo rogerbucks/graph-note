@@ -3,7 +3,9 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  DRAW_MARK_KINDS,
   DRAW_MARK_LIMIT,
+  FOLD_KINDS,
   drawMarksOf,
   drawOrder,
   fromPluginMarks,
@@ -153,5 +155,80 @@ describe('drawing marks (plugin_interface)', () => {
     );
     assert.equal(marks[3].angle, 0);
     assert.ok(Array.isArray(drawMarksOf(marks, { width: 100, height: 50 })));
+  });
+});
+
+// Board items (§45, board_item_marks): a whiteboard draws its items through the same marks and painters as a drawing.
+describe('board item marks', () => {
+  const STICKY = {
+    id: 'idea-1',
+    style: 'board.sticky',
+    kind: 'item',
+    item: 'sticky',
+    x: 20,
+    y: 30,
+    width: 120,
+    height: 80,
+    name: 'Sticky note: ship the board',
+  };
+
+  test('an item is a kind of mark, read and copied like any other', () => {
+    assert.ok(DRAW_MARK_KINDS.includes('item'));
+    const read = drawMarksOf([STICKY, { ...STICKY, id: 'vote', item: 'example.vote', name: 'Vote' }], SPACE);
+    assert.deepEqual(read, [STICKY, { ...STICKY, id: 'vote', item: 'example.vote', name: 'Vote' }]);
+    assert.ok(read[0] !== STICKY, 'a copy, never the mark given');
+  });
+
+  test('an item covers its box', () => {
+    assert.deepEqual(markBounds(STICKY), { x: 20, y: 30, width: 120, height: 80 });
+  });
+
+  test('an item is refused without a name, with a kind that is not a token, or outside its space', () => {
+    const { name: _, ...unnamed } = STICKY;
+    for (const [bad, why] of [
+      [unnamed, /an item with no name for a screen reader/],
+      [{ ...STICKY, item: 'Sticky Note' }, /an item whose kind is not a token/],
+      [{ ...STICKY, x: 350 }, /an item outside the space it was given/],
+    ])
+      assert.match(drawMarksOf([bad], SPACE), why);
+  });
+});
+
+// Folds (§34, process_fold_marks): a process view folds a part it cannot draw, such as a loop, into one mark.
+describe('fold marks', () => {
+  const LOOP = {
+    id: 'fold:retry',
+    style: 'fold',
+    kind: 'fold',
+    folds: 'loop',
+    hides: 3,
+    x: 100,
+    y: 40,
+    width: 90,
+    height: 50,
+    name: 'Loop hidden: 3 steps repeat until the payment clears',
+  };
+
+  test('a fold is a kind of mark, read and copied like any other, for each thing a view may fold', () => {
+    assert.ok(DRAW_MARK_KINDS.includes('fold'));
+    assert.deepEqual(FOLD_KINDS, ['loop', 'parallel', 'timing', 'other']);
+    const all = FOLD_KINDS.map((folds) => ({ ...LOOP, id: `fold:${folds}`, folds }));
+    assert.deepEqual(drawMarksOf(all, SPACE), all);
+  });
+
+  test('a fold covers its box', () => {
+    assert.deepEqual(markBounds(LOOP), { x: 100, y: 40, width: 90, height: 50 });
+  });
+
+  test('a fold is refused without a name, of a kind no view folds, hiding nothing, or outside its space', () => {
+    const { name: _, ...unnamed } = LOOP;
+    for (const [bad, why] of [
+      [unnamed, /a fold with no name for a screen reader/],
+      [{ ...LOOP, folds: 'branch' }, /a fold that is not one of loop, parallel, timing, other/],
+      [{ ...LOOP, hides: 0 }, /a fold that hides no things/],
+      [{ ...LOOP, hides: 1.5 }, /a fold that hides no things/],
+      [{ ...LOOP, y: 280 }, /a fold outside the space it was given/],
+    ])
+      assert.match(drawMarksOf([bad], SPACE), why);
   });
 });
