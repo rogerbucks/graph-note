@@ -98,6 +98,15 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
   - Look and ViewStyle are drawn by the plugin alone, so only their keys are checked here. Of a Shown, its view and the
     switches it was saved with are checked too, as graph_svg draws them.
 
+### Style: drawing marks
+
+- `src/graphspec/style/marks` — Graphviz's layout as drawing marks, the one picture format every diagram type gives back
+  (plugin_interface). It is the core's `graphviz-marks.ts` step for step.
+- `layout_marks` reads a layout Graphviz gives as JSON (`dot -Tjson`). It runs no Graphviz itself.
+- `marks_json` holds the style token for each stand-in colour, and reads an arrowhead (the core's `graphviz-json.ts`).
+  `marks_links` reads each link and the order Graphviz writes it in.
+- Each mark is a dict with the core's own keys, such as `maxWidth`, so the two can be compared as they are.
+
 ### Rules and the engine
 
 - `src/graphspec/rules/` — graph_rules's. Its modules:
@@ -201,3 +210,9 @@ arrowheads, rows and source. Its `python_answer` is the Python side `layout-pari
 
 Otherwise named after the module they test. `test_<entry point>_entry_point.py` hold each entry point to every name it
 had (`entry_points.json`) and to importing with only `src/` on the path.
+
+### Parity of the drawing marks
+
+`test_marks.py` proves the marks, and the core's `graphviz-marks-parity.test.js` holds them to the core's. Each case in
+`tests/marks_cases.json` is laid out once, and both libraries read that one layout. They give the same marks, parts and
+order, numbers to a billionth.

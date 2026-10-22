@@ -1,0 +1,49 @@
+{
+  "about": "Graphviz sources laid out by both libraries and read as drawing marks (editor spec §43, plugin_interface). Each is laid out once, as JSON, and both the core (graphviz-marks.ts, layoutMarks) and the Python library (graphspec/style/marks.py, layout_marks) read that one layout. Both give the same marks, the same parts in the same order, and the same room round the drawing. Shared by packages/core/test/graphviz-marks-parity.test.js and python/graph_spec/tests/test_marks.py.",
+  "cases": [
+    {
+      "name": "the plainest graph, with the page Graphviz fills and its own room round it",
+      "dot": "digraph { a -> b }"
+    },
+    {
+      "name": "a styled graph with a kind, a reading and a label of two lines",
+      "dot": "digraph G { graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2,\n    fillcolor=\"#000100\", color=\"#000200\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n    \"loan\" [label=\"Loan\\nterms\", fillcolor=\"#000100\", color=\"#000200\"]; \"b\" [fillcolor=\"#000101\", color=\"#000201\"];\n    \"loan\" -> \"b\" [label=\"owes\", color=\"#000300\", fontcolor=\"#000400\"]; }"
+    },
+    {
+      "name": "a label as a table, with the square kept for a picture",
+      "dot": "digraph G { graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2,\n    fillcolor=\"#000100\", color=\"#000200\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n    \"tom\" [label=<<table border=\"0\"><tr><td fixedsize=\"true\" width=\"48\" height=\"48\" bgcolor=\"#0005fe\"></td></tr>\n    <tr><td><font point-size=\"9\" color=\"#0000fe\">CAT</font></td></tr><tr><td>Tom</td></tr></table>>]; }"
+    },
+    {
+      "name": "clusters inside clusters, and one inside a subgraph that is not one",
+      "dot": "digraph G { graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2,\n    fillcolor=\"#000100\", color=\"#000200\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n    subgraph x { rank=same; subgraph cluster_b { label=\"B\"; b1; subgraph cluster_c { label=\"C\"; c1; } } }\n    subgraph cluster_a { label=\"A\"; style=\"rounded,dashed\"; color=\"#0000fe\"; a1; } a1 -> b1; c1 -> a1; }"
+    },
+    {
+      "name": "ids and classes the core gives, on things and links",
+      "dot": "digraph G { graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2,\n    fillcolor=\"#000100\", color=\"#000200\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n    \"hub\" [id=\"fold_hub_1\", class=\"thoughtknot-stub\"]; \"x\"; \"hub\" -> \"x\" [id=\"e9\", class=\"thoughtknot-flow dot\"]; }"
+    },
+    {
+      "name": "links written out of order, and hidden ones that still lead to the thing they reach",
+      "dot": "digraph G { graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2,\n    fillcolor=\"#000100\", color=\"#000200\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n    q; l; s; e; s -> l; e -> s; l -> q [style=invis]; e -> q; x [style=invis]; e -> x; }"
+    },
+    {
+      "name": "a point, a dashed outline, a heavy link and a link both ways",
+      "dot": "digraph G { graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2,\n    fillcolor=\"#000100\", color=\"#000200\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n    p [shape=point]; d [style=dashed, color=\"#0000fe\"]; p -> d [penwidth=2.5, dir=both]; }"
+    },
+    {
+      "name": "text that must be escaped, and spaces kept",
+      "dot": "digraph G { graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2,\n    fillcolor=\"#000100\", color=\"#000200\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0];\n    \"a<b>\" [label=\"Tom & \\\"Rex\\\" -  two  spaces\"]; \"a<b>\" -> c [label=\"it's\"]; }"
+    },
+    {
+      "name": "an undirected graph",
+      "dot": "graph { a -- b; b -- c; }"
+    },
+    {
+      "name": "a cluster label with a backslash and a quote, which Graphviz’s JSON leaves out",
+      "dot": "digraph G { graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor=\"transparent\", pad=0.1];\n  node [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=12.5, fontcolor=\"#0000fd\", penwidth=1.2,\n    fillcolor=\"#000100\", color=\"#000200\"];\n  edge [fontname=\"Helvetica\", fontsize=10.5, fontcolor=\"#0000fe\", color=\"#0000fc\", arrowsize=0.7, penwidth=1.0]; subgraph cluster_1 { label=\"C:\\\\ \\\"inside\\\"\\\\n\"; a; } }"
+    },
+    {
+      "name": "a colour that is no stand-in",
+      "dot": "digraph { a [style=filled, fillcolor=\"lightgrey\"]; }"
+    }
+  ]
+}
