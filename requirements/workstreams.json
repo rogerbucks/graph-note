@@ -941,6 +941,8 @@
       "scale_limits_revisited",
       "scale_benchmark",
       "scale_level_of_detail",
+      "scale_space_view",
+      "scale_space_painters",
       "scale_in_parts"
     ]
   },
