@@ -23,6 +23,7 @@ import type {
 import type { LeftAt } from '../links/link-types';
 import { renderTable, tableSize } from './table-view';
 import { button } from './view-bar';
+export { TypePlace, typeLeftAt } from './type-place';
 
 /** What a card is given of the diagram types, beyond its drawing. */
 export interface DiagramShown extends DiagramOffer {
