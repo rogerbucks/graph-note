@@ -10,6 +10,7 @@ from typing import Any
 from graphspec.engine.joining.breaches import breaches
 from graphspec.engine.joining.claims import add_claim, ident_str, vtext
 from graphspec.engine.joining.merge3 import merge3
+from graphspec.engine.joining.trust import flag_untrusted, held_by_trust
 from graphspec.engine.joining.union import union
 from graphspec.reader.limits import within_join_documents, within_join_items
 
@@ -264,10 +265,16 @@ def join(
     findings: Collection[dict[str, Any]] = (),
     checks: Collection[str] = ("cycles", "cardinality", "constraints", "determinism", "flags"),
 ) -> dict[str, Any]:
-    """Two or more documents joined (union), then finished: paradox checks, flags and findings."""
+    """Two or more documents joined (union), then finished: paradox checks, flags and findings.
+    Only own and trusted documents are counted; what only an untrusted one states is flagged
+    (trust.py)."""
     docs = list(docs)
     within_limits(docs)
-    return finish(union(docs, C), C, findings, checks)
+    refused: list = []
+    counted, untrusted = held_by_trust(docs, C, refused)
+    joined = finish(union(counted, C), C, findings, checks)
+    joined["report"].extend(refused)
+    return flag_untrusted(joined, untrusted)
 
 
 def join3(

@@ -44,6 +44,8 @@ def config(**k: Any) -> dict[str, Any]:
         edge_keys={},
         contexts={},
         types=[],
+        trust={},
+        owners={},
     )
     c.update(k)
     return c
@@ -66,6 +68,8 @@ def config_from(data: dict[str, Any] | None) -> dict[str, Any]:
         vocab={k: set(v) for k, v in (d.get("vocabulary") or {}).items()},
         edge_keys={k: tuple(v) for k, v in (d.get("identified_by") or {}).items()},
         contexts=d.get("guard_cases") or {},
+        trust=d.get("trust") or {},
+        owners=d.get("prefix_owners") or {},
         types=[("node", n, None) for n in (d.get("types") or {}).get("nodes", [])]
         + [("edge", e, r) for e, r in ((d.get("types") or {}).get("edges") or {}).items()],
     )
