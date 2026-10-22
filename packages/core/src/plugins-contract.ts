@@ -8,7 +8,7 @@ import type { DataExporter, GivenGraph, PluginCommand, PluginSource, PluginStep,
 import { joinedGraph } from './plugin-sources.ts';
 import { providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
-import { diagramProblem, marksOf } from './plugin-diagrams.ts';
+import { diagramProblem, drawnMarks } from './plugin-diagrams.ts';
 import type { DiagramSpace, PluginDiagram } from './plugin-diagrams.ts';
 import type { GraphShape } from './types-shape.ts';
 import { storageContract } from './storage-contract.ts';
@@ -297,8 +297,9 @@ export function diagramContract(d: PluginDiagram, pluginId: string): StorageChec
       name: 'it gives back marks as data, inside the space it was given, for an empty graph and a small one',
       run: async () => {
         for (const [name, shape] of Object.entries(SAMPLE_SHAPES)) {
-          const marks = marksOf(await drawn(shape), SAMPLE_SPACE);
-          if (typeof marks === 'string') fail(`${d.type} on ${name}`, 'boxes, lines and text in the space', marks);
+          const marks = drawnMarks(await drawn(shape), SAMPLE_SPACE);
+          if (typeof marks === 'string')
+            fail(`${d.type} on ${name}`, 'boxes, lines and text, or drawing marks, in the space', marks);
         }
       },
     },

@@ -2,7 +2,12 @@
 // - is named under its plug-in's id, as a style graph names it (style-graph.ts, `pluginTypeOf`);
 // - is given the graph's shape and the space to draw in, both frozen copies, and no host ability;
 // - gives back marks as data: boxes, lines and text, each with where it goes. Never markup.
+// - or gives back drawing marks (drawing-marks.ts), the format the built-in types give too (core-diagrams.ts).
 // The core checks every mark and draws them itself, escaping every label, so markup in a label shows as text.
+import { drawMarksOf, fromPluginMarks } from './drawing-marks.ts';
+import type { DrawMark } from './drawing-marks.ts';
+import { layoutSvg } from './graphviz-svg.ts';
+import { themed } from './theme.ts';
 import { pluginTypeOf } from './style-graph.ts';
 import type { GraphShape } from './types-shape.ts';
 import type { PluginCalls, PluginResult } from './plugin-calls.ts';
@@ -35,9 +40,12 @@ export interface PluginDiagram {
   type: string;
   /** What it is called where it is offered, in the host's language. */
   title: string;
-  /** The marks that draw `given`. */
-  draw: (given: DiagramGiven) => readonly DiagramMark[] | Promise<readonly DiagramMark[]>;
+  /** The marks that draw `given`: boxes, lines and text, or drawing marks, each with an id of its own. */
+  draw: (given: DiagramGiven) => DiagramDrawn | Promise<DiagramDrawn>;
 }
+
+/** What a diagram type gives back: boxes, lines and text, or drawing marks (drawing-marks.ts). */
+export type DiagramDrawn = readonly DiagramMark[] | readonly DrawMark[];
 
 /** The most marks a diagram may give back. */
 export const MARK_LIMIT = 5000;
@@ -152,23 +160,55 @@ export function marksSvg(marks: readonly DiagramMark[], space: DiagramSpace): st
   return `<svg xmlns="http://www.w3.org/2000/svg" class="gn-plugin-diagram" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${arrow}${marks.map(markSvg).join('')}</svg>`;
 }
 
-/** The SVG drawn from the marks `plugin`'s diagram type `d` gives for `shape` in `space`, each call timed; or why not. */
-export async function drawnDiagram(
-  plugin: string,
-  d: PluginDiagram,
-  shape: GraphShape,
-  space: DiagramSpace,
-  awaited: PluginCalls['awaited'],
-): Promise<PluginResult<string>> {
-  const what = word('plugins.what.diagram', { title: d.title });
-  const size = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0;
-  if (!size(space.width) || !size(space.height))
-    return { ok: false, plugin, message: word('plugins.diagram.no-space', { what, plugin }) };
-  const given = diagramGiven(shape, space);
-  const r = await awaited(plugin, what, () => d.draw(given));
-  if (!r.ok) return r;
-  const marks = marksOf(r.value, given.space);
-  if (typeof marks === 'string')
-    return { ok: false, plugin, message: word('plugins.diagram.not-drawn', { what, plugin, why: marks }) };
-  return { ok: true, value: marksSvg(marks, given.space) };
+/**
+ * Copies of the marks a diagram type gave back, as drawing marks, or why they are refused. A list whose first mark has an
+ * id is drawing marks. Any other is boxes, lines and text, given in the one format once checked.
+ */
+export function drawnMarks(raw: unknown, space: DiagramSpace): { marks: DrawMark[]; plain?: DiagramMark[] } | string {
+  if (Array.isArray(raw) && typeof (raw[0] as Raw | undefined)?.id === 'string') {
+    const marks = drawMarksOf(raw, space);
+    return typeof marks === 'string' ? marks : { marks };
+  }
+  const plain = marksOf(raw, space);
+  return typeof plain === 'string' ? plain : { marks: fromPluginMarks(plain), plain };
+}
+
+/** A diagram type found by its name, and the plug-in that adds it. */
+type Found = { d: PluginDiagram; plugin: string } | undefined;
+
+/** The registry's two ways to draw a diagram type: as SVG, or as checked drawing marks (plugins.ts). */
+export function diagramDrawing(find: (type: string) => Found, awaited: PluginCalls['awaited']) {
+  /** The checked marks the type `type` gives for `shape` in `space`, each call timed; or why not. */
+  const drawn = async (type: string, shape: GraphShape, space: DiagramSpace) => {
+    const found = find(type);
+    if (!found) return { ok: false as const, plugin: '', message: word('plugins.none.diagram', { name: type }) };
+    const { d, plugin } = found;
+    const what = word('plugins.what.diagram', { title: d.title });
+    const size = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0;
+    if (!size(space.width) || !size(space.height))
+      return { ok: false as const, plugin, message: word('plugins.diagram.no-space', { what, plugin }) };
+    const given = diagramGiven(shape, space);
+    const r = await awaited(plugin, what, () => d.draw(given));
+    if (!r.ok) return r;
+    const marks = drawnMarks(r.value, given.space);
+    if (typeof marks === 'string')
+      return { ok: false as const, plugin, message: word('plugins.diagram.not-drawn', { what, plugin, why: marks }) };
+    return { ok: true as const, value: { ...marks, space: given.space } };
+  };
+  return {
+    async drawDiagram(type: string, shape: GraphShape, space: DiagramSpace): Promise<PluginResult<string>> {
+      const r = await drawn(type, shape, space);
+      if (!r.ok) return r;
+      const { marks, plain, space: given } = r.value;
+      if (plain) return { ok: true, value: marksSvg(plain, given) };
+      // drawing marks are written as the built-in drawings are, then coloured by the kinds and readings in order
+      const kinds = [...new Set(shape.things.map((t) => t.kinds.join('.')))];
+      const readings = [...new Set(shape.links.map((l) => l.type))];
+      return { ok: true, value: themed(layoutSvg({ marks, space: given }), kinds, readings) };
+    },
+    async diagramMarks(type: string, shape: GraphShape, space: DiagramSpace): Promise<PluginResult<DrawMark[]>> {
+      const r = await drawn(type, shape, space);
+      return r.ok ? { ok: true, value: r.value.marks } : r;
+    },
+  };
 }

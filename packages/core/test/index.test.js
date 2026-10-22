@@ -11,14 +11,14 @@ const require = createRequire(import.meta.url);
 const ts = require('typescript');
 const ENTRY = new URL('../src/index.ts', import.meta.url);
 
-/** The names src/index.ts exports, as written: values, and types only. */
-function written() {
-  const src = ts.createSourceFile('index.ts', readFileSync(ENTRY, 'utf8'), ts.ScriptTarget.Latest, true);
-  const values = [],
-    types = [];
+/** The names src/index.ts exports, as written, and those of the entry files it exports all of: values, and types only. */
+function written(file = ENTRY, values = [], types = []) {
+  const src = ts.createSourceFile('index.ts', readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
   for (const n of src.statements)
     if (ts.isExportDeclaration(n) && n.exportClause && ts.isNamedExports(n.exportClause))
       for (const e of n.exportClause.elements) (n.isTypeOnly || e.isTypeOnly ? types : values).push(e.name.text);
+    else if (ts.isExportDeclaration(n) && !n.exportClause && n.moduleSpecifier)
+      written(new URL(n.moduleSpecifier.text, file), values, types);
   return { values: values.sort(), types: types.sort() };
 }
 

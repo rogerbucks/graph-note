@@ -181,10 +181,42 @@ describe('a diagram type a plug-in adds (trust_diagram_type_data)', () => {
     assert.match(drawn.value, />Paris<\/text>/);
   });
 
+  test('may give drawing marks instead, which the core checks; boxes, lines and text come as drawing marks too', async () => {
+    const box = { id: 'paris', of: 'paris', style: 'kind.0', kind: 'box', x: 10, y: 10, width: 100, height: 40 };
+    const label = {
+      id: 'paris.label',
+      style: 'text',
+      kind: 'label',
+      x: 60,
+      y: 30,
+      text: 'Paris',
+      size: 12,
+      anchor: 'middle',
+    };
+    const marks = registered({ ...sankey, draw: () => [box, label] });
+    assert.deepEqual(await marks.diagramMarks('acme.charts.sankey', SHAPE, SPACE), { ok: true, value: [box, label] });
+    const svg = await marks.drawDiagram('acme.charts.sankey', SHAPE, SPACE);
+    assert.match(svg.value, /<text [^>]*>Paris<\/text>/);
+    const bad = await registered({ ...sankey, draw: () => [{ ...box, style: 'fill:red' }] }).diagramMarks(
+      'acme.charts.sankey',
+      SHAPE,
+      SPACE,
+    );
+    assert.match(bad.message, /mark 1 is a mark whose style is not a token/);
+    const plain = await registered().diagramMarks('acme.charts.sankey', SHAPE, SPACE);
+    assert.deepEqual(
+      plain.value.slice(0, 2).map((m) => [m.id, m.kind]),
+      [
+        ['paris#0', 'box'],
+        ['paris#0.label', 'label'],
+      ],
+    );
+  });
+
   test('its contract passes for a good one, and names the promise a bad one breaks', async () => {
     for (const check of diagramContract(sankey, 'acme.charts')) await check.run();
     const [, marks] = diagramContract({ ...sankey, draw: () => '<svg/>' }, 'acme.charts');
-    await assert.rejects(marks.run(), /wanted boxes, lines and text in the space/);
+    await assert.rejects(marks.run(), /wanted boxes, lines and text, or drawing marks, in the space/);
     const [named] = diagramContract(sankey, 'other.charts');
     await assert.rejects(named.run(), /is not named other\.charts\.<word>/);
   });

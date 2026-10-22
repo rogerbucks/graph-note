@@ -167,6 +167,12 @@
           "suggested?: { block: number; line: number; character: number; } | undefined",
           "text: string"
         ],
+        "BOX_SHAPES": [
+          "value: readonly ['rect', 'round', 'ellipse', 'diamond', 'cylinder', 'note', 'hexagon']"
+        ],
+        "BoxShape": [
+          "type = 'note' | 'rect' | 'round' | 'ellipse' | 'diamond' | 'cylinder' | 'hexagon'"
+        ],
         "BrokenLink": [
           "interface",
           "at: Target",
@@ -362,7 +368,7 @@
           "detail?: string | undefined",
           "from?: number | undefined",
           "insertText?: string | undefined",
-          "kind: 8 | 6 | 7",
+          "kind: 8 | 7 | 6",
           "label: string"
         ],
         "completions": [
@@ -378,11 +384,20 @@
         "Converted": [
           "type = { ok: true; note: string; changed: number; } | { ok: false; reason: string; }"
         ],
+        "CORE_DIAGRAMS_ID": [
+          "value: 'thoughtknot.diagrams'"
+        ],
         "CORE_EXPORTS": [
           "value: ThoughtKnotPlugin"
         ],
         "CORE_STORAGE": [
           "value: ThoughtKnotPlugin"
+        ],
+        "coreDiagrams": [
+          "value: (engine: MarksEngine) => ThoughtKnotPlugin"
+        ],
+        "coreDiagramType": [
+          "value: (type: DiagramType) => string"
         ],
         "coverOf": [
           "value: (viewport: { top: number; bottom: number; }, sheetTop: number) => number"
@@ -535,6 +550,9 @@
         "diagramContract": [
           "value: (d: PluginDiagram, pluginId: string) => StorageCheck[]"
         ],
+        "DiagramDrawn": [
+          "type = ReadonlyArray<DiagramMark> | ReadonlyArray<DrawMark>"
+        ],
         "diagramFor": [
           "value: (drawing: Pick<GraphDrawing, 'boxes' | 'links' | 'estimates'>, style: TypeStyle, g?: Graph, view?: string) => DiagramChoice"
         ],
@@ -613,11 +631,32 @@
         "draw": [
           "value: (drawing: GraphDrawing, engine: Engine) => Drawn"
         ],
+        "DRAW_MARK_KINDS": [
+          "value: readonly ['box', 'link', 'label', 'arrowhead', 'group']"
+        ],
+        "DRAW_MARK_LIMIT": [
+          "value: 100000"
+        ],
+        "DRAW_TEXT_LIMIT": [
+          "value: 500"
+        ],
         "DrawingHeightSetting": [
           "type = 'none' | 'half' | 'most'"
         ],
         "drawingSource": [
           "value: (d: GraphDrawing, rankdir: 'LR' | 'TB') => string"
+        ],
+        "DrawMark": [
+          "type = MarkCommon & ({ kind: 'box'; x: number; y: number; width: number; height: number; shape?: BoxShape; outline?: MarkOutline; } | { kind: 'link'; points: MarkPoint[]; curve?: boolean; from?: string; to?: string; outline?: MarkOutline; } | { kind: 'label'; x: number; y: number; text: string; size: number; anchor: 'start' | 'middle' | 'end'; maxWidth?: number; font?: string; } | { kind: 'arrowhead'; x: number; y: number; angle: number; size: number; outline?: MarkOutline; } | { kind: 'group'; x: number; y: number; width: number; height: number; outline?: MarkOutline; })"
+        ],
+        "DrawMarkKind": [
+          "type = 'link' | 'box' | 'label' | 'arrowhead' | 'group'"
+        ],
+        "DrawMarkRole": [
+          "type = 'thing' | 'link' | 'group' | 'picture'"
+        ],
+        "drawMarksOf": [
+          "value: (raw: unknown, space: DiagramSpace) => DrawMark[] | string"
         ],
         "Drawn": [
           "interface",
@@ -626,6 +665,9 @@
           "rankdir: string",
           "svg: string",
           "width: number"
+        ],
+        "drawOrder": [
+          "value: (marks: readonly DrawMark[]) => DrawMark[]"
         ],
         "edgesOf": [
           "value: (d: GraphDrawing) => FocusEdge[]"
@@ -964,6 +1006,9 @@
         "FromPlugin": [
           "type = { manifest: Omit<ThoughtKnotPlugin, 'register'>; added: Added[]; } | { failed: string; } | { reply: number; value?: unknown; error?: string; } | { ask: number; ability: string; method: string; args: unknown[]; }"
         ],
+        "fromPluginMarks": [
+          "value: (marks: readonly DiagramMark[]) => DrawMark[]"
+        ],
         "Gate": [
           "type = { open: true; } | { ask: string; } | { refuse: string; }"
         ],
@@ -1249,6 +1294,20 @@
         "labelsHidden": [
           "value: (switches: Pick<ViewSwitches, 'labels'>, scale: number) => boolean"
         ],
+        "LaidMarks": [
+          "interface",
+          "layout?: { pad: number; origin: MarkPoint; parts: LaidPart[]; lost?: true; } | undefined",
+          "marks: Array<DrawMark>",
+          "space: DiagramSpace"
+        ],
+        "LaidPart": [
+          "interface",
+          "className: string",
+          "id: string",
+          "kind: 'graph' | 'cluster' | 'node' | 'edge'",
+          "marks: Array<string>",
+          "title: string"
+        ],
         "Landing": [
           "interface",
           "nudge: NudgeWrite",
@@ -1314,6 +1373,9 @@
         ],
         "layoutSource": [
           "value: (d: GraphDrawing, rankdir: 'LR' | 'TB') => LayoutSource"
+        ],
+        "layoutSvg": [
+          "value: (laid: LaidMarks) => string"
         ],
         "leavingWords": [
           "value: (link: FoundLink) => string | null"
@@ -1550,11 +1612,26 @@
         "Mark": [
           "type = 'unknown' | 'yes' | 'conditional' | 'no'"
         ],
+        "markBounds": [
+          "value: (m: DrawMark) => MarkBounds"
+        ],
+        "MarkBounds": [
+          "interface",
+          "height: number",
+          "width: number",
+          "x: number",
+          "y: number"
+        ],
         "markedChanges": [
           "value: (svg: string, shown: ChangesShown, palette: Palette) => string"
         ],
         "MarkKind": [
           "type = 'add' | 'change' | 'remove'"
+        ],
+        "MarkOutline": [
+          "interface",
+          "curve?: boolean | undefined",
+          "points: Array<MarkPoint>"
         ],
         "MarkPoint": [
           "type = [number, number]"
@@ -1563,6 +1640,13 @@
           "interface",
           "boxes: Map<string, ChangeMark>",
           "links: Map<number, ChangeMark>"
+        ],
+        "marksBounds": [
+          "value: (marks: readonly DrawMark[]) => MarkBounds | null"
+        ],
+        "MarksEngine": [
+          "interface",
+          "marks: (source: string) => LaidMarks"
         ],
         "markWord": [
           "value: (kind: MarkKind, within?: boolean) => string"
@@ -1737,7 +1821,7 @@
           "group?: string | undefined",
           "other?: string | undefined",
           "thing?: string | undefined",
-          "word: 'beside' | 'before' | 'group' | 'direction'"
+          "word: 'group' | 'beside' | 'before' | 'direction'"
         ],
         "NUDGE_WORDS": [
           "value: readonly ['beside', 'before', 'group', 'direction']"
@@ -1749,7 +1833,7 @@
           "value: (dot: string, nudges: readonly Nudge[], keys: Iterable<string>, diagram?: { type: string; }) => string"
         ],
         "NudgeWord": [
-          "type = 'beside' | 'before' | 'group' | 'direction'"
+          "type = 'group' | 'beside' | 'before' | 'direction'"
         ],
         "NudgeWrite": [
           "interface",
@@ -2054,7 +2138,7 @@
         ],
         "PluginDiagram": [
           "interface",
-          "draw: (given: DiagramGiven) => readonly DiagramMark[] | Promise<readonly DiagramMark[]>",
+          "draw: (given: DiagramGiven) => DiagramDrawn | Promise<DiagramDrawn>",
           "title: string",
           "type: string"
         ],
@@ -2079,6 +2163,7 @@
           "aiProvider: (name: string) => AiProvider | undefined",
           "aiProviders: () => AiProvider[]",
           "commands: () => PluginCommand[]",
+          "diagramMarks: (type: string, shape: GraphShape, space: DiagramSpace) => Promise<PluginResult<DrawMark[]>>",
           "diagramTypes: () => PluginDiagram[]",
           "drawDiagram: (type: string, shape: GraphShape, space: DiagramSpace) => Promise<PluginResult<string>>",
           "exporter: (format: string) => DataExporter | undefined",
@@ -2477,6 +2562,9 @@
         ],
         "sayWords": [
           "value: (entry: Words, values?: WordValues, language?: string) => string"
+        ],
+        "scaledMarks": [
+          "value: (marks: readonly DrawMark[], k: number) => DrawMark[]"
         ],
         "Scheduler": [
           "interface",
@@ -3072,14 +3160,14 @@
         ],
         "Token": [
           "interface",
-          "c: 'string' | 'type' | 'label' | 'value' | 'edge' | 'kw' | 'prop' | 'comment' | 'fn' | 'param' | 'var' | 'arrow' | 'op' | 'punct' | null",
+          "c: 'string' | 'label' | 'type' | 'value' | 'edge' | 'kw' | 'prop' | 'comment' | 'fn' | 'param' | 'var' | 'arrow' | 'op' | 'punct' | null",
           "s: string"
         ],
         "TOKEN_CLASSES": [
           "value: readonly ['kw', 'type', 'label', 'edge', 'prop', 'string', 'value', 'comment', 'fn', 'param', 'var', 'arrow', 'op', 'punct']"
         ],
         "TokenClass": [
-          "type = 'string' | 'type' | 'label' | 'value' | 'edge' | 'kw' | 'prop' | 'comment' | 'fn' | 'param' | 'var' | 'arrow' | 'op' | 'punct'"
+          "type = 'string' | 'label' | 'type' | 'value' | 'edge' | 'kw' | 'prop' | 'comment' | 'fn' | 'param' | 'var' | 'arrow' | 'op' | 'punct'"
         ],
         "tokenize": [
           "value: (src: string) => Token[]"

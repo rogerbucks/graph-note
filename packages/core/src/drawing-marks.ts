@@ -285,6 +285,23 @@ export function drawOrder(marks: readonly DrawMark[]): DrawMark[] {
     .map(([m]) => m);
 }
 
+/** `marks` drawn `k` times their size, from the top left: each place, size, outline and line width. */
+export function scaledMarks(marks: readonly DrawMark[], k: number): DrawMark[] {
+  const at = ([x, y]: MarkPoint): MarkPoint => [x * k, y * k];
+  const outline = (o?: MarkOutline) => (o ? { outline: { ...o, points: o.points.map(at) } } : {});
+  return marks.map((m) => {
+    const line = m.lineWidth === undefined ? {} : { lineWidth: m.lineWidth * k };
+    if (m.kind === 'link') return { ...m, ...line, points: m.points.map(at), ...outline(m.outline) };
+    const place = { ...line, x: m.x * k, y: m.y * k };
+    if (m.kind === 'label') {
+      const widest = m.maxWidth === undefined ? {} : { maxWidth: m.maxWidth * k };
+      return { ...m, ...place, size: m.size * k, ...widest };
+    }
+    if (m.kind === 'arrowhead') return { ...m, ...place, size: m.size * k, ...outline(m.outline) };
+    return { ...m, ...place, width: m.width * k, height: m.height * k, ...outline(m.outline) };
+  });
+}
+
 /** A plug-in's marks (boxes, lines and text) in the one format. Ids come from the thing drawn and the place given. */
 export function fromPluginMarks(marks: readonly DiagramMark[]): DrawMark[] {
   const out: DrawMark[] = [];

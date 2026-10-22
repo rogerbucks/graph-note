@@ -266,6 +266,17 @@ function planOf(fit: TypeFit, shape: GraphShape, timeline: Chosen): DiagramPlan 
   return undefined;
 }
 
+/**
+ * How Graphviz lays `type` out for `shape`, none for a network or a table. Or why the shape does not fit it (§15,
+ * type_only_when_fits). A tree follows the most used relationship that makes one. For a type drawn from a shape alone.
+ */
+export function typePlan(type: DiagramType, shape: GraphShape): { plan?: DiagramPlan } | { why: string } {
+  const fit = typeFits(shape).find((f) => f.type === type) as TypeFit;
+  if (!fit.fits) return { why: fit.why ?? '' };
+  const plan = planOf(fit, shape, {});
+  return plan ? { plan } : {};
+}
+
 /** What of a style graph the diagram types read: the types chosen, and the nudges, whose groups some types cannot draw. */
 export type TypeStyle = Pick<StyleGraph, 'diagrams'> & Partial<Pick<StyleGraph, 'nudges'>>;
 

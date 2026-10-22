@@ -4,6 +4,7 @@
 //   theme and every host read it as they read Graphviz's.
 // - Colours are written as the layout's stand-ins, from each mark's style token, so theme.ts swaps them as before.
 // - Every text is escaped as Graphviz escapes it, so markup in a label is drawn as text.
+import { drawOrder } from './drawing-marks.ts';
 import type { DrawMark } from './drawing-marks.ts';
 import { COLOUR_TOKENS, impliedLine } from './graphviz-json.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
@@ -77,9 +78,19 @@ function paintOf(style: string): { fill: string; line: string; dashed: boolean }
   return { fill: colourOf(fill, false), line: colourOf(line, true), dashed };
 }
 
-/** A drawing's marks as Graphviz's SVG, from its layout: its size, room round it, and parts in order. */
+/**
+ * A drawing's marks as Graphviz's SVG, from its layout: its size, room round it, and parts in order. Marks with no
+ * layout, such as a type's own, are drawn in their order on top, with no room round them.
+ */
 export function layoutSvg(laid: LaidMarks): string {
-  const { pad: padPx = 0, origin = [0, laid.space.height * PT], parts = [] } = laid.layout ?? {};
+  const all = {
+    kind: 'graph' as const,
+    id: '',
+    className: '',
+    title: '',
+    marks: drawOrder(laid.marks).map((m) => m.id),
+  };
+  const { pad: padPx = 0, origin = [0, laid.space.height * PT], parts = [all] } = laid.layout ?? {};
   const pad = padPx * PT;
   const [left, top] = origin;
   // as Graphviz rounds, to whole points: a half is rounded down, as every drawing the tests make shows
