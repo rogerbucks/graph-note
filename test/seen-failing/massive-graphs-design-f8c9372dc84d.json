@@ -1,0 +1,6 @@
+{
+  "file": "test/massive-graphs-design.test.js",
+  "test": "the note records the way Roger picked, with the date",
+  "seen_failing_first": false,
+  "evidence": "holds the decision recorded in PR #941, before this test"
+}
