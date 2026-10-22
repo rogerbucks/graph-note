@@ -66,6 +66,7 @@
 // Oct 2026 too. So did SHORTCUTS and SHORTCUT_PLACES (shortcuts_listed), and TOUR_STEPS and withExample
 // (first_run_help). formatSeries and purposeWords (words_catalogue) came on 21 Oct 2026, as did runPluginStep (plugin_step_named).
 // The drawing marks, the built-in diagram types as a plug-in and layoutSvg (plugin_interface) came on 22 Oct 2026.
+// So did changeNote and its types (storage_contract).
 import { TYPES_LATE } from './index-types-late.js';
 import { VALUES_LATE } from './index-values-late.js';
 
@@ -200,6 +201,7 @@ export const VALUES = [
   'boundsOf',
   'brokenLinks',
   'centres',
+  'changeNote',
   'changeSetId',
   'changesIn',
   'changesText',
@@ -467,6 +469,7 @@ export const TYPES = [
   'ChangeLog',
   'ChangeMark',
   'ChangeOp',
+  'ChangeOutcome',
   'ChangeRow',
   'ChangedFile',
   'ChangesShown',

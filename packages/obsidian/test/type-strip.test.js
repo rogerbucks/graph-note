@@ -9,7 +9,7 @@
 // edited, a type looked at can be kept.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until } from './host/load-plugin.js';
+import { build, load, settled, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 import { fakeContext } from './host/fake-obsidian.js';
@@ -96,6 +96,7 @@ describe('Diagram type on a card', () => {
         .find((b) => b.textContent === 'Tree')
         .click();
       await until(() => /:Diagram /.test(env.state.files.get(PATH)));
+      await settled();
       const now = env.state.files.get(PATH);
       assert.ok(now.includes(fence(ORG)), 'the data block untouched');
       assert.match(now, /STYLE org[\s\S]*\(diagram_1:Diagram \{type: 'tree', relationship: 'MANAGES'\}\)/);
@@ -204,6 +205,7 @@ describe('a chosen type that has stopped fitting', () => {
       assert.equal(asked.at(-1).diagram, undefined, 'never drawn wrongly');
       labelled(el, 'Use flow').click();
       await until(() => /type: 'flow'/.test(env.state.files.get(PATH)));
+      await settled();
       assert.equal(env.state.files.get(PATH).match(/:Diagram /g).length, 1, 'the choice changed in place');
     } finally {
       env.uninstall();
@@ -250,6 +252,7 @@ describe('a graph of more than 1,000 things', () => {
       );
       labelled(el, 'Show as table').click();
       await until(() => /type: 'table'/.test(env.state.files.get(PATH)));
+      await settled();
     } finally {
       done();
     }
@@ -280,6 +283,7 @@ describe('a view’s card', () => {
         .find((b) => b.textContent === 'Radial')
         .click();
       await until(() => /:Diagram /.test(env.state.files.get(PATH)));
+      await settled();
       assert.match(env.state.files.get(PATH), /\(diagram_1:Diagram \{type: 'radial', view: 'top'\}\)/);
     } finally {
       env.uninstall();
@@ -386,6 +390,7 @@ describe('in reading view', () => {
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a tree/);
       labelled(el, 'Keep it').click();
       await until(() => /:Diagram /.test(env.state.files.get(PATH)));
+      await settled();
       assert.match(
         env.state.files.get(PATH),
         /STYLE org[\s\S]*\(diagram_1:Diagram \{type: 'tree', relationship: 'MANAGES'\}\)/,
@@ -462,6 +467,7 @@ describe('changing the type keeps the place', () => {
       select(el, 'dee');
       pick(el, 'Flow');
       await until(() => /:Diagram /.test(env.state.files.get(PATH)));
+      await settled();
       const again = await show(env, env.state.files.get(PATH), 0);
       await until(() => selected(again.el) === 'dee');
       assert.match(again.el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a flow/);

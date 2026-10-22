@@ -12,7 +12,7 @@
 // In a radial drawing (radial_spoke_order), a box let go by a thing around the centre goes just before or after it.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, until } from './host/load-plugin.js';
+import { build, settled, until } from './host/load-plugin.js';
 import { fence } from './host/notes.js';
 import { PATH, TEAM, card, mouse, noteOf, touch } from './host/drag-steps.js';
 import { clock } from './host/quick-info-steps.js';
@@ -37,6 +37,7 @@ describe('dragging a box with a mouse', () => {
       assert.equal(hint.textContent, 'Put Ann beside Cy');
       vp.dispatch('pointerup', mouse(1, vp, drop));
       await until(() => /:Nudge /.test(env.state.files.get(PATH)));
+      await settled();
       const now = env.state.files.get(PATH);
       assert.ok(now.includes(fence(TEAM)), 'the data block untouched');
       assert.match(now, /STYLE team[\s\S]*\(nudge_1:Nudge \{word: 'beside', thing: 'ann', other: 'cy'\}\)/);
@@ -153,6 +154,7 @@ describe('moving a box with a finger', () => {
       vp.dispatch('pointerup', touch(1, vp, besideOf('cy')));
       assert.deepEqual(writes, [PATH]);
       await until(() => /:Nudge /.test(env.state.files.get(PATH)));
+      await settled();
       assert.match(env.state.files.get(PATH), /\(nudge_1:Nudge \{word: 'beside', thing: 'ann', other: 'cy'\}\)/);
       assert.ok(!ann.classList.contains('is-held'), 'put down');
       assert.equal(el.querySelector('.thoughtknot-details').hidden, true, 'nothing opens');
@@ -254,6 +256,7 @@ describe('dragging a box in a radial drawing', () => {
       assert.equal(el.querySelector('.thoughtknot-move-hint').textContent, 'Put C before A');
       vp.dispatch('pointerup', mouse(1, vp, drop));
       await until(() => /:Nudge /.test(env.state.files.get(PATH)));
+      await settled();
       assert.match(env.state.files.get(PATH), /\(nudge_1:Nudge \{word: 'before', thing: 'c', other: 'a'\}\)/);
     } finally {
       env.uninstall();

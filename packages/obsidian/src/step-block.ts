@@ -27,6 +27,7 @@ import { renderCode } from '@thoughtknot/core/display/code';
 import { readOnlyHere, whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import { editInPane } from './edit-in-pane';
 import { classificationOf } from './export/classification';
+import { changeVaultNote, noteText } from './storage/plugin-notes';
 
 const and = (xs: readonly string[]) => formatList([...xs]);
 
@@ -73,12 +74,12 @@ async function run(
 ): Promise<StepRun | null> {
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return null;
-  const text = await plugin.app.vault.cachedRead(file);
+  const text = (await noteText(plugin.app, file.path, { shown: true })) ?? '';
   const texts = gqlBlocks(text).map((b) => b.text);
   const shared = texts.some(namesSharedSchema) ? await plugin.sharedSchemas() : [];
   if (step.plugin) return runOutside(plugin, file, text, step, given, shared);
   let outcome: StepRun | null = null;
-  await plugin.app.vault.process(file, (note) => {
+  await changeVaultNote(plugin.app, file.path, (note) => {
     // the step as written now, found by its graph and name
     const now = gqlBlocks(note)
       .map((b, i) => stepOf(b.text, i))
@@ -123,7 +124,7 @@ async function runOutside(
   });
   if (!('proposal' in r)) return r;
   let outcome: StepRun = r;
-  await plugin.app.vault.process(file, (note) => {
+  await changeVaultNote(plugin.app, file.path, (note) => {
     const written = noteWithProposal(note, r.proposal);
     if (typeof written === 'string') return written;
     outcome = { refused: [word('step.not-written', { name: step.name, why: written.refused })] };

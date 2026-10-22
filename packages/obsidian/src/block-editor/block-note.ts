@@ -23,6 +23,7 @@ import { RECOVER_COMMAND, keyBeside, keyOf, newDraftId } from '../drafts';
 import { NOTE_DELETED } from '@thoughtknot/core/display/editor/editor-note';
 import type { EditorNote, KeptDraft, Refused, Reread } from '@thoughtknot/core/display/editor/editor-note';
 import { lockInNote, stepNote, writeThroughEditor, writeThroughVault } from './note-writing';
+import { changeVaultNote, noteText } from '../storage/plugin-notes';
 
 /** What is said when the note being edited is deleted while what was typed is not yet written. */
 export const deletedMessage = (): string => word('host.note-deleted', { command: RECOVER_COMMAND.name });
@@ -64,7 +65,7 @@ export class BlockNote implements EditorNote {
     const file = this.file(path);
     if (!file) return false;
     this.path = path;
-    this.text = await this.plugin.app.vault.read(file);
+    this.text = (await noteText(this.plugin.app, file.path)) ?? '';
     try {
       this.session = new PaneSession(this.text, line);
       // read by the strictness set on the settings page (spec §21), as it is when each reading is made
@@ -100,7 +101,7 @@ export class BlockNote implements EditorNote {
     }
     const keep = (note: string) => (this.text = note);
     const cm = this.plugin.editorFor(this.path);
-    const r = cm ? writeThroughEditor(cm, s, keep) : await writeThroughVault(this.plugin.app.vault, file, s, keep);
+    const r = cm ? writeThroughEditor(cm, s, keep) : await writeThroughVault(this.plugin.app, file, s, keep);
     if (r?.stopped) this.stopSaid = true;
     return r;
   }
@@ -110,7 +111,7 @@ export class BlockNote implements EditorNote {
     const s = this.session,
       file = this.file();
     if (!s || !file) return null;
-    return await stepNote(this.plugin.app.vault, file, s, which, (note) => (this.text = note));
+    return await stepNote(this.plugin.app, file, s, which, (note) => (this.text = note));
   }
 
   /** Lock the graph: writes its schema as a new block after the graph's last block in the note (spec §8). */
@@ -120,7 +121,7 @@ export class BlockNote implements EditorNote {
     if (!s || !file) return;
     const today = new Date().toISOString().slice(0, 10);
     const block = lockBlock(s.reading(this.text), s.graph, today, indentText(this.plugin.settings.indent));
-    await lockInNote(this.plugin.app.vault, file, s.graph, block, (note) => (this.text = note));
+    await lockInNote(this.plugin.app, file, s.graph, block, (note) => (this.text = note));
     s.noteChanged(this.text);
   }
 
@@ -136,7 +137,7 @@ export class BlockNote implements EditorNote {
     const { texts, index } = s.texts(this.text);
     const here = declareDeferredBlock(texts, s.graph, indent);
     if (here.block === index) return { text: here.text, whole: s.reading(this.text).whole[s.graph] };
-    await this.plugin.app.vault.process(file, (data) => (this.text = declareDeferred(data, s.graph, indent)));
+    await changeVaultNote(this.plugin.app, file.path, (data) => (this.text = declareDeferred(data, s.graph, indent)));
     s.noteChanged(this.text);
     return { text: s.text, whole: s.reading(this.text).whole[s.graph] };
   }
@@ -144,7 +145,7 @@ export class BlockNote implements EditorNote {
   /** The note's new text after `f` changed: what the session made of it. Null when `f` is another note or its text is the same. */
   async reread(f: TFile): Promise<Reread | null> {
     if (f.path !== this.path || !this.session) return null;
-    const text = await this.plugin.app.vault.read(f);
+    const text = (await noteText(this.plugin.app, f.path)) ?? '';
     if (text === this.text) return null;
     this.text = text;
     return this.session.noteChanged(text);

@@ -56,6 +56,7 @@ import { convertToStandard } from './convert';
 import { followLinks } from './links/rename-follow';
 import { HOVER_SOURCE } from './links/link-host';
 import { OutsidePlugins, type TurnedOn } from './outside/outside-plugins';
+import { noteText, shownNotes } from './storage/plugin-notes';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
 export interface EditTarget {
@@ -140,18 +141,18 @@ export default class ThoughtKnotPlugin extends Plugin {
   async sharedSchemas(): Promise<string[]> {
     if (!this.schemas) {
       const found = new Map<string, string[]>();
-      const read = async (f: TFile) => {
-        const blocks = gqlBlocks(await this.app.vault.cachedRead(f))
+      const read = async (path: string) => {
+        const blocks = gqlBlocks((await noteText(this.app, path, { shown: true })) ?? '')
           .map((b) => b.text)
           .filter(isSharedSchema);
-        if (blocks.length) found.set(f.path, blocks);
-        else found.delete(f.path);
+        if (blocks.length) found.set(path, blocks);
+        else found.delete(path);
       };
-      for (const f of this.app.vault.getMarkdownFiles()) await read(f);
+      for (const path of await shownNotes(this.app).list()) await read(path);
       this.schemas = found;
       this.registerEvent(
         this.app.vault.on('modify', (f) => {
-          if (f instanceof TFile && f.extension === 'md') void read(f);
+          if (f instanceof TFile && f.extension === 'md') void read(f.path);
         }),
       );
     }
@@ -218,9 +219,8 @@ export default class ThoughtKnotPlugin extends Plugin {
    * Throws, naming the block, when one could not be made standard: it is never handed over as if it were.
    */
   async standardGql(path: string): Promise<string[]> {
-    const file = this.app.vault.getFileByPath(path);
-    if (!file) return [];
-    const given = standardBlocks(gqlBlocks(await this.app.vault.cachedRead(file)).map((b) => b.text));
+    const text = this.app.vault.getFileByPath(path) ? await noteText(this.app, path, { shown: true }) : null;
+    const given = standardBlocks(gqlBlocks(text ?? '').map((b) => b.text));
     if (given.left.length) throw new Error(word('host.block-not-standard', { number: (given.left[0] ?? 0) + 1 }));
     return given.blocks;
   }

@@ -1,14 +1,16 @@
 // Writing the block editor's text into its note (spec §4, §9), safely.
 // - It goes through the core's session, which never overwrites a block changed meanwhile. The write goes through the
-//   note's editor when it is open in the editing view. Otherwise it goes atomically through the vault.
+//   note's editor when it is open in the editing view. Otherwise it goes atomically through the vault's
+//   note storage (storage_contract).
 // - Undo and redo of the note's own changes.
 // - Lock the graph, which writes its schema as a new block (spec §8).
 import { Notice } from 'obsidian';
-import type { TFile, Vault } from 'obsidian';
+import type { App, TFile } from 'obsidian';
 import type { EditorView } from '@codemirror/view';
 import type { PaneSession } from '@thoughtknot/core';
 import type { Refused } from '@thoughtknot/core/display/editor/editor-note';
 import { lockFailed, lockedNote } from '@thoughtknot/core/display/editor/lock-text';
+import { changeVaultNote } from '../storage/plugin-notes';
 
 export type { Refused };
 
@@ -50,14 +52,9 @@ export function writeThroughEditor(cm: EditorView, s: PaneSession, keep: Keep): 
 }
 
 /** Writes what is typed into a note through the vault, atomically against the note as it is now. */
-export async function writeThroughVault(
-  vault: Vault,
-  file: TFile,
-  s: PaneSession,
-  keep: Keep,
-): Promise<Refused | null> {
+export async function writeThroughVault(app: App, file: TFile, s: PaneSession, keep: Keep): Promise<Refused | null> {
   let refused: Refused | null = null;
-  await vault.process(file, (data) => {
+  await changeVaultNote(app, file.path, (data) => {
     const r = s.write(data);
     if (r.ok) {
       keep(r.note);
@@ -75,14 +72,14 @@ export async function writeThroughVault(
  * outside the editor (§9). A refused write keeps the note as it was found.
  */
 export async function stepNote(
-  vault: Vault,
+  app: App,
   file: TFile,
   s: PaneSession,
   which: 'undo' | 'redo',
   keep: Keep,
 ): Promise<Refused | null> {
   let refused: Refused | null = null;
-  await vault.process(file, (data) => {
+  await changeVaultNote(app, file.path, (data) => {
     const r = which === 'undo' ? s.undo(data) : s.redo(data);
     if (r.ok) {
       keep(r.note);
@@ -98,8 +95,8 @@ export async function stepNote(
 }
 
 /** Lock the graph: writes its schema `block` after the graph's last block in the note, or says it could not. */
-export async function lockInNote(vault: Vault, file: TFile, graph: string, block: string, keep: Keep): Promise<void> {
-  await vault.process(file, (data) => {
+export async function lockInNote(app: App, file: TFile, graph: string, block: string, keep: Keep): Promise<void> {
+  await changeVaultNote(app, file.path, (data) => {
     const locked = lockedNote(data, graph, block);
     if (locked === null) {
       new Notice(lockFailed());

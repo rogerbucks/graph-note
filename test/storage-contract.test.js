@@ -6,7 +6,15 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { historyLayer, layered, memoryStorage, storageContract, workspaceStorage } from '../packages/core/src/index.ts';
+import {
+  changeNote,
+  historyLayer,
+  layered,
+  memoryStorage,
+  REFUSED,
+  storageContract,
+  workspaceStorage,
+} from '../packages/core/src/index.ts';
 import { folderStorage } from '../packages/claude-code/server/folder-storage.ts';
 import { vaultStorage } from '../packages/obsidian/src/storage/vault-storage.ts';
 import { fakeObsidian } from '../packages/obsidian/test/host/fake-obsidian.js';
@@ -124,5 +132,50 @@ describe('the layers plug in at the storage interface', () => {
     for (const s of [plain, both]) await s.write('a/b.md', 'text');
     assert.deepEqual(await both.list(), await plain.list());
     assert.equal((await both.read('a/b.md')).text, (await plain.read('a/b.md')).text);
+  });
+});
+
+/** A store where another change is made to `n.md` each time a write is about to be made, `times` times. */
+function racing(times) {
+  const inner = memoryStorage({ 'n.md': 'one' });
+  let left = times;
+  return {
+    ...inner,
+    write: async (path, text, options) => {
+      if (left-- > 0) await inner.write(path, `${(await inner.read(path)).text}, theirs`);
+      return inner.write(path, text, options);
+    },
+  };
+}
+
+describe('a note is changed against the note as it is when written (changeNote)', () => {
+  test('a change made meanwhile is kept: the edit runs again on the note as it now is', async () => {
+    const store = racing(1),
+      seen = [];
+    const done = await changeNote(store, 'n.md', (text) => (seen.push(text), `${text}, mine`));
+    assert.deepEqual(seen, ['one', 'one, theirs']);
+    assert.equal(done.ok && done.text, 'one, theirs, mine');
+    assert.equal((await store.read('n.md')).text, 'one, theirs, mine');
+  });
+
+  test('a note that keeps changing is refused, never written over', async () => {
+    const done = await changeNote(racing(99), 'n.md', (text) => `${text}, mine`);
+    assert.equal(!done.ok && done.reason, REFUSED.changed);
+    assert.doesNotMatch(done.current.text, /mine/);
+  });
+
+  test('an edit that changes nothing writes nothing', async () => {
+    const store = racing(99);
+    const done = await changeNote(store, 'n.md', (text) => text);
+    assert.equal(done.ok && done.text, 'one');
+    assert.equal((await store.read('n.md')).text, 'one');
+  });
+
+  test('in an Obsidian vault the edit runs once, inside the vault’s own one-step change', async () => {
+    const { app } = fakeObsidian({ files: new Map([['n.md', 'one']]) });
+    let runs = 0;
+    const done = await changeNote(vaultStorage(app), 'n.md', (text) => (runs++, `${text}, mine`));
+    assert.equal(runs, 1);
+    assert.equal(done.ok && done.version, (await vaultStorage(app).read('n.md')).version);
   });
 });

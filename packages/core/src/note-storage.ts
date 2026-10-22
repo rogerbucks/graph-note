@@ -37,7 +37,19 @@ export interface NoteStorage {
   write(path: string, text: string, options?: WriteOptions): Promise<WriteOutcome>;
   /** Removes the note at `path`. On success the version is null. */
   remove(path: string, options?: WriteOptions): Promise<WriteOutcome>;
+  /**
+   * Changes the note at `path` by `edit` in one step, so nothing is written in between. Only a backend that can do so
+   * has it, such as an Obsidian vault. `changeNote` uses it when it is there.
+   */
+  change?(path: string, edit: NoteEdit, options?: Pick<WriteOptions, 'author'>): Promise<ChangeOutcome>;
 }
+
+/** A change to a note's text: the text as it is now in, the text to write out. The same text out writes nothing. */
+export type NoteEdit = (text: string) => string;
+
+/** A note changed, with its text and version now; or why not, and the note as it now is. */
+export type ChangeOutcome =
+  { ok: true; text: string; version: string } | { ok: false; reason: string; current: StoredNote | null };
 
 /** A layer, such as encryption, sync or history: a backend in, a backend out. */
 export type StorageLayer = (inner: NoteStorage) => NoteStorage;
@@ -73,6 +85,34 @@ export function refusal(current: StoredNote | null, options: WriteOptions = {}):
   if (expected === null) return current ? REFUSED.exists : null;
   if (!current) return REFUSED.missing;
   return current.version === expected ? null : REFUSED.changed;
+}
+
+/** How many times `changeNote` writes against a note another change keeps getting to first, before it gives up. */
+const CHANGE_TRIES = 5;
+
+/**
+ * Changes the note at `path` by `edit`, against the note as it is when written: never over a change made meanwhile. A
+ * backend that changes a note in one step does it (`change`). Any other is read, then written against the version
+ * read. When the note changed in between, `edit` runs again on the note as it now is. So `edit` must work from the text
+ * it is given alone. A note not there is refused, as is one that keeps changing.
+ */
+export async function changeNote(
+  storage: NoteStorage,
+  path: string,
+  edit: NoteEdit,
+  options: Pick<WriteOptions, 'author'> = {},
+): Promise<ChangeOutcome> {
+  if (storage.change) return storage.change(path, edit, options);
+  let current = await storage.read(path);
+  for (let tries = 0; current; tries++) {
+    const text = edit(current.text);
+    if (text === current.text) return { ok: true, text, version: current.version };
+    const done = await storage.write(path, text, { ...options, expected: current.version });
+    if (done.ok) return { ok: true, text, version: done.version ?? noteVersion(text) };
+    if (done.reason !== REFUSED.changed || tries + 1 >= CHANGE_TRIES) return done;
+    current = done.current;
+  }
+  return { ok: false, reason: REFUSED.missing, current: null };
 }
 
 /** A backend with its layers on: the first layer wraps the backend, and each after wraps the one before. */

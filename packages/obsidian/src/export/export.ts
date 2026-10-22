@@ -49,6 +49,7 @@ import { classificationOf } from './classification';
 import { deviceOf, imageFiles, tooLargeWords } from './image';
 import type { ExportFile } from './image';
 import { freePaths, vaultOps } from './vault-write';
+import { noteText } from '../storage/plugin-notes';
 
 export type { ExportAsk, ExportOutcome };
 
@@ -120,7 +121,7 @@ export async function exportGraph(plugin: ThoughtKnotPlugin, ask: ExportAsk): Pr
 async function exporting(plugin: ThoughtKnotPlugin, ask: ExportAsk): Promise<ExportOutcome> {
   const file = plugin.app.vault.getAbstractFileByPath(ask.path);
   if (!(file instanceof TFile)) return said({ stopped: word('exporting.no-note') });
-  const text = await plugin.app.vault.read(file);
+  const text = (await noteText(plugin.app, file.path)) ?? '';
   const texts = gqlBlocks(text).map((b) => b.text);
   const reading = readNote(texts);
   // a note over the text limit is never read (layout_contained), so there is nothing to draw: say why, never "nothing to export"

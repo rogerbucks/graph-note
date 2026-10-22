@@ -4,16 +4,17 @@ import { toStandard, word } from '@thoughtknot/core';
 import type { Converted } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from './main';
 import { noteToRewrite, stillToRewrite } from './reading-view';
+import { changeVaultNote, noteText } from './storage/plugin-notes';
 
 /** Converts the note in front back to standard GQL, and says what it did, or why it did nothing. */
 export async function convertToStandard(plugin: ThoughtKnotPlugin): Promise<void> {
-  const { workspace, vault } = plugin.app;
+  const { workspace } = plugin.app;
   // the note in the pane in front, unless that pane is in reading view, which never changes a note (spec §3)
   const to = word('host.to-convert');
   const front = noteToRewrite(workspace, to);
   if (!front) return;
   const { file } = front;
-  const checked = toStandard(await vault.read(file));
+  const checked = toStandard((await noteText(plugin.app, file.path)) ?? '');
   if (!checked.ok) {
     new Notice(word('host.not-converted', { why: checked.reason }));
     return;
@@ -26,7 +27,7 @@ export async function convertToStandard(plugin: ThoughtKnotPlugin): Promise<void
   if (!stillToRewrite(workspace, front, to)) return;
   // written against the note as it is when written, and checked again there: said only when it was written
   let written: Converted = checked;
-  await vault.process(file, (now) => {
+  await changeVaultNote(plugin.app, file.path, (now) => {
     written = toStandard(now);
     return written.ok ? written.note : now;
   });

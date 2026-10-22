@@ -7,7 +7,7 @@
 // - How it is shown is saved in the style, when asked.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, load, until } from './host/load-plugin.js';
+import { build, load, settled, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 import { propertiesShown } from './host/details-read.js';
@@ -114,6 +114,7 @@ describe('a view', () => {
     try {
       labelled(el, 'Hide others').click();
       await until(() => /outside: 'hide'/.test(env.state.files.get(PATH)));
+      await settled();
       const now = env.state.files.get(PATH);
       assert.ok(now.includes(fence(DATA)), 'the data block is untouched');
       assert.match(now, /STYLE trip[\s\S]*:ViewStyle \{view: 'round_park', outside: 'hide'\}/);
@@ -197,6 +198,7 @@ describe('what a view card says and shows', () => {
     try {
       labelled(el, 'Save as shown').click();
       await until(() => /:Shown/.test(env.state.files.get(PATH)));
+      await settled();
       assert.match(env.state.notices.at(-1), /saved/i);
     } finally {
       env.uninstall();
@@ -280,6 +282,7 @@ describe('a view saved as shown', () => {
       const before = shownAs(el);
       labelled(el, 'Save as shown').click();
       await until(() => /:Shown/.test(env.state.files.get(PATH)));
+      await settled();
       // the style block is written after the graph's data, so the view is now the third block
       const now = env.state.files.get(PATH);
       const at = now
@@ -333,6 +336,7 @@ describe('a view saved as shown', () => {
       assert.equal(env.state.files.get(PATH), note, 'choosing in the legend writes nothing');
       labelled(el, 'Save as shown').click();
       await until(() => /legend: 'type:NEAR hidden'/.test(env.state.files.get(PATH)));
+      await settled();
       const now = env.state.files.get(PATH);
       const at = now
         .split('```gql')

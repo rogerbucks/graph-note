@@ -1,12 +1,13 @@
 // A note or attachment renamed in Obsidian, followed in graph blocks (editor spec §18, renames_follow). Every link to it
 // inside a graph block of any note is rewritten in the same step. It goes through the note's editor when it is open in
-// the editing view, as one ordinary change its undo takes back. Or else it goes atomically through the vault. Obsidian
+// the editing view, as one ordinary change its undo takes back. Or else it goes atomically through the vault's note storage. Obsidian
 // does not update links inside code blocks, so the plugin does. Prose is Obsidian's own, and left to it. A link that cannot be
 // rewritten is left, and its card reports it broken.
 import { TFile } from 'obsidian';
 import type { TAbstractFile } from 'obsidian';
 import { applyChanges, renamedLinks } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
+import { changeVaultNote, noteText } from '../storage/plugin-notes';
 
 /** Follows the file renamed from `old` to where `file` now is, in every graph block of every note of the vault. */
 export async function followLinks(plugin: ThoughtKnotPlugin, file: TAbstractFile, old: string): Promise<void> {
@@ -30,7 +31,7 @@ export async function followLinks(plugin: ThoughtKnotPlugin, file: TAbstractFile
         });
       continue;
     }
-    if (changes(await vault.cachedRead(note)).length)
-      await vault.process(note, (data) => applyChanges(data, changes(data)));
+    if (changes((await noteText(plugin.app, note.path, { shown: true })) ?? '').length)
+      await changeVaultNote(plugin.app, note.path, (data) => applyChanges(data, changes(data)));
   }
 }

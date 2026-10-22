@@ -9,6 +9,7 @@ import type ThoughtKnotPlugin from '../main';
 import { classificationInText, classificationOf, higherClassification } from '../export/classification';
 import { noteToRewrite } from '../reading-view';
 import { SendDialog } from './send-dialog';
+import { noteText } from '../storage/plugin-notes';
 
 /** The command's id and name. */
 export const AI_COMMAND = {
@@ -39,7 +40,7 @@ export async function askAi(plugin: ThoughtKnotPlugin): Promise<void> {
   // the proposal is written into the note, so a note in reading view is refused, as any command that writes is
   const front = noteToRewrite(plugin.app.workspace, word('host.to-ask-ai'));
   if (!front) return;
-  const text = await plugin.app.vault.read(front.file);
+  const text = (await noteText(plugin.app, front.file.path)) ?? '';
   // read from the text being sent as well as the metadata cache, which can be behind it. The higher is taken. Read
   // again each time the dialog shows what will be sent, against the classifications as they are then
   const levelOf = () => {

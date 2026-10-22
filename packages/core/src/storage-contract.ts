@@ -3,7 +3,7 @@
 // The checks need no test framework. Each one throws when the backend breaks the promise, so a backend's tests run them
 // with whatever runner they have.
 import type { NoteStorage, WriteOutcome } from './note-storage.ts';
-import { REFUSED } from './note-storage.ts';
+import { changeNote, REFUSED } from './note-storage.ts';
 
 /** One check of the contract: what it holds a backend to, and the run that throws when the backend breaks it. */
 export interface StorageCheck {
@@ -110,6 +110,20 @@ export function storageContract(make: () => NoteStorage | Promise<NoteStorage>):
         if ((await s.read('n.md')) !== null) fail('read', 'null', await s.read('n.md'));
         if ((await s.list()).length) fail('list', 'no notes', await s.list());
         refused('remove', await s.remove('n.md'), REFUSED.missing, null);
+      },
+    },
+    {
+      name: 'a note changed is written from the note as it is, and one not there is refused, never made',
+      run: async () => {
+        const s = await make();
+        made('write', await s.write('n.md', 'one'));
+        const done = await changeNote(s, 'n.md', (text) => `${text}, two`);
+        if (!done.ok || done.text !== 'one, two') fail('change', 'the note changed to "one, two"', done);
+        const read = await s.read('n.md');
+        if (read?.text !== 'one, two' || read.version !== done.version)
+          fail('read', 'the change and its version', read);
+        refused('change', await changeNote(s, 'gone.md', (text) => `${text}!`), REFUSED.missing, null);
+        if ((await s.list()).join() !== 'n.md') fail('list', 'n.md alone', await s.list());
       },
     },
     {
