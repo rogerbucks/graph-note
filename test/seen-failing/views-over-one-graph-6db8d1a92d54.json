@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/views-over-one-graph.test.js",
+  "test": "two views of one graph, stacked in one note > are each drawn as their own diagram type, from the one data block",
+  "seen_failing_first": false,
+  "evidence": "Proves the merged view picker and many-views work together; no new code was needed"
+}

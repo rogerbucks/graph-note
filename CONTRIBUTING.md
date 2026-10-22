@@ -225,6 +225,8 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `packages/core/test/multi-member-drawn.test.js` — a thing in two clusters is drawn in each region, with the same
   marker. So is a part with two wholes (editor spec §36, multi_member_drawn).
+- `packages/core/test/views-as-scaffolds.test.js` — a view says what a complete version needs. Each field a thing lacks
+  is drawn as a prompt, and filling one writes it into the graph (editor spec §36, views_as_scaffolds).
 - `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
 - `packages/core/test/view-parity.test.js` — every view of the shared table (`python/graph_spec/tests/view_cases.json`)
   is found in its note, read, and returns the things the table gives. Every query outside the view profile gets the
@@ -377,6 +379,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/obsidian/test/views-many.test.js` — several views of one graph, in one note or in several. Each is drawn
   from the one data set where it is written, and none copies it. A view of a graph written in another note says which
   and opens it (editor spec §7, many_views_one_data, view_of_another_note).
+- `packages/obsidian/test/views-over-one-graph.test.js` — two views of one graph, stacked, each drawn as its own type.
+  An edit to the graph shows in both. A type chosen in one is saved for it alone (editor spec §36, views_over_one_graph).
 
 ### The graph format library
 

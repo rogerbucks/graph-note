@@ -13,6 +13,7 @@ import { forceMarks } from './force-view.ts';
 import { matrixMarks } from './matrix-view.ts';
 import { planMarks } from './plan-view.ts';
 import { treemapMarks } from './treemap-view.ts';
+import { VIEW_NEEDS, scaffoldMarks } from './view-scaffold.ts';
 
 /** The view types drawn as marks, in the order they are offered. */
 export const VIEW_TYPES = [
@@ -39,7 +40,8 @@ export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]>
   force: (given) => forceMarks(given),
   density: (given) => densityMarks(given),
   block: blockMarks,
-  plan: planMarks,
+  // drawn as a scaffold: each date a thing lacks is a prompt (views_as_scaffolds)
+  plan: (given) => scaffoldMarks(given, planMarks(given), VIEW_NEEDS.plan ?? []),
   centroid: centroidMarks,
   containment: containmentMarks,
 };
