@@ -21,14 +21,14 @@
     "quiet_run_bytes": 14,
     "coverage_percent": 99.2,
     "speed_index": 3.86,
-    "instructions_draw_fifty": 964374544,
+    "instructions_draw_fifty": 912574259,
     "instructions_reading_limits": 24966800552,
     "instructions_layout_refusals": 654100188,
     "instructions_naming": 2845924661,
     "instructions_keystroke": 389586025,
     "instruction_claims_broken": 0,
     "instructions_cold_start": 2672152969,
-    "instructions_draw_five_hundred": 12948347356,
+    "instructions_draw_five_hundred": 3328961961,
     "instructions_mesh_query": 233877341,
     "journey_steps_obsidian": 9,
     "journey_interactions_obsidian": 9,
@@ -69,11 +69,11 @@
           "name": "draw_fifty",
           "spec": "§11, fifty_in_half_second",
           "proves": "a graph of 50 things is read and drawn, on the calling thread and through the layout runner, in under half a second on a mid-range phone’s big core, about 4 instructions a nanosecond",
-          "fingerprint": "6e90a3a5bc75592913fe3dce73e715579eb93204a7288638025b041cc7518338",
-          "setup": 6100759577,
+          "fingerprint": "f22a7becec175cf5d866c0ccdf37b30bedd4fabc509599817444f4a3d0f052c9",
+          "setup": 6252897577,
           "cases": {
-            "draw": 481145165,
-            "through-runner": 483229379
+            "draw": 455017111,
+            "through-runner": 457557148
           }
         },
         {
@@ -133,11 +133,11 @@
           "name": "draw_five_hundred",
           "spec": "§41, speed_budgets",
           "proves": "a graph of 500 things is read and drawn, on the calling thread and through the layout runner, within its budget of instructions",
-          "fingerprint": "9015e7763e760c7d9069cac70f3662ab135eaaaed51257bf7ca7bf586840a809",
-          "setup": 18339033993,
+          "fingerprint": "c4d1fcc5ba3e2e0b22afbf404a6e3113cd52c0982f081dce9eebd9b506249a7c",
+          "setup": 8906512181,
           "cases": {
-            "draw": 6460434674,
-            "through-runner": 6487912682
+            "draw": 1654847472,
+            "through-runner": 1674114489
           }
         },
         {
@@ -167,14 +167,14 @@
         {
           "benchmark": "draw_fifty",
           "says": "read and drawn in under half a second on a mid-range phone’s big core, about 4 instructions a nanosecond",
-          "measured": 481145165,
+          "measured": 455017111,
           "allowed": 2000000000,
           "holds": true
         },
         {
           "benchmark": "draw_fifty",
           "says": "read and drawn through the layout runner in under half a second on a mid-range phone’s big core, about 4 instructions a nanosecond",
-          "measured": 483229379,
+          "measured": 457557148,
           "allowed": 2000000000,
           "holds": true
         },
@@ -230,14 +230,14 @@
         {
           "benchmark": "draw_five_hundred",
           "says": "read and drawn within its budget of instructions",
-          "measured": 6460434674,
+          "measured": 1654847472,
           "allowed": 7700000000,
           "holds": true
         },
         {
           "benchmark": "draw_five_hundred",
           "says": "read and drawn through the layout runner within its budget of instructions",
-          "measured": 6487912682,
+          "measured": 1674114489,
           "allowed": 7700000000,
           "holds": true
         },
