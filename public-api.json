@@ -2718,7 +2718,7 @@
           "value: (dock: SheetDock, screen: number) => { least: number; most: number; }"
         ],
         "SheetDock": [
-          "type = 'bottom' | 'top' | 'start' | 'end'"
+          "type = 'start' | 'end' | 'bottom' | 'top'"
         ],
         "sheetLimit": [
           "value: (screen: number) => number"
