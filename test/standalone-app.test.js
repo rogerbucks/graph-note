@@ -60,6 +60,8 @@ const freePort = () =>
   });
 
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+/** How long the app may take to show its first page, and then the editor: well inside the test's own limit. */
+const STARTUP = 45_000;
 
 describe('the desktop app, run for real: open a folder, draw a note, edit it, offline', () => {
   const app = findApp(),
@@ -126,12 +128,14 @@ describe('the desktop app, run for real: open a folder, draw a note, edit it, of
   });
 
   test('it lists the folder it was started on, and opens a note in the editor', options, async () => {
+    // a cold runner can take a while to start WebKit and open the first page, so the first two waits are longer
     const listed = await until(
       "const a = [...document.querySelectorAll('#gn-app li a')]; return a.length ? a.map((l) => l.textContent) : null",
+      STARTUP,
     );
     assert.deepEqual(listed, ['Reader.md']);
     await run("document.querySelector('#gn-app li a').click()");
-    await until("return location.pathname.endsWith('editor.html') && !!document.querySelector('textarea')");
+    await until("return location.pathname.endsWith('editor.html') && !!document.querySelector('textarea')", STARTUP);
   });
 
   test("it draws the note's graph", options, async () => {
