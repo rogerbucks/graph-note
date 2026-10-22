@@ -3,9 +3,10 @@
 // It is drawn as marks (drawing-marks.ts), so every painter draws it the same way.
 //
 // A thing is inside another by a link that says so. PART_OF, MEMBER_OF, IN and INSIDE run from the part to its whole.
-// CONTAINS, HAS and HOLDS run from the whole to its part. A part with two wholes is drawn in the first written. A link
-// that would put a thing inside itself is left out. A box's size grows with all it holds, laid out squarified as the
-// treemap view lays out its boxes.
+// CONTAINS, HAS and HOLDS run from the whole to its part. A part with two wholes is drawn inside each. Every box of it
+// carries the same shared marker (multi_member_drawn), so no part is forced under one parent. A link that would put
+// a thing inside itself is left out. A box's size grows with all it holds, laid out squarified as the treemap view
+// lays out its boxes.
 //
 // A key never holds a new line, so the ids this view joins with one never meet a thing's key.
 import type { DrawMark } from '../drawing-marks.ts';
@@ -24,13 +25,24 @@ const BAND = 16;
 const GAP = 2;
 /** The smallest a box is drawn with what it holds inside it; smaller, it is drawn on its own. */
 const ROOM_LEAST = 12;
+/** The most marks drawn, so a part held by many wholes, held by many in turn, still stops. */
+const MARKS_MOST = 4000;
 
-/** Each part's whole, by the first link that says so, leaving out a link that would put a thing inside itself. */
-export function wholesOf(shape: GraphShape): Map<string, string> {
+/** Each part's wholes, in the order written, leaving out a link that would put a thing inside itself. */
+export function wholesOf(shape: GraphShape): Map<string, string[]> {
   const known = new Set(shape.things.map((t) => t.key));
-  const whole = new Map<string, string>();
+  const whole = new Map<string, string[]>();
+  // whether `part` is `of`, or holds it, however deep
   const inside = (part: string, of: string) => {
-    for (let w: string | undefined = of; w !== undefined; w = whole.get(w)) if (w === part) return true;
+    const seen = new Set<string>();
+    const up = [of];
+    while (up.length) {
+      const w = up.pop() as string;
+      if (w === part) return true;
+      if (seen.has(w)) continue;
+      seen.add(w);
+      up.push(...(whole.get(w) ?? []));
+    }
     return false;
   };
   for (const l of shape.links) {
@@ -40,8 +52,8 @@ export function wholesOf(shape: GraphShape): Map<string, string> {
         ? [l.to, l.from]
         : [undefined, undefined];
     if (part === undefined || of === undefined || !known.has(part) || !known.has(of)) continue;
-    if (whole.has(part) || inside(part, of)) continue;
-    whole.set(part, of);
+    if (whole.get(part)?.includes(of) || inside(part, of)) continue;
+    (whole.get(part) ?? whole.set(part, []).get(part))?.push(of);
   }
   return whole;
 }
@@ -59,10 +71,11 @@ export function containmentMarks({ shape, space }: DiagramGiven): DrawMark[] {
   const whole = wholesOf(shape);
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const parts = new Map<string, string[]>();
-  for (const t of shape.things) {
-    const w = whole.get(t.key);
-    if (w !== undefined) (parts.get(w) ?? parts.set(w, []).get(w))?.push(t.key);
-  }
+  for (const t of shape.things)
+    for (const w of whole.get(t.key) ?? []) (parts.get(w) ?? parts.set(w, []).get(w))?.push(t.key);
+  // a part in two wholes is drawn twice or more: each of its boxes carries the shared marker
+  const shared = new Set([...whole].filter(([, ws]) => ws.length > 1).map(([k]) => k));
+  const drawn = new Map<string, number>();
   const weight = new Map<string, number>();
   const weigh = (k: string): number => {
     const known = weight.get(k);
@@ -77,7 +90,12 @@ export function containmentMarks({ shape, space }: DiagramGiven): DrawMark[] {
       keys.map((k) => weigh(k)),
       room,
     ).forEach((r, i) => {
+      if (marks.length >= MARKS_MOST) return;
       const k = keys[i] as string;
+      // the first box of a thing has its key for its id, and each other box its own
+      const n = drawn.get(k) ?? 0;
+      drawn.set(k, n + 1);
+      const id = n ? `${k}\nagain\n${n}` : k;
       const g = Math.min(GAP, r.width / 4, r.height / 4);
       const box = { x: r.x + g, y: r.y + g, width: r.width - 2 * g, height: r.height - 2 * g };
       const held = parts.get(k) ?? [];
@@ -86,9 +104,9 @@ export function containmentMarks({ shape, space }: DiagramGiven): DrawMark[] {
       const opens = held.length > 0 && inner.width >= ROOM_LEAST && inner.height >= ROOM_LEAST;
       marks.push({
         kind: 'box',
-        id: k,
+        id,
         of: k,
-        style: held.length ? 'whole' : 'thing',
+        style: `${held.length ? 'whole' : 'thing'}${shared.has(k) ? '.shared' : ''}`,
         ...box,
         ...(group ? { group } : {}),
         role: 'thing',
@@ -98,7 +116,7 @@ export function containmentMarks({ shape, space }: DiagramGiven): DrawMark[] {
       if (size >= 4 && box.width > 8)
         marks.push({
           kind: 'label',
-          id: `${k}\nlabel`,
+          id: `${id}\nlabel`,
           of: k,
           style: 'text',
           x: held.length ? box.x + 4 : box.x + box.width / 2,
@@ -110,7 +128,7 @@ export function containmentMarks({ shape, space }: DiagramGiven): DrawMark[] {
         });
       if (opens) {
         // what a whole holds sits in a region of its own, under its name
-        const region = `inside\n${k}`;
+        const region = `inside\n${id}`;
         marks.push({
           kind: 'group',
           id: region,

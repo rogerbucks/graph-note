@@ -5,8 +5,8 @@
 //
 // The clusters are found as the graph-spec library finds them (src/clusters/clusters.js). A written cluster is a thing
 // of kind Cluster, and its members link to it with MEMBER_OF. Louvain finds the rest over every other thing, by every
-// other link, and a group of one is not a cluster. A thing in two clusters is drawn in both, each dot of it the same
-// thing (multiple_membership). A thing in no cluster is drawn alone, as a dot.
+// other link, and a group of one is not a cluster. A thing in two clusters is drawn in both, each dot of it with the
+// same shared marker (multiple_membership, multi_member_drawn). A thing in no cluster is drawn alone, as a dot.
 //
 // A key never holds a new line, so the ids this view joins with one never meet a thing's key.
 import type { DrawMark } from '../drawing-marks.ts';
@@ -68,6 +68,9 @@ export function centroidMarks({ shape, space }: DiagramGiven): DrawMark[] {
   const text = new Map(shape.things.map((t) => [t.key, t.text]));
   const isCluster = new Set(clusters.filter((c) => c.kind === 'asserted').map((c) => c.id));
   const placed = new Set(clusters.flatMap((c) => c.members));
+  // a thing in two clusters is drawn in each: each of its dots carries the shared marker
+  const count = new Map<string, number>();
+  for (const m of clusters.flatMap((c) => c.members)) count.set(m, (count.get(m) ?? 0) + 1);
   // each thing in no cluster, and not itself a written cluster, stands alone
   const alone = shape.things.map((t) => t.key).filter((k) => !placed.has(k) && !isCluster.has(k));
   const spots = [
@@ -135,7 +138,7 @@ export function centroidMarks({ shape, space }: DiagramGiven): DrawMark[] {
         id: `${m}\nin\n${s.id}`,
         of: m,
         group: region,
-        style: 'member',
+        style: (count.get(m) ?? 0) > 1 ? 'member.shared' : 'member',
         x: x + ring * Math.cos(th) - dot / 2,
         y: y + ring * Math.sin(th) - dot / 2,
         width: dot,

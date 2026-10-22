@@ -28,7 +28,7 @@ test('a part is inside its whole, either way the link runs, and a part of a part
       ['garden', 'HAS', 'shed'],
     ],
   );
-  assert.deepEqual(Object.fromEntries(wholesOf(shape)), { room: 'house', desk: 'room', shed: 'garden' });
+  assert.deepEqual(Object.fromEntries(wholesOf(shape)), { room: ['house'], desk: ['room'], shed: ['garden'] });
   const marks = drawMarksOf(containmentMarks({ shape, space: SPACE }), SPACE);
   assert.ok(Array.isArray(marks), marks);
   const box = Object.fromEntries(marks.filter((m) => m.kind === 'box').map((m) => [m.id, m]));
@@ -39,7 +39,7 @@ test('a part is inside its whole, either way the link runs, and a part of a part
   assert.ok(area(box.house) > area(box.garden));
 });
 
-test('a part with two wholes goes in the first, and a link that would nest a thing in itself is left out', () => {
+test('a part with two wholes is drawn in each, and a link that would nest a thing in itself is left out', () => {
   const shape = shapeOf(
     ['a', 'b', 'c'],
     [
@@ -48,10 +48,12 @@ test('a part with two wholes goes in the first, and a link that would nest a thi
       ['a', 'PART_OF', 'c'],
     ],
   );
-  assert.deepEqual(Object.fromEntries(wholesOf(shape)), { c: 'a' });
+  assert.deepEqual(Object.fromEntries(wholesOf(shape)), { c: ['a', 'b'] });
   const marks = drawMarksOf(containmentMarks({ shape, space: SPACE }), SPACE);
   assert.ok(Array.isArray(marks), marks);
-  assert.equal(marks.filter((m) => m.kind === 'box').length, 3);
+  const c = marks.filter((m) => m.kind === 'box' && m.of === 'c');
+  assert.equal(c.length, 2);
+  assert.ok(c.every((m) => m.style === 'thing.shared'));
 });
 
 test('deep nesting and a big graph still fit the space with every id its own; nothing draws nothing', () => {

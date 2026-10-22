@@ -220,6 +220,11 @@ These test behaviour across modules, or the repository itself, so they are named
   from the catalogue by key (editor spec §42, words_catalogue). The few kept are listed, each with why.
 - `packages/core/test/locale-bytes.test.js` — the editor writes the same bytes in every setting. No language, locale
   or direction changes an edit, an export's data or the layout source (editor spec §42, locale_never_changes_bytes).
+
+### The core's views
+
+- `packages/core/test/multi-member-drawn.test.js` — a thing in two clusters is drawn in each region, with the same
+  marker. So is a part with two wholes (editor spec §36, multi_member_drawn).
 - `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
 - `packages/core/test/view-parity.test.js` — every view of the shared table (`python/graph_spec/tests/view_cases.json`)
   is found in its note, read, and returns the things the table gives. Every query outside the view profile gets the
