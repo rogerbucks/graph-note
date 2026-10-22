@@ -210,7 +210,7 @@ Checked against WCAG 2.2, Apple's and Microsoft's design guidance and common des
 | Empty states | Yes (`empty_view`, `empty_export`, `empty_block_start`) | — |
 | Undo | Yes (`undo_everything` and others) | — |
 | Plain-language messages | Yes (`ux_copy_auto`) | — |
-| Theme tokens for the interface | Yes for the interface, built 20 Oct 2026. A plug-in's own tokens wait for the hosts to load plug-ins (Wave 6) | `ui_theme_tokens`, `plugin_theme_tokens` |
+| Theme tokens for the interface | Yes. The interface's built 20 Oct 2026; a plug-in's own tokens reach the page in Obsidian and the browser page, 22 Oct 2026 | `ui_theme_tokens`, `plugin_theme_tokens` |
 | High contrast and forced colours | Yes | `forced_colours` |
 | Text enlarged to 200 per cent | Yes | `text_scaling` |
 | Colour never the only signal | Yes, built 20 Oct 2026 | `colour_never_alone` |
