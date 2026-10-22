@@ -1,0 +1,6 @@
+{
+  "file": "test/massive-graphs-design.test.js",
+  "test": "the note compares the ways A to F, each with its speed at 50,000 things",
+  "seen_failing_first": false,
+  "evidence": "holds the comparison already written in PR #936"
+}
