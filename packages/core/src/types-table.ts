@@ -18,14 +18,12 @@ export interface DiagramTable {
   links: { index: number; cells: [string, string, string]; properties: string }[];
 }
 
-/** The properties that give a thing its text: the one that does is its Thing cell, not a column of its own. */
-const TEXT_KEYS = ['name', 'title', 'text', 'label'];
-
 /** The drawing as a table: each thing with its kind and properties (from `g`, the graph as read), and each link. */
 export function tableOf(drawing: Pick<GraphDrawing, 'boxes' | 'links'>, g?: Graph): DiagramTable {
   const own = drawing.boxes.map((b) => {
     const p = g?.nodes.has(b.key) ? g.p(b.key) : {};
-    const textKey = TEXT_KEYS.find((k) => p[k] === b.text);
+    // the property that gives a thing its text is its Thing cell, not a column of its own; cut text keeps its column
+    const textKey = Object.keys(p).find((k) => k !== 'id' && p[k] === b.text);
     return new Map(Object.entries(p).filter(([k]) => k !== 'id' && k !== textKey));
   });
   const columns = [...new Set(own.flatMap((p) => [...p.keys()]))];

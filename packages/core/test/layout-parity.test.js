@@ -36,9 +36,7 @@ for item in json.load(sys.stdin):
         suggested = {p['suggested'] for p in problems if p.get('suggested') and p['graph'] == name}
         g = w[name]
         ids = [i for i, (l, _) in g.nodes.items() if not l & gr.SCHEMA_LABELS]; R = gr.readings(g, None)
-        def text(i):
-            p = g.p(i); return next((p[k] for k in ('name', 'title', 'text', 'label') if isinstance(p.get(k), str) and p[k]), i)
-        nodes = [(i, ' · '.join(sorted(l for l in g.nodes[i][0] if l not in gr.SCHEMA_LABELS)), text(i)) for i in ids]
+        nodes = [(i, ' · '.join(sorted(l for l in g.nodes[i][0] if l not in gr.SCHEMA_LABELS)), gr.shown_text(g, i)[0]) for i in ids]
         edges = [(s, gr._word(R, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
         res[name] = {rd: graph_svg.dot_source(nodes, edges, rd, suggested=suggested)[0] for rd in ('LR', 'TB')}
     out.append(res)

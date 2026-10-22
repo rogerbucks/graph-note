@@ -157,6 +157,13 @@ from graphspec.rules.views import (
     tops,
     views,
 )
+from graphspec.rules.shown_text import (
+    NAME_KEYS,
+    SHOWN_LIMIT,
+    WORDING_KEYS,
+    clip_shown,
+    shown_text,
+)
 from graphspec.rules.guessed_readings import (
     _ACTIVE,
     _IRREGULAR,

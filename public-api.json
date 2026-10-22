@@ -3485,6 +3485,7 @@
           "check: (world: GraphSpecCheck.World, graph: string, matrix?: unknown, switches?: Set<string>) => [string, boolean][]",
           "checkChangeset: (base: string[], block: string, matrix?: unknown, switches?: Set<string>, session?: string | null) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; claimed?: string; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }",
           "checkSyntax: (block: string) => GraphSpecCheck.ProfileError | null",
+          "clipShown: (text: string) => string",
           "COMMENT_FIX: string",
           "COMMENT_RULE: string",
           "completeness: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }",
@@ -3509,6 +3510,7 @@
           "schemaFor: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]",
           "secretsIn: (text: string) => string[]",
           "secretsInGraph: (g: GraphSpecCheck.Graph) => [string, string][]",
+          "shownText: (g: GraphSpecCheck.Graph, id: string, shared?: GraphSpecCheck.Graph) => [string, string | null]",
           "SPEC_NODES: Array<string>",
           "splitChangeset: (block: string) => { additions: string; changes: { line: number; lines: number[]; text: string; reason: string | null; }[]; basisOk: boolean; }",
           "Store: typeof GraphSpecCheck.Store",
@@ -3536,6 +3538,9 @@
         ],
         "checkSyntax": [
           "value: (block: string) => GraphSpecCheck.ProfileError | null"
+        ],
+        "clipShown": [
+          "value: (text: string) => string"
         ],
         "COMMENT_FIX": [
           "value: string"
@@ -3673,6 +3678,9 @@
         ],
         "secretsInGraph": [
           "value: (g: GraphSpecCheck.Graph) => [string, string][]"
+        ],
+        "shownText": [
+          "value: (g: GraphSpecCheck.Graph, id: string, shared?: GraphSpecCheck.Graph) => [string, string | null]"
         ],
         "SPEC_NODES": [
           "value: Array<string>"

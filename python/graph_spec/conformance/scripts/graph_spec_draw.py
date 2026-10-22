@@ -34,17 +34,17 @@ START, END = '<!-- graph-drawing:start', '<!-- graph-drawing:end -->'
 def _docs():
     sp = importlib.util.spec_from_file_location('check_docs', os.path.join(HERE, 'graph_spec_check_docs.py')); m = importlib.util.module_from_spec(sp); sp.loader.exec_module(m); return m
 
-def caption(g, i):
-    """A box's text: the node's name (or title, or text), then its label in italics."""
-    labels, p = g.nodes[i][0], g.p(i)
-    t = next((p[k] for k in ('name', 'title', 'text', 'label') if isinstance(p.get(k), str) and p[k]), i)
+def caption(g, i, shared=None):
+    """A box's text: the text the library shows it by (gr.shown_text), then its label in italics."""
+    labels = g.nodes[i][0]
+    t = gr.shown_text(g, i, shared)[0]
     kinds = ' · '.join(sorted(l for l in labels if l not in gr.SCHEMA_LABELS))
     return (f"{t}<br/><i>{kinds}</i>" if kinds else t).replace('"', "'")
 
 def mermaid(g, shared):
     ids = sorted(i for i, (l, _) in g.nodes.items() if not l & gr.SCHEMA_LABELS)
     var = {i: f"n{k}" for k, i in enumerate(ids)}; R = gr.readings(g, shared)
-    lines = ['flowchart LR'] + [f'    {var[i]}["{caption(g, i)}"]' for i in ids]
+    lines = ['flowchart LR'] + [f'    {var[i]}["{caption(g, i, shared)}"]' for i in ids]
     lines += sorted(f'    {var[s]} -->|"{gr._word(R, t)}"| {var[d]}' for s, t, d, _ in g.edges if s in var and d in var)
     return '\n'.join(lines), len(ids), sum(1 for s, _, d, _ in g.edges if s in var and d in var)
 
@@ -52,9 +52,7 @@ def parts(g, shared):
     """The things and links a drawing is laid out from — (nodes, edges) as graph_svg takes them. Shared with the layout
     parity check (graph_spec_layout_parity.py), so what is compared is what is drawn."""
     ids = [i for i, (l, _) in g.nodes.items() if not l & gr.SCHEMA_LABELS]; R = gr.readings(g, shared)   # in the note's order: colours follow first appearance
-    def text(i):
-        p = g.p(i); return next((p[k] for k in ('name', 'title', 'text', 'label') if isinstance(p.get(k), str) and p[k]), i)
-    nodes = [(i, ' · '.join(sorted(l for l in g.nodes[i][0] if l not in gr.SCHEMA_LABELS)), text(i)) for i in ids]
+    nodes = [(i, ' · '.join(sorted(l for l in g.nodes[i][0] if l not in gr.SCHEMA_LABELS)), gr.shown_text(g, i, shared)[0]) for i in ids]
     edges = [(s, gr._word(R, t), d) for s, t, d, _ in g.edges if s in ids and d in ids]
     return nodes, edges
 
