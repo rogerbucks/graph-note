@@ -1,0 +1,6 @@
+{
+  "file": "test/host-adapters.test.js",
+  "test": "every host’s adapter passes the one host contract > the desktop app > a menu shows its rows in order, with their lines, ticks and warnings",
+  "seen_failing_first": false,
+  "evidence": "It runs an adapter already merged and passing (the browser page's, which the app's window carries since #905), in the app's built page; no code changes, so it cannot fail first."
+}
