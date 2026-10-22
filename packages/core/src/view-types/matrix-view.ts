@@ -38,7 +38,8 @@ export function matrixMarks({ shape, space }: DiagramGiven): DrawMark[] {
       column = place.get(to) ?? 0;
     marks.push({
       kind: 'box',
-      id: `cell.${from}.${to}`,
+      // a key may hold a dot but never a new line, so the two keys are joined by one
+      id: `cell.${from}\n${to}`,
       style: types.length > 1 ? 'link.many' : `link`,
       x: names + column * cell,
       y: names + row * cell,

@@ -37,8 +37,8 @@ test('each thing has a row and a column, named, and each pair linked has one cel
   assert.deepEqual(
     cells.map((m) => [m.id, m.name, m.style]),
     [
-      ['cell.a.b', 'Alpha LINKS, CITES Beta', 'link.many'],
-      ['cell.b.c', 'Beta LINKS Gamma', 'link'],
+      ['cell.a\nb', 'Alpha LINKS, CITES Beta', 'link.many'],
+      ['cell.b\nc', 'Beta LINKS Gamma', 'link'],
     ],
   );
   // row a, column b: the cell sits right of a's row name and under b's column name
@@ -47,6 +47,20 @@ test('each thing has a row and a column, named, and each pair linked has one cel
   const column = labels.find((m) => m.id === 'b.column');
   assert.ok(ab.y < row.y && row.y < ab.y + ab.height);
   assert.ok(ab.x < column.x && column.x < ab.x + ab.width);
+});
+
+test('keys that hold dots still give each cell its own id', () => {
+  const shape = shapeOf(
+    [['a.b'], ['c'], ['a'], ['b.c']],
+    [
+      ['a.b', 'LINKS', 'c'],
+      ['a', 'LINKS', 'b.c'],
+    ],
+  );
+  const marks = drawMarksOf(matrixMarks({ shape, space: SPACE }), SPACE);
+  assert.ok(Array.isArray(marks), marks);
+  const ids = marks.filter((m) => m.kind === 'box').map((m) => m.id);
+  assert.deepEqual(ids, ['cell.a.b\nc', 'cell.a\nb.c']);
 });
 
 test('the cells are square and fit the space, however many things there are', () => {

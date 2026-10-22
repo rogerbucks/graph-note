@@ -770,6 +770,9 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 
 - `view-types.ts` — the list, `VIEW_TYPES`, and what draws each, `VIEW_DRAWERS`.
 - `matrix-view.ts` — a row and a column for each thing, and a cell for each pair of things linked.
+- `treemap-view.ts` — a rectangle for each group, else each kind, and one for each thing in it, sized by its links.
+  The rectangles are laid out squarified (`squarified`), so they stay near square.
+- `chord-view.ts` — each thing on a circle, grouped by kind, and each link a curve across it.
 
 ### Views (spec §2, §7)
 
