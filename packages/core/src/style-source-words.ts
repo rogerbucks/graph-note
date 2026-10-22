@@ -86,6 +86,8 @@ export const STYLE_SOURCE_WORDS = {
   'styling.diagram.unknown': '{written} is not a diagram type',
   'styling.diagram.tree-only': 'a relationship is chosen only for a tree',
   'styling.diagram.tree-only.fix': "remove relationship, or make it type: 'tree'",
+  'styling.diagram.radial-only': 'a centre is chosen only for a radial drawing',
+  'styling.diagram.radial-only.fix': "remove centre, or make it type: 'radial'",
   'styling.diagram.timeline-only': 'an order and what is shown are chosen only for a timeline',
   'styling.diagram.timeline-only.fix': "remove them, or make it type: 'timeline'",
   'styling.diagram.by-only': 'by is chosen only for an order by date or number',

@@ -29,6 +29,8 @@ export const SHORTCUT_SOURCE_WORDS = {
   'shortcut.clear.keys': 'Escape',
   'shortcut.pick-up': 'Pick up the box, to move it',
   'shortcut.pick-up.keys': 'M',
+  'shortcut.centre': 'Put the box in the centre of a radial drawing',
+  'shortcut.centre.keys': 'C',
   'shortcut.shortcuts': 'Show the keyboard shortcuts',
   'shortcut.shortcuts.keys': '?',
   'shortcut.move-choose': 'Choose where the box goes',

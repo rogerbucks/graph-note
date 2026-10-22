@@ -333,6 +333,21 @@ describe('the diagram type, saved in the style graph', () => {
       refused: 'a relationship is chosen only for a tree',
     });
   });
+
+  // proves: radial_centre_chosen
+  test('writes a radial drawing’s centre when one is chosen, and refuses one for another type', () => {
+    const note = `\`\`\`gql\n${TRIP}\n\`\`\`\n`;
+    const first = styleEdit(note, 'trip', { diagram: { type: 'radial', centre: 'park' } });
+    assert.match(first.note, /\(diagram_1:Diagram \{type: 'radial', centre: 'park'\}\)/);
+    const back = styleEdit(first.note, 'trip', { diagram: { type: 'radial' } });
+    assert.match(back.note, /\(diagram_1:Diagram \{type: 'radial'\}\)/, 'the usual centre again');
+    assert.deepEqual(styleEdit(note, 'trip', { diagram: { type: 'flow', centre: 'park' } }), {
+      refused: 'a centre is chosen only for a radial drawing',
+    });
+    assert.deepEqual(styleEdit(note, 'trip', { diagram: { type: 'radial', centre: '' } }), {
+      refused: 'a centre names a thing',
+    });
+  });
 });
 
 describe('a word written in a style graph', () => {

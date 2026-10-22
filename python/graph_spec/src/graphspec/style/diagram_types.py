@@ -17,6 +17,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from graphspec.style.inline import value_text
+from graphspec.style.radial import lone_thing, radial_centre
 from graphspec.style.timeline import is_number, timeline_fit, timeline_plan
 from graphspec.style.words import DIAGRAM_TYPES, DIRECTIONS, LOCKED, plugin_type_of
 
@@ -108,19 +109,6 @@ def _loop_in(things, links):
     return None
 
 
-def _centre_of(shape):
-    """The thing with the most links, the first drawn when two have as many."""
-    degree: dict[str, int] = {}
-    for link in shape["links"]:
-        for k in (link["from"], link["to"]):
-            degree[k] = degree.get(k, 0) + 1
-    best = shape["things"][0]["key"] if shape["things"] else ""
-    for t in shape["things"]:
-        if degree.get(t["key"], 0) > degree.get(best, 0):
-            best = t["key"]
-    return best
-
-
 def _tree_along(shape, type_, text):
     """Why the links of `type_` make no tree — a thing with a second parent, or a loop — or None
     when they make one. A parent linked to a thing twice by the type is one parent."""
@@ -173,24 +161,15 @@ def _tree_fit(shape, relationship, text):
     return _no("tree", f"no relationship makes a tree: along {types[0]}, {why}")
 
 
-def _radial_fit(shape, text):
+def _radial_fit(shape, text, chosen=None):
     if len(shape["things"]) < 3:
         return _no("radial", "a radial drawing needs three things or more")
     if shape.get("groups"):
         # Graphviz's radial layout cannot draw a group's box
         label = shape["groups"][0][0]
         return _no("radial", f"a radial drawing cannot draw the box of group {label}")
-    centre, near = _centre_of(shape), {}
-    for link in shape["links"]:
-        near.setdefault(link["from"], []).append(link["to"])
-        near.setdefault(link["to"], []).append(link["from"])
-    reached, queue = {centre}, [centre]
-    for k in queue:
-        for n in near.get(k, []):
-            if n not in reached:
-                reached.add(n)
-                queue.append(n)
-    lone = next((t for t in shape["things"] if t["key"] not in reached), None)
+    centre = radial_centre(shape, chosen)
+    lone = lone_thing(shape, centre)
     if lone is None:
         return _yes("radial")
     why = f"joined to the centre, {text(centre)}, and {lone['text']} is not"
@@ -221,7 +200,8 @@ def type_fits(
     """Whether each type fits the shape (§15, type_only_when_fits), in the order of DIAGRAM_TYPES,
     each {type, fits, why (when it does not fit), relationship (a tree that fits)}, as the core's
     typeFits gives them, word for word. A timeline fits while it has a thing to show, as
-    `timeline` (a Diagram's order, by and show) chooses (timeline_fits)."""
+    `timeline` (a Diagram's order, by and show) chooses (timeline_fits). A radial drawing is
+    judged around the centre `timeline` names, if any."""
     if not shape["things"]:
         return [_yes(t) if t == "network" else _no(t, _NOTHING) for t in DIAGRAM_TYPES]
     texts = {t["key"]: t["text"] for t in shape["things"]}
@@ -241,7 +221,7 @@ def type_fits(
         _yes("network"),
         _tree_fit(shape, relationship, text),
         flow,
-        _radial_fit(shape, text),
+        _radial_fit(shape, text, (timeline or {}).get("centre")),
         _lanes_fit(shape),
         timeline_fit(shape, timeline or {}),
         _yes("table"),
@@ -271,7 +251,7 @@ def _plan_of(fit, shape, choice):
     if typ == "flow":
         return {"type": "flow"}
     if typ == "radial":
-        return {"type": "radial", "centre": _centre_of(shape)}
+        return {"type": "radial", "centre": radial_centre(shape, choice.get("centre"))}
     if typ == "lanes":
         lanes: dict[str, list[str]] = {}
         for t in shape["things"]:
@@ -341,7 +321,7 @@ def typed_source(dot: str, plan: Mapping | None) -> str:
     lines = dot.split("\n")
     if plan["type"] == "radial":
         root = plan["centre"]
-        lines.insert(2, f'  graph [layout=twopi, root="{root}", overlap=false, splines=true];')
+        lines.insert(2, f'  graph [layout=twopi, root="{root}", overlap=scale, splines=true];')
         return "\n".join(lines)
     tree, out, n = set(plan.get("tree", ())), [], -1
     for line in lines:

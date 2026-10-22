@@ -2,6 +2,7 @@
 // or only looked at. That card takes up where the last was left: its zoom, the thing selected with its details, and
 // full screen, if it was open. The selected thing is brought into view where the new layout put it.
 import type { View, Zoom } from '@thoughtknot/core';
+import { glideBoxes } from './regroup';
 import { boxIn } from './taps';
 import type { Taps } from './taps';
 import type { DiagramShown, TypeLeftAt } from './type-strip';
@@ -52,6 +53,8 @@ export class TypePlace {
       g = key && svg ? boxIn(svg, key) : null,
       box = g ? taps.bounds(g.getAttribute('id') ?? '') : null;
     if (box) zoom.reveal(box);
+    // a radial drawing laid out around a new centre: each box glides from where it was (radial_centre_pick)
+    if (this.kept?.places) glideBoxes(svg, this.kept.places);
     if (this.handOn) full();
   }
 }

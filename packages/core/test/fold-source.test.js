@@ -167,7 +167,7 @@ describe('links routed', () => {
 
   // proves: radial_links_round
   test('a radial drawing curves its links unless they are routed, and then they go the way chosen', () => {
-    const radial = 'digraph G {\n  rankdir=LR;\n  graph [layout=twopi, root="a", overlap=false, splines=true];\n}';
+    const radial = 'digraph G {\n  rankdir=LR;\n  graph [layout=twopi, root="a", overlap=scale, splines=true];\n}';
     assert.equal(routedSource(radial, undefined), radial, 'curved: as the radial drawing asks');
     for (const [routing, splines] of [
       ['straight', 'line'],
@@ -179,7 +179,7 @@ describe('links routed', () => {
         [splines],
         `${routing}: one way to route`,
       );
-      assert.ok(routed.includes('  graph [layout=twopi, root="a", overlap=false];'), `${routing}: still radial`);
+      assert.ok(routed.includes('  graph [layout=twopi, root="a", overlap=scale];'), `${routing}: still radial`);
     }
   });
 });

@@ -18,6 +18,7 @@ from graphspec.style.flow import MEANS_NEEDED
 from graphspec.style.legend import legend_checked
 from graphspec.style.near_names import nearest
 from graphspec.style.picture import PICTURE_FOR
+from graphspec.style.radial import centre_problem
 from graphspec.style.timeline import timeline_problem
 from graphspec.style.words import (
     ARROWHEADS,
@@ -204,8 +205,8 @@ def _arrows_of(raw, names, out):
 def _diagram_of(raw, names, out):
     """The diagram type chosen, checked (§15, type_remembered): one of the types, in the whole
     graph or a view, whose name is the user's own; for a tree, a relationship type the graph has,
-    which no other type takes; for a timeline, how it is ordered, by which property, and what it
-    shows (timeline_order, timeline_show)."""
+    which no other type takes; a timeline's order, by and what it shows (timeline_order,
+    timeline_show); a radial drawing's centre, a thing (radial_centre_chosen)."""
     r, before, props = _Reader(raw, names, out), len(out), raw["props"]
     if "type" not in props:
         add = "add type: " + or_list([f"'{w}'" for w in DIAGRAM_TYPES])
@@ -216,17 +217,19 @@ def _diagram_of(raw, names, out):
     plugin = written if isinstance(written, str) and plugin_type_of(written) else None
     typ = "network" if plugin else r.word("type", DIAGRAM_TYPES, "$ is not a diagram type")
     relationship = r.name("relationship", names["types"], "a relationship type")
+    centre = r.name("centre", names["things"], "a thing", "the id of a thing")
     view = r.text("view")
     order = r.word("order", TIMELINE_ORDERS, f"order must be {or_list(TIMELINE_ORDERS)}")
     by = r.text("by")
     show = r.word("show", TIMELINE_SHOWS, f"show must be {or_list(TIMELINE_SHOWS)}")
     if typ and relationship is not None and typ != "tree":
         r.report(TREE_ONLY, "remove relationship, or make it type: 'tree'")
-    if typ and (why := timeline_problem(typ, order, by, show)):
+    whys = [centre_problem(typ, centre), timeline_problem(typ, order, by, show)] if typ else []
+    for why in filter(None, whys):
         r.report(*why)
     if not typ or len(out) != before:
         return None
-    chosen = {"order": order, "by": by, "show": show}
+    chosen = {"centre": centre, "order": order, "by": by, "show": show}
     return {
         "type": typ,
         **({} if plugin is None else {"plugin": plugin}),

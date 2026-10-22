@@ -232,7 +232,8 @@ round — are ported here exactly, each proved against Python by the layout test
   /**
    * The layout source `dot` laid out as a diagram type, by its plan (the core's types.ts):
    * - radial: around its centre, by Graphviz's twopi. Its links curve around the things they do not join
-   *   (splines=true), never through them.
+   *   (splines=true), never through them. Its rings grow evenly until no boxes overlap (overlap=scale). Moving
+   *   boxes one by one (overlap=false) crashed Graphviz around a centre with one link.
    * - tree, flow, lanes and timeline: every link laid out forward, and no kind put in a column of its own. A tree's
    *   other links and every link of a timeline never move a thing (constraint=false).
    * - lanes: a box for each kind, labelled as a group is.
@@ -244,7 +245,7 @@ round — are ported here exactly, each proved against Python by the layout test
     if (!plan) return dot;
     const lines = dot.split('\n');
     if (plan.type === 'radial') {
-      lines.splice(2, 0, `  graph [layout=twopi, root="${plan.centre}", overlap=false, splines=true];`);
+      lines.splice(2, 0, `  graph [layout=twopi, root="${plan.centre}", overlap=scale, splines=true];`);
       return lines.join('\n');
     }
     const tree = new Set(plan.tree || []),

@@ -3,7 +3,7 @@
 // says it is not saved, and where the note is edited offers to keep it. Choosing a type there saves it and forgets this.
 import { diagramFor } from '@thoughtknot/core';
 import type { DiagramWrite, GraphDrawing, NoteReading, StyleGraph } from '@thoughtknot/core';
-import { withTried } from '@thoughtknot/core/display/graph-view/type-strip';
+import { pickedCentre, withTried } from '@thoughtknot/core/display/graph-view/type-strip';
 import type { Trying, TypeLeftAt } from '@thoughtknot/core/display/graph-view/type-strip';
 
 /** How long where a card was left waits for the card drawn as its new type: a type saved draws it once written. */
@@ -73,11 +73,14 @@ export class TriedTypes {
     style: StyleGraph,
     g: NoteReading['world'][string] | undefined,
   ): { style: StyleGraph; trying: Trying } {
-    const tried = this.of(at);
+    const tried = this.of(at),
+      saved = diagramFor(drawing, style, g, at.view).drawn,
+      centre = saved === 'radial' ? pickedCentre(style, at.view) : undefined;
     return {
       style: tried ? withTried(style, tried) : style,
       trying: {
-        saved: diagramFor(drawing, style, g, at.view).drawn,
+        saved,
+        ...(centre === undefined ? {} : { savedCentre: centre }),
         tried: !!tried,
         tryOut: (change) => this.set(at, change),
         leave: (where) => this.leave(at, where),

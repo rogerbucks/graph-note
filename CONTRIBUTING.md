@@ -968,6 +968,10 @@ These test behaviour across modules, or the repository itself, so they are named
     reason and the day.
   - A drawing that changes fails until it is accepted. To accept it, run
     `THOUGHTKNOT_VISUAL_ACCEPT="why" npm run -s test:ai -- test/visual-regression.test.js`. CI never accepts.
+- `test/massive-graphs-design.test.js` — the research note on massive graphs (editor spec §53, scale_design). It is
+  in the wiki, compares the ways with measured numbers, and records Roger's pick.
+- `test/massive-graphs-benchmark.test.js` — the scale benchmark (editor spec §53, scale_benchmark). It grows the
+  V-10 graph up to 100 times and records each step's time and memory. It names a step over its budget.
 - `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
 
 ## The requirements in a GitHub Project

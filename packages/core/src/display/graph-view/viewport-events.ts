@@ -252,6 +252,12 @@ export function bindViewportEvents(host: ViewportHost): void {
       e.preventDefault();
       return;
     }
+    // C on a box puts it in the centre of a radial drawing (§15, radial_centre_pick)
+    const c = e.key === 'c' || e.key === 'C';
+    if (target && 'key' in target && plain && c && host.o?.diagram?.putCentre?.(target.key)) {
+      e.preventDefault();
+      return;
+    }
     // Enter or Space on a fold's stub or box opens it (§25)
     if (fold && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
