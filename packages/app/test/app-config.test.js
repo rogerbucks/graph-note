@@ -58,3 +58,17 @@ test('the app takes no plug-in that reaches the disk, the network or a shell on 
   for (const [name, version] of crates.filter(([n]) => n.startsWith('tauri')))
     assert.match(version, /^=\d+\.\d+\.\d+$/, `${name} is pinned to one version`);
 });
+
+test('the one advisory the dependency review allows is for glib 0.18, and goes once Tauri moves past it (SEC-11)', () => {
+  const review = readFileSync(new URL('../../../.github/workflows/dependency-review.yml', import.meta.url), 'utf8');
+  const allowed = [...review.matchAll(/^\s*allow-ghsas:\s*(.+)$/gm)].flatMap(([, ids]) => ids.split(/[\s,]+/));
+  assert.deepEqual(allowed, ['GHSA-wrw7-89jp-8q8g'], 'only this one advisory, by its id');
+  assert.match(review, /fail-on-severity: low/, 'the severity level is not lowered');
+  // Tauri draws Linux windows with GTK 3, which pins glib 0.18. When Tauri supports GTK 4, glib moves on, and this fails
+  // until the allowance is taken out of the workflow and SEC-11 is closed.
+  const glib = [...read('src-tauri/Cargo.lock').matchAll(/name = "glib"\nversion = "([^"]+)"/g)].map(([, v]) => v);
+  assert.ok(
+    glib.some((v) => v.startsWith('0.18.')),
+    'glib 0.18 is gone: remove GHSA-wrw7-89jp-8q8g from .github/workflows/dependency-review.yml and close SEC-11',
+  );
+});

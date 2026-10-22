@@ -1024,7 +1024,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
 
-## Done or accepted (26)
+## Done or accepted (27)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1054,3 +1054,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-14 | Plug-ins run with the host's full powers | done | #882; kept out by `packages/core/test/plugins-isolated.test.js` |
 | TRUST-15 | A plug-in given secrets could read every secret, AI keys too | done | #856; kept out by `packages/core/test/plugins-limits.test.js` |
 | TRUST-16 | The files ability reaches every note, whatever its class | done | #867; kept out by `packages/core/test/plugins-limits.test.js` |
+| SEC-11 | The desktop app's Linux build carries glib 0.18, with a known unsoundness | accepted | Roger, 22 Oct 2026 (decision card on PR #905): No code in the app's dependencies calls VariantStrIter. It is the Linux build only. No fixed glib works with Tauri yet. Undo when Tauri supports GTK 4. |
