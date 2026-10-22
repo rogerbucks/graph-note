@@ -3631,6 +3631,7 @@
           "checkChangeset: (base: string[], block: string, matrix?: unknown, switches?: Set<string>, session?: string | null) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; claimed?: string; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }",
           "checkSyntax: (block: string) => GraphSpecCheck.ProfileError | null",
           "clipShown: (text: string) => string",
+          "clustersOf: (graph: GraphSpecCheck.Graph, kind?: 'asserted' | 'found') => { clusters: GraphSpecCheck.Cluster[]; memberships: GraphSpecCheck.ClusterMembership[]; }",
           "COMMENT_FIX: string",
           "COMMENT_RULE: string",
           "completeness: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }",
@@ -3642,6 +3643,7 @@
           "isNamed: (value: unknown) => boolean",
           "LIMITS: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }",
           "lint: (text: string) => { trap: string; line: number; }[]",
+          "louvain: (n: number, links: readonly (readonly [number, number])[]) => number[]",
           "named: (digits: string) => string",
           "notes: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }",
           "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
@@ -3686,6 +3688,23 @@
         ],
         "clipShown": [
           "value: (text: string) => string"
+        ],
+        "Cluster": [
+          "interface",
+          "confidence: number | null",
+          "id: string",
+          "kind: 'asserted' | 'found'",
+          "members: Array<string>"
+        ],
+        "ClusterMembership": [
+          "interface",
+          "cluster: string",
+          "kind: 'asserted' | 'found'",
+          "thing: string",
+          "weight: number"
+        ],
+        "clustersOf": [
+          "value: (graph: GraphSpecCheck.Graph, kind?: 'asserted' | 'found') => { clusters: GraphSpecCheck.Cluster[]; memberships: GraphSpecCheck.ClusterMembership[]; }"
         ],
         "COMMENT_FIX": [
           "value: string"
@@ -3754,6 +3773,9 @@
         ],
         "lint": [
           "value: (text: string) => { trap: string; line: number; }[]"
+        ],
+        "louvain": [
+          "value: (n: number, links: readonly (readonly [number, number])[]) => number[]"
         ],
         "named": [
           "value: (digits: string) => string"
