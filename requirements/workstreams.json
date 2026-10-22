@@ -952,7 +952,9 @@
       "scale_expand_on_demand",
       "scale_facet_counts",
       "scale_explore_trail",
-      "scale_level_of_detail"
+      "scale_level_of_detail",
+      "scale_space_view",
+      "scale_space_painters"
     ]
   },
   "TM1": {

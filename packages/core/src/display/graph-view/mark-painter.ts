@@ -49,12 +49,13 @@ export type PainterMaker = (canvas: HTMLCanvasElement) => MarkPainter | null | P
 
 /**
  * The first painter `makers` can make for `canvas`, tried in order. A maker that fails or throws is passed over, so
- * a device that claims a feature it cannot give still gets a painter. Null only when none can paint at all.
+ * a device that claims a feature it cannot give still gets a painter. Null only when none can paint at all. The 3D
+ * view's painters (space-painter.ts) are picked the same way.
  */
-export async function pickPainter(
+export async function pickPainter<P extends { readonly kind: PainterKind } = MarkPainter>(
   canvas: HTMLCanvasElement,
-  makers: readonly PainterMaker[],
-): Promise<MarkPainter | null> {
+  makers: readonly ((canvas: HTMLCanvasElement) => P | null | Promise<P | null>)[],
+): Promise<P | null> {
   for (const make of makers) {
     try {
       const painter = await make(canvas);
@@ -151,7 +152,8 @@ function paintMark(ctx: CanvasRenderingContext2D, m: DrawMark, camera: Camera, p
     ctx.stroke();
     return;
   }
-  // an arrowhead: a triangle with its tip at (x, y), pointing along `angle` degrees
+  // an arrowhead: a triangle with its tip at (x, y), pointing along `angle` degrees; a board's marks are not painted yet
+  if (m.kind !== 'arrowhead') return;
   const turn = (m.angle * Math.PI) / 180,
     size = m.size * scale,
     tipX = sx(m.x),

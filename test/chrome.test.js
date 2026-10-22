@@ -2,7 +2,7 @@
 // its first page is open, with an empty list. So the list is asked again until a page is there.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { firstPage, removeProfile } from '../scripts/chrome.mjs';
+import { firstPage, portOf, removeProfile } from '../scripts/chrome.mjs';
 
 const noWait = async () => {};
 
@@ -36,5 +36,22 @@ describe('the profile of a headless Chrome, removed when it stops', () => {
     assert.doesNotThrow(() => removeProfile('/tmp/profile', failing('ENOTEMPTY')));
     assert.doesNotThrow(() => removeProfile('/tmp/profile', failing('EBUSY')));
     assert.throws(() => removeProfile('/tmp/profile', failing('EACCES')), { code: 'EACCES' });
+  });
+});
+
+describe("Chrome's DevTools port", () => {
+  const noWait = () => Promise.resolve();
+  test('is read from the file Chrome writes, once it is there, so two Chromes never share one', async () => {
+    let reads = 0;
+    const read = () => {
+      reads++;
+      if (reads < 3) throw new Error('ENOENT');
+      return '41234\n/devtools/browser/abc\n';
+    };
+    assert.equal(await portOf('/profile', { read, wait: noWait }), 41234);
+    assert.equal(reads, 3);
+  });
+  test('says so when Chrome never writes it', async () => {
+    await assert.rejects(portOf('/profile', { read: () => '', wait: noWait, tries: 3 }), /no DevTools port/);
   });
 });
