@@ -1,8 +1,9 @@
 // The text a thing is shown by in a drawing: chosen by one ranked rule, the same from Python (views.py, shown_text).
 'use strict';
 
-// The keys a thing's text is written under, first: the usual name keys, then the keys for wording.
+// The usual name keys a thing's text is written under, tried first.
 const NAME_KEYS = ['name', 'title', 'text', 'label'];
+// The common keys for wording, tried after the name keys.
 const WORDING_KEYS = ['statement', 'summary', 'heading', 'question', 'description'];
 // The most characters a box shows; longer text is cut at a word and ends in "…".
 const SHOWN_LIMIT = 80;
