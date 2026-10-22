@@ -373,7 +373,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - It shows its properties to read, and the inspector while the block is edited.
   - A thing's links are grouped by type and direction in words, each thing and link a choice. The trail has back and
     forward (§25).
-  - A thing's details offer Show only this and its neighbours, and the shortest path to another thing (§25).
+  - A thing's details offer Show only this and its neighbours, as a toggle, and the shortest path to another thing
+    (§25). Shown only, the few left are laid out again together (`regroup-motion.ts` glides them there).
   - Closing it, by button, Escape or a tap on empty space, clears the focus.
 - `rich-details.ts` — `RichDetails`, the rich parts of the details (§18).
   - A thing's text (when it holds Markdown) and its properties are rendered by Obsidian's `MarkdownRenderer`.

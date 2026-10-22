@@ -148,6 +148,7 @@ export class GraphView extends Lifecycle {
       viewport: () => this.viewport,
       size: () => this.viewportSize(),
       unfoldTo: (key, then) => !!this.switching?.unfoldTo(key, then),
+      switching: () => this.switching,
     });
     // the View menu's switches, under the bar with the rest that change the picture only (§25)
     if (this.o.switches)
@@ -306,14 +307,14 @@ export class GraphView extends Lifecycle {
     return playablePaths(this.o.reading, this.o.graph);
   }
 
-  /** The viewport's size to draw it at (viewport-size.ts). */
+  /** The viewport's size to draw it at (viewport-size.ts), kept as tall while regrouped. */
   private viewportSize() {
-    return viewportSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest);
+    return this.sel.held(viewportSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
   }
 
   /** The viewport's size to tell the zoom: none while hidden or not yet laid out, so the zoom keeps its view (§25). */
   private zoomSize() {
-    return zoomSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest);
+    return this.sel.held(zoomSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
   }
 
   /**

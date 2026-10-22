@@ -240,6 +240,8 @@ export const OBSIDIAN = {
       .find((b) => b.textContent.includes(word('details.show-only')))
       .click();
     assert.ok(el.querySelector('.thoughtknot-untangle'), 'the banner');
+    // laid out again with only them (untangle_regroup): tablet is no neighbour, so it goes
+    await until(() => !el.querySelector('g.node[data-key="tablet"]'));
     return { env, el };
   },
   'a card in full screen': async () => {

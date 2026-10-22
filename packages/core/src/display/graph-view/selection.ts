@@ -22,6 +22,7 @@ import type { DetailsPanel } from './details-panel';
 import { Glide, stepName } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DrawingMarks, focusTargetOf, sameTarget } from './focus-marks';
+import { Regrouping } from './regroup';
 import { Highlight } from './hover';
 import { scrollNote } from './placement';
 import { SelectionPointer } from './selection-pointer';
@@ -29,6 +30,7 @@ import type { Taps, Target } from './taps';
 import { UntangleView } from './untangle';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
+import type { ViewSwitching } from './view-switches';
 
 /** What the selection needs of its card, given late because the card builds them after it. */
 export interface SelectionHost {
@@ -47,6 +49,8 @@ export interface SelectionHost {
    * Opens the folds a thing is hidden in (§25), to go to it once the drawing is laid out again; false when none hides it.
    */
   unfoldTo?: (key: string, then: () => void) => boolean;
+  /** The View menu, which lays the graph out again with a thing and its neighbours together (untangle_regroup). */
+  switching?: () => ViewSwitching | null;
 }
 
 /**
@@ -82,11 +86,13 @@ export class Selection {
   private kept = 0;
   private glide: Glide | null = null;
   private readonly arrow: SelectionPointer;
+  private readonly regrouping: Regrouping;
 
   /** Builds the untangling's parts at the end of what `root` holds so far, and the highlight of its links. */
   constructor(root: HTMLElement, o: ViewOptions, host: SelectionHost) {
     this.o = o;
     this.host = host;
+    this.regrouping = new Regrouping({ ...host, switching: () => host.switching?.() ?? null });
     this.arrow = new SelectionPointer(host.viewport, () => this.came('shown', () => this.inSight()));
     this.untangle = new UntangleView(root, {
       drawing: host.drawing() ?? { graph: o.graph, boxes: [], links: [], estimates: [] },
@@ -97,6 +103,7 @@ export class Selection {
       go: (key) => this.goTo(key, false),
       // a view saved as shown opens with its legend's choices (§25, untangle_legend)
       legend: o.view?.shown?.legend,
+      regroup: (only) => this.regrouping.to(only),
     });
     this.layers = this.untangle.layers(null);
     this.hover = new Highlight(this.untangle.edges, () => this.hotChanged());
@@ -106,6 +113,7 @@ export class Selection {
   actions(): ThingActions & NavActions {
     return {
       showOnly: (k) => this.untangle.showOnly(k),
+      shownOnly: () => this.untangle.shownOnly(),
       routeFrom: (k) => this.untangle.routeFrom(k),
       choose: (step) => this.bring(step),
       sheetMoved: () => this.inSight(),
@@ -127,6 +135,11 @@ export class Selection {
   /** How the card is shown now, for a view's Save as shown: its view, what is selected and the legend's choices (§7, §25). */
   shownNow(view: View, selected: string | null): { view: View; selected: string | null; legend: LegendChoice[] } {
     return { view, selected, legend: this.untangle.legendChoices() };
+  }
+
+  /** A size for the card, kept as tall as it was while a thing and its neighbours are regrouped (untangle_regroup). */
+  held(size: Size): Size {
+    return this.regrouping.held(size);
   }
 
   /** A box or link was opened: it is the selection, and so the focus; and it is brought into view as it came (`How`). */
@@ -251,6 +264,8 @@ export class Selection {
     this.layers = this.untangle.layers(kept);
     this.shownHot = this.hover.hot();
     this.drawn()?.all({ ...this.layers, hot: this.shownHot });
+    // the details are built after the selection, so the first refresh comes before them
+    (this.host.details() as DetailsPanel | undefined)?.untangled(this.untangle.shownOnly());
   }
 
   /** Only the highlight changed: marks just the boxes and links it was on and is on now, over the layers as they stand. */

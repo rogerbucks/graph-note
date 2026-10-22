@@ -50,15 +50,34 @@ describe('show only a thing and its neighbours', () => {
   });
   after(() => env.uninstall());
 
+  const details = () => el.querySelector('.thoughtknot-details');
+  const drawnKeys = () =>
+    el
+      .querySelectorAll('g.node[data-key]')
+      .map((g) => g.getAttribute('data-key'))
+      .sort();
+  const drawnLinks = () =>
+    el
+      .querySelectorAll('g.edge')
+      .map((g) => g.getAttribute('data-link'))
+      .sort();
+
   test('the details of a thing offer it', () => {
-    const offer = withText(el.querySelector('.thoughtknot-details'), 'button', 'Show only this and its neighbours');
+    const offer = withText(details(), 'button', 'Show only this and its neighbours');
     assert.ok(offer);
   });
 
   test('it filters the drawing to the thing and what is within a step, hiding the rest and their links', () => {
-    withText(el.querySelector('.thoughtknot-details'), 'button', 'Show only this and its neighbours').click();
+    withText(details(), 'button', 'Show only this and its neighbours').click();
     assert.deepEqual(keys(el, 'thoughtknot-hidden'), ['island', 'tablet']);
     assert.deepEqual(links(el, 'thoughtknot-hidden'), ['1', '3']);
+  });
+
+  test('then lays out only them, so they sit together, each link drawn as itself (untangle_regroup)', async () => {
+    await until(() => !thing(el, 'island'));
+    assert.deepEqual(drawnKeys(), ['eyes', 'large', 'q']);
+    assert.deepEqual(drawnLinks(), ['0', '2']);
+    assert.ok(thing(el, 'large').hasClass('is-selected'), 'the thing stays selected');
   });
 
   test('a banner names the filter and offers a step back to the whole graph', () => {
@@ -67,21 +86,52 @@ describe('show only a thing and its neighbours', () => {
     assert.ok(withText(banner(el), 'button', 'Show the whole graph'));
   });
 
-  test('the step back shows everything again', () => {
+  test('the button is a toggle: pressed again, it lays the whole graph out again (untangle_toggle)', async () => {
+    const again = withText(details(), 'button', 'Show the whole graph');
+    assert.ok(again, 'it says what pressing it again does');
+    again.click();
+    await until(() => !!thing(el, 'island'));
+    assert.deepEqual(drawnKeys(), ['eyes', 'island', 'large', 'q', 'tablet']);
+    assert.deepEqual(keys(el, 'thoughtknot-hidden'), []);
+    assert.doesNotMatch(said(el), /Showing only/);
+    assert.ok(withText(details(), 'button', 'Show only this and its neighbours'));
+  });
+
+  test('the step back shows everything again', async () => {
+    withText(details(), 'button', 'Show only this and its neighbours').click();
+    await until(() => !thing(el, 'island'));
     withText(banner(el), 'button', 'Show the whole graph').click();
+    await until(() => !!thing(el, 'island'));
     assert.deepEqual(keys(el, 'thoughtknot-hidden'), []);
     assert.deepEqual(links(el, 'thoughtknot-hidden'), []);
     assert.doesNotMatch(said(el), /Showing only/);
   });
 
-  test('two steps reach further, chosen from the banner', () => {
-    withText(el.querySelector('.thoughtknot-details'), 'button', 'Show only this and its neighbours').click();
+  test('two steps reach further, chosen from the banner, and are laid out together too', async () => {
+    withText(details(), 'button', 'Show only this and its neighbours').click();
+    await until(() => !thing(el, 'tablet'));
     withText(banner(el), 'button', 'Widen to two steps').click();
     assert.match(said(el), /within 2 steps of it/);
-    assert.deepEqual(keys(el, 'thoughtknot-hidden'), ['island']);
+    await until(() => !!thing(el, 'tablet'));
+    assert.deepEqual(drawnKeys(), ['eyes', 'large', 'q', 'tablet']);
     withText(banner(el), 'button', 'Narrow to one step').click();
-    assert.deepEqual(keys(el, 'thoughtknot-hidden'), ['island', 'tablet']);
+    await until(() => !thing(el, 'tablet'));
     withText(banner(el), 'button', 'Show the whole graph').click();
+    await until(() => !!thing(el, 'island'));
+  });
+
+  test('the zoom it had before comes back with the whole graph', async () => {
+    labelled(el, 'Zoom in').click();
+    labelled(el, 'Zoom in').click();
+    const svg = el.querySelector('svg'),
+      vp = el.querySelector('.thoughtknot-viewport'),
+      was = [svg.getAttribute('width'), vp.cssProps['--thoughtknot-x']];
+    withText(details(), 'button', 'Show only this and its neighbours').click();
+    await until(() => !thing(el, 'island'));
+    assert.notEqual(svg.getAttribute('width'), was[0], 'the few left are fitted to the card');
+    withText(details(), 'button', 'Show the whole graph').click();
+    await until(() => !!thing(el, 'island'));
+    assert.deepEqual([svg.getAttribute('width'), vp.cssProps['--thoughtknot-x']], was);
   });
 
   test('the setting for how far focus reaches starts it at two steps', async () => {
@@ -90,6 +140,7 @@ describe('show only a thing and its neighbours', () => {
     tap(two, thing(two, 'large'));
     withText(two.querySelector('.thoughtknot-details'), 'button', 'Show only this and its neighbours').click();
     assert.match(said(two), /within 2 steps of it/);
+    await until(() => !thing(two, 'island')); // laid out together before the card goes
   });
 });
 
