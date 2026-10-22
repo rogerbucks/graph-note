@@ -141,7 +141,7 @@ export function blockMarks({ shape, space }: DiagramGiven): DrawMark[] {
       { kind: 'link', id: `link\n${i}`, style: 'link', points, from: l.from, to: l.to, role: 'link', name, z: -1 },
       {
         kind: 'arrowhead',
-        id: `link\n${i}\narrow`,
+        id: `arrowhead\n${i}`,
         style: 'link',
         x: x1,
         y: y1,
