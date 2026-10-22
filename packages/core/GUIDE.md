@@ -781,6 +781,7 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 - `plan-view.ts` — a project plan: a row for each thing, and a bar from its start date to its end date.
 - `centroid-view.ts` — each cluster as one circle with its members round it, and one line for the links between two.
 - `containment-view.ts` — each part drawn inside each of its wholes, by links such as PART_OF and CONTAINS.
+- `view-scaffold.ts` — what a complete view needs. Each field a thing lacks is drawn as a prompt; filling it is capture.
 
 ### Views (spec §2, §7)
 
