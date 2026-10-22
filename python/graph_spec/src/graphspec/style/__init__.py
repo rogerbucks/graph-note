@@ -8,4 +8,5 @@ style blocks, the nudges, arrowheads hidden, properties shown and links moved, w
 layout source, which diagram types fit a graph and how each is laid out, and what a View menu folds
 and merges, written into the source last when asked (untangle_hubs, untangle_groups,
 untangle_merge, untangle_routing); and the legend's choices a view was saved as shown with, and
-what they bring forward and hide (untangle_legend)."""
+what they bring forward and hide (untangle_legend). Also Graphviz's layout read as drawing marks,
+the picture format every diagram type gives back (plugin_interface)."""
