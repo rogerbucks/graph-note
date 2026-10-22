@@ -236,6 +236,7 @@ export class Zoom {
     const s = held(this.scale, this.content, viewport),
       r = s / this.scale,
       [mx, my] = [viewport.width / 2, viewport.height / 2];
+    if (s === this.scale) return this.place(s, this.x, this.y); // kept exactly, with no rounding
     this.place(s, mx - (mx - this.x) * r, my - (my - this.y) * r);
   }
 
