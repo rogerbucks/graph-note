@@ -940,8 +940,19 @@
       "scale_design",
       "scale_limits_revisited",
       "scale_benchmark",
-      "scale_level_of_detail",
-      "scale_in_parts"
+      "scale_groups",
+      "scale_layout_cache",
+      "scale_overview",
+      "scale_painters",
+      "scale_gpu_painters",
+      "scale_progressive",
+      "scale_layout_static",
+      "scale_filter_live",
+      "scale_search_fly",
+      "scale_expand_on_demand",
+      "scale_facet_counts",
+      "scale_explore_trail",
+      "scale_level_of_detail"
     ]
   },
   "TM1": {
@@ -987,6 +998,13 @@
       "cycles_allowed_flagged",
       "derivations_need_no_upkeep",
       "centroids_correct_first"
+    ]
+  },
+  "Z2": {
+    "title": "Massive graphs read in parts",
+    "size": "M",
+    "requirements": [
+      "scale_in_parts"
     ]
   }
 }
