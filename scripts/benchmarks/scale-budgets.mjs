@@ -16,6 +16,11 @@ export const SCALE_BUDGETS = {
   // the groups a massive graph opens as (scale_groups): about 6 ms, 0.13 s and 1 s. Past the read limit they are found
   // on copies of the V-10 drawing, as the reader refuses the text
   group: { 1: { ms: 100, mb: 20 }, 10: { ms: 800, mb: 50 }, 100: { ms: 5000, mb: 100 } },
+  // the overview as marks, and its index of where they are (scale_overview): about 5 ms, 8 ms and 57 ms
+  overview: { 1: { ms: 50, mb: 20 }, 10: { ms: 50, mb: 20 }, 100: { ms: 300, mb: 50 } },
+  // the slowest of 61 frames, the first with the whole overview on screen: about 0.3 ms, 1.5 ms and 14 ms. A frame
+  // must stay under 16 ms to be smooth; the budget leaves room for a slower runner, and the renderer culls the rest
+  pan: { 1: { ms: 10, mb: 5 }, 10: { ms: 16, mb: 5 }, 100: { ms: 50, mb: 20 } },
   // 1×: a note set on one thing and the note read again, about 0.7 s. 10× and 100×: refused, after reading the block
   edit: { 1: { ms: 2500, mb: 50 }, 10: { ms: 1200, mb: 20 }, 100: { ms: 12_000, mb: 20 } },
 };

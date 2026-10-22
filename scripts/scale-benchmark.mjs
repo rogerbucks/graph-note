@@ -22,6 +22,8 @@ import { gqlBlocks } from '../packages/core/src/blocks.ts';
 import { readNote } from '../packages/core/src/drawing.ts';
 import { LAYOUT_LIMITS, tooLarge } from '../packages/core/src/layout-limits.ts';
 import { setNote } from '../packages/core/src/note-edit.ts';
+import { MarkIndex } from '../packages/core/src/mark-index.ts';
+import { overviewOf } from '../packages/core/src/overview.ts';
 import { groupsOf } from '../packages/core/src/scale-groups.ts';
 import { SCALE_BUDGETS } from './benchmarks/scale-budgets.mjs';
 import { NOTE } from './make-huge-graph.mjs';
@@ -74,16 +76,42 @@ export const STEPS = {
     // past the read limit, the groups are found on copies of the V-10 drawing, made outside the time taken
     const made = drawing ?? copied(times);
     const start = performance.now();
-    const { groups } = groupsOf(made);
+    const grouping = groupsOf(made);
     const ms = performance.now() - start;
+    const { groups } = grouping;
     const most = Math.max(...groups.map((g) => g.keys.length));
     return {
       outcome: `done: ${groups.length} groups, the largest ${most} things${drawing ? '' : ', on copies not read'}`,
       ms,
+      grouping,
     };
   },
-  pan() {
-    return { outcome: 'not built: the overview (way E, step 4)' };
+  overview({ grouping }) {
+    if (!grouping) return { outcome: 'not built: nothing was grouped' };
+    const overview = new MarkIndex(overviewOf(grouping));
+    return { outcome: `done: ${overview.marks.length} marks`, overview };
+  },
+  pan({ overview }) {
+    if (!overview) return { outcome: 'not built: no overview' };
+    // a screen of 1600 by 1000 pixels: the whole overview fitted to it, then 60 frames panned across it zoomed in four
+    // times. The time is the slowest frame's, as the slowest frame is the one a person sees stutter.
+    const { width, height } = marksSpace(overview);
+    const fit = Math.min(1600 / width, 1000 / height);
+    let slowest = 0,
+      drawn = 0;
+    for (let f = 0; f <= 60; f++) {
+      const scale = f === 0 ? fit : fit * 4;
+      const view = { width: 1600 / scale, height: 1000 / scale };
+      const along = f === 0 ? 0 : f / 60;
+      const start = performance.now();
+      const shown = overview.visible(
+        { x: along * (width - view.width), y: along * (height - view.height), ...view },
+        scale,
+      );
+      slowest = Math.max(slowest, performance.now() - start);
+      drawn = Math.max(drawn, shown.length);
+    }
+    return { outcome: `done: at most ${drawn} marks a frame`, ms: slowest };
   },
   edit({ block }) {
     const first = block.match(/^\((\w+)[:\s)]/m)?.[1];
@@ -94,6 +122,18 @@ export const STEPS = {
     return { outcome: reading.tooLarge ? `refused: over the read limit on ${reading.tooLarge.limit}` : 'done' };
   },
 };
+
+/** The space the overview's marks fill. */
+function marksSpace(index) {
+  let width = 0,
+    height = 0;
+  for (const m of index.marks)
+    if (m.kind === 'group') {
+      width = Math.max(width, m.x + m.width);
+      height = Math.max(height, m.y + m.height);
+    }
+  return { width: Math.max(1, width), height: Math.max(1, height) };
+}
 
 /** A drawing of `times` copies of the V-10 drawing, made without reading them, for the steps after reading. */
 function copied(times) {
