@@ -18,10 +18,14 @@ class Graph {
       (this._in.get(e[2]) || this._in.set(e[2], []).get(e[2])).push(e);
     }
   }
+  // the nodes with `label`, in the graph's order; each label's are found in one pass, the first time any is asked for
   labelled(label) {
-    const o = [];
-    for (const [i, [labels]] of this.nodes) if (labels.has(label)) o.push(i);
-    return o;
+    if (!this._labelled) {
+      this._labelled = new Map();
+      for (const [i, [labels]] of this.nodes)
+        for (const l of labels) (this._labelled.get(l) || this._labelled.set(l, []).get(l)).push(i);
+    }
+    return [...(this._labelled.get(label) || [])];
   }
   p(i) {
     return this.nodes.has(i) ? this.nodes.get(i)[1] : {};

@@ -14,13 +14,16 @@ import type { Palette } from './palette.ts';
  * (toFixed rounds ties away from zero, so 0.125 would be 0.13 here and 0.12 in Python.)
  */
 export function fixed(x: number, digits: number): string {
+  const sign = x < 0 || Object.is(x, -0) ? '-' : '';
+  // toFixed rounds the exact value too, but for a tie: one is exactly between, when x times 2^(digits + 1) is odd
+  const twice = Math.abs(x) * 2 ** (digits + 1);
+  if (Math.abs(x) < 1e21 && !(Number.isInteger(twice) && twice % 2 === 1)) return sign + Math.abs(x).toFixed(digits);
   const [whole = '0', frac = ''] = Math.abs(x).toFixed(100).replace(/0+$/, '').split('.');
   const keep = frac.slice(0, digits).padEnd(digits, '0'),
     rest = frac.slice(digits);
   const last = Number((digits ? keep : whole).slice(-1));
   const up = rest > '5' || (rest === '5' && last % 2 === 1);
   const n = (BigInt(whole + keep) + (up ? 1n : 0n)).toString().padStart(digits + 1, '0');
-  const sign = x < 0 || Object.is(x, -0) ? '-' : '';
   return sign + (digits ? `${n.slice(0, -digits)}.${n.slice(-digits)}` : n);
 }
 
@@ -89,7 +92,7 @@ export function themed(svg: string, kinds: string[], readings: string[], palette
     return style.length ? tag.replace(' ', ` style="${style.join(';')}" `) : tag;
   });
   // taken out until none is left: one pass could join the pieces round a removed part into a new one
-  svg = removeAll(svg, /<\?xml[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>|<!--[\s\S]*?-->|<title>[\s\S]*?<\/title>/g);
+  svg = removeAll(svg, /<\?xml[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>|<!--[\s\S]*?-->|<title>[\s\S]*?<\/title>/g, LEFT);
   const m = /<svg width="([\d.]+)pt" height="([\d.]+)pt"/.exec(svg);
   if (m)
     svg = svg.replace(
@@ -99,12 +102,11 @@ export function themed(svg: string, kinds: string[], readings: string[], palette
   // a palette that carries its own colours puts its style sheet first inside the drawing, where every shape sees it
   if (palette.style) svg = svg.replace(/(<svg\b[^>]*>)/, `$1\n<style>${palette.style}</style>`);
   // an HTML block in Markdown ends at a blank line, and an indented line can read as code — so neither may appear
-  return svg
-    .split(/\r\n|\r|\n/)
-    .map((l) => l.trim())
-    .filter((l) => l)
-    .join('\n');
+  return svg.replace(/\s*(?:\r\n|\r|\n)\s*/g, '\n').trim();
 }
+
+/** Whether a part `themed` takes out may be left: the start of one, found faster than the part itself. */
+const LEFT = /<\?xml|<!DOCTYPE|<!--|<title>/;
 
 /** The colour attributes a shape is painted by, each with the pattern that finds its placeholder colour. */
 const PAINTS: [string, RegExp][] = [

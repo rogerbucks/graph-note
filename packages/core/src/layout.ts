@@ -35,12 +35,12 @@ export function layoutSource(d: GraphDrawing, rankdir: 'LR' | 'TB'): LayoutSourc
 /**
  * The source the drawing is laid out from: the layout source, with estimated links (spec §3) drawn dashed. They are
  * marked with a warning sign and the word "estimated", so a guess is never shown by line style alone. With no estimates
- * it is the layout source exactly, as graph_svg.py writes it.
+ * it is the layout source exactly, as graph_svg.py writes it. `laid` is the layout source, when it is made already.
  */
-export function drawingSource(d: GraphDrawing, rankdir: 'LR' | 'TB'): string {
-  const lines = layoutSource(d, rankdir).source.split('\n');
+export function drawingSource(d: GraphDrawing, rankdir: 'LR' | 'TB', laid = layoutSource(d, rankdir)): string {
   const estimates = d.estimates ?? [];
-  if (!estimates.length) return lines.join('\n');
+  if (!estimates.length) return laid.source;
+  const lines = laid.source.split('\n');
   const guess = (reading: string) =>
     `label="⚠ ${GraphLayout.escape(reading)} (estimated)", color="#0000fc", fontcolor="#0000fe", style="dashed"`;
   const edgeLines = lines.flatMap((l, i) => (/^ {2}"[^"]*" -> "[^"]*" \[label=/.test(l) ? [i] : []));
