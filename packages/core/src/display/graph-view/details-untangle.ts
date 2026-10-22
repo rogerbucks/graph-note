@@ -2,20 +2,28 @@
 // and the shortest path to another thing. For a busy hub, they offer folding or opening its links. Its box can be moved
 // too (§6). A graph drawn as a table (§15) has nothing to hide or bring forward, so there none of it is offered.
 import { word } from '@thoughtknot/core';
+import type { DiagramShown } from './type-strip';
 import type { ThingActions } from './untangle';
 
 /**
  * The offers for `key` in `el`, as buttons, if there is anything to offer them to (`on`). Move is offered too when the
- * card is given a way to (`move`). It picks the box up, to move it from the keyboard (§6, move_box_keyboard).
+ * card is given a way to (`move`). It picks the box up, to move it from the keyboard (§6, move_box_keyboard). In a
+ * radial drawing (`diagram`), Put in the centre is offered too.
  */
 export function untangleOffers(
   el: HTMLElement,
   key: string,
   on: ThingActions | undefined,
   move?: (key: string) => void,
+  diagram?: DiagramShown,
 ): void {
   if (!on) return;
   const row = el.createDiv({ cls: 'thoughtknot-untangle-offers' });
+  // a radial drawing laid out again around this thing, if it is not the centre already (§15, radial_centre_pick)
+  if (diagram?.putCentre && diagram.centre && diagram.centre.key !== key)
+    row
+      .createEl('button', { text: word('details.centre'), attr: { type: 'button' } })
+      .addEventListener('click', () => diagram.putCentre?.(key));
   if (move)
     row
       .createEl('button', { text: word('details.move'), attr: { type: 'button' } })

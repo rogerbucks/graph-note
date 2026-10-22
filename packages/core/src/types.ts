@@ -100,6 +100,9 @@ function treeAlong(shape: GraphShape, type: string, text: (k: string) => string)
 const no = (type: DiagramType, why: string): TypeFit => ({ type, fits: false, why });
 const yes = (type: DiagramType): TypeFit => ({ type, fits: true });
 
+/** What a type is judged and planned by, beyond its relationship: a timeline's choices and a radial drawing's centre. */
+type Chosen = TimelineChoice & Pick<Diagram, 'centre'>;
+
 /** Whether a timeline fits (timeline_fits): it does while it has a thing to show. */
 function timelineFit(shape: GraphShape, choice: TimelineChoice): TypeFit {
   if (timelineShown(shape, choice.show).length) return yes('timeline');
@@ -124,15 +127,21 @@ function treeFit(shape: GraphShape, relationship: string | undefined, text: (k: 
   return no('tree', word('diagram.tree.none', { relationship: most, why: treeAlong(shape, most, text) ?? '' }));
 }
 
+/** A radial drawing's centre: the thing chosen, while the drawing holds it (radial_centre_chosen), else `centreOf`. */
+function radialCentre(shape: GraphShape, chosen?: string): string {
+  return chosen !== undefined && shape.things.some((t) => t.key === chosen) ? chosen : centreOf(shape);
+}
+
 /**
  * Whether a radial drawing fits. It needs three things or more, every one joined to the centre, whichever way its links
- * run. No group may be written, as Graphviz's radial layout cannot draw a group's box.
+ * run. The centre is the thing chosen, if any. No group may be written, as Graphviz's radial layout cannot draw a
+ * group's box.
  */
-function radialFit(shape: GraphShape, text: (k: string) => string): TypeFit {
+function radialFit(shape: GraphShape, text: (k: string) => string, chosen?: string): TypeFit {
   if (shape.things.length < 3) return no('radial', word('diagram.radial.three'));
   const group = shape.groups?.[0];
   if (group) return no('radial', word('diagram.radial.group', { group: group[0] }));
-  const centre = centreOf(shape),
+  const centre = radialCentre(shape, chosen),
     near = new Map<string, string[]>();
   for (const l of shape.links) {
     near.set(l.from, [...(near.get(l.from) ?? []), l.to]);
@@ -172,7 +181,7 @@ function lanesFit(shape: GraphShape): TypeFit {
  * show, as `timeline` chooses (timeline_fits). A network fits every graph, and with nothing to draw only a network is
  * offered.
  */
-export function typeFits(shape: GraphShape, relationship?: string, timeline: TimelineChoice = {}): TypeFit[] {
+export function typeFits(shape: GraphShape, relationship?: string, timeline: Chosen = {}): TypeFit[] {
   if (!shape.things.length)
     return DIAGRAM_TYPES.map((t) => (t === 'network' ? yes(t) : no(t, word('diagram.nothing'))));
   const texts = new Map(shape.things.map((t) => [t.key, t.text]));
@@ -189,7 +198,7 @@ export function typeFits(shape: GraphShape, relationship?: string, timeline: Tim
       : loop
         ? no('flow', word('diagram.flow.loops', { loop: loop.map(text).join(' → ') }))
         : yes('flow'),
-    radialFit(shape, text),
+    radialFit(shape, text, timeline.centre),
     lanesFit(shape),
     timelineFit(shape, timeline),
     yes('table'),
@@ -242,11 +251,11 @@ export function chosenDiagram(style: Pick<StyleGraph, 'diagrams'>, view?: string
 }
 
 /** How Graphviz lays a fitting type out (graph-layout.js, `typedSource`); none for a network or a table. */
-function planOf(fit: TypeFit, shape: GraphShape, timeline: TimelineChoice): DiagramPlan | undefined {
+function planOf(fit: TypeFit, shape: GraphShape, timeline: Chosen): DiagramPlan | undefined {
   if (fit.type === 'tree')
     return { type: 'tree', tree: shape.links.flatMap((l, i) => (l.type === fit.relationship ? [i] : [])) };
   if (fit.type === 'flow') return { type: 'flow' };
-  if (fit.type === 'radial') return { type: 'radial', centre: centreOf(shape) };
+  if (fit.type === 'radial') return { type: 'radial', centre: radialCentre(shape, timeline.centre) };
   if (fit.type === 'lanes') {
     const lanes = new Map<string, string[]>();
     for (const t of shape.things) lanes.set(t.kinds[0] as string, [...(lanes.get(t.kinds[0] as string) ?? []), t.key]);

@@ -37,6 +37,14 @@ export function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arr
 
 /** What a Diagram's relationship is for (§15): the branches of a tree, and nothing else. */
 export const treeOnly = () => word('styling.diagram.tree-only');
+/** What a Diagram's centre is for (§15, radial_centre_chosen): the middle of a radial drawing, and nothing else. */
+const radialOnly = () => word('styling.diagram.radial-only');
+
+/** Why a radial drawing's centre cannot be written for a Diagram of `type` so, or null (style-edit.ts). */
+export function centreRefusal(d: { type: string; centre?: string }): string | null {
+  if (d.centre !== undefined && d.type !== 'radial') return radialOnly();
+  return d.centre === '' ? word('editing.style.centre-name') : null;
+}
 /** What a Diagram's order, by and show are for (§15): a timeline, and nothing else. */
 export const timelineOnly = () => word('styling.diagram.timeline-only');
 /** What a Diagram's by is for (§15): a timeline ordered by date or by number. */
@@ -57,6 +65,7 @@ export function timelineRefusal(d: { type: string; order?: string; by?: string; 
  * The diagram type chosen, checked (§15, type_remembered). It is one of the types, in the whole graph or a view, whose
  * name is the user's own. For a tree, it names a relationship type the graph has, which no other type takes. For a
  * timeline, it may say how it is ordered, by which property, and what it shows (timeline_order, timeline_show).
+ * For a radial drawing, it names the thing at its centre, which no other type takes (radial_centre_chosen).
  */
 export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Diagram | null {
   const r = reader(raw, names, out),
@@ -72,12 +81,15 @@ export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Di
     ? 'network'
     : r.word('type', DIAGRAM_TYPES, (w) => word('styling.diagram.unknown', { written: w }));
   const relationship = r.name('relationship', names.types, aType()),
+    centre = r.name('centre', names.things, word('styling.what.thing'), word('styling.what.thing-id')),
     view = r.text('view');
   const order = r.word('order', TIMELINE_ORDERS, mustBe('order', TIMELINE_ORDERS)),
     by = r.text('by'),
     show = r.word('show', TIMELINE_SHOWS, mustBe('show', TIMELINE_SHOWS));
   if (type && relationship !== undefined && type !== 'tree')
     r.report(treeOnly(), word('styling.diagram.tree-only.fix'));
+  if (type && centre !== undefined && type !== 'radial')
+    r.report(radialOnly(), word('styling.diagram.radial-only.fix'));
   const timeline = [order, by, show].some((v) => v !== undefined);
   if (type && timeline && type !== 'timeline') r.report(timelineOnly(), word('styling.diagram.timeline-only.fix'));
   else if (by !== undefined && order !== 'date' && order !== 'number')
@@ -88,6 +100,7 @@ export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Di
     ...(plugin ? { plugin } : {}),
     ...inView(view),
     ...(relationship === undefined ? {} : { relationship }),
+    ...(centre === undefined ? {} : { centre }),
     ...(order === undefined ? {} : { order }),
     ...(by === undefined ? {} : { by }),
     ...(show === undefined ? {} : { show }),
