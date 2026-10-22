@@ -239,11 +239,22 @@ export async function renderViewBlock(
   };
   // the diagram types for this view (§15): choosing one writes it for the view alone.
   // A type a plug-in from outside adds is drawn by that plug-in, when one turned on adds it (outside-diagrams.ts).
+  // drawn as the diagram type looked at in reading view, if one is, never saved (§15, type_try_reading)
+  const at = { path: ctx.sourcePath, graph: v.graph, view: v.name };
+  const looked = plugin.tried.styleFor(at, drawing, style, g);
   const diagram = await withPicture(
     plugin.outside,
-    diagramShown(drawing, style, g, v.name, (change, done) => {
-      void writeStyle(plugin, ctx.sourcePath, v.graph, { diagram: change }, done);
-    }),
+    diagramShown(
+      drawing,
+      looked.style,
+      g,
+      v.name,
+      (change, done) => {
+        plugin.tried.forget(at); // saved: no longer only looked at
+        void writeStyle(plugin, ctx.sourcePath, v.graph, { diagram: change }, done);
+      },
+      looked.trying,
+    ),
     drawing,
     g,
     style.nudges,
@@ -251,7 +262,7 @@ export async function renderViewBlock(
   let drawn;
   // Styled as this view (§7, §14, §15). That is its nudges, and the properties, arrowheads, type and moving links
   // chosen for it or the whole graph. Folded as its View menu says (§25).
-  const styled = styledDrawing(drawing, style, g, v.name);
+  const styled = styledDrawing(drawing, looked.style, g, v.name);
   const laidOut = (by?: object) => plugin.layout(state.folded(styled), by);
   try {
     drawn = diagram.table
