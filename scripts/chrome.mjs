@@ -81,8 +81,9 @@ export function removeProfile(profile, remove = rmSync) {
  * - run runs a line of script in the page.
  * - resize sets a new width.
  * - stop ends it all.
+ * `flags` are more of Chrome's switches, such as those that let it paint with WebGL and WebGPU in software.
  */
-export async function startChrome({ chrome, width = 1400, height = 1000, scale = 2 } = {}) {
+export async function startChrome({ chrome, width = 1400, height = 1000, scale = 2, flags = [] } = {}) {
   const port = 9300 + Math.floor(Math.random() * 500);
   const profile = mkdtempSync(join(tmpdir(), 'thoughtknot-chrome-'));
   const browser = spawn(
@@ -90,11 +91,12 @@ export async function startChrome({ chrome, width = 1400, height = 1000, scale =
     [
       '--headless=new',
       '--no-sandbox',
-      '--disable-gpu',
+      ...(flags.length ? [] : ['--disable-gpu']),
       '--no-proxy-server',
       '--hide-scrollbars',
       `--user-data-dir=${profile}`,
       `--remote-debugging-port=${port}`,
+      ...flags,
       'about:blank',
     ],
     { stdio: 'ignore' },
