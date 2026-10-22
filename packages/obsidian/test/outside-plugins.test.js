@@ -6,6 +6,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { build, load, until } from './host/load-plugin.js';
+import { fakeDocument } from './host/fake-dom.js';
 import { installWorkers } from './host/workers.js';
 import { findsNetwork, read, sourceFiles } from '../../../test/repository/repo.js';
 
@@ -69,6 +70,29 @@ describe('plug-ins from outside, in Obsidian (plugin_outside_file)', () => {
       assert.match(sheet.text, /\.theme-dark\{--gn-plugin-example-sample-mark:#f0f0f0\}/);
       await tab.setControlValue('outside.sample.js', false);
       assert.deepEqual(doc.adoptedStyleSheets, []);
+    } finally {
+      plugin.onunload();
+      uninstall();
+    }
+  });
+
+  test('a pop-out window gets the colours too, opened before the plug-in starts or after (plugin_theme_tokens)', async () => {
+    const { tab, commands, app, plugin, uninstall } = await loaded();
+    // a pop-out window opened, as Obsidian tells it: its own document
+    const popout = () => {
+      const doc = fakeDocument();
+      app.workspace.tell('window-open', { doc }, doc.defaultView);
+      return doc;
+    };
+    try {
+      const before = popout();
+      await tab.setControlValue('outside.sample.js', true);
+      await until(() => commands().includes(HELLO));
+      const after = popout();
+      for (const doc of [before, after]) assert.match(doc.adoptedStyleSheets[0]?.text ?? '', /sample-mark:#1a1a1a/);
+      app.workspace.tell('window-close', { doc: before }, before.defaultView);
+      await tab.setControlValue('outside.sample.js', false);
+      assert.deepEqual(after.adoptedStyleSheets, []);
     } finally {
       plugin.onunload();
       uninstall();

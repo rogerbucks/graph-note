@@ -8,7 +8,8 @@
 // - its graph sources are read by a block written `· FROM sample:trip` (plugin_source_from);
 // - its diagram types draw a graph whose style graph chooses one (outside-diagrams.ts);
 // - its steps run from a step block that names one (step-block.ts);
-// - its own colours join the page as a sheet of their own, gone when it stops (plugin_theme_tokens).
+// - its own colours join the main window and every pop-out as a sheet of their own, until it stops
+//   (plugin_theme_tokens).
 // Its other points join as the host draws them.
 import { Notice, TFile } from 'obsidian';
 import type { Plugin } from 'obsidian';
@@ -74,14 +75,26 @@ export class OutsidePlugins {
   /** Each file running: its plug-in, the registry it is installed in, the commands it added, and what takes off its colours. */
   private readonly running = new Map<
     string,
-    { iso: IsolatedPlugin; registry: PluginRegistry; commands: string[]; unstyle: () => void }
+    { iso: IsolatedPlugin; registry: PluginRegistry; commands: string[]; unstyle: (() => void)[] }
   >();
+  /** The pop-out windows open, each by its document. */
+  private readonly popouts = new Set<Document>();
 
   constructor(
     private readonly owner: Plugin,
     private readonly store: TurnedOnStore,
     private readonly start: (body: string) => PluginPort = blobWorker,
-  ) {}
+  ) {
+    // a pop-out window opened gets the colours of each plug-in running; one closed is forgotten
+    const workspace = owner.app.workspace;
+    owner.registerEvent(
+      workspace.on('window-open', (win) => {
+        this.popouts.add(win.doc);
+        for (const r of this.running.values()) r.unstyle.push(adoptTokens(win.doc, r.registry.themeTokens()));
+      }),
+    );
+    owner.registerEvent(workspace.on('window-close', (win) => void this.popouts.delete(win.doc)));
+  }
 
   /** The plug-in files in the folder, by name. */
   files(): string[] {
@@ -190,7 +203,8 @@ export class OutsidePlugins {
     const commands = registry.commands().map((c) => c.id);
     for (const c of registry.commands())
       this.owner.addCommand({ id: c.id, name: c.title, callback: () => void registry.runCommand(c.id) });
-    const unstyle = adoptTokens(activeDocument, registry.themeTokens());
+    const tokens = registry.themeTokens();
+    const unstyle = [document, ...this.popouts].map((doc) => adoptTokens(doc, tokens));
     this.running.set(name, { iso, registry, commands, unstyle });
   }
 
@@ -247,7 +261,7 @@ export class OutsidePlugins {
     const r = this.running.get(name);
     if (!r) return;
     r.iso.stop();
-    r.unstyle();
+    for (const off of r.unstyle) off();
     for (const id of r.commands) this.owner.removeCommand(id);
     this.running.delete(name);
   }

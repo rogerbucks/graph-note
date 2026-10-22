@@ -113,7 +113,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   until the person turns it on. Turning one on keeps the file's SHA-256, and a file that changes after is turned off and
   said.
 - Each runs in a worker of its own, from a Blob of main.js's sealing bundle and then the file. Its commands join
-  Obsidian's while it runs. Its own colours join the page as a sheet of their own while it runs (plugin_theme_tokens).
+  Obsidian's while it runs. Its own colours join the main window and every pop-out as a sheet of their own while it
+  runs (plugin_theme_tokens).
   A link is fetched once with `requestUrl`, checked and kept in the folder, off.
 - Its graph sources are read by a block written `· FROM sample:trip` (plugin_source_from). `readGraph` asks the
   plug-in running that adds the source. With none on, the block says so.
