@@ -21,6 +21,11 @@ from graphspec.style.words import DIAGRAM_TYPES, DIRECTIONS, LOCKED, plugin_type
 # More things than this are too many to read in one drawing (§15, large_way_in). It was 50, far too
 # low (Roger, 22 Oct 2026); the editor draws up to 2,000.
 LARGE_GRAPH = 1000
+# Past this many things a graph is laid out quickly, in one direction (§11, large_drawn_quick), as
+# the core's render.ts QUICK_LAYOUT says.
+QUICK_LAYOUT = 300
+# Graphviz's quick settings, written after the source's first line (render.ts, QUICK_SETTINGS).
+QUICK_SETTINGS = "  graph [splines=line, nslimit=0.5, mclimit=0.05];"
 _NOTHING = "there is nothing here to draw"
 # The types tried, in order, when the chosen one stops fitting; the network fits always.
 _NEAREST = {
@@ -317,15 +322,20 @@ def diagram_for(
     return {"chosen": d["type"], "drawn": d["type"], **({"plan": plan} if plan else {})}
 
 
-def directions(direction: str | None = None, diagram: Mapping | None = None) -> list[str]:
+def directions(
+    direction: str | None = None, diagram: Mapping | None = None, things: int = 0
+) -> list[str]:
     """The directions a drawing is laid out in: only `direction`, when a direction nudge sets one
     the style lists (read_style gives it); else only its diagram type's (a plan, from
-    diagram_for), a tree down and the rest across; else every direction the style lists, in its
-    order — as the plugin's core chooses them (render.ts, directions)."""
+    diagram_for), a tree down and the rest across; else, for a graph of more than QUICK_LAYOUT
+    `things`, only the first the style lists (§11, large_drawn_quick); else every direction the
+    style lists, in its order — as the plugin's core chooses them (render.ts, directions)."""
     if direction and direction in DIRECTIONS:
         return [direction]
     if diagram:
         return [_TYPE_DIRECTION[diagram["type"]]]
+    if things > QUICK_LAYOUT:
+        return list(DIRECTIONS[:1])
     return list(DIRECTIONS)
 
 
