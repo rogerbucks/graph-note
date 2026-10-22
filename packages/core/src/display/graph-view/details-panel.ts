@@ -5,7 +5,7 @@
 // retraced (§25). In view mode, in a note's card, it is the sheet pinned to the foot of the screen (details-sheet.ts).
 import { isPhone } from '../host';
 import { Trail, details, linkDetails, linkGroups, linkInBlock, propertiesOf, thingSaid, word } from '@thoughtknot/core';
-import type { Estimate, TrailStep } from '@thoughtknot/core';
+import type { Clear, Estimate, TrailStep } from '@thoughtknot/core';
 import { renderProperties } from '../properties/properties';
 import { problemText } from './problems-list';
 import { showSuggested } from './suggested-name';
@@ -75,14 +75,25 @@ export class DetailsPanel {
       // the sheet is for view mode, in a note's card. Full screen and the pane show the details in their own place. A
       // panel kept open is in the card, beside or below the drawing, never pinned to the screen (§24)
       on: () => o.mode === 'note' && !o.editing?.()?.session && !o.aids?.detailsOpen,
+      paneable: () => o.mode === 'note' && !o.aids?.detailsOpen,
       close: () => this.close(),
       moved: () => this.actions?.sheetMoved(),
+      redraw: () => {
+        if (this.el.hidden || !this.shown) return false;
+        this.refresh();
+        return true;
+      },
     });
   }
 
   /** Where the details sheet's top is on the screen, or null when there is no sheet to keep the chosen thing clear of. */
   sheetTop(): number | null {
     return this.sheet.top();
+  }
+
+  /** How much of `viewport` the details sheet covers at each of its edges, wherever it sits (§25, sheet_docked). */
+  sheetCover(viewport: DOMRect): Clear {
+    return this.sheet.cover(viewport);
   }
 
   /** The window changed size (`resized`), or the note scrolled: the sheet, if open, is placed again. */

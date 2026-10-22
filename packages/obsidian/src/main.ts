@@ -45,6 +45,7 @@ import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
 import { TriedTypes } from './tried-types';
 import { GraphPane, PANE } from './pane';
+import { DETAILS_PANE, DetailsPaneView } from './details-pane';
 import { addForYou } from './editor';
 import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
@@ -73,6 +74,8 @@ interface Saved {
   aiSends?: SendRecord[];
   /** The plug-in files from outside the person turned on, each with its SHA-256 then (§54, plugin_outside_file). */
   outside?: Record<string, TurnedOn>;
+  /** Where a card's details were last put, how big and whether minimised (§25, sheet_layout_kept). */
+  detailsLayout?: unknown;
 }
 
 /** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
@@ -83,8 +86,15 @@ export default class ThoughtKnotPlugin extends Plugin {
   private schemas: Map<string, string[]> | null = null;
 
   override async onload(): Promise<void> {
-    installObsidianHost(); // the display layer draws in Obsidian from here on
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
+    // the display layer draws in Obsidian from here on, the details' layout kept with the plugin's data
+    installObsidianHost(this, {
+      saved: () => this.saved.detailsLayout,
+      save: (detailsLayout) => {
+        this.saved = { ...this.saved, detailsLayout };
+        void this.saveData(this.saved);
+      },
+    });
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
@@ -110,6 +120,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
     addCommands(this); // the shortcuts' (§44); nothing is sent to an AI or read from a database until Send or Import
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
+    this.registerView(DETAILS_PANE, (leaf) => new DetailsPaneView(leaf)); // a card's details, beside (§25)
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
     this.registerEditorExtension(graphBlocks(this));
