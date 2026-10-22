@@ -9,10 +9,11 @@ import { densityMarks } from './density-view.ts';
 import { egoMarks } from './ego-view.ts';
 import { forceMarks } from './force-view.ts';
 import { matrixMarks } from './matrix-view.ts';
+import { planMarks } from './plan-view.ts';
 import { treemapMarks } from './treemap-view.ts';
 
 /** The view types drawn as marks, in the order they are offered. */
-export const VIEW_TYPES = ['matrix', 'treemap', 'chord', 'ego', 'force', 'density', 'block'] as const;
+export const VIEW_TYPES = ['matrix', 'treemap', 'chord', 'ego', 'force', 'density', 'block', 'plan'] as const;
 /** One view type drawn as marks. */
 export type ViewType = (typeof VIEW_TYPES)[number];
 
@@ -25,4 +26,5 @@ export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]>
   force: (given) => forceMarks(given),
   density: (given) => densityMarks(given),
   block: blockMarks,
+  plan: planMarks,
 };
