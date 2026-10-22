@@ -1250,7 +1250,7 @@
           "value: (l: Landing, dragged: string, textOf: (key: string) => string) => string"
         ],
         "LARGE_GRAPH": [
-          "value: 50"
+          "value: 1000"
         ],
         "layered": [
           "value: (base: NoteStorage, ...layers: StorageLayer[]) => NoteStorage"
