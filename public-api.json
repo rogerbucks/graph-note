@@ -407,7 +407,7 @@
           "value: ThoughtKnotPlugin"
         ],
         "coreDiagrams": [
-          "value: (engine: MarksEngine) => ThoughtKnotPlugin"
+          "value: (engine?: MarksEngine) => ThoughtKnotPlugin"
         ],
         "coreDiagramType": [
           "value: (type: DiagramType) => string"
@@ -3330,6 +3330,9 @@
         "VIEW_SWITCHES": [
           "value: readonly ['labels', 'hubs', 'groups', 'merge']"
         ],
+        "VIEW_TYPES": [
+          "value: readonly ['matrix', 'treemap', 'chord', 'ego', 'force', 'density', 'block', 'plan', 'centroid', 'containment']"
+        ],
         "ViewArgs": [
           "interface",
           "kinds: { kinds: string[]; }",
@@ -3385,6 +3388,9 @@
         ],
         "ViewSwitches": [
           "type = { labels: boolean; hubs: boolean; groups: boolean; merge: boolean; }"
+        ],
+        "ViewType": [
+          "type = 'block' | 'matrix' | 'treemap' | 'chord' | 'ego' | 'force' | 'density' | 'plan' | 'centroid' | 'containment'"
         ],
         "WalkedPath": [
           "interface",
