@@ -37,13 +37,24 @@ interface MarkCommon {
   name?: string;
   /** What it stands for, for a screen reader. */
   role?: DrawMarkRole;
+  /** How wide its line is, when not the usual. */
+  lineWidth?: number;
+}
+
+/**
+ * The exact outline a layout drew a shape with: points, and whether they are a curve (a start, then sets of three). A
+ * painter may draw it for a perfect match, or draw the shape from its kind and box instead.
+ */
+export interface MarkOutline {
+  points: MarkPoint[];
+  curve?: boolean;
 }
 
 /** A mark: where it goes, as numbers, by kind. */
 export type DrawMark = MarkCommon &
   (
-    | { kind: 'box'; x: number; y: number; width: number; height: number; shape?: BoxShape }
-    | { kind: 'link'; points: MarkPoint[]; curve?: boolean; from?: string; to?: string }
+    | { kind: 'box'; x: number; y: number; width: number; height: number; shape?: BoxShape; outline?: MarkOutline }
+    | { kind: 'link'; points: MarkPoint[]; curve?: boolean; from?: string; to?: string; outline?: MarkOutline }
     | {
         kind: 'label';
         x: number;
@@ -52,9 +63,11 @@ export type DrawMark = MarkCommon &
         size: number;
         anchor: 'start' | 'middle' | 'end';
         maxWidth?: number;
+        /** The font's family, such as Helvetica, when the layout names one. */
+        font?: string;
       }
-    | { kind: 'arrowhead'; x: number; y: number; angle: number; size: number }
-    | { kind: 'group'; x: number; y: number; width: number; height: number }
+    | { kind: 'arrowhead'; x: number; y: number; angle: number; size: number; outline?: MarkOutline }
+    | { kind: 'group'; x: number; y: number; width: number; height: number; outline?: MarkOutline }
   );
 
 /** A box around marks: its corner, width and height. */
@@ -71,6 +84,22 @@ export const DRAW_MARK_LIMIT = 100_000;
 export const DRAW_TEXT_LIMIT = 500;
 
 const STYLE = /^[a-z][a-z0-9-]*(\.[a-z0-9-]+)*$/;
+const FONT = /^[A-Za-z][A-Za-z0-9 -]*$/;
+/** The most points one outline may hold. */
+const OUTLINE_LIMIT = 10_000;
+
+/** A copy of an outline, held to finite points, or null when it is not one. */
+function outlineOf(raw: unknown): MarkOutline | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const o = raw as Record<string, unknown>;
+  const points = Array.isArray(o.points) ? (o.points as unknown[]) : [];
+  const finite = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
+  const at = (p: unknown) => Array.isArray(p) && p.length === 2 && finite(p[0]) && finite(p[1]);
+  if (points.length < 2 || points.length > OUTLINE_LIMIT || !points.every(at)) return null;
+  if (o.curve === true && (points.length - 1) % 3 !== 0) return null;
+  const copied = points.map((p) => [...(p as MarkPoint)] as MarkPoint);
+  return { points: copied, ...(o.curve === true ? { curve: true } : {}) };
+}
 const ROLES: readonly string[] = ['thing', 'link', 'group', 'picture'];
 const ANCHORS: readonly string[] = ['start', 'middle', 'end'];
 
@@ -92,8 +121,12 @@ function drawMarkOf(raw: unknown, space: DiagramSpace): DrawMark | string {
   if (m.z !== undefined && !Number.isInteger(m.z)) return 'a mark whose order on top is not a whole number';
   if (m.role !== undefined && !ROLES.includes(m.role as string))
     return 'a mark whose role is not a thing, a link, a group or a picture';
+  if (m.lineWidth !== undefined && !size(m.lineWidth)) return 'a mark whose line width is not a size';
+  const outline = m.outline === undefined ? undefined : outlineOf(m.outline);
+  if (outline === null) return 'a mark whose outline is not finite points, or a curve of a start and sets of three';
+  const exact = outline ? { outline } : {};
   const common: MarkCommon = { id: m.id as string, style: m.style };
-  for (const k of ['of', 'group', 'name', 'z', 'role'] as const)
+  for (const k of ['of', 'group', 'name', 'z', 'role', 'lineWidth'] as const)
     if (m[k] !== undefined) Object.assign(common, { [k]: m[k] });
   const area = () => {
     const { x, y, width: w, height: h } = m;
@@ -105,10 +138,11 @@ function drawMarkOf(raw: unknown, space: DiagramSpace): DrawMark | string {
   if (m.kind === 'box' || m.kind === 'group') {
     if (!area()) return `a ${m.kind} outside the space it was given`;
     const rect = { ...place, width: m.width as number, height: m.height as number };
-    if (m.kind === 'group') return { ...common, kind: 'group', ...rect };
+    if (m.kind === 'group') return { ...common, kind: 'group', ...rect, ...exact };
     if (m.shape !== undefined && !(BOX_SHAPES as readonly unknown[]).includes(m.shape))
       return `a box whose shape is not one of ${BOX_SHAPES.join(', ')}`;
-    return { ...common, kind: 'box', ...rect, ...(m.shape === undefined ? {} : { shape: m.shape as BoxShape }) };
+    const shape = m.shape === undefined ? {} : { shape: m.shape as BoxShape };
+    return { ...common, kind: 'box', ...rect, ...shape, ...exact };
   }
   if (m.kind === 'link') {
     const points = Array.isArray(m.points) ? (m.points as unknown[]) : [];
@@ -123,7 +157,7 @@ function drawMarkOf(raw: unknown, space: DiagramSpace): DrawMark | string {
       ...(m.from === undefined ? {} : { from: m.from as string }),
       ...(m.to === undefined ? {} : { to: m.to as string }),
     };
-    return { ...common, kind: 'link', points: copied, ...(m.curve === true ? { curve: true } : {}), ...ends };
+    return { ...common, kind: 'link', points: copied, ...(m.curve === true ? { curve: true } : {}), ...ends, ...exact };
   }
   if (m.kind === 'label') {
     if (!inX(m.x) || !inY(m.y)) return 'a label outside the space it was given';
@@ -131,19 +165,22 @@ function drawMarkOf(raw: unknown, space: DiagramSpace): DrawMark | string {
     if (!size(m.size)) return 'a label with no text size';
     if (!ANCHORS.includes(m.anchor as string)) return 'a label not anchored at its start, middle or end';
     if (m.maxWidth !== undefined && !size(m.maxWidth)) return 'a label whose widest is not a size';
+    if (m.font !== undefined && (typeof m.font !== 'string' || !FONT.test(m.font) || m.font.length > 100))
+      return 'a label whose font is not a family name';
     const label = { ...place, text: m.text as string, size: m.size as number, anchor: m.anchor as 'start' };
     return {
       ...common,
       kind: 'label',
       ...label,
       ...(m.maxWidth === undefined ? {} : { maxWidth: m.maxWidth as number }),
+      ...(m.font === undefined ? {} : { font: m.font }),
     };
   }
   if (m.kind === 'arrowhead') {
     if (!inX(m.x) || !inY(m.y)) return 'an arrowhead outside the space it was given';
     if (typeof m.angle !== 'number' || !Number.isFinite(m.angle)) return 'an arrowhead with no angle';
     if (!size(m.size)) return 'an arrowhead with no size';
-    return { ...common, kind: 'arrowhead', ...place, angle: m.angle, size: m.size as number };
+    return { ...common, kind: 'arrowhead', ...place, angle: m.angle, size: m.size as number, ...exact };
   }
   return `a mark of the kind ${JSON.stringify(m.kind)}, which is not one of ${DRAW_MARK_KINDS.join(', ')}`;
 }

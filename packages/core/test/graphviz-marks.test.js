@@ -55,14 +55,14 @@ describe('Graphviz layout as marks (plugin_interface)', () => {
     assert.equal(marks.find((m) => m.id === 'l:e:["loan","borrower"]#0').text, 'owes');
   });
 
-  test('each arrowhead points along its link, at the end it is drawn at', () => {
+  test('each arrowhead points along its link, at the end it is drawn at, the tail first as Graphviz draws it', () => {
     const { marks } = laid(DOT);
     const heads = marks.filter((m) => m.kind === 'arrowhead').map((m) => m.id);
     assert.deepEqual(heads, [
       'head:e:["loan","borrower"]#0',
       'head:e:["loan","borrower"]#1',
-      'head:e:["borrower","rate"]#0',
       'tail:e:["borrower","rate"]#0',
+      'head:e:["borrower","rate"]#0',
     ]);
     // laid out left to right, so the heads point right and the tail of the two-way link points left
     const angle = (id) => marks.find((m) => m.id === id).angle;
@@ -96,6 +96,23 @@ describe('Graphviz layout as marks (plugin_interface)', () => {
       ],
     );
   });
+  test('how each mark looks is the token its stand-in colour stands for, never the colour', () => {
+    const dot = `digraph { bgcolor="transparent";
+      "a" [shape=box, style="rounded,filled", fillcolor="#000102", color="#000202", fontcolor="#0000fd", penwidth=1.2];
+      "b" [shape=box, style="dashed", color="#0000fe"];
+      "a" -> "b" [color="#000301", fontcolor="#000401", label="r", style=dashed]; }`;
+    const { marks } = laid(dot);
+    const style = (id) => marks.find((m) => m.id === id).style;
+    assert.equal(style('t:a'), 'kind.2');
+    assert.equal(style('l:t:a'), 'text');
+    assert.equal(style('t:b'), 'text.muted.outline.dashed');
+    assert.equal(style('e:["a","b"]#0'), 'reading.1.dashed');
+    assert.equal(style('head:e:["a","b"]#0'), 'reading.1');
+    assert.equal(style('l:e:["a","b"]#0'), 'reading.1.label');
+    assert.equal(marks.find((m) => m.id === 't:a').lineWidth.toFixed(2), '1.60', 'its line, 1.2 points, in pixels');
+    assert.ok(!marks.some((m) => m.id === 'background'), 'a transparent page has no background');
+  });
+
   test('a link drawn invisible is left out, with its arrowhead and label, and the next link keeps its id', () => {
     const dot = 'digraph { "a" -> "b" [style=invis, label="hidden"]; "a" -> "b"; }';
     const { marks } = laid(dot);

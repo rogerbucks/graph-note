@@ -723,7 +723,7 @@ A host that has the plug-in draws it (trust_diagram_type_data; `plugin-diagrams.
 #### Drawing marks: one picture format for every type
 
 `drawing-marks.ts` is the one format every diagram type will give back, the built-in ones too (plugin_interface). The
-built-in types move to it one at a time. Until then they still draw through Graphviz.
+built-in types give it too: Graphviz lays them out, and the engine reads that layout as marks (`engine.marks`).
 
 - A mark is a box, a link, a label, an arrowhead or a group. Each has numbers for where it goes and a style token for how
   it looks, such as `thing` or `link.dashed`. Never a colour, CSS or markup.
@@ -735,8 +735,20 @@ built-in types move to it one at a time. Until then they still draw through Grap
 - `drawMarksOf` checks and copies marks, refusing any with why. Every id must be its own, and every group named drawn.
 - `markBounds` and `marksBounds` give the box marks cover. `drawOrder` sorts by order on top.
 - `fromPluginMarks` turns a plug-in's boxes, lines and text into this format.
+- A shape may keep the exact `outline` it was laid out with, and any mark its `lineWidth`. A label may name its `font`.
+
+#### Graphviz's layout as marks
+
 - `graphviz-marks.ts` reads Graphviz's layout, as JSON, into marks (`layoutMarks`). It turns points from the bottom into
-  CSS pixels from the top, and names each link by the keys it joins and a count.
+  CSS pixels from the top, and names each link by the keys it joins and a count. It also keeps how Graphviz's own SVG
+  holds them: each part's id, class and title, in the order Graphviz writes them.
+- `graphviz-json.ts` holds Graphviz's JSON types, and the style token each stand-in colour stands for (`colourToken`).
+- `graphviz-svg.ts` writes the SVG from the marks (`layoutSvg`). It is the one Graphviz writes, part for part. The
+  tests hold it so for a drawing of each kind the core makes. So a host that draws marks draws what Graphviz drew.
+- The SVG shown is still Graphviz's own (`engine.render`). Reading the layout as JSON costs about twice the work, for
+  the same drawing. A host that draws marks itself asks for them.
+- When marks cannot give a drawing back exactly, they say so (`layout.lost`). That is a text Graphviz's JSON leaves
+  out, or a colour that is no stand-in.
 
 ### Views (spec §2, §7)
 
