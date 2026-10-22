@@ -58,3 +58,19 @@ cd packages/app/src-tauri && cargo run -- path/to/notes
 On Linux the build needs WebKitGTK 4.1 (`libwebkit2gtk-4.1-dev`). The tests in `test/` run with the rest of the
 JavaScript suite and need no Rust. `test/app-window.js` runs the built window in a DOM, over a real folder. The
 first-run journey (`test/repository/journey-app.js`) and the WCAG check (`test/wcag.test.js`) use it.
+
+## The real app, tested
+
+`test/standalone-app.test.js` starts the built app on a folder and drives it through tauri-driver. It lists the
+notes, opens one, draws it, writes an edit to disk, and checks that the window refuses any other address. It skips
+with one line where there is no app, driver or display.
+
+The desktop app workflow (`.github/workflows/desktop-app.yml`) builds the app and runs `cargo test` on Linux, macOS
+and Windows. On Linux it also runs that test under a virtual display. tauri-driver has no macOS driver, so macOS and
+Windows are built and tested, not driven.
+
+```
+cargo install tauri-driver --locked --version 2.1.0
+cd packages/app/src-tauri && cargo build && cd ../../..
+xvfb-run -a npm run test:ai -- test/standalone-app.test.js
+```
