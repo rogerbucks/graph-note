@@ -475,6 +475,8 @@ Confirmed 4 Oct 2026 — [[2026-10-04 Joining documents' graphs never overwrites
 
 - **Read plain — 11 Oct 2026.** The loan-balance figure must be computed from the reader's reading, held to the reference engine's answer by a test. [[2026-10-11 Grafeo is the compatibility reference, kept out of the graph-note chain.decision]]
 
+- **Trust on joined graphs — 22 Oct 2026.** A join may name each document's trust: own, trusted or untrusted. A document not named is untrusted. Claims from an untrusted source are flagged until a person accepts them. What only it states is a flagged row, left out and never contested. And only its owner can write under an id prefix. A thing under another's prefix is refused, naming the owner. [[2026-10-20 Trust on joined graphs, from the trust model review.decision]]
+
 ### 22. Paths and altitude — lifting and zooming through levels of detail
 
 Confirmed 5 Oct 2026 — [[2026-10-05 Paths are nodes, and altitude lets a reader lift and zoom through levels of detail.decision]]. Roger: *"§22 confirmed."* Conformance case: [[Altitude test — loan L3 at four altitudes]].

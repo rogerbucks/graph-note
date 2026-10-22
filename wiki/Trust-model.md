@@ -205,7 +205,9 @@ request that builds one of them proves its rule and updates this page.
 
 ### Trust on joined graphs
 
-For `spec_join_trust`, built in the mesh join (Wave 9).
+For `spec_join_trust`. Built 22 Oct 2026 in the join of both graph-spec libraries (`trust.js`, `trust.py`). So the
+mesh join (Wave 9) only has to name each peer's level. A join names each document's level as `trust`, and each prefix's
+owner as `prefix_owners`. What only an untrusted document states comes back as a row marked flagged.
 
 | Level | What it is | Counted? |
 |---|---|---|
