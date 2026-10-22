@@ -2,17 +2,14 @@
 // found patterns like these that took time growing with the square of the text's length. It also found tags taken out
 // in one pass, which can leave a new tag made of the pieces round each one removed.
 
-/**
- * The text with every match of `pattern` removed, again and again until none is left. `pattern` has the g flag. With
- * `left`, a quick test that finds the start of every match, a pass is made only while it finds one.
- */
-export function removeAll(text: string, pattern: RegExp, left?: RegExp): string {
+/** The text with every match of `pattern` removed, again and again until none is left. `pattern` has the g flag. */
+export function removeAll(text: string, pattern: RegExp): string {
   let before: string;
   let out = text;
   do {
     before = out;
     out = out.replace(pattern, '');
-  } while (out !== before && (!left || left.test(out)));
+  } while (out !== before);
   return out;
 }
 

@@ -92,7 +92,7 @@ export function themed(svg: string, kinds: string[], readings: string[], palette
     return style.length ? tag.replace(' ', ` style="${style.join(';')}" `) : tag;
   });
   // taken out until none is left: one pass could join the pieces round a removed part into a new one
-  svg = removeAll(svg, /<\?xml[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>|<!--[\s\S]*?-->|<title>[\s\S]*?<\/title>/g, LEFT);
+  svg = removeAll(svg, /<\?xml[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>|<!--[\s\S]*?-->|<title>[\s\S]*?<\/title>/g);
   const m = /<svg width="([\d.]+)pt" height="([\d.]+)pt"/.exec(svg);
   if (m)
     svg = svg.replace(
@@ -102,11 +102,12 @@ export function themed(svg: string, kinds: string[], readings: string[], palette
   // a palette that carries its own colours puts its style sheet first inside the drawing, where every shape sees it
   if (palette.style) svg = svg.replace(/(<svg\b[^>]*>)/, `$1\n<style>${palette.style}</style>`);
   // an HTML block in Markdown ends at a blank line, and an indented line can read as code — so neither may appear
-  return svg.replace(/\s*(?:\r\n|\r|\n)\s*/g, '\n').trim();
+  return svg
+    .split(/\r\n|\r|\n/)
+    .map((l) => l.trim())
+    .filter((l) => l)
+    .join('\n');
 }
-
-/** Whether a part `themed` takes out may be left: the start of one, found faster than the part itself. */
-const LEFT = /<\?xml|<!DOCTYPE|<!--|<title>/;
 
 /** The colour attributes a shape is painted by, each with the pattern that finds its placeholder colour. */
 const PAINTS: [string, RegExp][] = [
