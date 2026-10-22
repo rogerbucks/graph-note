@@ -128,5 +128,26 @@
         "reason": "Its Cachegrind counts the instructions the benchmarks take (scripts/instruction-counts.mjs). Running a GPL program is unrestricted (GPLv3 §2), the counts it writes are not a work covered by it, and nothing of it is copied, linked or shipped."
       }
     }
+  },
+  "desktopBuildLibraries": {
+    "about": "The one allowance for system libraries (spec §13, build_tool_licences; spec §41, standalone_app): what the desktop app builds against on Linux, and what its real-app test needs. Roger chose it on 22 Oct 2026 (PR #911). Each is installed by apt-get in the one job named, never by npm, never in node_modules, never bundled. None may be GPL: WebKitGTK is linked from the system at run time, as LGPL allows. Check the LGPL duties again before the first Linux package that bundles libraries, such as an AppImage. test/licences.test.js holds this.",
+    "job": "desktop-app.yml build",
+    "libraries": {
+      "libwebkit2gtk-4.1-dev": {
+        "licence": "LGPL-2.0-or-later",
+        "licenceSource": "https://webkitgtk.org/",
+        "reason": "WebKitGTK, the window Tauri draws on Linux. The app is built against its headers and loads it from the system at run time; nothing of it is copied in."
+      },
+      "webkit2gtk-driver": {
+        "licence": "LGPL-2.0-or-later",
+        "licenceSource": "https://webkitgtk.org/",
+        "reason": "WebKitGTK's WebDriver, which tauri-driver drives for test/standalone-app.test.js. Test only, never shipped."
+      },
+      "xvfb": {
+        "licence": "MIT",
+        "licenceSource": "https://gitlab.freedesktop.org/xorg/xserver/-/blob/master/COPYING",
+        "reason": "A virtual display, so the real-app test can open the app's window on a runner. Test only, never shipped."
+      }
+    }
   }
 }

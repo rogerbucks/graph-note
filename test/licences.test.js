@@ -14,6 +14,7 @@ import {
   bundledPackages,
   carriesWasm,
   ciOnlyProblems,
+  desktopLibraryProblems,
   licenceAllowed,
   lockedNames,
 } from './repository/licences.js';
@@ -220,8 +221,12 @@ describe('a GPL tool, allowed only where it runs in CI alone and is never shippe
     assert.equal(ciOnlyProblems(planted, lockedNames()).filter((p) => p.startsWith('valgrind')).length, 2);
   });
 
+  /** The desktop app's Linux libraries, by name, and the one job that may install them. */
+  const desktop = () => record().desktopBuildLibraries;
+  const isDesktopLibrary = ({ job, name }) => job === desktop().job && !!desktop().libraries[name];
+
   test('every package a workflow installs with apt-get is on the allowance, in exactly the jobs it names', () => {
-    const found = installs();
+    const found = installs().filter((i) => !isDesktopLibrary(i));
     for (const { job, name } of found) assert.ok(tools()[name], `${job} installs ${name}, not on the allowance`);
     for (const [name, t] of Object.entries(tools())) {
       const where = found.filter((i) => i.name === name).map((i) => i.job);
@@ -268,8 +273,41 @@ describe('a GPL tool, allowed only where it runs in CI alone and is never shippe
       for (const [job, lines] of Object.entries(jobs(read(f)))) {
         const SHIPS = /npm run build|npm test|gh release|git archive/;
         const builds = runCommands(lines.join('\n')).some((r) => SHIPS.test(r));
-        if (builds || file === 'ci.yml') assert.ok(!installing.has(`${file} ${job}`), `${file} ${job}`);
+        // the desktop app's job may install its listed Linux libraries, and nothing else
+        const others = installs().filter((i) => i.job === `${file} ${job}` && !isDesktopLibrary(i));
+        if (builds || file === 'ci.yml') assert.deepEqual(others, [], `${file} ${job}`);
       }
     }
+  });
+});
+
+describe("the desktop app's Linux libraries: one job, named, and none of them GPL (Roger, 22 Oct 2026)", () => {
+  const record = () => readJSON('licences/bundled.json');
+  const allowance = () => record().desktopBuildLibraries;
+  const installs = () =>
+    workflowFiles().flatMap((f) => aptInstalls(f.replace('.github/workflows/', ''), jobs(read(f))));
+
+  test('the allowance is these three, in desktop-app.yml build alone, each with its licence and reason', () => {
+    assert.deepEqual(Object.keys(allowance().libraries).sort(), ['libwebkit2gtk-4.1-dev', 'webkit2gtk-driver', 'xvfb']);
+    assert.equal(allowance().job, 'desktop-app.yml build');
+    assert.deepEqual(desktopLibraryProblems(record(), lockedNames()), []);
+    const where = installs().filter((i) => allowance().libraries[i.name]);
+    assert.ok(where.length > 0, 'the control: the installs are found');
+    for (const i of where) {
+      assert.equal(i.job, allowance().job, `${i.name} is installed only in ${allowance().job}`);
+      assert.ok(i.bare, `${i.job} installs ${i.name} with --no-install-recommends`);
+    }
+  });
+
+  test('a GPL library, one with no reason, or one shipped is refused', () => {
+    const planted = structuredClone(record());
+    planted.desktopBuildLibraries.libraries.readline = { licence: 'GPL-3.0', licenceSource: 'https://x', reason: 'r' };
+    planted.desktopBuildLibraries.libraries.esbuild = { licence: 'MIT', licenceSource: 'https://x', reason: '' };
+    planted.desktopBuildLibraries.job = 'ci.yml test';
+    const said = desktopLibraryProblems(planted, lockedNames()).join('\n');
+    assert.match(said, /^readline: a GPL licence/m);
+    assert.match(said, /^esbuild: why it is needed/m);
+    assert.match(said, /^esbuild: in the lockfile/m);
+    assert.match(said, /a job of desktop-app\.yml alone/);
   });
 });
