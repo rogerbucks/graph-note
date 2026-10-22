@@ -62,6 +62,7 @@ describe('a graph embedded in another note is read-only wherever it is shown', (
       // the text being edited are checked below to be as they were
       assert.deepEqual(
         pressTheRest(el, ['Close details', ...UNTANGLING], () => tapKey(el, 'large'), [
+          'Move details',
           'Minimise details',
           'Close details',
           'Which device?',

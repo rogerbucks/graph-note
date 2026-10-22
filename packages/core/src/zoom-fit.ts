@@ -57,12 +57,37 @@ export function fitScale(content: Size, viewport: Size, mode: Mode): number {
   return Math.min(wholeFit(content, viewport), mode === 'note' ? 1 : MAX_SCALE);
 }
 
-/** Where the drawing may sit: its viewport, the strip kept clear at the viewport's foot (§25), and its size there. */
+/** What a sheet over the viewport covers at each of its edges, in pixels (§25, sheet_docked). */
+export interface Clear {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+/** Nothing kept clear. */
+export const NO_CLEAR: Clear = { top: 0, right: 0, bottom: 0, left: 0 };
+
+/** What is kept clear: a number is the strip at the viewport's foot, as a sheet at the bottom covers it. */
+export const clearOf = (c: number | Clear): Clear => (typeof c === 'number' ? { ...NO_CLEAR, bottom: c } : c);
+
+/** What is kept clear, each edge held within a viewport of `size`. */
+export function clearWithin(covered: number | Clear, size: Size): Clear {
+  const c = clearOf(covered);
+  return {
+    top: clamp(c.top, 0, size.height),
+    right: clamp(c.right, 0, size.width),
+    bottom: clamp(c.bottom, 0, size.height),
+    left: clamp(c.left, 0, size.width),
+  };
+}
+
+/** Where the drawing may sit: its viewport, what is kept clear at its edges (§25), and its size there. */
 export interface Room {
   content: Size;
   viewport: Size;
-  /** The strip at the foot of the viewport kept clear, in pixels: what a sheet over it covers. */
-  clear: number;
+  /** What a sheet over the viewport covers, in pixels: a number is the strip at its foot. */
+  clear: number | Clear;
 }
 
 /**
@@ -82,21 +107,34 @@ export function inSight(room: Room, scale: number, x: number, y: number): [numbe
 }
 
 /**
- * Where the drawing sits when the view is placed for you: fitted, or aimed at a thing (§25), not dragged. It is centred on an axis where it is smaller than the viewport, edge to edge where it is
- * larger. Up and down, it may also rise into the strip kept clear at the foot, by as much as the strip and no further.
- * With `centre`, centred on both axes.
+ * Where the drawing sits when the view is placed for you: fitted, or aimed at a thing (§25), not dragged. It is
+ * centred on an axis where it is smaller than the viewport, edge to edge where it is larger. It may also move into what
+ * is kept clear at an edge, by as much as is covered there and no further. With `centre`, centred on both axes.
  */
 export function clampPan(room: Room, scale: number, x: number, y: number, centre = false): [number, number] {
   const w = room.content.width * scale,
     h = room.content.height * scale,
-    { width: vw, height: vh } = room.viewport;
+    { width: vw, height: vh } = room.viewport,
+    c = clearOf(room.clear);
   const range = (size: number, space: number): [number, number] =>
     size <= space ? [(space - size) / 2, (space - size) / 2] : [space - size, 0];
-  const axis = (v: number, size: number, space: number) => {
+  const axis = (v: number, size: number, space: number, near: number, far: number) => {
     const [lo, hi] = range(size, space);
-    return centre ? (space - size) / 2 : clamp(v, lo, hi);
+    if (centre) return (space - size) / 2;
+    return clamp(v, Math.min(lo, space - far - size), Math.max(hi, near));
   };
-  if (centre || !room.clear) return [axis(x, w, vw), axis(y, h, vh)];
-  const [lo, hi] = range(h, vh);
-  return [axis(x, w, vw), clamp(y, Math.min(lo, vh - room.clear - h), hi)];
+  return [axis(x, w, vw, c.left, c.right), axis(y, h, vh, c.top, c.bottom)];
+}
+
+/**
+ * Where the drawing goes when what is kept clear changes to `clear` (§25). Within the old limits on an axis, it is held
+ * within the new ones. Dragged freely past them, it stays where it was put.
+ */
+export function heldClear(room: Room, scale: number, x: number, y: number, clear: Clear): [number, number] {
+  const now = { ...room, clear },
+    [lx, ly] = clampPan(room, scale, -Infinity, -Infinity),
+    [hx, hy] = clampPan(room, scale, Infinity, Infinity);
+  const [nx, ny] = clampPan(now, scale, x, y),
+    back = (v: number, lo: number, hi: number, n: number) => (v < lo - 1e-9 || v > hi + 1e-9 ? v : n);
+  return [back(x, lx, hx, nx), back(y, ly, hy, ny)];
 }

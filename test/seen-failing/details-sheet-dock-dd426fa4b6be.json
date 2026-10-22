@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/details-sheet-dock.test.js",
+  "test": "the place, size and state are kept in the plugin’s data, across restarts > anything kept that is not a place, a state or a share is left out, and the defaults used",
+  "seen_failing_first": false,
+  "evidence": "A guard: before the change nothing was read back, so the defaults showed anyway. It now holds that bad saved data is ignored."
+}
