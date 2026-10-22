@@ -5,6 +5,7 @@
 // - hands the process its API, and the note's id for the address.
 // With no vault in its environment it serves no API, as before. A note that cannot be opened, or a folder that is
 // refused, is thrown as plain words. The process says them on stderr before it listens anywhere.
+import { readFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { EditorProcessOptions } from './editor-process.ts';
@@ -14,9 +15,10 @@ import type { GateSettings } from '@thoughtknot/core';
 import { storeGate } from './editor-gate.ts';
 import { proposerName } from './editor-proposals.ts';
 import { NoteStore } from './editor-store.ts';
-import { loadPageAssets, type PageAssets } from './page-assets.ts';
+import { loadPageAssets, PLUGIN_START, type PageAssets } from './page-assets.ts';
 import { Exporter, withExport } from './export-api.ts';
 import { pageSettings, withSettings } from './page-settings.ts';
+import { pagePlugins, withPlugins } from './page-plugins.ts';
 
 /** The variables the mod sets; the process reads these and no others. */
 export const EDITOR_ENVIRONMENT = {
@@ -59,10 +61,17 @@ export function gateSettings(raw: string | undefined): GateSettings {
  * built page the start fails in plain words, before the server listens, rather than serving a page that cannot run.
  */
 export async function pageFiles(here = dirname(fileURLToPath(import.meta.url))): Promise<PageAssets> {
-  const files = await loadPageAssets(join(here, basename(here) === 'bin' ? '../page' : '../mod/page'));
+  const files = await loadPageAssets(pageFolder(here));
   if (!files.has('/')) throw new Error(word('server.page-not-built'));
   return files;
 }
+
+/** The folder the build made the page in, from the folder this process runs from. */
+const pageFolder = (here: string): string => join(here, basename(here) === 'bin' ? '../page' : '../mod/page');
+
+/** The start the build made for each plug-in worker's script; null when the page was built without it. */
+export const pluginStart = (here = dirname(fileURLToPath(import.meta.url))): Promise<string | null> =>
+  readFile(join(pageFolder(here), PLUGIN_START), 'utf8').catch(() => null);
 
 /** The process's options from its environment: the store for the vault, with the note opened, and how it is stopped. */
 export async function optionsFromEnvironment(
@@ -92,9 +101,11 @@ export async function optionsFromEnvironment(
     exportFolder: pageSettings(env[EDITOR_ENVIRONMENT.settings]).exportFolder,
     notePath: (id) => store.pathOf(id),
   });
+  // the plug-ins turned on in Obsidian, each file checked against the SHA-256 it was turned on with (page-plugins.ts)
+  const plugins = await pagePlugins(vault, await pluginStart());
   return {
-    api: withSettings(env[EDITOR_ENVIRONMENT.settings], withExport(exporter, store.api)),
-    page: await pageFiles(),
+    api: withPlugins(plugins.list, withSettings(env[EDITOR_ENVIRONMENT.settings], withExport(exporter, store.api))),
+    page: new Map([...(await pageFiles()), ...plugins.files]),
     drain: async () => void (await Promise.all([store.stop(), exporter.stop()])),
     note: opened.id,
     ignoreInput: env[EDITOR_ENVIRONMENT.input] === 'ignore',

@@ -5,13 +5,14 @@
 // puts everything away.
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { openWindow } from '../../../test/repository/wcag.js';
 import { workerFor } from '../../../test/repository/wcag-page.js';
 import { until } from '../../obsidian/test/host/load-plugin.js';
 import { NoteStore } from '../server/editor-store.ts';
 import { Exporter, withExport } from '../server/export-api.ts';
-import { loadPageAssets } from '../server/page-assets.ts';
+import { loadPageAssets, PLUGIN_START } from '../server/page-assets.ts';
+import { pagePlugins, withPlugins } from '../server/page-plugins.ts';
 import { withSettings } from '../server/page-settings.ts';
 import { startEditorServer } from '../server/start-server.ts';
 import { built } from './editor-page-support.js';
@@ -24,14 +25,21 @@ export const NOTE_PATH = 'Reader.md';
  * The page opened on `note` (written to a vault of its own, with `files` beside it): `{ window, doc, file, read, write,
  * type, field, ... }`. `file()` is the note's text on disk now. `write(text)` is another program changing it. It is told
  * to the page as the watcher would tell it. `type(text)` is the person typing `text` into the field, as the page hears it.
- * With `exports`, the server also writes exports, as the shipped one does, into the folder its settings name.
+ * With `exports`, the server also writes exports, as the shipped one does, into the folder its settings name. With
+ * `plugins`, it serves the plug-ins turned on in the vault's Obsidian settings, as the shipped one does.
  */
-export async function livePage(note, { files = {}, settings = '{}', fire = true, before, gate, github, exports } = {}) {
+export async function livePage(
+  note,
+  { files = {}, settings = '{}', fire = true, before, gate, github, exports, plugins } = {},
+) {
   const top = mkdtempSync(join(tmpdir(), 'editor-page-live-'));
   const vault = join(top, 'vault');
   mkdirSync(vault);
   writeFileSync(join(vault, NOTE_PATH), note);
-  for (const [name, text] of Object.entries(files)) writeFileSync(join(vault, name), text);
+  for (const [name, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(vault, name)), { recursive: true });
+    writeFileSync(join(vault, name), text);
+  }
   const watcher = handWatch();
   const store = await NoteStore.create({
     vault,
@@ -51,7 +59,12 @@ export async function livePage(note, { files = {}, settings = '{}', fire = true,
       })
     : null;
   const api = exporter ? withExport(exporter, store.api) : store.api;
-  const server = await startEditorServer({ page: await loadPageAssets(dir), api: withSettings(settings, api) });
+  // with `plugins`, the server serves the plug-ins turned on in the vault, as the shipped one does (page-plugins.ts)
+  const served = plugins ? await pagePlugins(vault, readFileSync(join(dir, PLUGIN_START), 'utf8')) : null;
+  const server = await startEditorServer({
+    page: new Map([...(await loadPageAssets(dir)), ...(served?.files ?? [])]),
+    api: served ? withPlugins(served.list, withSettings(settings, api)) : withSettings(settings, api),
+  });
 
   const html = readFileSync(join(dir, 'index.html'), 'utf8');
   const script = readFileSync(join(dir, 'page.js'), 'utf8').replace(/\nexport \{[^}]*\};?\s*$/, '\n');

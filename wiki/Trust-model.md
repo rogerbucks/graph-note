@@ -292,6 +292,10 @@ Before a host loads a plug-in it did not ship, these must be fixed:
   from its source. That graph is outside data, held as a joined graph (trust_source_joined).
 - A step block can name a plug-in's step. What it gives back is held the same way. Then it is offered as a proposal
   for a person to accept.
+- The browser page runs only the plug-ins turned on in Obsidian (`packages/claude-code/server/page-plugins.ts`). It
+  turns none on. Its server reads which are on from Obsidian's settings in the vault, and serves a file only while its
+  SHA-256 is the one turned on. Each is served sealed, under a policy that allows no connection, so the browser keeps
+  it off the network too. A diagram type one adds draws the note's graph there as an image that runs nothing.
 
 ## Boundaries still to come
 
