@@ -15,6 +15,7 @@ the share of its members' links that stay inside it.
 
 from __future__ import annotations
 
+from ...rules.plain_graph import Graph
 from .louvain import louvain
 
 # The label of a written cluster, and the link that joins a member to it.
@@ -73,7 +74,7 @@ def _found_clusters(graph):
     return found
 
 
-def clusters_of(graph, kind=None):
+def clusters_of(graph: Graph, kind: str | None = None) -> dict:
     """The clusters of a graph and every membership in them.
 
     `kind` keeps only "asserted" or only "found" clusters, as a view filtered by kind shows

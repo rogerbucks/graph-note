@@ -13,8 +13,9 @@
 
 const { louvain } = require('./louvain.js');
 
-/** The label of a written cluster, and the link that joins a member to it. */
+/** The label of a written cluster. */
 const CLUSTER = 'Cluster';
+/** The link that joins a member to its cluster. */
 const MEMBER_OF = 'MEMBER_OF';
 
 /** The kinds a membership can have. */
