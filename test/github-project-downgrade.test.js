@@ -12,7 +12,7 @@ import { readBoard } from '../scripts/slice-board.mjs';
 import { desiredState, idOfBody } from '../scripts/github-project-desired.mjs';
 import { buildPlan, planProject } from '../scripts/github-project-plan.mjs';
 import { executePlan, readAdoptable, readRemote } from '../scripts/github-project-gh.mjs';
-import { createGuard } from '../scripts/github-project-issues.mjs';
+import { GAPS_ALLOWED, createGuard, readsWhole } from '../scripts/github-project-issues.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 
@@ -210,5 +210,33 @@ describe('issues the bot makes that GitHub is slow to list', () => {
       /bot-created issues aren’t listed by creator=github-actions\[bot\]; creating stopped to avoid duplicates/,
     );
     assert.deepEqual(waits, [1, 2]);
+  });
+
+  test('creating stops when the issues list comes back short, so the old issues are never made again', () => {
+    const plan = { creator: BOT, adopters: ['rogerbucks', BOT], issues: { create: [{ id: 'mini_map' }] } };
+    const user = { login: 'rogerbucks' };
+    const page = (from, to) =>
+      Array.from({ length: from - to + 1 }, (_, k) => ({
+        number: from - k,
+        title: 't',
+        body: '',
+        state: 'open',
+        user,
+      }));
+    const short = () => JSON.stringify([page(100, 61)]);
+    assert.throws(
+      () => createGuard(short, REPO, plan).before(),
+      /issues list came back short \(40 of #1 to #100\); creating stopped to avoid duplicates/,
+    );
+    const gaps = () => JSON.stringify([page(100, 31), page(25, 1)]);
+    assert.doesNotThrow(() => createGuard(gaps, REPO, plan).before());
+  });
+
+  test('a read is whole when it lacks at most a few numbers from #1 to the newest, for deleted or moved issues', () => {
+    const upTo = (n) => Array.from({ length: n }, (_, k) => k + 1);
+    assert.equal(readsWhole([]), true);
+    assert.equal(readsWhole(upTo(100)), true);
+    assert.equal(readsWhole(upTo(100).slice(GAPS_ALLOWED)), true);
+    assert.equal(readsWhole(upTo(100).slice(GAPS_ALLOWED + 1)), false);
   });
 });
