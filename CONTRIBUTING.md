@@ -968,6 +968,10 @@ These test behaviour across modules, or the repository itself, so they are named
     reason and the day.
   - A drawing that changes fails until it is accepted. To accept it, run
     `THOUGHTKNOT_VISUAL_ACCEPT="why" npm run -s test:ai -- test/visual-regression.test.js`. CI never accepts.
+- `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
+
+### Massive graphs
+
 - `test/massive-graphs-design.test.js` — the research note on massive graphs (editor spec §53, scale_design). It is
   in the wiki, compares the ways with measured numbers, and records Roger's pick.
 - `test/massive-graphs-benchmark.test.js` — the scale benchmark (editor spec §53, scale_benchmark). It grows the
@@ -975,7 +979,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/gpu-painters.test.js` — the WebGL 2 and WebGPU painters in headless Chrome (editor spec §53,
   scale_gpu_painters). WebGL 2 must paint the overview as the 2D canvas does. WebGPU's shaders must build, and a frame
   must paint with no error.
-- `test/whitespace.test.js` — the three copies of the one whitespace set are the same, and the set is openGQL's.
+- `test/space-painters.test.js` — the 3D view's painters in headless Chrome (editor spec §53, scale_space_painters).
+  WebGL 2 must paint the city where the 2D canvas does. The drawing on screen must read as marks with its colours.
 
 ## The requirements in a GitHub Project
 

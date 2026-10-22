@@ -123,6 +123,9 @@ export const KEPT = {
   // the shaders the graphics chip runs, and a developer's error when it cannot build them: never shown
   'packages/core/src/display/graph-view/gl-painter.ts': '*',
   'packages/core/src/display/graph-view/gpu-painter.ts': '*',
+  // the 3D view's shaders, the same way
+  'packages/core/src/display/graph-view/space-painter.ts': '*',
+  'packages/core/src/display/graph-view/space-gpu-painter.ts': '*',
   // the elements that can take the focus, as a selector kept in a constant
   'packages/core/src/display/graph-view/full-screen.ts': ['a[href], button, input, select, textarea, [tabindex]'],
   'packages/claude-code/page/keyboard.ts': ['a[href], button, input, select, textarea, [tabindex]'],

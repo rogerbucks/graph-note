@@ -19,6 +19,7 @@ import { markView, renderViewStrip } from './view-strip';
 import { markProposal } from '../proposals/mark-proposal';
 import { renderProposalStrip } from '../proposals/proposal-strip';
 import { renderBar } from './view-bar';
+import { openSpaceView } from './space-view-panel';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
 import { markFlow, renderFlowLegend } from './flow-marks';
@@ -72,8 +73,7 @@ export class GraphView extends Lifecycle {
     this.containerEl = inHost(containerEl);
     // whether the card is where the note is only read: in reading view, or opened from a card that is (spec §3)
     this.readOnly = () => !!options.readOnly?.() || (options.mode === 'note' && readOnlyHere(containerEl));
-    // every write the card can make goes through that one check: none where the card is read-only. The card's parts are
-    // given the same check as `readOnly`. So a control that writes is not offered at all there
+    // every write goes through that one check, as do the card's parts: none is offered where the card is read-only
     this.o = gateWrites({ ...options, readOnly: this.readOnly }, this.readOnly);
     this.taps = new Taps(options.drawn.svg);
     this.drawn = options.drawn;
@@ -120,6 +120,7 @@ export class GraphView extends Lifecycle {
       legend: (b) => this.sel.untangle.toggleLegend(b),
       view: (b) => this.switching?.menu.toggle(b),
       fullScreen: () => this.fullscreen.show(),
+      space: () => void (this.svg && openSpaceView(root, this.svg, this.o.graph, () => this.viewport.focus())),
       editHere: () => (this.o.editing?.()?.session ? this.o.onDoneEditing?.() : this.o.onEditHere?.()),
       toggleSource: (b) => this.source.toggle(b),
       export: () => this.o.exporting && toggleExportForm(root, { ...this.o.exporting, paths: this.playable() }),
@@ -171,8 +172,7 @@ export class GraphView extends Lifecycle {
     if (this.o.proposal) writes.push(...renderProposalStrip(root, this.o.proposal));
     const at = () => typeLeftAt(this.zoom.view(), this.details.selectedKey(), mode === 'full'); // kept as types change
     if (this.o.diagram) writes.push(...renderTypeStrip(root, this.o.diagram, this.readOnly, at)); // its types (§15)
-    // what its moving links mean, in words beside their icons (§7, motion_not_alone). Only those drawn, never a link
-    // folded into a stub or a box (§25). So its slot is filled again whenever the View menu lays the graph out again
+    // what its drawn moving links mean, by their icons (§7); filled again as the View menu lays it out again (§25)
     this.legendSlot = root.createDiv({ cls: 'thoughtknot-flow-legend-slot' });
     this.flowLegend();
     this.viewport = root.createDiv({

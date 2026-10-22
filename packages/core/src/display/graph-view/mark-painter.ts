@@ -49,12 +49,13 @@ export type PainterMaker = (canvas: HTMLCanvasElement) => MarkPainter | null | P
 
 /**
  * The first painter `makers` can make for `canvas`, tried in order. A maker that fails or throws is passed over, so
- * a device that claims a feature it cannot give still gets a painter. Null only when none can paint at all.
+ * a device that claims a feature it cannot give still gets a painter. Null only when none can paint at all. The 3D
+ * view's painters (space-painter.ts) are picked the same way.
  */
-export async function pickPainter(
+export async function pickPainter<P extends { readonly kind: PainterKind } = MarkPainter>(
   canvas: HTMLCanvasElement,
-  makers: readonly PainterMaker[],
-): Promise<MarkPainter | null> {
+  makers: readonly ((canvas: HTMLCanvasElement) => P | null | Promise<P | null>)[],
+): Promise<P | null> {
   for (const make of makers) {
     try {
       const painter = await make(canvas);
