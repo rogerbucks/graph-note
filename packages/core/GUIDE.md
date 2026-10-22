@@ -1422,6 +1422,8 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
 - `shortcuts-list.ts` — the list of every keyboard shortcut (`listShortcuts`), and the card's own copy that ? shows
   (`toggleShortcuts`). `graph-view/card-in-use.ts` keeps the card used last, for a host's commands (`cardInUse`).
 - `tour.ts` — the short tour of a first graph, a step at a time, in the card (`showTour`). It can be skipped.
+- `plugin-tokens.ts` — a plug-in's own colours on the page (§44, plugin_theme_tokens). `adoptTokens` adds them as one
+  style sheet made in code, which follows the theme by itself, and gives back what takes it off.
 
 ### The edit pane and the rest
 

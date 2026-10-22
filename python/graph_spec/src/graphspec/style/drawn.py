@@ -16,6 +16,7 @@ from typing import Any
 
 from graphspec.reader.drawing import read_for_drawing
 from graphspec.rules.plain_graph import World
+from graphspec.rules.shown_text import shown_text
 from graphspec.rules.views import SCHEMA_LABELS, _word, readings
 from graphspec.style.arrows import arrowless
 from graphspec.style.diagram_types import diagram_for
@@ -24,9 +25,6 @@ from graphspec.style.folding import drawn_groups, fold_plan, links_of, starting_
 from graphspec.style.inline import inline_rows
 from graphspec.style.picture import pictures_for
 from graphspec.style.reading import read_style
-
-# The properties that give a thing its text, in the order the drawing chooses among them.
-TEXT_KEYS = ("name", "title", "text", "label")
 
 
 def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict[str, Any]:
@@ -39,11 +37,12 @@ def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict
     ids = [i for i, (labels, _) in g.nodes.items() if not labels & SCHEMA_LABELS]
     # Each link in its schema's words. That is the graph's own schema, else the shared schema it
     # names. The core reads them so (drawing.ts), and reading.py's _names finds its types so.
-    drawn, words = set(ids), readings(g, world.schema_for(graph)[1])
+    shared = world.schema_for(graph)[1]
+    drawn, words = set(ids), readings(g, shared)
 
+    # Each thing by the text the ranked rule chooses (shown_text.py), as the core chooses it.
     def text(i):
-        p = g.p(i)
-        return next((p[k] for k in TEXT_KEYS if isinstance(p.get(k), str) and p[k]), i)
+        return shown_text(g, i, shared)[0]
 
     def kind(i):
         return " · ".join(sorted(x for x in g.nodes[i][0] if x not in SCHEMA_LABELS))

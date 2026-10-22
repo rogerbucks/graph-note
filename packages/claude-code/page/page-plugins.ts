@@ -3,10 +3,12 @@
 // - Each runs in a worker of its own, started from the file the server serves at `/plugins/<its SHA-256>.js`. That file
 //   seals the worker before the plug-in's first line runs. Its policy keeps it off the network.
 // - What it adds goes into a registry of its own, through the core's checks, as in Obsidian.
+// - Its own colours join the page as a sheet of their own, light and dark (plugin_theme_tokens).
 // - A diagram type it adds draws the note's graph when the graph's style graph chooses that type. The page shows the
 //   core's picture of the marks it gave, as an image that runs nothing. Otherwise it says why in words.
 // - A plug-in left out, or one that could not start, is said by its name, with why.
 import { gqlBlocks } from '../../core/src/blocks.ts';
+import { adoptTokens } from '../../core/src/display/plugin-tokens.ts';
 import { readNote } from '../../core/src/drawing.ts';
 import { isolatedPlugin } from '../../core/src/plugin-isolated.ts';
 import type { PluginPort } from '../../core/src/plugin-isolated.ts';
@@ -67,6 +69,7 @@ export async function startPlugins(
         iso.stop();
         throw e;
       }
+      adoptTokens(win.document, registry.themeTokens());
       registries.push(registry);
     } catch (e) {
       told.push(word('page.plugin-not-started', { name: p.name, why: said(e) }));

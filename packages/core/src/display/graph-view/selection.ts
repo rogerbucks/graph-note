@@ -46,10 +46,9 @@ export interface SelectionHost {
   viewport: () => HTMLElement;
   size: () => Size;
   /**
-   * Opens the folds a thing is hidden in (§25), to go to it once the drawing is laid out again; false when none hides it.
+   * The View menu. It opens the folds a thing is hidden in (§25), and lays the graph out again with a thing and its
+   * neighbours together (untangle_regroup).
    */
-  unfoldTo?: (key: string, then: () => void) => boolean;
-  /** The View menu, which lays the graph out again with a thing and its neighbours together (untangle_regroup). */
   switching?: () => ViewSwitching | null;
 }
 
@@ -344,7 +343,7 @@ export class Selection {
     const svg = this.host.svg();
     // a thing folded away with a hub or into a group's box is found by opening its folds first (§25)
     const drawn = Array.from(svg?.querySelectorAll('g.node') ?? []).some((n) => n.getAttribute('data-key') === key);
-    if (svg && !drawn && this.host.unfoldTo?.(key, () => this.goTo(key, walking))) return;
+    if (svg && !drawn && this.host.switching?.()?.unfoldTo(key, () => this.goTo(key, walking))) return;
     // the thing's box in a drawing; in a graph drawn as a table (§15), its row, which takes the focus as a box does
     const g = svg
       ? Array.from(svg.querySelectorAll<SVGGElement>('g.node')).find((n) => n.getAttribute('data-key') === key)

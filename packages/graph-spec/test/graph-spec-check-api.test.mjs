@@ -84,6 +84,8 @@ const NAMES = [
   // the shapes of secret a reader refuses to serve (editor spec §51, spec_secrets_and_fences)
   'secretsIn',
   'secretsInGraph',
+  'shownText',
+  'clipShown',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

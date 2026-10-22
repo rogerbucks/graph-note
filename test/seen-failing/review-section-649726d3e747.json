@@ -1,0 +1,6 @@
+{
+  "file": "packages/claude-code/test/review-section.test.js",
+  "test": "reviewing a change from GitHub in the browser editor > lists the changes only once asked, and shows the one picked in levels down to every line",
+  "seen_failing_first": false,
+  "evidence": "Held to the ranked box text of the commit before it (shown_text_ranked), which CI showed this test still expected the old way; the code came first, in that commit."
+}

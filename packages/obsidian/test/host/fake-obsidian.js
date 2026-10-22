@@ -149,8 +149,17 @@ export function fakeObsidian(state = {}) {
     detachLeavesOfType: (type) => {
       for (const l of leaves.filter((x) => x.view?.getViewType() === type)) l.detach();
     },
-    on: () => ({}),
-    offref: () => {},
+    // an event the workspace tells: only a pop-out window opening or closing is kept, for a test to tell with `tell`
+    handlers: new Map(),
+    on(name, fn) {
+      const ref = { name, fn, e: workspace };
+      if (name === 'window-open' || name === 'window-close') workspace.handlers.set(ref, ref);
+      return ref;
+    },
+    offref: (ref) => workspace.handlers.delete(ref),
+    tell: (name, ...args) => {
+      for (const { name: n, fn } of [...workspace.handlers.values()]) if (n === name) fn(...args);
+    },
     // the vault and the workspace are ready at once here, as Obsidian's are once it has started
     onLayoutReady: (run) => run(),
     // a link opened, as a tap on a link in a note opens it. Kept, for a test to see which, from where, and in which leaf
