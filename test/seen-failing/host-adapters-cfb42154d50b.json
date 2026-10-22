@@ -1,0 +1,6 @@
+{
+  "file": "test/host-adapters.test.js",
+  "test": "every host’s adapter passes the one host contract > the desktop app > an icon is drawn into its element, once, whether the host knows its name or not",
+  "seen_failing_first": false,
+  "evidence": "It runs an adapter already merged and passing (the browser page's, which the app's window carries since #905), in the app's built page; no code changes, so it cannot fail first."
+}
