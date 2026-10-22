@@ -108,6 +108,14 @@ declare namespace GraphSpecCheck {
   function readings(g: Graph, shared?: Graph): Map<string, [string | undefined, string | undefined]>;
   /** A relationship type in words: its declared reading, else the type's own words. */
   function word(readings: Map<string, [string | undefined, string | undefined]>, type: string): string;
+  /**
+   * [text, key] a thing is shown by: its schema's shown_by, a name key, a wording key or its first readable text. Else it
+   * is its id, with key null. Text over 80 characters is cut at a word and ends in "…". The shared schema is read only
+   * when the graph declares no ElementType of its own.
+   */
+  function shownText(g: Graph, id: string, shared?: Graph): [string, string | null];
+  /** Text cut to 80 characters at a word, ending in "…"; shorter text as it is. */
+  function clipShown(text: string): string;
   /** The readings guessed for a relationship type with none declared: [forward, reverse]. */
   function guessReadings(type: string): [string, string];
   /** The reverse of a forward reading: the active verb of a known passive, the passive of a verb, or a placeholder. */

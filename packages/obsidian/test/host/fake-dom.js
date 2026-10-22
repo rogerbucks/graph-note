@@ -408,6 +408,7 @@ export function fakeDocument(width = 700) {
   doc.createElement = (t) => new FakeElement(t, doc);
   doc.createElementNS = (_ns, t) => new FakeElement(t, doc);
   doc.importNode = (n) => n;
+  doc.adoptedStyleSheets = [];
   doc.adoptNode = (n) => n;
   doc.listeners = new Map();
   doc.addEventListener = (type, fn) => (doc.listeners.get(type) ?? doc.listeners.set(type, []).get(type)).push(fn);
@@ -444,6 +445,13 @@ export function fakeDocument(width = 700) {
     },
     requestAnimationFrame: (f) => setTimeout(f, 0),
     cancelAnimationFrame: clearTimeout,
+    // a style sheet made in code, as a page adopts one: it keeps the CSS it was given, to be read back as `text`
+    CSSStyleSheet: class {
+      text = '';
+      replaceSync(css) {
+        this.text = css;
+      }
+    },
     // Obsidian's helpers on the window: an element not yet on the page
     createDiv: (o = {}) => {
       const e = new FakeElement('div', doc);

@@ -172,3 +172,54 @@ describe('the switches’ names', () => {
     for (const s of VIEW_SWITCHES) assert.ok(isPseudoWord(switchName(s)), s);
   });
 });
+
+describe('a card regrouped to a thing and its neighbours (untangle_regroup)', () => {
+  // the links of star(3): 0 hub→leaf1, 1 hub→leaf2, 2 hub→leaf3, 3 ann→bob
+  const only = { things: new Set(['hub', 'leaf1', 'leaf2']), edges: new Set([0, 1]) };
+
+  test('lays out only what it keeps: the rest left out, its links kept by their places, no hub folded', () => {
+    const { drawing } = styledOf(star(3));
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS)),
+      card = {};
+    assert.equal(state.folded(drawing, card).folding, undefined, 'nothing kept yet: the whole graph');
+    state.keepOnly(card, only);
+    const { folding } = state.folded(drawing, card);
+    assert.deepEqual(folding.hidden, ['leaf3', 'ann', 'bob']);
+    assert.deepEqual(folding.folded, [2, 3]);
+    assert.deepEqual(folding.hubs, []);
+    assert.equal(state.plan, undefined, 'the plan the other cards share is the whole graph’s');
+  });
+
+  test('a busy hub shown with its neighbours is drawn with its links, not a stub', () => {
+    const { drawing } = styledOf(star(13));
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS)),
+      card = {};
+    state.keepOnly(card, only);
+    const { folding } = state.folded(drawing, card);
+    assert.deepEqual(folding.hubs, []);
+    assert.ok(!folding.folded.includes(0) && !folding.folded.includes(1));
+    assert.ok(!folding.hidden.includes('leaf1'));
+  });
+
+  test('is that card’s alone, and the whole graph comes back when it is let go', () => {
+    const { drawing } = styledOf(star(3));
+    const state = new ViewState(startingSwitches(DEFAULT_SETTINGS)),
+      card = {},
+      other = {};
+    state.keepOnly(card, only);
+    assert.equal(state.folded(drawing, other).folding, undefined);
+    assert.equal(state.folded(drawing).folding, undefined);
+    state.keepOnly(card, null);
+    assert.equal(state.folded(drawing, card).folding, undefined);
+  });
+
+  test('a group keeps its box while one of its things is kept, and goes with the last', () => {
+    const { drawing } = styledOf(star(3), GROUPED);
+    const state = new ViewState({ labels: true, hubs: true, groups: true, merge: false }),
+      card = {};
+    state.keepOnly(card, { things: new Set(['ann']), edges: new Set() });
+    assert.deepEqual(state.folded(drawing, card).folding.groups, [['Friends', ['ann', 'bob'], true]]);
+    state.keepOnly(card, only);
+    assert.deepEqual(state.folded(drawing, card).folding.groups, []);
+  });
+});

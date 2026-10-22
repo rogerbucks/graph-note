@@ -77,7 +77,8 @@ describe('reviewing a change from GitHub in the browser editor', () => {
       assert.deepEqual(texts(result.querySelectorAll('.gn-review-summary li')), [
         '41 · Every surface: 1 added, 1 changed',
         'V1 · Review: 1 added, 1 changed',
-        'Changed: changes_view (Requirement)',
+        // a requirement is shown by its readable rule (shown_text_ranked); 'Items.' is one word, so its id stays
+        'Changed: Changes are drawn and listed. (Requirement)',
         'Added: review_items (Requirement)',
       ]);
       assert.match(result.querySelector('.gn-review-summary').textContent, /1 other file changed/);

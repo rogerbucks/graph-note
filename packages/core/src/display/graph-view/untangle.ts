@@ -4,7 +4,7 @@
 // (untangle_data_untouched). So none of it is gated for reading view: it changes the picture, never the data. Only the
 // legend's choices are ever written, by a view's Save as shown (view-strip.ts), which is gated. A view saved so starts
 // with them (untangle_legend).
-import { Untangle, find, kindLegend, neighbourhoodWords, pathWords, word } from '@thoughtknot/core';
+import { Untangle, find, kindLegend, neighbourhood, neighbourhoodWords, pathWords, word } from '@thoughtknot/core';
 import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, LegendChoice, NoteReading } from '@thoughtknot/core';
 import { Banner } from './untangle-banner';
 import type { BannerRow } from './untangle-banner';
@@ -26,11 +26,19 @@ export interface UntangleHost {
   go: (key: string) => void;
   /** The legend's choices a view was saved as shown with, to start with (§25, untangle_legend); none for any other. */
   legend?: readonly LegendChoice[];
+  /**
+   * Lays the graph out again with only a thing and its neighbours, so they sit together, or the whole graph (null). A
+   * card that cannot lay out again, such as a table, has none: there the rest is only hidden (untangle_regroup).
+   */
+  regroup?: (only: Kept | null) => void;
 }
 
 /** What the details of a thing offer, which the card gives them. */
 export interface ThingActions {
+  /** Shows only a thing and its neighbours; pressed again for the same thing, the whole graph (untangle_toggle). */
   showOnly: (key: string) => void;
+  /** The thing the drawing shows only with its neighbours now; null for the whole graph. */
+  shownOnly?: () => string | null;
   routeFrom: (key: string) => void;
   /** A busy hub's links and whether they are folded now (§25, untangle_hubs); null for another thing. */
   hub?: (key: string) => { links: number; folded: boolean } | null;
@@ -47,6 +55,8 @@ export class UntangleView {
   private readonly host: UntangleHost;
   private readonly names: Map<string, string>;
   private asking: string | null = null;
+  /** The thing and steps the drawing was last regrouped to, so it is laid out again only when they change. */
+  private regrouped = '';
   /** The bar's button that opens the search row, which Escape in the row gives the focus back to. */
   private findButton: HTMLElement | null = null;
 
@@ -104,10 +114,19 @@ export class UntangleView {
     b.setAttribute('aria-expanded', String(!this.legend.el.hidden));
   }
 
-  /** Filters the drawing to a thing and what lies within the setting's steps of it. */
+  /**
+   * Filters the drawing to a thing and what lies within the setting's steps of it. Asked again for the same thing, it
+   * shows the whole graph again: the button is a toggle (untangle_toggle).
+   */
   showOnly(key: string): void {
-    this.core.showOnly(key, this.host.depth());
+    if (this.core.only?.key === key) this.core.showAll();
+    else this.core.showOnly(key, this.host.depth());
     this.changed();
+  }
+
+  /** The thing the drawing shows only with its neighbours now; null for the whole graph. */
+  shownOnly(): string | null {
+    return this.core.only?.key ?? null;
   }
 
   /** Asks for a second thing, to bring forward the shortest path from this one to it. */
@@ -162,6 +181,12 @@ export class UntangleView {
   private changed(): void {
     this.banner.show(this.rows());
     this.host.changed();
+    // a thing and its neighbours are laid out together; the whole graph, as it was (untangle_regroup)
+    const only = this.core.only,
+      now = only ? `${only.steps} ${only.key}` : '';
+    if (now === this.regrouped) return;
+    this.regrouped = now;
+    this.host.regroup?.(only ? neighbourhood(this.edges, only.key, only.steps) : null);
   }
 
   private rows(): BannerRow[] {

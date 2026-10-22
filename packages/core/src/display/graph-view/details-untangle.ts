@@ -1,6 +1,6 @@
-// What a thing's details offer to untangle the drawing (spec §25). They offer its neighbourhood alone, and the shortest
-// path to another thing. For a busy hub, they offer folding or opening its links. Its box can be moved too (§6). A
-// graph drawn as a table (§15) has nothing to hide or bring forward, so there none of it is offered.
+// What a thing's details offer to untangle the drawing (spec §25). They offer its neighbourhood alone, as a toggle,
+// and the shortest path to another thing. For a busy hub, they offer folding or opening its links. Its box can be moved
+// too (§6). A graph drawn as a table (§15) has nothing to hide or bring forward, so there none of it is offered.
 import { word } from '@thoughtknot/core';
 import type { ThingActions } from './untangle';
 
@@ -20,8 +20,12 @@ export function untangleOffers(
     row
       .createEl('button', { text: word('details.move'), attr: { type: 'button' } })
       .addEventListener('click', () => move(key));
+  // a toggle: pressed again, or while this thing is shown only, it shows the whole graph (untangle_toggle)
   row
-    .createEl('button', { text: word('details.show-only'), attr: { type: 'button' } })
+    .createEl('button', {
+      text: showOnlyWords(key, on.shownOnly?.() ?? null),
+      attr: { type: 'button', 'data-show-only': key },
+    })
     .addEventListener('click', () => on.showOnly(key));
   row
     .createEl('button', { text: word('details.shortest-path'), attr: { type: 'button' } })
@@ -35,4 +39,14 @@ export function untangleOffers(
         attr: { type: 'button' },
       })
       .addEventListener('click', () => on.toggleHub?.(key));
+}
+
+/** What the Show only button of `key` says, with `only` shown alone now: shown alone, it offers the whole graph back. */
+const showOnlyWords = (key: string, only: string | null): string =>
+  word(only === key ? 'untangle.show-all' : 'details.show-only');
+
+/** Says on each Show only button in `el` what pressing it does now, with `only` shown alone (untangle_toggle). */
+export function relabelShowOnly(el: HTMLElement, only: string | null): void {
+  for (const b of Array.from(el.querySelectorAll<HTMLElement>('button[data-show-only]')))
+    b.setText(showOnlyWords(b.getAttribute('data-show-only') ?? '', only));
 }

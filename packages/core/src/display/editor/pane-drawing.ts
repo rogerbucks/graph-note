@@ -108,7 +108,7 @@ export class PaneDrawing extends Lifecycle {
   redraw(host: HTMLElement, reading: NoteReading, s: PaneSession, stale: () => boolean, on: Choosing): void {
     const d = reading.graphs.get(s.graph);
     const state = (this.state ??= new ViewState(startingSwitches(this.host.settings())));
-    const laidOut = (by: object) => (d ? this.host.layout(state.folded(d), by) : Promise.resolve(null));
+    const laidOut = (by: object) => (d ? this.host.layout(state.folded(d, by), by) : Promise.resolve(null));
     // too large to read, nothing was read (§9); and a layout this editor asked for before, not yet started, is dropped
     const laid = reading.tooLarge
       ? Promise.resolve(reading.tooLarge)

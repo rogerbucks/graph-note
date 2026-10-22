@@ -207,15 +207,15 @@
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "a7270fe668421c13e2e16010ec9317a7546618d5bf394edaeac2ce1707b6f8d6",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "e584e752f6ac636ea6b6e14ca7d8b001bd9f8ac7750830b1ba99aac2d61997c0",
+      "reason": "showing only a thing and its neighbours now lays them out again together (untangle_regroup)",
+      "day": "2026-10-22"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "64eb4c714424d082f002ea625189b3383c59f6a2a2692790baea095f8d1d4b2a",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "1389181f41f82f6c892419db1639c795f4048bc72b54bf8c54b26679b9ced73f",
+      "reason": "showing only a thing and its neighbours now lays them out again together (untangle_regroup)",
+      "day": "2026-10-22"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
