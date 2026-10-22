@@ -1,9 +1,9 @@
 // The diagram types looked at in reading view, never saved (spec §15, type_try_reading). One for each graph or view of
 // each note, held until Obsidian closes, as the View menu's switches are. A card is drawn as the type held, if any. It
 // says it is not saved, and where the note is edited offers to keep it. Choosing a type there saves it and forgets this.
-import { chosenDiagram, diagramFor } from '@thoughtknot/core';
+import { diagramFor } from '@thoughtknot/core';
 import type { DiagramWrite, GraphDrawing, NoteReading, StyleGraph } from '@thoughtknot/core';
-import { withTried } from '@thoughtknot/core/display/graph-view/type-strip';
+import { pickedCentre, withTried } from '@thoughtknot/core/display/graph-view/type-strip';
 import type { Trying, TypeLeftAt } from '@thoughtknot/core/display/graph-view/type-strip';
 
 /** How long where a card was left waits for the card drawn as its new type: a type saved draws it once written. */
@@ -75,7 +75,7 @@ export class TriedTypes {
   ): { style: StyleGraph; trying: Trying } {
     const tried = this.of(at),
       saved = diagramFor(drawing, style, g, at.view).drawn,
-      centre = saved === 'radial' ? chosenDiagram(style, at.view)?.centre : undefined;
+      centre = saved === 'radial' ? pickedCentre(style, at.view) : undefined;
     return {
       style: tried ? withTried(style, tried) : style,
       trying: {

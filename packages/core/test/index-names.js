@@ -65,7 +65,7 @@
 // workspaceStorage, notePath, noteVersion, refusal, REFUSED, DIRECTORY` and their types, storage_contract) came on 20
 // Oct 2026 too. So did SHORTCUTS and SHORTCUT_PLACES (shortcuts_listed), and TOUR_STEPS and withExample
 // (first_run_help). formatSeries and purposeWords (words_catalogue) came on 21 Oct 2026, as did runPluginStep (plugin_step_named).
-// chosenDiagram (radial_centre_pick) came on 22 Oct 2026.
+// TIMELINE_ORDERS and TIMELINE_SHOWS came on 22 Oct 2026 (timeline_order, timeline_show).
 import { TYPES_LATE } from './index-types-late.js';
 import { VALUES_LATE } from './index-values-late.js';
 
@@ -158,6 +158,8 @@ export const VALUES = [
   'THEME_COLOURS',
   'THEME_TOKENS',
   'THRESHOLDS',
+  'TIMELINE_ORDERS',
+  'TIMELINE_SHOWS',
   'TIMEOUTS_BEFORE_STOPPING',
   'TOKEN_CLASSES',
   'TOUR_STEPS',
@@ -197,7 +199,6 @@ export const VALUES = [
   'changesView',
   'choose',
   'chosen',
-  'chosenDiagram',
   'classMapFrom',
   'classMapProblems',
   'classMapText',

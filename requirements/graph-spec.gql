@@ -1,4 +1,4 @@
-// graph: requirements · SOURCE · schema spec-requirements@1 · 210 requirements, 10 wordings
+// graph: requirements · SOURCE · schema spec-requirements@1 · 212 requirements, 10 wordings
 // The graph spec, frozen as it stood before the requirements moved to GitHub (Roger's vault, 19 Oct 2026).
 // Each Section is a § the code cites. Each Requirement's quote is the rule's own words. Do not edit by hand.
 // It came by a paste. Its escapes, underscores and the emphasis inside its quotes were put back from the spec's own text.
@@ -665,6 +665,11 @@ INSERT
 (r21_incomplete_missing:Requirement {id: 'req:21.incomplete-missing', level: 'must', statement: 'A figure that reads a missing fact says it is incomplete and names what lacks it; it never raises and never takes the value as zero', quote: 'A figure that reads a fact which is not there must say it is incomplete, and name the thing that lacks it'}), (r21_incomplete_missing)-[:PART_OF]->(s21),
 (r21_incomplete_missing)-[:PROVED_BY {test: 'Z5'}]->(cplain),
 (r21_incomplete_missing)-[:DECIDED_IN]->(dMissingFact),
+(dJoinTrust:Decision {id: 'note:2026-10-20 Trust on joined graphs, from the trust model review.decision'}),
+(r21_trust_counted:Requirement {id: 'req:21.trust-counted', level: 'must', statement: 'A join counts only own and trusted documents; what only an untrusted one states is flagged and left out, never contested', quote: 'Claims from an untrusted source are flagged until a person accepts them'}), (r21_trust_counted)-[:PART_OF]->(s21),
+(r21_trust_counted)-[:DECIDED_IN]->(dJoinTrust),
+(r21_prefix_owner:Requirement {id: 'req:21.prefix-owner', level: 'must', statement: 'A thing under an id prefix another document owns is refused, with the owner named, and its relationships go with it', quote: 'only its owner can write under an id prefix'}), (r21_prefix_owner)-[:PART_OF]->(s21),
+(r21_prefix_owner)-[:DECIDED_IN]->(dJoinTrust),
 // restatements last: GQL reuses a variable only after the node is written (§3)
 (r6_reference_resolves)-[:RESTATES]->(r4_ref_resolves),
 (r16_detail_ref)-[:RESTATES]->(r4_ref_resolves),

@@ -24,7 +24,8 @@ export const DRAWING_SOURCE_WORDS = {
   'diagram.lanes.two': 'lanes need things of two kinds or more',
   'diagram.flow.no-links': 'a flow needs links, and there are none',
   'diagram.flow.loops': 'a flow runs one way, and this loops back: {loop}',
-  'diagram.timeline.undated': 'a timeline needs every thing to carry a date, and {thing} carries none',
+  'diagram.timeline.none-dated': 'a timeline of the things with a date needs one, and no thing carries a date',
+  'diagram.timeline.all-dated': 'a timeline of the things without a date needs one, and every thing carries a date',
   'diagram.plugin-missing':
     'the diagram type {type} comes from the plug-in {plugin}, which is not here, so the graph is drawn as a network',
   // why a type is suggested (types.ts)

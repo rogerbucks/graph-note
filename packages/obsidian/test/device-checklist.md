@@ -481,8 +481,8 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
       draws it as a network, and offers Use flow. Press it, and the style block now says flow (type_stops_fitting).
 - [ ] **E-05** Phone: a wide flow, a wide tree and a wide timeline each show at a readable size, fitted top to bottom. A
       finger moves the drawing sideways only, and up and down still scroll the note (wide_types_phone).
-- [ ] **E-06** A graph of 51 things says it has too many to read in one drawing and offers Show as table and a view; Show as
-      table draws it as a table (large_way_in).
+- [ ] **E-06** A graph of 1,001 things says it has too many to read in one drawing and offers Show as table and a view;
+      Show as table draws it as a table (large_way_in).
 
 ## AI models — spec §19
 

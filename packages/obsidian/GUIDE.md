@@ -458,7 +458,7 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - Each type that does not fit is listed with why. The suggested one is said, and never drawn until chosen.
   - A chosen type that has stopped fitting is said, the graph drawn as a network, and the nearest type that fits
     offered.
-  - A graph of more than 50 things gets a way in: the table or a view.
+  - A graph of more than 1,000 things gets a way in: the table or a view.
   - Reading view keeps the words and drops the controls that write. The core decides all of it (`diagramOffer`).
 - `table-view.ts` — a graph drawn as a table: the plugin's own table, never Graphviz.
   - It has a row for each thing (its kind and properties) and each link. Each row is reached, named and opened as a box

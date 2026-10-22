@@ -4,7 +4,7 @@
 // - Choosing writes the type into the style graph, for the graph or the view the card shows.
 // - A chosen type that has stopped fitting is said, with the nearest that fits offered. The graph is drawn as a network
 //   meanwhile.
-// - A graph of more than 50 things offers the table or a view as the way in.
+// - A graph of more than 1,000 things offers the table or a view as the way in.
 // Reading view says how the graph is drawn, and draws it as another type to look at, never saved. Where the note is
 // edited, a type looked at can be kept.
 import { test, describe, before } from 'node:test';
@@ -13,6 +13,7 @@ import { build, load, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 import { fakeContext } from './host/fake-obsidian.js';
+import { installWorkers } from './host/workers.js';
 
 before(() => build());
 
@@ -64,7 +65,7 @@ describe('Diagram type on a card', () => {
         ['Flow', true, ''],
         ['Radial', true, ''],
         ['Lanes', false, 'lanes need things of two kinds or more'],
-        ['Timeline', false, 'a timeline needs every thing to carry a date, and Ada carries none'],
+        ['Timeline', true, ''],
         ['Table', true, ''],
       ]);
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a network/);
@@ -143,7 +144,7 @@ describe('the Diagram type list looks native', () => {
         '',
         '',
         'thoughtknot-type-unfit',
-        'thoughtknot-type-unfit',
+        '',
         '',
       ]);
     } finally {
@@ -210,20 +211,47 @@ describe('a chosen type that has stopped fitting', () => {
   });
 });
 
-describe('a graph of more than 50 things', () => {
-  const big = `// graph: big\n${Array.from({ length: 51 }, (_, i) => `(t${i}:Thing {name: 'Thing ${i}'})`).join(',\n')}`;
+describe('a graph of more than 1,000 things', () => {
+  const graphOf = (n) =>
+    `// graph: big\n${Array.from({ length: n }, (_, i) => `(t${i}:Thing {name: 'Thing ${i}'})`).join(',\n')}`;
+  const big = graphOf(1001);
+  /** The card, laid out in a worker as Obsidian lays it out: the page's own thread draws at most 300 things. */
+  const bigCard = async (note) => {
+    const workers = installWorkers();
+    const { env, el } = await card(note);
+    await until(() => el.querySelector('svg, .thoughtknot-table, .thoughtknot-banner'), 60_000);
+    const done = () => {
+      env.plugin.onunload();
+      workers.uninstall();
+      env.uninstall();
+    };
+    return { env, el, done };
+  };
+
+  // proves: large_way_in
+  test('one of 1,000 things is drawn with no way in', async () => {
+    const { el, done } = await bigCard(noteOf(graphOf(1000)));
+    try {
+      assert.ok(el.querySelector('svg'), 'it is drawn');
+      assert.equal(el.querySelector('.thoughtknot-way-in'), null);
+    } finally {
+      done();
+    }
+  });
 
   // proves: large_way_in
   test('offers the table or a view as the way in, and Show as table writes the table', async () => {
-    const note = noteOf(big);
-    const { env, el } = await card(note);
+    const { env, el, done } = await bigCard(noteOf(big));
     try {
       const way = el.querySelector('.thoughtknot-way-in');
-      assert.match(way.textContent, /51 things, too many to read in one drawing: open it as a table, or make a view/);
+      assert.match(
+        way.textContent,
+        /1,001 things, too many to read in one drawing: open it as a table, or make a view/,
+      );
       labelled(el, 'Show as table').click();
       await until(() => /type: 'table'/.test(env.state.files.get(PATH)));
     } finally {
-      env.uninstall();
+      done();
     }
   });
 
@@ -231,7 +259,7 @@ describe('a graph of more than 50 things', () => {
   test('drawn as a table, offers no way in again', async () => {
     const { env, el } = await card(noteOf(big, "// graph: big_style · STYLE big\n(d1:Diagram {type: 'table'})"));
     try {
-      assert.equal(el.querySelectorAll('.thoughtknot-table tr[data-key]').length, 51, 'its way in is the table');
+      assert.equal(el.querySelectorAll('.thoughtknot-table tr[data-key]').length, 1001, 'its way in is the table');
       assert.equal(el.querySelector('.thoughtknot-way-in'), null);
     } finally {
       env.uninstall();

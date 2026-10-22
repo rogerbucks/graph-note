@@ -11,6 +11,7 @@ const { validate } = require('./validate.js');
 const { union } = require('./union.js');
 const { merge3 } = require('./merge3.js');
 const { finish } = require('./finish.js');
+const { heldByTrust, flagUntrusted } = require('./trust.js');
 const { withinJoinDocuments, withinJoinItems } = require('../reader/limits.js');
 
 // A join configuration from the declared data in the suite (spec §17), each part empty when not given. A constraint
@@ -27,6 +28,8 @@ function configFrom(d) {
     vocab: Object.fromEntries(Object.entries(d.vocabulary || {}).map(([k, v]) => [k, new Set(v)])),
     edge_keys: d.identified_by || {},
     contexts: d.guard_cases || {},
+    trust: d.trust || {},
+    owners: d.prefix_owners || {},
   };
   config.constraints = (d.constraints || []).map((c) => [
     c.why,
@@ -37,7 +40,8 @@ function configFrom(d) {
 // A join request answered end to end. Each document is read, normalised and validated, then joined, and finished.
 // The join is merge3 of the first two over the base when there is one, union otherwise. The answer's rows, claims,
 // pairs, paradoxes, nodes and relationships are sorted and written as JSON values. That is to compare with the Python
-// library's. Switches turn single steps off ('base-dates', 'validate', 'base').
+// library's. Switches turn single steps off ('base-dates', 'validate', 'base'). A union holds to the documents' trust
+// (trust.js).
 function joinDocs(q) {
   // q: {docs: [block], base: block|null, config, findings, checks, hold, switches}
   const config = configFrom(q.config),
@@ -56,10 +60,15 @@ function joinDocs(q) {
     docs = q.docs.map((b) => one(b, base)),
     checks = q.checks;
   withinJoinItems([base, ...docs].reduce((n, d) => n + (d ? d.nodes.size + d.raw_edges.length : 0), 0));
+  // a union counts only own and trusted documents, and flags what only an untrusted one states (req:21.trust-counted)
+  const unioned = () => {
+    const { counted, untrusted } = heldByTrust(docs, config, log);
+    return flagUntrusted(finish(union(counted, config), config, q.findings || [], checks), untrusted);
+  };
   const joined =
     base && !sw.has('base')
       ? finish(merge3(base, docs[0], docs[1], config, q.hold), config, q.findings || [], checks)
-      : finish(union(docs, config), config, q.findings || [], checks);
+      : unioned();
   const pr = (p) => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, norm(v)]));
   return {
     rows: log

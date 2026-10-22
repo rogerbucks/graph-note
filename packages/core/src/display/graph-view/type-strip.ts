@@ -2,12 +2,12 @@
 // seven types (diagram_type_set, type_only_when_fits, suggest_type). Each that fits can be chosen, written into the
 // style graph. Each that does not comes with why. The one suggested is said so, and never drawn until chosen. A chosen
 // type that has stopped fitting is said, with why, and the nearest type that fits offered (type_stops_fitting). A graph
-// of more than 50 things is offered the table or a view as the way in (large_way_in). The core decides all of it
+// of more than 1,000 things is offered the table or a view as the way in (large_way_in). The core decides all of it
 // (types.ts). A type a plug-in adds is drawn as a picture of the marks that plug-in gave, when one here draws it
 // (plugin_diagram_type_named). Otherwise the strip says which plug-in draws it. In reading view a type chosen is only
 // looked at: drawn at once, never saved, and said so. Where the note is edited, a type looked at can be kept
 // (type_try_reading).
-import { chosenDiagram, diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
+import { diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
   DiagramSpace,
@@ -28,7 +28,7 @@ export { TypePlace, typeLeftAt } from './type-place';
 
 /** What a card is given of the diagram types, beyond its drawing. */
 export interface DiagramShown extends DiagramOffer {
-  /** For a graph of more than 50 things: the way in, in words. */
+  /** For a graph of more than 1,000 things: the way in, in words. */
   wayIn: { say: string } | null;
   /** The drawing as a table, when it is drawn as one. */
   table?: DiagramTable;
@@ -93,6 +93,12 @@ export function withTried(style: StyleGraph, change: DiagramWrite): StyleGraph {
     at: { block: -1, line: 0, id: 'tried' },
   };
   return { ...style, diagrams: [tried, ...style.diagrams.filter((d) => d.view !== change.view)] };
+}
+
+/** The centre `style` picks for a radial drawing in `view`, the view's own over the whole graph's; none if not picked. */
+export function pickedCentre(style: Pick<StyleGraph, 'diagrams'>, view?: string): string | undefined {
+  const own = view === undefined ? undefined : style.diagrams.find((d) => d.view === view);
+  return (own ?? style.diagrams.find((d) => d.view === undefined))?.centre;
 }
 
 /** The space a plug-in's diagram type is given to draw in, in pixels, by every host. */
@@ -166,7 +172,7 @@ export function diagramShown(
     ...(centre === undefined
       ? {}
       : {
-          centre: { key: centre, text: text(centre), picked: chosenDiagram(style, view)?.centre !== undefined },
+          centre: { key: centre, text: text(centre), picked: pickedCentre(style, view) !== undefined },
           centreOn,
         }),
     wayIn: wayIn(drawing.boxes.length),

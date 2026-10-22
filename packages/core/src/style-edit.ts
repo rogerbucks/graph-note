@@ -10,7 +10,7 @@ import { items } from './block-items.ts';
 import { STYLE } from './layout.ts';
 import { quoted } from './lock.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
-import { radialOnly, showFor, treeOnly } from './style-checks.ts';
+import { centreRefusal, showFor, timelineRefusal, treeOnly } from './style-checks.ts';
 import {
   ARROWHEADS,
   DIAGRAM_TYPES,
@@ -86,15 +86,15 @@ export interface ArrowsWrite {
   type?: string;
 }
 
-/**
- * A diagram type to choose (§15): for the whole graph or a view. For a tree, the relationship it follows; for a radial
- * drawing, the id of the thing at its centre (radial_centre_chosen).
- */
+/** A diagram type to choose (§15), for the graph or a view; a tree's relationship, timeline order or radial centre. */
 export interface DiagramWrite {
   type: string;
   view?: string;
   relationship?: string;
   centre?: string;
+  order?: string;
+  by?: string;
+  show?: string;
 }
 
 /** One change to a graph's style. */
@@ -183,8 +183,8 @@ function diagramRefusal(d: DiagramWrite): string | null {
   if (!(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return mustBe('type', DIAGRAM_TYPES);
   if (d.relationship !== undefined && d.type !== 'tree') return treeOnly();
   if (d.relationship === '') return word('editing.style.type-name');
-  if (d.centre !== undefined && d.type !== 'radial') return radialOnly();
-  if (d.centre === '') return word('editing.style.centre-name');
+  const chosen = centreRefusal(d) ?? timelineRefusal(d);
+  if (chosen) return chosen;
   if (d.view === '') return noViewName();
   return null;
 }
@@ -207,6 +207,9 @@ function choiceFor(
         ['view', d.view],
         ['relationship', d.relationship],
         ['centre', d.centre],
+        ['order', d.order],
+        ['by', d.by],
+        ['show', d.show],
       ],
       match: [['view', d.view]],
     };

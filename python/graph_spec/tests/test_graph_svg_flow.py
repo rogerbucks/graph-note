@@ -98,7 +98,7 @@ def rendered(args):
         mock.patch.object(graph_svg.subprocess, "run", run),
     ):
         graph_svg.render(**args)
-    rankdirs = graph_svg.directions(args["direction"], args["diagram"])
+    rankdirs = graph_svg.directions(args["direction"], args["diagram"], len(args["nodes"]))
     return dict(zip(rankdirs, given, strict=True))
 
 

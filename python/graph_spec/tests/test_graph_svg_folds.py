@@ -125,7 +125,7 @@ def python_answer(texts, view, switches, opened):
                 routing=args["routing"],
                 pictures=args["pictures"],
             )[0]
-            for rd in graph_svg.directions(args["direction"], args["diagram"])
+            for rd in graph_svg.directions(args["direction"], args["diagram"], len(args["nodes"]))
         }
     return {"styles": styles, "drawn": drawn}
 

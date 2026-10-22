@@ -41,3 +41,13 @@ def lone_thing(shape: Mapping[str, Any], centre: str) -> Mapping[str, Any] | Non
                 reached.add(n)
                 queue.append(n)
     return next((t for t in shape["things"] if t["key"] not in reached), None)
+
+
+def centre_problem(typ: str, centre: str | None) -> tuple[str, str] | None:
+    """A centre chosen for a type other than radial, as a problem and its fix, or None."""
+    if centre is None or typ == "radial":
+        return None
+    return (
+        "a centre is chosen only for a radial drawing",
+        "remove centre, or make it type: 'radial'",
+    )

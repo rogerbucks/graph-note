@@ -1,5 +1,5 @@
 {
-  "about": "Graphs whose style graph chooses a diagram type (editor spec §15: diagram_type_set, type_only_when_fits, tree_fits, timeline_fits, type_stops_fitting, type_both_renderers, plugin_diagram_type_named; radial_centre_chosen; §6: radial_spoke_order), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same answer for whether each type fits and why not, the same type drawn (or, when the chosen type no longer fits, the same why and the same nearest type, and a network drawn), and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_types.py does the same from the Python side.",
+  "about": "Graphs whose style graph chooses a diagram type (editor spec §15: diagram_type_set, type_only_when_fits, tree_fits, timeline_fits, timeline_order, timeline_show, type_stops_fitting, type_both_renderers, plugin_diagram_type_named; radial_centre_chosen; §6: radial_spoke_order), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same answer for whether each type fits and why not, the same type drawn (or, when the chosen type no longer fits, the same why and the same nearest type, and a network drawn), and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_types.py does the same from the Python side.",
   "cases": [
     {
       "name": "a tree along one relationship: its links forward, a link drawn backwards in a network laid out forward, the others free",
@@ -18,7 +18,10 @@
           "(cy)-[:TAGGED]->(green),",
           "(ada)-[:TAGGED]->(blue)"
         ],
-        ["// graph: org_style · STYLE org", "(d1:Diagram {type: 'tree', relationship: 'MANAGES'})"]
+        [
+          "// graph: org_style · STYLE org",
+          "(d1:Diagram {type: 'tree', relationship: 'MANAGES'})"
+        ]
       ]
     },
     {
@@ -36,7 +39,10 @@
           "(bea)-[:TAGGED]->(green),",
           "(ada)-[:TAGGED]->(blue)"
         ],
-        ["// graph: org_style · STYLE org", "(d1:Diagram {type: 'flow'})"]
+        [
+          "// graph: org_style · STYLE org",
+          "(d1:Diagram {type: 'flow'})"
+        ]
       ]
     },
     {
@@ -126,7 +132,10 @@
           "(bob)-[:IN]->(dev),",
           "(ann)-[:ASKS]->(bob)"
         ],
-        ["// graph: teams_style · STYLE teams", "(d1:Diagram {type: 'lanes'})"]
+        [
+          "// graph: teams_style · STYLE teams",
+          "(d1:Diagram {type: 'lanes'})"
+        ]
       ]
     },
     {
@@ -144,7 +153,10 @@
           "(arrive)-[:THEN]->(rest),",
           "(rest)-[:THEN]->(back)"
         ],
-        ["// graph: trip_style · STYLE trip", "(d1:Diagram {type: 'timeline'})"]
+        [
+          "// graph: trip_style · STYLE trip",
+          "(d1:Diagram {type: 'timeline'})"
+        ]
       ]
     },
     {
@@ -161,7 +173,10 @@
           "(bea)-[:MANAGES]->(dee),",
           "(cy)-[:MANAGES]->(dee)"
         ],
-        ["// graph: org_style · STYLE org", "(d1:Diagram {type: 'tree', relationship: 'MANAGES'})"]
+        [
+          "// graph: org_style · STYLE org",
+          "(d1:Diagram {type: 'tree', relationship: 'MANAGES'})"
+        ]
       ]
     },
     {
@@ -177,7 +192,10 @@
           "(make)-[:NEXT]->(check),",
           "(check)-[:NEXT]->(plan)"
         ],
-        ["// graph: loop_style · STYLE loop", "(d1:Diagram {type: 'timeline'})"]
+        [
+          "// graph: loop_style · STYLE loop",
+          "(d1:Diagram {type: 'timeline'})"
+        ]
       ]
     },
     {
@@ -199,8 +217,14 @@
           "// graph: lone",
           "(x:Thing {name: 'X'})"
         ],
-        ["// graph: plain_style · STYLE plain", "(d1:Diagram {type: 'network'})"],
-        ["// graph: other_style · STYLE other", "(d1:Diagram {type: 'table'})"]
+        [
+          "// graph: plain_style · STYLE plain",
+          "(d1:Diagram {type: 'network'})"
+        ],
+        [
+          "// graph: other_style · STYLE other",
+          "(d1:Diagram {type: 'table'})"
+        ]
       ]
     },
     {
@@ -258,7 +282,10 @@
           "(ada)-[:MANAGES]->(bea),",
           "(ada)-[:MANAGES]->(cy)"
         ],
-        ["// graph: org_style · STYLE org", "(d1:Diagram {type: 'tree', relationship: 'MANAGES'})"]
+        [
+          "// graph: org_style · STYLE org",
+          "(d1:Diagram {type: 'tree', relationship: 'MANAGES'})"
+        ]
       ]
     },
     {
@@ -273,7 +300,10 @@
           "(a)-[:BETA]->(b),",
           "(c)-[:ALPHA]->(d)"
         ],
-        ["// graph: pair_style · STYLE pair", "(d1:Diagram {type: 'tree'})"]
+        [
+          "// graph: pair_style · STYLE pair",
+          "(d1:Diagram {type: 'tree'})"
+        ]
       ]
     },
     {
@@ -331,6 +361,171 @@
           "// graph: trip_style · STYLE trip",
           "(d1:Diagram {type: 'acme.charts.sankey'}),",
           "(d2:Diagram {type: 'Acme.Sankey', view: 'odd'})"
+        ]
+      ]
+    },
+    {
+      "name": "a timeline with things undated, none chosen: by date, an instant on its day, the undated together last",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(leave:Event {name: 'Leave home', on: DATE '2026-09-01', step: 2}),",
+          "(rest:Event {name: 'Rest', on: DATE '2026-09-03', step: 1, booked: DATE '2026-01-05'}),",
+          "(note:Event {name: 'A note', step: 1.0}),",
+          "(arrive:Event {name: 'Arrive', at: DATETIME '2026-09-03T08:00:00Z', cost: 9, booked: DATE '2026-01-02'}),",
+          "(back:Event {name: 'Back', on: DATE '2026-09-10', step: 3, done: true}),",
+          "(leave)-[:THEN]->(arrive),",
+          "(arrive)-[:THEN]->(rest),",
+          "(rest)-[:THEN]->(back),",
+          "(note)-[:ABOUT]->(rest)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(d1:Diagram {type: 'timeline'}),",
+          "(d2:Diagram {type: 'timeline', view: 'v', order: 'date', by: 'booked'})"
+        ]
+      ]
+    },
+    {
+      "name": "a timeline by the date of the property chosen, drawn in its view",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(leave:Event {name: 'Leave home', on: DATE '2026-09-01', step: 2}),",
+          "(rest:Event {name: 'Rest', on: DATE '2026-09-03', step: 1, booked: DATE '2026-01-05'}),",
+          "(note:Event {name: 'A note', step: 1.0}),",
+          "(arrive:Event {name: 'Arrive', at: DATETIME '2026-09-03T08:00:00Z', cost: 9, booked: DATE '2026-01-02'}),",
+          "(back:Event {name: 'Back', on: DATE '2026-09-10', step: 3, done: true}),",
+          "(leave)-[:THEN]->(arrive),",
+          "(arrive)-[:THEN]->(rest),",
+          "(rest)-[:THEN]->(back),",
+          "(note)-[:ABOUT]->(rest)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(d1:Diagram {type: 'timeline'}),",
+          "(d2:Diagram {type: 'timeline', view: 'v', order: 'date', by: 'booked'})"
+        ]
+      ],
+      "view": "v"
+    },
+    {
+      "name": "a timeline by number: the number most things carry, 1 and 1.0 one place, true no number, the unnumbered last",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(leave:Event {name: 'Leave home', on: DATE '2026-09-01', step: 2}),",
+          "(rest:Event {name: 'Rest', on: DATE '2026-09-03', step: 1, booked: DATE '2026-01-05'}),",
+          "(note:Event {name: 'A note', step: 1.0}),",
+          "(arrive:Event {name: 'Arrive', at: DATETIME '2026-09-03T08:00:00Z', cost: 9, booked: DATE '2026-01-02'}),",
+          "(back:Event {name: 'Back', on: DATE '2026-09-10', step: 3, done: true}),",
+          "(leave)-[:THEN]->(arrive),",
+          "(arrive)-[:THEN]->(rest),",
+          "(rest)-[:THEN]->(back),",
+          "(note)-[:ABOUT]->(rest)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(d1:Diagram {type: 'timeline', order: 'number'})"
+        ]
+      ]
+    },
+    {
+      "name": "a timeline by links with a loop, broken where first written, and a thing joined to nothing",
+      "blocks": [
+        [
+          "// graph: loop",
+          "(plan:Step {name: 'Plan'}),",
+          "(make:Step {name: 'Make'}),",
+          "(check:Step {name: 'Check'}),",
+          "(lone:Step {name: 'Lone'}),",
+          "(plan)-[:NEXT]->(make),",
+          "(make)-[:NEXT]->(check),",
+          "(check)-[:NEXT]->(plan)"
+        ],
+        [
+          "// graph: loop_style · STYLE loop",
+          "(d1:Diagram {type: 'timeline', order: 'links'})"
+        ]
+      ]
+    },
+    {
+      "name": "a timeline as written: each thing a place of its own",
+      "blocks": [
+        [
+          "// graph: loop",
+          "(plan:Step {name: 'Plan'}),",
+          "(make:Step {name: 'Make'}),",
+          "(check:Step {name: 'Check'}),",
+          "(lone:Step {name: 'Lone'}),",
+          "(plan)-[:NEXT]->(make),",
+          "(make)-[:NEXT]->(check),",
+          "(check)-[:NEXT]->(plan)"
+        ],
+        [
+          "// graph: loop_style · STYLE loop",
+          "(d1:Diagram {type: 'timeline', order: 'written'})"
+        ]
+      ]
+    },
+    {
+      "name": "a timeline of the dated things only: the undated and their links left out of the source",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(leave:Event {name: 'Leave home', on: DATE '2026-09-01', step: 2}),",
+          "(rest:Event {name: 'Rest', on: DATE '2026-09-03', step: 1, booked: DATE '2026-01-05'}),",
+          "(note:Event {name: 'A note', step: 1.0}),",
+          "(arrive:Event {name: 'Arrive', at: DATETIME '2026-09-03T08:00:00Z', cost: 9, booked: DATE '2026-01-02'}),",
+          "(back:Event {name: 'Back', on: DATE '2026-09-10', step: 3, done: true}),",
+          "(leave)-[:THEN]->(arrive),",
+          "(arrive)-[:THEN]->(rest),",
+          "(rest)-[:THEN]->(back),",
+          "(note)-[:ABOUT]->(rest)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(d1:Diagram {type: 'timeline', show: 'dated'})"
+        ]
+      ]
+    },
+    {
+      "name": "a timeline of the dated things only, with none to show: said, the nearest offered, and a network drawn",
+      "blocks": [
+        [
+          "// graph: loop",
+          "(plan:Step {name: 'Plan'}),",
+          "(make:Step {name: 'Make'}),",
+          "(check:Step {name: 'Check'}),",
+          "(lone:Step {name: 'Lone'}),",
+          "(plan)-[:NEXT]->(make),",
+          "(make)-[:NEXT]->(check),",
+          "(check)-[:NEXT]->(plan)"
+        ],
+        [
+          "// graph: loop_style · STYLE loop",
+          "(d1:Diagram {type: 'timeline', show: 'dated'})"
+        ]
+      ]
+    },
+    {
+      "name": "a timeline's words checked: an order and a show not in the set, given to a flow, and by with no order by date or number",
+      "blocks": [
+        [
+          "// graph: loop",
+          "(plan:Step {name: 'Plan'}),",
+          "(make:Step {name: 'Make'}),",
+          "(check:Step {name: 'Check'}),",
+          "(lone:Step {name: 'Lone'}),",
+          "(plan)-[:NEXT]->(make),",
+          "(make)-[:NEXT]->(check),",
+          "(check)-[:NEXT]->(plan)"
+        ],
+        [
+          "// graph: loop_style · STYLE loop",
+          "(d1:Diagram {type: 'timeline', order: 'size', show: 'some'}),",
+          "(d2:Diagram {type: 'flow', view: 'v', order: 'links'}),",
+          "(d3:Diagram {type: 'timeline', view: 'w', order: 'links', by: 'step'})"
         ]
       ]
     }

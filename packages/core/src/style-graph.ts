@@ -3,6 +3,7 @@
 // view fades or hides what is outside it, and how a view was shown. It holds where arrowheads are hidden, the diagram
 // type chosen, how links move and the pictures on boxes (§18). A style graph is written in the same notation as the
 // data, in its own block, and never in the data.
+import type { TimelineChoice } from './timeline.ts';
 import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
 import type { Problem } from './note-reading.ts';
@@ -115,7 +116,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   ViewStyle: ['view', 'outside'],
   Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected', 'labels', 'hubs', 'groups', 'merge', 'legend'],
   Arrows: ['arrowheads', 'view', 'type'],
-  Diagram: ['type', 'view', 'relationship', 'centre'],
+  Diagram: ['type', 'view', 'relationship', 'order', 'by', 'show', 'centre'],
   Flow: ['motion', 'means', 'type', 'view'],
   Links: ['view', 'routing', 'merge'],
   Picture: ['property', 'kind', 'thing', 'view'],
@@ -175,9 +176,9 @@ export interface Arrows {
 
 /**
  * The diagram type chosen (§15, type_remembered): for the whole graph, or for one view. For a tree, the relationship it
- * follows; for a radial drawing, the thing at its centre. Drawn only while the data fits it (types.ts, `diagramFor`).
+ * follows; for a radial drawing, the id of its `centre` (radial_centre_chosen). Drawn only while the data fits it.
  */
-export interface Diagram {
+export interface Diagram extends TimelineChoice {
   type: DiagramType;
   /** A diagram type a plug-in adds, by its whole name (`pluginTypeOf`). Where none draws it, `type` is a network. */
   plugin?: string;
@@ -185,7 +186,6 @@ export interface Diagram {
   view?: string;
   /** For a tree: the relationship type whose links are its branches; none, the one that makes the best tree. */
   relationship?: string;
-  /** For a radial drawing: the id of the thing at its centre; none, the thing with the most links (radial_centre_chosen). */
   centre?: string;
   at: StyleAt;
 }
