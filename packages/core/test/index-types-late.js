@@ -117,6 +117,7 @@ export const TYPES_LATE = [
   'SendResult',
   'Settings',
   'Shape',
+  'SheetDock',
   'Shortcut',
   'ShortcutPlace',
   'Show',

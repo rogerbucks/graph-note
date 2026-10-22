@@ -11,7 +11,8 @@ import type { Bounds } from './hits.ts';
 import { STYLE } from './layout.ts';
 import { formatList } from './locale-formats.ts';
 import type { NoteReading } from './note-reading.ts';
-import type { Place, Size, View } from './zoom.ts';
+import type { Clear, Place, Size, View } from './zoom.ts';
+import { clearOf } from './zoom-fit.ts';
 
 /** One group of a thing's links: one relationship type, one way, with the things at their other ends. */
 export interface LinkGroup {
@@ -201,22 +202,25 @@ const EDGE = 22;
 
 /**
  * The arrow at the edge of the view pointing to a selection out of sight (selection_pointer). There is none while any
- * of it shows in the part of the viewport not covered by the sheet (`clear` pixels at its foot). Otherwise it sits at
- * the edge of that part, on the line from its middle towards the selection, pointing along it.
+ * of it shows in the part of the viewport not covered by the sheet. That is `clear`: a number is pixels at its foot,
+ * else each edge's. Otherwise it sits at the edge of that part, on the line from its middle towards the selection, pointing
+ * along it.
  */
-export function pointerTo(box: Bounds, view: View, viewport: Size, clear = 0): Pointing | null {
-  const room = Math.max(0, viewport.height - clear);
+export function pointerTo(box: Bounds, view: View, viewport: Size, clear: number | Clear = 0): Pointing | null {
+  const c = clearOf(clear),
+    roomRight = Math.max(c.left, viewport.width - c.right),
+    roomFoot = Math.max(c.top, viewport.height - c.bottom);
   const left = view.x + box.x * view.width,
     top = view.y + box.y * view.height,
     right = left + box.width * view.width,
     bottom = top + box.height * view.height;
-  if (right > 0 && left < viewport.width && bottom > 0 && top < room) return null;
-  const mx = viewport.width / 2,
-    my = room / 2,
+  if (right > c.left && left < roomRight && bottom > c.top && top < roomFoot) return null;
+  const mx = (c.left + roomRight) / 2,
+    my = (c.top + roomFoot) / 2,
     dx = (left + right) / 2 - mx,
     dy = (top + bottom) / 2 - my;
-  const halfW = Math.max(0, mx - EDGE),
-    halfH = Math.max(0, my - EDGE);
+  const halfW = Math.max(0, (roomRight - c.left) / 2 - EDGE),
+    halfH = Math.max(0, (roomFoot - c.top) / 2 - EDGE);
   const reach = Math.min(dx ? halfW / Math.abs(dx) : Infinity, dy ? halfH / Math.abs(dy) : Infinity);
   return { x: mx + dx * reach, y: my + dy * reach, angle: (Math.atan2(dy, dx) * 180) / Math.PI };
 }
@@ -242,4 +246,51 @@ export function sheetLimit(screen: number): number {
 /** How many pixels of a viewport, given by its top and bottom on the screen, a sheet whose top is at `sheetTop` covers. */
 export function coverOf(viewport: { top: number; bottom: number }, sheetTop: number): number {
   return Math.min(viewport.bottom - viewport.top, Math.max(0, viewport.bottom - sheetTop));
+}
+
+/**
+ * Where the sheet sits over the note's visible part (sheet_docked): its bottom, the default, its top, or a side. The
+ * sides are logical: `start` is the left in a language read left to right, and the right in one read right to left.
+ */
+export type SheetDock = 'bottom' | 'top' | 'start' | 'end';
+
+/** Every place the sheet can sit, in the order its place button offers them. */
+export const SHEET_DOCKS: readonly SheetDock[] = ['bottom', 'top', 'start', 'end'];
+
+/** The share of the visible screen's width the sheet takes at a side, until it is resized. */
+export const SIDE_SHARE = 0.4;
+
+/** The width kept beside a sheet at a side for the chosen thing and some of the drawing, in pixels. */
+export const BESIDE_SHEET = 200;
+
+/** The narrowest a sheet at a side is, in pixels, where the screen has room: enough for its header and a link a line. */
+const SIDE_LEAST = 240;
+
+/** How much one press of an arrow key on the resize bar moves it, as a share of the screen across it. */
+export const RESIZE_STEP = 0.05;
+
+/** Whether the sheet at `dock` is sized across the screen's width (a side), not its height. */
+export const sideways = (dock: SheetDock): boolean => dock === 'start' || dock === 'end';
+
+/**
+ * The least and the most the sheet at `dock` may be across the screen, on a visible screen `screen` pixels across
+ * that way (sheet_resized). It is never smaller than its bar, or at a side its header. It never takes so much that the
+ * chosen thing and some of the drawing cannot be seen beside it.
+ */
+export function sheetBounds(dock: SheetDock, screen: number): { least: number; most: number } {
+  const keep = sideways(dock) ? BESIDE_SHEET : ABOVE_SHEET,
+    least = sideways(dock) ? Math.min(SIDE_LEAST, Math.max(BAR_PX, screen - keep)) : BAR_PX;
+  return { least, most: Math.max(least, screen - keep) };
+}
+
+/**
+ * How big the sheet at `dock` is across a visible screen `screen` pixels across that way. `share` is the share of it
+ * chosen with the resize bar. It is null when it was never resized, and then the sheet takes its own share. That is
+ * as `sheetLimit` gives it for the bottom or top. Always within `sheetBounds`.
+ */
+export function sheetSpan(dock: SheetDock, share: number | null, screen: number): number {
+  const { least, most } = sheetBounds(dock, screen),
+    wanted = share ?? (sideways(dock) ? SIDE_SHARE : null);
+  if (wanted === null) return sheetLimit(screen);
+  return Math.min(most, Math.max(least, wanted * screen));
 }

@@ -223,6 +223,12 @@ const CLIPS = {
   '.thoughtknot-table th': 'a column of the table, which scrolls sideways when wide',
   '.thoughtknot-table td': 'a cell of the table, which scrolls sideways when wide',
   '.thoughtknot-sr': 'the screen reader’s text, kept off the screen on purpose',
+  '.thoughtknot-view > .thoughtknot-details.thoughtknot-sheet':
+    'the sheet, a size the person set; its words wrap in its body, which scrolls',
+  '.thoughtknot-link-reading':
+    'a link’s reading, one line of the details; its full words are read out and in the drawing',
+  '.thoughtknot-link-row button.thoughtknot-link-thing':
+    'a linked thing, one line of the details; its full name is its button’s words, read out whole',
 };
 
 /** The rules with a fixed width that hold no words, each with why. */
@@ -232,6 +238,12 @@ const HOLDS_NO_WORDS = {
   '.gn-icon': 'an icon',
   '.thoughtknot-switch-track': 'a switch drawn as a toggle; its words sit beside it',
   '.thoughtknot-switch-track::before': 'the toggle’s knob',
+  '.is-dock-left > .thoughtknot-sheet-resizer': 'the sheet’s resize bar',
+  '.is-dock-right > .thoughtknot-sheet-resizer': 'the sheet’s resize bar',
+  '.is-dock-bottom > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar',
+  '.is-dock-top > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar',
+  '.is-dock-left > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar',
+  '.is-dock-right > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar',
 };
 
 /** A length that does not grow with the words: pixels, points, em or characters. */

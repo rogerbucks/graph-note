@@ -2,11 +2,11 @@
 // Host-free: the host passes plain events in and draws the view this returns. handle() says whether the event was used.
 // The host stops the browser's own handling only then: in a note the wheel and a one-finger drag still scroll the
 // note. A drag pans freely past the drawing's edges (pan_freely), and Fit brings it back; the limits are zoom-fit.ts's.
-import { MAX_SCALE, STEP, clamp, clampPan, fitScale, hasSize, held, inSight, outLimit } from './zoom-fit.ts';
-import type { Mode, Size } from './zoom-fit.ts';
+import { MAX_SCALE, NO_CLEAR, STEP, clampPan, clearWithin, fitScale, hasSize, held, heldClear } from './zoom-fit.ts';
+import { inSight, outLimit, type Clear, type Mode, type Size } from './zoom-fit.ts';
 
 export { MAX_SCALE, STEP } from './zoom-fit.ts';
-export type { Mode, Size } from './zoom-fit.ts';
+export type { Clear, Mode, Size } from './zoom-fit.ts';
 
 /** Two taps this close in time (ms) and place (px) are a double tap; a pointer that moves further than TAP_SLOP is a drag. */
 const DOUBLE_TAP_MS = 300,
@@ -101,8 +101,8 @@ export class Zoom {
   private readonly pointers = new Map<number, Pointer>();
   private pinch: Pinch | null = null;
   private lastTap: { x: number; y: number; time: number } | null = null;
-  /** The strip at the foot of the viewport kept clear, in pixels: what a sheet over it covers (§25). */
-  private clear = 0;
+  /** What a sheet over the viewport covers at its edges, in pixels, kept clear (§25). */
+  private clear: Clear = NO_CLEAR;
   /** Whether the drawing was fitted when its card was hidden, so it is fitted again when it shows (§25). */
   private refit = false;
 
@@ -188,26 +188,28 @@ export class Zoom {
    */
   aim(box: { x: number; y: number; width: number; height: number }, minScale = 0): Place | null {
     const { width: cw, height: ch } = this.content,
-      vw = this.viewport.width,
-      room = this.viewport.height - this.clear,
+      c = this.clear,
+      right = this.viewport.width - c.right,
+      foot = this.viewport.height - c.bottom,
       s = Math.max(this.scale, Math.min(minScale, MAX_SCALE));
     const left = this.x + box.x * cw * s,
       top = this.y + box.y * ch * s;
-    const inView = left >= 0 && top >= 0 && left + box.width * cw * s <= vw && top + box.height * ch * s <= room;
+    const inView =
+      left >= c.left && top >= c.top && left + box.width * cw * s <= right && top + box.height * ch * s <= foot;
     if (s === this.scale && inView) return null;
     const [x, y] = this.clampPan(
       s,
-      vw / 2 - (box.x + box.width / 2) * cw * s,
-      room / 2 - (box.y + box.height / 2) * ch * s,
+      (c.left + right) / 2 - (box.x + box.width / 2) * cw * s,
+      (c.top + foot) / 2 - (box.y + box.height / 2) * ch * s,
     );
     return { scale: s, x, y };
   }
 
-  /** Keeps `bottom` pixels at the foot clear for a sheet (§25); a smaller strip brings down a drawing risen into it. */
-  keepClear(bottom: number): void {
-    const was = this.clampPan(this.scale, this.x, -Infinity)[1];
-    this.clear = clamp(bottom, 0, this.viewport.height);
-    if (this.y >= was - EPS) this.panBy(0, Math.max(0, this.clampPan(this.scale, this.x, -Infinity)[1] - this.y));
+  /** Keeps what a sheet covers clear (§25): a strip at the foot, or each edge's; a drawing moved into it comes back. */
+  keepClear(covered: number | Clear): void {
+    const room = { content: this.content, viewport: this.viewport, clear: this.clear };
+    const [x, y] = heldClear(room, this.scale, this.x, this.y, (this.clear = clearWithin(covered, this.viewport)));
+    this.panBy(x - this.x, y - this.y);
   }
 
   panBy(dx: number, dy: number): void {

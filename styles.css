@@ -1176,6 +1176,10 @@ pre.thoughtknot-code {
   min-width: 44px;
   min-height: 44px;
 }
+/* the header's buttons sit together at its end: only the first is pushed there */
+.thoughtknot-details-head button ~ button {
+  margin-inline-start: 0;
+}
 .thoughtknot-details h4 {
   display: flex;
   align-items: center;
@@ -1372,7 +1376,10 @@ pre.thoughtknot-code {
   z-index: var(--gn-layer-popover);
   display: flex;
   flex-direction: column;
-  max-height: min(45vh, var(--thoughtknot-sheet-max, 45vh));
+  max-height: var(--thoughtknot-sheet-max, 45vh);
+  height: var(--thoughtknot-sheet-height, auto);
+  /* its body scrolls, not the sheet, so its header and resize bar stay put */
+  overflow: hidden;
   margin: 0;
   background: var(--gn-bg);
   border: 1px solid var(--gn-border-focus);
@@ -1380,6 +1387,129 @@ pre.thoughtknot-code {
   border-radius: var(--gn-radius-l) var(--gn-radius-l) 0 0;
   box-shadow: var(--gn-shadow-l);
   padding: 0 var(--gn-space-3) max(var(--gn-space-2), env(safe-area-inset-bottom));
+}
+/* Docked at the top of the note's visible part, or along a side of the card from that top to that foot (sheet_docked).
+   The plugin works out the sides in pixels from the way the host reads. So left and right here are the sides as seen. */
+.thoughtknot-view > .thoughtknot-details.thoughtknot-sheet.is-dock-top {
+  top: var(--thoughtknot-sheet-top, 0);
+  bottom: auto;
+  border: 1px solid var(--gn-border-focus);
+  border-top: 0;
+  border-radius: 0 0 var(--gn-radius-l) var(--gn-radius-l);
+  padding: 0 var(--gn-space-3) var(--gn-space-3);
+}
+.thoughtknot-view > .thoughtknot-details.thoughtknot-sheet:is(.is-dock-left, .is-dock-right) {
+  top: var(--thoughtknot-sheet-top, 0);
+  bottom: var(--thoughtknot-sheet-bottom, auto);
+  max-height: none;
+  height: auto;
+  border: 1px solid var(--gn-border-focus);
+  border-radius: 0;
+  padding: 0 var(--gn-space-3) var(--gn-space-2);
+}
+/* The resize bar (sheet_resized): the sheet's edge facing the drawing, with a short line in its middle to grab. */
+.thoughtknot-sheet-resizer {
+  position: absolute;
+  z-index: 1;
+  touch-action: none;
+  background: none;
+}
+.thoughtknot-sheet-resizer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 999px;
+  background: var(--gn-border-focus);
+  opacity: 0.6;
+}
+.is-dock-bottom > .thoughtknot-sheet-resizer,
+.is-dock-top > .thoughtknot-sheet-resizer {
+  inset-inline: 0;
+  height: 12px;
+  cursor: row-resize;
+}
+.is-dock-bottom > .thoughtknot-sheet-resizer {
+  top: 0;
+}
+.is-dock-top > .thoughtknot-sheet-resizer {
+  bottom: 0;
+}
+.is-dock-bottom > .thoughtknot-sheet-resizer::after,
+.is-dock-top > .thoughtknot-sheet-resizer::after {
+  width: 40px;
+  height: 4px;
+}
+.is-dock-left > .thoughtknot-sheet-resizer,
+.is-dock-right > .thoughtknot-sheet-resizer {
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  cursor: col-resize;
+}
+.is-dock-left > .thoughtknot-sheet-resizer {
+  right: 0;
+}
+.is-dock-right > .thoughtknot-sheet-resizer {
+  left: 0;
+}
+.is-dock-left > .thoughtknot-sheet-resizer::after,
+.is-dock-right > .thoughtknot-sheet-resizer::after {
+  width: 4px;
+  height: 40px;
+}
+.thoughtknot-sheet-resizer:hover::after,
+.thoughtknot-sheet-resizer:focus-visible::after,
+.is-resizing > .thoughtknot-sheet-resizer::after {
+  opacity: 1;
+}
+.thoughtknot-sheet-resizer:focus-visible {
+  outline: 2px solid var(--gn-border-focus);
+  outline-offset: -2px;
+}
+/* On touch, the bar is a target a finger can find: 24 points across */
+@media (pointer: coarse) {
+  .is-dock-bottom > .thoughtknot-sheet-resizer,
+  .is-dock-top > .thoughtknot-sheet-resizer {
+    height: 24px;
+  }
+  .is-dock-left > .thoughtknot-sheet-resizer,
+  .is-dock-right > .thoughtknot-sheet-resizer {
+    width: 24px;
+  }
+}
+/* The details in the host's own side pane (details_in_host_pane). They sit in the pane's flow and scroll within it.
+   The header is kept in sight at its top (details_scroll). */
+.thoughtknot-details-pane {
+  padding: var(--gn-space-2) var(--gn-space-3);
+  overflow-y: auto;
+}
+.thoughtknot-details-pane .thoughtknot-details-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--gn-bg);
+}
+/* The details in the card, below the drawing, as while the block is edited. They are never longer than most of the
+   screen, and scroll within themselves. The header is kept in sight (details_scroll). */
+.thoughtknot-view > .thoughtknot-details {
+  max-height: 70vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.thoughtknot-view > .thoughtknot-details > .thoughtknot-details-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--gn-bg);
+}
+.thoughtknot-details-pane > .thoughtknot-details {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.thoughtknot-details-pane-empty {
+  color: var(--gn-text-muted);
 }
 .thoughtknot-sheet > .thoughtknot-details-head {
   flex: none;
@@ -1397,8 +1527,8 @@ pre.thoughtknot-code {
 /* A thing's details (spec §25):
    - a sentence on what is going on (details_said);
    - its links in and out, side by side where the panel is wide and one above the other where it is narrow
-     (details_ins_outs). Each group is headed by its reading, its things one to a row. Each is a choice with its link's
-     own small button beside it;
+     (details_ins_outs). Each link is one line: its reading, then the thing, a choice with its link's own small button
+     beside it. So a thing with many links takes little room;
    - its properties as a table of name and value (details_properties_table).
    Section labels are small capitals, as a box's kind is on the drawing. Each part is a tile. Each row is a quiet
    44-point button that shows its hover and focus, as the diagram types and the View menu's switches are. */
@@ -1428,10 +1558,6 @@ pre.thoughtknot-code {
 }
 .thoughtknot-links-part {
   min-width: 0;
-  padding: var(--gn-space-2) var(--gn-space-3);
-  border: 1px solid var(--gn-border);
-  border-radius: var(--gn-radius-m);
-  background: var(--gn-bg);
 }
 .thoughtknot-details .thoughtknot-links-part > h4 {
   margin-top: 0;
@@ -1446,14 +1572,15 @@ pre.thoughtknot-code {
   margin: 0;
   padding-inline-start: 0;
 }
-.thoughtknot-link-group + .thoughtknot-link-group {
-  margin-top: var(--gn-space-2);
-}
 .thoughtknot-link-reading {
-  display: flex;
+  flex: 0 1 auto;
+  max-width: 45%;
+  display: inline-flex;
   align-items: center;
-  gap: var(--gn-space-2);
-  margin: var(--gn-space-1) 0 var(--gn-space-half-1);
+  gap: var(--gn-space-1);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: var(--gn-font-size-s);
   color: var(--gn-text-muted);
 }
@@ -1463,7 +1590,7 @@ pre.thoughtknot-code {
   gap: var(--gn-space-half-2);
   border-top: 1px solid var(--gn-border);
 }
-.thoughtknot-link-row:first-child {
+.thoughtknot-link-group:first-child .thoughtknot-link-row:first-child {
   border-top: 0;
 }
 .thoughtknot-link-row button.thoughtknot-link-thing {
@@ -1481,8 +1608,9 @@ pre.thoughtknot-code {
   font-size: inherit;
   font-weight: normal;
   text-align: start;
-  white-space: normal;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   cursor: var(--gn-cursor-link);
 }
 .thoughtknot-link-row button.thoughtknot-link-choice {
@@ -1499,6 +1627,23 @@ pre.thoughtknot-code {
   border: 0;
   box-shadow: none;
   color: var(--gn-text-muted);
+}
+/* With a mouse or trackpad, a line is a compact 28 pixels; on touch it keeps its 44 points */
+@media (pointer: fine) {
+  .thoughtknot-link-row button.thoughtknot-link-thing,
+  .thoughtknot-link-row button.thoughtknot-link-choice {
+    min-height: 28px;
+    padding-block: var(--gn-space-half-1);
+  }
+  .thoughtknot-link-row button.thoughtknot-link-choice {
+    min-width: 28px;
+  }
+}
+/* A thing's note, with the button that opens it beside the graph (note_open_beside) */
+.thoughtknot-note-open {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-2);
 }
 .thoughtknot-link-row button:hover {
   background: var(--gn-bg-hover);

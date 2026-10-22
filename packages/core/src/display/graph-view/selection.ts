@@ -8,6 +8,7 @@
 import { FocusState, READABLE_SCALE, coverOf, estimateEdge, nextAlong, pointerTo, word } from '@thoughtknot/core';
 import type {
   Bounds,
+  Clear,
   FocusTarget,
   GraphDrawing,
   Kept,
@@ -31,6 +32,9 @@ import { UntangleView } from './untangle';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
 import type { ViewSwitching } from './view-switches';
+
+/** Nothing kept clear: no sheet over the drawing. */
+const NONE: Clear = { top: 0, right: 0, bottom: 0, left: 0 };
 
 /** What the selection needs of its card, given late because the card builds them after it. */
 export interface SelectionHost {
@@ -81,8 +85,8 @@ export class Selection {
   private box: Bounds | null = null;
   /** How the selection came (`How`). */
   private how: How = 'tap';
-  /** The pixels at the viewport's foot the details sheet covers, as last kept clear. */
-  private kept = 0;
+  /** What the details sheet covers at each edge of the viewport, as last kept clear. */
+  private kept: Clear = NONE;
   private glide: Glide | null = null;
   private readonly arrow: SelectionPointer;
   private readonly regrouping: Regrouping;
@@ -125,8 +129,8 @@ export class Selection {
     this.hover.tapped(null);
     this.target = this.box = null;
     this.glide?.stop();
-    this.kept = 0;
-    this.host.zoom().keepClear(0);
+    this.kept = NONE;
+    this.host.zoom().keepClear(NONE);
     this.refresh();
     this.pointAt();
   }
@@ -173,23 +177,33 @@ export class Selection {
   }
 
   /**
-   * Brings the selection into sight as it came (`How`), clear of the details sheet. The drawing pans up into the strip
-   * the sheet covers, never more. Where the sheet covers the whole drawing, the note scrolls instead. A tap moves the
-   * view only for the sheet; from the details the thing is also made readable. The move is brief, or at once (§25).
+   * Brings the selection into sight as it came (`How`), clear of the details sheet, wherever it sits. The drawing pans
+   * into the part the sheet covers, never more. Where a sheet at the foot covers the whole drawing, the note scrolls
+   * instead. A tap moves the view only for the sheet; from the details the thing is also made readable. The move is
+   * brief, or at once (§25).
    */
   private inSight(): void {
     const box = this.box,
       zoom = this.host.zoom(),
-      top = this.host.details().sheetTop();
+      details = this.host.details(),
+      top = details.sheetTop();
     if (!box) return this.pointAt();
     const r = this.host.viewport().getBoundingClientRect(),
+      c = details.sheetCover(r),
       cover = top === null ? 0 : coverOf(r, top);
-    this.kept = cover < r.height ? cover : 0;
+    // an edge the sheet covers wholly is no strip to pan into
+    this.kept = {
+      top: c.top < r.height ? c.top : 0,
+      right: c.right < r.width ? c.right : 0,
+      bottom: c.bottom < r.height ? c.bottom : 0,
+      left: c.left < r.width ? c.left : 0,
+    };
+    const any = this.kept.top + this.kept.right + this.kept.bottom + this.kept.left > 0;
     zoom.keepClear(this.kept);
-    const to = this.how === 'tap' && !this.kept ? null : zoom.aim(box, this.how === 'chosen' ? READABLE_SCALE : 0);
+    const to = this.how === 'tap' && !any ? null : zoom.aim(box, this.how === 'chosen' ? READABLE_SCALE : 0);
     if (to && this.how === 'found') zoom.restore(to.scale, to.x, to.y);
     else if (to) (this.glide ??= new Glide(this.host.viewport())).to(zoom, to);
-    if (top !== null && this.kept === 0 && cover > 0) {
+    if (top !== null && this.kept.bottom === 0 && cover > 0) {
       const v = zoom.view(),
         scale = to?.scale ?? v.scale,
         foot = r.top + (to?.y ?? v.y) + (box.y + box.height) * (v.height / v.scale) * scale;

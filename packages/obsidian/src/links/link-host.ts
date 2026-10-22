@@ -156,6 +156,11 @@ export function linkHost(plugin: ThoughtKnotPlugin, path: string, graph: string)
       if (!newLeaf && at) left().set(key, at); // the link takes this tab: the back step finds the card as it was
       void plugin.app.workspace.openLinkText(link.opens, path, newLeaf);
     },
+    // a split beside the card's own tab, so the note and the graph are seen side by side (§25, note_open_beside)
+    openBeside: (link) => {
+      if (link.kind !== 'note' && link.kind !== 'file') return;
+      void plugin.app.workspace.openLinkText(link.opens, path, 'split');
+    },
     hover: (link, evt, el) => {
       if (link.kind !== 'note' && link.kind !== 'file') return;
       plugin.app.workspace.trigger('hover-link', {
