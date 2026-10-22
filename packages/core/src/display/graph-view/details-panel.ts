@@ -17,7 +17,7 @@ import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';
 import { RichDetails } from './rich-details';
 import { renderSummary } from './details-summary';
-import { untangleOffers } from './details-untangle';
+import { relabelShowOnly, untangleOffers } from './details-untangle';
 import { MovingImages, placePictures, renderImages } from './animated-images';
 import type { ThingActions } from './untangle';
 import type { ViewOptions } from './view-options';
@@ -333,6 +333,11 @@ export class DetailsPanel {
         // the note as it is now: a thing written in another block is found, and one only suggested is not parked (§4)
         () => ed.session?.current() ?? this.o.reading,
       );
+  }
+
+  /** The drawing is shown only with `only` and its neighbours now, or whole (null): its button says so (untangle_toggle). */
+  untangled(only: string | null): void {
+    relabelShowOnly(this.el, only);
   }
 
   /** The drawing was laid out again (§25): the box or link whose details are open is marked as selected on it again. */

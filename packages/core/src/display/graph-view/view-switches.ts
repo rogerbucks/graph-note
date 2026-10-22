@@ -21,7 +21,7 @@ const nameOf = (s: ViewSwitch): string => {
   const o = OPTIONS.find((x) => x.key === SWITCH_SETTINGS[s]);
   return o ? optionSaid(o).name : switchName(s);
 };
-import type { Drawn, GraphDrawing, ViewState, ViewSwitch } from '@thoughtknot/core';
+import type { Drawn, GraphDrawing, Kept, ViewState, ViewSwitch } from '@thoughtknot/core';
 import type { SwitchesShown } from './view-options';
 
 /** A card's View menu, hidden until the bar's button opens it. */
@@ -155,6 +155,15 @@ export class ViewSwitching {
     if (hiding.group !== undefined) this.o.state.open({ group: hiding.group });
     void this.redraw(then);
     return true;
+  }
+
+  /**
+   * Lays this card's graph out again with only what `only` keeps, so a thing and its neighbours sit together; or the
+   * whole graph again (null). `then` runs on the drawing laid out again (untangle_regroup).
+   */
+  regroup(only: Kept | null, then?: () => void): void {
+    this.o.state.keepOnly(this.owner, only);
+    void this.redraw(then);
   }
 
   /** Brings the drawing up to date when another card, such as its full screen, turned the shared switches. */
