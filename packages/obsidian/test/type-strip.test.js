@@ -65,7 +65,7 @@ describe('Diagram type on a card', () => {
         ['Flow', true, ''],
         ['Radial', true, ''],
         ['Lanes', false, 'lanes need things of two kinds or more'],
-        ['Timeline', false, 'a timeline needs every thing to carry a date, and Ada carries none'],
+        ['Timeline', true, ''],
         ['Table', true, ''],
       ]);
       assert.match(el.querySelector('.thoughtknot-type-drawn').textContent, /Drawn as a network/);
@@ -144,7 +144,7 @@ describe('the Diagram type list looks native', () => {
         '',
         '',
         'thoughtknot-type-unfit',
-        'thoughtknot-type-unfit',
+        '',
         '',
       ]);
     } finally {

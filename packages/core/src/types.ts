@@ -1,6 +1,7 @@
 // Diagram types (editor spec §15). This works out:
 // - which of the seven types fit a graph, and why each that does not fit does not (type_only_when_fits, tree_fits,
 //   timeline_fits);
+// - a timeline's order and what it shows (timeline_order, timeline_show);
 // - the type that fits best, suggested and never drawn unless chosen (suggest_type);
 // - the type the style graph chooses, drawn only while the data fits it. Else the graph is drawn as a network, and the
 //   nearest type that fits is offered (type_stops_fitting);
@@ -11,13 +12,15 @@ import type { Graph } from '@thoughtknot/graph-spec';
 import type { DiagramPlan, GraphDrawing } from './note-reading.ts';
 import { DIAGRAM_TYPES, pluginTypeOf } from './style-graph.ts';
 import type { Diagram, DiagramType, StyleGraph } from './style-graph.ts';
-import { centreOf, dayOf, loopIn, shapeOf } from './types-shape.ts';
+import { TIMELINE_ORDERS, TIMELINE_SHOWS, timelinePlan, timelineShown } from './timeline.ts';
+import type { TimelineChoice, TimelineOrder, TimelineShow } from './timeline.ts';
+import { centreOf, loopIn, shapeOf } from './types-shape.ts';
 import type { GraphShape } from './types-shape.ts';
 import { formatList } from './locale-formats.ts';
 import { word } from './words.ts';
 
-export { DIAGRAM_TYPES, pluginTypeOf, shapeOf };
-export type { DiagramType, GraphShape };
+export { DIAGRAM_TYPES, TIMELINE_ORDERS, TIMELINE_SHOWS, pluginTypeOf, shapeOf };
+export type { DiagramType, GraphShape, TimelineChoice, TimelineOrder, TimelineShow };
 
 /** Whether a type fits, and, when it does not, why, in words naming the things at fault. */
 export interface TypeFit {
@@ -97,6 +100,12 @@ function treeAlong(shape: GraphShape, type: string, text: (k: string) => string)
 const no = (type: DiagramType, why: string): TypeFit => ({ type, fits: false, why });
 const yes = (type: DiagramType): TypeFit => ({ type, fits: true });
 
+/** Whether a timeline fits (timeline_fits): it does while it has a thing to show. */
+function timelineFit(shape: GraphShape, choice: TimelineChoice): TypeFit {
+  if (timelineShown(shape, choice.show).length) return yes('timeline');
+  return no('timeline', word(choice.show === 'dated' ? 'diagram.timeline.none-dated' : 'diagram.timeline.all-dated'));
+}
+
 /**
  * Whether a tree fits. It is judged along `relationship`, or, none chosen, along the type with the most links that
  * makes one. Of two with as many, the first by name wins, so the choice never hangs on the order written.
@@ -159,10 +168,11 @@ function lanesFit(shape: GraphShape): TypeFit {
 
 /**
  * Whether each type fits the shape (§15, type_only_when_fits), in the order of `DIAGRAM_TYPES`, each that does not with
- * why. A tree is judged along `relationship` when one is chosen (tree_fits). A timeline needs every thing to carry a
- * date (timeline_fits). A network fits every graph, and with nothing to draw only a network is offered.
+ * why. A tree is judged along `relationship` when one is chosen (tree_fits). A timeline fits while it has a thing to
+ * show, as `timeline` chooses (timeline_fits). A network fits every graph, and with nothing to draw only a network is
+ * offered.
  */
-export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
+export function typeFits(shape: GraphShape, relationship?: string, timeline: TimelineChoice = {}): TypeFit[] {
   if (!shape.things.length)
     return DIAGRAM_TYPES.map((t) => (t === 'network' ? yes(t) : no(t, word('diagram.nothing'))));
   const texts = new Map(shape.things.map((t) => [t.key, t.text]));
@@ -171,7 +181,6 @@ export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
     shape.things.map((t) => t.key),
     shape.links,
   );
-  const undated = shape.things.find((t) => t.date === undefined);
   return [
     yes('network'),
     treeFit(shape, relationship, text),
@@ -182,7 +191,7 @@ export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
         : yes('flow'),
     radialFit(shape, text),
     lanesFit(shape),
-    undated ? no('timeline', word('diagram.timeline.undated', { thing: undated.text })) : yes('timeline'),
+    timelineFit(shape, timeline),
     yes('table'),
   ];
 }
@@ -197,7 +206,8 @@ export function suggestType(fits: readonly TypeFit[], shape: GraphShape): Sugges
   const fit = (t: DiagramType) => fits.find((f) => f.type === t && f.fits);
   const n = shape.things.length;
   if (n > LARGE_GRAPH && fit('table')) return { type: 'table', because: word('diagram.because.table', { count: n }) };
-  if (fit('timeline')) return { type: 'timeline', because: word('diagram.because.timeline') };
+  if (fit('timeline') && shape.things.every((t) => t.date !== undefined))
+    return { type: 'timeline', because: word('diagram.because.timeline') };
   const along = fit('tree')?.relationship;
   const touched = (type: string) => new Set(shape.links.filter((l) => l.type === type).flatMap((l) => [l.from, l.to]));
   if (along !== undefined && shape.things.every((t) => touched(along).has(t.key)))
@@ -232,7 +242,7 @@ export function chosenDiagram(style: Pick<StyleGraph, 'diagrams'>, view?: string
 }
 
 /** How Graphviz lays a fitting type out (graph-layout.js, `typedSource`); none for a network or a table. */
-function planOf(fit: TypeFit, shape: GraphShape): DiagramPlan | undefined {
+function planOf(fit: TypeFit, shape: GraphShape, timeline: TimelineChoice): DiagramPlan | undefined {
   if (fit.type === 'tree')
     return { type: 'tree', tree: shape.links.flatMap((l, i) => (l.type === fit.relationship ? [i] : [])) };
   if (fit.type === 'flow') return { type: 'flow' };
@@ -243,12 +253,7 @@ function planOf(fit: TypeFit, shape: GraphShape): DiagramPlan | undefined {
     // each group is drawn inside its lane (graph-layout.js, typedSource), never as a box of its own
     return { type: 'lanes', lanes: [...lanes], ...(shape.groups ? { groups: shape.groups } : {}) };
   }
-  if (fit.type === 'timeline') {
-    // a rank is a day: an instant shares the rank of a date on its day
-    const day = (t: GraphShape['things'][number]) => dayOf(t.date as string);
-    const days = [...new Set(shape.things.map(day))].sort(byName);
-    return { type: 'timeline', dates: days.map((d) => shape.things.filter((t) => day(t) === d).map((t) => t.key)) };
-  }
+  if (fit.type === 'timeline') return timelinePlan(shape, timeline);
   return undefined;
 }
 
@@ -275,9 +280,10 @@ export function diagramOffer(
   g?: Graph,
   view?: string,
 ): DiagramOffer {
-  const shape = shapeOf(drawing, g, style.nudges);
+  const shape = shapeOf(drawing, g, style.nudges),
+    chosen = chosenDiagram(style, view);
   return {
-    fits: typeFits(shape, chosenDiagram(style, view)?.relationship),
+    fits: typeFits(shape, chosen?.relationship, chosen),
     suggested: suggestType(typeFits(shape), shape),
     choice: diagramFor(drawing, style, g, view),
   };
@@ -303,7 +309,7 @@ export function diagramFor(
     return { drawn: 'network', plugin: { type: d.plugin, plugin: own.plugin, why } };
   }
   const shape = shapeOf(drawing, g, style.nudges),
-    fits = typeFits(shape, d.relationship),
+    fits = typeFits(shape, d.relationship, d),
     fit = fits.find((f) => f.type === d.type) as TypeFit;
   if (!fit.fits)
     return {
@@ -311,6 +317,6 @@ export function diagramFor(
       drawn: 'network',
       stopped: { type: d.type, why: fit.why ?? '', nearest: nearestType(d.type, fits) },
     };
-  const plan = planOf(fit, shape);
+  const plan = planOf(fit, shape, d);
   return { chosen: d.type, drawn: d.type, ...(plan ? { plan } : {}) };
 }

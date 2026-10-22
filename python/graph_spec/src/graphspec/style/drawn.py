@@ -59,6 +59,22 @@ def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict
     }
 
 
+def without_hidden(parts: Mapping[str, Any], plan: Mapping | None) -> Mapping[str, Any]:
+    """`parts` (graph_parts) without the things a timeline's `plan` hides (timeline_show), and the
+    links that touch them — the core's style-source.ts withoutHidden."""
+    gone = set((plan or {}).get("hidden", ()))
+    if not gone:
+        return parts
+    kept = [i for i, (s, _, d) in enumerate(parts["edges"]) if s not in gone and d not in gone]
+    return {
+        **parts,
+        "nodes": [n for n in parts["nodes"] if n[0] not in gone],
+        "edges": [parts["edges"][i] for i in kept],
+        "boxes": [b for b in parts["boxes"] if b[0] not in gone],
+        "links": [parts["links"][i] for i in kept],
+    }
+
+
 def render_args(
     texts: Sequence[str],
     graph: str,
@@ -72,7 +88,8 @@ def render_args(
     arrowheads, the properties shown inline, the links that move (§7, flow_links), the boxes drawn
     with a picture (§18, pictures_for), and the plan of
     the diagram type it is drawn as, while
-    the data fits the one chosen (a network, with no plan, otherwise). A table chosen is drawn as a
+    the data fits the one chosen (a network, with no plan, otherwise); a timeline leaves out the
+    things it hides. A table chosen is drawn as a
     network, as only the plugin draws a table, and a note on stderr says so. How its links are
     routed (§25; None: curved). And, only when `switches` is given, what a View menu folds and
     merges: the switches start as the plugin's settings start a graph, links merged as the style
@@ -85,6 +102,7 @@ def render_args(
     parts = graph_parts(world, graph, problems)
     style = read_style(texts, graph, world)[0]
     choice = diagram_for(parts, style["diagrams"], view, style["nudges"])
+    parts = without_hidden(parts, choice.get("plan"))
     if choice["drawn"] == "table":
         print(
             f"graph_svg: graph {graph} is chosen to be drawn as a table, which only the plugin "

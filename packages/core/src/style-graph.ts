@@ -3,6 +3,7 @@
 // view fades or hides what is outside it, and how a view was shown. It holds where arrowheads are hidden, the diagram
 // type chosen, how links move and the pictures on boxes (§18). A style graph is written in the same notation as the
 // data, in its own block, and never in the data.
+import type { TimelineChoice } from './timeline.ts';
 import { distance } from './estimates.ts';
 import { STYLE } from './layout.ts';
 import type { Problem } from './note-reading.ts';
@@ -115,7 +116,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   ViewStyle: ['view', 'outside'],
   Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected', 'labels', 'hubs', 'groups', 'merge', 'legend'],
   Arrows: ['arrowheads', 'view', 'type'],
-  Diagram: ['type', 'view', 'relationship'],
+  Diagram: ['type', 'view', 'relationship', 'order', 'by', 'show'],
   Flow: ['motion', 'means', 'type', 'view'],
   Links: ['view', 'routing', 'merge'],
   Picture: ['property', 'kind', 'thing', 'view'],
@@ -177,7 +178,7 @@ export interface Arrows {
  * The diagram type chosen (§15, type_remembered): for the whole graph, or for one view; for a tree, the relationship it
  * follows. Drawn only while the data fits it (types.ts, `diagramFor`).
  */
-export interface Diagram {
+export interface Diagram extends TimelineChoice {
   type: DiagramType;
   /** A diagram type a plug-in adds, by its whole name (`pluginTypeOf`). Where none draws it, `type` is a network. */
   plugin?: string;

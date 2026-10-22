@@ -8,6 +8,7 @@ import type { Refusal } from './layout-limits.ts';
 import type { FlowLink } from './link-flow.ts';
 import type { PictureBox } from './picture.ts';
 import type { Nudge } from './style-graph.ts';
+import type { TimelineOrder } from './timeline.ts';
 import type { Folding } from './untangle-fold.ts';
 
 /** A gql block in a note: its text, and the note line (1-based) its opening fence is on. */
@@ -98,7 +99,8 @@ export interface GraphDrawing {
  * - a tree by its links (indexes in the order the layout source draws links);
  * - a radial drawing around its centre;
  * - lanes by kind (each lane's label and its things, and the groups drawn inside them);
- * - a timeline by its things grouped by day, earliest first.
+ * - a timeline by its things grouped by place, first first: by day, by number, as written or by links. Its things
+ *   hidden (timeline_show) are left out of the drawing.
  * A flow needs nothing more. A network and a table have none: a network is the layout source as it is, and a table is
  * drawn by the host.
  */
@@ -107,7 +109,7 @@ export type DiagramPlan =
   | { type: 'flow' }
   | { type: 'radial'; centre: string }
   | { type: 'lanes'; lanes: [string, string[]][]; groups?: [string, string[]][] }
-  | { type: 'timeline'; dates: string[][] };
+  | { type: 'timeline'; order: TimelineOrder; dates: string[][]; hidden?: string[] };
 
 /**
  * Something that could not be read: its graph, the block (index in the note) and the line in that block (1 = its

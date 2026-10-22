@@ -1,5 +1,5 @@
 // The shape a diagram type is judged on (editor spec §15):
-// - the things drawn, with their kinds and first dates;
+// - the things drawn, with their kinds, their dates and their numbers;
 // - their written links;
 // - the groups the style graph's nudges draw them in.
 // And what types.ts reads from it: the first loop the links make, and the thing with the most links. Host-free. The
@@ -10,12 +10,17 @@ import { valueText } from './inline-properties.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Nudge } from './style-graph.ts';
 
-/** A thing as a type judges it: its key, its text, its kinds, and the first date it carries, said as inline. */
+/**
+ * A thing as a type judges it: its key, its text, its kinds, and the first date it carries, said as inline. A timeline
+ * also reads each date and each number it carries, by property, in the order written; none when it carries none.
+ */
 export interface ShapeThing {
   key: string;
   text: string;
   kinds: string[];
   date?: string;
+  dates?: Map<string, string>;
+  numbers?: Map<string, number>;
 }
 
 /** A link as a type judges it: its two ends and the relationship type it is styled by. */
@@ -62,12 +67,18 @@ export function shapeOf(
     }
   return {
     things: drawing.boxes.map((b) => {
-      const date = Object.values(g?.nodes.has(b.key) ? g.p(b.key) : {}).find(isDate);
+      const props = Object.entries(g?.nodes.has(b.key) ? g.p(b.key) : {});
+      const dates = props.flatMap(([k, v]): [string, string][] => (isDate(v) ? [[k, valueText(v)]] : []));
+      // a number is a finite one; true and false are not numbers
+      const numbers = props.flatMap(([k, v]): [string, number][] =>
+        typeof v === 'number' && Number.isFinite(v) ? [[k, v]] : [],
+      );
       return {
         key: b.key,
         text: b.text,
         kinds: b.kind ? b.kind.split(' · ') : [],
-        ...(date === undefined ? {} : { date: valueText(date) }),
+        ...(dates.length ? { date: (dates[0] as [string, string])[1], dates: new Map(dates) } : {}),
+        ...(numbers.length ? { numbers: new Map(numbers) } : {}),
       };
     }),
     links: drawing.links.map((l, i) => ({ from: l.from, type: types[i] ?? l.type, to: l.to })),
