@@ -1,22 +1,22 @@
-<svg viewBox="0 0 235 289" width="313.33" height="385.33" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:inline;visibility:visible">
-  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 281.6)">
+<svg viewBox="0 0 532 71" width="700" height="93.42" paint="fill:rgb(0, 0, 0);fill-opacity:1;stroke:rgba(0, 0, 0, 0);stroke-opacity:1;stroke-width:1px;stroke-dasharray:none;opacity:1;font-size:16px;font-weight:400;font-style:normal;color:rgb(218, 218, 218);display:inline;visibility:visible">
+  <g id="p1" transform="scale(1 1) rotate(0) translate(7.2 63.6)">
     <g id="p2">
-      <path d="M166.99,-56.4C166.99,-56.4 71.14,-56.4 71.14,-56.4 65.14,-56.4 59.14,-50.4 59.14,-44.4 59.14,-44.4 59.14,-12 59.14,-12 59.14,-6 65.14,0 71.14,0 71.14,0 166.99,0 166.99,0 172.99,0 178.99,-6 178.99,-12 178.99,-12 178.99,-44.4 178.99,-44.4 178.99,-50.4 172.99,-56.4 166.99,-56.4" paint="fill:rgba(233, 151, 63, 0.16);stroke:rgb(229, 168, 102);stroke-width:2">
-      <text x="92.69" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> QUESTION
-      <text x="78.42" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Which device?
+      <path d="M505.97,-56.4C505.97,-56.4 410.12,-56.4 410.12,-56.4 404.12,-56.4 398.12,-50.4 398.12,-44.4 398.12,-44.4 398.12,-12 398.12,-12 398.12,-6 404.12,0 410.12,0 410.12,0 505.97,0 505.97,0 511.97,0 517.97,-6 517.97,-12 517.97,-12 517.97,-44.4 517.97,-44.4 517.97,-50.4 511.97,-56.4 505.97,-56.4" paint="fill:rgba(233, 151, 63, 0.16);stroke:rgb(229, 168, 102);stroke-width:2">
+      <text x="431.66" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> QUESTION
+      <text x="417.4" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Which device?
     <g id="p3">
-      <path d="M98.14,-165.4C98.14,-165.4 12,-165.4 12,-165.4 6,-165.4 0,-159.4 0,-153.4 0,-153.4 0,-121 0,-121 0,-115 6,-109 12,-109 12,-109 98.14,-109 98.14,-109 104.14,-109 110.14,-115 110.14,-121 110.14,-121 110.14,-153.4 110.14,-153.4 110.14,-159.4 104.14,-165.4 98.14,-165.4" paint="fill:rgba(250, 153, 205, 0.16);stroke:rgb(242, 169, 208);stroke-width:3">
-      <text x="35.66" y="-144.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> OPTION
-      <text x="19.28" y="-124.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Large reader
+      <path d="M307.02,-56.4C307.02,-56.4 220.88,-56.4 220.88,-56.4 214.88,-56.4 208.88,-50.4 208.88,-44.4 208.88,-44.4 208.88,-12 208.88,-12 208.88,-6 214.88,0 220.88,0 220.88,0 307.02,0 307.02,0 313.02,0 319.02,-6 319.02,-12 319.02,-12 319.02,-44.4 319.02,-44.4 319.02,-50.4 313.02,-56.4 307.02,-56.4" paint="fill:rgba(250, 153, 205, 0.16);stroke:rgb(242, 169, 208);stroke-width:3">
+      <text x="244.54" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> OPTION
+      <text x="228.16" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Large reader
     <g id="p4">
-      <path d="M69.07,-108.47C74.44,-98.25 80.76,-86.67 86.97,-76.4 89.47,-72.27 92.17,-68 94.92,-63.8" paint="stroke:rgb(117, 222, 220);stroke-width:2">
-      <polygon points="96.88,-65.28 98.72,-58.09 92.8,-62.57 96.88,-65.28" paint="fill:rgb(117, 222, 220);stroke:rgb(117, 222, 220);stroke-width:2">
-      <text x="106.52" y="-79.55" text-anchor="middle" paint="fill:rgb(151, 221, 220)"> answers
+      <path d="M319.48,-28.2C341.22,-28.2 366.46,-28.2 389.35,-28.2" paint="stroke:rgb(117, 222, 220);stroke-width:2">
+      <polygon points="389.15,-30.65 396.15,-28.2 389.15,-25.75 389.15,-30.65" paint="fill:rgb(117, 222, 220);stroke:rgb(117, 222, 220);stroke-width:2">
+      <text x="358.57" y="-31.35" text-anchor="middle" paint="fill:rgb(151, 221, 220)"> answers
     <g id="p5">
-      <path d="M173.29,-274.4C173.29,-274.4 62.84,-274.4 62.84,-274.4 56.84,-274.4 50.84,-268.4 50.84,-262.4 50.84,-262.4 50.84,-230 50.84,-230 50.84,-224 56.84,-218 62.84,-218 62.84,-218 173.29,-218 173.29,-218 179.29,-218 185.29,-224 185.29,-230 185.29,-230 185.29,-262.4 185.29,-262.4 185.29,-268.4 179.29,-274.4 173.29,-274.4" paint="fill:rgba(2, 122, 255, 0.16);stroke:rgb(56, 146, 246);stroke-width:2">
-      <text x="96.9" y="-253.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> REASON
-      <text x="70.12" y="-233.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Easy on the eyes
+      <path d="M122.45,-56.4C122.45,-56.4 12,-56.4 12,-56.4 6,-56.4 0,-50.4 0,-44.4 0,-44.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 122.45,0 122.45,0 128.45,0 134.45,-6 134.45,-12 134.45,-12 134.45,-44.4 134.45,-44.4 134.45,-50.4 128.45,-56.4 122.45,-56.4" paint="fill:rgba(2, 122, 255, 0.16);stroke:rgb(56, 146, 246);stroke-width:2">
+      <text x="46.06" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> REASON
+      <text x="19.28" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Easy on the eyes
     <g id="p6">
-      <path d="M101.45,-217.8C97.55,-211.32 93.43,-204.43 89.64,-198 84.92,-190.01 79.9,-181.4 75.19,-173.26" paint="stroke:rgb(106, 210, 137);stroke-width:2">
-      <polygon points="77.35,-172.1 71.73,-167.26 73.11,-174.55 77.35,-172.1" paint="fill:rgb(106, 210, 137);stroke:rgb(106, 210, 137);stroke-width:2">
-      <text x="106.85" y="-188.55" text-anchor="middle" paint="fill:rgb(143, 213, 164)"> favours
+      <path d="M134.97,-28.2C156.06,-28.2 179.29,-28.2 200.1,-28.2" paint="stroke:rgb(106, 210, 137);stroke-width:2">
+      <polygon points="200.04,-30.65 207.04,-28.2 200.04,-25.75 200.04,-30.65" paint="fill:rgb(106, 210, 137);stroke:rgb(106, 210, 137);stroke-width:2">
+      <text x="171.67" y="-31.35" text-anchor="middle" paint="fill:rgb(143, 213, 164)"> favours

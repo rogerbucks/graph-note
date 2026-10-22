@@ -18,6 +18,7 @@ from graphspec.style.flow import MEANS_NEEDED
 from graphspec.style.legend import legend_checked
 from graphspec.style.near_names import nearest
 from graphspec.style.picture import PICTURE_FOR
+from graphspec.style.timeline import timeline_problem
 from graphspec.style.words import (
     ARROWHEADS,
     DIAGRAM_TYPES,
@@ -28,6 +29,8 @@ from graphspec.style.words import (
     ON_OFF,
     ROUTINGS,
     SAVED_SWITCHES,
+    TIMELINE_ORDERS,
+    TIMELINE_SHOWS,
     STYLE_KINDS,
     or_list,
     plugin_type_of,
@@ -201,7 +204,8 @@ def _arrows_of(raw, names, out):
 def _diagram_of(raw, names, out):
     """The diagram type chosen, checked (§15, type_remembered): one of the types, in the whole
     graph or a view, whose name is the user's own; for a tree, a relationship type the graph has,
-    which no other type takes."""
+    which no other type takes; for a timeline, how it is ordered, by which property, and what it
+    shows (timeline_order, timeline_show)."""
     r, before, props = _Reader(raw, names, out), len(out), raw["props"]
     if "type" not in props:
         add = "add type: " + or_list([f"'{w}'" for w in DIAGRAM_TYPES])
@@ -213,15 +217,22 @@ def _diagram_of(raw, names, out):
     typ = "network" if plugin else r.word("type", DIAGRAM_TYPES, "$ is not a diagram type")
     relationship = r.name("relationship", names["types"], "a relationship type")
     view = r.text("view")
+    order = r.word("order", TIMELINE_ORDERS, f"order must be {or_list(TIMELINE_ORDERS)}")
+    by = r.text("by")
+    show = r.word("show", TIMELINE_SHOWS, f"show must be {or_list(TIMELINE_SHOWS)}")
     if typ and relationship is not None and typ != "tree":
         r.report(TREE_ONLY, "remove relationship, or make it type: 'tree'")
+    if typ and (why := timeline_problem(typ, order, by, show)):
+        r.report(*why)
     if not typ or len(out) != before:
         return None
+    chosen = {"order": order, "by": by, "show": show}
     return {
         "type": typ,
         **({} if plugin is None else {"plugin": plugin}),
         **({} if view is None else {"view": view}),
         **({} if relationship is None else {"relationship": relationship}),
+        **{k: v for k, v in chosen.items() if v is not None},
         "at": raw["at"],
     }
 

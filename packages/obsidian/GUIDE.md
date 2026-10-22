@@ -113,7 +113,9 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   until the person turns it on. Turning one on keeps the file's SHA-256, and a file that changes after is turned off and
   said.
 - Each runs in a worker of its own, from a Blob of main.js's sealing bundle and then the file. Its commands join
-  Obsidian's while it runs. A link is fetched once with `requestUrl`, checked and kept in the folder, off.
+  Obsidian's while it runs. Its own colours join the main window and every pop-out as a sheet of their own while it
+  runs (plugin_theme_tokens).
+  A link is fetched once with `requestUrl`, checked and kept in the folder, off.
 - Its graph sources are read by a block written `· FROM sample:trip` (plugin_source_from). `readGraph` asks the
   plug-in running that adds the source. With none on, the block says so.
 - `outside-diagrams.ts` — `withPicture`: a card whose style graph chooses a plug-in's diagram type, such as
@@ -373,7 +375,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - It shows its properties to read, and the inspector while the block is edited.
   - A thing's links are grouped by type and direction in words, each thing and link a choice. The trail has back and
     forward (§25).
-  - A thing's details offer Show only this and its neighbours, and the shortest path to another thing (§25).
+  - A thing's details offer Show only this and its neighbours, as a toggle, and the shortest path to another thing
+    (§25). Shown only, the few left are laid out again together (`regroup-motion.ts` glides them there).
   - Closing it, by button, Escape or a tap on empty space, clears the focus.
 - `rich-details.ts` — `RichDetails`, the rich parts of the details (§18).
   - A thing's text (when it holds Markdown) and its properties are rendered by Obsidian's `MarkdownRenderer`.
@@ -455,7 +458,7 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - Each type that does not fit is listed with why. The suggested one is said, and never drawn until chosen.
   - A chosen type that has stopped fitting is said, the graph drawn as a network, and the nearest type that fits
     offered.
-  - A graph of more than 50 things gets a way in: the table or a view.
+  - A graph of more than 1,000 things gets a way in: the table or a view.
   - Reading view keeps the words and drops the controls that write. The core decides all of it (`diagramOffer`).
 - `table-view.ts` — a graph drawn as a table: the plugin's own table, never Graphviz.
   - It has a row for each thing (its kind and properties) and each link. Each row is reached, named and opened as a box

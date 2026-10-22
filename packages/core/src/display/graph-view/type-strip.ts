@@ -2,9 +2,11 @@
 // seven types (diagram_type_set, type_only_when_fits, suggest_type). Each that fits can be chosen, written into the
 // style graph. Each that does not comes with why. The one suggested is said so, and never drawn until chosen. A chosen
 // type that has stopped fitting is said, with why, and the nearest type that fits offered (type_stops_fitting). A graph
-// of more than 50 things is offered the table or a view as the way in (large_way_in). The core decides all of it
+// of more than 1,000 things is offered the table or a view as the way in (large_way_in). The core decides all of it
 // (types.ts). A type a plug-in adds is drawn as a picture of the marks that plug-in gave, when one here draws it
-// (plugin_diagram_type_named). Otherwise the strip says which plug-in draws it.
+// (plugin_diagram_type_named). Otherwise the strip says which plug-in draws it. In reading view a type chosen is only
+// looked at: drawn at once, never saved, and said so. Where the note is edited, a type looked at can be kept
+// (type_try_reading).
 import { diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
@@ -15,14 +17,17 @@ import type {
   Drawn,
   GraphDrawing,
   NoteReading,
+  Diagram,
   StyleGraph,
 } from '@thoughtknot/core';
+import type { LeftAt } from '../links/link-types';
 import { renderTable, tableSize } from './table-view';
 import { button } from './view-bar';
+export { TypePlace, typeLeftAt } from './type-place';
 
 /** What a card is given of the diagram types, beyond its drawing. */
 export interface DiagramShown extends DiagramOffer {
-  /** For a graph of more than 50 things: the way in, in words. */
+  /** For a graph of more than 1,000 things: the way in, in words. */
   wayIn: { say: string } | null;
   /** The drawing as a table, when it is drawn as one. */
   table?: DiagramTable;
@@ -30,6 +35,50 @@ export interface DiagramShown extends DiagramOffer {
   choose: (type: DiagramType) => void;
   /** The drawing as a plug-in's diagram type drew it: the core's SVG of its marks, the type and its size. */
   picture?: PluginPicture;
+  /** Draws the card as the type chosen, never saving it: for reading view. The saved type puts the card back. */
+  look?: (type: DiagramType) => void;
+  /** Whether the card is drawn as a type only looked at, not saved. */
+  tried?: boolean;
+  /** Draws the card as its saved type again. */
+  back?: () => void;
+  /** Saves the type looked at, as choosing it does. */
+  keep?: () => void;
+  /** Keeps where the card is, just before its type changes, for the card drawn as the new type (type_keeps_place). */
+  leave?: (at: TypeLeftAt) => void;
+  /** Where the card was left when its type changed, once; the card drawn as the new type takes it up. */
+  kept?: () => TypeLeftAt | undefined;
+}
+
+/** Where a card was when its type changed: its zoom, the thing selected, and whether it was full screen. */
+export interface TypeLeftAt extends LeftAt {
+  full?: boolean;
+}
+
+/** How a host lets a card look at a type without saving it (type_try_reading). */
+export interface Trying {
+  /** The type the card is drawn as from the style graph as saved. */
+  saved: DiagramType;
+  /** Whether the card is drawn as a type only looked at. */
+  tried: boolean;
+  /** Draws the card as the change, never written; null draws it as saved again. */
+  tryOut: (change: DiagramWrite | null) => void;
+  /** Keeps where the card is as its type changes; `kept` gives it back once, to the card drawn next. */
+  leave: (at: TypeLeftAt) => void;
+  kept: () => TypeLeftAt | undefined;
+}
+
+/**
+ * `style` with the diagram type `change` chooses, in place of the one chosen for its view or the whole graph. It is held
+ * only in memory, for a type looked at and never saved (type_try_reading).
+ */
+export function withTried(style: StyleGraph, change: DiagramWrite): StyleGraph {
+  const tried: Diagram = {
+    type: change.type as DiagramType,
+    ...(change.view === undefined ? {} : { view: change.view }),
+    ...(change.relationship === undefined ? {} : { relationship: change.relationship }),
+    at: { block: -1, line: 0, id: 'tried' },
+  };
+  return { ...style, diagrams: [tried, ...style.diagrams.filter((d) => d.view !== change.view)] };
 }
 
 /** The space a plug-in's diagram type is given to draw in, in pixels, by every host. */
@@ -53,7 +102,8 @@ const named = (type: DiagramType): string => word(`type.${type}`);
  * What a card shows of the diagram types for `drawing`, a graph or a view (`view`) as drawn. It is styled by `style`,
  * its values from `g`. It shows the core's offer, the way in to a large graph, and the table when drawn as one. Choose
  * hands `write` the change to the style graph and what to say once it is written. A tree is chosen along the
- * relationship it fits best, so it stays the tree that was offered.
+ * relationship it fits best, so it stays the tree that was offered. With `trying`, a type can also be looked at: drawn,
+ * never written. Looking at the saved type puts the card back.
  */
 export function diagramShown(
   drawing: GraphDrawing,
@@ -61,21 +111,35 @@ export function diagramShown(
   g: NoteReading['world'][string] | undefined,
   view: string | undefined,
   write: (change: DiagramWrite, done: string) => void,
+  trying?: Trying,
 ): DiagramShown {
   const offer = diagramOffer(drawing, style, g, view);
+  const change = (type: DiagramType): DiagramWrite => {
+    const along = type === 'tree' ? offer.fits.find((f) => f.type === 'tree')?.relationship : undefined;
+    return { type, ...(view === undefined ? {} : { view }), ...(along === undefined ? {} : { relationship: along }) };
+  };
+  const choose = (type: DiagramType) =>
+    write(
+      change(type),
+      view === undefined
+        ? word('type.now-graph', { type: said(type) })
+        : word('type.now-view', { view, type: said(type) }),
+    );
   return {
     ...offer,
     wayIn: wayIn(drawing.boxes.length),
     ...(offer.choice.drawn === 'table' ? { table: tableOf(drawing, g) } : {}),
-    choose: (type) => {
-      const along = type === 'tree' ? offer.fits.find((f) => f.type === 'tree')?.relationship : undefined;
-      write(
-        { type, ...(view === undefined ? {} : { view }), ...(along === undefined ? {} : { relationship: along }) },
-        view === undefined
-          ? word('type.now-graph', { type: said(type) })
-          : word('type.now-view', { view, type: said(type) }),
-      );
-    },
+    choose,
+    ...(trying
+      ? {
+          look: (type: DiagramType) => trying.tryOut(type === trying.saved ? null : change(type)),
+          tried: trying.tried,
+          back: () => trying.tryOut(null),
+          keep: () => choose(offer.choice.drawn),
+          leave: trying.leave,
+          kept: trying.kept,
+        }
+      : {}),
   };
 }
 
@@ -107,11 +171,31 @@ export const tableDrawn = (table: DiagramTable): Drawn => ({ svg: '', rankdir: '
 /**
  * The strip under a card's bar: how it is drawn, and Diagram type and its list. When there is one to say, it says the
  * type chosen has stopped fitting, or gives the way in to a large graph. Returns the controls that write, which a
- * read-only card takes away; what it says stays.
+ * read-only card takes away; what it says stays. Where the card can look at a type (`d.look`), its types stay offered
+ * while `readOnly` says so, each drawn without being saved. A type looked at is said not saved, with Back to saved, and
+ * Keep it where the note is edited. Each keeps where the card is (`where`) first, for the card drawn as the new type.
  */
-export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement[] {
-  const { choice, suggested } = d,
+export function renderTypeStrip(
+  root: HTMLElement,
+  d: DiagramShown,
+  readOnly: () => boolean = () => false,
+  where?: () => TypeLeftAt,
+): HTMLElement[] {
+  const { choice, suggested, look } = d,
     writes: HTMLElement[] = [];
+  // the type about to change: where the card is kept first, so the next card is full screen, selected and zoomed alike
+  const leaving =
+    (then: () => void): (() => void) =>
+    () => {
+      if (where) d.leave?.(where());
+      then();
+    };
+  // a type picked: looked at while the card is read-only, when it can be; else chosen, and saved
+  const pick = (type: DiagramType) => leaving(() => (look && readOnly() ? look(type) : d.choose(type)))();
+  // a control that picks a type stays where the card is read-only only when the type can be looked at there
+  const picks = (...els: HTMLElement[]) => {
+    if (!look) writes.push(...els);
+  };
   const strip = root.createDiv({ cls: 'thoughtknot-type-strip' });
   const drawnAs = d.picture
     ? word('type.drawn-plugin', { type: d.picture.type, plugin: d.picture.plugin })
@@ -128,7 +212,7 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
   };
   const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
   toggle.setAttribute('aria-expanded', 'false');
-  writes.push(toggle, list);
+  picks(toggle, list);
   // each type a tile, its state marked by class for the look and said in words beside it, never by colour alone
   for (const f of d.fits) {
     const li = list.createEl('li', {
@@ -143,7 +227,7 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
       attr: { type: 'button', 'aria-pressed': String(f.type === choice.drawn) },
     });
     b.disabled = !f.fits;
-    b.addEventListener('click', () => d.choose(f.type));
+    b.addEventListener('click', () => pick(f.type));
     const why = f.fits
       ? [
           f.type === choice.drawn ? word('type.drawn-now') : '',
@@ -164,12 +248,19 @@ export function renderTypeStrip(root: HTMLElement, d: DiagramShown): HTMLElement
       stopped.nearest === 'network'
         ? word('type.as-network')
         : word('type.use', { type: word(`type.${stopped.nearest}.word`) });
-    writes.push(button(banner, label, 'check', () => d.choose(stopped.nearest), label));
+    picks(button(banner, label, 'check', () => pick(stopped.nearest), label));
   }
   if (d.wayIn && choice.drawn !== 'table') {
     const way = root.createDiv({ cls: 'thoughtknot-way-in', attr: { role: 'note' } });
     way.createSpan({ text: word('type.way-in', { say: d.wayIn.say }) });
-    writes.push(button(way, word('type.as-table'), 'table', () => d.choose('table'), word('type.as-table')));
+    picks(button(way, word('type.as-table'), 'table', () => pick('table'), word('type.as-table')));
+  }
+  if (d.tried) {
+    // a type only looked at: said so, never by colour alone, with the way back and, where the note is edited, to keep it
+    const tried = root.createDiv({ cls: 'thoughtknot-type-tried', attr: { role: 'status' } });
+    tried.createSpan({ text: word('type.tried') });
+    if (d.back) button(tried, word('type.back'), 'undo-2', leaving(d.back), word('type.back'));
+    if (d.keep) writes.push(button(tried, word('type.keep'), 'check', leaving(d.keep), word('type.keep')));
   }
   return writes;
 }

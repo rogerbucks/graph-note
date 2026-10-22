@@ -68,6 +68,8 @@ and no module requires one that requires it back.
     as the check does.
 - **`src/joins/`** — §21 joins (`graph_spec.py`): `python-text.js`, `normalise.js`, `named-rules.js`, `validate.js`,
   `claims.js`, `union.js`, `merge3.js`, `finish.js`, and `join-docs.js`, which answers a join request end to end.
+  `trust.js` holds a union to each document's trust. Only own and trusted ones count, and an id prefix has an owner
+  (req:21.trust-counted, req:21.prefix-owner).
 - **`src/views/`** — `mermaid.js` (relationships, legend and paths as Mermaid text) and `views.js` (every view of a
   graph at once).
 

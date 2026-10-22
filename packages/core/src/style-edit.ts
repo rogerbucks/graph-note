@@ -10,7 +10,7 @@ import { items } from './block-items.ts';
 import { STYLE } from './layout.ts';
 import { quoted } from './lock.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
-import { showFor, treeOnly } from './style-checks.ts';
+import { showFor, timelineRefusal, treeOnly } from './style-checks.ts';
 import {
   ARROWHEADS,
   DIAGRAM_TYPES,
@@ -86,11 +86,14 @@ export interface ArrowsWrite {
   type?: string;
 }
 
-/** A diagram type to choose (§15): for the whole graph or a view, and for a tree, the relationship it follows. */
+/** A diagram type to choose (§15): for the graph or a view; a tree's relationship; a timeline's order, by and show. */
 export interface DiagramWrite {
   type: string;
   view?: string;
   relationship?: string;
+  order?: string;
+  by?: string;
+  show?: string;
 }
 
 /** One change to a graph's style. */
@@ -179,6 +182,8 @@ function diagramRefusal(d: DiagramWrite): string | null {
   if (!(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return mustBe('type', DIAGRAM_TYPES);
   if (d.relationship !== undefined && d.type !== 'tree') return treeOnly();
   if (d.relationship === '') return word('editing.style.type-name');
+  const timeline = timelineRefusal(d);
+  if (timeline) return timeline;
   if (d.view === '') return noViewName();
   return null;
 }
@@ -200,6 +205,9 @@ function choiceFor(
         ['type', d.type],
         ['view', d.view],
         ['relationship', d.relationship],
+        ['order', d.order],
+        ['by', d.by],
+        ['show', d.show],
       ],
       match: [['view', d.view]],
     };

@@ -1,7 +1,7 @@
 // Diagram types (editor spec §15). The editor offers network, tree, flow, radial, lanes, timeline and table. It offers
 // each only when the data fits it, saying why when it does not. It suggests the type that fits best and never switches
 // without being asked. An edit may make the data stop fitting the chosen type. Then it says so and offers the nearest
-// type that fits. It draws the graph as a network meanwhile, never wrongly. A graph of more than 50 things is offered
+// type that fits. It draws the graph as a network meanwhile, never wrongly. A graph of more than 1,000 things is offered
 // the table or a view as the way in. Spans types.ts (what fits, the suggestion, the choice) and types-table.ts (the
 // table and the way in). Also graph-layout.js (each type's source) and render.ts (the directions laid out).
 import { afterEach, test, describe } from 'node:test';
@@ -172,7 +172,6 @@ describe('a type is offered only when the data fits it, and says why when it doe
     const loop = fitsOf(LOOP);
     assert.equal(loop.flow.why, 'a flow runs one way, and this loops back: Plan → Make → Check → Plan');
     assert.equal(loop.lanes.why, 'lanes need things of two kinds or more');
-    assert.equal(loop.timeline.why, 'a timeline needs every thing to carry a date, and Plan carries none');
     const lone = fitsOf(LONE);
     assert.equal(lone.radial.why, 'a radial drawing needs every thing joined to the centre, A, and C is not');
     for (const f of [...Object.values(loop), ...Object.values(lone)])
@@ -316,17 +315,21 @@ describe('a tree', () => {
 
 describe('a timeline', () => {
   // proves: timeline_fits
-  test('fits when every thing carries a date, and not when one carries none', () => {
+  test('fits when every thing carries a date, and when one carries none', () => {
     assert.equal(fitsOf(TRIP).timeline.fits, true);
     const undated = `${TRIP},\n(note:Event {name: 'A note'})`;
-    assert.equal(fitsOf(undated).timeline.why, 'a timeline needs every thing to carry a date, and A note carries none');
+    assert.equal(fitsOf(undated).timeline.fits, true);
   });
 
   // proves: timeline_fits
   test('drawn, things stand in date order across, those of one day together, the links never moving them', () => {
     const { plain, style, g } = shown(TRIP, "(d1:Diagram {type: 'timeline'})");
     const drawing = styledDrawing(plain, style, g);
-    assert.deepEqual(drawing.diagram, { type: 'timeline', dates: [['leave'], ['rest', 'arrive'], ['back']] });
+    assert.deepEqual(drawing.diagram, {
+      type: 'timeline',
+      order: 'date',
+      dates: [['leave'], ['rest', 'arrive'], ['back']],
+    });
     const [laid] = directions(drawing);
     assert.equal(laid.rankdir, 'LR');
     assert.ok(laid.dot.includes('  {rank=same; "rest"; "arrive";}'), laid.dot);
@@ -485,12 +488,12 @@ describe('when an edit makes the data stop fitting the chosen type', () => {
   });
 
   // proves: type_stops_fitting
-  test('a thing without a date on a timeline: said, and drawn as a network until another type is chosen', () => {
-    const { plain, style, g } = shown(`${TRIP},\n(note:Event {name: 'A note'})`, "(d1:Diagram {type: 'timeline'})");
+  test('a timeline of dated things left with none: said, and drawn as a network until another type is chosen', () => {
+    const { plain, style, g } = shown(ORG, "(d1:Diagram {type: 'timeline', show: 'dated'})");
     const choice = diagramFor(plain, style, g);
     assert.deepEqual(choice.stopped, {
       type: 'timeline',
-      why: 'a timeline needs every thing to carry a date, and A note carries none',
+      why: 'a timeline of the things with a date needs one, and no thing carries a date',
       nearest: 'flow',
     });
     assert.equal(choice.drawn, 'network');
@@ -524,22 +527,22 @@ describe('a table', () => {
 
 describe('a large graph', () => {
   // proves: large_way_in
-  test('of more than 50 things is offered the table or a view as the way in, and the table is suggested', () => {
+  test('of more than 1,000 things is offered the table or a view as the way in, and the table is suggested', () => {
     const things = (n) =>
       `// graph: big\n${Array.from({ length: n }, (_, i) => `(t${i}:Thing {name: 'Thing ${i}'})`).join(',\n')}`;
-    assert.equal(LARGE_GRAPH, 50);
-    assert.equal(wayIn(50), null);
-    assert.deepEqual(wayIn(51), {
-      count: 51,
-      say: 'This graph has 51 things, too many to read in one drawing: open it as a table, or make a view of the part you need.',
+    assert.equal(LARGE_GRAPH, 1000);
+    assert.equal(wayIn(1000), null);
+    assert.deepEqual(wayIn(1001), {
+      count: 1001,
+      say: 'This graph has 1,001 things, too many to read in one drawing: open it as a table, or make a view of the part you need.',
     });
-    const { plain, g } = shown(things(51));
+    const { plain, g } = shown(things(1001));
     const shape = shapeOf(plain, g);
     assert.deepEqual(suggestType(typeFits(shape), shape), {
       type: 'table',
-      because: 'a graph of 51 things reads best as a table first',
+      because: 'a graph of 1,001 things reads best as a table first',
     });
-    const small = shown(things(50));
+    const small = shown(things(1000));
     assert.notEqual(suggestType(typeFits(shapeOf(small.plain, small.g)), shapeOf(small.plain, small.g)).type, 'table');
   });
 });
@@ -560,10 +563,10 @@ describe('a wide tree, flow or timeline on a phone', () => {
 describe('only the types that fit are offered', () => {
   // proves: type_only_when_fits
   test('as the graphs above show', () => {
-    assert.deepEqual(fitting(ORG), ['network', 'tree', 'flow', 'radial', 'table']);
+    assert.deepEqual(fitting(ORG), ['network', 'tree', 'flow', 'radial', 'timeline', 'table']);
     assert.deepEqual(fitting(TRIP), ['network', 'tree', 'flow', 'radial', 'timeline', 'table']);
-    assert.deepEqual(fitting(LOOP), ['network', 'radial', 'table']);
-    assert.deepEqual(fitting(TEAMS), ['network', 'tree', 'flow', 'radial', 'lanes', 'table']);
+    assert.deepEqual(fitting(LOOP), ['network', 'radial', 'timeline', 'table']);
+    assert.deepEqual(fitting(TEAMS), ['network', 'tree', 'flow', 'radial', 'lanes', 'timeline', 'table']);
   });
 });
 

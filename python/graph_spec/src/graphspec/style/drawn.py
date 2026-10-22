@@ -16,6 +16,7 @@ from typing import Any
 
 from graphspec.reader.drawing import read_for_drawing
 from graphspec.rules.plain_graph import World
+from graphspec.rules.shown_text import shown_text
 from graphspec.rules.views import SCHEMA_LABELS, _word, readings
 from graphspec.style.arrows import arrowless
 from graphspec.style.diagram_types import diagram_for
@@ -24,9 +25,6 @@ from graphspec.style.folding import drawn_groups, fold_plan, links_of, starting_
 from graphspec.style.inline import inline_rows
 from graphspec.style.picture import pictures_for
 from graphspec.style.reading import read_style
-
-# The properties that give a thing its text, in the order the drawing chooses among them.
-TEXT_KEYS = ("name", "title", "text", "label")
 
 
 def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict[str, Any]:
@@ -39,11 +37,12 @@ def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict
     ids = [i for i, (labels, _) in g.nodes.items() if not labels & SCHEMA_LABELS]
     # Each link in its schema's words. That is the graph's own schema, else the shared schema it
     # names. The core reads them so (drawing.ts), and reading.py's _names finds its types so.
-    drawn, words = set(ids), readings(g, world.schema_for(graph)[1])
+    shared = world.schema_for(graph)[1]
+    drawn, words = set(ids), readings(g, shared)
 
+    # Each thing by the text the ranked rule chooses (shown_text.py), as the core chooses it.
     def text(i):
-        p = g.p(i)
-        return next((p[k] for k in TEXT_KEYS if isinstance(p.get(k), str) and p[k]), i)
+        return shown_text(g, i, shared)[0]
 
     def kind(i):
         return " · ".join(sorted(x for x in g.nodes[i][0] if x not in SCHEMA_LABELS))
@@ -60,6 +59,22 @@ def graph_parts(world: World, graph: str, problems: Iterable[dict] = ()) -> dict
     }
 
 
+def without_hidden(parts: Mapping[str, Any], plan: Mapping | None) -> Mapping[str, Any]:
+    """`parts` (graph_parts) without the things a timeline's `plan` hides (timeline_show), and the
+    links that touch them — the core's style-source.ts withoutHidden."""
+    gone = set((plan or {}).get("hidden", ()))
+    if not gone:
+        return parts
+    kept = [i for i, (s, _, d) in enumerate(parts["edges"]) if s not in gone and d not in gone]
+    return {
+        **parts,
+        "nodes": [n for n in parts["nodes"] if n[0] not in gone],
+        "edges": [parts["edges"][i] for i in kept],
+        "boxes": [b for b in parts["boxes"] if b[0] not in gone],
+        "links": [parts["links"][i] for i in kept],
+    }
+
+
 def render_args(
     texts: Sequence[str],
     graph: str,
@@ -73,7 +88,8 @@ def render_args(
     arrowheads, the properties shown inline, the links that move (§7, flow_links), the boxes drawn
     with a picture (§18, pictures_for), and the plan of
     the diagram type it is drawn as, while
-    the data fits the one chosen (a network, with no plan, otherwise). A table chosen is drawn as a
+    the data fits the one chosen (a network, with no plan, otherwise); a timeline leaves out the
+    things it hides. A table chosen is drawn as a
     network, as only the plugin draws a table, and a note on stderr says so. How its links are
     routed (§25; None: curved). And, only when `switches` is given, what a View menu folds and
     merges: the switches start as the plugin's settings start a graph, links merged as the style
@@ -86,6 +102,7 @@ def render_args(
     parts = graph_parts(world, graph, problems)
     style = read_style(texts, graph, world)[0]
     choice = diagram_for(parts, style["diagrams"], view, style["nudges"])
+    parts = without_hidden(parts, choice.get("plan"))
     if choice["drawn"] == "table":
         print(
             f"graph_svg: graph {graph} is chosen to be drawn as a table, which only the plugin "

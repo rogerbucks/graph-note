@@ -6,6 +6,7 @@
 // (view_switch_view_only).
 import { READABLE_PX } from './details-nav.ts';
 import { edgesOf } from './focus.ts';
+import type { FocusEdge, Kept } from './focus.ts';
 import { STYLE } from './layout.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import type { Settings } from './settings.ts';
@@ -76,6 +77,30 @@ export function labelsHidden(switches: Pick<ViewSwitches, 'labels'>, scale: numb
 export type Fold = { hub: string } | { group: string };
 
 /**
+ * A plan that lays out only the things and links `only` keeps, so they are drawn together (untangle_regroup). The rest
+ * is left out of the layout. No hub is folded: the few left need no stub. A group keeps its box while any of its things
+ * is kept, and a folded one still holds its own links.
+ */
+function regrouped(
+  plan: Folding | undefined,
+  keys: readonly string[],
+  edges: readonly FocusEdge[],
+  only: Kept,
+): Folding {
+  const groups = (plan?.groups ?? []).filter(([, things]) => things.some((k) => only.things.has(k))),
+    box = new Map<string, string>();
+  for (const [label, things, isFolded] of groups) if (isFolded) for (const k of things) box.set(k, label);
+  const inBox = (e: FocusEdge) => box.has(e.from) && box.get(e.from) === box.get(e.to);
+  return {
+    hidden: keys.filter((k) => !only.things.has(k)),
+    folded: edges.flatMap((e, i) => (!only.edges.has(i) || inBox(e) ? [i] : [])),
+    hubs: [],
+    groups,
+    merge: plan?.merge ?? false,
+  };
+}
+
+/**
  * One card's switches, and the hubs and groups opened since they were folded. They are the drawing's alone, never
  * written to the note. It folds a styled drawing for its layout (`folded`). It keeps the plan it last made, for what a
  * tap on a stub or a box opens.
@@ -86,6 +111,8 @@ export class ViewState {
   plan: Folding | undefined;
   private readonly openedHubs = new Set<string>();
   private readonly openedGroups = new Set<string>();
+  /** What each card is regrouped to, by the card: laid out alone, the rest left out (untangle_regroup). */
+  private readonly only = new WeakMap<object, Kept>();
 
   /** For a card starting with these switches. */
   constructor(start: ViewSwitches) {
@@ -117,19 +144,32 @@ export class ViewState {
   }
 
   /**
-   * The drawing (as its style draws it: `styledDrawing`) folded and merged as the switches say, for its layout. It is
-   * the same drawing with the plan on it, or with none when nothing folds. The drawing given is never changed.
+   * Regroups one card's drawing to a thing and its neighbours (`only`), or draws the whole graph again (null). It is that
+   * card's alone: another card of the same graph, such as its full screen, is drawn as before (untangle_regroup).
    */
-  folded(d: GraphDrawing): GraphDrawing {
-    const keys = d.boxes.map((b) => b.key);
-    this.plan = foldPlan(keys, edgesOf(d), drawnGroups(d.nudges ?? [], keys, d.diagram), {
+  keepOnly(card: object, only: Kept | null): void {
+    if (only) this.only.set(card, only);
+    else this.only.delete(card);
+  }
+
+  /**
+   * The drawing (as its style draws it: `styledDrawing`) folded and merged as the switches say, for its layout. It is
+   * the same drawing with the plan on it, or with none when nothing folds. For a card regrouped (`keepOnly`), only what
+   * it keeps is laid out. The drawing given is never changed.
+   */
+  folded(d: GraphDrawing, card?: object): GraphDrawing {
+    const keys = d.boxes.map((b) => b.key),
+      edges = edgesOf(d);
+    this.plan = foldPlan(keys, edges, drawnGroups(d.nudges ?? [], keys, d.diagram), {
       hubs: this.switches.hubs,
       groups: this.switches.groups,
       merge: this.switches.merge,
       opened: { hubs: [...this.openedHubs], groups: [...this.openedGroups] },
     });
+    const only = card ? this.only.get(card) : undefined;
+    const plan = only ? regrouped(this.plan, keys, edges, only) : this.plan;
     const { folding: _was, ...rest } = d;
-    return this.plan ? { ...rest, folding: this.plan } : rest;
+    return plan ? { ...rest, folding: plan } : rest;
   }
 
   /**

@@ -681,7 +681,7 @@ seven `DIAGRAM_TYPES`. style-checks.ts and style-conflicts.ts check a Diagram's 
     with the most links.
   - Lanes need every thing of one kind and every group of one kind, with two kinds or more. Each group is drawn inside
     its lane and never by the nudges again.
-  - A timeline needs every thing carrying a date, with a rank for each day.
+  - A timeline fits any things, dated or not (timeline_fits); its order and what it shows are below.
   - A table fits any things.
   - `suggestType` gives the best fit and why, never drawn unless chosen.
   - `diagramFor` gives the type drawn: the chosen one while it fits, else a network, with why and `nearestType`
@@ -695,6 +695,15 @@ seven `DIAGRAM_TYPES`. style-checks.ts and style-conflicts.ts check a Diagram's 
   link). Also the way in to a graph of more than `LARGE_GRAPH` things (`wayIn`, large_way_in). Also which types scroll
   one way only on a phone (`scrollsOneWay`).
 
+#### A timeline's order and what it shows
+
+A timeline's Diagram may choose `order`, `by` and `show` (timeline_order, timeline_show; `types.ts`, `timelinePlan`):
+
+- `order`: `date` (a rank for each day), `number` (a rank for each number), `written`, or `links` (each thing after the
+  things that link to it). With none, or none that any thing carries: by date, else links, else as written.
+- `by`: the date or number property it is ordered by. With none, each thing's first date, or the most used number.
+- `show`: `all`, `dated` or `undated`. `styledDrawing` leaves the hidden things and their links out (`withoutHidden`).
+- Things without the value stand together in a last rank. A timeline is suggested only when every thing has a date.
 
 #### A plug-in's diagram type
 
@@ -1422,6 +1431,8 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
 - `shortcuts-list.ts` — the list of every keyboard shortcut (`listShortcuts`), and the card's own copy that ? shows
   (`toggleShortcuts`). `graph-view/card-in-use.ts` keeps the card used last, for a host's commands (`cardInUse`).
 - `tour.ts` — the short tour of a first graph, a step at a time, in the card (`showTour`). It can be skipped.
+- `plugin-tokens.ts` — a plug-in's own colours on the page (§44, plugin_theme_tokens). `adoptTokens` adds them as one
+  style sheet made in code, which follows the theme by itself, and gives back what takes it off.
 
 ### The edit pane and the rest
 

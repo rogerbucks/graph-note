@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/timeline.test.js",
+  "test": "a timeline draws every graph with things in it > is suggested only when every thing carries a date, as before",
+  "seen_failing_first": false,
+  "evidence": "It pins behaviour that already held: an undated graph was never suggested a timeline. It guards that widening when a timeline fits keeps the suggestion as it was."
+}

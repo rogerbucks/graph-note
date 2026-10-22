@@ -20,6 +20,8 @@
       "hover_not_alone",
       "hover_still",
       "untangle_neighbourhood",
+      "untangle_toggle",
+      "untangle_regroup",
       "untangle_legend",
       "untangle_path",
       "untangle_find",

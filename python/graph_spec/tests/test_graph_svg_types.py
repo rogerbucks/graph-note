@@ -39,7 +39,7 @@ from graphspec.style.diagram_types import (  # noqa: E402
     type_fits,
     typed_source,
 )
-from graphspec.style.drawn import graph_parts  # noqa: E402
+from graphspec.style.drawn import graph_parts, without_hidden  # noqa: E402
 from graphspec.style.inline import inline_rows  # noqa: E402
 from graphspec.style.words import DIAGRAM_TYPES  # noqa: E402
 
@@ -110,14 +110,17 @@ def python_answer(texts, view):
         if g is not None and g not in styles:
             styles[g] = [row(p) for p in gp.read_style(texts, g, world)[1]]
     for name in (n for n in world.graphs if not n.startswith("schema ")):
-        parts = graph_parts(world, name, problems)
-        nodes, edges, suggested = parts["nodes"], parts["edges"], parts["suggested"]
+        whole = graph_parts(world, name, problems)
         style = gp.read_style(texts, name, world)[0]
+        fits[name] = type_fits(shape_of(whole, style["nudges"]))
+        choice[name] = diagram_for(whole, style["diagrams"], view, style["nudges"])
+        plan = choice[name].get("plan")
+        # a timeline leaves out the things it hides (timeline_show)
+        parts = without_hidden(whole, plan)
+        nodes, edges, suggested = parts["nodes"], parts["edges"], parts["suggested"]
         keys = [key for key, _, _ in nodes]
         hidden = arrowless([t for t, _ in parts["links"]], style["arrows"], view)
         shown = inline_rows(parts["boxes"], parts["links"], style["shows"], view)
-        choice[name] = diagram_for(parts, style["diagrams"], view, style["nudges"])
-        plan = choice[name].get("plan")
         drawn[name] = {
             rd: graph_svg.nudged_source(
                 graph_svg.inline_source(
@@ -133,7 +136,6 @@ def python_answer(texts, view):
             )
             for rd in directions(style["direction"], plan)
         }
-        fits[name] = type_fits(shape_of(parts, style["nudges"]))
     return {"styles": styles, "drawn": drawn, "choice": choice, "fits": fits}
 
 

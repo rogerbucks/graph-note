@@ -5,6 +5,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Zoom, MAX_SCALE } from '../src/zoom.ts';
+import { SIGHT } from '../src/zoom-fit.ts';
 import { AcrossZoom } from '../src/zoom-across.ts';
 
 const close = (a, b, msg) => assert.ok(Math.abs(a - b) < 1e-9, `${msg ?? ''} ${a} ≈ ${b}`);
@@ -94,21 +95,40 @@ describe('limits', () => {
     close(v.height, 500 * v.scale);
   });
 
-  test('panning never takes the drawing out of view', () => {
+  // proves: pan_freely
+  test('panning goes past the drawing’s edges, never stopping as an edge comes into view', () => {
+    const z = make();
+    z.zoomAt(2, 0, 0);
+    z.panBy(-600, -300);
+    const v = z.view();
+    close(v.x + v.width, 400, 'its right edge is 100 pixels inside the viewport’s');
+    close(v.y + v.height, 200);
+    z.panBy(700, 350);
+    assert.deepEqual([z.view().x, z.view().y], [100, 50], 'and its left and top edges past theirs');
+  });
+
+  // proves: pan_freely
+  test('however far it is dragged, a strip of the drawing stays in sight, so it is never lost', () => {
     const z = make();
     z.zoomAt(2, 0, 0);
     z.panBy(-1e6, -1e6);
-    const v = z.view();
-    close(v.x + v.width, 500, 'its right edge stops at the viewport’s');
-    close(v.y + v.height, 250);
+    let v = z.view();
+    close(v.x + v.width, SIGHT, 'its right edge, a strip from the viewport’s left');
+    close(v.y + v.height, SIGHT);
     z.panBy(1e6, 1e6);
-    assert.deepEqual([z.view().x, z.view().y], [0, 0]);
+    v = z.view();
+    assert.deepEqual([v.x, v.y], [500 - SIGHT, 250 - SIGHT], 'its left edge, a strip from the viewport’s right');
   });
 
-  test('a drawing smaller than its viewport stays centred and cannot be dragged away', () => {
+  // proves: pan_freely
+  test('a drawing that fits can be dragged too, and Fit brings it back to the middle', () => {
     const z = make('note', { width: 200, height: 100 });
-    z.panBy(300, 300);
+    z.panBy(100, 50);
+    assert.deepEqual([z.view().x, z.view().y], [250, 125]);
+    assert.equal(z.isFitted(), false);
+    z.fit();
     assert.deepEqual([z.view().x, z.view().y], [150, 75]);
+    assert.equal(z.isFitted(), true);
   });
 });
 

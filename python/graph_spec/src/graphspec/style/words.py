@@ -29,6 +29,10 @@ ARROWHEADS = ("show", "hide")
 # The diagram types (§15, diagram_type_set): what fits each, and how each is laid out, is in
 # graphspec/style/diagram_types.py.
 DIAGRAM_TYPES = ("network", "tree", "flow", "radial", "lanes", "timeline", "table")
+# How a timeline is ordered (§15, timeline_order): by a date, a number, as written, or by links.
+TIMELINE_ORDERS = ("date", "number", "written", "links")
+# What a timeline shows (§15, timeline_show): every thing, only the dated, or only the undated.
+TIMELINE_SHOWS = ("all", "dated", "undated")
 _PLUGIN_ID = re.compile(r"[a-z0-9]+(?:[.-][a-z0-9]+)+")
 _OWN_WORD = re.compile(r"[a-z][a-z0-9-]*")
 
@@ -88,7 +92,7 @@ STYLE_KEYS = {
     "ViewStyle": ("view", "outside"),
     "Shown": ("view", "zoom", "x", "y", "frame", "selected", *SAVED_SWITCHES, "legend"),
     "Arrows": ("arrowheads", "view", "type"),
-    "Diagram": ("type", "view", "relationship"),
+    "Diagram": ("type", "view", "relationship", "order", "by", "show"),
     "Flow": ("motion", "means", "type", "view"),
     "Links": ("view", "routing", "merge"),
     "Picture": ("property", "kind", "thing", "view"),

@@ -396,9 +396,10 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
       until the pointer leaves. Nothing in the drawing shifts or changes size (slice 3, hover_highlight, hover_still).
 - [ ] **F-04** Without a pointer: on the phone, a tap that selects a box gives it the same glow and underline. They stay
       until something else is chosen. On a keyboard, Tab to a box or a link gives them too (slice 3, hover_not_alone).
-- [ ] **F-05** Open a box's details and press Show only this and its neighbours. The other boxes and their links
-      disappear, and a banner names the box and the steps. Widen to two steps and Narrow to one step change it. Show the
-      whole graph brings everything back (slice 3, untangle_neighbourhood).
+- [ ] **F-05** Zoom in, open a box's details and press Show only this and its neighbours. The rest disappears, and
+      those left glide together. A banner names the box and the steps; the button says Show the whole graph. Widen to
+      two steps and Narrow to one step change it. Press the button again: all comes back as drawn, at your zoom (slice
+      3, untangle_neighbourhood, untangle_toggle, untangle_regroup).
 ### Filter, shortest path, find and the arrow keys
 
 - [ ] **F-06** Press Filter by kind or link: each kind and relationship type is a button with its count. Choose one: it comes
@@ -474,8 +475,8 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
       draws it as a network, and offers Use flow. Press it, and the style block now says flow (type_stops_fitting).
 - [ ] **E-05** Phone: a wide flow, a wide tree and a wide timeline each show at a readable size, fitted top to bottom. A
       finger moves the drawing sideways only, and up and down still scroll the note (wide_types_phone).
-- [ ] **E-06** A graph of 51 things says it has too many to read in one drawing and offers Show as table and a view; Show as
-      table draws it as a table (large_way_in).
+- [ ] **E-06** A graph of 1,001 things says it has too many to read in one drawing and offers Show as table and a view;
+      Show as table draws it as a table (large_way_in).
 
 ## AI models — spec §19
 

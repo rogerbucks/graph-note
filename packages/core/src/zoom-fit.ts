@@ -8,6 +8,8 @@
 // size when it would fit larger. It replaces §3's quarter of natural size. So a drawing that fits only below a quarter
 // can still be seen whole. Four times natural size stays the furthest in.
 
+/** How much of the drawing, in pixels, stays in the viewport however far it is dragged: enough to find and grab it. */
+export const SIGHT = 48;
 /** The furthest the drawing zooms in. */
 export const MAX_SCALE = 4;
 /** One press of zoom in or zoom out. */
@@ -89,9 +91,25 @@ export interface Room {
 }
 
 /**
- * Keeps the drawing in view. It is centred on an axis where it is smaller than the viewport, edge to edge where it is
- * larger. It may also move into what is kept clear at an edge, by as much as is covered there and no further. With
- * `centre`, centred on both axes.
+ * Where a drag may take the drawing: anywhere, past its edges, as far as you like (pan_freely). It never stops because an
+ * edge has come into view. The one limit: a strip of it, `SIGHT` pixels or all of it if smaller, stays in the viewport
+ * on each axis. So it can never be lost off screen, and Fit brings the whole of it back.
+ */
+export function inSight(room: Room, scale: number, x: number, y: number): [number, number] {
+  const axis = (v: number, size: number, space: number) => {
+    const keep = Math.min(SIGHT, size, space);
+    return clamp(v, keep - size, space - keep);
+  };
+  return [
+    axis(x, room.content.width * scale, room.viewport.width),
+    axis(y, room.content.height * scale, room.viewport.height),
+  ];
+}
+
+/**
+ * Where the drawing sits when the view is placed for you: fitted, or aimed at a thing (§25), not dragged. It is
+ * centred on an axis where it is smaller than the viewport, edge to edge where it is larger. It may also move into what
+ * is kept clear at an edge, by as much as is covered there and no further. With `centre`, centred on both axes.
  */
 export function clampPan(room: Room, scale: number, x: number, y: number, centre = false): [number, number] {
   const w = room.content.width * scale,
@@ -106,4 +124,17 @@ export function clampPan(room: Room, scale: number, x: number, y: number, centre
     return clamp(v, Math.min(lo, space - far - size), Math.max(hi, near));
   };
   return [axis(x, w, vw, c.left, c.right), axis(y, h, vh, c.top, c.bottom)];
+}
+
+/**
+ * Where the drawing goes when what is kept clear changes to `clear` (§25). Within the old limits on an axis, it is held
+ * within the new ones. Dragged freely past them, it stays where it was put.
+ */
+export function heldClear(room: Room, scale: number, x: number, y: number, clear: Clear): [number, number] {
+  const now = { ...room, clear },
+    [lx, ly] = clampPan(room, scale, -Infinity, -Infinity),
+    [hx, hy] = clampPan(room, scale, Infinity, Infinity);
+  const [nx, ny] = clampPan(now, scale, x, y),
+    back = (v: number, lo: number, hi: number, n: number) => (v < lo - 1e-9 || v > hi + 1e-9 ? v : n);
+  return [back(x, lx, hx, nx), back(y, ly, hy, ny)];
 }

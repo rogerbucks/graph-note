@@ -38,21 +38,47 @@ export interface Direction {
 }
 
 /**
+ * Past this many things a graph is laid out quickly (spec §11, large_drawn_quick): once, in one direction, with the
+ * quick settings below. Take a graph with a tree and cross links, laid out in full one way on a desktop. It took
+ * about a second at 400 things, 15 at 1,000 and 48 at 2,000. Both ways took twice that, and a phone is slower still.
+ * The quick way took under one second at 1,000 and about three at 2,000. 300 is also the most the page's own thread
+ * draws (layout-limits.ts), so a graph drawn there is laid out in full.
+ */
+export const QUICK_LAYOUT = 300;
+
+/**
+ * Graphviz's quick settings. Links are drawn straight (`splines=line`), as the View menu's Straight routing draws them.
+ * Placing the boxes in each row stops early (`nslimit=0.5`). Uncrossing the links tries a twentieth as hard
+ * (`mclimit=0.05`). The rows are kept, so the drawing still reads in order. The routing a person chose is written
+ * after, so it still wins (`routedSource`). Never `nslimit=0`: Graphviz stopped on an assertion with it.
+ */
+const QUICK_SETTINGS = '  graph [splines=line, nslimit=0.5, mclimit=0.05];';
+
+/** The source with the quick settings added after its first line, as `routedSource` adds its own. */
+function quickSource(dot: string): string {
+  const lines = dot.split('\n');
+  lines.splice(1, 0, QUICK_SETTINGS);
+  return lines.join('\n');
+}
+
+/**
  * What Graphviz is handed for a drawing. It is one source for each direction the style lists, in the style's order. Or
  * it is only the drawing's own direction, when it was given one of those (spec §21, settings_formatting; a direction
- * nudge, §6). Or else it is only its diagram type's direction (§15: a tree down, the other types across).
+ * nudge, §6). Or else it is only its diagram type's direction (§15: a tree down, the other types across). A graph of
+ * more than `QUICK_LAYOUT` things is laid out in only the first, with the quick settings (§11, large_drawn_quick).
  */
 export function directions(drawing: GraphDrawing): Direction[] {
   const own = drawing.direction && STYLE.directions.includes(drawing.direction) ? drawing.direction : undefined;
   const only = own ?? (drawing.diagram ? GraphLayout.typeDirection(drawing.diagram) : undefined);
   const keys = drawing.boxes.map((b) => b.key);
-  return (only ? [only] : STYLE.directions).map((rankdir) => ({
-    rankdir,
+  const quick = drawing.boxes.length > QUICK_LAYOUT;
+  const ways = only ? [only] : quick ? STYLE.directions.slice(0, 1) : STYLE.directions;
+  return ways.map((rankdir) => {
     // the diagram type chosen (§15), the links moved (§7) and the style graph's arrowheads hidden (§15). Then
     // properties shown (§14), room for the pictures on boxes (§18) and nudges written in (§6). Then what the View menu
     // folds and merges and how the links are routed (§25). With none of them, the source the Python library gives, byte
     // for byte
-    dot: routedSource(
+    const dot = routedSource(
       foldedSource(
         nudgedSource(
           pictureSource(
@@ -75,9 +101,9 @@ export function directions(drawing: GraphDrawing): Direction[] {
         drawing.folding,
       ),
       drawing.routing,
-    ),
-    src: layoutSource(drawing, rankdir as 'LR' | 'TB'),
-  }));
+    );
+    return { rankdir, dot: quick ? quickSource(dot) : dot, src: layoutSource(drawing, rankdir as 'LR' | 'TB') };
+  });
 }
 
 /**

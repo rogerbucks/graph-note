@@ -83,6 +83,22 @@ export function nudgedDrawing(drawing: GraphDrawing, style: Pick<StyleGraph, 'di
 }
 
 /**
+ * The drawing without the things a timeline hides (timeline_show), and the links and estimates that touch them. Each
+ * link kept says which written link it is, as a view's do.
+ */
+export function withoutHidden(drawing: GraphDrawing, hidden: readonly string[] = []): GraphDrawing {
+  if (!hidden.length) return drawing;
+  const gone = new Set(hidden),
+    kept = (l: { from: string; to: string }) => !gone.has(l.from) && !gone.has(l.to);
+  return {
+    ...drawing,
+    boxes: drawing.boxes.filter((b) => !gone.has(b.key)),
+    links: drawing.links.flatMap((l, i) => (kept(l) ? [{ ...l, edge: l.edge ?? i }] : [])),
+    estimates: drawing.estimates.filter(kept),
+  };
+}
+
+/**
  * The drawing as its style graph draws it in `view` (none: the whole graph), as every host draws a graph, a view or an
  * export. It is drawn:
  * - in the direction its direction nudge sets, with its nudges (§6);
@@ -90,12 +106,14 @@ export function nudgedDrawing(drawing: GraphDrawing, style: Pick<StyleGraph, 'di
  * - with the properties it shows inline (§14), their values from `g`, the graph as read (none: no property shown);
  * - with the links it moves (§7, link-flow.ts);
  * - with the boxes it draws a picture on (§18, picture.ts; none without `g`);
- * - laid out as the diagram type it chooses while the data fits it (§15, types.ts); a network otherwise.
+ * - laid out as the diagram type it chooses while the data fits it (§15, types.ts); a network otherwise. A timeline
+ *   leaves out the things it hides.
  */
-export function styledDrawing(drawing: GraphDrawing, style: StyleGraph, g?: Graph, view?: string): GraphDrawing {
+export function styledDrawing(whole: GraphDrawing, style: StyleGraph, g?: Graph, view?: string): GraphDrawing {
+  const { plan } = diagramFor(whole, style, g, view),
+    drawing = withoutHidden(whole, plan?.type === 'timeline' ? plan.hidden : []);
   const arrowless = arrowlessLinks(drawing, style, view),
     inline = g ? inlineRows(drawing, g, style, view) : undefined,
-    { plan } = diagramFor(drawing, style, g, view),
     flow = flowLinks(drawing, style, view),
     { routing } = linksOf(style, view),
     pictures = g ? picturesFor(drawing, g, style, view) : [];
