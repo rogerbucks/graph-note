@@ -6,15 +6,25 @@
 // - A mark may name the thing or link it draws, a group it sits in, its order on top, and words a screen reader says.
 // - A link mark may name the keys of the two things it joins, so a renderer needs no lookup back into the graph.
 // - Every number is in the drawing's own CSS pixels, at scale 1.
+// - A board item (§45, board_item_marks) is a kind of its own. So is a fold, a part a view cannot draw (§34,
+//   process_fold_marks). So the whiteboard and the process views use the same painters. Each must have a name.
 import type { DiagramMark, DiagramSpace, MarkPoint } from './plugin-diagrams.ts';
 
-/** The kinds of mark: a box, a link through points, a label, an arrowhead, and a group drawn around other marks. */
-export const DRAW_MARK_KINDS = ['box', 'link', 'label', 'arrowhead', 'group'] as const;
+/**
+ * The kinds of mark: a box, a link through points, a label, an arrowhead, and a group drawn around other marks. Then an
+ * item on a board, and a fold: one place for a part a view cannot draw, such as a loop.
+ */
+export const DRAW_MARK_KINDS = ['box', 'link', 'label', 'arrowhead', 'group', 'item', 'fold'] as const;
 /** One kind of mark. */
 export type DrawMarkKind = (typeof DRAW_MARK_KINDS)[number];
 
 /** What a mark stands for, for a screen reader: a thing, a link, a group, or only a picture. */
 export type DrawMarkRole = 'thing' | 'link' | 'group' | 'picture';
+
+/** What a fold stands for: a loop, steps run side by side, timing, or another part the view cannot draw. */
+export const FOLD_KINDS = ['loop', 'parallel', 'timing', 'other'] as const;
+/** One kind of fold. */
+export type FoldKind = (typeof FOLD_KINDS)[number];
 
 /** A box's outline. The core draws each one. */
 export const BOX_SHAPES = ['rect', 'round', 'ellipse', 'diamond', 'cylinder', 'note', 'hexagon'] as const;
@@ -68,6 +78,19 @@ export type DrawMark = MarkCommon &
       }
     | { kind: 'arrowhead'; x: number; y: number; angle: number; size: number; outline?: MarkOutline }
     | { kind: 'group'; x: number; y: number; width: number; height: number; outline?: MarkOutline }
+    /** An item on a board. `item` is its kind as a token, such as `sticky`, `card` or a plug-in's `example.vote`. */
+    | { kind: 'item'; x: number; y: number; width: number; height: number; item: string; name: string }
+    /** A part a view cannot draw, folded into one place. `hides` is how many things it holds. */
+    | {
+        kind: 'fold';
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+        folds: FoldKind;
+        hides: number;
+        name: string;
+      }
   );
 
 /** A box around marks: its corner, width and height. */
@@ -176,6 +199,21 @@ function drawMarkOf(raw: unknown, space: DiagramSpace): DrawMark | string {
       ...(m.font === undefined ? {} : { font: m.font }),
     };
   }
+  if (m.kind === 'item' || m.kind === 'fold') {
+    if (!area()) return `${m.kind === 'item' ? 'an item' : 'a fold'} outside the space it was given`;
+    if (common.name === undefined)
+      return `${m.kind === 'item' ? 'an item' : 'a fold'} with no name for a screen reader`;
+    const rect = { ...place, width: m.width as number, height: m.height as number, name: common.name };
+    if (m.kind === 'item') {
+      if (typeof m.item !== 'string' || !STYLE.test(m.item) || m.item.length > DRAW_TEXT_LIMIT)
+        return 'an item whose kind is not a token, such as sticky or card';
+      return { ...common, kind: 'item', ...rect, item: m.item };
+    }
+    if (!(FOLD_KINDS as readonly unknown[]).includes(m.folds))
+      return `a fold that is not one of ${FOLD_KINDS.join(', ')}`;
+    if (!Number.isInteger(m.hides) || (m.hides as number) < 1) return 'a fold that hides no things';
+    return { ...common, kind: 'fold', ...rect, folds: m.folds as FoldKind, hides: m.hides as number };
+  }
   if (m.kind === 'arrowhead') {
     if (!inX(m.x) || !inY(m.y)) return 'an arrowhead outside the space it was given';
     if (typeof m.angle !== 'number' || !Number.isFinite(m.angle)) return 'an arrowhead with no angle';
@@ -207,7 +245,8 @@ export function drawMarksOf(raw: unknown, space: DiagramSpace): DrawMark[] | str
 
 /** The box one mark covers. A label's is its anchor point, widened to its widest when it names one. */
 export function markBounds(m: DrawMark): MarkBounds {
-  if (m.kind === 'box' || m.kind === 'group') return { x: m.x, y: m.y, width: m.width, height: m.height };
+  if (m.kind === 'box' || m.kind === 'group' || m.kind === 'item' || m.kind === 'fold')
+    return { x: m.x, y: m.y, width: m.width, height: m.height };
   if (m.kind === 'link') {
     const xs = m.points.map((p) => p[0]),
       ys = m.points.map((p) => p[1]);

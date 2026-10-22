@@ -109,7 +109,7 @@ export function layoutSvg(laid: LaidMarks): string {
     }
     const fill = m.kind === 'group' ? 'none' : p.fill;
     const paint = ` fill="${fill}" stroke="${m.kind === 'group' ? colourOf(m.style.replace(/\.dashed$/, ''), true) : p.line}"${lineAttrs(m, p.dashed)}`;
-    const outline = m.outline;
+    const outline = 'outline' in m ? m.outline : undefined;
     if (outline) {
       const ps = outline.points;
       if (m.kind === 'box' && m.shape === 'ellipse' && ps.length === 2) {
@@ -152,9 +152,13 @@ export function layoutSvg(laid: LaidMarks): string {
 }
 
 /** A box or group with no outline given, drawn from its shape and box. */
-function shapeSvg(m: Extract<DrawMark, { kind: 'box' | 'group' }>, paint: string, pt: (p: MarkPoint) => string) {
+function shapeSvg(
+  m: Extract<DrawMark, { kind: 'box' | 'group' | 'item' | 'fold' }>,
+  paint: string,
+  pt: (p: MarkPoint) => string,
+) {
   const { x, y, width: w, height: hh } = m;
-  const shape = m.kind === 'group' ? 'round' : (m.shape ?? 'rect');
+  const shape = m.kind === 'box' ? (m.shape ?? 'rect') : m.kind === 'group' ? 'round' : 'rect';
   const corners = (ps: MarkPoint[]) => `<polygon${paint} points="${[...ps, ps[0] ?? [0, 0]].map(pt).join(' ')}"/>`;
   if (shape === 'ellipse') {
     const [cx, cy] = pt([x + w / 2, y + hh / 2]).split(',');
