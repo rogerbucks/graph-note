@@ -9,6 +9,13 @@ import { notePath, refusal, REFUSED } from '@thoughtknot/core';
 import { NODE_FILES, readNoteFile, writeAtomically } from './note-file.ts';
 import type { NoteFiles } from './note-file.ts';
 
+/** A read or write that failed, naming the note, with why in words of its own for a host to show (`why`). */
+const fault = (path: string, why: string) => Object.assign(new Error(`${path}: ${why}`), { why });
+
+/** Why a read or write of the store failed, in words for the person: the store's own, or the error's. */
+export const faultOf = (e: unknown): string =>
+  e && typeof e === 'object' && 'why' in e ? String(e.why) : e instanceof Error ? e.message : String(e);
+
 /** A new note's mode: read and written by its owner, read by others, as a text editor makes one. */
 const NEW_NOTE_MODE = 0o644;
 
@@ -19,7 +26,7 @@ export function folderStorage(root: string, files: NoteFiles = NODE_FILES): Note
     const there = await fs.lstat(real(path)).catch(() => null);
     if (!there) return null;
     const read = await readNoteFile(real(path));
-    if (!read.ok) throw new Error(`${path}: ${read.why}`);
+    if (!read.ok) throw fault(path, read.why);
     return { text: read.text, version: read.version, mode: read.mode };
   };
   const walk = async (folder: string): Promise<string[]> => {
@@ -45,7 +52,7 @@ export function folderStorage(root: string, files: NoteFiles = NODE_FILES): Note
       if (reason) return { ok: false, reason, current: shown(current) };
       await fs.mkdir(dirname(real(path)), { recursive: true });
       const done = await writeAtomically(real(path), text, current?.mode ?? NEW_NOTE_MODE, files);
-      if (!done.ok) throw new Error(`${path}: ${done.why}`);
+      if (!done.ok) throw fault(path, done.why);
       return { ok: true, version: done.version };
     },
     remove: async (path, options) => {

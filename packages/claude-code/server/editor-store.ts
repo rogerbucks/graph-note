@@ -16,10 +16,13 @@ import { promises as fs } from 'node:fs';
 import { basename, dirname, resolve, sep } from 'node:path';
 import type { ApiAnswer, ApiRequest } from './start-server.ts';
 import { DraftShelf } from './note-drafts.ts';
-import { NODE_FILES, readNoteFile, writeAtomically, type NoteFiles, type NoteText } from './note-file.ts';
+import { NODE_FILES, type NoteFiles } from './note-file.ts';
+import { folderStorage } from './folder-storage.ts';
+import { loadNote, writeNote, type Loaded } from './editor-notes.ts';
 import { notePlace, type Vault } from './note-place.ts';
 import { watchNote, type Watcher } from './note-watch.ts';
 import { sha256, word } from '@thoughtknot/core';
+import type { NoteStorage } from '@thoughtknot/core';
 
 import type { NoteGate } from './editor-gate.ts';
 import { proposalInto } from './editor-proposals.ts';
@@ -95,7 +98,8 @@ export class NoteStore {
   private readonly where: Vault;
   private readonly drafts: DraftShelf;
   private readonly watch: Watcher;
-  private readonly files: NoteFiles;
+  /** The vault's notes, through the one storage interface (storage_contract): every read and write of a note. */
+  private readonly kept: NoteStorage;
   private readonly gate: NoteGate | undefined;
   private proposer = 'Claude';
   private history: NoteHistory = GIT_HISTORY;
@@ -105,7 +109,7 @@ export class NoteStore {
     this.where = where;
     this.drafts = drafts;
     this.watch = watch;
-    this.files = files;
+    this.kept = folderStorage(where.real, files);
     this.gate = gate;
   }
 
@@ -198,11 +202,8 @@ export class NoteStore {
   }
 
   /** The note read from disk where it was opened, its place checked again first. */
-  private async load(note: OpenNote): Promise<NoteText & { real?: string }> {
-    const place = await notePlace(this.where, note.inVault);
-    if (!place.ok || place.inVault !== note.inVault) return { ok: false, why: word('server.note-moved') };
-    const r = await readNoteFile(place.real);
-    return r.ok ? { ...r, real: place.real } : r;
+  private load(note: OpenNote): Promise<Loaded> {
+    return loadNote(this.kept, this.where, note.inVault);
   }
 
   private async read(id: string): Promise<ApiAnswer> {
@@ -228,7 +229,7 @@ export class NoteStore {
     return changesAnswer(tail, {
       sendable: async () => {
         const r = await this.load(note);
-        if (!r.ok || !r.real) return answer(410, { why: r.ok ? word('server.note-gone') : r.why });
+        if (!r.ok) return answer(410, { why: r.why });
         const held = this.refusal(note, r.text);
         return held === null ? r.real : answer(403, { why: held });
       },
@@ -266,9 +267,9 @@ export class NoteStore {
         const note = this.notes.get(id) as OpenNote;
         const keep = () => this.drafts.keep(note.inVault, { text, against: ifMatch });
         const now = await this.load(note);
-        if (!now.ok || !now.real) {
+        if (!now.ok) {
           const kept = await keep();
-          return answer(410, { why: now.ok ? word('server.note-gone') : now.why, draft: kept.ok });
+          return answer(410, { why: now.why, draft: kept.ok });
         }
         const refused = this.refusal(note, now.text);
         if (refused !== null) return answer(410, { why: refused, draft: false });
@@ -277,7 +278,8 @@ export class NoteStore {
           return answer(409, { text: now.text, version: now.version, draft: kept.ok }, { etag: now.version });
         }
         if (this.stopped) return stopped();
-        const w = text === now.text ? { ok: true as const, version: now.version } : await this.writeNote(now, text);
+        const w =
+          text === now.text ? { ok: true as const, version: now.version } : await writeNote(this.kept, now, text);
         if (!w.ok) {
           const kept = await keep();
           return answer(500, { why: w.why, draft: kept.ok });
@@ -292,10 +294,6 @@ export class NoteStore {
     );
   }
 
-  private writeNote(now: { real?: string; mode: number }, text: string) {
-    return writeAtomically(now.real as string, text, now.mode, this.files);
-  }
-
   /**
    * Claude's proposal, written beside the graph as a change set and never applied (cc_claude_proposes). It is made
    * under the note's lock, from the note as it is on disk now. It passes the same gate as any send, and again on the
@@ -308,7 +306,7 @@ export class NoteStore {
         if (this.stopped) return stopped();
         const note = this.notes.get(id) as OpenNote;
         const now = await this.load(note);
-        if (!now.ok || !now.real) return answer(410, { why: now.ok ? word('server.note-gone') : now.why });
+        if (!now.ok) return answer(410, { why: now.why });
         const refused = this.refusal(note, now.text);
         if (refused !== null) return answer(403, { why: refused });
         const at = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
@@ -318,7 +316,7 @@ export class NoteStore {
         const next = this.gate?.note(made.text, sha256(made.text)) ?? null;
         if (next !== null) return answer(403, { why: next });
         if (this.stopped) return stopped();
-        const w = await this.writeNote(now, made.text);
+        const w = await writeNote(this.kept, now, made.text);
         if (!w.ok) return answer(500, { why: w.why });
         // Claude's own text never carries the user's yes: a note that needed one asks again about this text
         const later = this.refusal(note, made.text);
