@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_trust.py",
+  "test": "TrustCounted.test_naming_no_trust_every_document_is_counted",
+  "seen_failing_first": false,
+  "evidence": "It proves a join naming no trust works as before, so it passes against the code before it by design."
+}
