@@ -9,6 +9,7 @@ import {
   fromPluginMarks,
   markBounds,
   marksBounds,
+  scaledMarks,
 } from '../src/drawing-marks.ts';
 
 const SPACE = { width: 400, height: 300 };
@@ -120,6 +121,28 @@ describe('drawing marks (plugin_interface)', () => {
     assert.deepEqual(markBounds(HEAD), { x: 194, y: 74, width: 12, height: 12 });
     assert.deepEqual(marksBounds([BOX, LINK, HEAD]), { x: 10, y: 20, width: 196, height: 66 });
     assert.equal(marksBounds([]), null);
+  });
+
+  test('marks drawn at half their size keep their shape: every place, size, outline and line width halved', () => {
+    const outlined = {
+      ...BOX,
+      outline: {
+        points: [
+          [10, 20],
+          [110, 60],
+        ],
+      },
+      lineWidth: 2,
+    };
+    const [box, label, link, head] = scaledMarks([outlined, LABEL, LINK, HEAD], 0.5);
+    assert.deepEqual([box.x, box.y, box.width, box.height, box.lineWidth], [5, 10, 50, 20, 1]);
+    assert.deepEqual(box.outline.points, [
+      [5, 10],
+      [55, 30],
+    ]);
+    assert.deepEqual([label.x, label.y, label.size, label.maxWidth, label.text], [30, 22.5, 7, 45, 'Loan']);
+    assert.deepEqual(link.points[3], [100, 40]);
+    assert.deepEqual([head.x, head.y, head.size, head.angle], [100, 40, 3, 90]);
   });
 
   test('marks are drawn by their order on top, keeping the order given where it is the same', () => {

@@ -20,8 +20,9 @@ import type { JoinedGraph } from './plugin-sources.ts';
 import { pluginCalls } from './plugin-calls.ts';
 import { guardedProvider, providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
-import { diagramProblem, drawnDiagram } from './plugin-diagrams.ts';
+import { diagramDrawing, diagramProblem } from './plugin-diagrams.ts';
 import type { DiagramSpace, PluginDiagram } from './plugin-diagrams.ts';
+import type { DrawMark } from './drawing-marks.ts';
 import type { GraphShape } from './types-shape.ts';
 import type { PluginResult } from './plugin-calls.ts';
 import { gatedFiles } from './plugin-files.ts';
@@ -175,6 +176,8 @@ export interface PluginRegistry {
   diagramTypes: () => PluginDiagram[];
   /** The SVG the core draws from the marks the diagram type `type` gives for `shape` in `space`, or why not. */
   drawDiagram: (type: string, shape: GraphShape, space: DiagramSpace) => Promise<PluginResult<string>>;
+  /** The drawing marks the diagram type `type` gives for `shape` in `space`, checked, for a host that draws marks. */
+  diagramMarks: (type: string, shape: GraphShape, space: DiagramSpace) => Promise<PluginResult<DrawMark[]>>;
   /** The plug-ins stopped for running too long, and why; nothing of theirs is called again. */
   stopped: () => StoppedPlugin[];
 }
@@ -377,11 +380,10 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       return c && guardedProvider(c, providers.owner.get(name) ?? '', guarded);
     },
     diagramTypes: () => diagrams.items.map((c) => ({ ...c })),
-    async drawDiagram(type, shape, space) {
-      const c = diagrams.items.find((x) => x.type === type);
-      if (!c) return { ok: false, plugin: '', message: word('plugins.none.diagram', { name: type }) };
-      return drawnDiagram(diagrams.owner.get(type) ?? '', c, shape, space, awaited);
-    },
+    ...diagramDrawing((type) => {
+      const d = diagrams.items.find((x) => x.type === type);
+      return d && { d, plugin: diagrams.owner.get(type) ?? '' };
+    }, awaited),
     stopped: () => [...stopped].map(([plugin, why]) => ({ plugin, why })),
   };
 }

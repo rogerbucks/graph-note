@@ -750,6 +750,18 @@ built-in types give it too: Graphviz lays them out, and the engine reads that la
 - When marks cannot give a drawing back exactly, they say so (`layout.lost`). That is a text Graphviz's JSON leaves
   out, or a colour that is no stand-in.
 
+#### The built-in types, through the plug-in interface
+
+- `core-diagrams.ts` adds the seven built-in types through the plug-in interface, as a plug-in adds its own
+  (`coreDiagrams(engine)`, plugin_interface). Each is named under the core's id, such as `thoughtknot.diagrams.tree`.
+- Each gives drawing marks for a graph's shape. Graphviz lays the shape out as the type, in the direction that fits the
+  space best. The marks are shrunk to fit the space (`scaledMarks`), never grown.
+- A type the shape does not fit is drawn as a network, as a drawing is. A table is a row for each thing.
+- A plug-in's type may give drawing marks too. A list whose first mark has an id is drawing marks (`drawnMarks`).
+- The registry's `diagramMarks` gives a type's marks, checked, for a host that draws marks. Its `drawDiagram` still
+  gives SVG: drawing marks are written by `layoutSvg` and coloured by the theme.
+- The view still shows Graphviz's own SVG. These marks are what the renderer will draw.
+
 ### Views (spec §2, §7)
 
 A view is a named query block in the note: `// graph: <graph> · QUERY view <name>`, then the query. The reader already

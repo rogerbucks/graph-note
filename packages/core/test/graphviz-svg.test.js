@@ -69,6 +69,23 @@ describe("the SVG written from the marks is Graphviz's own (plugin_interface)", 
     assert.equal(layoutMarks(viz.renderJSON(SOURCES['an undirected graph'])).layout.lost, undefined);
   });
 
+  test('marks with no layout are written in their order on top, in the space they were given', () => {
+    const box = { id: 'a', style: 'kind.0', kind: 'box', x: 0, y: 0, width: 40, height: 20, z: 1 };
+    const text = {
+      id: 'a.label',
+      style: 'text',
+      kind: 'label',
+      x: 20,
+      y: 12,
+      text: 'A & B',
+      size: 12,
+      anchor: 'middle',
+    };
+    const svg = layoutSvg({ marks: [box, text], space: { width: 80, height: 40 } });
+    assert.match(svg, /<svg width="60pt" height="30pt"/);
+    assert.ok(svg.indexOf('A &amp; B') < svg.indexOf('<polygon'), 'the box, higher on top, is written after the text');
+  });
+
   test("the engine gives a drawing's marks too, and drawn from them it is the SVG the engine draws", async () => {
     const engine = await loadEngine();
     const dot = SOURCES['a styled graph with a kind, a reading and a label of two lines'];
