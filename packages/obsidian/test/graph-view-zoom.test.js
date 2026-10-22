@@ -5,7 +5,8 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
-import { load, GRAPH, show, svgOf } from './host/view-notes.js';
+import { load, GRAPH, show, styles, svgOf } from './host/view-notes.js';
+import { rules, winner } from './host/cascade.js';
 
 before(() => build());
 
@@ -206,5 +207,23 @@ describe('full screen', () => {
     );
     labelled(overlay, 'Close full screen').click();
     assert.equal(env.doc.body.querySelector('.thoughtknot-fullscreen'), null);
+  });
+
+  test('a thing’s details in full screen take at most 40% of it and scroll; the drawing keeps 30% (details_keep_view)', () => {
+    const all = rules(styles, 'styles.css'),
+      inFull = (cls) => ({
+        tag: 'div',
+        classes: [cls],
+        ancestors: [
+          { tag: 'div', classes: ['thoughtknot', 'thoughtknot-view', 'is-full'] },
+          { tag: 'div', classes: ['thoughtknot-fullscreen'] },
+          { tag: 'body', classes: [] },
+        ],
+      }),
+      details = inFull('thoughtknot-details');
+    assert.equal(winner(all, details, 'max-height')?.value, '40%');
+    assert.equal(winner(all, details, 'overflow-y')?.value, 'auto');
+    assert.equal(winner(all, details, 'flex')?.value, '0 1 auto', 'the details give way first when room is short');
+    assert.equal(winner(all, inFull('thoughtknot-viewport'), 'min-height')?.value, '30%');
   });
 });
