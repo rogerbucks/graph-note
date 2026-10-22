@@ -120,6 +120,9 @@ export const KEPT = {
   'packages/core/src/display/graph-view/read-only.ts': '*',
   // a colour the code asks the browser whether it can mix, never shown
   'packages/core/src/display/graph-view/drawing-svg.ts': ['color-mix(in srgb, red 50%, blue)'],
+  // the shaders the graphics chip runs, and a developer's error when it cannot build them: never shown
+  'packages/core/src/display/graph-view/gl-painter.ts': '*',
+  'packages/core/src/display/graph-view/gpu-painter.ts': '*',
   // the elements that can take the focus, as a selector kept in a constant
   'packages/core/src/display/graph-view/full-screen.ts': ['a[href], button, input, select, textarea, [tabindex]'],
   'packages/claude-code/page/keyboard.ts': ['a[href], button, input, select, textarea, [tabindex]'],
