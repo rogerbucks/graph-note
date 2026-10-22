@@ -22,6 +22,7 @@ import {
   OUTSIDE,
   STYLE_HUES,
   orList,
+  pluginTypeOf,
 } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
@@ -180,7 +181,9 @@ function arrowsRefusal(a: ArrowsWrite): string | null {
 
 /** Why a diagram type cannot be chosen so, or null. */
 function diagramRefusal(d: DiagramWrite): string | null {
-  if (!(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return mustBe('type', DIAGRAM_TYPES);
+  // a plug-in's type is written by its whole name, as a style graph names it (plugin_diagram_type_named)
+  const own = pluginTypeOf(d.type) !== null;
+  if (!own && !(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return mustBe('type', DIAGRAM_TYPES);
   if (d.relationship !== undefined && d.type !== 'tree') return treeOnly();
   if (d.relationship === '') return word('editing.style.type-name');
   const chosen = centreRefusal(d) ?? timelineRefusal(d);
