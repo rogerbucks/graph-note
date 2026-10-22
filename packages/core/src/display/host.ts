@@ -23,6 +23,21 @@ export interface MenuRow {
 /** What a menu holds: its rows, and a line between groups. */
 export type MenuEntry = MenuRow | 'separator';
 
+/**
+ * A side pane of the host's own that a card's details can be shown in (editor spec §25, details_in_host_pane):
+ * Obsidian's sidebar, a VS Code panel, a window of the app's own. One card's details are in it at a time.
+ */
+export interface SidePane {
+  /**
+   * Shows `el`, a card's details, in the pane under `title`, opening the pane if need be. When it is shown again, the
+   * title changes. `left` is called when the details leave the pane without being asked: the person closed the pane
+   * (`closed`), or another card's details took it (`taken`).
+   */
+  show: (el: HTMLElement, title: string, left: (why: 'closed' | 'taken') => void) => void;
+  /** Takes `el` out of the pane, when it is the one shown there; the pane says it holds nothing. */
+  release: (el: HTMLElement) => void;
+}
+
 /** The host's side of the display layer. */
 export interface DisplayHost {
   /** Draws the icon named `name` into `el`, replacing what it held. */
@@ -33,6 +48,13 @@ export interface DisplayHost {
   notice: (message: string) => void;
   /** Shows a menu of `entries` with its top left at `at`, in the window of `doc`. */
   menu: (entries: MenuEntry[], at: { x: number; y: number }, doc: Document) => void;
+  /** A side pane of the host's own for a card's details, where it has one (§25, details_in_host_pane). Not set: none. */
+  sidePane?: SidePane;
+  /**
+   * Where the details' last place, size and state are kept between sessions, in the host's own data (§25,
+   * sheet_layout_kept). `saved` gives what was kept, or nothing; `save` keeps a plain JSON value. Not set: the session only.
+   */
+  detailsLayout?: { saved: () => unknown; save: (layout: unknown) => void };
   /**
    * Whether the host's content security policy forbids inline styles (`style-src` without `'unsafe-inline'`), as the
    * browser editor's page does (editor spec §26, cc_csp). The core writes the colours of a drawing as style attributes.
@@ -126,6 +148,12 @@ export const setIcon = (el: HTMLElement, name: string): void => displayHost().ic
 
 /** Whether the screen is a phone's, through the host. */
 export const isPhone = (): boolean => displayHost().isPhone();
+
+/** The host's side pane for a card's details, or null where it has none, or no host is installed. */
+export const sidePane = (): SidePane | null => installed?.sidePane ?? null;
+
+/** Where the host keeps the details' layout between sessions, or null where it keeps none. */
+export const keptLayout = (): DisplayHost['detailsLayout'] | null => installed?.detailsLayout ?? null;
 
 /** Tells the person something briefly, through the host. */
 export const notice = (message: string): void => displayHost().notice(message);

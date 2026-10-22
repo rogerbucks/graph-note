@@ -10,6 +10,7 @@ import { Lifecycle } from '../lifecycle';
 import { attachmentsOf, linksHeld, noteOf, withMeant, word } from '@thoughtknot/core';
 import type { Target, View } from '@thoughtknot/core';
 import { noteControls } from './note-controls';
+import { button } from './view-bar';
 import { linkAnchor, renderLinks } from '../links/links-list';
 import type { LeftAt } from '../links/link-types';
 import type { ViewOptions } from './view-options';
@@ -70,7 +71,13 @@ export class RichDetails {
       note = host && noteOf(this.o.reading, this.o.graph, key);
     if (host && note) {
       const box = el.createDiv({ cls: 'thoughtknot-note' });
-      linkAnchor(box.createDiv(), note, host, this.where, `Open ${note.label}`);
+      const line = box.createDiv({ cls: 'thoughtknot-note-open' });
+      linkAnchor(line, note, host, this.where, `Open ${note.label}`);
+      // where the host has panes of its own, the note can be opened beside the graph, to edit there (note_open_beside)
+      if (host.openBeside)
+        button(line, word('details.open-beside', { name: note.label }), 'separator-vertical', () =>
+          host.openBeside?.(note),
+        ).addClass('thoughtknot-open-beside');
       this.render(box, `![[${note.opens}]]`, 'thoughtknot-note-body');
     }
     if (host && MARKED.test(text)) this.render(el, text, 'thoughtknot-rich-text');

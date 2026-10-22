@@ -59,6 +59,8 @@ const OPERABLE = new Set([
   'graphics-document',
   'application',
   'region',
+  // a separator that takes the keyboard is a window splitter, a widget (WAI-ARIA 1.2): the details sheet's resize bar
+  'separator',
 ]);
 
 /** The state each role must say, where the element is not a native control that says it itself. */

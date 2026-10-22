@@ -22,6 +22,11 @@ export interface LinkHost {
   found(target: string): boolean;
   /** Opens a link through the host; `left`, where the card is, is kept when the link takes the card's own tab. */
   open(link: FoundLink, evt?: MouseEvent | KeyboardEvent, left?: LeftAt | null): void;
+  /**
+   * Opens a link to a note in a pane of the host's own beside the graph, to read and edit there (§25,
+   * note_open_beside). Not set: the host has no such pane, and a thing's note offers only to open it.
+   */
+  openBeside?(link: FoundLink): void;
   /** Shows the host's own preview of a link to a note or file, as a hover over a link in a note does. */
   hover(link: FoundLink, evt: MouseEvent | PointerEvent, el: HTMLElement): void;
   /**

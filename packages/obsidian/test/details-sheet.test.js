@@ -460,7 +460,7 @@ describe('minimised to a bar, or restored to a panel that never fills the screen
     const BODY = { tag: 'div', classes: ['thoughtknot-details-body'], ancestors: [SHEET] };
     assert.equal(css(BODY, 'overflow-y'), 'auto');
     const max = css(SHEET, 'max-height');
-    assert.match(max, /^min\(45vh, var\(--thoughtknot-sheet-max/, max);
+    assert.match(max, /^var\(--thoughtknot-sheet-max, 45vh\)/, max);
     const limit = parseFloat(details(el).cssProps['--thoughtknot-sheet-max']);
     assert.ok(limit > 0 && limit <= 800 * 0.45, `${limit}`);
   });

@@ -19,6 +19,12 @@ const FIXED_HEIGHT = {
   '.thoughtknot-switch-track':
     'a switch drawn as a toggle, sized in em so it grows with the text; its words sit beside it',
   '.thoughtknot-switch-track::before': 'the toggle’s knob, sized in em',
+  '.is-dock-bottom > .thoughtknot-sheet-resizer': 'the sheet’s resize bar, which holds no text',
+  '.is-dock-top > .thoughtknot-sheet-resizer': 'the sheet’s resize bar, which holds no text',
+  '.is-dock-bottom > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar, which holds no text',
+  '.is-dock-top > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar, which holds no text',
+  '.is-dock-left > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar, which holds no text',
+  '.is-dock-right > .thoughtknot-sheet-resizer::after': 'the line drawn on the resize bar, which holds no text',
 };
 
 /** A rule of the drawing: its marks are in its own units, laid out with it, and scale with its zoom. */
