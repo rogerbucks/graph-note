@@ -96,4 +96,10 @@ describe('Graphviz layout as marks (plugin_interface)', () => {
       ],
     );
   });
+  test('a link drawn invisible is left out, with its arrowhead and label, and the next link keeps its id', () => {
+    const dot = 'digraph { "a" -> "b" [style=invis, label="hidden"]; "a" -> "b"; }';
+    const { marks } = laid(dot);
+    const parts = marks.filter((m) => m.of === JSON.stringify(['a', 'b'])).map((m) => m.id);
+    assert.deepEqual(parts, ['e:["a","b"]#1', 'head:e:["a","b"]#1']);
+  });
 });

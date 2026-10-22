@@ -152,6 +152,8 @@ export function layoutMarks(g: GraphvizLayout): LaidMarks {
     seen.set(key, n + 1);
     const id = `e:${key}#${n}`;
     const line = e._draw_?.find((d) => (d.op === 'b' || d.op === 'L') && d.points);
+    // A link Graphviz draws no line for (style=invis) is left out on purpose, with its arrowheads and label. Its
+    // count is used up all the same, so the links after it keep their ids.
     if (!line?.points) continue;
     const points = line.points.map(([x, y]) => at(x, y));
     const curve = line.op === 'b' && (points.length - 1) % 3 === 0 ? { curve: true } : {};
