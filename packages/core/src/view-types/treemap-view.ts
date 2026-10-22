@@ -105,14 +105,15 @@ export function treemapMarks({ shape, space }: DiagramGiven): DrawMark[] {
   );
   return groups.flatMap(([label, keys], g): DrawMark[] => {
     const box = inset(boxes[g] as Rect, 1);
-    const id = `group.${g}`;
+    // a key never holds a new line, so ids joined by one never meet a thing's key
+    const id = `group\n${g}`;
     const band = Math.min(BAND, box.height * BAND_SHARE);
     const inside: Rect = { x: box.x, y: box.y + band, width: box.width, height: box.height - band };
     const marks: DrawMark[] = [
       { kind: 'group', id, style: 'group', ...box, role: 'group', name: label },
       {
         kind: 'label',
-        id: `${id}.label`,
+        id: `${id}\nlabel`,
         style: 'text',
         group: id,
         x: box.x + 4,
@@ -131,7 +132,7 @@ export function treemapMarks({ shape, space }: DiagramGiven): DrawMark[] {
       if (size >= 4 && cell.width > 8)
         marks.push({
           kind: 'label',
-          id: `${key}.label`,
+          id: `${key}\nlabel`,
           of: key,
           style: 'text',
           group: id,

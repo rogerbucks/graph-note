@@ -65,3 +65,10 @@ test('a graph with nothing draws nothing, and a link to a thing not drawn draws 
   const marks = chordMarks({ shape: shapeOf([['a']], [['a', 'gone']]), space: SPACE });
   assert.equal(marks.filter((m) => m.kind === 'link').length, 0);
 });
+
+test('keys that look like the ids of names or links still give every mark its own id', () => {
+  const things = [['a'], ['a.label'], ['link.0'], ['kind.0.label']];
+  const marks = chordMarks({ shape: shapeOf(things, [['a', 'link.0']]), space: SPACE });
+  const ids = marks.map((m) => m.id);
+  assert.equal(new Set(ids).size, ids.length, ids.join(' | '));
+});

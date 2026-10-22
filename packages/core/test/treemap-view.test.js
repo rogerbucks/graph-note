@@ -80,3 +80,9 @@ test('a big graph still fits the space, and a graph with nothing draws nothing',
   assert.equal(marks.filter((m) => m.kind === 'box').length, 2000);
   assert.deepEqual(treemapMarks({ shape: shapeOf([]), space: SPACE }), []);
 });
+
+test('keys that look like the ids of names or groups still give every mark its own id', () => {
+  const marks = treemapMarks({ shape: shapeOf([['a'], ['a.label'], ['group.0'], ['group.0.label']]), space: SPACE });
+  const ids = marks.map((m) => m.id);
+  assert.equal(new Set(ids).size, ids.length, ids.join(' | '));
+});

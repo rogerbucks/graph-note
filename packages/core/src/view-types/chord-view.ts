@@ -6,6 +6,8 @@ import type { DiagramGiven } from '../plugin-diagrams.ts';
 
 /** The share of the circle's radius kept outside it for names. */
 const NAMES_SHARE = 0.25;
+// A key never holds a new line, so the ids this view joins with one never meet a thing's key.
+
 /** Past this many things, only each kind is named, not each thing. */
 const NAMED_MOST = 60;
 /** The share of the circle left as a gap after each kind, so the kinds stand apart. */
@@ -58,7 +60,7 @@ export function chordMarks({ shape, space }: DiagramGiven): DrawMark[] {
       const [lx, ly] = at(th, r + size);
       marks.push({
         kind: 'label',
-        id: `${t.key}.label`,
+        id: `${t.key}\nlabel`,
         of: t.key,
         style: 'text',
         x: lx,
@@ -77,7 +79,7 @@ export function chordMarks({ shape, space }: DiagramGiven): DrawMark[] {
       const [lx, ly] = at(th, r + size);
       marks.push({
         kind: 'label',
-        id: `kind.${i}.label`,
+        id: `kind\n${i}`,
         style: 'text',
         x: lx,
         y: ly + nameSize / 3,
@@ -99,7 +101,7 @@ export function chordMarks({ shape, space }: DiagramGiven): DrawMark[] {
       c2 = at(to, (r - size / 2) * (1 - pull));
     marks.push({
       kind: 'link',
-      id: `link.${i}`,
+      id: `link\n${i}`,
       style: 'link',
       points: [p, c1, c2, q],
       curve: true,
