@@ -1,0 +1,6 @@
+{
+  "file": "test/nightly-workflow.test.js",
+  "test": "the nightly version > sorts each lettered build after the one before it and before the next day, as BRAT and semver order them",
+  "seen_failing_first": false,
+  "evidence": "It checks semantic versioning's own order for the names chosen, which held before the code; the letter tests beside it failed first."
+}

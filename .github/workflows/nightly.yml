@@ -101,8 +101,12 @@ jobs:
       - run: npm run build
       - name: The nightly version, written into the manifest the build carries
         id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # a second build the same day takes the next letter, so it never replaces the first (scripts/nightly-version.mjs)
         run: |
-          echo "version=$(node scripts/nightly-version.mjs --date "$(date -u +%Y%m%d)" --write)" >> "$GITHUB_OUTPUT"
+          taken=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '[.[].tagName | select(test("-nightly\\."))] | join(" ")')
+          echo "version=$(node scripts/nightly-version.mjs --date "$(date -u +%Y%m%d)" --taken "$taken" --write)" >> "$GITHUB_OUTPUT"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Bundle the core's layout source into one file, for the vault's layout parity check
         run: npm run build:layout
@@ -148,10 +152,9 @@ jobs:
           VERSION: ${{ needs.build.outputs.version }}
           SHA: ${{ needs.build.outputs.sha }}
         run: |
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}$ ]] || { echo "::error::$VERSION is not a nightly version"; exit 1; }
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}(\.[b-z])?$ ]] || { echo "::error::$VERSION is not a nightly version"; exit 1; }
           [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::$SHA is not a commit"; exit 1; }
           cd nightly
-          gh release delete "$VERSION" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes 2>/dev/null || true
           gh release create "$VERSION" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" SHA256SUMS --repo "$GITHUB_REPOSITORY" --prerelease --target "$SHA" --title "Nightly $VERSION" --notes "A nightly build of main at $SHA. Every test passed on it, but it has not been through a stable release's checks. For the newest work only; most people should use the latest stable release."
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease,createdAt --jq '[.[] | select(.isPrerelease and (.tagName | test("-nightly\\.")))] | sort_by(.createdAt) | reverse | .[7:] | .[].tagName' |
             while read -r old; do gh release delete "$old" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes; done

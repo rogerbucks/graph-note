@@ -10,6 +10,29 @@ import { block, jobs, permissionValues, read, runCommands, stripComment, usesRef
 import { NIGHTLY, nightlyVersion } from '../scripts/nightly-version.mjs';
 
 const NIGHTLY_YML = '.github/workflows/nightly.yml';
+
+/** Semantic versioning's order of two versions, -1, 0 or 1 (semver.org, rule 11), for the pre-releases a nightly has. */
+function semverCompare(a, b) {
+  const split = (v) => {
+    const [core, pre] = v.split(/-(.*)/);
+    return [core.split('.').map(Number), pre === undefined ? null : pre.split('.')];
+  };
+  const [ca, pa] = split(a);
+  const [cb, pb] = split(b);
+  for (let i = 0; i < 3; i++) if (ca[i] !== cb[i]) return ca[i] < cb[i] ? -1 : 1;
+  if (!pa || !pb) return pa === pb ? 0 : pa ? -1 : 1;
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if (pa[i] === undefined) return -1;
+    if (pb[i] === undefined) return 1;
+    if (pa[i] === pb[i]) continue;
+    const na = /^\d+$/.test(pa[i]);
+    const nb = /^\d+$/.test(pb[i]);
+    if (na && nb) return Number(pa[i]) < Number(pb[i]) ? -1 : 1;
+    if (na !== nb) return na ? -1 : 1;
+    return pa[i] < pb[i] ? -1 : 1;
+  }
+  return 0;
+}
 const text = read(NIGHTLY_YML);
 const lines = text.split('\n');
 const given = (job) =>
@@ -78,7 +101,7 @@ describe('the nightly workflow', () => {
 
   test('carries the assets a release carries, with the nightly version in the manifest', () => {
     const build = runCommands(jobs(text).build.join('\n')).join('\n');
-    assert.match(build, /node scripts\/nightly-version\.mjs --date "\$\(date -u \+%Y%m%d\)" --write/);
+    assert.match(build, /node scripts\/nightly-version\.mjs --date "\$\(date -u \+%Y%m%d\)" --taken "\$taken" --write/);
     assert.match(build, /npm run build:layout/);
     assert.match(build, /git archive --format=tar\.gz -o "graph-spec-libraries-\$VERSION\.tar\.gz"/);
     const create = runCommands(jobs(text).publish.join('\n')).find((r) => /gh release create/.test(r));
@@ -101,9 +124,21 @@ describe('the nightly workflow', () => {
 
   test('checks the version and the commit it is handed before it uses them', () => {
     const publish = jobs(text).publish.join('\n');
-    assert.match(publish, /\[\[ "\$VERSION" =~ \^\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+-nightly\\\.\[0-9\]\{8\}\$ \]\]/);
+    assert.match(
+      publish,
+      /\[\[ "\$VERSION" =~ \^\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+-nightly\\\.\[0-9\]\{8\}\(\\\.\[b-z\]\)\?\$ \]\]/,
+    );
     assert.match(publish, /\[\[ "\$SHA" =~ \^\[0-9a-f\]\{40\}\$ \]\]/);
     assert.doesNotMatch(runCommands(publish).join('\n'), /\$\{\{/, 'no expression inside a command');
+  });
+
+  // Roger, 22 Oct 2026. A second run on the same day used to delete the first's release and make it again. Its name
+  // stayed the same, so BRAT never saw an update. Now the build is handed every nightly tag, and takes a new name.
+  test('gives a second build the same day a name of its own, and never replaces a nightly already published', () => {
+    const build = runCommands(jobs(text).build.join('\n')).join('\n');
+    assert.match(build, /taken=\$\(gh release list --repo "\$GITHUB_REPOSITORY" .*-nightly/);
+    const publish = runCommands(jobs(text).publish.join('\n')).join('\n');
+    assert.doesNotMatch(publish, /gh release delete "\$VERSION"/);
   });
 
   test('runs no code of the repository in the job that writes: no checkout, no install, no Node', () => {
@@ -142,6 +177,33 @@ describe('the nightly version', () => {
     assert.equal(nightlyVersion('0.6.0', '20261018'), '0.6.1-nightly.20261018');
     assert.equal(nightlyVersion('1.9.9', '20270101'), '1.9.10-nightly.20270101');
     assert.match(nightlyVersion('0.6.0', '20261018'), NIGHTLY);
+  });
+
+  test('takes the next letter, .b to .z, when the day already has a nightly, and is refused past .z', () => {
+    const plain = '0.7.2-nightly.20261022';
+    assert.equal(nightlyVersion('0.7.1', '20261022', ['0.7.2-nightly.20261021']), plain);
+    assert.equal(nightlyVersion('0.7.1', '20261022', [plain]), `${plain}.b`);
+    assert.equal(nightlyVersion('0.7.1', '20261022', [plain, `${plain}.b`]), `${plain}.c`);
+    assert.match(`${plain}.b`, NIGHTLY);
+    assert.doesNotMatch(`${plain}.a`, NIGHTLY);
+    assert.doesNotMatch(`${plain}b`, NIGHTLY);
+    const all = [plain, ...[...'bcdefghijklmnopqrstuvwxyz'].map((l) => `${plain}.${l}`)];
+    assert.throws(() => nightlyVersion('0.7.1', '20261022', all), /every nightly of 20261022 is taken/);
+  });
+
+  // BRAT orders versions by semantic versioning (semver's compare). A letter joined to the day, as 20261022b, is a word
+  // and so goes after every number, the next day's 20261023 included. As its own part, it sorts in time.
+  test('sorts each lettered build after the one before it and before the next day, as BRAT and semver order them', () => {
+    const order = [
+      '0.7.2-nightly.20261022',
+      '0.7.2-nightly.20261022.b',
+      '0.7.2-nightly.20261022.c',
+      '0.7.2-nightly.20261022.z',
+      '0.7.2-nightly.20261023',
+      '0.7.2',
+    ];
+    for (let i = 1; i < order.length; i++) assert.equal(semverCompare(order[i - 1], order[i]), -1, order[i]);
+    assert.equal(semverCompare('0.7.2-nightly.20261022b', '0.7.2-nightly.20261023'), 1, 'the joined letter goes last');
   });
 
   test('is refused for a version that is not a release, or a day not written YYYYMMDD', () => {
