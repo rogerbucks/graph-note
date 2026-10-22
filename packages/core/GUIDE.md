@@ -735,6 +735,8 @@ built-in types move to it one at a time. Until then they still draw through Grap
 - `drawMarksOf` checks and copies marks, refusing any with why. Every id must be its own, and every group named drawn.
 - `markBounds` and `marksBounds` give the box marks cover. `drawOrder` sorts by order on top.
 - `fromPluginMarks` turns a plug-in's boxes, lines and text into this format.
+- `graphviz-marks.ts` reads Graphviz's layout, as JSON, into marks (`layoutMarks`). It turns points from the bottom into
+  CSS pixels from the top, and names each link by the keys it joins and a count.
 
 ### Views (spec §2, §7)
 
