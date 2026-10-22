@@ -10,6 +10,7 @@ import type { MarkdownPostProcessorContext, TAbstractFile } from 'obsidian';
 import { namesSharedSchema, READ_LIMITS, readSource } from '@thoughtknot/core';
 import type { GraphSource, SourceFetched, SourceRead, SourceRefusal } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
+import { noteText } from '../storage/plugin-notes';
 
 /** The last part of a place: the file's name, a note's with `.md` when its link leaves it off. */
 function nameOf(source: GraphSource): string {
@@ -44,11 +45,16 @@ async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: stri
     return { missing: true, elsewhere };
   }
   // A .gql file over the bytes a note's graph blocks may hold is never read (§9). Its size is the one the vault keeps.
-  // A note is read, as Obsidian reads it, and only its graph blocks are held to the limits.
+  // A note is read through the vault's note storage, from Obsidian's cache, and only its graph blocks are held to the
+  // limits. A .gql file is no note, so the vault reads it.
   if (source.kind === 'file' && file.stat.size > READ_LIMITS.bytes)
     return { found: file.path, tooLarge: file.stat.size };
   try {
-    return { found: file.path, text: await plugin.app.vault.cachedRead(file) };
+    const text =
+      file.extension === 'md'
+        ? await noteText(plugin.app, file.path, { shown: true })
+        : await plugin.app.vault.cachedRead(file);
+    return text === null ? { missing: true, elsewhere: [] } : { found: file.path, text };
   } catch (e) {
     return { found: file.path, unreadable: e instanceof Error ? e.message : String(e) };
   }

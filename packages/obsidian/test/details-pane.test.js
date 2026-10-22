@@ -188,6 +188,7 @@ describe('a thing that stands for a note opens it beside the graph', () => {
       assert.ok(b, 'a button to open it beside');
       b.click();
       assert.deepEqual(env.state.opened, { link: 'Trip plan', from: PATH, newLeaf: 'split' });
+      await settled(); // the rest of the note's rendering has run, before the stand-ins go
     } finally {
       env.uninstall();
     }

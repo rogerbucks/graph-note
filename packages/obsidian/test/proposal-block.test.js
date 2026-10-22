@@ -11,7 +11,7 @@
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { ProposalReview, basisOf, makeProposal, thingChange } from '@thoughtknot/core';
-import { build, load, until } from './host/load-plugin.js';
+import { build, load, settled, until } from './host/load-plugin.js';
 import { fence, labelled } from './host/notes.js';
 import { show } from './host/view-notes.js';
 
@@ -214,6 +214,7 @@ describe('a person decides, a change at a time', () => {
     try {
       press(row(el, 'c1'), 'Accept');
       await until(() => noteNow(env) !== note);
+      await settled();
       const now = noteNow(env);
       assert.match(now, /\(question:Question[^]*\(small_reader:Option \{name: 'Small reader'\}\)\n```/);
       assert.doesNotMatch(now.split('```gql')[1], /price: 4/);
@@ -256,6 +257,7 @@ describe('a person decides, a change at a time', () => {
       // the card drawn again is the note's: a decision on it is written
       press(row(el, 'c1'), 'Accept');
       await until(() => noteNow(env) !== edited);
+      await settled();
       assert.match(noteNow(env), /Smaller reader/);
     } finally {
       env.uninstall();
@@ -268,6 +270,7 @@ describe('a person decides, a change at a time', () => {
     try {
       press(row(el, 'c3'), 'Reject');
       await until(() => noteNow(env) !== note);
+      await settled();
       const [, graph, set, judgement] = noteNow(env).split('```gql');
       assert.equal(graph.split('```')[0].trim(), GRAPH);
       assert.doesNotMatch(set, /SET large_reader\.price = 4/);
@@ -285,10 +288,12 @@ describe('a person decides, a change at a time', () => {
       assert.equal(labelled(el, 'Undo the last decision'), undefined);
       press(row(el, 'c1'), 'Accept');
       await until(() => noteNow(env) !== note);
+      await settled();
       const again = await show(env, noteNow(env), 1);
       await until(() => !!again.el.querySelector('svg'));
       labelled(again.el, 'Undo the last decision').click();
       await until(() => noteNow(env) === note);
+      await settled();
       assert.match(env.state.notices.at(-1), /Undone/);
     } finally {
       env.uninstall();
@@ -301,6 +306,7 @@ describe('a person decides, a change at a time', () => {
     try {
       press(el, 'Accept all');
       await until(() => noteNow(env) !== note);
+      await settled();
       const graph = noteNow(env).split('```gql')[1].split('```')[0];
       assert.match(graph, /price: 4/);
       assert.match(graph, /\(small_reader\)-\[:ANSWERS\]->\(question\)/);
@@ -383,6 +389,7 @@ describe('a person decides, a change at a time', () => {
     try {
       press(row(el, 'c1'), 'Accept');
       await until(() => noteNow(env) !== note);
+      await settled();
       assert.match(noteNow(env), /small_reader:Option/);
     } finally {
       env.uninstall();
@@ -395,6 +402,7 @@ describe('a person decides, a change at a time', () => {
     try {
       press(el, 'Reject all');
       await until(() => noteNow(env) !== note);
+      await settled();
       const [, graph, , judgement] = noteNow(env).split('```gql');
       assert.equal(graph.split('```')[0].trim(), GRAPH);
       assert.equal(judgement.match(/state: 'rejected'/g).length, 5);
@@ -431,6 +439,7 @@ describe('a proposal whose graph has moved', () => {
       assert.equal(accept.disabled, false);
       accept.click();
       await until(() => noteNow(env) !== moved);
+      await settled();
       assert.match(noteNow(env), /small_reader:Option/);
     } finally {
       env.uninstall();
@@ -462,6 +471,7 @@ describe('a big proposal', () => {
       );
       press(el, 'Accept Prices');
       await until(() => noteNow(env) !== note);
+      await settled();
       const graph = noteNow(env).split('```gql')[1].split('```')[0];
       assert.match(graph, /p6: 1/);
       assert.doesNotMatch(graph, /o1:Option/);

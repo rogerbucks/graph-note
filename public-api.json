@@ -236,8 +236,14 @@
           "ids: Array<string>",
           "kind: MarkKind"
         ],
+        "changeNote": [
+          "value: (storage: NoteStorage, path: string, edit: NoteEdit, options?: Pick<WriteOptions, 'author'>) => Promise<ChangeOutcome>"
+        ],
         "ChangeOp": [
           "type = { op: 'add'; gql: string; } | { op: 'set'; thing: string; key: string; value: string; labels?: string[]; } | { op: 'remove-thing'; thing: string; detach?: false; labels?: string[]; } | { op: 'remove-link'; from: string; type: string; to: string; ends?: [string[], string[]]; }"
+        ],
+        "ChangeOutcome": [
+          "type = { ok: true; text: string; version: string; } | { ok: false; reason: string; current: StoredNote | null; }"
         ],
         "ChangeRow": [
           "interface",
@@ -1793,6 +1799,9 @@
         "NoteClassification": [
           "type = { kind: 'none'; } | { kind: 'given'; level: string; } | { kind: 'unknown'; }"
         ],
+        "NoteEdit": [
+          "type = (text: string) => string"
+        ],
         "noteOf": [
           "value: (_reading: NoteReading, _graph: string, key: string) => FoundLink | null"
         ],
@@ -1810,6 +1819,7 @@
         ],
         "NoteStorage": [
           "interface",
+          "change?: ((path: string, edit: NoteEdit, options?: Pick<WriteOptions, 'author'>) => Promise<ChangeOutcome>) | undefined",
           "list: () => Promise<string[]>",
           "read: (path: string) => Promise<StoredNote | null>",
           "remove: (path: string, options?: WriteOptions) => Promise<WriteOutcome>",

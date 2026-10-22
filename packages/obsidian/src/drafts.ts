@@ -10,6 +10,7 @@ import { Notice } from 'obsidian';
 import type ThoughtKnotPlugin from './main';
 import type { Drafts } from './main';
 import { freePath } from './export/vault-write';
+import { vaultNotes } from './storage/plugin-notes';
 
 /** The command that recovers every kept draft into a new note: its name is said in the language when it is asked. */
 export const RECOVER_COMMAND = {
@@ -96,7 +97,10 @@ export async function recoverDrafts(plugin: ThoughtKnotPlugin): Promise<void> {
   const intro = 'What was typed in a graph and could not be written, as ThoughtKnot kept it.';
   const path = freePath(plugin, 'Kept drafts.md');
   try {
-    await plugin.app.vault.create(path, `# Kept drafts\n\n${intro}\n${parts.join('\n')}\n`);
+    const made = await vaultNotes(plugin.app).write(path, `# Kept drafts\n\n${intro}\n${parts.join('\n')}\n`, {
+      expected: null,
+    });
+    if (!made.ok) throw new Error(made.reason);
   } catch (e) {
     // as on a Mac, where a note named only in another case is the same file: said, and the drafts stay kept
     new Notice(word('host.drafts-failed', { path, why: (e as Error).message }));

@@ -4,7 +4,7 @@
 // no keyboard to hand or who does not know M.
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { build, until } from './host/load-plugin.js';
+import { build, settled, until } from './host/load-plugin.js';
 import { PATH, TEAM, card, noteOf } from './host/drag-steps.js';
 
 before(() => build());
@@ -32,6 +32,7 @@ describe('moving a box from the keyboard', () => {
       const said = /^(Put Ann \w+ \w+)/.exec(first)[1];
       assert.ok(vp.dispatch('keydown', key(ann, 'Enter')).defaultPrevented);
       await until(() => /:Nudge /.test(env.state.files.get(PATH)));
+      await settled();
       assert.equal(env.state.notices.at(-1), `Moved: ${said}`);
       assert.ok(!ann.classList.contains('is-held'), 'put down');
       assert.equal(hint.hidden, true);
@@ -73,6 +74,7 @@ describe('moving a box from the keyboard', () => {
       assert.match(el.querySelector('.thoughtknot-move-hint').textContent, /^Put Cy /);
       vp.dispatch('keydown', key(cy, 'Enter'));
       await until(() => /:Nudge /.test(env.state.files.get(PATH)));
+      await settled();
     } finally {
       env.uninstall();
     }

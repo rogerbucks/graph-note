@@ -9,6 +9,7 @@ import { readInHostDirection } from '@thoughtknot/core/display/host';
 import { importedBlock, isDbFile, withImport, word } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
 import { noteToRewrite } from '../reading-view';
+import { changeVaultNote } from '../storage/plugin-notes';
 
 /** The command's id and name. */
 export const IMPORT_COMMAND = {
@@ -117,7 +118,7 @@ class ImportDialog extends Modal {
         failed(made.refused);
         return;
       }
-      await this.app.vault.process(this.file, (now) => withImport(now, made.block));
+      await changeVaultNote(this.app, this.file.path, (now) => withImport(now, made.block));
       new Notice(word('import.done', { graph: this.graph, file: db.basename, note: this.file.basename }));
       this.close();
     } catch (e) {

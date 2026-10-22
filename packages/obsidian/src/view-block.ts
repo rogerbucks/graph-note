@@ -39,6 +39,7 @@ import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
 import { sourcedView } from './sources/sources';
 import { sourceAlert, sourceStrip } from './sources/source-strip';
 import { linkHost } from './links/link-host';
+import { changeVaultNote } from './storage/plugin-notes';
 
 /** Writes a change to the style graph of `graph` into the note at `path`, against the note as it is when written. */
 export async function writeStyle(
@@ -51,7 +52,7 @@ export async function writeStyle(
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return;
   let refused = '';
-  await plugin.app.vault.process(file, (note) => {
+  await changeVaultNote(plugin.app, file.path, (note) => {
     // a thing only suggested in the note as it is now is not styled until its name is written (§4)
     const r = styleEdit(note, graph, change);
     if ('refused' in r) refused = r.refused;
@@ -74,7 +75,7 @@ export async function writeViewBlock(
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return word('blocks.view-note-gone');
   let refused: string | null = null;
-  await plugin.app.vault.process(file, (note) => {
+  await changeVaultNote(plugin.app, file.path, (note) => {
     // checked against the note as it is now: a name another view has, or a thing only suggested in it (§4), is refused
     const r = addView(note, graph, block);
     if ('note' in r) return r.note;

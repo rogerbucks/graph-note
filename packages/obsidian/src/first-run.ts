@@ -7,6 +7,7 @@ import { cardInUse } from '@thoughtknot/core/display/graph-view/card-in-use';
 import { whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
+import { changeVaultNote } from './storage/plugin-notes';
 
 /** Whether the next drawing opens the tour: set when an example was written, and taken by the drawing that follows. */
 let tourNext = false;
@@ -23,7 +24,7 @@ async function writeExample(plugin: ThoughtKnotPlugin, target: EditTarget, sourc
   const file = plugin.app.vault.getAbstractFileByPath(target.path);
   let written = false;
   if (file instanceof TFile)
-    await plugin.app.vault.process(file, (note) => {
+    await changeVaultNote(plugin.app, file.path, (note) => {
       const r = replaceBlock(note, { line: target.line, text: source }, withExample(source));
       written = r.ok;
       return r.ok ? r.note : note;

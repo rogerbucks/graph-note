@@ -27,6 +27,7 @@ import {
 import type { LeftAt, LinkHost } from '@thoughtknot/core/display/links/link-types';
 import { FOLLOWED, followAnchor } from '@thoughtknot/core/display/links/links-list';
 import type ThoughtKnotPlugin from '../main';
+import { noteText, vaultNotes } from '../storage/plugin-notes';
 
 /** The source the plugin's links are hovered from, as Page preview's settings name it. */
 export const HOVER_SOURCE = 'thoughtknot';
@@ -209,7 +210,7 @@ export function linkHost(plugin: ThoughtKnotPlugin, path: string, graph: string)
         const hash = part.embed.opens.indexOf('#'),
           heading = hash >= 0 ? part.embed.opens.slice(hash + 1) : undefined;
         if (file instanceof TFile && file.extension === 'md') {
-          const note = await plugin.app.vault.cachedRead(file);
+          const note = (await noteText(plugin.app, file.path, { shown: true })) ?? '';
           await draw(embeddedMarkdown(note, heading), box, file.path, embeddedRemoteImages(note, heading));
         } else await draw(safeMarkdown(`[[${part.embed.opens}]]`), box, path); // a note not there: a link to it
       }
@@ -225,7 +226,8 @@ export function linkHost(plugin: ThoughtKnotPlugin, path: string, graph: string)
       const at = parent && parent !== '/' ? `${parent}/${name}` : name;
       if (plugin.app.vault.getAbstractFileByPath(at) instanceof TFile) return true;
       try {
-        await plugin.app.vault.create(at, '');
+        const made = await vaultNotes(plugin.app).write(at, '', { expected: null });
+        if (!made.ok) throw new Error(made.reason);
       } catch (e) {
         new Notice(word('links.note-failed', { path: at, why: e instanceof Error ? e.message : String(e) }));
         return false;

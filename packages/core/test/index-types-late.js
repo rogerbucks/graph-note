@@ -36,6 +36,7 @@ export const TYPES_LATE = [
   'NamedView',
   'NewThing',
   'NoteClassification',
+  'NoteEdit',
   'NoteReading',
   'NoteStorage',
   'Nudge',

@@ -25,6 +25,7 @@ import type ThoughtKnotPlugin from '../main';
 import { knownClass } from './matrix-known';
 import { readMatrix } from './matrix-note';
 import { obsidianTransport } from './send';
+import { changeVaultNote } from '../storage/plugin-notes';
 
 /** The purpose a send from this dialog is for: the model set up for it is offered first. */
 const PURPOSE = 'Proposing changes';
@@ -330,7 +331,7 @@ export class SendDialog extends Modal {
       n = proposal.changes.length;
     const outcome: { refused: string | null } = { refused: null };
     try {
-      await this.app.vault.process(this.file, (now) => {
+      await changeVaultNote(this.app, this.file.path, (now) => {
         // a proposal the graph spec's check fails is not written
         const written = noteWithProposal(now, proposal);
         if (typeof written === 'string') return written;

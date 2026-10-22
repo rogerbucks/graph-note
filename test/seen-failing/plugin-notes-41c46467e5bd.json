@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/plugin-notes.test.js",
+  "test": "each file let read or write what is not a note still does, so none is let off for nothing",
+  "seen_failing_first": false,
+  "evidence": "It guards the list of files let off, which were already there; it passes before and after the change by design."
+}

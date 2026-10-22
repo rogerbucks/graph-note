@@ -26,6 +26,7 @@ import { readOnlyHere, whenPlaced } from '@thoughtknot/core/display/graph-view/p
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { renderProposalStrip } from '@thoughtknot/core/display/proposals/proposal-strip';
 import type { ProposalCard } from '@thoughtknot/core/display/proposals/proposal-strip';
+import { changeVaultNote } from '../storage/plugin-notes';
 
 /**
  * Who decides here. Obsidian says nothing of who is at the keyboard. So it is the name set in the settings, exactly as
@@ -95,7 +96,7 @@ export async function renderProposalBlock(
     if (!(file instanceof TFile)) return word('blocks.proposal-note-gone');
     let said = '';
     let again: { block: string; note: string } | undefined;
-    await plugin.app.vault.process(file, (now) => {
+    await changeVaultNote(plugin.app, file.path, (now) => {
       const r = change(now);
       said = r.ok ? r.said : word('blocks.proposal-not-decided', { why: r.reason });
       if (!r.ok) again = r.again;

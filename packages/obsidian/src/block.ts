@@ -47,6 +47,7 @@ import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
 import type { ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
+import { changeVaultNote } from './storage/plugin-notes';
 
 /**
  * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
@@ -92,7 +93,7 @@ async function writeBlock(
   const file = plugin.app.vault.getAbstractFileByPath(path);
   if (!(file instanceof TFile)) return word('blocks.note-gone');
   let refused: string | null = null;
-  await plugin.app.vault.process(file, (note) => {
+  await changeVaultNote(plugin.app, file.path, (note) => {
     const r = replaceBlock(note, { line: fence - 1, text: was }, now);
     if (r.ok) return r.note;
     refused = word('blocks.changed');
