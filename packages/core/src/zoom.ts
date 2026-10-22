@@ -1,8 +1,8 @@
 // Zoom, pan and full-screen for a drawing (spec §3), with the gestures maps and photo apps have taught everyone.
 // Host-free: the host passes plain events in and draws the view this returns. handle() says whether the event was used.
 // The host stops the browser's own handling only then: in a note the wheel and a one-finger drag still scroll the
-// note. The limits it holds the drawing within are zoom-fit.ts's.
-import { MAX_SCALE, STEP, clamp, clampPan, fitScale, hasSize, held, outLimit } from './zoom-fit.ts';
+// note. A drag pans freely past the drawing's edges (pan_freely), and Fit brings it back; the limits are zoom-fit.ts's.
+import { MAX_SCALE, STEP, clamp, clampPan, fitScale, hasSize, held, inSight, outLimit } from './zoom-fit.ts';
 import type { Mode, Size } from './zoom-fit.ts';
 
 export { MAX_SCALE, STEP } from './zoom-fit.ts';
@@ -203,14 +203,11 @@ export class Zoom {
     return { scale: s, x, y };
   }
 
-  /**
-   * Keeps a strip of `bottom` pixels at the foot of the viewport clear, as a sheet over it covers it (§25). The drawing
-   * may pan up into it, by as much and no further, so a thing near its bottom can be seen above the sheet. Zero, as at
-   * first, puts it back within its edges.
-   */
+  /** Keeps `bottom` pixels at the foot clear for a sheet (§25); a smaller strip brings down a drawing risen into it. */
   keepClear(bottom: number): void {
+    const was = this.clampPan(this.scale, this.x, -Infinity)[1];
     this.clear = clamp(bottom, 0, this.viewport.height);
-    this.place(this.scale, this.x, this.y);
+    if (this.y >= was - EPS) this.panBy(0, Math.max(0, this.clampPan(this.scale, this.x, -Infinity)[1] - this.y));
   }
 
   panBy(dx: number, dy: number): void {
@@ -236,6 +233,7 @@ export class Zoom {
     const s = held(this.scale, this.content, viewport),
       r = s / this.scale,
       [mx, my] = [viewport.width / 2, viewport.height / 2];
+    if (s === this.scale) return this.place(s, this.x, this.y); // kept exactly, with no rounding
     this.place(s, mx - (mx - this.x) * r, my - (my - this.y) * r);
   }
 
@@ -370,13 +368,16 @@ export class Zoom {
     return p.pans;
   }
 
-  /** Keeps the drawing in view, as zoom-fit.ts's `clampPan` says, in this viewport and with this strip kept clear. */
+  /** Where the view is placed for you, as zoom-fit.ts's `clampPan` says, in this viewport and with this strip kept clear. */
   private clampPan(scale: number, x: number, y: number, centre = false): [number, number] {
     return clampPan({ content: this.content, viewport: this.viewport, clear: this.clear }, scale, x, y, centre);
   }
 
+  protected edgeBound?(): boolean;
+  /** Puts the view there: centred, or within the edges where `edgeBound` says, or anywhere with some drawing in sight. */
   private place(scale: number, x: number, y: number, centre = false): void {
-    const [cx, cy] = this.clampPan(scale, x, y, centre);
+    const room = { content: this.content, viewport: this.viewport, clear: this.clear };
+    const [cx, cy] = centre || this.edgeBound?.() ? clampPan(room, scale, x, y, centre) : inSight(room, scale, x, y);
     if (scale === this.scale && cx === this.x && cy === this.y) return;
     this.scale = scale;
     this.x = cx;

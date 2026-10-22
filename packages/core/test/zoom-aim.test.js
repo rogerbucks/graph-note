@@ -17,20 +17,17 @@ const placed = (z, b) => {
 };
 
 describe('the strip a sheet covers', () => {
-  test('with nothing covered, the drawing in a note cannot pan: it fills its viewport', () => {
+  // proves: pan_freely
+  test('with nothing covered, the drawing in a note still pans past its edges', () => {
     const z = make();
-    z.panBy(0, -80);
-    assert.equal(z.view().y, 0);
-  });
-
-  test('with the bottom 100 pixels covered, it may pan up by as much, and no further', () => {
-    const z = make();
-    z.keepClear(100);
-    assert.equal(z.view().y, 0, 'keeping clear moves nothing by itself');
     z.panBy(0, -80);
     assert.equal(z.view().y, -80);
-    z.panBy(0, -80);
-    assert.equal(z.view().y, -100);
+  });
+
+  test('keeping a strip clear moves nothing by itself', () => {
+    const z = make();
+    z.keepClear(100);
+    assert.equal(z.view().y, 0);
   });
 
   test('uncovered again, the drawing goes back within its edges', () => {
@@ -41,11 +38,20 @@ describe('the strip a sheet covers', () => {
     assert.equal(z.view().y, 0);
   });
 
+  // proves: pan_freely
+  test('a drawing dragged further than the strip is left where it was dragged, when the strip goes', () => {
+    const z = make();
+    z.keepClear(100);
+    z.panBy(0, -150);
+    z.keepClear(0);
+    assert.equal(z.view().y, -150);
+  });
+
   test('a cover larger than the viewport is taken as the whole of it', () => {
     const z = make();
     z.keepClear(1000);
-    z.panBy(0, -1000);
-    assert.equal(z.view().y, -250);
+    const y = z.aim(LOW).y;
+    assert.ok(Math.abs(y + 0.85 * 250) < 1e-9, `the box’s middle at the viewport’s top, not 750 pixels above it: ${y}`);
   });
 });
 
