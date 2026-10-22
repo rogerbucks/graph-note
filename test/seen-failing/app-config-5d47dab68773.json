@@ -1,6 +1,0 @@
-{
-  "file": "packages/app/test/app-config.test.js",
-  "test": "the one advisory the dependency review allows is for glib 0.18, and goes once Tauri moves past it (SEC-11)",
-  "seen_failing_first": false,
-  "evidence": "It guards a workflow allowance that this same commit adds; it fails only when glib 0.18 leaves Cargo.lock, which has not happened yet."
-}
