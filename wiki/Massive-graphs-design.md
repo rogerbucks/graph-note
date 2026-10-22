@@ -1,0 +1,144 @@
+# Massive graphs design
+
+This note covers how to open, draw and move around a graph of 2,000 to 50,000 things. The goal is close to real
+time, on the person's own machine. This is the research note that section 53 asks for (`scale_design`). It was written on 22 October 2026, at
+Roger's request, before any of section 53 is built. Roger pulled the section forward, ahead of R2, the same day.
+
+Every number here was measured, not guessed. The scripts are kept in the project's shared files
+(`massive-graphs/`), so anyone can run them again.
+
+## The short answer
+
+| Question | Answer |
+|---|---|
+| Why is a big graph slow today? | Two steps. Graphviz lays out every thing at once, and the browser draws every box as SVG. Both slow down faster than the graph grows |
+| What is the fix? | Show groups first, and lay out the inside of a group only when you open it or zoom in. Draw the overview on the graphics chip (WebGL). Save each finished layout so it opens at once next time |
+| How fast? | 50,000 things: the overview in under a second. Opening a group takes 0.07 to 0.25 seconds. Panning costs under 1 millisecond a frame |
+| What stays the same? | Graphs of up to 2,000 things keep today's drawing, with every feature. An opened group is drawn the same way, as a normal drawing |
+| Recommended | Way E below: groups first, detail on demand, a saved-layout cache, and WebGL for the overview. It reads the marks every diagram type now gives as data |
+
+## What was measured
+
+The test graphs are a tree with random parents plus 30% extra cross links, like a real knowledge graph. Each thing
+has a few words of text. Times are on one desktop core (Linux, Node 22, headless Chromium). A phone is about three
+times slower. Drawing used Chromium's software graphics, so a real graphics chip is faster still.
+
+### Laying a graph out
+
+| Way to lay out | 2,000 things | 10,000 things | 50,000 things |
+|---|---|---|---|
+| Graphviz `dot`, full (before PR #922) | about 48 s a direction | not tried | not tried |
+| Graphviz `dot`, quick settings (PR #922, merged) | 1.8 s | 59 s | out of reach |
+| Graphviz `sfdp` (force layout) | over 2 min | over 2 min | out of reach |
+| ELK layered (JavaScript) | 5.9 s | 88 s, 1 GB of memory | out of reach |
+| d3-force, 300 steps | 3.8 s | 32 s | out of reach |
+| ForceAtlas2, 100 steps | 1.1 s | 7.8 s | about 40 s, estimated |
+| **Groups first** (find groups, lay out the groups, then one group's inside) | **0.1 s** | **0.2 s** | **0.8 s** |
+
+Groups were found with the Louvain method, which links things that link to each other most. At 50,000 things it
+found 130 groups in 0.65 seconds. The groups themselves laid out in 0.15 seconds. The inside of the largest group,
+842 things, laid out in 0.25 seconds with Graphviz's quick settings. A median group, 364 things, took 0.07 seconds.
+
+So no single layout of every thing is fast enough. Laying out a little at a time is.
+
+### Drawing and panning
+
+The time one frame of panning takes. Under 16 milliseconds is smooth, at 60 frames a second.
+
+| Way to draw | 2,000 things | 10,000 things | 50,000 things |
+|---|---|---|---|
+| SVG, today's drawing | 8.5 ms, with stalls of 140 ms | 600 ms: stuck | not tried |
+| Canvas, everything | 0.9 ms | 4.2 ms | 59 ms, with stalls of seconds |
+| Canvas, only what is on screen (spatial index) | not needed | 1.3 ms | 1.5 ms |
+| WebGL (graphics chip) | 0.5 ms | 0.5 ms | 0.5 ms |
+
+The spatial index (Flatbush) finds what is on screen in well under a millisecond, at any size.
+
+### Opening again
+
+A saved layout of 50,000 things is 0.4 MB as numbers, or 0.8 MB as JSON. It loads in 0.15 ms as numbers and 19 ms as
+JSON. So a graph seen before can open without any layout at all.
+
+## The ways compared
+
+| Way | What it is | Speed at 50,000 | Keeps today's features | Work | Risk |
+|---|---|---|---|---|---|
+| A. Faster Graphviz | Tune settings, one direction (done in PR #922, merged) | Out of reach | All | Done | Tops out near 2,000 |
+| B. Draw only what is on screen | Spatial index plus Canvas. Layout is still all at once | Drawing fine; layout still takes minutes | Few: no SVG to tap or style | M | Layout stays the bottleneck |
+| C. Force layout in a worker | ForceAtlas2 in the background, the drawing settling as it runs | 40 s to settle | Few; the look changes from rows to a cloud | M | Loses the ordered, readable look |
+| D. Graphics chip for all | WebGL for every size | Drawing fine; layout still slow | Needs rebuilding: taps, focus, marks, exports | L | Rebuilds what works today |
+| **E. Groups first, detail on demand** | Groups found or named, an overview of groups, a group's inside laid out when opened. Saved layouts. WebGL overview | **Under 1 s, then 0.25 s a group** | **All, inside an opened group** | **M to L** | Groups must make sense to the reader |
+| F. Read in parts | Read only the groups on screen from the local store (`scale_in_parts`) | Same as E, less memory | All | L | Needs the local store (Q-05) first |
+
+## Recommended: way E
+
+```mermaid
+flowchart LR
+  T["Note text<br/>(the only store)"] --> R["Read"]
+  R --> G["Find groups<br/>own groups first, else Louvain"]
+  G --> O["Overview: one dot per group<br/>WebGL, under 1 s"]
+  O -->|zoom in or open| L["Lay out that group<br/>Graphviz quick, 0.07–0.25 s"]
+  L --> M["Marks as data"]
+  M --> S["Today's SVG drawing<br/>for the opened group"]
+  M --> W["WebGL layer<br/>for everything else on screen"]
+  L --> C[("Saved layout cache<br/>by content hash")]
+  C -->|seen before| M
+```
+
+1. **Groups first.** The groups a person wrote come first: style groups, kinds, and in the mesh, notes. When a graph
+   has none that fit, the Louvain method finds them, in well under a second.
+2. **Overview.** Past 2,000 things, the drawing opens as one dot or card per group, sized by how many things it holds.
+   It is laid out in a fraction of a second. Lines between groups show how many links cross.
+3. **Detail on demand.** Zooming in on a group, or opening it, lays out its inside with Graphviz's quick settings. It
+   is drawn as today's drawing, with taps, details, editing and every diagram type. Nearby groups lay out in the
+   background, in the worker, so panning finds them ready.
+4. **Never more than the screen.** A spatial index picks what is on screen. Text is drawn only when it is big enough
+   to read. Far out, each group is one mark (`scale_level_of_detail`).
+5. **Saved layouts.** Each laid-out group is saved by a hash of its content, in the local store or the browser's
+   storage. Opening a graph seen before skips the layout. An edit lays out again only the group it touched. The note's
+   text stays the only store, and the cache can always be thrown away (`text_is_the_store`).
+6. **WebGL for the overview, SVG for detail.** WebGL draws the many marks fast. The opened group keeps SVG, so
+   nothing that works today is rebuilt.
+
+### Why marks as data matter
+
+On 22 October 2026 Roger chose marks as data. Every diagram type, built in or from a plug-in, gives its drawing
+as marks: plain data, before any SVG is written. That is what makes way E clean. One set of marks feeds both the SVG drawing
+and the WebGL layer, and the cache saves marks, not SVG. For that, each mark needs:
+
+- a stable id (a thing's key, or a link's key);
+- its geometry as numbers, and its bounding box for the spatial index;
+- a kind and a style token, never raw CSS, so WebGL can draw many at once;
+- its text as a separate label, so text can be skipped when zoomed out;
+- its group and its accessible name, so the overview has a screen-reader layer too.
+
+These were sent to the thread building the marks, to fold into its format.
+
+### Keeping it safe and accessible
+
+- **Hostile graphs still refused.** The read limits stay until the benchmark (`scale_benchmark`) shows each new limit
+  holds. Every raised limit still refuses a hostile graph with a clear reason (`scale_limits_revisited`).
+- **Layout off the page.** Every layout runs in the worker, which can be stopped. The page never waits on one.
+- **Screen readers.** The overview has a list of groups, with their sizes, that the keyboard can move through. An
+  opened group is today's accessible drawing.
+- **Works offline.** WebGL is in every browser Obsidian, the desktop app and VS Code use. Where it is missing, the
+  overview falls back to Canvas with the spatial index, which measured 1.5 ms a frame.
+
+## How it would be built
+
+| Step | What | Size |
+|---|---|---|
+| 1 | The benchmark: open, draw, pan and edit graphs from 2,666 things (V-10) up to 266,600, time and memory (`scale_benchmark`) | S |
+| 2 | Groups: the graph's own, else Louvain, in the core, with tests | S |
+| 3 | The saved-layout cache, by content hash, per group | S |
+| 4 | The overview: WebGL layer reading marks, Canvas fallback, spatial index, level of detail | M |
+| 5 | Opening a group into today's drawing, and laying out neighbours in the background | M |
+| 6 | Raise the drawing limit, with the benchmark holding each new limit | S |
+| 7 | Read in parts from the local store (`scale_in_parts`), once Q-05's store is in | L, later |
+
+Steps 1 to 6 do not wait on anything else, except that step 4 reads the marks format. Step 7 waits for the local
+store.
+
+## Decision
+
+Roger picks one way. Recorded here once picked.

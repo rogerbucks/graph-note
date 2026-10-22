@@ -62,3 +62,5 @@ flowchart LR
 - An AI breaking prose into a graph shown as a proposal: [text to graph design](Text-to-graph-design).
 - Claude showing a graph, walking you through it and taking your decision: [Claude presents and decides design](Claude-presents-and-decides-design).
 - Who and what each part trusts, where that trust ends, and the gaps found: [trust model](Trust-model).
+- Opening, drawing and moving around a graph of 2,000 to 50,000 things in close to real time, measured:
+  [massive graphs design](Massive-graphs-design).
