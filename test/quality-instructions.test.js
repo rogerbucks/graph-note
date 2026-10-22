@@ -264,6 +264,16 @@ describe('the committed baseline holds the counts', () => {
     worse.metrics[steady] = Math.round(b.metrics[steady] * 1.1);
     assert.deepEqual(failed(compare(b, worse, [], { ci: true })), [steady]);
   });
+
+  // spec §41, drawing_counts_regained: the 18 Oct 2026 release runner counted 0.94 and 12.48 billion
+  test('the drawings’ counts are back at or below the release runner’s, with the 5% they may grow by unwidened', () => {
+    const b = readJSON('quality/baseline.json');
+    assert.ok(b.metrics.instructions_draw_fifty <= 0.94e9, `draw_fifty ${b.metrics.instructions_draw_fifty}`);
+    assert.ok(b.metrics.instructions_draw_five_hundred <= 12.48e9, `${b.metrics.instructions_draw_five_hundred}`);
+    for (const n of ['draw_fifty', 'draw_five_hundred'])
+      assert.equal(METRICS[`instructions_${n}`].tolerance, INSTRUCTION_TOLERANCE, n);
+    assert.equal(INSTRUCTION_TOLERANCE, 0.05);
+  });
 });
 
 describe('how far a count may move', () => {

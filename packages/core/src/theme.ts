@@ -14,13 +14,16 @@ import type { Palette } from './palette.ts';
  * (toFixed rounds ties away from zero, so 0.125 would be 0.13 here and 0.12 in Python.)
  */
 export function fixed(x: number, digits: number): string {
+  const sign = x < 0 || Object.is(x, -0) ? '-' : '';
+  // toFixed rounds the exact value too, but for a tie: one is exactly between, when x times 2^(digits + 1) is odd
+  const twice = Math.abs(x) * 2 ** (digits + 1);
+  if (Math.abs(x) < 1e21 && !(Number.isInteger(twice) && twice % 2 === 1)) return sign + Math.abs(x).toFixed(digits);
   const [whole = '0', frac = ''] = Math.abs(x).toFixed(100).replace(/0+$/, '').split('.');
   const keep = frac.slice(0, digits).padEnd(digits, '0'),
     rest = frac.slice(digits);
   const last = Number((digits ? keep : whole).slice(-1));
   const up = rest > '5' || (rest === '5' && last % 2 === 1);
   const n = (BigInt(whole + keep) + (up ? 1n : 0n)).toString().padStart(digits + 1, '0');
-  const sign = x < 0 || Object.is(x, -0) ? '-' : '';
   return sign + (digits ? `${n.slice(0, -digits)}.${n.slice(-digits)}` : n);
 }
 

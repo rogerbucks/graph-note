@@ -77,6 +77,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
   const quick = drawing.boxes.length > QUICK_LAYOUT;
   const ways = only ? [only] : quick ? STYLE.directions.slice(0, 1) : STYLE.directions;
   return ways.map((rankdir) => {
+    const src = layoutSource(drawing, rankdir as 'LR' | 'TB');
     // the diagram type chosen (§15), the links moved (§7) and the style graph's arrowheads hidden (§15). Then
     // properties shown (§14), room for the pictures on boxes (§18) and nudges written in (§6). Then what the View menu
     // folds and merges and how the links are routed (§25). With none of them, the source the Python library gives, byte
@@ -88,7 +89,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
             inlineSource(
               arrowlessSource(
                 flowSource(
-                  GraphLayout.typedSource(drawingSource(drawing, rankdir as 'LR' | 'TB'), drawing.diagram, STYLE),
+                  GraphLayout.typedSource(drawingSource(drawing, rankdir as 'LR' | 'TB', src), drawing.diagram, STYLE),
                   drawing.flow ?? [],
                 ),
                 drawing.arrowless ?? [],
@@ -105,7 +106,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
       ),
       drawing.routing,
     );
-    return { rankdir, dot: quick ? quickSource(dot) : dot, src: layoutSource(drawing, rankdir as 'LR' | 'TB') };
+    return { rankdir, dot: quick ? quickSource(dot) : dot, src };
   });
 }
 
