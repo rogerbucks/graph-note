@@ -116,7 +116,7 @@ export const STYLE_KEYS: Record<StyleKind, readonly string[]> = {
   ViewStyle: ['view', 'outside'],
   Shown: ['view', 'zoom', 'x', 'y', 'frame', 'selected', 'labels', 'hubs', 'groups', 'merge', 'legend'],
   Arrows: ['arrowheads', 'view', 'type'],
-  Diagram: ['type', 'view', 'relationship', 'order', 'by', 'show'],
+  Diagram: ['type', 'view', 'relationship', 'order', 'by', 'show', 'centre'],
   Flow: ['motion', 'means', 'type', 'view'],
   Links: ['view', 'routing', 'merge'],
   Picture: ['property', 'kind', 'thing', 'view'],
@@ -175,8 +175,8 @@ export interface Arrows {
 }
 
 /**
- * The diagram type chosen (§15, type_remembered): for the whole graph, or for one view; for a tree, the relationship it
- * follows. Drawn only while the data fits it (types.ts, `diagramFor`).
+ * The diagram type chosen (§15, type_remembered): for the whole graph, or for one view. For a tree, the relationship it
+ * follows; for a radial drawing, the id of its `centre` (radial_centre_chosen). Drawn only while the data fits it.
  */
 export interface Diagram extends TimelineChoice {
   type: DiagramType;
@@ -186,6 +186,7 @@ export interface Diagram extends TimelineChoice {
   view?: string;
   /** For a tree: the relationship type whose links are its branches; none, the one that makes the best tree. */
   relationship?: string;
+  centre?: string;
   at: StyleAt;
 }
 

@@ -35,8 +35,9 @@ const DATA = [
  * change the drawing alone, and lay it out again, never writing (§25, view_switch_view_only). So they are open, with
  * the state held by its class. The images only find and read the vault's files and draw a first frame (§18), so are
  * open whole. Following a link opens, previews or renders, never writing the note (§18). So it is open, but for
- * `links.create`, which makes one. A diagram type looked at is drawn, never written (§15, type_try_reading). So looking
- * and going back are open; keeping it, and choosing, are not. Where a card was as its type changed is held in memory
+ * `links.create`, which makes one. A diagram type looked at is drawn, never written (§15, type_try_reading).
+ * So is a timeline's order or what it shows (timeline_choice_card), and a radial drawing's centre (radial_centre_pick).
+ * So looking and going back are open; keeping it, and choosing, are not. Where a card was as its type changed is held in memory
  * alone, so keeping and taking it up are open too.
  */
 export const READS = [
@@ -53,7 +54,10 @@ export const READS = [
   'links.render',
   'links.cameBack',
   'diagram.look',
+  'diagram.lookTimeline',
   'diagram.back',
+  'diagram.centreLook',
+  'diagram.putCentre',
   'diagram.leave',
   'diagram.kept',
 ] as const;

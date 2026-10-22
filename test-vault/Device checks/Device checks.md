@@ -1,6 +1,6 @@
 # Device checks
 
-One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md)): 160 checks in 21 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
+One note for each check in the device checklist ([the checklist, on GitHub](https://github.com/rogerbucks/thoughtknot/blob/main/packages/obsidian/test/device-checklist.md)): 161 checks in 21 sections, in the checklist's order. Each note opens with the check's number, says what you should see, shows the graph to try it on, and then gives the steps and the checklist line. The Before items are setup and have no note. A note's number never changes, and is the same as in the checklist.
 
 ## 01 Viewing
 
@@ -83,6 +83,7 @@ One note for each check in the device checklist ([the checklist, on GitHub](http
 - [[Device checks/05 The style graph/S-04 Hold a box to move it|S-04 Hold a box to move it]]
 - [[Device checks/05 The style graph/S-05 Move a box from the keyboard|S-05 Move a box from the keyboard]]
 - [[Device checks/05 The style graph/S-06 Move a box round a radial drawing|S-06 Move a box round a radial drawing]]
+- [[Device checks/05 The style graph/S-07 Put a thing in the centre|S-07 Put a thing in the centre]]
 
 ## 06 Views
 

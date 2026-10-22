@@ -385,19 +385,11 @@
     ]
   },
   "W20": {
-    "title": "Clusters and centroids",
-    "size": "M",
+    "title": "Cluster certainty",
+    "size": "S",
     "requirements": [
-      "recursive_centroids",
-      "stored_centroids",
       "centroid_cohesion",
-      "centroid_cycle_guard",
-      "cluster_kind_recorded",
-      "multiple_membership",
-      "parent_floor_optional",
-      "cycles_allowed_flagged",
-      "derivations_need_no_upkeep",
-      "centroids_correct_first"
+      "parent_floor_optional"
     ]
   },
   "W21": {
@@ -463,10 +455,6 @@
       "drawing_holds_no_state",
       "accessibility_queryable",
       "accessibility_lenses_run",
-      "views_over_one_graph",
-      "multi_member_drawn",
-      "view_types_offered",
-      "views_as_scaffolds",
       "render_cascade",
       "theme_graph",
       "theme_links_meaningful",
@@ -959,7 +947,12 @@
   "TM1": {
     "title": "Trust model review",
     "size": "M",
-    "requirements": ["trust_model_written", "trust_model_reviewed", "trust_model_kept_current", "trust_plugin_own_secrets"]
+    "requirements": [
+      "trust_model_written",
+      "trust_model_reviewed",
+      "trust_model_kept_current",
+      "trust_plugin_own_secrets"
+    ]
   },
   "ST1": {
     "title": "Storage of your choice",
@@ -968,6 +961,32 @@
       "storage_user_choice",
       "storage_defaults",
       "storage_history_layer"
+    ]
+  },
+  "V2": {
+    "title": "New view types on the drawing marks",
+    "size": "L",
+    "requirements": [
+      "view_types_offered",
+      "views_over_one_graph",
+      "multi_member_drawn",
+      "views_as_scaffolds",
+      "process_fold_marks",
+      "board_item_marks"
+    ]
+  },
+  "V3": {
+    "title": "Clusters on the shared groups engine",
+    "size": "M",
+    "requirements": [
+      "cluster_kind_recorded",
+      "multiple_membership",
+      "recursive_centroids",
+      "stored_centroids",
+      "centroid_cycle_guard",
+      "cycles_allowed_flagged",
+      "derivations_need_no_upkeep",
+      "centroids_correct_first"
     ]
   }
 }

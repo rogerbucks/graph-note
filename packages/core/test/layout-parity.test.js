@@ -518,3 +518,32 @@ test('a graph folded, merged and routed is drawn the same by both, its Links rea
       mark,
     );
 });
+
+// large_drawn_quick (editor spec §11). Past 300 things a graph is laid out the quick way: one direction, with
+// Graphviz's quick settings. graph_svg.py does the same, so both still draw it from the same source, byte for byte.
+const PYTHON_QUICK = `
+import json, sys
+sys.path.insert(0, ${JSON.stringify(PY_TESTS)})
+from test_graph_svg_folds import python_answer
+print(json.dumps([python_answer([note], None, None, None) for note in json.load(sys.stdin)]))
+`;
+
+test('a graph of more than 300 things is laid out the quick way by both, byte for byte; one of 300 in full', () => {
+  const chain = (n) =>
+    `// graph: big\n${[
+      ...Array.from({ length: n }, (_, i) => `(t${i}:Thing {name: 'Thing ${i}'})`),
+      ...Array.from({ length: n - 1 }, (_, i) => `(t${i})-[:THEN]->(t${i + 1})`),
+    ].join(',\n')}`;
+  const notes = [chain(300), chain(301)];
+  const r = spawnSync('python3', ['-c', PYTHON_QUICK], { input: JSON.stringify(notes), encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const python = JSON.parse(r.stdout);
+  notes.forEach((note, n) => {
+    const drawing = readNote([note]).graphs.get('big');
+    const core = Object.fromEntries(directions(drawing).map((d) => [d.rankdir, d.dot]));
+    assert.deepEqual(python[n].drawn.big, core, `${drawing.boxes.length} things`);
+  });
+  assert.equal(Object.keys(python[1].drawn.big).length, 1, 'one direction past 300');
+  assert.match(Object.values(python[1].drawn.big)[0], /nslimit=0\.5/);
+  assert.equal(Object.keys(python[0].drawn.big).length, 2, 'both directions at 300');
+});

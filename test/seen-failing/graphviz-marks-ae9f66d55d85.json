@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/graphviz-marks.test.js",
+  "test": "Graphviz layout as marks (plugin_interface) > a link drawn invisible is left out, with its arrowhead and label, and the next link keeps its id",
+  "seen_failing_first": false,
+  "evidence": "A review asked for a test of behaviour the code already had: an invisible link was always left out. The test pins it down."
+}

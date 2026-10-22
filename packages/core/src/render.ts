@@ -13,11 +13,14 @@ import { inlineSource } from './inline-properties.ts';
 import { foldedSource, routedSource } from './fold-source.ts';
 import { flowSource } from './link-flow.ts';
 import { pictureSource } from './picture.ts';
+import type { LaidMarks } from './graphviz-marks.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
   version: string;
   render(source: string): string;
+  /** The same layout as drawing marks (spec §43), for a host that draws marks itself. */
+  marks?(source: string): LaidMarks;
 }
 
 /** A drawing ready to show: themed SVG text, the direction chosen, and its natural size in CSS pixels. */

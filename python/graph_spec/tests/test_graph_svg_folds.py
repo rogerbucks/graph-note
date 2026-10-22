@@ -125,7 +125,7 @@ def python_answer(texts, view, switches, opened):
                 routing=args["routing"],
                 pictures=args["pictures"],
             )[0]
-            for rd in graph_svg.directions(args["direction"], args["diagram"])
+            for rd in graph_svg.directions(args["direction"], args["diagram"], len(args["nodes"]))
         }
     return {"styles": styles, "drawn": drawn}
 
@@ -178,7 +178,7 @@ class Folds(unittest.TestCase):
             [
                 "digraph G {",
                 "  rankdir=LR;",
-                '  graph [layout=twopi, root="a", overlap=false, splines=true];',
+                '  graph [layout=twopi, root="a", overlap=scale, splines=true];',
                 "}",
             ]
         )
@@ -186,7 +186,7 @@ class Folds(unittest.TestCase):
         for routing, splines in (("straight", "line"), ("right-angled", "ortho")):
             routed = routed_source(radial, routing)
             self.assertEqual(re.findall(r"splines=(\w+)", routed), [splines], routing)
-            self.assertIn('  graph [layout=twopi, root="a", overlap=false];', routed, routing)
+            self.assertIn('  graph [layout=twopi, root="a", overlap=scale];', routed, routing)
 
     def test_a_busy_hub_has_more_links_than_the_cores_number(self):
         self.assertEqual(BUSY_HUB, 12)
