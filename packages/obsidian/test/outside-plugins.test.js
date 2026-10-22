@@ -58,6 +58,23 @@ describe('plug-ins from outside, in Obsidian (plugin_outside_file)', () => {
     }
   });
 
+  test('turned on, its own colours join the page, light and dark; turned off, they go (plugin_theme_tokens)', async () => {
+    const { tab, commands, doc, plugin, uninstall } = await loaded();
+    try {
+      await tab.setControlValue('outside.sample.js', true);
+      await until(() => commands().includes(HELLO));
+      const [sheet, more] = doc.adoptedStyleSheets;
+      assert.equal(more, undefined, 'one sheet for the one plug-in');
+      assert.match(sheet.text, /\.theme-light\{--gn-plugin-example-sample-mark:#1a1a1a\}/);
+      assert.match(sheet.text, /\.theme-dark\{--gn-plugin-example-sample-mark:#f0f0f0\}/);
+      await tab.setControlValue('outside.sample.js', false);
+      assert.deepEqual(doc.adoptedStyleSheets, []);
+    } finally {
+      plugin.onunload();
+      uninstall();
+    }
+  });
+
   test('a file that changed since it was turned on is turned off, and said', async () => {
     const data = { outside: { 'sample.js': { sha: '0'.repeat(64) } } };
     const { commands, state, plugin, uninstall } = await loaded({ data });

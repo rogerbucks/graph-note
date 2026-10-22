@@ -7,7 +7,9 @@
 // - its commands join Obsidian's, named as the plug-in names them;
 // - its graph sources are read by a block written `· FROM sample:trip` (plugin_source_from);
 // - its diagram types draw a graph whose style graph chooses one (outside-diagrams.ts);
-// - its steps run from a step block that names one (step-block.ts). Its other points join as the host draws them.
+// - its steps run from a step block that names one (step-block.ts);
+// - its own colours join the page as a sheet of their own, gone when it stops (plugin_theme_tokens).
+// Its other points join as the host draws them.
 import { Notice, TFile } from 'obsidian';
 import type { Plugin } from 'obsidian';
 import { outsidePlugin, outsideProblem, pluginRegistry, READ_LIMITS, word } from '@thoughtknot/core';
@@ -21,6 +23,7 @@ import type {
   PluginResult,
   SourceFetched,
 } from '@thoughtknot/core';
+import { adoptTokens } from '@thoughtknot/core/display/plugin-tokens';
 import { pluginWorker } from 'thoughtknot:plugin-worker';
 import { fetchPluginFile } from './outside-link';
 
@@ -68,8 +71,11 @@ function blobWorker(body: string): PluginPort {
 
 /** The plug-ins from outside: the files found, which are on, and the ones running. */
 export class OutsidePlugins {
-  /** Each file running: its plug-in, the registry it is installed in, and the commands it added. */
-  private readonly running = new Map<string, { iso: IsolatedPlugin; registry: PluginRegistry; commands: string[] }>();
+  /** Each file running: its plug-in, the registry it is installed in, the commands it added, and what takes off its colours. */
+  private readonly running = new Map<
+    string,
+    { iso: IsolatedPlugin; registry: PluginRegistry; commands: string[]; unstyle: () => void }
+  >();
 
   constructor(
     private readonly owner: Plugin,
@@ -184,7 +190,8 @@ export class OutsidePlugins {
     const commands = registry.commands().map((c) => c.id);
     for (const c of registry.commands())
       this.owner.addCommand({ id: c.id, name: c.title, callback: () => void registry.runCommand(c.id) });
-    this.running.set(name, { iso, registry, commands });
+    const unstyle = adoptTokens(activeDocument, registry.themeTokens());
+    this.running.set(name, { iso, registry, commands, unstyle });
   }
 
   /**
@@ -240,6 +247,7 @@ export class OutsidePlugins {
     const r = this.running.get(name);
     if (!r) return;
     r.iso.stop();
+    r.unstyle();
     for (const id of r.commands) this.owner.removeCommand(id);
     this.running.delete(name);
   }
