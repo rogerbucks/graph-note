@@ -3,15 +3,30 @@
 // style graph's diagram type (style-graph.ts). The core adds each through the plug-in interface (core-diagrams.ts).
 import type { DrawMark } from '../drawing-marks.ts';
 import type { DiagramGiven } from '../plugin-diagrams.ts';
+import { blockMarks } from './block-view.ts';
+import { centroidMarks } from './centroid-view.ts';
 import { chordMarks } from './chord-view.ts';
+import { containmentMarks } from './containment-view.ts';
 import { densityMarks } from './density-view.ts';
 import { egoMarks } from './ego-view.ts';
 import { forceMarks } from './force-view.ts';
 import { matrixMarks } from './matrix-view.ts';
+import { planMarks } from './plan-view.ts';
 import { treemapMarks } from './treemap-view.ts';
 
 /** The view types drawn as marks, in the order they are offered. */
-export const VIEW_TYPES = ['matrix', 'treemap', 'chord', 'ego', 'force', 'density'] as const;
+export const VIEW_TYPES = [
+  'matrix',
+  'treemap',
+  'chord',
+  'ego',
+  'force',
+  'density',
+  'block',
+  'plan',
+  'centroid',
+  'containment',
+] as const;
 /** One view type drawn as marks. */
 export type ViewType = (typeof VIEW_TYPES)[number];
 
@@ -23,4 +38,8 @@ export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]>
   ego: (given) => egoMarks(given),
   force: (given) => forceMarks(given),
   density: (given) => densityMarks(given),
+  block: blockMarks,
+  plan: planMarks,
+  centroid: centroidMarks,
+  containment: containmentMarks,
 };
