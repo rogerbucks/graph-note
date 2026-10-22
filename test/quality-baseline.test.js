@@ -193,6 +193,22 @@ describe('a baseline committed worse than its parent’s', () => {
       'release.yml release',
     ]);
   });
+
+  // The whole suite at once peaked over the default 4 GB ceiling (21 and 22 Oct 2026). CI's shards got 6 GB. So every
+  // job that runs the suite gets the same, or the quality run stops with no test of its own failing.
+  test('every workflow job that runs the suite gets the memory ceiling CI’s shards get', () => {
+    const ceiling = (job) => job.join('\n').match(/THOUGHTKNOT_TEST_MEMORY_MB: (\d+)/)?.[1];
+    const ci = ceiling(jobs(read('.github/workflows/ci.yml')).suite);
+    assert.ok(ci, 'CI’s shards have a ceiling');
+    for (const [file, name] of [
+      ['nightly.yml', 'build'],
+      ['quality-baseline.yml', 'measure'],
+      ['release-check.yml', 'quality'],
+      ['release.yml', 'quality'],
+      ['release.yml', 'release'],
+    ])
+      assert.equal(ceiling(jobs(read(`.github/workflows/${file}`))[name]), ci, `${file} ${name}`);
+  });
 });
 
 // No timing is enforced on any machine: test duration only warns. The work is held by the benchmarks' instruction
