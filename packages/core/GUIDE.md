@@ -773,6 +773,7 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 - `treemap-view.ts` — a rectangle for each group, else each kind, and one for each thing in it, sized by its links.
   The rectangles are laid out squarified (`squarified`), so they stay near square.
 - `chord-view.ts` — each thing on a circle, grouped by kind, and each link a curve across it.
+- `ego-view.ts` — one thing in the middle, and the things one and two links away on rings round it.
 
 ### Views (spec §2, §7)
 
