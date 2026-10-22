@@ -55,6 +55,7 @@ const { SCHEMA_LABELS, mermaidGraph, legend, word, mermaidPath } = require('./vi
 const { views } = require('./views/views.js');
 const { louvain } = require('./clusters/louvain.js');
 const { clustersOf } = require('./clusters/clusters.js');
+const { centroidId, centroidsOf } = require('./clusters/centroids.js');
 
 // The API, its names in the order they have always had; test/graph-spec-check-api.test.mjs holds the list.
 module.exports = {
@@ -131,4 +132,6 @@ module.exports = {
   clipShown,
   louvain,
   clustersOf,
+  centroidId,
+  centroidsOf,
 };

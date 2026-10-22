@@ -25,6 +25,7 @@ const BANDS = [
   ['very-likely', 80, 95],
   ['almost-certain', 95, 100],
 ];
+// each likelihood word's range of chances, in percent: its band, narrowed at the ends, and cannot-judge as 0 to 100
 const RANGE = Object.assign(Object.fromEntries(BANDS.map(([t, lo, hi]) => [t, [lo, hi]])), {
   'almost-no-chance': [1, 5],
   'almost-certain': [95, 99],
@@ -300,4 +301,4 @@ function section20(g, sw) {
   return out;
 }
 
-module.exports = { bandRank, latestAssessment, confidenceFromEvidence, claimStatus, section20 };
+module.exports = { RANGE, bandRank, latestAssessment, confidenceFromEvidence, claimStatus, section20 };
