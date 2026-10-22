@@ -43,6 +43,8 @@ KINDS = f"{', '.join(STYLE_KINDS[:-1])} or {STYLE_KINDS[-1]}"
 SHOW_FOR = "a Show is for one kind, thing or relationship type"
 # What a Diagram's relationship is for (§15): the branches of a tree, and nothing else.
 TREE_ONLY = "a relationship is chosen only for a tree"
+# What a Diagram's centre is for (§15, radial_centre_chosen): the middle of a radial drawing.
+RADIAL_ONLY = "a centre is chosen only for a radial drawing"
 
 
 class _Reader:
@@ -201,7 +203,8 @@ def _arrows_of(raw, names, out):
 def _diagram_of(raw, names, out):
     """The diagram type chosen, checked (§15, type_remembered): one of the types, in the whole
     graph or a view, whose name is the user's own; for a tree, a relationship type the graph has,
-    which no other type takes."""
+    which no other type takes; for a radial drawing, the thing at its centre, which no other type
+    takes (radial_centre_chosen)."""
     r, before, props = _Reader(raw, names, out), len(out), raw["props"]
     if "type" not in props:
         add = "add type: " + or_list([f"'{w}'" for w in DIAGRAM_TYPES])
@@ -212,9 +215,12 @@ def _diagram_of(raw, names, out):
     plugin = written if isinstance(written, str) and plugin_type_of(written) else None
     typ = "network" if plugin else r.word("type", DIAGRAM_TYPES, "$ is not a diagram type")
     relationship = r.name("relationship", names["types"], "a relationship type")
+    centre = r.name("centre", names["things"], "a thing", "the id of a thing")
     view = r.text("view")
     if typ and relationship is not None and typ != "tree":
         r.report(TREE_ONLY, "remove relationship, or make it type: 'tree'")
+    if typ and centre is not None and typ != "radial":
+        r.report(RADIAL_ONLY, "remove centre, or make it type: 'radial'")
     if not typ or len(out) != before:
         return None
     return {
@@ -222,6 +228,7 @@ def _diagram_of(raw, names, out):
         **({} if plugin is None else {"plugin": plugin}),
         **({} if view is None else {"view": view}),
         **({} if relationship is None else {"relationship": relationship}),
+        **({} if centre is None else {"centre": centre}),
         "at": raw["at"],
     }
 

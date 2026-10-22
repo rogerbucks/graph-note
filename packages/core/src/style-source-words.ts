@@ -86,6 +86,8 @@ export const STYLE_SOURCE_WORDS = {
   'styling.diagram.unknown': '{written} is not a diagram type',
   'styling.diagram.tree-only': 'a relationship is chosen only for a tree',
   'styling.diagram.tree-only.fix': "remove relationship, or make it type: 'tree'",
+  'styling.diagram.radial-only': 'a centre is chosen only for a radial drawing',
+  'styling.diagram.radial-only.fix': "remove centre, or make it type: 'radial'",
   'styling.links.missing': 'a Links sets routing or merge',
   'styling.links.add': "add routing: {among}, or merge: 'on'",
   'styling.links.routing-unknown': '{written} is not a routing: links are {among}',

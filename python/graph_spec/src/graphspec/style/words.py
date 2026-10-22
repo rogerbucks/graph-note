@@ -88,7 +88,7 @@ STYLE_KEYS = {
     "ViewStyle": ("view", "outside"),
     "Shown": ("view", "zoom", "x", "y", "frame", "selected", *SAVED_SWITCHES, "legend"),
     "Arrows": ("arrowheads", "view", "type"),
-    "Diagram": ("type", "view", "relationship"),
+    "Diagram": ("type", "view", "relationship", "centre"),
     "Flow": ("motion", "means", "type", "view"),
     "Links": ("view", "routing", "merge"),
     "Picture": ("property", "kind", "thing", "view"),

@@ -36,10 +36,13 @@ export function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arr
 
 /** What a Diagram's relationship is for (§15): the branches of a tree, and nothing else. */
 export const treeOnly = () => word('styling.diagram.tree-only');
+/** What a Diagram's centre is for (§15, radial_centre_chosen): the middle of a radial drawing, and nothing else. */
+export const radialOnly = () => word('styling.diagram.radial-only');
 
 /**
  * The diagram type chosen, checked (§15, type_remembered). It is one of the types, in the whole graph or a view, whose
- * name is the user's own. For a tree, it names a relationship type the graph has, which no other type takes.
+ * name is the user's own. For a tree, it names a relationship type the graph has, which no other type takes. For a
+ * radial drawing, it names the thing at its centre, which no other type takes (radial_centre_chosen).
  */
 export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Diagram | null {
   const r = reader(raw, names, out),
@@ -55,15 +58,19 @@ export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Di
     ? 'network'
     : r.word('type', DIAGRAM_TYPES, (w) => word('styling.diagram.unknown', { written: w }));
   const relationship = r.name('relationship', names.types, aType()),
+    centre = r.name('centre', names.things, word('styling.what.thing'), word('styling.what.thing-id')),
     view = r.text('view');
   if (type && relationship !== undefined && type !== 'tree')
     r.report(treeOnly(), word('styling.diagram.tree-only.fix'));
+  if (type && centre !== undefined && type !== 'radial')
+    r.report(radialOnly(), word('styling.diagram.radial-only.fix'));
   if (!type || out.length !== before) return null;
   return {
     type,
     ...(plugin ? { plugin } : {}),
     ...inView(view),
     ...(relationship === undefined ? {} : { relationship }),
+    ...(centre === undefined ? {} : { centre }),
     at: raw.at,
   };
 }

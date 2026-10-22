@@ -112,15 +112,21 @@ function treeFit(shape: GraphShape, relationship: string | undefined, text: (k: 
   return no('tree', word('diagram.tree.none', { relationship: most, why: treeAlong(shape, most, text) ?? '' }));
 }
 
+/** A radial drawing's centre: the thing chosen, while the drawing holds it (radial_centre_chosen), else `centreOf`. */
+function radialCentre(shape: GraphShape, chosen?: string): string {
+  return chosen !== undefined && shape.things.some((t) => t.key === chosen) ? chosen : centreOf(shape);
+}
+
 /**
  * Whether a radial drawing fits. It needs three things or more, every one joined to the centre, whichever way its links
- * run. No group may be written, as Graphviz's radial layout cannot draw a group's box.
+ * run. The centre is the thing chosen, if any. No group may be written, as Graphviz's radial layout cannot draw a
+ * group's box.
  */
-function radialFit(shape: GraphShape, text: (k: string) => string): TypeFit {
+function radialFit(shape: GraphShape, text: (k: string) => string, chosen?: string): TypeFit {
   if (shape.things.length < 3) return no('radial', word('diagram.radial.three'));
   const group = shape.groups?.[0];
   if (group) return no('radial', word('diagram.radial.group', { group: group[0] }));
-  const centre = centreOf(shape),
+  const centre = radialCentre(shape, chosen),
     near = new Map<string, string[]>();
   for (const l of shape.links) {
     near.set(l.from, [...(near.get(l.from) ?? []), l.to]);
@@ -159,7 +165,7 @@ function lanesFit(shape: GraphShape): TypeFit {
  * why. A tree is judged along `relationship` when one is chosen (tree_fits). A timeline needs every thing to carry a
  * date (timeline_fits). A network fits every graph, and with nothing to draw only a network is offered.
  */
-export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
+export function typeFits(shape: GraphShape, relationship?: string, centre?: string): TypeFit[] {
   if (!shape.things.length)
     return DIAGRAM_TYPES.map((t) => (t === 'network' ? yes(t) : no(t, word('diagram.nothing'))));
   const texts = new Map(shape.things.map((t) => [t.key, t.text]));
@@ -177,7 +183,7 @@ export function typeFits(shape: GraphShape, relationship?: string): TypeFit[] {
       : loop
         ? no('flow', word('diagram.flow.loops', { loop: loop.map(text).join(' → ') }))
         : yes('flow'),
-    radialFit(shape, text),
+    radialFit(shape, text, centre),
     lanesFit(shape),
     undated ? no('timeline', word('diagram.timeline.undated', { thing: undated.text })) : yes('timeline'),
     yes('table'),
@@ -229,11 +235,11 @@ export function chosenDiagram(style: Pick<StyleGraph, 'diagrams'>, view?: string
 }
 
 /** How Graphviz lays a fitting type out (graph-layout.js, `typedSource`); none for a network or a table. */
-function planOf(fit: TypeFit, shape: GraphShape): DiagramPlan | undefined {
+function planOf(fit: TypeFit, shape: GraphShape, centre?: string): DiagramPlan | undefined {
   if (fit.type === 'tree')
     return { type: 'tree', tree: shape.links.flatMap((l, i) => (l.type === fit.relationship ? [i] : [])) };
   if (fit.type === 'flow') return { type: 'flow' };
-  if (fit.type === 'radial') return { type: 'radial', centre: centreOf(shape) };
+  if (fit.type === 'radial') return { type: 'radial', centre: radialCentre(shape, centre) };
   if (fit.type === 'lanes') {
     const lanes = new Map<string, string[]>();
     for (const t of shape.things) lanes.set(t.kinds[0] as string, [...(lanes.get(t.kinds[0] as string) ?? []), t.key]);
@@ -274,7 +280,7 @@ export function diagramOffer(
 ): DiagramOffer {
   const shape = shapeOf(drawing, g, style.nudges);
   return {
-    fits: typeFits(shape, chosenDiagram(style, view)?.relationship),
+    fits: typeFits(shape, chosenDiagram(style, view)?.relationship, chosenDiagram(style, view)?.centre),
     suggested: suggestType(typeFits(shape), shape),
     choice: diagramFor(drawing, style, g, view),
   };
@@ -300,7 +306,7 @@ export function diagramFor(
     return { drawn: 'network', plugin: { type: d.plugin, plugin: own.plugin, why } };
   }
   const shape = shapeOf(drawing, g, style.nudges),
-    fits = typeFits(shape, d.relationship),
+    fits = typeFits(shape, d.relationship, d.centre),
     fit = fits.find((f) => f.type === d.type) as TypeFit;
   if (!fit.fits)
     return {
@@ -308,6 +314,6 @@ export function diagramFor(
       drawn: 'network',
       stopped: { type: d.type, why: fit.why ?? '', nearest: nearestType(d.type, fits) },
     };
-  const plan = planOf(fit, shape);
+  const plan = planOf(fit, shape, d.centre);
   return { chosen: d.type, drawn: d.type, ...(plan ? { plan } : {}) };
 }

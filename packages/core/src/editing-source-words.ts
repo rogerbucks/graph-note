@@ -21,6 +21,7 @@ export const EDITING_SOURCE_WORDS = {
   'editing.style.frame': 'frame must be four numbers',
   'editing.style.selected': 'selected must name a thing',
   'editing.style.type-name': 'a relationship type needs a name',
+  'editing.style.centre-name': 'a centre names a thing',
   // a property held as a list of linked things (linked-list.ts)
   'editing.list.itself': '{value} is this thing itself: a thing cannot be in its own list',
   'editing.list.relationship-word': 'the relationship must be one word: letters, digits and underscores',

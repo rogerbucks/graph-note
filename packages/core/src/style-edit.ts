@@ -10,7 +10,7 @@ import { items } from './block-items.ts';
 import { STYLE } from './layout.ts';
 import { quoted } from './lock.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
-import { showFor, treeOnly } from './style-checks.ts';
+import { radialOnly, showFor, treeOnly } from './style-checks.ts';
 import {
   ARROWHEADS,
   DIAGRAM_TYPES,
@@ -86,11 +86,15 @@ export interface ArrowsWrite {
   type?: string;
 }
 
-/** A diagram type to choose (§15): for the whole graph or a view, and for a tree, the relationship it follows. */
+/**
+ * A diagram type to choose (§15): for the whole graph or a view. For a tree, the relationship it follows; for a radial
+ * drawing, the id of the thing at its centre (radial_centre_chosen).
+ */
 export interface DiagramWrite {
   type: string;
   view?: string;
   relationship?: string;
+  centre?: string;
 }
 
 /** One change to a graph's style. */
@@ -179,6 +183,8 @@ function diagramRefusal(d: DiagramWrite): string | null {
   if (!(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return mustBe('type', DIAGRAM_TYPES);
   if (d.relationship !== undefined && d.type !== 'tree') return treeOnly();
   if (d.relationship === '') return word('editing.style.type-name');
+  if (d.centre !== undefined && d.type !== 'radial') return radialOnly();
+  if (d.centre === '') return word('editing.style.centre-name');
   if (d.view === '') return noViewName();
   return null;
 }
@@ -200,6 +206,7 @@ function choiceFor(
         ['type', d.type],
         ['view', d.view],
         ['relationship', d.relationship],
+        ['centre', d.centre],
       ],
       match: [['view', d.view]],
     };
