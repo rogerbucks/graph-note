@@ -98,19 +98,25 @@ function tableMarks({ shape, space }: DiagramGiven): DrawMark[] {
 
 /**
  * The built-in diagram types, added through the plug-in interface as any plug-in's are (plugin_interface). `engine`
- * lays the Graphviz types out. Each type's title is said in the reader's language as it is added.
+ * lays the Graphviz types out. With no engine, only the view types drawn as marks are added, as a host that draws the
+ * Graphviz types itself needs (view_types_offered). Each type's title is said in the reader's language as it is added.
  */
-export function coreDiagrams(engine: MarksEngine): ThoughtKnotPlugin {
-  const drawer = (type: DiagramType): PluginDiagram['draw'] =>
-    type === 'table' ? tableMarks : (given) => laidOut(engine, type, given);
+export function coreDiagrams(engine?: MarksEngine): ThoughtKnotPlugin {
+  const drawer = (type: DiagramType, on: MarksEngine): PluginDiagram['draw'] =>
+    type === 'table' ? tableMarks : (given) => laidOut(on, type, given);
   return {
     id: CORE_DIAGRAMS_ID,
     version: '1.0.0',
     api: PLUGIN_API,
     uses: ['diagrams'],
     register: (points) => {
-      for (const type of DIAGRAM_TYPES)
-        points.diagrams?.add({ type: coreDiagramType(type), title: word(`type.${type}`), draw: drawer(type) });
+      if (engine)
+        for (const type of DIAGRAM_TYPES)
+          points.diagrams?.add({
+            type: coreDiagramType(type),
+            title: word(`type.${type}`),
+            draw: drawer(type, engine),
+          });
       for (const view of VIEW_TYPES)
         points.diagrams?.add({
           type: `${CORE_DIAGRAMS_ID}.${view}`,

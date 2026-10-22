@@ -40,7 +40,7 @@ import { readFrame, unknownKeys } from './style-words.ts';
 import { legendChecked } from './untangle-saved.ts';
 import { word as say } from './words.ts';
 
-export { centreRefusal, timelineRefusal, treeOnly } from './style-choice-checks.ts';
+export { centreRefusal, diagramTypeKnown, timelineRefusal, treeOnly } from './style-choice-checks.ts';
 
 /** One thing of a style graph as read: its kinds, its properties, where it is, and where each property's text is. */
 export interface RawThing {

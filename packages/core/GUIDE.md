@@ -780,7 +780,7 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 - `block-view.ts` — a block diagram: each thing a block, and links running left to right in right-angled lines.
 - `plan-view.ts` — a project plan: a row for each thing, and a bar from its start date to its end date.
 - `centroid-view.ts` — each cluster as one circle with its members round it, and one line for the links between two.
-- `containment-view.ts` — each part drawn inside its whole, by links such as PART_OF and CONTAINS.
+- `containment-view.ts` — each part drawn inside each of its wholes, by links such as PART_OF and CONTAINS.
 
 ### Views (spec §2, §7)
 

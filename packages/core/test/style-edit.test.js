@@ -221,3 +221,23 @@ describe('what is never written', () => {
     assert.ok(isPseudoWord(styleEdit(NOTE, 'nowhere', changes[0]).refused));
   });
 });
+
+describe('a diagram type a plug-in adds', () => {
+  // proves: view_types_offered, plugin_diagram_type_named
+  test('is written by its whole name, read back as the plug-in’s type, and takes no tree relationship', () => {
+    const note = written(styleEdit(NOTE, 'trip', { diagram: { type: 'thoughtknot.diagrams.matrix' } }));
+    const [d] = styleIn(note).style.diagrams;
+    assert.equal(d.plugin, 'thoughtknot.diagrams.matrix');
+    assert.deepEqual(data(note), data(NOTE));
+    const view = written(styleEdit(note, 'trip', { diagram: { type: 'acme.charts.sankey', view: 'flows' } }));
+    assert.deepEqual(
+      styleIn(view).style.diagrams.map((x) => [x.plugin, x.view]),
+      [
+        ['thoughtknot.diagrams.matrix', undefined],
+        ['acme.charts.sankey', 'flows'],
+      ],
+    );
+    assert.ok('refused' in styleEdit(NOTE, 'trip', { diagram: { type: 'acme.charts.sankey', relationship: 'R' } }));
+    assert.ok('refused' in styleEdit(NOTE, 'trip', { diagram: { type: 'Not A.type' } }));
+  });
+});

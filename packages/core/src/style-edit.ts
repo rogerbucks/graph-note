@@ -10,7 +10,7 @@ import { items } from './block-items.ts';
 import { STYLE } from './layout.ts';
 import { quoted } from './lock.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
-import { centreRefusal, showFor, timelineRefusal, treeOnly } from './style-checks.ts';
+import { centreRefusal, diagramTypeKnown, showFor, timelineRefusal, treeOnly } from './style-checks.ts';
 import {
   ARROWHEADS,
   DIAGRAM_TYPES,
@@ -180,7 +180,7 @@ function arrowsRefusal(a: ArrowsWrite): string | null {
 
 /** Why a diagram type cannot be chosen so, or null. */
 function diagramRefusal(d: DiagramWrite): string | null {
-  if (!(DIAGRAM_TYPES as readonly string[]).includes(d.type)) return mustBe('type', DIAGRAM_TYPES);
+  if (!diagramTypeKnown(d.type)) return mustBe('type', DIAGRAM_TYPES);
   if (d.relationship !== undefined && d.type !== 'tree') return treeOnly();
   if (d.relationship === '') return word('editing.style.type-name');
   const chosen = centreRefusal(d) ?? timelineRefusal(d);

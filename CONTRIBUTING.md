@@ -220,6 +220,11 @@ These test behaviour across modules, or the repository itself, so they are named
   from the catalogue by key (editor spec §42, words_catalogue). The few kept are listed, each with why.
 - `packages/core/test/locale-bytes.test.js` — the editor writes the same bytes in every setting. No language, locale
   or direction changes an edit, an export's data or the layout source (editor spec §42, locale_never_changes_bytes).
+
+### The core's views
+
+- `packages/core/test/multi-member-drawn.test.js` — a thing in two clusters is drawn in each region, with the same
+  marker. So is a part with two wholes (editor spec §36, multi_member_drawn).
 - `packages/core/test/display.test.js` — styled views and paths change only what they choose, and keep the locked hues, contrast and legend (editor spec §7).
 - `packages/core/test/view-parity.test.js` — every view of the shared table (`python/graph_spec/tests/view_cases.json`)
   is found in its note, read, and returns the things the table gives. Every query outside the view profile gets the
@@ -360,6 +365,8 @@ These test behaviour across modules, or the repository itself, so they are named
   and in the pane. It shows the graph's summary while nothing is chosen. It sits beside the drawing, and below it where
   the card is narrow (editor spec §24, details_always_visible, details_narrow).
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
+- `packages/obsidian/test/view-types.test.js` — the card's Views list offers each view drawn as marks. A view chosen is
+  saved in the style graph and drawn (editor spec §36, view_types_offered).
 - `packages/obsidian/test/remote-images.test.js` — an image from outside the vault, in a thing's details or a note
   embedded there, is a link with a Load image button. Only pressing it loads that image (editor spec §18,
   remote_images_asked).

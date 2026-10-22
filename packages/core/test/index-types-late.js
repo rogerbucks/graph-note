@@ -193,6 +193,7 @@ export const TYPES_LATE = [
   'ViewStyle',
   'ViewSwitch',
   'ViewSwitches',
+  'ViewType',
   'WalkedPath',
   'Which',
   'WordKey',

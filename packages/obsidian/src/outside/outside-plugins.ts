@@ -13,7 +13,7 @@
 // Its other points join as the host draws them.
 import { Notice, TFile } from 'obsidian';
 import type { Plugin } from 'obsidian';
-import { outsidePlugin, outsideProblem, pluginRegistry, READ_LIMITS, word } from '@thoughtknot/core';
+import { coreDiagrams, outsidePlugin, outsideProblem, pluginRegistry, READ_LIMITS, word } from '@thoughtknot/core';
 import type {
   DiagramSpace,
   GraphShape,
@@ -224,6 +224,16 @@ export class OutsidePlugins {
     return { missing: true };
   }
 
+  private views: PluginRegistry | null = null;
+  /** The registry of the core's own view types: made once, when first drawn, so the titles are in the reader's language. */
+  private builtIn(): PluginRegistry {
+    if (!this.views) {
+      this.views = pluginRegistry();
+      this.views.register(coreDiagrams());
+    }
+    return this.views;
+  }
+
   /**
    * The SVG the core drew from the marks of the diagram type `type`, for `shape` in `space`. Or why the plug-in running
    * that adds it could not draw it, or null when none running adds it.
@@ -233,7 +243,8 @@ export class OutsidePlugins {
     shape: GraphShape,
     space: DiagramSpace,
   ): Promise<{ svg: string } | { why: string } | null> {
-    for (const { registry } of this.running.values()) {
+    // the core's own view types, drawn as marks, are always on (view_types_offered)
+    for (const { registry } of [{ registry: this.builtIn() }, ...this.running.values()]) {
       if (!registry.diagramTypes().some((d) => d.type === type)) continue;
       const r = await registry.drawDiagram(type, shape, space);
       return r.ok ? { svg: r.value } : { why: r.message };

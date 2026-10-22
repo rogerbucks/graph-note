@@ -43,7 +43,7 @@ test('each cluster is one circle with its members round it, and a lone thing is 
   const centroids = marks.filter((m) => m.style === 'centroid');
   assert.equal(centroids.length, shapeClusters(SHAPE).length);
   const team = centroids.find((m) => m.of === 'team');
-  const members = marks.filter((m) => m.group === team.group && m.style === 'member');
+  const members = marks.filter((m) => m.group === team.group && m.style.startsWith('member'));
   assert.deepEqual(
     members.map((m) => m.of),
     ['a', 'b'],

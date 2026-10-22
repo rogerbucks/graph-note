@@ -37,6 +37,9 @@ export function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arr
 
 /** What a Diagram's relationship is for (§15): the branches of a tree, and nothing else. */
 export const treeOnly = () => word('styling.diagram.tree-only');
+/** Whether `type` is a diagram type: one of the core's seven, or a plug-in's by its whole name (plugin_diagram_type_named). */
+export const diagramTypeKnown = (type: string): boolean =>
+  pluginTypeOf(type) !== null || (DIAGRAM_TYPES as readonly string[]).includes(type);
 /** What a Diagram's centre is for (§15, radial_centre_chosen): the middle of a radial drawing, and nothing else. */
 const radialOnly = () => word('styling.diagram.radial-only');
 

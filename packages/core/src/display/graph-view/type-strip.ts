@@ -6,8 +6,9 @@
 // (types.ts). A type a plug-in adds is drawn as a picture of the marks that plug-in gave, when one here draws it
 // (plugin_diagram_type_named). Otherwise the strip says which plug-in draws it. In reading view a type chosen is only
 // looked at: drawn at once, never saved, and said so. Where the note is edited, a type looked at can be kept
-// (type_try_reading).
-import { chosenDiagram, diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
+// (type_try_reading). Under the types, Views lists the core's view types drawn as marks. Each is chosen and written
+// the same way, and said by its title once drawn (view_types_offered).
+import { CORE_DIAGRAMS_ID, VIEW_TYPES, chosenDiagram, diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
   DiagramSpace,
@@ -36,6 +37,12 @@ export interface DiagramShown extends DiagramOffer {
   table?: DiagramTable;
   /** Writes the type chosen into the style graph: for the graph, or for the view the card shows. */
   choose: (type: DiagramType) => void;
+  /** The view types drawn as marks (view_types_offered): each by its whole name, its title, and whether it is drawn now. */
+  views: { type: string; title: string; now: boolean }[];
+  /** Writes the view type `type` chosen into the style graph, as `choose` writes a type. */
+  chooseView: (type: string) => void;
+  /** Draws the card as the view type `type`, never saving it: for reading view. */
+  lookView?: (type: string) => void;
   /** The drawing as a plug-in's diagram type drew it: the core's SVG of its marks, the type and its size. */
   picture?: PluginPicture;
   /** Draws the card as the type chosen, never saving it: for reading view. The saved type puts the card back. */
@@ -154,6 +161,17 @@ export function diagramShown(
       ? word('type.now-graph', { type: said(type) })
       : word('type.now-view', { view, type: said(type) });
   const choose = (type: DiagramType) => write(change(type), now(type));
+  // the view types drawn as marks, each a plug-in type of the core's own (view_types_offered)
+  const drawnView = chosenDiagram(style, view)?.plugin;
+  const views = VIEW_TYPES.map((v) => {
+    const type = `${CORE_DIAGRAMS_ID}.${v}`;
+    return { type, title: word(`view.${v}`), now: drawnView === type };
+  });
+  const viewChange = (type: string): DiagramWrite => ({ type, ...(view === undefined ? {} : { view }) });
+  const viewNow = (type: string) => {
+    const title = views.find((v) => v.type === type)?.title ?? type;
+    return view === undefined ? word('type.now-graph', { type: title }) : word('type.now-view', { view, type: title });
+  };
   // the Diagram drawn here, whole: a type looked at, or kept, keeps its tree's relationship and its timeline's choice
   const d = chosenDiagram(style, view);
   const whole: DiagramWrite =
@@ -194,6 +212,8 @@ export function diagramShown(
     wayIn: wayIn(drawing.boxes.length),
     ...(offer.choice.drawn === 'table' ? { table: tableOf(drawing, g) } : {}),
     choose,
+    views,
+    chooseView: (type: string) => write(viewChange(type), viewNow(type)),
     ...(timeline && plan?.type === 'timeline'
       ? {
           timeline: { order: plan.order, show: timeline.show ?? 'all' },
@@ -204,6 +224,7 @@ export function diagramShown(
     ...(trying
       ? {
           look: (type: DiagramType) => trying.tryOut(type === trying.saved ? null : change(type)),
+          lookView: (type: string) => trying.tryOut(drawnView === type && !trying.tried ? null : viewChange(type)),
           tried: trying.tried,
           back: () => trying.tryOut(null),
           ...(centre === undefined ? {} : { centreLook }),
@@ -269,8 +290,12 @@ export function renderTypeStrip(
     if (!look) writes.push(...els);
   };
   const strip = root.createDiv({ cls: 'thoughtknot-type-strip' });
+  // a view type of the core's own is said by its title; a plug-in's type, with the plug-in that draws it
+  const viewNow = d.views.find((v) => v.now);
   const drawnAs = d.picture
-    ? word('type.drawn-plugin', { type: d.picture.type, plugin: d.picture.plugin })
+    ? d.picture.plugin === CORE_DIAGRAMS_ID && viewNow
+      ? word('type.drawn', { type: viewNow.title })
+      : word('type.drawn-plugin', { type: d.picture.type, plugin: d.picture.plugin })
     : word('type.drawn', { type: said(choice.drawn) });
   strip.createSpan({ cls: 'thoughtknot-type-drawn', text: drawnAs });
   // a plug-in's type that nothing here draws: which plug-in draws it, and that the graph is a network meanwhile
@@ -317,6 +342,20 @@ export function renderTypeStrip(
           .join('; ')
       : (f.why ?? '');
     li.createSpan({ cls: 'thoughtknot-type-why', text: why });
+  }
+  // the view types drawn as marks, in a list of their own under the types (view_types_offered)
+  const views = root.createEl('ul', { cls: 'thoughtknot-view-list', attr: { 'aria-label': word('view.list') } });
+  views.hidden = true;
+  toggle.addEventListener('click', () => (views.hidden = list.hidden));
+  picks(views);
+  const { lookView } = d;
+  for (const v of d.views) {
+    const li = views.createEl('li', { cls: v.now ? ['thoughtknot-type-now'] : [] });
+    const b = li.createEl('button', { text: v.title, attr: { type: 'button', 'aria-pressed': String(v.now) } });
+    b.addEventListener('click', () =>
+      leaving(() => (lookView && readOnly() ? lookView(v.type) : d.chooseView(v.type)))(),
+    );
+    if (v.now) li.createSpan({ cls: 'thoughtknot-type-why', text: word('type.drawn-now') });
   }
   const stopped = choice.stopped;
   if (stopped) {

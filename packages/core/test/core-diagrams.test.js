@@ -44,6 +44,19 @@ describe('the built-in diagram types, through the plug-in interface (plugin_inte
     );
   });
 
+  // proves: view_types_offered
+  test('with no engine, only the view types drawn as marks are added, and each still draws', async () => {
+    const r = pluginRegistry({ timeLimit: Infinity });
+    r.register(coreDiagrams());
+    assert.deepEqual(
+      r.diagramTypes().map((d) => d.type),
+      VIEW_TYPES.map((v) => `thoughtknot.diagrams.${v}`),
+    );
+    const drawn = await r.drawDiagram('thoughtknot.diagrams.matrix', FAMILY, SPACE);
+    assert.ok(drawn.ok, drawn.message);
+    assert.match(drawn.value, /^<svg/);
+  });
+
   test('each holds to the contract every plug-in’s diagram type is held to', async () => {
     for (const d of registry().diagramTypes())
       for (const check of diagramContract(d, CORE_DIAGRAMS_ID)) await check.run();
