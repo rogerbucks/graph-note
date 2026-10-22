@@ -6,6 +6,7 @@ import type { DiagramGiven } from '../plugin-diagrams.ts';
 import { blockMarks } from './block-view.ts';
 import { centroidMarks } from './centroid-view.ts';
 import { chordMarks } from './chord-view.ts';
+import { containmentMarks } from './containment-view.ts';
 import { densityMarks } from './density-view.ts';
 import { egoMarks } from './ego-view.ts';
 import { forceMarks } from './force-view.ts';
@@ -24,6 +25,7 @@ export const VIEW_TYPES = [
   'block',
   'plan',
   'centroid',
+  'containment',
 ] as const;
 /** One view type drawn as marks. */
 export type ViewType = (typeof VIEW_TYPES)[number];
@@ -39,4 +41,5 @@ export const VIEW_DRAWERS: Record<ViewType, (given: DiagramGiven) => DrawMark[]>
   block: blockMarks,
   plan: planMarks,
   centroid: centroidMarks,
+  containment: containmentMarks,
 };
