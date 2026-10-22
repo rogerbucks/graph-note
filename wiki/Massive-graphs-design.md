@@ -65,13 +65,14 @@ The scale benchmark (`npm run bench:scale`, `scripts/scale-benchmark.mjs`) runs 
 today. It grows the V-10 graph of 2,666 things up to 100 copies. CI runs it on every pull request, and a step over its
 budget fails the run. These are its numbers on one desktop core, on 22 October 2026.
 
-| Size | Open | Draw | Pan | Edit |
-|---|---|---|---|---|
-| 1× (2,666 things, 0.4 MB) | read in 0.4 s | refused, shown as text | not built | 0.7 s |
-| 10× (26,660 things, 4.2 MB) | refused over the read limit, 0.03 s | nothing to draw | not built | refused, 0.3 s |
-| 100× (266,600 things, 43 MB) | refused over the read limit, 0.3 s | nothing to draw | not built | refused, 3.7 s |
+| Size | Open | Draw | Group | Pan | Edit |
+|---|---|---|---|---|---|
+| 1× (2,666 things, 0.4 MB) | read in 0.4 s | refused, shown as text | 20 groups, 0.006 s | not built | 0.7 s |
+| 10× (26,660 things, 4.2 MB) | refused over the read limit, 0.03 s | nothing to draw | 288 groups, 0.13 s | not built | refused, 0.3 s |
+| 100× (266,600 things, 43 MB) | refused over the read limit, 0.3 s | nothing to draw | 2,875 groups, 1 s | not built | refused, 3.7 s |
 
-Three things it shows:
+Group finds the groups a graph opens as (way E, step 2). Past the read limit it runs on copies of the V-10 drawing,
+made without reading. Three more things it shows:
 
 - **The reader is slow too.** Reading 0.4 MB takes 0.4 seconds. So reading 100 copies whole would take about 40
   seconds, before any layout. Way E needs a faster reader, and way F reads only a part.

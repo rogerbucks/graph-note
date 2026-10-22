@@ -84,7 +84,8 @@ test('a step over its budget in time or in memory is named, with what was measur
 });
 
 test('every size has a budget for each step that is built', () => {
-  for (const name of ['open', 'edit']) for (const s of SIZES) assert.ok(SCALE_BUDGETS[name][s], `${name} at ${s}×`);
+  for (const name of ['open', 'group', 'edit'])
+    for (const s of SIZES) assert.ok(SCALE_BUDGETS[name][s], `${name} at ${s}×`);
   assert.ok(SCALE_BUDGETS.draw[1]);
   assert.equal(SCALE_BUDGETS.pan, undefined, 'panning has no budget until the overview is built');
 });
