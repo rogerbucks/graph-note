@@ -2,7 +2,7 @@
 // seven types (diagram_type_set, type_only_when_fits, suggest_type). Each that fits can be chosen, written into the
 // style graph. Each that does not comes with why. The one suggested is said so, and never drawn until chosen. A chosen
 // type that has stopped fitting is said, with why, and the nearest type that fits offered (type_stops_fitting). A graph
-// of more than 50 things is offered the table or a view as the way in (large_way_in). The core decides all of it
+// of more than 1,000 things is offered the table or a view as the way in (large_way_in). The core decides all of it
 // (types.ts). A type a plug-in adds is drawn as a picture of the marks that plug-in gave, when one here draws it
 // (plugin_diagram_type_named). Otherwise the strip says which plug-in draws it. In reading view a type chosen is only
 // looked at: drawn at once, never saved, and said so. Where the note is edited, a type looked at can be kept
@@ -27,7 +27,7 @@ export { TypePlace, typeLeftAt } from './type-place';
 
 /** What a card is given of the diagram types, beyond its drawing. */
 export interface DiagramShown extends DiagramOffer {
-  /** For a graph of more than 50 things: the way in, in words. */
+  /** For a graph of more than 1,000 things: the way in, in words. */
   wayIn: { say: string } | null;
   /** The drawing as a table, when it is drawn as one. */
   table?: DiagramTable;

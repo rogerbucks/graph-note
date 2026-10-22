@@ -1,7 +1,7 @@
 // Diagram types (editor spec §15). The editor offers network, tree, flow, radial, lanes, timeline and table. It offers
 // each only when the data fits it, saying why when it does not. It suggests the type that fits best and never switches
 // without being asked. An edit may make the data stop fitting the chosen type. Then it says so and offers the nearest
-// type that fits. It draws the graph as a network meanwhile, never wrongly. A graph of more than 50 things is offered
+// type that fits. It draws the graph as a network meanwhile, never wrongly. A graph of more than 1,000 things is offered
 // the table or a view as the way in. Spans types.ts (what fits, the suggestion, the choice) and types-table.ts (the
 // table and the way in). Also graph-layout.js (each type's source) and render.ts (the directions laid out).
 import { afterEach, test, describe } from 'node:test';
@@ -524,22 +524,22 @@ describe('a table', () => {
 
 describe('a large graph', () => {
   // proves: large_way_in
-  test('of more than 50 things is offered the table or a view as the way in, and the table is suggested', () => {
+  test('of more than 1,000 things is offered the table or a view as the way in, and the table is suggested', () => {
     const things = (n) =>
       `// graph: big\n${Array.from({ length: n }, (_, i) => `(t${i}:Thing {name: 'Thing ${i}'})`).join(',\n')}`;
-    assert.equal(LARGE_GRAPH, 50);
-    assert.equal(wayIn(50), null);
-    assert.deepEqual(wayIn(51), {
-      count: 51,
-      say: 'This graph has 51 things, too many to read in one drawing: open it as a table, or make a view of the part you need.',
+    assert.equal(LARGE_GRAPH, 1000);
+    assert.equal(wayIn(1000), null);
+    assert.deepEqual(wayIn(1001), {
+      count: 1001,
+      say: 'This graph has 1,001 things, too many to read in one drawing: open it as a table, or make a view of the part you need.',
     });
-    const { plain, g } = shown(things(51));
+    const { plain, g } = shown(things(1001));
     const shape = shapeOf(plain, g);
     assert.deepEqual(suggestType(typeFits(shape), shape), {
       type: 'table',
-      because: 'a graph of 51 things reads best as a table first',
+      because: 'a graph of 1,001 things reads best as a table first',
     });
-    const small = shown(things(50));
+    const small = shown(things(1000));
     assert.notEqual(suggestType(typeFits(shapeOf(small.plain, small.g)), shapeOf(small.plain, small.g)).type, 'table');
   });
 });

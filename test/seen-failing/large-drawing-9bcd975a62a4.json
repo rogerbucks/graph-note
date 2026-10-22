@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/large-drawing.test.js",
+  "test": "a large graph > of 300 things or fewer is laid out each way in full, as before",
+  "seen_failing_first": false,
+  "evidence": "It pins the behaviour that already existed for graphs of 300 things or fewer: laid out both ways in full, with no quick settings. The change must leave it alone, so it passes on the code before it."
+}
