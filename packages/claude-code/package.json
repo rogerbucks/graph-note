@@ -10,6 +10,6 @@
   },
   "dependencies": {
     "@thoughtknot/core": "0.7.1",
-    "marked": "18.1.0"
+    "marked": "18.1.1"
   }
 }
