@@ -54,6 +54,7 @@ const { configFrom, joinDocs } = require('./joins/join-docs.js');
 const { SCHEMA_LABELS, mermaidGraph, legend, word, mermaidPath } = require('./views/mermaid.js');
 const { views } = require('./views/views.js');
 const { louvain } = require('./clusters/louvain.js');
+const { clustersOf } = require('./clusters/clusters.js');
 
 // The API, its names in the order they have always had; test/graph-spec-check-api.test.mjs holds the list.
 module.exports = {
@@ -129,4 +130,5 @@ module.exports = {
   shownText,
   clipShown,
   louvain,
+  clustersOf,
 };

@@ -72,8 +72,11 @@ and no module requires one that requires it back.
   (req:21.trust-counted, req:21.prefix-owner).
 - **`src/views/`** — `mermaid.js` (relationships, legend and paths as Mermaid text) and `views.js` (every view of a
   graph at once).
-- **`src/clusters/`** — `louvain.js`, the one method that finds groups by how things link. Clusters (editor spec §31) and the
-  groups a massive graph opens as (editor spec §53) both use it. Python's twin gives the same groups (`test/louvain-cases.json`).
+- **`src/clusters/`** — clusters (editor spec §31) and the groups a massive graph opens as (editor spec §53). Python's
+  twins give the same answers. Its files:
+  - `louvain.js` — the one method that finds groups by how things link (`test/louvain-cases.json`).
+  - `clusters.js` — a graph's written and found clusters. Each membership says its kind and counts 1/N for a thing in N
+    clusters (`test/cluster-cases.json`).
 
 ## Beside them
 

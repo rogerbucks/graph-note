@@ -225,6 +225,27 @@ declare namespace GraphSpecCheck {
    */
   function louvain(n: number, links: readonly (readonly [number, number])[]): number[];
 
+  /** A cluster of a graph (editor spec §31): written by a person and asserted, or found by Louvain with a confidence. */
+  interface Cluster {
+    id: string;
+    kind: 'asserted' | 'found';
+    members: string[];
+    /** The share of the members' links that stay inside. Null for a written cluster. */
+    confidence: number | null;
+  }
+  /** One thing in one cluster. A thing in N clusters has weight 1/N in each. */
+  interface ClusterMembership {
+    thing: string;
+    cluster: string;
+    kind: 'asserted' | 'found';
+    weight: number;
+  }
+  /** The clusters of a graph and every membership in them, of one kind when `kind` is given. */
+  function clustersOf(
+    graph: Graph,
+    kind?: 'asserted' | 'found',
+  ): { clusters: Cluster[]; memberships: ClusterMembership[] };
+
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];
 }

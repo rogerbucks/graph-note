@@ -36,8 +36,14 @@ Found clusters come from the Louvain method. It is the same code the massive-gra
 `packages/core/src/louvain.ts` into the graph spec library, and Python gets the same method. A parity test checks that
 both give the same groups for the same graph.
 
+Louvain runs over every thing that is not a cluster, by every link but `MEMBER_OF`. A group of one thing is not a
+cluster. A found cluster is named `found:` and its first member, so the same graph gives the same names.
+
 A found cluster's confidence is counted, not guessed. It is the share of its members' links that stay inside it. A
-cluster whose links all stay inside has confidence 1. A cluster whose links mostly leave it has confidence near 0.
+cluster whose links all stay inside has confidence 1. A cluster whose links mostly leave it has confidence near 0. A
+written cluster has no counted confidence.
+
+A view can show one kind only. Then each thing's 1/N counts only the clusters of that kind.
 
 ## Centroids
 
