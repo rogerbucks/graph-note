@@ -1,0 +1,6 @@
+{
+  "file": "test/host-adapters.test.js",
+  "test": "every host’s adapter passes the one host contract > the desktop app > choosing a menu row runs its action once, and no other row’s",
+  "seen_failing_first": false,
+  "evidence": "It runs an adapter already merged and passing (the browser page's, which the app's window carries since #905), in the app's built page; no code changes, so it cannot fail first."
+}
