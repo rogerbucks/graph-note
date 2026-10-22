@@ -365,6 +365,8 @@ These test behaviour across modules, or the repository itself, so they are named
   and in the pane. It shows the graph's summary while nothing is chosen. It sits beside the drawing, and below it where
   the card is narrow (editor spec §24, details_always_visible, details_narrow).
 - `packages/obsidian/test/build.test.mjs` — the build writes the files the plugin is installed from.
+- `packages/obsidian/test/view-types.test.js` — the card's Views list offers each view drawn as marks. A view chosen is
+  saved in the style graph and drawn (editor spec §36, view_types_offered).
 - `packages/obsidian/test/remote-images.test.js` — an image from outside the vault, in a thing's details or a note
   embedded there, is a link with a Load image button. Only pressing it loads that image (editor spec §18,
   remote_images_asked).
