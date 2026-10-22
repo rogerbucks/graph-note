@@ -371,18 +371,19 @@ describe('laid out like a drawing, under the same limits', () => {
 
   test('a word over the limit has advice of its own, and an export says it is laid out where a card says it is drawn', async () => {
     const long = `// graph: trip\n(a:Thing {name: '${'x'.repeat(2000)}'})`;
-    await exporting(noteOf(long), {}, { word: 1000 }, async (env, workers) => {
+    // a box shows at most 80 characters (shown_text_ranked), so the cut word is 80 long: the limit here is under it
+    await exporting(noteOf(long), {}, { word: 40 }, async (env, workers) => {
       const out = await env.plugin.exportGraph(ASK);
       assert.equal(
         out.stopped,
-        'The export could not be made: a word in this graph is 2,000 characters long, and at most 1,000 are laid out. Nothing was saved. Shorten the long name or text.',
+        'The export could not be made: a word in this graph is 80 characters long, and at most 40 are laid out. Nothing was saved. Shorten the long name or text.',
       );
       assert.deepEqual(saved(env), []);
       assert.equal(workers.made.length, 0, 'no layout was attempted');
       const { el } = await show(env, noteOf(long), 0);
       assert.match(
         el.querySelector('.thoughtknot-banner').textContent,
-        /a word in this graph is 2,000 characters long, and at most 1,000 are drawn\./,
+        /a word in this graph is 80 characters long, and at most 40 are drawn\./,
         'the card’s banner keeps its words',
       );
     });

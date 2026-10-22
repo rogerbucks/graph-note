@@ -488,7 +488,8 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
 - `server-calls.ts` — the page's reads from the server (`/api/settings`, `/api/notes/<id>`), the token held in memory.
 - `page-plugins.ts` — the plug-ins from outside turned on in Obsidian, each run in a worker of its own. The server
   serves each sealed. When the note's style graph chooses a diagram type one adds, the page shows its picture of the
-  graph as an image. A plug-in left out is said by its name, with why. The page turns none on.
+  graph as an image. Its own colours join the page as a sheet of their own (plugin_theme_tokens). A plug-in left out is
+  said by its name, with why. The page turns none on.
 - `note-calls.ts` — the page's two other calls on its note. They are the change stream, and the user's decision written
   (the whole note, `If-Match` its version, the page's token alone). Kept apart so `server-calls.ts` stays read only.
 

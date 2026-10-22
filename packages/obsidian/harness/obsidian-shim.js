@@ -194,6 +194,9 @@ const workspace = {
   // previews nothing
   openLinkText: async () => {},
   trigger: () => {},
+  // the browser view has one window, so no pop-out opens or closes, and nothing listened for is ever told
+  on: () => ({}),
+  offref: () => {},
   // ready at once: the one note is read before the plugin loads
   onLayoutReady: (run) => run(),
 };

@@ -221,6 +221,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
     a zoom restored before layout is kept.
   - One fitted when hidden is fitted again at the next resize with a size. It is fitted to the size it was laid out at
     meanwhile.
+  - Full screen or the pane squeezed to no height by a thing's details is told no size too (`zoomSize`). So closing the
+    details gives back the zoom and place the drawing had (details_keep_view).
 - `zoom-across.ts` — `AcrossZoom`, a `Zoom` that only adds to it. A wide drawing is fitted to its height and shown from
   its start. It is moved across only by one finger, until it is zoomed in. A pinch works as on any drawing (a tree, flow
   or timeline on a phone, §15 wide_types_phone).
@@ -1420,6 +1422,8 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
 - `shortcuts-list.ts` — the list of every keyboard shortcut (`listShortcuts`), and the card's own copy that ? shows
   (`toggleShortcuts`). `graph-view/card-in-use.ts` keeps the card used last, for a host's commands (`cardInUse`).
 - `tour.ts` — the short tour of a first graph, a step at a time, in the card (`showTour`). It can be skipped.
+- `plugin-tokens.ts` — a plug-in's own colours on the page (§44, plugin_theme_tokens). `adoptTokens` adds them as one
+  style sheet made in code, which follows the theme by itself, and gives back what takes it off.
 
 ### The edit pane and the rest
 
