@@ -705,7 +705,8 @@
       "plugin_point_versions",
       "plugin_outside_file",
       "plugin_source_from",
-      "plugin_step_named"
+      "plugin_step_named",
+      "plugin_outside_page"
     ]
   },
   "U1": {

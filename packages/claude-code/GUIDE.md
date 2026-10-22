@@ -227,6 +227,8 @@ runtime dependency beyond the core's `READ_LIMITS`. Built into `mod/bin/editor-s
   - The page's files (`PageAssets`) are read once from the built `mod/page/`. They are served by exact path with no
     token, as they say nothing of any note. With none, a placeholder is served at `/` alone.
   - For the worker's file alone, the policy has `'wasm-unsafe-eval'` added to `script-src` (see `page-assets.ts`).
+  - Each plug-in's file, at `/plugins/<its SHA-256>.js`, has a policy of its own: `default-src 'none'; script-src
+    'self'`. So it can make no connection (see `page-plugins.ts`).
   - Every `/api/` call needs the token, then goes to the `api` handed in (`ApiHandler`; none, and it is not found). A
     write needs the server's own origin.
   - An answer may be a stream (`ApiAnswer.feed`), written piece by piece until either side closes.
@@ -484,6 +486,9 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   page draws a note's graph with the edit pane instead. This stands for a note with no graph block to edit, which it
   says so for.
 - `server-calls.ts` — the page's reads from the server (`/api/settings`, `/api/notes/<id>`), the token held in memory.
+- `page-plugins.ts` — the plug-ins from outside turned on in Obsidian, each run in a worker of its own. The server
+  serves each sealed. When the note's style graph chooses a diagram type one adds, the page shows its picture of the
+  graph as an image. A plug-in left out is said by its name, with why. The page turns none on.
 - `note-calls.ts` — the page's two other calls on its note. They are the change stream, and the user's decision written
   (the whole note, `If-Match` its version, the page's token alone). Kept apart so `server-calls.ts` stays read only.
 
@@ -540,6 +545,14 @@ The server's side: `server/page-assets.ts` (the files, kept in memory, served by
 `server/page-settings.ts`. `server/page-settings.ts` serves `GET /api/settings`: the mod's settings read back by the
 core as the plugin reads them, with no model's address or key, never written. The mod hands the settings the page shows
 with in the same environment variable as the gate's (`src/editor-settings-env.ts`).
+
+`server/page-plugins.ts` serves the plug-ins from outside (spec §54, plugin_outside_page):
+- It reads which are on from the Obsidian plugin's `data.json`, in the vault's hidden configuration folder. That is
+  each file's name and SHA-256. It reads nothing else there.
+- It reads each file from `ThoughtKnot plug-ins` and checks it as Obsidian does. A file that changed since, imports, or
+  has a name with a folder in it is left out, with why.
+- Each file is served after the start the build made (`plugin-start.txt`, from `page/plugin-worker-entry.ts`), which
+  seals the worker first. `GET /api/plugins` lists them, read only.
 
 ### Building and testing the mod
 
