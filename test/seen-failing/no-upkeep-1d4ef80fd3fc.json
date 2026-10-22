@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/no-upkeep.test.js",
+  "test": "an edit that changes nothing a centroid is made from works out no centroid again",
+  "seen_failing_first": false,
+  "evidence": "It proves that reading a note again needs no upkeep, using centroids that already work out only what changed (PR #994), so it passed before this commit."
+}
