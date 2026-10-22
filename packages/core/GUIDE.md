@@ -720,6 +720,22 @@ A host that has the plug-in draws it (trust_diagram_type_data; `plugin-diagrams.
   space, or of an unknown kind, refuses the drawing, and the host keeps the network.
 - `diagramContract` holds a diagram type to its promises, as the other points' contracts do.
 
+#### Drawing marks: one picture format for every type
+
+`drawing-marks.ts` is the one format every diagram type will give back, the built-in ones too (plugin_interface). The
+built-in types move to it one at a time. Until then they still draw through Graphviz.
+
+- A mark is a box, a link, a label, an arrowhead or a group. Each has numbers for where it goes and a style token for how
+  it looks, such as `thing` or `link.dashed`. Never a colour, CSS or markup.
+- Each mark has an id that stays the same between drawings, so a large drawing can change only what changed.
+- Text is a label mark of its own, with its size, anchor and widest width.
+- A link mark may name the keys of the two things it joins (`from`, `to`). Every number is in CSS pixels at scale 1.
+- A mark may name the thing or link it draws (`of`), its group and its order on top (`z`). It may also carry a name and
+  role for a screen reader.
+- `drawMarksOf` checks and copies marks, refusing any with why. Every id must be its own, and every group named drawn.
+- `markBounds` and `marksBounds` give the box marks cover. `drawOrder` sorts by order on top.
+- `fromPluginMarks` turns a plug-in's boxes, lines and text into this format.
+
 ### Views (spec §2, §7)
 
 A view is a named query block in the note: `// graph: <graph> · QUERY view <name>`, then the query. The reader already
