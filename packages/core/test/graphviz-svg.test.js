@@ -10,8 +10,17 @@ import { drawMarksOf } from '../src/drawing-marks.ts';
 import { loadEngine } from '../src/engine.ts';
 
 const viz = await instance();
-// Graphviz's own comments are left out: no host reads them
-const graphviz = (dot) => viz.renderString(dot, { format: 'svg' }).replace(/<!--[\s\S]*?-->\n?/g, '');
+/** The SVG without Graphviz's own comments, line by line: no host reads them. */
+function uncommented(svg) {
+  const kept = [];
+  let inside = false;
+  for (const line of svg.split('\n')) {
+    if (inside || line.startsWith('<!--')) inside = !line.endsWith('-->');
+    else kept.push(line);
+  }
+  return kept.join('\n');
+}
+const graphviz = (dot) => uncommented(viz.renderString(dot, { format: 'svg' }));
 const ours = (dot) => layoutSvg(layoutMarks(viz.renderJSON(dot)));
 
 const STYLE = `graph [rankdir=LR, ranksep=0.55, nodesep=0.5, bgcolor="transparent", pad=0.1];
@@ -63,7 +72,6 @@ describe("the SVG written from the marks is Graphviz's own (plugin_interface)", 
   test("the engine gives a drawing's marks too, and drawn from them it is the SVG the engine draws", async () => {
     const engine = await loadEngine();
     const dot = SOURCES['a styled graph with a kind, a reading and a label of two lines'];
-    const strip = (svg) => svg.replace(/<!--[\s\S]*?-->\n?/g, '');
-    assert.equal(layoutSvg(engine.marks(dot)), strip(engine.render(dot)));
+    assert.equal(layoutSvg(engine.marks(dot)), uncommented(engine.render(dot)));
   });
 });
