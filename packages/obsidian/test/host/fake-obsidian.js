@@ -142,6 +142,12 @@ export function fakeObsidian(state = {}) {
       leaves.push(leaf);
       return leaf;
     },
+    // a leaf in the right sidebar, as Obsidian gives one for a view of a plugin's own
+    getRightLeaf: () => {
+      const leaf = new WorkspaceLeaf(app, 'right');
+      leaves.push(leaf);
+      return leaf;
+    },
     getLeavesOfType: (type) => leaves.filter((l) => l.view?.getViewType() === type),
     revealLeaf: async (leaf) => {
       state.revealed = leaf;

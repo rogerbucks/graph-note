@@ -20,8 +20,7 @@ export type { Block, Box, Link, GraphDrawing, Problem, NoteReading, ThingNote } 
 export { layoutSource, drawingSource, STYLE } from './layout.ts';
 export { explain, distance, hops } from './estimates.ts';
 export type { Estimate } from './estimates.ts';
-export { estimateFix } from './estimate-fix.ts';
-export type { EstimateFix } from './estimate-fix.ts';
+export { estimateFix, type EstimateFix } from './estimate-fix.ts';
 export { themed, choose, sizeOf, fixed, withoutColorMix, hueColour } from './theme.ts';
 export { draw, directions, chosen, details, linkDetails } from './render.ts';
 export { mirrored, inReadingDirection, shownAsRead } from './drawing-direction.ts';
@@ -110,10 +109,11 @@ export type {
 } from './layout-worker.ts';
 export { Zoom, MAX_SCALE, STEP } from './zoom.ts';
 export { AcrossZoom } from './zoom-across.ts';
-export type { Mode, Place, Size, View, ZoomEvent } from './zoom.ts';
+export type { Clear, Mode, Place, Size, View, ZoomEvent } from './zoom.ts';
 export { MOVE_MS, READABLE_SCALE, Trail, coverOf, glideAt, linkGroups, pointerTo, sheetLimit } from './details-nav.ts';
+export { RESIZE_STEP, SHEET_DOCKS, sheetBounds, sheetSpan, sideways } from './details-nav.ts';
 export { linksSaid, thingSaid } from './details-said.ts';
-export type { LinkGroup, Pointing, TrailStep } from './details-nav.ts';
+export type { LinkGroup, Pointing, SheetDock, TrailStep } from './details-nav.ts';
 export { tokenize, TOKEN_CLASSES } from './tokens.ts';
 export type { Token, TokenClass } from './tokens.ts';
 export { diagnostics, completions, readBack, textVersion, SEVERITY, KIND } from './help.ts';

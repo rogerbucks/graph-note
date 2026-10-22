@@ -44,6 +44,7 @@ import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
 import { GraphPane, PANE } from './pane';
+import { DETAILS_PANE, DetailsPaneView } from './details-pane';
 import { addForYou } from './editor';
 import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
@@ -82,7 +83,7 @@ export default class ThoughtKnotPlugin extends Plugin {
   private schemas: Map<string, string[]> | null = null;
 
   override async onload(): Promise<void> {
-    installObsidianHost(); // the display layer draws in Obsidian from here on
+    installObsidianHost(this); // the display layer draws in Obsidian from here on
     this.saved = ((await this.loadData()) as Saved | null) ?? {};
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
@@ -109,6 +110,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
     addCommands(this); // the shortcuts' (§44); nothing is sent to an AI or read from a database until Send or Import
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
+    this.registerView(DETAILS_PANE, (leaf) => new DetailsPaneView(leaf)); // a card's details, beside (§25)
     this.registerEditorExtension(addForYou);
     // in Live Preview the plugin draws graph blocks itself, so a card being typed in is never torn down (spec §4)
     this.registerEditorExtension(graphBlocks(this));

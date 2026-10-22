@@ -24,7 +24,7 @@
 // a change without a person deciding is exported. deciderName, DECIDER_DEFAULT and ProposalCheck came on 16 Oct 2026.
 // So did changesIn, the changes a model's answer proposes, which the Claude Code host reads Claude's proposal with.
 // Finding your way from the details (`linkGroups, Trail, glideAt, pointerTo, sheetLimit, coverOf, MOVE_MS,
-// READABLE_SCALE`, their types, and the zoom's Place, 13 Oct 2026). The diagram types (`DIAGRAM_TYPES, LARGE_GRAPH,
+// READABLE_SCALE`, their types, and the zoom's Place, 13 Oct 2026). Where the sheet sits and how big, 22 Oct 2026. The diagram types (`DIAGRAM_TYPES, LARGE_GRAPH,
 // diagramFor, diagramOffer, typeFits, shapeOf, suggestType, nearestType, tableOf, wayIn, scrollsOneWay` and their
 // types, 14 Oct 2026). AcrossZoom, the zoom of a drawing scrolled across only, moved out of Zoom in the review of #126.
 // Sending to an AI model (`aiReady, modelChoices, endpointProblem, AI_PURPOSES, prepareSend, confirmSend, sendPrepared,
@@ -142,10 +142,12 @@ export const VALUES = [
   'READABLE_SCALE',
   'READ_LIMITS',
   'REFUSED',
+  'RESIZE_STEP',
   'REVIEW_LEVELS',
   'ReviewItems',
   'SAMPLE_GRAPH',
   'SEVERITY',
+  'SHEET_DOCKS',
   'SHORTCUTS',
   'SHORTCUT_PLACES',
   'SOURCE_LANGUAGE',
@@ -420,9 +422,6 @@ export const VALUES = [
   'settingsFrom',
   'sha256',
   'shapeOf',
-  'sheetLimit',
-  'shortestPath',
-  'shownAsRead',
   ...VALUES_LATE,
 ];
 
@@ -454,6 +453,7 @@ export const TYPES = [
   'ChangesShown',
   'Choice',
   'ClassGrant',
+  'Clear',
   'Clock',
   'CodeAction',
   'CompanionInfo',

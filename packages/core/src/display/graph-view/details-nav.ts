@@ -69,9 +69,9 @@ export function renderInsOuts(
 let parts = 0;
 
 /**
- * A thing's groups of links, one item each. The group's reading is its heading, with its count when it holds more than
- * one link. Then come its things one to a row. Each is a button that chooses the thing, with a button beside it for
- * each link that reaches it.
+ * A thing's groups of links, one item each, and each link on a single line of its own (details_ins_outs). A line says
+ * the group's reading, then the thing at the other end. The thing is a button that chooses it. Beside it is a button
+ * for each link that reaches it. The first line of a group of more than one link says how many it holds.
  */
 export function renderLinkGroups(
   el: HTMLElement,
@@ -83,19 +83,17 @@ export function renderLinkGroups(
   for (const g of groups) {
     const li = ul.createEl('li', { cls: 'thoughtknot-link-group' });
     // the reading, or, where none could be guessed, the words after the names: "part of plan this"
-    const reading = li.createDiv({
-      cls: 'thoughtknot-link-reading',
-      text: (g.before || g.after.replace(/ \(\d+\)$/, '')).trim(),
-    });
-    if (g.count > 1) reading.createSpan({ cls: 'thoughtknot-count', text: String(g.count) });
+    const words = (g.before || g.after.replace(/ \(\d+\)$/, '')).trim();
     const rows = li.createEl('ul', { cls: 'thoughtknot-link-rows' });
-    for (const t of g.things) {
+    g.things.forEach((t, i) => {
       const row = rows.createEl('li', { cls: 'thoughtknot-link-row' });
+      const reading = row.createSpan({ cls: 'thoughtknot-link-reading', text: words });
+      if (i === 0 && g.count > 1) reading.createSpan({ cls: 'thoughtknot-count', text: String(g.count) });
       thingButton(row, t.text, () => choose({ key: t.key }));
       // a thing linked twice in the same way is named once, with a button for each of its links
       for (const n of t.links)
         button(row, linkName(n), 'link', () => choose({ link: n })).addClass('thoughtknot-link-choice');
-    }
+    });
   }
 }
 

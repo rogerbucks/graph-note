@@ -1,6 +1,12 @@
-// The last part of the values src/index.ts exports, from sizeOf on, sorted: test support only, nothing here ships. It
+// The last part of the values src/index.ts exports, from sheetBounds on, sorted: test support only, nothing here ships. It
 // is kept apart from index-names.js, which joins it to the values before it, so neither file passes the test file size.
 export const VALUES_LATE = [
+  'sheetBounds',
+  'sheetLimit',
+  'sheetSpan',
+  'shortestPath',
+  'shownAsRead',
+  'sideways',
   'sizeOf',
   'sortedForReader',
   'sourceContract',

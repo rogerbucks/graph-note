@@ -100,7 +100,7 @@ describe('the host contract', () => {
   });
 
   test('it is versioned, and holds a host to each of its promises by name', () => {
-    assert.equal(HOST_CONTRACT_VERSION, 4);
+    assert.equal(HOST_CONTRACT_VERSION, 5);
     const names = hostContract(() => plainHost()).map((c) => c.name);
     assert.equal(names.length, 8);
     for (const promise of [
