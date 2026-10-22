@@ -4,6 +4,7 @@
 // and the thing is left out.
 import type { Problem } from './note-reading.ts';
 import { ARROWHEADS, DIAGRAM_TYPES, ON_OFF, ROUTINGS, orList, pluginTypeOf } from './style-graph.ts';
+import { TIMELINE_ORDERS, TIMELINE_SHOWS } from './timeline.ts';
 import type { Arrows, Diagram, Links } from './style-graph.ts';
 import type { RawThing, StyledNames } from './style-checks.ts';
 import { reader } from './style-reader.ts';
@@ -36,10 +37,26 @@ export function arrowsOf(raw: RawThing, names: StyledNames, out: Problem[]): Arr
 
 /** What a Diagram's relationship is for (§15): the branches of a tree, and nothing else. */
 export const treeOnly = () => word('styling.diagram.tree-only');
+/** What a Diagram's order, by and show are for (§15): a timeline, and nothing else. */
+export const timelineOnly = () => word('styling.diagram.timeline-only');
+/** What a Diagram's by is for (§15): a timeline ordered by date or by number. */
+export const byOnly = () => word('styling.diagram.by-only');
+
+/** Why a timeline's order, by and show cannot be written for a Diagram of `type` so, or null (style-edit.ts). */
+export function timelineRefusal(d: { type: string; order?: string; by?: string; show?: string }): string | null {
+  if ([d.order, d.by, d.show].some((v) => v !== undefined) && d.type !== 'timeline') return timelineOnly();
+  if (d.order !== undefined && !(TIMELINE_ORDERS as readonly string[]).includes(d.order))
+    return mustBe('order', TIMELINE_ORDERS);
+  if (d.show !== undefined && !(TIMELINE_SHOWS as readonly string[]).includes(d.show))
+    return mustBe('show', TIMELINE_SHOWS);
+  if (d.by !== undefined && d.order !== 'date' && d.order !== 'number') return byOnly();
+  return null;
+}
 
 /**
  * The diagram type chosen, checked (§15, type_remembered). It is one of the types, in the whole graph or a view, whose
- * name is the user's own. For a tree, it names a relationship type the graph has, which no other type takes.
+ * name is the user's own. For a tree, it names a relationship type the graph has, which no other type takes. For a
+ * timeline, it may say how it is ordered, by which property, and what it shows (timeline_order, timeline_show).
  */
 export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Diagram | null {
   const r = reader(raw, names, out),
@@ -56,14 +73,24 @@ export function diagramOf(raw: RawThing, names: StyledNames, out: Problem[]): Di
     : r.word('type', DIAGRAM_TYPES, (w) => word('styling.diagram.unknown', { written: w }));
   const relationship = r.name('relationship', names.types, aType()),
     view = r.text('view');
+  const order = r.word('order', TIMELINE_ORDERS, mustBe('order', TIMELINE_ORDERS)),
+    by = r.text('by'),
+    show = r.word('show', TIMELINE_SHOWS, mustBe('show', TIMELINE_SHOWS));
   if (type && relationship !== undefined && type !== 'tree')
     r.report(treeOnly(), word('styling.diagram.tree-only.fix'));
+  const timeline = [order, by, show].some((v) => v !== undefined);
+  if (type && timeline && type !== 'timeline') r.report(timelineOnly(), word('styling.diagram.timeline-only.fix'));
+  else if (by !== undefined && order !== 'date' && order !== 'number')
+    r.report(byOnly(), word('styling.diagram.by-only.fix'));
   if (!type || out.length !== before) return null;
   return {
     type,
     ...(plugin ? { plugin } : {}),
     ...inView(view),
     ...(relationship === undefined ? {} : { relationship }),
+    ...(order === undefined ? {} : { order }),
+    ...(by === undefined ? {} : { by }),
+    ...(show === undefined ? {} : { show }),
     at: raw.at,
   };
 }

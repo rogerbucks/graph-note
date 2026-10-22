@@ -1,5 +1,6 @@
 """Diagram types (editor spec §15): which of the seven types fit a graph, and why each that does
-not fit does not (type_only_when_fits, tree_fits, timeline_fits); the type that fits best,
+not fit does not (type_only_when_fits, tree_fits, timeline_fits); a timeline's order and what it
+shows (timeline_order, timeline_show); the type that fits best,
 suggested and never drawn unless chosen (suggest_type); the type the style graph chooses, drawn
 only while the data fits it — else the graph is drawn as a network, and the nearest type that fits
 is offered (type_stops_fitting); and each type laid out by Graphviz from the same source as the
@@ -16,6 +17,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from graphspec.style.inline import value_text
+from graphspec.style.timeline import is_number, timeline_fit, timeline_plan
 from graphspec.style.words import DIAGRAM_TYPES, DIRECTIONS, LOCKED, plugin_type_of
 
 # More things than this are too many to read in one drawing (§15, large_way_in).
@@ -47,14 +49,18 @@ def _counted(n):
 
 def shape_of(parts: Mapping[str, Any], nudges: Sequence[Mapping] = ()) -> dict[str, list]:
     """The shape a type is judged on, from graph_parts: each thing {key, text, kinds, date (the
-    first date it carries, said as inline, if any)}, each written link {from, type, to}, and, when
-    any are written, the groups `nudges` (read_style's) draw, [label, keys of things drawn], in
-    the order first written — the core's types-shape.ts shapeOf."""
+    first date it carries, said as inline, if any), dates and numbers (each it carries, by
+    property, if any)}, each written link {from, type, to}, and, when any are written, the groups
+    `nudges` (read_style's) draw, [label, keys of things drawn], in the order first written — the
+    core's types-shape.ts shapeOf."""
     things = []
     for (key, kind, text), (_, _, props) in zip(parts["nodes"], parts["boxes"], strict=True):
-        date = next((v for v in props.values() if isinstance(v, dt.date)), None)
+        dates = {k: value_text(v) for k, v in props.items() if isinstance(v, dt.date)}
+        numbers = {k: v for k, v in props.items() if is_number(v)}
         thing = {"key": key, "text": text, "kinds": kind.split(" · ") if kind else []}
-        things.append(thing if date is None else {**thing, "date": value_text(date)})
+        if dates:
+            thing = {**thing, "date": next(iter(dates.values())), "dates": dates}
+        things.append({**thing, "numbers": numbers} if numbers else thing)
     links = [
         {"from": s, "type": t, "to": d}
         for (s, _, d), (t, _) in zip(parts["edges"], parts["links"], strict=True)
@@ -206,10 +212,15 @@ def _lanes_fit(shape):
     return _yes("lanes")
 
 
-def type_fits(shape: Mapping[str, list], relationship: str | None = None) -> list[dict]:
+def type_fits(
+    shape: Mapping[str, list],
+    relationship: str | None = None,
+    timeline: Mapping[str, Any] | None = None,
+) -> list[dict]:
     """Whether each type fits the shape (§15, type_only_when_fits), in the order of DIAGRAM_TYPES,
     each {type, fits, why (when it does not fit), relationship (a tree that fits)}, as the core's
-    typeFits gives them, word for word."""
+    typeFits gives them, word for word. A timeline fits while it has a thing to show, as
+    `timeline` (a Diagram's order, by and show) chooses (timeline_fits)."""
     if not shape["things"]:
         return [_yes(t) if t == "network" else _no(t, _NOTHING) for t in DIAGRAM_TYPES]
     texts = {t["key"]: t["text"] for t in shape["things"]}
@@ -218,7 +229,6 @@ def type_fits(shape: Mapping[str, list], relationship: str | None = None) -> lis
         return texts.get(k, k)
 
     loop = _loop_in([t["key"] for t in shape["things"]], shape["links"])
-    undated = next((t for t in shape["things"] if "date" not in t), None)
     if not shape["links"]:
         flow = _no("flow", "a flow needs links, and there are none")
     elif loop:
@@ -226,18 +236,13 @@ def type_fits(shape: Mapping[str, list], relationship: str | None = None) -> lis
         flow = _no("flow", f"a flow runs one way, and this loops back: {around}")
     else:
         flow = _yes("flow")
-    if undated:
-        why = f"a timeline needs every thing to carry a date, and {undated['text']} carries none"
-        timeline = _no("timeline", why)
-    else:
-        timeline = _yes("timeline")
     return [
         _yes("network"),
         _tree_fit(shape, relationship, text),
         flow,
         _radial_fit(shape, text),
         _lanes_fit(shape),
-        timeline,
+        timeline_fit(shape, timeline or {}),
         _yes("table"),
     ]
 
@@ -256,7 +261,7 @@ def chosen_diagram(diagrams: Sequence[Mapping], view: str | None = None) -> Mapp
     return own or next((d for d in diagrams if d.get("view") is None), None)
 
 
-def _plan_of(fit, shape):
+def _plan_of(fit, shape, choice):
     """How Graphviz lays a fitting type out (typed_source); None for a network or a table."""
     typ = fit["type"]
     if typ == "tree":
@@ -274,12 +279,7 @@ def _plan_of(fit, shape):
         plan = {"type": "lanes", "lanes": [[k, keys] for k, keys in lanes.items()]}
         return {**plan, "groups": shape["groups"]} if shape.get("groups") else plan
     if typ == "timeline":
-        # a rank is a day, the date's first ten characters: an instant shares a date's rank
-        days = sorted(dict.fromkeys(t["date"][:10] for t in shape["things"]))
-        return {
-            "type": "timeline",
-            "dates": [[t["key"] for t in shape["things"] if t["date"][:10] == d] for d in days],
-        }
+        return timeline_plan(shape, choice)
     return None
 
 
@@ -307,12 +307,12 @@ def diagram_for(
             "plugin": {"type": d["plugin"], "plugin": own["plugin"], "why": why},
         }
     shape = shape_of(parts, nudges)
-    fits = type_fits(shape, d.get("relationship"))
+    fits = type_fits(shape, d.get("relationship"), d)
     fit = next(f for f in fits if f["type"] == d["type"])
     if not fit["fits"]:
         stopped = {"type": d["type"], "why": fit["why"], "nearest": nearest_type(d["type"], fits)}
         return {"chosen": d["type"], "drawn": "network", "stopped": stopped}
-    plan = _plan_of(fit, shape)
+    plan = _plan_of(fit, shape, d)
     return {"chosen": d["type"], "drawn": d["type"], **({"plan": plan} if plan else {})}
 
 

@@ -172,7 +172,6 @@ describe('a type is offered only when the data fits it, and says why when it doe
     const loop = fitsOf(LOOP);
     assert.equal(loop.flow.why, 'a flow runs one way, and this loops back: Plan → Make → Check → Plan');
     assert.equal(loop.lanes.why, 'lanes need things of two kinds or more');
-    assert.equal(loop.timeline.why, 'a timeline needs every thing to carry a date, and Plan carries none');
     const lone = fitsOf(LONE);
     assert.equal(lone.radial.why, 'a radial drawing needs every thing joined to the centre, A, and C is not');
     for (const f of [...Object.values(loop), ...Object.values(lone)])
@@ -316,17 +315,21 @@ describe('a tree', () => {
 
 describe('a timeline', () => {
   // proves: timeline_fits
-  test('fits when every thing carries a date, and not when one carries none', () => {
+  test('fits when every thing carries a date, and when one carries none', () => {
     assert.equal(fitsOf(TRIP).timeline.fits, true);
     const undated = `${TRIP},\n(note:Event {name: 'A note'})`;
-    assert.equal(fitsOf(undated).timeline.why, 'a timeline needs every thing to carry a date, and A note carries none');
+    assert.equal(fitsOf(undated).timeline.fits, true);
   });
 
   // proves: timeline_fits
   test('drawn, things stand in date order across, those of one day together, the links never moving them', () => {
     const { plain, style, g } = shown(TRIP, "(d1:Diagram {type: 'timeline'})");
     const drawing = styledDrawing(plain, style, g);
-    assert.deepEqual(drawing.diagram, { type: 'timeline', dates: [['leave'], ['rest', 'arrive'], ['back']] });
+    assert.deepEqual(drawing.diagram, {
+      type: 'timeline',
+      order: 'date',
+      dates: [['leave'], ['rest', 'arrive'], ['back']],
+    });
     const [laid] = directions(drawing);
     assert.equal(laid.rankdir, 'LR');
     assert.ok(laid.dot.includes('  {rank=same; "rest"; "arrive";}'), laid.dot);
@@ -485,12 +488,12 @@ describe('when an edit makes the data stop fitting the chosen type', () => {
   });
 
   // proves: type_stops_fitting
-  test('a thing without a date on a timeline: said, and drawn as a network until another type is chosen', () => {
-    const { plain, style, g } = shown(`${TRIP},\n(note:Event {name: 'A note'})`, "(d1:Diagram {type: 'timeline'})");
+  test('a timeline of dated things left with none: said, and drawn as a network until another type is chosen', () => {
+    const { plain, style, g } = shown(ORG, "(d1:Diagram {type: 'timeline', show: 'dated'})");
     const choice = diagramFor(plain, style, g);
     assert.deepEqual(choice.stopped, {
       type: 'timeline',
-      why: 'a timeline needs every thing to carry a date, and A note carries none',
+      why: 'a timeline of the things with a date needs one, and no thing carries a date',
       nearest: 'flow',
     });
     assert.equal(choice.drawn, 'network');
@@ -560,10 +563,10 @@ describe('a wide tree, flow or timeline on a phone', () => {
 describe('only the types that fit are offered', () => {
   // proves: type_only_when_fits
   test('as the graphs above show', () => {
-    assert.deepEqual(fitting(ORG), ['network', 'tree', 'flow', 'radial', 'table']);
+    assert.deepEqual(fitting(ORG), ['network', 'tree', 'flow', 'radial', 'timeline', 'table']);
     assert.deepEqual(fitting(TRIP), ['network', 'tree', 'flow', 'radial', 'timeline', 'table']);
-    assert.deepEqual(fitting(LOOP), ['network', 'radial', 'table']);
-    assert.deepEqual(fitting(TEAMS), ['network', 'tree', 'flow', 'radial', 'lanes', 'table']);
+    assert.deepEqual(fitting(LOOP), ['network', 'radial', 'timeline', 'table']);
+    assert.deepEqual(fitting(TEAMS), ['network', 'tree', 'flow', 'radial', 'lanes', 'timeline', 'table']);
   });
 });
 
