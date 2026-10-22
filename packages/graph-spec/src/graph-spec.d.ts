@@ -219,6 +219,12 @@ declare namespace GraphSpecCheck {
    * none of them. Throws ProfileError where the reader does; a query or an excerpt holds no notes. */
   function notes(block: string): { notes: ElementNote[]; shared: { line: number; lines: number[] }[] };
 
+  /**
+   * The group of each of `n` things, found by how they link (the Louvain method), from links as [from, to] by the
+   * things' numbers. Groups are numbered from 0 in the order of their first thing. The same links give the same groups.
+   */
+  function louvain(n: number, links: readonly (readonly [number, number])[]): number[];
+
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];
 }

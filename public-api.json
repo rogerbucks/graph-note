@@ -3642,6 +3642,7 @@
           "isNamed: (value: unknown) => boolean",
           "LIMITS: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }",
           "lint: (text: string) => { trap: string; line: number; }[]",
+          "louvain: (n: number, links: readonly (readonly [number, number])[]) => number[]",
           "named: (digits: string) => string",
           "notes: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }",
           "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
@@ -3754,6 +3755,9 @@
         ],
         "lint": [
           "value: (text: string) => { trap: string; line: number; }[]"
+        ],
+        "louvain": [
+          "value: (n: number, links: readonly (readonly [number, number])[]) => number[]"
         ],
         "named": [
           "value: (digits: string) => string"

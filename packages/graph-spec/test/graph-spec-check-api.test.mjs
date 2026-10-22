@@ -86,6 +86,8 @@ const NAMES = [
   'secretsInGraph',
   'shownText',
   'clipShown',
+  // groups found by how things link, for clusters and big-graph groups (wiki/Clusters-design.md)
+  'louvain',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

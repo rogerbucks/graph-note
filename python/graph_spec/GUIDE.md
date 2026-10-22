@@ -124,6 +124,11 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
 - `src/graphspec/engine/joining/` — §21: `config`, `restating`, `breaches`, `claims`, `union`, `merge3`, `finish` (and
   join, join3), `audit` (held, lost, invented), `emit`, `named_rules`, `gql_rules`.
   `trust` makes a union count only own and trusted documents, and gives an id prefix an owner.
+
+### Clusters and processes
+
+- `src/graphspec/engine/clusters/` — editor spec §31: `louvain` finds groups by how things link, the twin of the JavaScript
+  library's `louvain.js`. Both give the same groups on `packages/graph-spec/test/louvain-cases.json`.
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).
