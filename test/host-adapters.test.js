@@ -114,11 +114,8 @@ function makeBrowser(html = '<!doctype html><body></body>') {
   };
 }
 
-/** A fresh desktop app host for one check: the browser page's adapter, in the app's built editor page, scripts left out. */
-async function makeApp() {
-  const page = readFileSync(join(await builtApp(), 'editor.html'), 'utf8').replace(/<script\b[\s\S]*?<\/script>/g, '');
-  return makeBrowser(page);
-}
+/** A fresh desktop app host for one check: the browser page's adapter, in the app's built editor page. */
+const makeApp = async () => makeBrowser(readFileSync(join(await builtApp(), 'editor.html'), 'utf8'));
 
 /** The host the next check runs on: the checks ask for one synchronously, so each test makes it first. */
 let made;
