@@ -193,6 +193,12 @@ export class MiniMap {
       size = this.host.size();
     const fx = clamp((w.x + ((e.clientX - r.left) / r.width) * w.width - vb.x) / vb.width),
       fy = clamp((w.y + ((e.clientY - r.top) / r.height) * w.height - vb.y) / vb.height);
-    zoom.panBy(size.width / 2 - fx * v.width - v.x, size.height / 2 - fy * v.height - v.y);
+    // a drag on the drawing pans freely (pan_freely), but a tap here goes to a part of it, so it shows no empty space
+    const edged = (to: number, length: number, room: number) =>
+      length <= room ? (room - length) / 2 : Math.min(0, Math.max(room - length, to));
+    zoom.panBy(
+      edged(size.width / 2 - fx * v.width, v.width, size.width) - v.x,
+      edged(size.height / 2 - fy * v.height, v.height, size.height) - v.y,
+    );
   }
 }
