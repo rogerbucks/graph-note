@@ -51,13 +51,14 @@ from collections.abc import Collection, Mapping, Sequence
 # source as the plugin's core writes it. They live with the style graph that chooses them, as do
 # the directions laid out (re-exported here)
 from graphspec.style.arrows import arrowless_source
-from graphspec.style.diagram_types import QUICK_LAYOUT, QUICK_SETTINGS, directions, typed_source
+from graphspec.style.diagram_types import typed_source
 from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
 from graphspec.style.flow import flow_source
 from graphspec.style.fold_source import folded_source, routed_source
 from graphspec.style.inline import inline_source
 from graphspec.style.nudges import nudged_source
 from graphspec.style.picture import picture_source
+from graphspec.style.quick import QUICK_SETTINGS, directions, quick_source  # noqa: F401
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STYLE = json.load(open(os.path.join(HERE, "graph_svg.style.json"), encoding="utf-8"))
@@ -222,19 +223,13 @@ def drawn_source(
     out as its diagram type (typed_source), its moving links marked (flow_source), its arrowheads
     hidden and properties shown (arrowless_source, inline_source), room kept for its pictures
     (picture_source), its nudges written in (nudged_source), then folded and merged as `folding`
-    says (folded_source) and its links routed (routed_source). Past QUICK_LAYOUT things,
-    Graphviz's quick settings come first."""
+    says (folded_source), its links routed (routed_source), and when large, laid out quickly."""
     src, kinds, readings = dot_source(nodes, edges, rankdir, suggested)
     src = flow_source(typed_source(src, plan), flow)
     src = picture_source(inline_source(arrowless_source(src, arrowless), inline), pictures)
     src = nudged_source(src, nudges, [key for key, _, _ in nodes], plan)
     src = routed_source(folded_source(src, folding), routing)
-    if len(nodes) > QUICK_LAYOUT:
-        # a large graph is laid out quickly (§11, large_drawn_quick); a routing chosen still wins
-        lines = src.split("\n")
-        lines.insert(1, QUICK_SETTINGS)
-        src = "\n".join(lines)
-    return src, kinds, readings
+    return quick_source(src, len(nodes)), kinds, readings
 
 
 def _themed(svg, kinds, readings=()):

@@ -14,7 +14,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
 
 import graph_svg  # noqa: E402
-from graphspec.style import diagram_types  # noqa: E402
+from graphspec.style import diagram_types, quick  # noqa: E402
 
 CORE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "packages", "core"
@@ -55,8 +55,8 @@ class SameAsTheCore(unittest.TestCase):
         with open(os.path.join(CORE, "src", "render.ts"), encoding="utf-8") as f:
             render = f.read()
         self.assertIn(f"export const LARGE_GRAPH = {diagram_types.LARGE_GRAPH};", types)
-        self.assertIn(f"export const QUICK_LAYOUT = {diagram_types.QUICK_LAYOUT};", render)
-        self.assertIn(f"const QUICK_SETTINGS = '{diagram_types.QUICK_SETTINGS}';", render)
+        self.assertIn(f"export const QUICK_LAYOUT = {quick.QUICK_LAYOUT};", render)
+        self.assertIn(f"const QUICK_SETTINGS = '{quick.QUICK_SETTINGS}';", render)
 
 
 if __name__ == "__main__":
