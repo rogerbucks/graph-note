@@ -79,6 +79,8 @@ and no module requires one that requires it back.
     clusters (`test/cluster-cases.json`).
   - `centroids.js` — each cluster's centroid, which sums it up. Centroids nest, keep their ids after a rebuild and are
     worked out again only when their members change. One still moving is flagged unsettled (`test/centroid-cases.json`).
+  - `cycles.js` — clusters inside each other in a cycle. A cycle is flagged, never refused, and a view hides or
+    highlights it (`test/cycle-cases.json`).
 
 ## Beside them
 

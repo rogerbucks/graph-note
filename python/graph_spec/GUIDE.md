@@ -127,12 +127,14 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
 
 ### Clusters and processes
 
-- `src/graphspec/engine/clusters/` — editor spec §31: `louvain` finds groups by how things link, the twin of the JavaScript
-  library's `louvain.js`. Both give the same groups on `packages/graph-spec/test/louvain-cases.json`. `clusters_of`
-  gives a graph's written and found clusters, each membership with its kind and its 1/N weight. It is the twin of
-  `clusters.js`, held to `packages/graph-spec/test/cluster-cases.json`.
-  `centroids_of` gives each cluster's centroid, the twin of `centroids.js`, held to
-  `packages/graph-spec/test/centroid-cases.json`.
+- `src/graphspec/engine/clusters/` — editor spec §31. Each module is the twin of a JavaScript one, held to its shared
+  cases in `packages/graph-spec/test/`:
+  - `louvain` finds groups by how things link (`louvain.js`, `louvain-cases.json`).
+  - `clusters_of` gives a graph's written and found clusters, each membership with its kind and its 1/N weight
+    (`clusters.js`, `cluster-cases.json`).
+  - `centroids_of` gives each cluster's centroid (`centroids.js`, `centroid-cases.json`).
+  - `cluster_cycles` and `cycle_view` flag the clusters in a cycle, and hide or highlight them (`cycles.js`,
+    `cycle-cases.json`).
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).

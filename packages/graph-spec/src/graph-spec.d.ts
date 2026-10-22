@@ -276,6 +276,10 @@ declare namespace GraphSpecCheck {
     graph: Graph,
     options?: { previous?: Centroids; passes?: number; threshold?: number; budget?: number; clock?: () => number },
   ): Centroids;
+  /** Each cycle of clusters inside each other, its clusters in written order. A cycle is flagged, never refused. */
+  function clusterCycles(graph: Graph): string[][];
+  /** What a view shows with a graph's cycles hidden or highlighted. */
+  function cycleView(graph: Graph, how: 'hide' | 'highlight'): { shown: string[]; highlighted: string[] };
 
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];

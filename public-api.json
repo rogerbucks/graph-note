@@ -3633,10 +3633,12 @@
           "checkChangeset: (base: string[], block: string, matrix?: unknown, switches?: Set<string>, session?: string | null) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; claimed?: string; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }",
           "checkSyntax: (block: string) => GraphSpecCheck.ProfileError | null",
           "clipShown: (text: string) => string",
+          "clusterCycles: (graph: GraphSpecCheck.Graph) => string[][]",
           "clustersOf: (graph: GraphSpecCheck.Graph, kind?: 'asserted' | 'found') => { clusters: GraphSpecCheck.Cluster[]; memberships: GraphSpecCheck.ClusterMembership[]; }",
           "COMMENT_FIX: string",
           "COMMENT_RULE: string",
           "completeness: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }",
+          "cycleView: (graph: GraphSpecCheck.Graph, how: 'hide' | 'highlight') => { shown: string[]; highlighted: string[]; }",
           "Graph: typeof GraphSpecCheck.Graph",
           "GTime: typeof GraphSpecCheck.GTime",
           "guessReadings: (type: string) => [string, string]",
@@ -3726,6 +3728,9 @@
           "kind: 'asserted' | 'found'",
           "members: Array<string>"
         ],
+        "clusterCycles": [
+          "value: (graph: GraphSpecCheck.Graph) => string[][]"
+        ],
         "ClusterMembership": [
           "interface",
           "cluster: string",
@@ -3757,6 +3762,9 @@
           "overdue: Array<string>",
           "rule: string",
           "says: string"
+        ],
+        "cycleView": [
+          "value: (graph: GraphSpecCheck.Graph, how: 'hide' | 'highlight') => { shown: string[]; highlighted: string[]; }"
         ],
         "Edge": [
           "type = [string, string, string, Record<string, GraphSpecCheck.Value>]"
