@@ -203,10 +203,7 @@ export class Zoom {
     return { scale: s, x, y };
   }
 
-  /**
-   * Keeps a strip of `bottom` pixels at the foot of the viewport clear, as a sheet over it covers it (§25). A thing aimed
-   * at is placed above it. A smaller strip brings down a drawing that had risen into it, as far as the strip now allows.
-   */
+  /** Keeps `bottom` pixels at the foot clear for a sheet (§25); a smaller strip brings down a drawing risen into it. */
   keepClear(bottom: number): void {
     const was = this.clampPan(this.scale, this.x, -Infinity)[1];
     this.clear = clamp(bottom, 0, this.viewport.height);
