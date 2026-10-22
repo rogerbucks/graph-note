@@ -377,6 +377,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/obsidian/test/views-many.test.js` — several views of one graph, in one note or in several. Each is drawn
   from the one data set where it is written, and none copies it. A view of a graph written in another note says which
   and opens it (editor spec §7, many_views_one_data, view_of_another_note).
+- `packages/obsidian/test/views-over-one-graph.test.js` — two views of one graph, stacked, each drawn as its own type.
+  An edit to the graph shows in both. A type chosen in one is saved for it alone (editor spec §36, views_over_one_graph).
 
 ### The graph format library
 
