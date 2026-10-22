@@ -95,14 +95,15 @@
       }
     },
     {
-      "title": "Wave 7 · Language, theming and the standalone app",
+      "title": "Wave 7 · Language, theming, the standalone app and massive graphs",
       "start": "2026-10-28",
       "end": "2026-10-30",
       "estimate": true,
       "workstreams": [
         "G1",
         "U1",
-        "H1"
+        "H1",
+        "Z1"
       ],
       "earlier_plan": {
         "start": "2026-11-27",
@@ -445,12 +446,12 @@
       }
     },
     {
-      "title": "Wave 29 · Held: massive graphs on your own machine",
+      "title": "Wave 29 · Held: massive graphs read in parts",
       "start": "2027-01-05",
       "end": "2027-01-08",
       "estimate": true,
       "workstreams": [
-        "Z1"
+        "Z2"
       ]
     },
     {

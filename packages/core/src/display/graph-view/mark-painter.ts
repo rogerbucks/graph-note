@@ -123,7 +123,8 @@ function paintMark(ctx: CanvasRenderingContext2D, m: DrawMark, camera: Camera, p
     return;
   }
   if (textOnly) return;
-  if (m.kind === 'box' || m.kind === 'group') {
+  // a board item and a fold are drawn as plain boxes until the whiteboard and the process views style them
+  if (m.kind === 'box' || m.kind === 'group' || m.kind === 'item' || m.kind === 'fold') {
     outline(ctx, m.kind === 'box' ? (m.shape ?? 'rect') : 'rect', sx(m.x), sy(m.y), m.width * scale, m.height * scale);
     if (paint.fill) {
       ctx.fillStyle = paint.fill;
