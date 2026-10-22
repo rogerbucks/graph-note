@@ -11,9 +11,9 @@ import type { ThemeToken } from '../theme-tokens.ts';
  */
 export function adoptTokens(doc: Document, tokens: readonly ThemeToken[]): () => void {
   const css = themeTokenCss(tokens);
-  const Sheet = doc.defaultView?.CSSStyleSheet;
-  if (!css || !Sheet || !doc.adoptedStyleSheets) return () => {};
-  const sheet = new Sheet();
+  const view = doc.defaultView;
+  if (!css || !view?.CSSStyleSheet || !doc.adoptedStyleSheets) return () => {};
+  const sheet = new view.CSSStyleSheet();
   sheet.replaceSync(css);
   doc.adoptedStyleSheets = [...doc.adoptedStyleSheets, sheet];
   return () => {
