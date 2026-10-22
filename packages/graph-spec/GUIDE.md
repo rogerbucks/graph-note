@@ -77,6 +77,8 @@ and no module requires one that requires it back.
   - `louvain.js` — the one method that finds groups by how things link (`test/louvain-cases.json`).
   - `clusters.js` — a graph's written and found clusters. Each membership says its kind and counts 1/N for a thing in N
     clusters (`test/cluster-cases.json`).
+  - `centroids.js` — each cluster's centroid, which sums it up. Centroids nest, keep their ids after a rebuild and are
+    worked out again only when their members change. One still moving is flagged unsettled (`test/centroid-cases.json`).
 
 ## Beside them
 

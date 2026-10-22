@@ -3625,6 +3625,8 @@
       ".": {
         "export =": [
           "canon: (g: GraphSpecCheck.Graph) => string",
+          "centroidId: (cluster: string) => string",
+          "centroidsOf: (graph: GraphSpecCheck.Graph, options?: { previous?: GraphSpecCheck.Centroids; passes?: number; threshold?: number; budget?: number; clock?: () => number; }) => GraphSpecCheck.Centroids",
           "changeId: (change: GraphSpecCheck.ReadChange) => string",
           "changesetHeader: (block: string) => { graph: string; id: string; against: string; by: string; } | null",
           "check: (world: GraphSpecCheck.World, graph: string, matrix?: unknown, switches?: Set<string>) => [string, boolean][]",
@@ -3670,6 +3672,34 @@
         ],
         "canon": [
           "value: (g: GraphSpecCheck.Graph) => string"
+        ],
+        "Centroid": [
+          "interface",
+          "basis: GraphSpecCheck.CentroidBasis",
+          "certainty: { low: number; high: number; } | null",
+          "cluster: string",
+          "id: string",
+          "kind: 'asserted' | 'found'",
+          "kinds: Record<string, number>",
+          "members: number",
+          "settled: boolean",
+          "weight: number"
+        ],
+        "CentroidBasis": [
+          "type = Array<[member: string, weight: number, kinds: Array<string>, likelihood: string | null]>"
+        ],
+        "centroidId": [
+          "value: (cluster: string) => string"
+        ],
+        "Centroids": [
+          "interface",
+          "centroids: Array<GraphSpecCheck.Centroid>",
+          "passes: number",
+          "recomputed: Array<string>",
+          "settled: boolean"
+        ],
+        "centroidsOf": [
+          "value: (graph: GraphSpecCheck.Graph, options?: { previous?: GraphSpecCheck.Centroids; passes?: number; threshold?: number; budget?: number; clock?: () => number; }) => GraphSpecCheck.Centroids"
         ],
         "changeId": [
           "value: (change: GraphSpecCheck.ReadChange) => string"

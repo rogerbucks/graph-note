@@ -246,6 +246,37 @@ declare namespace GraphSpecCheck {
     kind?: 'asserted' | 'found',
   ): { clusters: Cluster[]; memberships: ClusterMembership[] };
 
+  /** What a centroid is worked out from: each member, its weight, its kinds and its likelihood word. */
+  type CentroidBasis = [member: string, weight: number, kinds: string[], likelihood: string | null][];
+  /** A derived thing that sums up one cluster (editor spec §31). */
+  interface Centroid {
+    /** A named SHA-256 hash of the cluster's id, so it is the same after a rebuild. */
+    id: string;
+    cluster: string;
+    kind: 'asserted' | 'found';
+    members: number;
+    weight: number;
+    kinds: Record<string, number>;
+    certainty: { low: number; high: number } | null;
+    /** False while its value may still move. */
+    settled: boolean;
+    basis: CentroidBasis;
+  }
+  interface Centroids {
+    centroids: Centroid[];
+    /** The clusters worked out again, in written order. */
+    recomputed: string[];
+    passes: number;
+    settled: boolean;
+  }
+  /** The id of a cluster's centroid. */
+  function centroidId(cluster: string): string;
+  /** Each cluster's centroid. Given the last answer, only what changed is worked out again. */
+  function centroidsOf(
+    graph: Graph,
+    options?: { previous?: Centroids; passes?: number; threshold?: number; budget?: number; clock?: () => number },
+  ): Centroids;
+
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];
 }
