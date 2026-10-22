@@ -1,0 +1,67 @@
+name: Desktop app
+
+# The desktop app (spec §41, standalone_app), built for real on Linux, macOS and Windows, with its Rust tests. On Linux
+# it is also run on a folder of notes and driven as a person uses it (test/standalone-app.test.js), under a virtual
+# display. tauri-driver has no macOS driver, so the other two are built and tested, not driven.
+# It runs when the app, the editor page it carries, or the core beneath them changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/app/**'
+      - 'packages/claude-code/page/**'
+      - 'packages/claude-code/esbuild.page.mjs'
+      - 'packages/core/src/**'
+      - 'test/standalone-app.test.js'
+      - '.github/workflows/desktop-app.yml'
+  pull_request:
+    paths:
+      - 'packages/app/**'
+      - 'packages/claude-code/page/**'
+      - 'packages/claude-code/esbuild.page.mjs'
+      - 'packages/core/src/**'
+      - 'test/standalone-app.test.js'
+      - '.github/workflows/desktop-app.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-app-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      # the window's files, which the Rust build takes in whole
+      - run: npm run build --workspace packages/app
+      # WebKitGTK, which Tauri builds against on Linux; the driver and a display only to drive it
+      - if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev webkit2gtk-driver xvfb
+      - working-directory: packages/app/src-tauri
+        run: cargo test --locked
+      - working-directory: packages/app/src-tauri
+        run: cargo build --locked
+      - if: runner.os == 'Linux'
+        run: cargo install tauri-driver --locked --version 2.1.0
+      # missing app, driver or display fails here, never skips
+      - if: runner.os == 'Linux'
+        env:
+          THOUGHTKNOT_APP_REQUIRED: 1
+        run: xvfb-run -a npm run test:ai -- test/standalone-app.test.js

@@ -114,6 +114,36 @@ export function ciOnlyProblems(record, locked) {
 }
 
 /**
+ * What is wrong with the allowance for the desktop app's Linux libraries (`desktopBuildLibraries`), as a list of faults:
+ * - a library with no licence, a GPL licence, or no source for it;
+ * - one with no reason;
+ * - the allowance naming no job, or a job of ordinary CI or of a release;
+ * - one the lockfile holds, or one that is bundled or inside what is bundled.
+ */
+export function desktopLibraryProblems(record, locked) {
+  const allowance = record.desktopBuildLibraries;
+  if (!allowance) return [];
+  const lower = (s) => String(s).toLowerCase();
+  const shipped = new Set(
+    Object.entries(record.packages ?? {})
+      .flatMap(([key, p]) => [key.slice(0, key.lastIndexOf('@')), ...(p.inside ?? []).map((c) => c.name)])
+      .map(lower),
+  );
+  const installed = new Set(locked.map(lower));
+  const found = [];
+  if (!/^desktop-app\.yml \S+$/.test(allowance.job ?? ''))
+    found.push(`the allowance names a job of desktop-app.yml alone`);
+  for (const [name, l] of Object.entries(allowance.libraries ?? {})) {
+    if (!l.licence || /^(?:A)?GPL-/.test(l.licence)) found.push(`${name}: a GPL licence, or none: ${l.licence}`);
+    if (!/^https:\/\//.test(l.licenceSource ?? '')) found.push(`${name}: where its licence is stated`);
+    if (!l.reason?.trim()) found.push(`${name}: why it is needed`);
+    if (installed.has(lower(name))) found.push(`${name}: in the lockfile, so in node_modules`);
+    if (shipped.has(lower(name))) found.push(`${name}: bundled, or inside what is bundled, so shipped`);
+  }
+  return found;
+}
+
+/**
  * Each package a workflow's job installs with apt or apt-get. It is keyed as `<file> <job>`, against the package's
  * name and whether its line asks for no recommended packages. It reads `apt install x`, `apt-get -y install a b`, and
  * flags anywhere among the names.

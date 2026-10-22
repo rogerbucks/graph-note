@@ -1,0 +1,6 @@
+{
+  "file": "test/standalone-app.test.js",
+  "test": "the desktop app, run for real: open a folder, draw a note, edit it, offline > it draws the note's graph",
+  "seen_failing_first": false,
+  "evidence": "It proves the app merged in #905, built for real; the replay has no display or driver, so it skipped. CI drives it under xvfb."
+}
