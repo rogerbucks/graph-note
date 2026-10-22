@@ -779,6 +779,7 @@ These views are not laid out by Graphviz. Each is a pure function from a graph's
 - `density-view.ts` — the force layout cut into squares, each shaded by how many things are in it.
 - `block-view.ts` — a block diagram: each thing a block, and links running left to right in right-angled lines.
 - `plan-view.ts` — a project plan: a row for each thing, and a bar from its start date to its end date.
+- `centroid-view.ts` — each cluster as one circle with its members round it, and one line for the links between two.
 
 ### Views (spec §2, §7)
 

@@ -272,6 +272,7 @@ export const SOURCE_WORDS = {
   'view.density': 'Density',
   'view.block': 'Block',
   'view.plan': 'Plan',
+  'view.centroid': 'Centroid',
   'type.now-graph': 'The graph is now drawn as {type}.',
   'type.now-view': 'View {view} is now drawn as {type}.',
   'type.drawn': 'Drawn as {type}',
