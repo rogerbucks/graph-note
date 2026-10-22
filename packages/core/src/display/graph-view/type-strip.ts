@@ -7,7 +7,7 @@
 // (plugin_diagram_type_named). Otherwise the strip says which plug-in draws it. In reading view a type chosen is only
 // looked at: drawn at once, never saved, and said so. Where the note is edited, a type looked at can be kept
 // (type_try_reading).
-import { diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
+import { chosenDiagram, diagramOffer, tableOf, wayIn, word } from '@thoughtknot/core';
 import type {
   DiagramOffer,
   DiagramSpace,
@@ -24,6 +24,8 @@ import type { LeftAt } from '../links/link-types';
 import { centreStrip } from './radial-centre';
 import { renderTable, tableSize } from './table-view';
 import { button } from './view-bar';
+import { renderTimelineChoice, timelineChange } from './timeline-choice';
+import type { TimelinePick, TimelineShown } from './timeline-choice';
 export { TypePlace, typeLeftAt } from './type-place';
 
 /** What a card is given of the diagram types, beyond its drawing. */
@@ -56,6 +58,12 @@ export interface DiagramShown extends DiagramOffer {
   centreLook?: (key: string | null) => void;
   /** Set by the strip: `centreOn`, the boxes gliding there; false where nothing can be put in the centre (radial_centre_pick). */
   putCentre?: (key: string | null) => boolean;
+  /** For a card drawn as a timeline: its order and what it shows, to offer (timeline_choice_card). */
+  timeline?: TimelineShown;
+  /** Writes a timeline's order or what it shows into the style graph, keeping the rest of its Diagram. */
+  chooseTimeline?: (p: TimelinePick) => void;
+  /** Draws the card with a timeline's order or what it shows, never saving it: for reading view. */
+  lookTimeline?: (p: TimelinePick) => void;
 }
 
 /** Where a card was when its type changed: its zoom, the thing selected, and whether it was full screen. */
@@ -80,6 +88,11 @@ export interface Trying {
   kept: () => TypeLeftAt | undefined;
 }
 
+/** What a Diagram carries beyond its type and view, as written: a tree's relationship, a timeline's choice, a centre. */
+const CARRIED = ['relationship', 'order', 'by', 'show', 'centre'] as const;
+const carried = (d: Partial<Record<(typeof CARRIED)[number], string>>): Record<string, string> =>
+  Object.fromEntries(CARRIED.flatMap((k) => (d[k] === undefined ? [] : [[k, d[k]]])));
+
 /**
  * `style` with the diagram type `change` chooses, in place of the one chosen for its view or the whole graph. It is held
  * only in memory, for a type looked at and never saved (type_try_reading).
@@ -88,8 +101,7 @@ export function withTried(style: StyleGraph, change: DiagramWrite): StyleGraph {
   const tried: Diagram = {
     type: change.type as DiagramType,
     ...(change.view === undefined ? {} : { view: change.view }),
-    ...(change.relationship === undefined ? {} : { relationship: change.relationship }),
-    ...(change.centre === undefined ? {} : { centre: change.centre }),
+    ...(carried(change) as Partial<Diagram>),
     at: { block: -1, line: 0, id: 'tried' },
   };
   return { ...style, diagrams: [tried, ...style.diagrams.filter((d) => d.view !== change.view)] };
@@ -97,8 +109,7 @@ export function withTried(style: StyleGraph, change: DiagramWrite): StyleGraph {
 
 /** The centre `style` picks for a radial drawing in `view`, the view's own over the whole graph's; none if not picked. */
 export function pickedCentre(style: Pick<StyleGraph, 'diagrams'>, view?: string): string | undefined {
-  const own = view === undefined ? undefined : style.diagrams.find((d) => d.view === view);
-  return (own ?? style.diagrams.find((d) => d.view === undefined))?.centre;
+  return chosenDiagram(style, view)?.centre;
 }
 
 /** The space a plug-in's diagram type is given to draw in, in pixels, by every host. */
@@ -138,15 +149,20 @@ export function diagramShown(
     const along = type === 'tree' ? offer.fits.find((f) => f.type === 'tree')?.relationship : undefined;
     return { type, ...(view === undefined ? {} : { view }), ...(along === undefined ? {} : { relationship: along }) };
   };
-  const choose = (type: DiagramType) =>
-    write(
-      change(type),
-      view === undefined
-        ? word('type.now-graph', { type: said(type) })
-        : word('type.now-view', { view, type: said(type) }),
-    );
-  const plan = offer.choice.plan,
-    centre = plan?.type === 'radial' ? plan.centre : undefined,
+  const now = (type: DiagramType) =>
+    view === undefined
+      ? word('type.now-graph', { type: said(type) })
+      : word('type.now-view', { view, type: said(type) });
+  const choose = (type: DiagramType) => write(change(type), now(type));
+  // the Diagram drawn here, whole: a type looked at, or kept, keeps its tree's relationship and its timeline's choice
+  const d = chosenDiagram(style, view);
+  const whole: DiagramWrite =
+    d && d.type === offer.choice.drawn
+      ? { type: d.type, ...(view === undefined ? {} : { view }), ...carried(d) }
+      : change(offer.choice.drawn);
+  const plan = offer.choice.plan;
+  const timeline = plan?.type === 'timeline' ? timelineChange(whole, {}) : undefined;
+  const centre = plan?.type === 'radial' ? plan.centre : undefined,
     text = (key: string) => drawing.boxes.find((b) => b.key === key)?.text ?? key;
   // a centre put in a radial drawing: saved, or looked at in reading view, where it can be (radial_centre_pick)
   const radial = (key: string | null): DiagramWrite => ({
@@ -178,13 +194,20 @@ export function diagramShown(
     wayIn: wayIn(drawing.boxes.length),
     ...(offer.choice.drawn === 'table' ? { table: tableOf(drawing, g) } : {}),
     choose,
+    ...(timeline && plan?.type === 'timeline'
+      ? {
+          timeline: { order: plan.order, show: timeline.show ?? 'all' },
+          chooseTimeline: (p: TimelinePick) => write(timelineChange(timeline, p), word('timeline.now')),
+          ...(trying ? { lookTimeline: (p: TimelinePick) => trying.tryOut(timelineChange(timeline, p)) } : {}),
+        }
+      : {}),
     ...(trying
       ? {
           look: (type: DiagramType) => trying.tryOut(type === trying.saved ? null : change(type)),
           tried: trying.tried,
           back: () => trying.tryOut(null),
           ...(centre === undefined ? {} : { centreLook }),
-          keep: () => choose(offer.choice.drawn),
+          keep: () => write(whole, now(offer.choice.drawn)),
           leave: trying.leave,
           kept: trying.kept,
         }
@@ -262,6 +285,14 @@ export function renderTypeStrip(
   const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
   toggle.setAttribute('aria-expanded', 'false');
   picks(toggle, list);
+  // a timeline's order and what it shows: looked at while the card is read-only, when it can be; else saved
+  if (d.timeline) {
+    const { chooseTimeline, lookTimeline } = d;
+    const row = renderTimelineChoice(root, d.timeline, (p) =>
+      leaving(() => (lookTimeline && readOnly() ? lookTimeline(p) : chooseTimeline?.(p)))(),
+    );
+    if (!lookTimeline) writes.push(row);
+  }
   // each type a tile, its state marked by class for the look and said in words beside it, never by colour alone
   for (const f of d.fits) {
     const li = list.createEl('li', {

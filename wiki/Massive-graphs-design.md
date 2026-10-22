@@ -121,8 +121,9 @@ These were sent to the thread building the marks, to fold into its format.
 - **Layout off the page.** Every layout runs in the worker, which can be stopped. The page never waits on one.
 - **Screen readers.** The overview has a list of groups, with their sizes, that the keyboard can move through. An
   opened group is today's accessible drawing.
-- **Works offline.** WebGL is in every browser Obsidian, the desktop app and VS Code use. Where it is missing, the
-  overview falls back to Canvas with the spatial index, which measured 1.5 ms a frame.
+- **Works offline.** WebGL is in every browser Obsidian, the desktop app and VS Code use. On Linux the desktop app
+  sometimes has it switched off. Where it is missing, the overview falls back to Canvas with the spatial index, which
+  measured 1.5 ms a frame.
 
 ## How it would be built
 
@@ -131,7 +132,7 @@ These were sent to the thread building the marks, to fold into its format.
 | 1 | The benchmark: open, draw, pan and edit graphs from 2,666 things (V-10) up to 266,600, time and memory (`scale_benchmark`) | S |
 | 2 | Groups: the graph's own, else Louvain, in the core, with tests | S |
 | 3 | The saved-layout cache, by content hash, per group | S |
-| 4 | The overview: WebGL layer reading marks, Canvas fallback, spatial index, level of detail | M |
+| 4 | The overview: WebGPU and WebGL layers reading marks, Canvas fallback, spatial index, level of detail | M to L |
 | 5 | Opening a group into today's drawing, and laying out neighbours in the background | M |
 | 6 | Raise the drawing limit, with the benchmark holding each new limit | S |
 | 7 | Read in parts from the local store (`scale_in_parts`), once Q-05's store is in | L, later |
@@ -141,4 +142,26 @@ store.
 
 ## Decision
 
-Roger picks one way. Recorded here once picked.
+On 22 October 2026 Roger chose way E, with three additions.
+
+1. **Draw in steps, most likely interest first.** The overview of groups comes first, or the saved layout of a graph
+   seen before. Next comes the group on screen, then what the reader most likely wants: the selection, search hits,
+   recent edits and the most linked things. Then neighbouring groups, in the background. The rest comes when the
+   machine is idle, with labels last.
+2. **A layout stays put.** It is worked out once and saved. Panning, zooming, a resize or a theme change only draw
+   again. Only an edit that changes the structure lays out again, and only the group it touched.
+3. **A layer for each device, WebGPU and WebGL both.** The drawing tests what the device can do, never its name.
+   WebGPU comes first where it is there, then WebGL 2, then Canvas. WebGPU also finds what is on screen on the graphics chip.
+   SVG stays for an opened group, editing, screen readers and exports.
+
+| Where | WebGPU | WebGL 2 |
+|---|---|---|
+| Obsidian on a desktop (Electron) | Yes | Yes |
+| Obsidian and the app on an iPhone or iPad, iOS 26 | Yes | Yes |
+| VS Code, a browser | Yes, in recent versions | Yes |
+| The desktop app on Mac and Windows | Yes | Yes |
+| The desktop app on Linux | No | Sometimes off, so Canvas |
+
+On a phone, which is about three times slower and has less memory, groups open smaller and far detail goes sooner.
+Background layout pauses when the phone is idle or hot. Later, the desktop and iPhone app may run layout as native
+code, as an extra layer that Obsidian does not have.
