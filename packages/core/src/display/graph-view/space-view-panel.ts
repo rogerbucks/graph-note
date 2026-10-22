@@ -23,6 +23,11 @@ import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { button } from './view-bar';
 import { marksOfSvg } from './svg-marks.ts';
 
+/** The close of the 3D view open on each card, so a second press of 3D view closes it rather than stacking one more. */
+const opened = new WeakMap<HTMLElement, () => void>();
+/** How often an open view checks its card is still on the page, in milliseconds: a card drawn again drops it. */
+const STILL_THERE_MS = 1000;
+
 /** How far a key press turns or tilts the camera, as a drag of this many pixels would. */
 const KEY_STEP = 24;
 
@@ -45,6 +50,11 @@ export async function openSpaceView(
   graph: string,
   closed: () => void,
 ): Promise<(() => void) | null> {
+  const already = opened.get(root);
+  if (already) {
+    already();
+    return null;
+  }
   const { marks, paints } = marksOfSvg(svg);
   const el = root.createDiv({
     cls: 'thoughtknot-space-view',
@@ -61,7 +71,9 @@ export async function openSpaceView(
   const bar = el.createDiv({ cls: 'thoughtknot-space-bar', attr: { role: 'toolbar' } });
   const said = el.createDiv({ cls: 'thoughtknot-space-said', attr: { 'aria-live': 'polite' } });
   const win = el.win;
-  const halo = win.getComputedStyle(root).backgroundColor || 'Canvas';
+  // a card with no background of its own shows the page's: the label halo uses the system's page colour then
+  const background = win.getComputedStyle(root).backgroundColor;
+  const halo = !background || background === 'transparent' || /,\s*0\)$/.test(background) ? 'Canvas' : background;
   const depths: DepthBy[] = [{ by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
   let depth = marks.some((m) => m.kind === 'group') ? 0 : 1;
   let space: SpaceMarks = spaceOf(marks, depths[depth] as DepthBy);
@@ -96,9 +108,13 @@ export async function openSpaceView(
   const sizer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
   sizer?.observe(el);
 
+  // the card was drawn again or closed: the view goes with it, and lets go of the graphics chip
+  const watch = win.setInterval(() => !el.isConnected && close(), STILL_THERE_MS);
   const close = () => {
     if (!open) return;
     open = false;
+    opened.delete(root);
+    win.clearInterval(watch);
     sizer?.disconnect();
     painter.destroy();
     el.remove();
@@ -182,6 +198,7 @@ export async function openSpaceView(
     again();
   });
 
+  opened.set(root, close);
   resize();
   orbit = orbitFit(space, width / height);
   el.focus();

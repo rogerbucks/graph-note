@@ -51,15 +51,15 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
         .sort((a, b) => b.far - a.far);
       for (const { b, points } of placed) {
         const paint = paints(b.style);
-        // the four sides, then the top: a side facing away is covered by the top and the near sides
-        const faces = [
+        // the four sides, far ones first, then the top: so the sides facing the camera cover the ones facing away
+        const farOf = (face: number[]) => face.reduce((n, k) => n + (points[k]?.far ?? 0), 0);
+        const sides = [
           [0, 1, 5, 4],
           [1, 2, 6, 5],
           [2, 3, 7, 6],
           [3, 0, 4, 7],
-          [0, 1, 2, 3],
-        ];
-        for (const face of faces) {
+        ].sort((a, b) => farOf(b) - farOf(a));
+        for (const face of [...sides, [0, 1, 2, 3]]) {
           ctx.beginPath();
           face.forEach((k, i) => {
             const p = points[k] as { x: number; y: number };

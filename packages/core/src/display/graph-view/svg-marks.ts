@@ -90,12 +90,23 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
       const p = path.getPointAtLength((length * i) / LINK_STEPS);
       return [p.x, p.y] as [number, number];
     });
-    const title = titleOf(g),
-      cut = title.search(/->|--/);
-    const from = cut > 0 ? title.slice(0, cut) : undefined,
-      to = cut > 0 ? title.slice(cut + 2) : undefined;
-    const ends = from !== undefined && to !== undefined && keys.has(from) && keys.has(to) ? { from, to } : {};
+    const ends = endsOf(titleOf(g), keys);
     marks.push({ id: `e:${g.id || marks.length}`, kind: 'link', style: styled(path, null), points, ...ends });
   }
   return { marks, paints: (style) => table.get(style) ?? {} };
+}
+
+/**
+ * A link's two ends from its title, `a->b` or `a--b`, each a key drawn. A key may hold `->` itself, so each place the
+ * title could be cut is tried. A port after a colon, as in `a:n->b`, is left off. None when no cut gives two keys.
+ */
+function endsOf(title: string, keys: ReadonlySet<string>): { from?: string; to?: string } {
+  const key = (part: string) =>
+    keys.has(part) ? part : keys.has(part.replace(/:[^:]*$/, '')) ? part.replace(/:[^:]*$/, '') : null;
+  for (const cut of title.matchAll(/->|--/g)) {
+    const from = key(title.slice(0, cut.index)),
+      to = key(title.slice(cut.index + 2));
+    if (from !== null && to !== null) return { from, to };
+  }
+  return {};
 }

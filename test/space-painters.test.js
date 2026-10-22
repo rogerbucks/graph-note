@@ -90,6 +90,7 @@ window.readSvg = () => {
     <g class="node" id="node1"><title>ada</title><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="20,20 120,20 120,60 20,60"/><text x="70" y="45" font-size="14" fill="rgb(10, 10, 10)">Ada</text></g>
     <g class="node" id="node2"><title>bob</title><ellipse fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" cx="230" cy="150" rx="40" ry="20"/><text x="230" y="155" font-size="14" fill="rgb(10, 10, 10)">Bob</text></g>
     <g class="edge" id="edge1"><title>ada&#45;&gt;bob</title><path fill="none" stroke="rgb(90, 90, 90)" d="M70,60 C100,100 160,140 190,150"/></g>
+    <g class="edge" id="edge2"><title>bob:w&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M190,150 C160,140 100,100 70,60"/></g>
   </g></svg>\`;
   const { marks, paints } = marksOfSvg(holder.querySelector('svg'));
   holder.remove();
@@ -186,6 +187,8 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(ada.group, team.id, 'a thing inside a group is in it');
     assert.equal(bob.group, undefined);
     assert.deepEqual([link.from, link.to], ['ada', 'bob'], 'the link names its ends by its title');
+    const port = byId.get('e:edge2');
+    assert.deepEqual([port.from, port.to], ['bob', 'ada'], 'a port after a colon is left off its end');
     assert.ok(link.points.length > 2);
     assert.deepEqual(ada.paint, { fill: 'rgb(200, 240, 200)', line: 'rgb(0, 100, 0)', text: 'rgb(10, 10, 10)' });
     assert.equal(byId.get('l:ada').text, 'Ada');
