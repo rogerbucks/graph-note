@@ -275,7 +275,6 @@ export const SOURCE_WORDS = {
   'view.plan': 'Plan',
   'view.centroid': 'Centroid',
   'view.containment': 'Containment',
-  'scaffold.prompt': 'Add {field} for {thing}',
   'type.now-graph': 'The graph is now drawn as {type}.',
   'type.now-view': 'View {view} is now drawn as {type}.',
   'type.drawn': 'Drawn as {type}',

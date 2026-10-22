@@ -107,4 +107,6 @@ export const DRAWING_SOURCE_WORDS = {
   'completeness.overdue': { one: '{count} overdue', other: '{count} overdue' },
   'completeness.missing': { one: '{count} missing', other: '{count} missing' },
   'completeness.unchecked': 'cannot be checked',
+  // a field a view needs and a thing lacks (view-scaffold.ts)
+  'scaffold.prompt': 'Add {field} for {thing}',
 } as const;
