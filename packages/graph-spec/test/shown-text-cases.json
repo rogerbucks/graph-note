@@ -1,0 +1,81 @@
+{
+  "about": "The text a thing is shown by in a drawing (editor spec §3, shown_text_ranked; Roger, 22 Oct 2026). The first that gives text wins: the property its schema names (shown_by), a name key (name, title, text, label), a wording key (statement, summary, heading, question, description), the first readable text in the order written, then its id. Text longer than 80 characters is cut at a word and ends in …. Both libraries run these cases: packages/graph-spec/test/shown-text.test.mjs and python/graph_spec/tests/test_shown_text.py. Each case gives its block, its graph and, for each thing, [text, key]; the key is null for an id.",
+  "cases": [
+    {
+      "name": "a requirement is shown by its statement, never its id",
+      "graph": "spec",
+      "body": [
+        "// graph: spec",
+        "(r5_origin:Requirement {id: 'rq:5.origin', level: 'must', statement: 'Every ElementType declares its origin (§6)', quote: '| `origin` | must |'})"
+      ],
+      "shown": { "rq:5.origin": ["Every ElementType declares its origin (§6)", "statement"] }
+    },
+    {
+      "name": "a name key comes before a wording key, in the order name, title, text, label",
+      "graph": "g",
+      "body": [
+        "// graph: g",
+        "(a:Thing {statement: 'A long statement here', name: 'Short name'}),",
+        "(b:Thing {label: 'The label', text: 'The text'}),",
+        "(c:Thing {description: 'Said at length', summary: 'Said in short'})"
+      ],
+      "shown": {
+        "a": ["Short name", "name"],
+        "b": ["The text", "text"],
+        "c": ["Said in short", "summary"]
+      }
+    },
+    {
+      "name": "the schema's shown_by comes first, for the thing's kind",
+      "graph": "spec",
+      "body": [
+        "// graph: spec",
+        "(t_req:Meta:ElementType {id: 'meta:spec:Requirement', kind: 'node', name: 'Requirement', origin: 'source', shown_by: 'quote'}),",
+        "(r1:Requirement {id: 'req:1', name: 'One', statement: 'The first rule', quote: 'the rule in its own words'}),",
+        "(r2:Requirement {id: 'req:2', name: 'Two'}),",
+        "(s1:Section {id: 'spec:1', title: 'Purpose'})"
+      ],
+      "shown": {
+        "req:1": ["the rule in its own words", "quote"],
+        "req:2": ["Two", "name"],
+        "spec:1": ["Purpose", "title"]
+      }
+    },
+    {
+      "name": "with no named key, the first readable text in the order written; ids, links, dates and numbers are not readable",
+      "graph": "g",
+      "body": [
+        "// graph: g",
+        "(a:Thing {ref: 'rq:5.origin', link: 'https://thoughtknot.app/a b', note: 'Checked by the suite', why: 'A later reason'}),",
+        "(b:Thing {code: 'rq:5.origin', due: '2026-10-22', url: 'https://thoughtknot.app', count: 3, ok: true}),",
+        "(c:Thing {span: '10 20', words: 'two words'})"
+      ],
+      "shown": {
+        "a": ["Checked by the suite", "note"],
+        "b": ["b", null],
+        "c": ["two words", "words"]
+      }
+    },
+    {
+      "name": "an empty name is passed over",
+      "graph": "g",
+      "body": ["// graph: g", "(a:Thing {name: '', statement: 'Said in words'})"],
+      "shown": { "a": ["Said in words", "statement"] }
+    },
+    {
+      "name": "text over 80 characters is cut at its last space in the second half, and ends in …",
+      "graph": "g",
+      "body": [
+        "// graph: g",
+        "(a:Thing {statement: 'Every view labels a relationship with its reading and lists the type names in a legend underneath'}),",
+        "(b:Thing {name: 'Short words then onelongwordthatrunsonandonandonwithnospaceatallforthewholewaytotheend'}),",
+        "(c:Thing {name: 'Exactly eighty characters long, which is the limit, so it is shown as written...'})"
+      ],
+      "shown": {
+        "a": ["Every view labels a relationship with its reading and lists the type names in…", "statement"],
+        "b": ["Short words then onelongwordthatrunsonandonandonwithnospaceatallforthewholewayt…", "name"],
+        "c": ["Exactly eighty characters long, which is the limit, so it is shown as written...", "name"]
+      }
+    }
+  ]
+}

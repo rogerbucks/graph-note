@@ -16,16 +16,6 @@ import { undeclared, undeclaredUse } from './schema-checks.ts';
 import { missingSchemas } from './schema-names.ts';
 import { suggestedPlaces } from './suggested-names.ts';
 
-/** A thing's text: its name, else its title, text or label, else its id — as graph-spec-draw.py chooses. */
-function textOf(g: Graph, id: string): string {
-  const p = g.p(id);
-  for (const k of ['name', 'title', 'text', 'label']) {
-    const v = p[k];
-    if (typeof v === 'string' && v) return v;
-  }
-  return id;
-}
-
 const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 function drawingOf(
@@ -55,7 +45,7 @@ function drawingOf(
           .filter((l) => !hidden.has(l))
           .sort(byCode)
           .join(' · '),
-        text: textOf(g, key),
+        text: gs.shownText(g, key, shared)[0],
         ...(place ? { suggested: place } : {}),
         ...(parked ? { deferred: { overdue: parked.overdue, what: parked.what } } : {}),
       };
