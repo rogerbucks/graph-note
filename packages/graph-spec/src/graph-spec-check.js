@@ -41,6 +41,7 @@ const { check } = require('./rules/check.js');
 const { completeness } = require('./rules/completeness.js');
 const { readings } = require('./rules/readings.js');
 const { guessReadings, reverseReading } = require('./rules/guessed-readings.js');
+const { clipShown, shownText } = require('./rules/shown-text.js');
 const { lint } = require('./changesets/dialect-lint.js');
 const { changesetHeader, checkChangeset } = require('./changesets/changeset.js');
 const { splitChangeset, readChange, changeId } = require('./changesets/changes.js');
@@ -124,4 +125,6 @@ module.exports = {
   LIMITS,
   secretsIn,
   secretsInGraph,
+  shownText,
+  clipShown,
 };

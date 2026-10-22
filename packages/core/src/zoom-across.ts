@@ -1,7 +1,8 @@
 // A wide drawing that scrolls one way only (editor spec §15, wide_types_phone). Take a tree, a flow or a timeline wider
 // than its card on a phone (types-table.ts, `scrollsOneWay`). It is fitted to the card's height and shown from its
 // start. One finger moves it across and never up or down, while the browser keeps scrolling the page up and down.
-// Zoomed in, by a pinch or a button, it pans both ways, as any drawing does, and Fit brings the one-way view back.
+// It scrolls like a page, stopping at either end. Zoomed in, by a pinch or a button, it pans both ways. It pans freely,
+// as any drawing does (pan_freely), and Fit brings the one-way view back.
 // Everything else is Zoom's own (zoom.ts), which this only adds to, so the two never differ in anything else.
 import { Zoom } from './zoom.ts';
 import { MAX_SCALE } from './zoom-fit.ts';
@@ -70,6 +71,11 @@ export class AcrossZoom extends Zoom {
     return true;
   }
 
+  /** While it scrolls across, it stops at either end, as a page does. */
+  protected override edgeBound(): boolean {
+    return this.scrollsAcross();
+  }
+
   /** Wider than its viewport, and not zoomed in. */
   private scrollsAcross(): boolean {
     return !this.zoomedIn() && this.view().width > this.viewport.width + EPS;
@@ -77,6 +83,6 @@ export class AcrossZoom extends Zoom {
 
   /** To the drawing's start, across, when it is wider than its viewport; centred, as Zoom keeps it, when it is not. */
   private toStart(): void {
-    this.panBy(this.content.fromRight ? -this.view().width : this.view().width, 0);
+    if (this.scrollsAcross()) this.panBy(this.content.fromRight ? -this.view().width : this.view().width, 0);
   }
 }

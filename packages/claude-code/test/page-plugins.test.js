@@ -139,6 +139,36 @@ describe('the page runs them and draws the graph by a type one adds (plugin_outs
     }
   });
 
+  test('the colours the sample adds join the page as a sheet of their own, light and dark (plugin_theme_tokens)', async () => {
+    const threads = [];
+    const sheets = [];
+    const page = await livePage(NOTE, {
+      files: vaultFiles({ 'sample.js': SAMPLE }),
+      plugins: true,
+      before: (window) => {
+        pluginWorkers(window, threads);
+        // jsdom adopts no sheet made in code: this keeps the CSS each was given, as the browser applies it
+        window.CSSStyleSheet = class {
+          replaceSync(css) {
+            this.text = css;
+          }
+        };
+        Object.defineProperty(window.document, 'adoptedStyleSheets', {
+          get: () => sheets,
+          set: (all) => sheets.splice(0, sheets.length, ...all),
+        });
+      },
+    });
+    try {
+      await until(() => sheets.length, 8000);
+      assert.match(sheets[0].text, /:root,\.theme-light\{--gn-plugin-example-sample-mark:#1a1a1a\}/);
+      assert.match(sheets[0].text, /prefers-color-scheme: dark\)\{:root\{--gn-plugin-example-sample-mark:#f0f0f0\}/);
+    } finally {
+      await Promise.all(threads.map((t) => t.terminate()));
+      await page.stop();
+    }
+  });
+
   test('a file changed since it was turned on is not run, and the page says so by its name', async () => {
     const page = await livePage(NOTE, {
       files: vaultFiles({ 'sample.js': SAMPLE }, { 'sample.js': `${SAMPLE}\n// changed` }),

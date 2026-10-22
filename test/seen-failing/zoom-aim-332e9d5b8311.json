@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/zoom-aim.test.js",
+  "test": "the strip a sheet covers > keeping a strip clear moves nothing by itself",
+  "seen_failing_first": false,
+  "evidence": "Split out of the old 'may pan up by as much' test: the half that still holds, kept as a guard while the pan clamp goes"
+}

@@ -43,6 +43,7 @@ import { ThoughtKnotSettingTab } from './settings/settings';
 import type { DeclaredList } from '@thoughtknot/core/display/properties/list-row';
 import { engineOnThePage, Layouts } from './layout-worker/layout-worker';
 import { renderShown } from './block';
+import { TriedTypes } from './tried-types';
 import { GraphPane, PANE } from './pane';
 import { addForYou } from './editor';
 import type { BlockEditor } from './block-editor/block-editor';
@@ -179,6 +180,8 @@ export default class ThoughtKnotPlugin extends Plugin {
 
   /** Each graph's View menu state (§25), by note, graph and view: kept while the plugin runs, never saved. */
   private readonly viewStates = new Map<string, ViewState>();
+  /** The diagram types looked at in reading view (§15, type_try_reading): kept while the plugin runs, never saved. */
+  readonly tried = new TriedTypes();
 
   /**
    * The View menu's state of a graph, or of one of its views, in a note (§25). It is the same for every card that draws

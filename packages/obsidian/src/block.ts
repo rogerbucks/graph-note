@@ -127,6 +127,12 @@ export async function renderShown(
   };
   const keeper = new MarkdownRenderChild(el);
   keeper.register(plugin.watchSettings(() => void draw()));
+  // a diagram type looked at in this note, or put back (§15, type_try_reading)
+  keeper.register(
+    plugin.tried.watch((path) => {
+      if (path === ctx.sourcePath) void draw();
+    }),
+  );
   ctx.addChild(keeper);
   await draw();
 }
@@ -209,16 +215,28 @@ export async function renderBlock(
     .filter((p) => p.graph === graph)
     .map(shown);
   const plain = reading.graphs.get(graph);
-  const drawing = plain && styledDrawing(plain, styling.style, reading.world[graph]);
+  // drawn as the diagram type looked at in reading view, if one is, never saved (§15, type_try_reading)
+  const at = { path: target.path, graph };
+  const looked = plain && plugin.tried.styleFor(at, plain, styling.style, reading.world[graph]);
+  const drawing = plain && styledDrawing(plain, looked ? looked.style : styling.style, reading.world[graph]);
   // the diagram types (§15): which fit, the one suggested and the one drawn; choosing one writes it in the style graph.
   // A type a plug-in from outside adds is drawn by that plug-in, when one turned on adds it (outside-diagrams.ts).
   const diagram =
     plain &&
+    looked &&
     (await withPicture(
       plugin.outside,
-      diagramShown(plain, styling.style, reading.world[graph], undefined, (change, done) => {
-        void writeStyle(plugin, target.path, graph, { diagram: change }, done);
-      }),
+      diagramShown(
+        plain,
+        looked.style,
+        reading.world[graph],
+        undefined,
+        (change, done) => {
+          plugin.tried.forget(at); // saved: no longer only looked at
+          void writeStyle(plugin, target.path, graph, { diagram: change }, done);
+        },
+        looked.trying,
+      ),
       plain,
       reading.world[graph],
       styling.style.nudges,
@@ -254,7 +272,7 @@ export async function renderBlock(
   // the View menu (§25). One state for every card of this graph in this note, folding it as its switches say. A graph
   // drawn as a table has none
   const state = diagram?.table || diagram?.picture ? undefined : plugin.switchesFor(target.path, graph, styling.style);
-  const laidOut = (by?: object) => plugin.layout(state ? state.folded(drawing) : drawing, by);
+  const laidOut = (by?: object) => plugin.layout(state ? state.folded(drawing, by) : drawing, by);
   let drawn: Drawn | Refusal | null;
   try {
     // a graph drawn as a table is the plugin's own table, never laid out (§15)

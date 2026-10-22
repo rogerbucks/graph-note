@@ -223,6 +223,9 @@ These test behaviour across modules, or the repository itself, so they are named
   is found in its note, read, and returns the things the table gives. Every query outside the view profile gets the
   table's refusal (editor spec §7, views_agree_with_grafeo).
 - `packages/core/test/views-across.test.js` — a view saved as shown is written in the style graph, never the data, and reopens the same (editor spec §7).
+- `packages/core/test/large-drawing.test.js` — a graph of more than 300 things is laid out the quick way, in one
+  direction. It is still drawn whole by the engine, and a person's routing still wins (editor spec §11,
+  large_drawn_quick).
 - `packages/core/test/edge-cases.test.js` — empty, broken and oversized inputs each give a stated result, never a blank or a crash (spec §9).
 - `packages/core/test/edits.test.js` — every edit from the pane round-trips; locking writes a schema the checks pass.
 - `packages/core/test/proposals-checked.test.js` — a proposal is run through the graph spec's own change-set check, and
