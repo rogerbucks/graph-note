@@ -632,7 +632,7 @@
           "value: (drawing: GraphDrawing, engine: Engine) => Drawn"
         ],
         "DRAW_MARK_KINDS": [
-          "value: readonly ['box', 'link', 'label', 'arrowhead', 'group']"
+          "value: readonly ['box', 'link', 'label', 'arrowhead', 'group', 'item', 'fold']"
         ],
         "DRAW_MARK_LIMIT": [
           "value: 100000"
@@ -647,10 +647,10 @@
           "value: (d: GraphDrawing, rankdir: 'LR' | 'TB') => string"
         ],
         "DrawMark": [
-          "type = MarkCommon & ({ kind: 'box'; x: number; y: number; width: number; height: number; shape?: BoxShape; outline?: MarkOutline; } | { kind: 'link'; points: MarkPoint[]; curve?: boolean; from?: string; to?: string; outline?: MarkOutline; } | { kind: 'label'; x: number; y: number; text: string; size: number; anchor: 'start' | 'middle' | 'end'; maxWidth?: number; font?: string; } | { kind: 'arrowhead'; x: number; y: number; angle: number; size: number; outline?: MarkOutline; } | { kind: 'group'; x: number; y: number; width: number; height: number; outline?: MarkOutline; })"
+          "type = MarkCommon & ({ kind: 'box'; x: number; y: number; width: number; height: number; shape?: BoxShape; outline?: MarkOutline; } | { kind: 'link'; points: MarkPoint[]; curve?: boolean; from?: string; to?: string; outline?: MarkOutline; } | { kind: 'label'; x: number; y: number; text: string; size: number; anchor: 'start' | 'middle' | 'end'; maxWidth?: number; font?: string; } | { kind: 'arrowhead'; x: number; y: number; angle: number; size: number; outline?: MarkOutline; } | { kind: 'group'; x: number; y: number; width: number; height: number; outline?: MarkOutline; } | { kind: 'item'; x: number; y: number; width: number; height: number; item: string; name: string; } | { kind: 'fold'; x: number; y: number; width: number; height: number; folds: FoldKind; hides: number; name: string; })"
         ],
         "DrawMarkKind": [
-          "type = 'link' | 'box' | 'label' | 'arrowhead' | 'group'"
+          "type = 'link' | 'box' | 'label' | 'arrowhead' | 'group' | 'item' | 'fold'"
         ],
         "DrawMarkRole": [
           "type = 'thing' | 'link' | 'group' | 'picture'"
