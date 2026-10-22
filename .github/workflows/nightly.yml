@@ -94,7 +94,10 @@ jobs:
       - run: npm ci
       - run: npm audit signatures
       - run: node scripts/check-classification.mjs --all
-      - run: npm test
+      # the whole suite at once peaked over the default 4 GB ceiling (22 Oct 2026); CI's runs get 6 GB, and so does this
+      - env:
+          THOUGHTKNOT_TEST_MEMORY_MB: 6144
+        run: npm test
       - run: npm run build
       - name: The nightly version, written into the manifest the build carries
         id: version
