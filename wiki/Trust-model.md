@@ -308,4 +308,4 @@ Each of these adds a boundary. The pull request that builds it updates this page
 - **Sync and the peer network** (Wave 13): peers and their devices.
 - **The web layer and corporate boundary** (Wave 14): servers and filtered snapshots.
 - **New hosts:** the standalone app (Wave 7) and VS Code (Wave 8).
-- **Outside data tables** (Wave 28): fetched data sets, under `data_set_access`.
+- **Outside data tables** (Wave 33): fetched data sets, under `data_set_access`.
