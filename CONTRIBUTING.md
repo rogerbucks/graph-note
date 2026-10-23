@@ -474,6 +474,11 @@ These test behaviour across modules, or the repository itself, so they are named
   words. It refuses as a name and as a kind exactly the words the core keeps from them.
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
 
+### The libraries' examples
+
+- `test/library-examples.test.js` — the libraries' runnable examples, `examples/js` and `examples/python`, read and
+  check a block with every rule passing (API-12). CI's `examples` job runs each one from the release archive's layout.
+
 ### Colours and direction
 
 - `test/print.test.js` — a printed note (editor spec §44, print_ready). Each graph is drawn whole, in the host's

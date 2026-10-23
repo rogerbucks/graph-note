@@ -41,16 +41,26 @@ export function builtExtension() {
 
 /**
  * A stand-in VS Code with the extension activated, over the workspace folder `folder`. The note at `path` is in the
- * active editor. `open()` chooses Open in ThoughtKnot.
+ * active editor. `open()` chooses Open in ThoughtKnot, `ask()` Ask AI about this note. `settings` and `models` are VS
+ * Code's (fake-vscode.js); `context` is what the extension was given, its kept values in `globalState`.
  */
-export async function vscodeOn(folder, path, { language = 'en', origin, served } = {}) {
+export async function vscodeOn(folder, path, { language = 'en', origin, served, settings, models } = {}) {
   const extension = await builtExtension();
-  const fake = fakeVscode({ language, folders: [folder], origin, served: served ?? extension });
-  const context = { subscriptions: [], extensionUri: Uri.file(extension) };
+  const fake = fakeVscode({ language, folders: [folder], origin, served: served ?? extension, settings, models });
+  const kept = new Map();
+  const globalState = { get: (key) => kept.get(key), update: async (key, value) => void kept.set(key, value) };
+  const context = { subscriptions: [], extensionUri: Uri.file(extension), globalState };
   const loaded = loadExtension(join(extension, 'dist/extension.cjs'), fake.vscode);
   loaded.activate(context);
   fake.vscode.window.activeTextEditor = { document: { uri: Uri.file(join(folder, path)) } };
-  return { ...fake, extension, loaded, open: (...args) => fake.commands.get('thoughtknot.openGraph')(...args) };
+  return {
+    ...fake,
+    extension,
+    loaded,
+    context,
+    open: (...args) => fake.commands.get('thoughtknot.openGraph')(...args),
+    ask: (...args) => fake.commands.get('thoughtknot.askAi')(...args),
+  };
 }
 
 /** The tab's page in a DOM, for the tab `tab` made from the extension at `extension`. */
