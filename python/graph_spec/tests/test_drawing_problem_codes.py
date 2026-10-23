@@ -1,9 +1,9 @@
-"""Editor spec §42, problem_codes: every problem the Python drawing reader finds in a note carries
-a stable code, the same as the core's. The graph spec reader's own problems keep its codes
-(packages/graph-spec/src/reader/problem-codes.json). What the drawing reader finds beyond them
-takes a code from packages/core/src/drawing-problem-codes.json, which the library never reads:
-each problem passes its code as a literal. The sources are scanned, so every code passed is in a
-table, and every code the table gives Python is passed. The notes of
+"""Editor spec §42, problem_codes: every problem the Python drawing reader finds in a note or its
+style graph carries a stable code, the same as the core's. The graph spec reader's own problems
+keep its codes (packages/graph-spec/src/reader/problem-codes.json). What the drawing reader
+finds beyond them takes a code from packages/core/src/drawing-problem-codes.json, which the
+library never reads: each problem passes its code as a literal. The sources are scanned, so
+every code passed is in a table, and every code the table gives Python is passed. The notes of
 packages/core/test/drawing-problem-cases.json, which the core reads too
 (packages/core/test/note-reading-codes.test.js), give their codes in order.
 
@@ -21,7 +21,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "..", "src")
 sys.path.insert(0, SRC)
 
+import graph_rules as gr  # noqa: E402
 from graphspec.reader.drawing import read_for_drawing  # noqa: E402
+from graphspec.style.reading import read_style  # noqa: E402
 
 PACKAGES = os.path.join(HERE, "..", "..", "..", "packages")
 
@@ -36,7 +38,7 @@ READER = _json("graph-spec", "src", "reader", "problem-codes.json")
 CASES = _json("core", "test", "drawing-problem-cases.json")
 BY_CODE = {c["code"]: c for c in TABLE["codes"]}
 READER_CODES = {c["code"] for c in READER["codes"]}
-CODE = re.compile(r"\"(GN7\d\d)\"")
+CODE = re.compile(r"\"(GN[78]\d\d)\"")
 
 
 def passed():
@@ -76,7 +78,9 @@ class DrawingProblemCodes(unittest.TestCase):
         for c in ours:
             for code in c["codes"]:
                 self.assertTrue(code in BY_CODE or code in READER_CODES, f"{c['name']}: {code}")
-            _, problems = read_for_drawing(c["blocks"])
+            store, problems = read_for_drawing(c["blocks"])
+            if c.get("style"):
+                problems = read_style(c["blocks"], c["style"], gr.World.from_store(store))[1]
             got = [p.get("code") for p in problems]
             if got != c["codes"]:
                 wrong.append(f"{c['name']}: {got}")

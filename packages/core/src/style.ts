@@ -93,6 +93,7 @@ function links(texts: string[], blocks: number[], graph: string): Problem[] {
       block,
       line: blanked.slice(0, m.index).split('\n').length,
       severity: 'error',
+      code: 'GN801',
       message: word('styling.link'),
       fix: word('styling.link.fix'),
     }));
@@ -116,15 +117,16 @@ export function readStyle(
 ): { style: StyleGraph; problems: Problem[] } {
   const blocks = texts.flatMap((t, i) => (styleOf(t) === graph ? [i] : []));
   const first = { block: blocks[0] ?? 0, line: 1, id: '' };
-  const fail = (message: string, fix: string) => ({
+  const fail = (code: string, message: string, fix: string) => ({
     style: emptyStyle(),
-    problems: [{ graph, block: first.block, line: 1, severity: 'error' as const, message, fix }],
+    problems: [{ graph, block: first.block, line: 1, severity: 'error' as const, code, message, fix }],
   });
   if (!blocks.length || reading.tooLarge) return { style: emptyStyle(), problems: [] };
   // measured before anything is read, as the data is (§9): a style too large never holds the page
   const big = textTooLarge(blocks.map((i) => texts[i] ?? ''));
   if (big?.reason === 'too-large')
     return fail(
+      'GN802',
       word(big.limit === 'text-lines' ? 'styling.too-large-lines' : 'styling.too-large-bytes', {
         size: String(big.count),
         most: String(big.most),
@@ -132,7 +134,7 @@ export function readStyle(
       word('styling.too-large.fix'),
     );
   const g = reading.whole[graph] ?? reading.world[graph];
-  if (!g) return fail(word('styling.no-graph', { graph }), word('styling.no-graph.fix', { graph }));
+  if (!g) return fail('GN803', word('styling.no-graph', { graph }), word('styling.no-graph.fix', { graph }));
   const read = readBlocks(texts, [], REREAD_BUDGET, (t) => (styleOf(t) === graph ? 'data' : null));
   const problems = read.problems.filter((p) => p.severity !== 'hint').map((p) => ({ ...p, graph }));
   // where each thing is written: the first block and line that write it
@@ -174,6 +176,7 @@ export function readStyle(
             block,
             line: 1,
             severity: 'warning',
+            code: 'GN804',
             message: word('styling.named-as-data', { own }),
             fix: word('styling.named-as-data.fix', { graph }),
           },

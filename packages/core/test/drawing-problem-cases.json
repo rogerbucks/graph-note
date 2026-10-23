@@ -1,5 +1,5 @@
 {
-  "about": "Editor spec §42, problem_codes: small notes and the code each problem the drawing reader finds in them carries (packages/core/src/drawing-problem-codes.json, and the graph spec reader's own codes). readers says which readers read the case: core reads it with readNote, and with readBlocks where py reads it too; py reads it with read_for_drawing. Where both read a case, both give the same codes in the same order. Read by packages/core/test/note-reading-codes.test.js and python/graph_spec/tests/test_drawing_problem_codes.py.",
+  "about": "Editor spec §42, problem_codes: small notes and the code each problem the drawing reader finds in them carries (packages/core/src/drawing-problem-codes.json, and the graph spec reader's own codes). style, where given, names the graph a case's style blocks style: its problems are those readStyle (read_style) gives. readers says which readers read the case: core reads it with readNote, and with readBlocks where py reads it too; py reads it with read_for_drawing. Where both read a case, both give the same codes in the same order. Read by packages/core/test/note-reading-codes.test.js and python/graph_spec/tests/test_drawing_problem_codes.py.",
   "cases": [
     {
       "name": "a comma with nothing after it",
@@ -72,6 +72,76 @@
       "blocks": ["// graph: g\nINSERT\n/// a note\n(a:Thing {text: 'A'}), (b:Thing {text: 'B'})"],
       "codes": ["GN718"],
       "readers": ["core"]
+    },
+    {
+      "name": "a link in a style graph",
+      "blocks": [
+        "// graph: g\nINSERT (a:Thing {text: 'A'}),\n(b:Thing {text: 'B'})",
+        "// graph: g_style · STYLE g\nINSERT (n:Nudge {word: 'beside', thing: 'a', other: 'b'}),\n(n)-[:ON]->(n)"
+      ],
+      "style": "g",
+      "codes": ["GN801"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a style block for a graph the note lacks",
+      "blocks": [
+        "// graph: g\nINSERT (a:Thing {text: 'A'}),\n(b:Thing {text: 'B'})",
+        "// graph: h_style · STYLE h\nINSERT (n:Nudge {word: 'beside', thing: 'a', other: 'b'})"
+      ],
+      "style": "h",
+      "codes": ["GN803"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a style block named as its data graph",
+      "blocks": [
+        "// graph: g\nINSERT (a:Thing {text: 'A'}),\n(b:Thing {text: 'B'})",
+        "// graph: g · STYLE g\nINSERT (n:Nudge {word: 'beside', thing: 'a', other: 'b'})"
+      ],
+      "style": "g",
+      "codes": ["GN804"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a style thing of no style kind",
+      "blocks": [
+        "// graph: g\nINSERT (a:Thing {text: 'A'}),\n(b:Thing {text: 'B'})",
+        "// graph: g_style · STYLE g\nINSERT (x:Banana {colour: 'red'})"
+      ],
+      "style": "g",
+      "codes": ["GN807"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a key a style kind does not use",
+      "blocks": [
+        "// graph: g\nINSERT (a:Thing {text: 'A'}),\n(b:Thing {text: 'B'})",
+        "// graph: g_style · STYLE g\nINSERT (s:Show {property: 'text', kind: 'Thing', colr: 'red'})"
+      ],
+      "style": "g",
+      "codes": ["GN806"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a style value naming a thing the graph lacks",
+      "blocks": [
+        "// graph: g\nINSERT (a:Thing {text: 'A'}),\n(b:Thing {text: 'B'})",
+        "// graph: g_style · STYLE g\nINSERT (n:Nudge {word: 'beside', thing: 'zzz', other: 'a'})"
+      ],
+      "style": "g",
+      "codes": ["GN805"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "two direction nudges that conflict",
+      "blocks": [
+        "// graph: g\nINSERT (a:Thing {text: 'A'}),\n(b:Thing {text: 'B'})",
+        "// graph: g_style · STYLE g\nINSERT (n:Nudge {word: 'direction', direction: 'TB'}),\n(m:Nudge {word: 'direction', direction: 'LR'})"
+      ],
+      "style": "g",
+      "codes": ["GN808"],
+      "readers": ["core", "py"]
     }
   ]
 }

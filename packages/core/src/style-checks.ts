@@ -284,7 +284,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
       const message = other
         ? say('styling.kind-unknown', { label: other, kinds: kindsList() })
         : say('styling.kind-one', { kinds: kindsList() });
-      c.problems.push(styleProblem(names.graph, raw.at, message, say('styling.kind.fix', { kinds: kindsList() })));
+      c.problems.push(styleProblem(names.graph, raw.at, 'GN807', message, say('styling.kind.fix', { kinds: kindsList() })));
       continue;
     }
     const p = c.problems;

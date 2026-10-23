@@ -48,6 +48,7 @@ def _links(texts, blocks, graph):
                     "severity": "error",
                     "message": "a link means nothing in a style graph",
                     "fix": "remove the link",
+                    "code": "GN801",
                 }
             )
     return out
@@ -133,6 +134,7 @@ def read_style(
                 "severity": "error",
                 "message": f"there is no graph {graph} in this note to style",
                 "fix": f"write graph {graph}, or style a graph the note has",
+                "code": "GN803",
             }
         ]
     store, read = read_for_drawing(
@@ -195,6 +197,7 @@ def read_style(
                     "message": f"this style block takes the data graph {own}'s name; it needs a "
                     "name of its own, never a data graph's",
                     "fix": f"name it {graph}_style: // graph: {graph}_style · STYLE {graph}",
+                    "code": "GN804",
                 }
             )
     every = [*named, *problems, *_links(texts, blocks, graph), *checked, *conflicts]

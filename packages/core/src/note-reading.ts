@@ -139,9 +139,10 @@ export interface Problem {
   also?: { span: { line: number; character: number; end: number }; text: string }[];
   /** Set when what was written departs from standard GQL and was read as meant (spec §21): which departure it is. */
   departure?: Departure;
-  /** The problem's stable code, such as GN207, when the graph spec's reader raised it. It is the same from the Python
-   * library, and given as the diagnostic's code (editor spec §42, problem_codes). */
-  code?: string;
+  /** The problem's stable code, given as the diagnostic's code (editor spec §42, problem_codes). The graph spec
+   * reader's own, such as GN207, or for what the core finds beyond it, one of drawing-problem-codes.json, such as
+   * GN709. Every problem has one, the same from the Python library where it finds the problem too. */
+  code: string;
   /** What sort of problem the core raised, where no code says it: a link to a missing thing, or a relationship type
    * the graph lacks. Many problems are grouped by it (spec §8). */
   kind?: 'broken-links' | 'unknown-types';

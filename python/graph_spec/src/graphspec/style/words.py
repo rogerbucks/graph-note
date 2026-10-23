@@ -128,9 +128,10 @@ def word_fix(written: str, among: Sequence[str], always: bool = False) -> dict:
     return {"fix": f"change {written} to {some}{or_list(among)}", "nearest": None}
 
 
-def style_problem(graph: str, at: dict, message: str, fix: str) -> dict:
-    """A problem with the style of `graph`, on the line of the style thing at `at`: an error, as
-    what it names is left out of the style, and the graph is drawn without it."""
+def style_problem(graph: str, at: dict, code: str, message: str, fix: str) -> dict:
+    """A problem with the style of `graph`, on the line of the style thing at `at`, with its stable
+    code (editor spec §42): an error, as what it names is left out of the style, and the graph is
+    drawn without it."""
     return {
         "graph": graph,
         "block": at["block"],
@@ -138,6 +139,7 @@ def style_problem(graph: str, at: dict, message: str, fix: str) -> dict:
         "severity": "error",
         "message": message,
         "fix": fix,
+        "code": code,
     }
 
 
@@ -158,7 +160,9 @@ def unknown_keys(kind: str, written: Sequence[str], graph: str, at: dict) -> lis
             fix = f"change {k} to {mean}{or_list(by)}"
         else:
             fix = f"remove {k}, or use one of {or_list(known)}"
-        out.append(style_problem(graph, at, f"{k} is not a key {article(kind)} {kind} uses", fix))
+        out.append(
+            style_problem(graph, at, "GN806", f"{k} is not a key {article(kind)} {kind} uses", fix)
+        )
     return out
 
 

@@ -1,6 +1,7 @@
-// Editor spec §42, problem_codes: every problem the drawing reader finds in a note carries a stable code. The graph
-// spec reader's own problems keep its codes (problem-codes.json). What the core finds beyond them takes a code from
-// src/drawing-problem-codes.json, whose numbering goes on from that table. The code is the diagnostic's code.
+// Editor spec §42, problem_codes: every problem the drawing reader finds in a note or its style graph carries a stable
+// code. The graph spec reader's own problems keep its codes (problem-codes.json). What the core finds beyond them takes
+// a code from src/drawing-problem-codes.json, whose numbering goes on from that table. The code is the diagnostic's
+// code. A Problem without one does not typecheck.
 // - The sources are scanned, so every code passed is in a table, and every code the core is given is passed.
 // - Each code's words are in the catalogue, and in the file that passes it.
 // - The notes of drawing-problem-cases.json give their codes. The Python drawing reader reads them too.
@@ -11,6 +12,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readNote } from '../src/drawing.ts';
 import { readBlocks } from '../src/partial-read.ts';
+import { readStyle } from '../src/style.ts';
 import { diagnostics } from '../src/help.ts';
 import { SOURCE_WORDS } from '../src/source-words.ts';
 
@@ -33,12 +35,15 @@ const SOURCES = walk(SRC).map((file) => {
   return { file: file.slice(SRC.length), text, codes: [...text.matchAll(/'(GN\d{3})'/g)].map((m) => m[1]) };
 });
 
+/** The problems of a case: of its style graph where it names one, else of the note. */
+const problemsOf = (c) => (c.style ? readStyle(c.blocks, c.style, readNote(c.blocks)) : readNote(c.blocks)).problems;
+
 describe('editor spec §42, problem_codes: the drawing reader’s table', () => {
-  test('every code is GN7 and two digits, given once, apart from the reader’s, with its words and readers', () => {
+  test('every code is GN7 or GN8 and two digits, given once, apart from the reader’s, with its words and readers', () => {
     assert.match(TABLE.about, /never reused/);
     assert.equal(BY_CODE.size, TABLE.codes.length, 'no code given twice');
     for (const c of TABLE.codes) {
-      assert.match(c.code, /^GN7\d\d$/);
+      assert.match(c.code, /^GN[78]\d\d$/);
       assert.ok(!READER_CODES.has(c.code), `${c.code} is the reader's too`);
       assert.ok(c.section === null || /^\d+$/.test(c.section), c.code);
       assert.ok(c.libraries.length && c.libraries.every((l) => l === 'core' || l === 'py'), c.code);
@@ -79,7 +84,7 @@ describe('editor spec §42, problem_codes: each note gives its codes', () => {
 
   test('every problem of every case carries a code, and the codes are the case’s', () => {
     const wrong = CASES.cases
-      .map((c) => ({ c, got: readNote(c.blocks).problems.map((p) => p.code) }))
+      .map((c) => ({ c, got: problemsOf(c).map((p) => p.code) }))
       .filter(({ c, got }) => JSON.stringify(got) !== JSON.stringify(c.codes))
       .map(({ c, got }) => `${c.name}: ${got.join(' ')}`);
     assert.deepEqual(wrong, []);
@@ -87,7 +92,7 @@ describe('editor spec §42, problem_codes: each note gives its codes', () => {
 
   test('a case the Python reader reads too gives the same codes from readBlocks, as it reads them', () => {
     const wrong = CASES.cases
-      .filter((c) => c.readers.includes('py'))
+      .filter((c) => c.readers.includes('py') && !c.style)
       .map((c) => ({ c, got: readBlocks(c.blocks, []).problems.map((p) => p.code) }))
       .filter(({ c, got }) => JSON.stringify(got) !== JSON.stringify(c.codes))
       .map(({ c, got }) => `${c.name}: ${got.join(' ')}`);

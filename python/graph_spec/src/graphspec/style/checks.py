@@ -57,7 +57,7 @@ class _Reader:
         self.raw, self.names, self.out = raw, names, out
 
     def report(self, message, fix):
-        self.out.append(style_problem(self.names["graph"], self.raw["at"], message, fix))
+        self.out.append(style_problem(self.names["graph"], self.raw["at"], "GN805", message, fix))
 
     def missing(self, message, fix):
         """A fault of something absent, said unless a misspelt key may be it: the rename comes
@@ -377,7 +377,7 @@ def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
                 else f"a thing of a style graph is one of {KINDS}"
             )
             fix = f"write it as one of {KINDS}, or remove it"
-            problems.append(style_problem(names["graph"], raw["at"], message, fix))
+            problems.append(style_problem(names["graph"], raw["at"], "GN807", message, fix))
             continue
         unknown = unknown_keys(kinds[0], list(raw["props"]), names["graph"], raw["at"])
         problems.extend(unknown)
