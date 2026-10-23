@@ -1526,6 +1526,8 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
     history. They are also the text's help, picture, problems and suggestions, the picker, and the draft banner.
   - The last part is the pane's own drawing (`pane-drawing.ts`). It holds `directed`, the direction rule both hosts lay
     out by.
+  - A graph too large to lay out is shown as its overview under the banner, when the host gives a `palette`. It starts
+    with the Filter saved in the style graph. A filter chosen goes to the host's `saveFilter`, if it has one.
 
 ### Lifecycle, code and the card's folders
 

@@ -28,6 +28,9 @@ import { installDomHelpers } from './packages/core/src/display/dom-helpers.ts';
 import { installHost } from './packages/core/src/display/host.ts';
 import { massiveView } from './packages/core/src/display/graph-view/massive-view.ts';
 import { PALETTES } from './packages/core/src/palette.ts';
+import { PaneDrawing } from './packages/core/src/display/editor/pane-drawing.ts';
+import { readNote } from './packages/core/src/drawing.ts';
+import { DEFAULT_SETTINGS } from './packages/core/src/settings.ts';
 installDomHelpers(window);
 installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
 const boxes = [], links = [];
@@ -152,6 +155,38 @@ window.trail = async (name) => {
     back: !at('Back'),
     forward: !at('Forward'),
   };
+};
+// the edit pane's drawing of pets, which its host will not lay out: the banner, then the overview, saved filter and all.
+// Then the dogs are ticked too, and what the host was asked to save is given
+window.pane = async () => {
+  const lines = ['// graph: pets'];
+  for (let i = 0; i < 30; i++) lines.push('(p' + i + ':' + (i % 2 ? 'Cat' : 'Dog') + " {name: 'Pet " + i + "'}),");
+  lines.push('(p0)-[:KNOWS]->(p1)');
+  const texts = [lines.join('\\n'), "// graph: pets_style · STYLE pets\\n(filter_1:Filter {keep: 'Kind: Cat'})"];
+  const saved = [];
+  const host = {
+    settings: () => DEFAULT_SETTINGS,
+    layout: () => Promise.resolve({ reason: 'too-large', limit: 'text-lines', count: 32, most: 10 }),
+    palette: PALETTES.light,
+    saveFilter: (graph, keep) => saved.push([graph, keep]),
+  };
+  const el = document.body.appendChild(document.createElement('div'));
+  el.style.width = '600px';
+  const on = { edit() {}, select() {}, replace: () => false };
+  new PaneDrawing(host).redraw(el, readNote(texts), { graph: 'pets', text: texts[0] }, () => false, on);
+  for (let i = 0; i < 50 && !el.querySelector('.thoughtknot-massive'); i++) await new Promise((r) => setTimeout(r, 20));
+  const stage = el.querySelector('.thoughtknot-massive-stage');
+  const boxes = [...el.querySelectorAll('.thoughtknot-massive-facet input')];
+  const shown = {
+    banner: !!el.querySelector('.thoughtknot-banner'),
+    label: stage && stage.getAttribute('aria-label'),
+    ticked: boxes.filter((b) => b.checked).map((b) => b.nextSibling.textContent),
+  };
+  const dog = boxes.find((b) => b.nextSibling.textContent === 'Dog');
+  dog.checked = true;
+  dog.dispatchEvent(new Event('change'));
+  el.remove();
+  return { ...shown, saved };
 };
 window.flyToNeedle = async () => {
   const [match] = view.find('needle');
@@ -307,6 +342,18 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     assert.equal(after.forward, false, 'the new step dropped the filter ahead of it');
     assert.deepEqual(after.ticked, []);
   });
+  // proves: scale_massive_card
+  test(
+    'the edit pane shows a graph too large to lay out as its overview, and saves the filter chosen',
+    options,
+    async () => {
+      const { banner, label, ticked, saved } = await run('pane()');
+      assert.ok(banner, 'the banner still says why it is not drawn');
+      assert.match(label, /^Overview of pets: 15 things in \d+ groups\./, 'it starts with the saved filter');
+      assert.deepEqual(ticked, ['Cat']);
+      assert.deepEqual(saved, [['pets', { Kind: ['Cat', 'Dog'] }]], 'the host is asked to save the new one');
+    },
+  );
   // proves: scale_filter_live
   test('a card drawn with a saved filter starts with it ticked, keeping only its things', options, async () => {
     const { label, ticked } = await run('saved()');
