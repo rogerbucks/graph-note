@@ -120,16 +120,18 @@ def _literal(v):
     return _text(v)
 
 
-def promote_transition(graph: Graph, a, b, tid) -> dict:
+def promote_transition(graph: Graph, a: str, b: str, tid: str) -> dict:
     """A TRANSITION link promoted to a Transition thing: the link to remove, the lines to add.
 
     The link's properties move to the thing. The lines join and can be contested like any other.
     """
     link = next((e for e in graph.edges if e[0] == a and e[1] == "TRANSITION" and e[2] == b), None)
     if link is None:
-        raise ValueError(f"refused: there is no transition from {a} to {b} to promote (§34)")
+        raise ValueError(
+            f"refused: there is no transition from {a} to {b} to promote (editor spec §34)"
+        )
     if tid in graph.nodes:
-        raise ValueError(f"refused: {tid} is already a thing in the graph (§34)")
+        raise ValueError(f"refused: {tid} is already a thing in the graph (editor spec §34)")
     props = link[3] or {}
     extra = "".join(f", {k}: {_literal(props[k])}" for k in sorted(props))
     return {
@@ -142,7 +144,7 @@ def promote_transition(graph: Graph, a, b, tid) -> dict:
     }
 
 
-def process_path(graph: Graph, frm, to):
+def process_path(graph: Graph, frm: str, to: str) -> list | None:
     """The shortest path between two things, walking every link either way and each transition
     as a thing of its own. None when nothing joins them."""
     nxt: dict = {}
@@ -178,7 +180,7 @@ def process_path(graph: Graph, frm, to):
     return path
 
 
-def guard_of(graph: Graph, transition):
+def guard_of(graph: Graph, transition: str) -> dict | None:
     """The guard on a transition: its expression, or its function's name and version, shown."""
     found = [e[2] for e in graph.out(transition, "GUARDED_BY")]
     if not found:
@@ -206,12 +208,12 @@ def guard_allows(guard: dict, ctx: dict, functions: dict | None = None) -> bool:
     if not versions or guard["version"] not in versions:
         raise ValueError(
             f"refused: no function {guard['function']} at version {guard['version']}"
-            " is given (§34)"
+            " is given (editor spec §34)"
         )
     return bool(versions[guard["version"]](ctx))
 
 
-def running_rule_of(graph: Graph, run) -> dict:
+def running_rule_of(graph: Graph, run: str) -> dict:
     """The running rule a run follows: its own override, or its process's one default."""
     r = graph.p(run)
     process = graph.p(r.get("process"))
@@ -227,12 +229,12 @@ def running_rule_of(graph: Graph, run) -> dict:
     }
 
 
-def override_running_rule(graph: Graph, run, rule) -> Graph:
+def override_running_rule(graph: Graph, run: str, rule: str) -> Graph:
     """The graph with a run's running rule overridden on the run alone; the process is left."""
     if rule not in RUNNING_RULES:
         raise ValueError(f"refused: a running rule is one of {', '.join(RUNNING_RULES)}")
     if not graph.has(run, "Run"):
-        raise ValueError(f"refused: {run} is not a run (§34)")
+        raise ValueError(f"refused: {run} is not a run (editor spec §34)")
     nodes = dict(graph.nodes)
     labels, props = nodes[run]
     nodes[run] = (labels, {**props, "running_rule": rule})

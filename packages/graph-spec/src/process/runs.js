@@ -41,7 +41,7 @@ function holdersOf(graph, state) {
   const out = [],
     seen = new Set([state]);
   for (let at = containerOf(graph, state); at !== null; at = containerOf(graph, at)) {
-    if (seen.has(at)) throw new Error(`refused: states contain each other in a loop through ${at} (§34)`);
+    if (seen.has(at)) throw new Error(`refused: states contain each other in a loop through ${at} (editor spec §34)`);
     seen.add(at);
     out.unshift(at);
   }
@@ -63,7 +63,7 @@ function enterState(graph, run, state, at = null) {
   const out = [],
     seen = new Set();
   for (let s = state; s !== null; s = innerStart(graph, s)) {
-    if (seen.has(s)) throw new Error(`refused: states contain each other in a loop through ${s} (§34)`);
+    if (seen.has(s)) throw new Error(`refused: states contain each other in a loop through ${s} (editor spec §34)`);
     seen.add(s);
     holdersOf(graph, s);
     out.push({ seq: ++seq, did: 'entered', state: s, under: containerOf(graph, s), at });

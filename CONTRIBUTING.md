@@ -418,6 +418,9 @@ These test behaviour across modules, or the repository itself, so they are named
   `mesh-parity-cases.json` holds (mesh_engine_parity).
 - `packages/graph-spec/test/join-every-author.test.mjs` — identical edits from any author join alike. A text merge that
   picks a value leaves the dispute for a person (same_join_every_author; `join-every-author-cases.json`).
+- `packages/graph-spec/test/process-core.test.mjs` — the process core and its runs, across `src/process/core.js` and
+  `runs.js`. It covers eight kinds, transitions, guards as data, the run log and nested machines (editor spec §34;
+  `process-core-cases.json`).
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
 - `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
 
@@ -443,6 +446,8 @@ These test behaviour across modules, or the repository itself, so they are named
   library, by the hashes of `mesh-parity-cases.json` (mesh_engine_parity).
 - `python/graph_spec/tests/test_join_every_author.py` — the Python library gives the answers of
   `join-every-author-cases.json`, whoever made the edits (same_join_every_author).
+- `python/graph_spec/tests/test_process_core.py` — the Python library's `core` and `runs` give the answers of
+  `process-core-cases.json` (editor spec §34).
 - `python/graph_spec/tests/test_drawing_problem_codes.py` — each problem the Python drawing reader finds in a note or
   a style graph has a stable code. It comes from `packages/core/src/drawing-problem-codes.json` or the reader's own
   table. The notes of `drawing-problem-cases.json` give the same codes as the core gives them (editor spec §42, problem_codes).

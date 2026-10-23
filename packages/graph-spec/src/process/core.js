@@ -91,8 +91,8 @@ function literal(v) {
  */
 function promoteTransition(graph, a, b, id) {
   const link = graph.edges.find((e) => e[0] === a && e[1] === 'TRANSITION' && e[2] === b);
-  if (!link) throw new Error(`refused: there is no transition from ${a} to ${b} to promote (§34)`);
-  if (graph.nodes.has(id)) throw new Error(`refused: ${id} is already a thing in the graph (§34)`);
+  if (!link) throw new Error(`refused: there is no transition from ${a} to ${b} to promote (editor spec §34)`);
+  if (graph.nodes.has(id)) throw new Error(`refused: ${id} is already a thing in the graph (editor spec §34)`);
   const props = Object.keys(link[3] || {})
     .sort()
     .map((k) => `, ${k}: ${literal(link[3][k])}`)
@@ -156,7 +156,7 @@ function guardAllows(guard, ctx, functions = {}) {
   if (guard.expression !== undefined) return guardHolds(guard.expression, ctx);
   const versions = Object.hasOwn(functions, guard.function) ? functions[guard.function] : null;
   if (!versions || !Object.hasOwn(versions, guard.version))
-    throw new Error(`refused: no function ${guard.function} at version ${guard.version} is given (§34)`);
+    throw new Error(`refused: no function ${guard.function} at version ${guard.version} is given (editor spec §34)`);
   return Boolean(versions[guard.version](ctx));
 }
 
@@ -172,7 +172,7 @@ function runningRuleOf(graph, run) {
 /** The graph with a run's running rule overridden on the run alone; the process is left as it is. */
 function overrideRunningRule(graph, run, rule) {
   if (!RUNNING_RULES.includes(rule)) throw new Error(`refused: a running rule is one of ${RUNNING_RULES.join(', ')}`);
-  if (!graph.has(run, 'Run')) throw new Error(`refused: ${run} is not a run (§34)`);
+  if (!graph.has(run, 'Run')) throw new Error(`refused: ${run} is not a run (editor spec §34)`);
   const nodes = new Map(graph.nodes);
   const [labels, props] = nodes.get(run);
   nodes.set(run, [labels, { ...props, running_rule: rule }]);
