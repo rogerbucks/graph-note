@@ -2,10 +2,12 @@
 // from its text by readNote and grouped by scale-groups.ts, each with the note lines it came from.
 import gs from '@thoughtknot/graph-spec';
 import { sha256 } from './ai-digest.ts';
-import { blockItems } from './block-items.ts';
-import { graphOf } from './blocks.ts';
-import { readNote } from './drawing.ts';
+import { dataKind } from './blocks.ts';
 import { gqlBlocks } from './fences.ts';
+import { textTooLarge } from './layout-limits.ts';
+import { namedKeys, readInParts, readWhole } from './note-parts.ts';
+import type { GraphRead, PartItem } from './note-parts.ts';
+import type { Link } from './note-reading.ts';
 import { groupsOf } from './scale-groups.ts';
 import type { GroupedBy } from './scale-groups.ts';
 
@@ -97,37 +99,73 @@ export const PAGE_MOST = 500;
 /** A value as canonical JSON (RFC 8785), a date as its text: what the index keeps and compares. */
 export const json = (v: unknown): string => gs.jcs(v);
 
-/** The note line span of the first item in a graph's blocks that `match` accepts. */
-function spanOf(
-  blocks: { text: string; line: number }[],
-  graph: string,
-  match: (item: string) => boolean,
-): Span | null {
-  for (const b of blocks) {
-    if (graphOf(b.text) !== graph) continue;
-    for (const it of blockItems(b.text))
-      if (match(it.text)) return { line: b.line + 1 + it.line, end: b.line + 1 + it.end };
-  }
-  return null;
+/** Where a graph's things and links were written: for each, the first item that wrote it, found without a search per thing. */
+function spans(items: PartItem[]): { thing: (key: string) => Span | null; link: (l: Link) => Span | null } {
+  const leads = new Map<string, number>(),
+    names = new Map<string, number>(),
+    typed = new Map<string, number[]>();
+  items.forEach((it, i) => {
+    const keys = namedKeys(it.text);
+    const lead = /^\s*\(/.test(it.text) ? keys[0] : undefined;
+    if (lead !== undefined && !leads.has(lead)) leads.set(lead, i);
+    for (const k of keys) if (!names.has(k)) names.set(k, i);
+    for (const m of it.text.matchAll(/:\s*(\w+)\b/g)) {
+      const list = typed.get(m[1] ?? '') ?? [];
+      if (list[list.length - 1] !== i) list.push(i);
+      typed.set(m[1] ?? '', list);
+    }
+  });
+  const span = (i: number | undefined): Span | null => {
+    const it = i === undefined ? undefined : items[i];
+    return it ? { line: it.line, end: it.end } : null;
+  };
+  let last = 0;
+  return {
+    thing: (key) => span(leads.get(key) ?? names.get(key)),
+    // a graph's links are found in the order they were written, each from where the last was found
+    link: (l) => {
+      const list = typed.get(l.type) ?? [];
+      const wrote = (i: number) => {
+        const t = items[i]?.text ?? '';
+        return t.includes(l.from) && t.includes(l.to);
+      };
+      // where the last link was found, then on to the end, then from the start
+      let at = 0,
+        hi = list.length;
+      while (at < hi) {
+        const mid = (at + hi) >> 1;
+        if ((list[mid] ?? 0) < last) at = mid + 1;
+        else hi = mid;
+      }
+      for (let k = 0; k < list.length; k++) {
+        const j = (at + k) % list.length,
+          i = list[j] ?? 0;
+        if (!wrote(i)) continue;
+        last = i;
+        return span(i);
+      }
+      return null;
+    },
+  };
 }
 
-const escape = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-/** A note's text read into the rows the index keeps. */
+/**
+ * A note's text read into the rows the index keeps. A note within the read limits is read in one go. A bigger one is
+ * read in parts (note-parts.ts), so no reading holds its whole graph; it gives the same rows.
+ */
 export function noteRows(note: string, text: string): NoteRows {
   const blocks = gqlBlocks(text);
-  const reading = readNote(blocks.map((b) => b.text));
+  const sized = blocks.map((b) => b.text).filter((t) => typeof dataKind(t) === 'string');
+  const reading = textTooLarge(sized)
+    ? (readInParts(blocks)?.graphs ?? new Map<string, GraphRead>())
+    : readWhole(blocks);
   const out: NoteRows = { note, version: sha256(text), things: [], links: [], groups: [], between: [] };
-  for (const [graph, drawing] of reading.graphs) {
+  for (const [graph, { drawing, props, items }] of reading) {
     const grouping = groupsOf(drawing);
     const groupOf = new Map<string, string>();
     grouping.groups.forEach((g) => g.keys.forEach((k) => groupOf.set(k, g.id)));
-    const world = reading.world[graph];
-    const propsOf = new Map<string, Record<string, unknown>>();
-    if (world) for (const id of world.nodes.keys()) propsOf.set(id, world.p(id));
-    for (const box of drawing.boxes) {
-      const defines = new RegExp(`^\\s*\\(\\s*${escape(box.key)}\\s*[:){\\s]`),
-        names = new RegExp(`\\(\\s*${escape(box.key)}\\s*[:){\\s]`);
+    const where = spans(items);
+    for (const box of drawing.boxes)
       out.things.push({
         note,
         graph,
@@ -135,12 +173,10 @@ export function noteRows(note: string, text: string): NoteRows {
         kind: box.kind,
         text: box.text,
         group: groupOf.get(box.key) ?? '',
-        props: json(propsOf.get(box.key) ?? {}),
-        span: spanOf(blocks, graph, (t) => defines.test(t)) ?? spanOf(blocks, graph, (t) => names.test(t)),
+        props: json(props.get(box.key) ?? {}),
+        span: where.thing(box.key),
       });
-    }
     drawing.links.forEach((l, n) => {
-      const typed = new RegExp(`:\\s*${escape(l.type)}\\b`);
       out.links.push({
         note,
         graph,
@@ -150,7 +186,7 @@ export function noteRows(note: string, text: string): NoteRows {
         to: l.to,
         fromGroup: groupOf.get(l.from) ?? '',
         toGroup: groupOf.get(l.to) ?? '',
-        span: spanOf(blocks, graph, (t) => typed.test(t) && t.includes(l.from) && t.includes(l.to)),
+        span: where.link(l),
       });
     });
     const inside = new Map<string, number>();

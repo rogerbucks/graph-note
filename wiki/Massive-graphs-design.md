@@ -178,10 +178,21 @@ These were sent to the thread building the marks, to fold into its format.
 | 4 | The overview: WebGPU and WebGL layers reading marks, Canvas fallback, spatial index, level of detail | M to L |
 | 5 | Opening a group into today's drawing, and laying out neighbours in the background | M |
 | 6 | Raise the read limit, with the benchmark holding each new limit (done 23 October 2026) | S |
-| 7 | Read in parts from the local store (`scale_in_parts`), once Q-05's store is in | L, later |
+| 7 | Read in parts from the local store (`scale_in_parts`). Part 1, the store reads a too-big note in parts, done 23 October 2026 | L |
 
-Steps 1 to 6 do not wait on anything else, except that step 4 reads the marks format. Step 7 waits for the local
-store.
+Steps 1 to 6 do not wait on anything else, except that step 4 reads the marks format. Step 7 waited for the local
+store, which came in on 23 October 2026 (#1071).
+
+### Step 7: reading in parts
+
+Step 7 comes in three parts:
+
+1. **The store reads a note in parts** (`note-parts.ts`). A note past the read limits is cut between its items.
+   Each part is within a quarter of the limits. A part is given a stand-in for each thing it names from an earlier
+   part, so its links are read. The store gets the same rows as a whole reading would give. A 2.1 MB note of 13,330
+   things goes into the store in about 2 seconds.
+2. **A too-big note opens as its groups**, read from the store, instead of being refused.
+3. **An edit in an opened group** is written to the note's text first. Then the store reads that note again.
 
 ## Decision
 
