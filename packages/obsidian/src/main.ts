@@ -33,7 +33,7 @@ import type {
 import { SENDS_KEPT, addCommands, sqliteQuery } from './commands';
 import { exportGraph, type ExportAsk, type ExportOutcome } from './export/export';
 import { PNG_PIXEL_LIMIT, rasterise } from './export/png';
-import { installObsidianHost } from './display-host';
+import { chooseLanguage, installObsidianHost } from './display-host';
 import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
 import { stillFrame } from '@thoughtknot/core/display/images/still-frame';
 import { vaultImages } from './images/vault-images';
@@ -99,6 +99,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     // drafts kept before ids are given theirs, and saved at once, so each keeps the same id from one load to the next
     if (Object.values(this.saved.drafts ?? {}).some((d) => !d.id)) await this.saveDrafts(this.drafts());
     this.settings = settingsFrom(this.saved.settings);
+    chooseLanguage(this.settings.language); // the language set here, else the host's (§42)
     this.outside = new OutsidePlugins(this, {
       read: () => this.saved.outside ?? {},
       write: async (outside) => {
@@ -174,10 +175,7 @@ export default class ThoughtKnotPlugin extends Plugin {
     return () => this.settingsWatchers.delete(changed);
   }
 
-  /**
-   * Saves the settings, read back as the core reads them, so nothing out of range or secret is kept. When the strictness
-   * or the drawing direction changed, every drawing and editor already shown reads and draws again.
-   */
+  /** Saves the settings as the core reads them, keeping nothing out of range or secret. What is shown draws again. */
   async saveSettings(next: Settings): Promise<void> {
     const was = this.settings;
     this.settings = settingsFrom(next);
@@ -186,9 +184,11 @@ export default class ThoughtKnotPlugin extends Plugin {
     // the View menu's defaults too (§25): every graph starts again from them, until its View menu changes them
     const switches = (s: Settings) => VIEW_SWITCHES.map((v) => s[SWITCH_SETTINGS[v]]);
     if (JSON.stringify(switches(was)) !== JSON.stringify(switches(this.settings))) this.viewStates.clear();
+    chooseLanguage(this.settings.language);
     const shown = (s: Settings) =>
       JSON.stringify([s.strictness, s.allowed, s.direction, s.focusDepth, s.noteCallouts, aidsOf(s), switches(s)]);
-    if (shown(was) !== shown(this.settings)) for (const changed of [...this.settingsWatchers]) changed();
+    if (shown(was) !== shown(this.settings) || was.language !== this.settings.language)
+      for (const changed of [...this.settingsWatchers]) changed();
   }
 
   /** Each graph's View menu state (§25), by note, graph and view: kept while the plugin runs, never saved. */

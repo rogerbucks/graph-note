@@ -166,6 +166,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 
 #### Colours and tokens
 
+- `bidi.ts` — sets apart a label with a right-to-left letter, in the drawing and every picture of it (editor spec §42,
+  bidi_labels). It is read from its first strong letter. `themed`, the saved picture's frame and the overview use it.
 - `theme.ts` — the drawing's colours and size, from the theme, in the host's palette. `hueColour` is the one blend every
   hue is drawn through, kinds, readings and the style graph's looks alike.
 - `palette.ts` — the one colour mapping (spec §10): how each host writes the style's colours.
@@ -1018,8 +1020,12 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     picked for `count` by `Intl.PluralRules`.
   - `SOURCE_WORDS` is UK English.
   - A translation is checked by `translationProblems` and added by `addTranslation`.
-  - `setLanguage`, called by `installHost` with the host's `language()`, picks it, or its base language's, else UK
-    English.
+  - Each translation is a plain JSON file in `packages/core/translations/`, with a guide for translators there.
+    `node scripts/translations.mjs` lists the files in `translation-files.ts`; each that holds to the source is used.
+  - `setLanguage` picks a language's translation, or its base language's, else UK English.
+  - `installHost` calls it with the host's `language()`, and sets the locale and direction too.
+  - `chooseLanguage(setting)` in `display/language.ts` does the same from the `language` setting. `host` follows the
+    host; any other names a language. Obsidian calls it on load and when the setting changes.
   - A word a translation lacks is said in UK English, never as its key.
   - Places move their words into `source-words.ts` one at a time.
   - Some words sit apart, each spread into `SOURCE_WORDS`:
@@ -1526,6 +1532,8 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
     history. They are also the text's help, picture, problems and suggestions, the picker, and the draft banner.
   - The last part is the pane's own drawing (`pane-drawing.ts`). It holds `directed`, the direction rule both hosts lay
     out by.
+  - A graph too large to lay out is shown as its overview under the banner, when the host gives a `palette`. It starts
+    with the Filter saved in the style graph. A filter chosen goes to the host's `saveFilter`, if it has one.
 
 ### Lifecycle, code and the card's folders
 

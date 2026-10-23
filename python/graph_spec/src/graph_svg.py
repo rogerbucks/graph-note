@@ -49,7 +49,8 @@ from collections.abc import Collection, Mapping, Sequence
 # Arrowheads hidden and the diagram type (editor spec §15), and properties shown inline (§14). Also
 # links that move (§7), nudges (§6), and folds, trunks and routing (§25). Each is written into the
 # source as the plugin's core writes it. They live with the style graph that chooses them, as do
-# the directions laid out (re-exported here)
+# the directions laid out (re-exported here). Labels set apart (editor spec §42).
+from graph_bidi import isolate_labels
 from graphspec.style.arrows import arrowless_source
 from graphspec.style.diagram_types import typed_source
 from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
@@ -286,6 +287,7 @@ def _themed(svg, kinds, readings=()):
 
     svg = re.sub(r'(<text[^>]*fill="#0000fe"[^>]*>)([^<]*)</text>', track, svg)
     svg = re.sub(r"<(?:path|polygon|ellipse|polyline|text)\b[^>]*>", fix, svg)
+    svg = isolate_labels(svg)  # a right-to-left label reads in its own direction (bidi_labels)
     svg = re.sub(r"<\?xml.*?\?>|<!DOCTYPE.*?>|<!--.*?-->|<title>.*?</title>", "", svg, flags=re.S)
     m = re.search(r'<svg width="([\d.]+)pt" height="([\d.]+)pt"', svg)
     if m:

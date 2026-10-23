@@ -1,10 +1,14 @@
 // The language the words are said in follows the host (editor spec §42, language_follows_host). A host says its
 // language as it is installed. A translation for it, or for its base language, is used. A word a translation lacks is
-// said in UK English, never as its key.
+// said in UK English, never as its key. The language setting can name one in place of the host's.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { addTranslation, currentLanguage, setLanguage, SOURCE_LANGUAGE, word } from '../src/words.ts';
 import { installHost } from '../src/display/host.ts';
+import { chooseLanguage } from '../src/display/language.ts';
+import { currentDirection } from '../src/words.ts';
+import { DEFAULT_SETTINGS, OPTIONS, settingsFrom } from '../src/settings.ts';
+import { languageChoice } from '../src/settings-language.ts';
 
 const FRENCH = {
   'code.copied': 'Copié',
@@ -60,5 +64,35 @@ describe('the language of the words', () => {
     assert.equal(word('code.copied'), 'Copié');
     installHost(host());
     assert.equal(currentLanguage(), 'en-GB');
+  });
+});
+
+describe('the language setting', () => {
+  test('follows the host until a language is chosen, and the locale and direction follow the language', () => {
+    addTranslation('fr', FRENCH);
+    installHost({ ...host('fr-FR'), direction: () => 'rtl' });
+    assert.equal(chooseLanguage('host'), 'fr');
+    assert.equal(currentDirection(), 'rtl', 'the host says its direction');
+    assert.equal(chooseLanguage('en-GB'), 'en-GB');
+    assert.equal(word('code.copied'), 'Copied');
+    assert.equal(currentDirection(), 'ltr', 'the language chosen says its own');
+    assert.equal(chooseLanguage('host'), 'fr');
+    installHost(host());
+  });
+
+  test('is saved as one of its choices: the host’s, UK English or a language with a translation file', () => {
+    const o = OPTIONS.find((x) => x.key === 'language');
+    assert.equal(DEFAULT_SETTINGS.language, 'host');
+    assert.deepEqual(
+      o.choices.slice(0, 2).map((c) => c.value),
+      ['host', 'en-GB'],
+    );
+    assert.equal(settingsFrom({ language: 'en-GB' }).language, 'en-GB');
+    assert.equal(settingsFrom({ language: 'xx-unknown' }).language, 'host');
+  });
+
+  test('names a language with a translation in itself, the same in every language', () => {
+    assert.deepEqual(languageChoice('fr'), { value: 'fr', name: 'Français', own: true });
+    assert.deepEqual(languageChoice('pt-BR'), { value: 'pt-BR', name: 'Português (Brasil)', own: true });
   });
 });

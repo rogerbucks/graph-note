@@ -3,6 +3,7 @@
 // - Strictness has three levels, read as stated wherever a graph is read.
 // - One action converts a note back to standard GQL, checked first. Engines and exports are given standard GQL.
 // - The AI models of §19, with their keys kept out of the vault. And formatting and drawing defaults.
+// - The language follows Obsidian's until one is chosen here (§42, language_follows_host).
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, load, until, wait } from './host/load-plugin.js';
@@ -80,6 +81,34 @@ describe('the settings page', () => {
     try {
       assert.equal(again.plugin.settings.strictness, 'standard');
       assert.equal(row(page(again), 'Strictness').querySelector('select').value, 'standard');
+    } finally {
+      again.uninstall();
+    }
+  });
+});
+
+describe('the language', () => {
+  test('follows Obsidian’s until UK English is chosen, and is kept when the plugin loads again', async () => {
+    const env = await load({ language: 'en-XA' });
+    let data;
+    try {
+      assert.equal(row(page(env), 'Strictness', true), undefined, 'the page speaks the test language');
+      const { OPTIONS } = await import('../../core/src/settings.ts');
+      const language = OPTIONS.find((o) => o.key === 'language');
+      const r = page(env)
+        .querySelectorAll('.setting-item')
+        .find((x) => x.querySelector('select option[value="en-GB"]'));
+      assert.ok(r, language.name);
+      choose(r, 'en-GB');
+      await until(() => env.state.data?.settings?.language === 'en-GB');
+      data = env.state.data;
+      assert.ok(row(page(env), 'Strictness', true), 'the page speaks UK English at once');
+    } finally {
+      env.uninstall();
+    }
+    const again = await load({ data, language: 'en-XA' });
+    try {
+      assert.ok(row(page(again), 'Strictness', true), 'and again after loading');
     } finally {
       again.uninstall();
     }

@@ -1010,5 +1010,74 @@
     "requirements": [
       "scale_in_parts"
     ]
+  },
+  "RL1": {
+    "title": "Rules and looks",
+    "size": "M",
+    "requirements": [
+      "rule_look_when",
+      "rule_look_not_colour_alone",
+      "rule_look_order",
+      "rule_look_legend",
+      "rule_look_bands",
+      "rule_look_massive",
+      "rule_look_try_save"
+    ]
+  },
+  "CV1": {
+    "title": "Calculated values and the table view",
+    "size": "L",
+    "requirements": [
+      "calc_in_schema",
+      "calc_by_tools",
+      "calc_engines_agree",
+      "calc_gaps_said",
+      "calc_loops_flagged",
+      "calc_set_totals",
+      "calc_details_shown",
+      "table_view",
+      "calc_measures_shared"
+    ]
+  },
+  "IN1": {
+    "title": "Intents and the pole view",
+    "size": "L",
+    "requirements": [
+      "intent_thing",
+      "intent_links",
+      "intent_standing",
+      "intent_rule_links",
+      "intent_checks_folded",
+      "intent_overlay",
+      "intent_pole_view",
+      "intent_poles_massive"
+    ]
+  },
+  "AS1": {
+    "title": "AI suggestions for categories and intents",
+    "size": "M",
+    "requirements": [
+      "ai_suggest_values",
+      "ai_suggest_groups",
+      "ai_suggest_preview",
+      "ai_suggest_on_ask",
+      "ai_never_draws"
+    ]
+  },
+  "DX1": {
+    "title": "Discovery in large graphs",
+    "size": "L",
+    "requirements": [
+      "discover_group_by",
+      "discover_gap_lenses",
+      "discover_bulk_edit",
+      "discover_saved_trail",
+      "discover_working_set",
+      "discover_ask_plain",
+      "discover_as_at",
+      "discover_compare_sets",
+      "discover_group_names",
+      "discover_watch_rule"
+    ]
   }
 }

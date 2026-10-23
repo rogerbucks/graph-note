@@ -20,10 +20,11 @@ import { readMatrix } from '../ai/matrix-note';
 import { aiModelList, getModelValue, setModelValue } from './ai-models';
 import { LINK_KEY, OUTSIDE_KEY, outsideGroup } from '../outside/outside-settings';
 
-const SECTIONS = ['Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
+const SECTIONS = ['Language', 'Strictness', 'AI models', 'Proposals', 'Formatting', 'Drawing', 'Export'] as const;
 
 /** The heading of each section, in the person's language. */
 const SECTION_WORDS = {
+  Language: 'settings.section.language',
   Strictness: 'settings.section.strictness',
   'AI models': 'settings.section.ai-models',
   Proposals: 'settings.section.proposals',

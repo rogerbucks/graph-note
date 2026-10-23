@@ -36,7 +36,7 @@ const command = (...args) =>
   });
 
 describe('the workstreams file', () => {
-  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33, the WCAG workstream W34, the test-files workstream W35, the moving-boxes workstream W36, the roadmap workstreams A1, R1, R2, L1, H1, H2, V1 and D1, the design-review workstreams G1, T1, P1 and U1, the open-questions workstream Q, the whiteboard workstreams B1 to B4, the Copilot Cowork workstream M1, the text-to-graph workstream X1, the home page workstream D2, the developer site workstream D3, the GitHub repository workstream K1 and the Claude presents and decides workstreams Y1 and Y2, and the graph spec workstreams GS1 to GS7, the data tables workstream E1, the massive graphs workstream Z1, the trust model workstream TM1, the storage workstream ST1, the new views and clusters workstreams V2 and V3, and the massive graphs read in parts workstream Z2, with the titles agreed', () => {
+  test('names the workstreams W0 to W15, the slice-end workstream S3, the graph mesh workstreams W16 to W33, the WCAG workstream W34, the test-files workstream W35, the moving-boxes workstream W36, the roadmap workstreams A1, R1, R2, L1, H1, H2, V1 and D1, the design-review workstreams G1, T1, P1 and U1, the open-questions workstream Q, the whiteboard workstreams B1 to B4, the Copilot Cowork workstream M1, the text-to-graph workstream X1, the home page workstream D2, the developer site workstream D3, the GitHub repository workstream K1 and the Claude presents and decides workstreams Y1 and Y2, and the graph spec workstreams GS1 to GS7, the data tables workstream E1, the massive graphs workstream Z1, the trust model workstream TM1, the storage workstream ST1, the new views and clusters workstreams V2 and V3, the massive graphs read in parts workstream Z2, and the rules, calculated values, intents, AI suggestions and discovery workstreams RL1, CV1, IN1, AS1 and DX1, with the titles agreed', () => {
     assert.deepEqual(Object.keys(workstreams), [
       ...Array.from({ length: 16 }, (_, n) => `W${n}`),
       ...Array.from({ length: 9 }, (_, n) => `C${n}`),
@@ -74,6 +74,11 @@ describe('the workstreams file', () => {
       'V2',
       'V3',
       'Z2',
+      'RL1',
+      'CV1',
+      'IN1',
+      'AS1',
+      'DX1',
     ]);
     assert.deepEqual(
       Object.values(workstreams).map((w) => w.title),
@@ -163,6 +168,11 @@ describe('the workstreams file', () => {
         'New view types on the drawing marks',
         'Clusters on the shared groups engine',
         'Massive graphs read in parts',
+        'Rules and looks',
+        'Calculated values and the table view',
+        'Intents and the pole view',
+        'AI suggestions for categories and intents',
+        'Discovery in large graphs',
       ],
     );
   });

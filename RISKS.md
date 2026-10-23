@@ -85,11 +85,11 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | AI-2 | Classification gate guards the pane only, not Claude's own reads | ●●● | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | AI-4 | Answers are free text parsed by brace slicing, not structured output | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | AI-5 | No cost ceiling, token cap, usage record or prompt caching | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| AI-6 | No eval set: a model change cannot be judged safe | ●●● | ●●○ | fix-later (Wave 19 · Held: text to graph with AI) | days |
+| AI-6 | No eval set: a model change cannot be judged safe | ●●● | ●●○ | fix-later (Wave 24 · Held: text to graph with AI) | days |
 | AI-7 | Only the chat-completions wire shape; Anthropic Messages API unreachable | ●●● | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
-| AI-8 | No MCP server or SKILL.md exposes the graph format | ●●● | ●●○ | fix-later (Wave 23 · Held: Claude presents and decides in Claude Code) | weeks |
+| AI-8 | No MCP server or SKILL.md exposes the graph format | ●●● | ●●○ | fix-later (Wave 28 · Held: Claude presents and decides in Claude Code) | weeks |
 | AI-9 | Planned AI waves are ordered against value and risk | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
-| AI-10 | Text to graph has no quality measure in its plan | ●●● | ●●○ | fix-later (Wave 19 · Held: text to graph with AI) | days |
+| AI-10 | Text to graph has no quality measure in its plan | ●●● | ●●○ | fix-later (Wave 24 · Held: text to graph with AI) | days |
 | TRUST-3 | The stable release builds and publishes in one job | ●○○ | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
 | TRUST-4 | GitHub titles and messages reach Claude's pane unfenced | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | TRUST-6 | Python fill recipes read outside the folder and inject into the query | ●○○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | hours |
@@ -408,7 +408,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/display/editor/editor-note.ts`, `packages/core/src/store.ts`, `test/storage-contract.test.js`, `packages/claude-code/server/**`, `packages/obsidian/src/block-editor/**`.
 
-**Risk:** Sync (Wave 13), the encrypted store (W30) and the GitHub backend (Wave 22) are all planned as 'one more backend of the storage interface'. But that interface has no file and no contract test. It has two hand-written implementations. Whoever adds the third backend inherits the differences between the first two.
+**Risk:** Sync (Wave 13), the encrypted store (W30) and the GitHub backend (Wave 27) are all planned as 'one more backend of the storage interface'. But that interface has no file and no contract test. It has two hand-written implementations. Whoever adds the third backend inherits the differences between the first two.
 
 **Fix:** In Wave 6 (L1) lift EditorNote plus a small NoteStore (read, write-if-unchanged, watch, list, draft) into core as the named storage interface. Write test/storage-contract.test.js. Run the vault, the page store and a plain-folder backend against it before the Tauri app starts.
 
@@ -860,7 +860,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Risk:** ai-ceiling.ts is a classification ceiling. Nothing bounds spend. Today each send is one click, so cost is bounded by the user. Text to graph on whole notes and agent loops in Waves 19 and 23 remove that bound.
 
-**Fix:** Record the reply's usage object in SendRecord. Show the byte size already computed as an estimate before send. Add max_tokens, and a per-day send count setting that refuses beyond it. Prompt caching matters only once the same graph is sent repeatedly (Wave 23). Then put the graph first and stable.
+**Fix:** Record the reply's usage object in SendRecord. Show the byte size already computed as an estimate before send. Add max_tokens, and a per-day send count setting that refuses beyond it. Prompt caching matters only once the same graph is sent repeatedly (Wave 28). Then put the graph first and stable.
 
 **Check:** ai.test.js asserts a record carries usage when the reply gives it, and a send past the daily count is refused in words.
 
@@ -890,7 +890,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Risk:** The only agent surface is a mod tool named mcp__thoughtknot__propose inside Claude Code. No other agent, editor or chat can read, check or propose a graph. Waves 18 and 24 each plan their own surface, so the same gate logic will be written three times.
 
-**Fix:** Build the minimum local stdio MCP server from graph-spec and the core now, before Wave 23. Its tools are read_graph(path) through claudeGate, check_changeset(path, block) and propose(path, changes), which writes the change set beside the graph. Notes only under one named folder, and no network. A ten-line SKILL.md then points any host at it, which is most of Wave 18.
+**Fix:** Build the minimum local stdio MCP server from graph-spec and the core now, before Wave 28. Its tools are read_graph(path) through claudeGate, check_changeset(path, block) and propose(path, changes), which writes the change set beside the graph. Notes only under one named folder, and no network. A ten-line SKILL.md then points any host at it, which is most of Wave 23.
 
 **Check:** test/mcp-app.test.js lists the three tools, proves a top-classification note is refused and that propose never touches the graph block.
 
@@ -898,9 +898,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Who found it:** AI product and engineering expert. **Where:** `requirements/waves.json`, `requirements/workstreams.json`, `requirements/editor-requirements.gql`.
 
-**Risk:** Wave 18 (a Copilot Cowork skill) and Wave 24's remote connector come with the most host-specific code and the least reuse. The local MCP server, structured output and source citation each unlock several waves and are not on the plan as steps of their own.
+**Risk:** Wave 23 (a Copilot Cowork skill) and Wave 29's remote connector come with the most host-specific code and the least reuse. The local MCP server, structured output and source citation each unlock several waves and are not on the plan as steps of their own.
 
-**Fix:** Reorder the work. First, a local MCP server with the gate. Second, the one text-to-graph contract with schema output and a source span per change. Third, the Claude Code write hook of AI-1. Hold Wave 18 to a SKILL.md over the MCP server. Keep mcp_app_remote as should and after a security review, as written.
+**Fix:** Reorder the work. First, a local MCP server with the gate. Second, the one text-to-graph contract with schema output and a source span per change. Third, the Claude Code write hook of AI-1. Hold Wave 23 to a SKILL.md over the MCP server. Keep mcp_app_remote as should and after a security review, as written.
 
 **Check:** manual
 

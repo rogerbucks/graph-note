@@ -3,6 +3,7 @@
 // and lines join the groups that link, as on an Obsidian card (massive-view.ts). A line at the top says what it is.
 //
 // Host-free and pure: the marks are overview.ts's, the colours the host's palette. Every word is escaped.
+import { isolated } from './bidi.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import { drawOrder } from './drawing-marks.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
@@ -43,7 +44,7 @@ export function overviewSvg(laid: LaidMarks, palette: Palette, caption: readonly
     } else if (m.kind === 'label') {
       const colour = m.style === 'overview.count' ? palette.muted : palette.text;
       parts.push(
-        `<text x="${num(m.x)}" y="${num(m.y)}" font-size="${num(m.size)}" text-anchor="middle" dominant-baseline="middle" fill="${colour}" aria-hidden="true">${escaped(m.text)}</text>`,
+        `<text x="${num(m.x)}" y="${num(m.y)}" font-size="${num(m.size)}" text-anchor="middle" dominant-baseline="middle" fill="${colour}" aria-hidden="true">${isolated(escaped(m.text))}</text>`,
       );
     }
   }

@@ -11,11 +11,11 @@ import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 
 afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
-/** Each word of option `o` in UK English, in the order of its keys. */
+/** Each word of option `o` in UK English, in the order of its keys: a language's own name is no catalogue word. */
 const wordsOf = (o) => [
   o.name,
   o.sentence,
-  ...(o.choices ?? []).flatMap((c) => [c.name, ...(c.sentence ? [c.sentence] : [])]),
+  ...(o.choices ?? []).filter((c) => !c.own).flatMap((c) => [c.name, ...(c.sentence ? [c.sentence] : [])]),
 ];
 
 /** The page's own words, kept beside the options': the action that converts a note to standard GQL. */

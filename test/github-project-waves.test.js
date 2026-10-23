@@ -257,10 +257,11 @@ describe('the real waves file', () => {
     assert.ok(!plan.waves.slice(0, at).some(held), 'no held wave comes before R2');
   });
 
-  test('keeps the earlier plan of every wave planned again on 19 Oct 2026, and every workstream has a size', () => {
+  test('keeps the earlier plan of every wave planned again from 19 Oct 2026, and every workstream has a size', () => {
     const again = plan.waves.filter((w) => w.earlierPlan);
     assert.ok(again.length >= 20, 'waves 4 onwards were planned again at the measured rate');
-    for (const w of again) assert.equal(w.earlierPlan.replaced, '2026-10-19', w.title);
+    // A wave first planned again on 19 Oct 2026 keeps that first plan. One first moved later says when.
+    for (const w of again) assert.ok(w.earlierPlan.replaced >= '2026-10-19', w.title);
     for (const [id, w] of Object.entries(workstreams)) assert.match(w.size ?? '', /^[SML]$/, `${id} has a size`);
   });
 

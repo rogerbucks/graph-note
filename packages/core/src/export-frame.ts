@@ -7,6 +7,7 @@
 import { STYLE } from './layout.ts';
 import type { Palette } from './palette.ts';
 import { fixed } from './theme.ts';
+import { isolated } from './bidi.ts';
 
 /** The least width of a frame in CSS pixels, so a small drawing still has room for its title and legend. */
 export const FRAME_MIN_WIDTH = 360;
@@ -107,7 +108,7 @@ function wrapped(text: string, most: number, size: number, bold = false): string
 /** Lines of text as one element: the first at `y`, the others a line lower each. */
 function block(lines: string[], x: number, y: number, size: number, fill: string, bold = false): string {
   const tspans = lines.map(
-    (l, i) => `<tspan x="${num(x)}"${i ? ` dy="${num(size * LEAD)}"` : ''}>${escaped(l)}</tspan>`,
+    (l, i) => `<tspan x="${num(x)}"${i ? ` dy="${num(size * LEAD)}"` : ''}>${isolated(escaped(l))}</tspan>`,
   );
   const weight = bold ? ' font-weight="bold"' : '';
   return `<text x="${num(x)}" y="${num(y)}" font-family="${FONT}" font-size="${fixed(size, 2)}"${weight} fill="${fill}">${tspans.join('')}</text>`;

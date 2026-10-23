@@ -4,16 +4,16 @@
 import { DEPARTURES } from './strictness.ts';
 import type { Departure, Strictness, StrictnessSettings } from './strictness.ts';
 import { STYLE } from './layout.ts';
-import { switchesFrom } from './ai-matrix.ts';
-import type { AiModel } from './ai-model.ts';
+import { aiModel, CLASSIFICATIONS, type AiModel } from './ai-model.ts';
 import { vaultFolder } from './vault-folder.ts';
+import { LANGUAGE_OPTION } from './settings-language.ts';
 import { AID_OPTIONS } from './settings-aids.ts';
 import { MATRIX_OPTIONS } from './settings-matrix.ts';
 import type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
 
 export type { DrawingHeightSetting, MiniMapSetting } from './settings-aids.ts';
 
-export type { AiModel } from './ai-model.ts';
+export { aiModel, type AiModel } from './ai-model.ts';
 
 /** How a line the editor writes is indented. */
 export type Indent = 'two' | 'four' | 'tab';
@@ -35,6 +35,8 @@ export type SwitchSetting = 'on' | 'off';
 
 /** Every option the editor offers. */
 export interface Settings extends StrictnessSettings {
+  /** The language the editor speaks: `host` follows the host's, else a language tag with a translation (§42). */
+  language: string;
   /** Whether the editor may send anything to an AI model: off until the user turns it on. */
   aiUse: AiUse;
   /** The classifications a note may carry, lowest first: the ceilings an AI model may be given. */
@@ -79,10 +81,9 @@ export interface Settings extends StrictnessSettings {
 /** The most characters a decider's name is kept to. */
 const MOST_NAME = 200;
 
-const CLASSIFICATIONS = ['Public', 'Internal', 'Confidential', 'Restricted'];
-
 /** The settings before any is changed. */
 export const DEFAULT_SETTINGS: Settings = {
+  language: 'host',
   strictness: 'forgiving',
   allowed: [],
   aiUse: 'off',
@@ -116,12 +117,14 @@ export interface Choice {
   value: string;
   name: string;
   sentence?: string;
+  /** Whether the name is the choice's own, the same in every language: a language named in itself. */
+  own?: boolean;
 }
 
 /** One option on the settings page: the setting it sets, its part of the page, its name, its sentence, its choices. */
 export interface Option {
   key: keyof Settings;
-  section: 'Strictness' | 'AI models' | 'Proposals' | 'Formatting' | 'Drawing' | 'Export';
+  section: 'Language' | 'Strictness' | 'AI models' | 'Proposals' | 'Formatting' | 'Drawing' | 'Export';
   name: string;
   sentence: string;
   choices?: Choice[];
@@ -159,6 +162,7 @@ function switchOption(key: keyof Settings, name: string, sentence: string): Opti
 
 /** Every option, in the order the settings page shows them. */
 export const OPTIONS: Option[] = [
+  LANGUAGE_OPTION, // the language the editor speaks (§42)
   {
     key: 'strictness',
     section: 'Strictness',
@@ -305,29 +309,6 @@ const text = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v :
 const oneOf = <T extends string>(key: keyof Settings, v: unknown, fallback: T): T =>
   (OPTIONS.find((o) => o.key === key)?.choices ?? []).some((c) => c.value === v) ? (v as T) : fallback;
 
-/**
- * An AI model from what was given, with only its own fields: whatever else was given, such as a key, is dropped. A
- * model with no ceiling gets the lowest classification. One whose ceiling is no longer a classification keeps it as
- * written. So a classification being retyped never loses it, and the settings page says so.
- */
-export function aiModel(given: Partial<AiModel> & Record<string, unknown>, classifications?: string[]): AiModel {
-  const levels = classifications ?? DEFAULT_SETTINGS.classifications;
-  return {
-    name: text(given.name),
-    purpose: text(given.purpose),
-    ceiling: text(given.ceiling) || (levels[0] ?? ''),
-    endpoint: text(given.endpoint),
-    model: text(given.model),
-    keyName: text(given.keyName),
-    // kept only with a row picked, so a model with none is as it was
-    ...(text(given.matrixRow).trim() && {
-      matrixRow: text(given.matrixRow).trim(),
-      matrixOn: switchesFrom(given.matrixOn),
-    }),
-    ...(text(given.provider).trim() && { provider: text(given.provider).trim() }),
-  };
-}
-
 /** Settings read back from what was saved: each known one kept when it is in range, else its default. */
 export function settingsFrom(saved: unknown): Settings {
   const s = saved && typeof saved === 'object' ? (saved as Record<string, unknown>) : {};
@@ -337,6 +318,7 @@ export function settingsFrom(saved: unknown): Settings {
   const levels = given.filter((c): c is string => typeof c === 'string');
   const classifications = levels.length && levels.length === given.length ? levels : d.classifications;
   return {
+    language: oneOf('language', s.language, d.language),
     strictness: oneOf<Strictness>('strictness', s.strictness, d.strictness),
     // copies, never the defaults themselves: a change to what is handed out never changes them
     allowed: Array.isArray(s.allowed) ? (s.allowed as unknown[]).filter(isDeparture) : [...d.allowed],

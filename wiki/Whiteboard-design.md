@@ -6,7 +6,7 @@ version 0.5.0, at Roger's request.
 
 The requirements are section 45 of
 [`requirements/editor-requirements.md`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.md),
-slice 10, in workstreams B1 to B4. They are built in Waves 16 and 17 of
+slice 10, in workstreams B1 to B4. They are built in Waves 21 and 22 of
 [`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json), after the
 Obsidian community release (R2). Roger's rule is that what he adds now goes after R2.
 
@@ -140,10 +140,10 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  R2["Wave 15<br/>R2 community release"] --> W16["Wave 16<br/>B1 the board<br/>B2 board and graph"]
-  W16 --> W17["Wave 17<br/>B3 brainstorming<br/>B4 working together"]
-  W13["Wave 13<br/>CRDT sync (W31)"] -.->|needed by B4| W17
-  W6["Wave 6<br/>plug-in interface (P1)"] -.->|item kinds| W16
+  R2["Wave 15<br/>R2 community release"] --> W21["Wave 21<br/>B1 the board<br/>B2 board and graph"]
+  W21 --> W22["Wave 22<br/>B3 brainstorming<br/>B4 working together"]
+  W13["Wave 13<br/>CRDT sync (W31)"] -.->|needed by B4| W22
+  W6["Wave 6<br/>plug-in interface (P1)"] -.->|item kinds| W21
 ```
 
 Small pull requests, each a spec, a test that fails first, then code:
@@ -164,4 +164,4 @@ Small pull requests, each a spec, a test that fails first, then code:
 | Where the board lives | A gql block in the note | A separate JSON file: breaks *text is the store* and graph diffing |
 | File format | Board graph, with JSON Canvas import and export | JSON Canvas as the store: cannot link items to things or be checked as a graph |
 | Multi-user | The planned CRDT, peer to peer | A hosted server (tldraw sync, Liveblocks): a server would decide what is true, and it needs to be online |
-| When | Waves 16 and 17, after R2 | Earlier: against Roger's rule for new additions |
+| When | Waves 21 and 22, after R2 | Earlier: against Roger's rule for new additions |
