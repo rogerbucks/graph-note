@@ -1609,6 +1609,17 @@
         "LOCKED_AWAY": [
           "value: readonly ['fetch', 'XMLHttpRequest', 'WebSocket', 'WebTransport', 'EventSource', 'RTCPeerConnection', 'BroadcastChannel', 'importScripts', 'indexedDB', 'caches', 'Worker', 'SharedWorker']"
         ],
+        "LogEntry": [
+          "interface",
+          "at: string",
+          "detail: Array<string>",
+          "kind: LogKind",
+          "notes: Array<string>",
+          "source: string"
+        ],
+        "LogKind": [
+          "type = 'change' | 'ai-query' | 'bundle' | 'join'"
+        ],
         "Look": [
           "interface",
           "at: StyleAt",
@@ -1752,6 +1763,20 @@
           "graph: string",
           "group: string",
           "key: string"
+        ],
+        "MeshHistory": [
+          "class",
+          "static new (now?: () => string): MeshHistory",
+          "aiQuery: (words: string, notes: string[], source: string) => LogEntry",
+          "bundle: (id: string, texts: Record<string, string | null>, source: string) => LogEntry",
+          "change: (note: string, text: string | null, source: string) => LogEntry",
+          "contestedSince: (claim: string) => string | null",
+          "join: (notes: string[], source: string) => MeshJoin",
+          "joinAt: (notes: string[], at?: string) => MeshJoin",
+          "lastJoinBefore: (at: string) => string | null",
+          "log: () => LogEntry[]",
+          "record: (change: StoredChange) => void",
+          "textsAt: (at: string) => Record<string, string>"
         ],
         "MeshIndex": [
           "class",
@@ -3753,6 +3778,7 @@
     "entries": {
       ".": {
         "export =": [
+          "asAt: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph",
           "byCertainty: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]",
           "canon: (g: GraphSpecCheck.Graph) => string",
           "centroidId: (cluster: string) => string",
@@ -3777,6 +3803,7 @@
           "header: (block: string) => [string | null, GraphSpecCheck.BlockKind]",
           "isNamed: (value: unknown) => boolean",
           "jcs: (value: unknown) => string",
+          "lensAsAt: (graph: GraphSpecCheck.Graph, rule: string, axis: 'recorded' | 'real', date: string) => Record<string, string> | null",
           "LIMITS: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }",
           "lint: (text: string) => { trap: string; line: number; }[]",
           "louvain: (n: number, links: readonly (readonly [number, number])[]) => number[]",
@@ -3801,6 +3828,9 @@
           "tokens: (text: string) => [string, string, number, string, number][]",
           "word: (readings: Map<string, [string | undefined, string | undefined]>, type: string) => string",
           "worldFromStore: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
+        ],
+        "asAt": [
+          "value: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph"
         ],
         "BlockKind": [
           "type = 'data' | 'schema' | 'query' | 'excerpt' | 'changeset'"
@@ -3947,6 +3977,9 @@
         ],
         "jcs": [
           "value: (value: unknown) => string"
+        ],
+        "lensAsAt": [
+          "value: (graph: GraphSpecCheck.Graph, rule: string, axis: 'recorded' | 'real', date: string) => Record<string, string> | null"
         ],
         "LIMITS": [
           "value: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }"

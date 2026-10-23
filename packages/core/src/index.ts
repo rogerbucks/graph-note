@@ -382,3 +382,5 @@ export type {
   SqlEngine,
   ThingRow,
 } from './mesh-index.ts';
+export { MeshHistory } from './mesh-history.ts';
+export type { LogEntry, LogKind } from './mesh-history.ts';

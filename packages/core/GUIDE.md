@@ -115,6 +115,10 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
   host hands in (sql.js). No server and no JVM (embedded_backends).
 
+- `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
+  change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
+  source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
+
 #### Deferred things
 
 - `deferred.ts` — deferred things (§5, §8).

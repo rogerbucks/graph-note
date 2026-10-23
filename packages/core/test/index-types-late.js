@@ -25,6 +25,8 @@ export const TYPES_LATE = [
   'ListShape',
   'ListValue',
   'LoadedImage',
+  'LogEntry',
+  'LogKind',
   'Look',
   'LookWrite',
   'Mark',

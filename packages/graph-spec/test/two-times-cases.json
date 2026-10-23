@@ -1,0 +1,50 @@
+{
+  "about": "A graph as at a date on its two kinds of time (editor spec §29, two_kinds_of_time): recorded time (recorded_at, and SUPERSEDES) and real-world time (valid_from up to valid_to). Each case runs its lens on the block as at each date on each axis; the buckets must be those named, from asAt (packages/graph-spec/src/mesh/as-at.js) and as_at (python/graph_spec/src/graphspec/engine/mesh/as_at.py) alike.",
+  "block": [
+    "// graph: staff",
+    "(ann:Person {name: 'Ann', role: 'junior', recorded_at: DATE '2024-01-10', valid_from: DATE '2023-06-01', valid_to: DATE '2024-03-01'}),",
+    "(ann2:Person {name: 'Ann', role: 'senior', recorded_at: DATE '2024-09-01', valid_from: DATE '2024-03-01'}),",
+    "(ann2)-[:SUPERSEDES]->(ann),",
+    "(ben:Person {name: 'Ben', role: 'senior', recorded_at: DATE '2024-02-01', valid_from: DATE '2022-01-01', valid_to: DATE '2024-05-01'}),",
+    "(cat:Person {name: 'Cat', role: 'junior'})"
+  ],
+  "lens": "MATCH (p:Person) RETURN p.id AS id, CASE WHEN p.role = 'senior' THEN 'senior' ELSE 'other' END AS grp",
+  "cases": [
+    {
+      "name": "recorded time: before Ann's promotion was written down, the graph says she is junior",
+      "axis": "recorded",
+      "date": "2024-06-01",
+      "buckets": { "ann": "other", "ben": "senior", "cat": "other" }
+    },
+    {
+      "name": "recorded time: once it is written, her new record supersedes the old",
+      "axis": "recorded",
+      "date": "2024-10-01",
+      "buckets": { "ann2": "senior", "ben": "senior", "cat": "other" }
+    },
+    {
+      "name": "recorded time: before anything was written, only what carries no time is there",
+      "axis": "recorded",
+      "date": "2023-12-31",
+      "buckets": { "cat": "other" }
+    },
+    {
+      "name": "real-world time: in April 2024 Ann was already senior, though it was written later",
+      "axis": "real",
+      "date": "2024-04-01",
+      "buckets": { "ann2": "senior", "ben": "senior", "cat": "other" }
+    },
+    {
+      "name": "real-world time: in July 2023 Ann was junior",
+      "axis": "real",
+      "date": "2023-07-01",
+      "buckets": { "ann": "other", "ben": "senior", "cat": "other" }
+    },
+    {
+      "name": "real-world time: after Ben left, he is not in the graph",
+      "axis": "real",
+      "date": "2024-06-01",
+      "buckets": { "ann2": "senior", "cat": "other" }
+    }
+  ]
+}

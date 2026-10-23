@@ -88,6 +88,8 @@ and no module requires one that requires it back.
     both sides, and the gaps are listed. Each claim has its certainty in words, ranked by a key made from them, never
     typed. A dispute lowers only the thing disputed, and a link to a contested thing is marked. A hand-made cluster
     can be contested, and same-named states match only as a guess (`test/mesh-join-cases.json`).
+  - `as-at.js` — a graph as at a date, so a lens answers as it was then (`test/two-times-cases.json`). Recorded time
+    is `recorded_at`, and SUPERSEDES. Real-world time runs from `valid_from` up to `valid_to`.
 
 ## Beside them
 

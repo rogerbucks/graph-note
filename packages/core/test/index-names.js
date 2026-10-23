@@ -125,6 +125,7 @@ export const VALUES = [
   'LegendFilter',
   'MAX_SCALE',
   'MOVE_MS',
+  'MeshHistory',
   'MeshIndex',
   'NO_BASIS',
   'NUDGE_WORDS',

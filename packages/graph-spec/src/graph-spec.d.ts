@@ -344,6 +344,11 @@ declare namespace GraphSpecCheck {
     sameDomain?: [string, string][];
   }): MeshJoin;
 
+  /** A graph as at a date on one kind of time: when it was recorded, or when it held in the world (editor spec §29). */
+  function asAt(graph: Graph, axis: 'recorded' | 'real', date: string): Graph;
+  /** A lens run on a graph as at a date: each thing's bucket as it was then, or null for a rule it cannot run. */
+  function lensAsAt(graph: Graph, rule: string, axis: 'recorded' | 'real', date: string): Record<string, string> | null;
+
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];
 }
