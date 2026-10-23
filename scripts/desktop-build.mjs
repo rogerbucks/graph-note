@@ -80,11 +80,6 @@ export function gpgSign(files, key, passphrase) {
   }
 }
 
-function run(command, args, options) {
-  const done = spawnSync(command, args, { stdio: 'inherit', ...options });
-  if (done.status !== 0) process.exit(done.status ?? 1);
-}
-
 /** Runs `build` with the API key in a file only the runner's user can read, named as Apple names it, then deletes it. */
 function withApiKey(plan, build) {
   if (!plan.apiKey) return build();
