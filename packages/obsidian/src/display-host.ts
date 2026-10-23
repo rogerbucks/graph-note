@@ -8,6 +8,8 @@ import { installHost } from '@thoughtknot/core/display/host';
 import type { DisplayHost } from '@thoughtknot/core/display/host';
 import { detailsSidePane } from './details-pane';
 
+export { chooseLanguage } from '@thoughtknot/core/display/host';
+
 /**
  * Installs Obsidian as the host the display layer draws in, with `plugin`'s details pane as its side pane. `layout` is
  * where the details' last place and size are kept, in the plugin's data.

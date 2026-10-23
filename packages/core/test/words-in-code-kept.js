@@ -20,6 +20,7 @@ export const CORE_KEPT = {
   'packages/core/src/settings.ts': '*',
   'packages/core/src/settings-aids.ts': '*',
   'packages/core/src/settings-matrix.ts': '*',
+  'packages/core/src/settings-language.ts': '*',
   // what each open number governs, for a developer reading the register: no host shows it
   'packages/core/src/thresholds.ts': '*',
   // what each design token is for, and why a plug-in's token is refused: for a theme's or a plug-in's developer

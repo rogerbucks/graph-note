@@ -1,6 +1,12 @@
-// An AI model as the settings keep it (editor spec §19). It is kept apart from settings.ts, which re-exports it. So
-// that file stays within the size limit.
+// An AI model as the settings keep it (editor spec §19), and how one is read back. It is kept apart from settings.ts,
+// which re-exports it. So that file stays within the size limit.
+import { switchesFrom } from './ai-matrix.ts';
 import type { MatrixSwitch } from './ai-matrix.ts';
+
+/** The classifications a note may carry, lowest first, until the settings change them. */
+export const CLASSIFICATIONS = ['Public', 'Internal', 'Confidential', 'Restricted'];
+
+const text = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
 
 /** An AI model set up for §19: what it is for, and its ceiling — the highest classification of note it may be sent. */
 export interface AiModel {
@@ -18,4 +24,27 @@ export interface AiModel {
   matrixOn?: MatrixSwitch[];
   /** The AI provider a plug-in adds that shapes its requests, by name; with none, the one wire format. */
   provider?: string;
+}
+
+/**
+ * An AI model from what was given, with only its own fields: whatever else was given, such as a key, is dropped. A
+ * model with no ceiling gets the lowest classification. One whose ceiling is no longer a classification keeps it as
+ * written. So a classification being retyped never loses it, and the settings page says so.
+ */
+export function aiModel(given: Partial<AiModel> & Record<string, unknown>, classifications?: string[]): AiModel {
+  const levels = classifications ?? CLASSIFICATIONS;
+  return {
+    name: text(given.name),
+    purpose: text(given.purpose),
+    ceiling: text(given.ceiling) || (levels[0] ?? ''),
+    endpoint: text(given.endpoint),
+    model: text(given.model),
+    keyName: text(given.keyName),
+    // kept only with a row picked, so a model with none is as it was
+    ...(text(given.matrixRow).trim() && {
+      matrixRow: text(given.matrixRow).trim(),
+      matrixOn: switchesFrom(given.matrixOn),
+    }),
+    ...(text(given.provider).trim() && { provider: text(given.provider).trim() }),
+  };
 }

@@ -216,6 +216,9 @@ These test behaviour across modules, or the repository itself, so they are named
   labels or values is read from its first strong letter. It is set apart from the words around it
   (`unicode-bidi: plaintext`). Each is an element the layer makes (editor spec §42, bidi_labels; partial until the
   drawing and the exports join it).
+- `packages/core/test/words-files.test.js` — the translation files in `packages/core/translations/` (editor spec §42,
+  translations_as_files). Each is named by its language tag and holds the source's keys and placeholders. Each is
+  listed for the core. The folder's README.md is the translators' guide.
 - `packages/core/test/words-in-code.test.js` — the display layer's code holds no words a person reads: each comes
   from the catalogue by key (editor spec §42, words_catalogue). The few kept are listed, each with why.
 - `packages/core/test/locale-bytes.test.js` — the editor writes the same bytes in every setting. No language, locale

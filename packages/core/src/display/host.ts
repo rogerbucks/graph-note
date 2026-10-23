@@ -122,11 +122,20 @@ let installed: DisplayHost | null = null;
 /** Installs the host the layer draws in; the host that installs it last is the one used. */
 export function installHost(host: DisplayHost): void {
   installed = host;
-  const language = host.language?.() ?? SOURCE_LANGUAGE;
-  setLanguage(language);
+  chooseLanguage();
+}
+
+/**
+ * Sets the language from the language setting (editor spec §42, language_follows_host): `host` follows the host
+ * installed, else the language named. The locale and the direction follow it. The language used.
+ */
+export function chooseLanguage(setting = 'host'): string {
+  const fromHost = setting === 'host';
+  const language = (fromHost ? installed?.language?.() : setting) ?? SOURCE_LANGUAGE;
   // a bare "en", as Obsidian says English, is the source's UK English, not American
   setLocale(language === 'en' ? SOURCE_LANGUAGE : language);
-  setDirection(host.direction?.() ?? directionOf(language));
+  setDirection((fromHost ? installed?.direction?.() : undefined) ?? directionOf(language));
+  return setLanguage(language);
 }
 
 /**
