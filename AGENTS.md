@@ -46,7 +46,7 @@ wording or route. The one exception: when the refusal itself says how to do it a
 - [CONTRIBUTING.md](CONTRIBUTING.md) — how a change is made (spec, then test, then code), the conventions, the naming.
 - [packages/core/GUIDE.md](packages/core/GUIDE.md) — the host-free core: reading, drawing, edits.
 - [packages/graph-spec/GUIDE.md](packages/graph-spec/GUIDE.md) — the graph format library in plain JavaScript.
-- The hosts: [packages/obsidian/GUIDE.md](packages/obsidian/GUIDE.md), [packages/claude-code/GUIDE.md](packages/claude-code/GUIDE.md), [packages/app/GUIDE.md](packages/app/GUIDE.md).
+- The hosts: [packages/obsidian/GUIDE.md](packages/obsidian/GUIDE.md), [packages/claude-code/GUIDE.md](packages/claude-code/GUIDE.md), [packages/app/GUIDE.md](packages/app/GUIDE.md), [packages/vscode/GUIDE.md](packages/vscode/GUIDE.md).
 - [python/graph_spec/GUIDE.md](python/graph_spec/GUIDE.md) — the Python library.
 - Tests mirror the code: `src/zoom.ts` is tested in `test/zoom.test.js`. Tests that span modules sit in the root `test/`.
 - `scripts/` — tools that run from the command line: the quiet runners, `tests-first.mjs`, `check-classification.mjs`.

@@ -2,10 +2,12 @@
 // - Obsidian's: built as the plugin builds it, run against the stand-in for Obsidian;
 // - the browser page's: run in a DOM;
 // - the desktop app's: the window carries the browser page's adapter unchanged, so it runs in the app's own built
-//   editor page (packages/app).
-// VS Code's joins this list when it is built.
+//   editor page (packages/app);
+// - VS Code's: its tab is the browser page too. So the page's adapter runs in the tab's page, made from the built
+//   extension (packages/vscode).
 import { test, describe, after } from 'node:test';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
@@ -16,6 +18,8 @@ import { hostContract } from '../packages/core/src/display/host-contract.ts';
 import { browserHost } from '../packages/claude-code/page/browser-host.ts';
 import { fakeObsidian } from '../packages/obsidian/test/host/fake-obsidian.js';
 import { builtApp, cleanUpApp } from '../packages/app/test/app-window.js';
+import { buildExtension } from '../packages/vscode/esbuild.config.mjs';
+import { webviewHtml } from '../packages/vscode/src/webview-html.ts';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const require = createRequire(import.meta.url);
@@ -117,15 +121,30 @@ function makeBrowser(html = '<!doctype html><body></body>') {
 /** A fresh desktop app host for one check: the browser page's adapter, in the app's built editor page. */
 const makeApp = async () => makeBrowser(readFileSync(join(await builtApp(), 'editor.html'), 'utf8'));
 
+let extension;
+/** A fresh VS Code host for one check: the browser page's adapter, in the tab's page made from the built extension. */
+async function makeVscode() {
+  extension ??= (async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'thoughtknot-vscode-'));
+    await buildExtension(join(dir, 'dist'));
+    return dir;
+  })();
+  const page = readFileSync(join(await extension, 'dist/webview/index.html'), 'utf8');
+  const settings = { base: 'https://webview.invalid/dist/webview', note: 'Reader.md', language: 'en' };
+  return makeBrowser(webviewHtml(page, settings, 'https://webview.invalid', 'n'));
+}
+
 /** The host the next check runs on: the checks ask for one synchronously, so each test makes it first. */
 let made;
 
 describe('every host’s adapter passes the one host contract', () => {
   after(cleanUpApp);
+  after(async () => extension && rmSync(await extension, { recursive: true, force: true }));
   for (const [name, make] of [
     ['Obsidian', makeObsidian],
     ['the browser page', () => makeBrowser()],
     ['the desktop app', makeApp],
+    ['VS Code', makeVscode],
   ])
     describe(name, () => {
       for (const check of hostContract(() => made))

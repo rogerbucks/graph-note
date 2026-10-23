@@ -9,18 +9,40 @@
 // An edit is written to the note's text first, never to the store. The text stays the only store of the graph
 // (text_is_the_store). Only the lines that wrote the thing are edited, so the note is never read whole. The host
 // writes the new text to the note, and the store then reads the changed note again.
+import gs from '@thoughtknot/graph-spec';
 import { sha256 } from './ai-digest.ts';
+import { gqlBlocks } from './fences.ts';
 import { parseValue, setProperty } from './inspector.ts';
 import type { Edit, PropType } from './inspector.ts';
 import { noteRowsPaced } from './mesh-index-rows.ts';
 import type { MeshIndex } from './mesh-index.ts';
-import type { GraphDrawing } from './note-reading.ts';
+import type { GraphDrawing, Problem } from './note-reading.ts';
+import { readStyle } from './style.ts';
+import type { StyleGraph } from './style-graph.ts';
 import { word } from './words.ts';
 
 /** One graph of a note as the store gives it: a drawing to show as its overview, and each thing's properties. */
 export interface StoredGraph {
   drawing: GraphDrawing;
   props: (key: string) => Readonly<Record<string, unknown>>;
+  /** Its things and links as the style checks read a graph: each thing by its kind, each link without properties. */
+  world: () => gs.Graph;
+}
+
+/** A graph as the graph library's rules read one, from things (key, kind, properties) and links. */
+function plainGraph(things: [string, string, Record<string, gs.Value>][], edges: gs.Edge[]): gs.Graph {
+  const nodes = new Map(
+    things.map(([key, kind, props]) => [key, [new Set([kind]), props] as [Set<string>, typeof props]]),
+  );
+  return {
+    nodes,
+    edges,
+    labelled: (label) => [...nodes].filter(([, [labels]]) => labels.has(label)).map(([key]) => key),
+    p: (id) => nodes.get(id)?.[1] ?? {},
+    has: (id, label) => !!nodes.get(id)?.[0].has(label),
+    out: (id, type) => edges.filter((e) => e[0] === id && (type === undefined || e[1] === type)),
+    inc: (id, type) => edges.filter((e) => e[2] === id && (type === undefined || e[1] === type)),
+  };
 }
 
 /**
@@ -60,6 +82,11 @@ export async function storedGraphs(
         if (!parsed.has(key)) parsed.set(key, JSON.parse(props.get(key) ?? '{}') as Record<string, unknown>);
         return parsed.get(key) ?? {};
       },
+      world: () =>
+        plainGraph(
+          things.map((t) => [t.key, t.kind, JSON.parse(t.props) as Record<string, gs.Value>]),
+          links.filter((l) => l.graph === graph).map((l) => [l.from, l.type, l.to, {}]),
+        ),
     });
   }
   return out;
@@ -103,5 +130,21 @@ export function setInParts(
   if (!value.ok) return { ok: false, reason: value.error };
   return editInParts(ix, at.note, at.text, at.graph, key, (lines) =>
     setProperty(lines, at.graph, { thing: key }, prop, value.gql),
+  );
+}
+
+/**
+ * The style of a graph of a note too big to read at once, read from its style blocks (§2). Its names are checked
+ * against the graph as the store holds it, as a whole reading checks them. The note's data blocks are never read here.
+ */
+export function storedStyle(text: string, stored: StoredGraph): { style: StyleGraph; problems: Problem[] } {
+  const graph = stored.drawing.graph;
+  const world = Object.assign(Object.create(null) as Record<string, gs.Graph>, {
+    [graph]: stored.world(),
+  });
+  return readStyle(
+    gqlBlocks(text).map((b) => b.text),
+    graph,
+    { world, whole: Object.create(null) as typeof world },
   );
 }

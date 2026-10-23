@@ -44,6 +44,7 @@ export const VALUES_LATE = [
   'storageBackendContract',
   'storageContract',
   'storedGraphs',
+  'storedStyle',
   'styleEdit',
   'styleOf',
   'styledDrawing',

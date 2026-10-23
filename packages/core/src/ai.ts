@@ -11,6 +11,8 @@
 import { proposalFrom } from './ai-answer.ts';
 import { clearance, credentialsIn, levelSaid } from './ai-ceiling.ts';
 import { aiReady, endpointProblem } from './ai-choice.ts';
+import { hostAiModel } from './ai-host.ts';
+import type { HostModel } from './ai-host.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
 import { INSTRUCTIONS, askedText, changesIn, readReply, requestBody } from './ai-request.ts';
 import { keyHeader } from './plugin-ai.ts';
@@ -62,6 +64,8 @@ export interface SendAsk {
   matrix?: MatrixRow[];
   /** The AI provider the model names, as the host's plug-ins give it (`aiProvider`); none for the one wire format. */
   provider?: AiProvider;
+  /** The host's own model, when the model asked is the host's (host_ai_first): sent through the host, not an address. */
+  host?: HostModel;
 }
 
 /** A send made ready: everything that will go, and where, for the user to see before saying yes. */
@@ -134,16 +138,19 @@ const exactly = (p: PreparedSend) => JSON.stringify([p.model.name, p.to, p.body]
 export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   const { settings } = ask;
   const ready = aiReady(settings);
-  if ('off' in ready) return { refused: ready.off };
-  const found = settings.aiModels.find((m) => m.name === ask.model);
+  // the host's own model needs AI turned on, but no model set up here
+  const host = ask.host?.name === ask.model ? hostAiModel(ask.host, settings.classifications) : null;
+  if ('off' in ready && !(host && settings.aiUse === 'on')) return { refused: ready.off };
+  const found = host ?? settings.aiModels.find((m) => m.name === ask.model);
   if (!found) return { refused: word('ai.send.no-model', { model: ask.model }) };
   // a copy, so what is shown, said yes to and sent stays as it was shown whatever the settings do meanwhile
   const model = { ...found };
-  const address = endpointProblem(model.endpoint);
+  const address = host ? null : endpointProblem(model.endpoint);
   if (address) return { refused: word('ai.send.address', { model: model.name, why: address }) };
   if (!model.model.trim()) return { refused: word('ai.send.no-model-name', { model: model.name }) };
   const matrix = { rows: ask.matrix ?? [], classMap: settings.aiClassMap };
-  const cleared = clearance(ask.level, model, settings.classifications, ready.ready, settings.aiUnlabelled, matrix);
+  const others = 'ready' in ready ? ready.ready : [];
+  const cleared = clearance(ask.level, model, settings.classifications, others, settings.aiUnlabelled, matrix);
   if ('refused' in cleared) return cleared;
   const provider = model.provider ? ask.provider : undefined;
   if (model.provider && provider?.name !== model.provider)
