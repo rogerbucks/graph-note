@@ -42,6 +42,7 @@ export const VALUES_LATE = [
   'stepOver',
   'storageBackendContract',
   'storageContract',
+  'storedGraphs',
   'styleEdit',
   'styleOf',
   'styledDrawing',

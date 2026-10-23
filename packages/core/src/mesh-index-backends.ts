@@ -30,8 +30,8 @@ const TABLES = [
   'CREATE TABLE IF NOT EXISTS notes (note TEXT PRIMARY KEY, version TEXT NOT NULL)',
   `CREATE TABLE IF NOT EXISTS things (note TEXT, graph TEXT, place INTEGER, key TEXT, kind TEXT, text TEXT,
      grp TEXT, props TEXT, line INTEGER, end_line INTEGER)`,
-  `CREATE TABLE IF NOT EXISTS links (note TEXT, graph TEXT, n INTEGER, place INTEGER, src TEXT, type TEXT, dst TEXT,
-     src_grp TEXT, dst_grp TEXT, line INTEGER, end_line INTEGER)`,
+  `CREATE TABLE IF NOT EXISTS links (note TEXT, graph TEXT, n INTEGER, place INTEGER, src TEXT, type TEXT, reading TEXT,
+     dst TEXT, src_grp TEXT, dst_grp TEXT, line INTEGER, end_line INTEGER)`,
   `CREATE TABLE IF NOT EXISTS thing_groups (note TEXT, graph TEXT, place INTEGER, id TEXT, label TEXT, by TEXT,
      things INTEGER, links INTEGER)`,
   'CREATE TABLE IF NOT EXISTS group_links (note TEXT, graph TEXT, place INTEGER, src TEXT, dst TEXT, links INTEGER)',
@@ -70,13 +70,14 @@ export function sqliteBackend(engine: SqlEngine): MeshBackend {
         ]),
       );
       rows.links.forEach((l, i) =>
-        engine.run('INSERT INTO links VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+        engine.run('INSERT INTO links VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
           l.note,
           l.graph,
           l.n,
           i,
           l.from,
           l.type,
+          l.reading,
           l.to,
           l.fromGroup,
           l.toGroup,
@@ -149,6 +150,7 @@ export function sqliteBackend(engine: SqlEngine): MeshBackend {
         n: num(r['n']),
         from: str(r['src']),
         type: str(r['type']),
+        reading: str(r['reading']),
         to: str(r['dst']),
         fromGroup: str(r['src_grp']),
         toGroup: str(r['dst_grp']),
