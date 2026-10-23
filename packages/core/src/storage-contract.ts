@@ -39,7 +39,21 @@ const TEXTS = [
 ];
 
 /** Paths no backend may write: outside the store, in a hidden folder, or not a note. */
-const OUTSIDE = ['../out.md', '/root.md', '~/home.md', '.hidden/app.md', 'a/../b.md', 'notes.txt', 'a\\b.md', ''];
+const OUTSIDE = [
+  '../out.md',
+  '/root.md',
+  '~/home.md',
+  '.hidden/app.md',
+  'a/../b.md',
+  'notes.txt',
+  'a\\b.md',
+  'C:/drive.md',
+  'a.md:stream.md',
+  '',
+];
+
+/** A note named as people name them: a `+`, a `?` and dots that end the name. Mac and Linux hold it, and so must we. */
+const ODD_NAME = '+Contacts as a single source of truth/Best Contact manager for gmail? I want to get con....md';
 
 /** Every check of the contract, each run on a fresh, empty backend from `make`. */
 export function storageContract(make: () => NoteStorage | Promise<NoteStorage>): StorageCheck[] {
@@ -124,6 +138,18 @@ export function storageContract(make: () => NoteStorage | Promise<NoteStorage>):
           fail('read', 'the change and its version', read);
         refused('change', await changeNote(s, 'gone.md', (text) => `${text}!`), REFUSED.missing, null);
         if ((await s.list()).join() !== 'n.md') fail('list', 'n.md alone', await s.list());
+      },
+    },
+    {
+      name: 'a note named with a `+`, a `?` and dots before `.md` is written, listed, read and removed',
+      run: async () => {
+        const s = await make();
+        made('write', await s.write(ODD_NAME, 'odd'));
+        if ((await s.list()).join() !== ODD_NAME) fail('list', ODD_NAME, await s.list());
+        const read = await s.read(ODD_NAME);
+        if (read?.text !== 'odd') fail('read', '"odd"', read);
+        made('remove', await s.remove(ODD_NAME));
+        if ((await s.list()).length) fail('list', 'no notes', await s.list());
       },
     },
     {
