@@ -50,12 +50,13 @@ export interface Direction {
 export const QUICK_LAYOUT = 300;
 
 /**
- * Graphviz's quick settings. Links are drawn straight (`splines=line`), as the View menu's Straight routing draws them.
- * Placing the boxes in each row stops early (`nslimit=0.5`). Uncrossing the links tries a twentieth as hard
+ * Graphviz's quick settings. Links keep their curves, as Roger asked (23 Oct 2026). Curves cost about twice straight
+ * lines: under a second at 1,000 things, and about three at 2,000. Placing the boxes in each row stops early
+ * (`nslimit=0.5`). Uncrossing the links tries a twentieth as hard
  * (`mclimit=0.05`). The rows are kept, so the drawing still reads in order. The routing a person chose is written
  * after, so it still wins (`routedSource`). Never `nslimit=0`: Graphviz stopped on an assertion with it.
  */
-const QUICK_SETTINGS = '  graph [splines=line, nslimit=0.5, mclimit=0.05];';
+const QUICK_SETTINGS = '  graph [nslimit=0.5, mclimit=0.05];';
 
 /** The source with the quick settings added after its first line, as `routedSource` adds its own. */
 function quickSource(dot: string): string {

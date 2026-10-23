@@ -35,6 +35,11 @@ class QuickLayout(unittest.TestCase):
         src = graph_svg.drawn_source(nodes, edges, "LR")[0]
         self.assertEqual(src.split("\n")[1], graph_svg.QUICK_SETTINGS)
 
+    def test_past_300_links_keep_their_curves(self):
+        # Roger, 23 Oct 2026: curved links, not straight ones (large_drawn_curved)
+        nodes, edges = chain(301)
+        self.assertNotIn("splines", graph_svg.drawn_source(nodes, edges, "LR")[0])
+
     def test_300_or_fewer_each_way_in_full(self):
         self.assertEqual(graph_svg.directions(None, None, 300), graph_svg.STYLE["directions"])
         nodes, edges = chain(300)
