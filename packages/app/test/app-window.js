@@ -94,13 +94,17 @@ function furnish(window) {
 const run = (window, file) =>
   window.eval(`(() => {\n${readFileSync(file, 'utf8').replace(/\nexport \{[^}]*\};?\s*$/, '\n')}\n})();`);
 
-/** The window opened on `page` of the built app at `hash`, with `invoke` as Tauri's: `{ dom, window, doc, stop }`. */
-async function open(page, hash, invoke, scripts) {
+/**
+ * The window opened on `page` of the built app at `hash`, with `invoke` as Tauri's: `{ dom, window, doc, stop }`. The
+ * system's language is `language`, as the window says it.
+ */
+async function open(page, hash, invoke, scripts, language = 'en-GB') {
   const dir = await builtApp();
   const dom = openWindow(readFileSync(join(dir, page), 'utf8'), { url: `http://tauri.localhost/${page}${hash}` });
   const { window } = dom;
   window.document.querySelectorAll('script, link[rel="stylesheet"]').forEach((e) => e.remove());
   furnish(window);
+  Object.defineProperty(window.navigator, 'language', { value: language });
   window.__TAURI__ = { core: { invoke } };
   const stopWorkers = workerFor(window, join(dir, 'layout-worker.js'));
   for (const script of scripts) run(window, join(dir, script));
@@ -115,9 +119,18 @@ async function open(page, hash, invoke, scripts) {
   };
 }
 
-/** The app's first page on `folder`, as when the app is started with the folder named; none: no folder picked yet. */
-export const openAppStart = (folder) =>
-  open('index.html', '', folder ? fakeInvoke(folder) : async () => Promise.reject('no folder is open'), ['app.js']);
+/**
+ * The app's first page on `folder`, as when the app is started with the folder named; none: no folder picked yet. The
+ * system speaks `language`.
+ */
+export const openAppStart = (folder, language) =>
+  open(
+    'index.html',
+    '',
+    folder ? fakeInvoke(folder) : async () => Promise.reject('no folder is open'),
+    ['app.js'],
+    language,
+  );
 
 /**
  * The editor in the app, on the note at `path` in `folder`. It gives `{ window, doc, field, typed, file, ready, stop }`,
