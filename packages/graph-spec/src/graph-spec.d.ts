@@ -303,7 +303,7 @@ declare namespace GraphSpecCheck {
   function certaintyOf(claim: MeshClaim): { range: [number, number]; sort_key: number } | null;
   /** Claims ranked likeliest first: only the shaky ones, or only those at least as likely as a word, when asked. */
   function byCertainty(claims: readonly MeshClaim[], options?: { shaky?: boolean; atLeast?: string }): RankedClaim[];
-  /** What the mesh's join found (editor spec §28 and §30). */
+  /** What the mesh's join found (editor spec §28 and editor spec §30). */
   interface MeshJoin {
     /** Each clash, with each side's value and the documents that state it. */
     conflicts: { subject: string; about: string; sides: [value: unknown, statedIn: string[]][] }[];

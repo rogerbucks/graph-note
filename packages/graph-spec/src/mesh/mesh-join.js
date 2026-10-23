@@ -1,4 +1,4 @@
-// The graph mesh's join (editor spec §28 and §30): graphs from many notes joined, with what the join found. It is
+// The graph mesh's join (editor spec §28 and editor spec §30): graphs from many notes joined, with what the join found. It is
 // built on the §21 join (joins/), which already keeps both sides of a clash as contested claims. This adds:
 // - each conflict with both sides and who states each (conflicts_flagged_kept);
 // - the gaps: what one graph states that another, holding the same thing, does not (mesh_join_reports_gaps);
