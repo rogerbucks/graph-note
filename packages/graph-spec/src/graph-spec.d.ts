@@ -114,6 +114,8 @@ declare namespace GraphSpecCheck {
    * when the graph declares no ElementType of its own.
    */
   function shownText(g: Graph, id: string, shared?: Graph): [string, string | null];
+  /** The text each thing of a graph is shown by, as shownText gives it, with the schema read once for them all. */
+  function shownTexts(g: Graph, shared?: Graph): (id: string) => [string, string | null];
   /** Text cut to 80 characters at a word, ending in "…"; shorter text as it is. */
   function clipShown(text: string): string;
   /** The readings guessed for a relationship type with none declared: [forward, reverse]. */

@@ -30,7 +30,14 @@ export function setLocale(tag: string, zone?: string): string {
 export const currentLocale = (): string => current;
 
 /** A count, grouped as the locale groups digits: 12,345 in UK English, 12.345 in German. */
-export const formatCount = (n: number): string => n.toLocaleString(current);
+export const formatCount = (n: number): string => counts().format(n);
+
+/** The formatter of counts for the current locale, made once for each locale it is asked in. */
+let countFormat: { locale: string; format: Intl.NumberFormat } | null = null;
+function counts(): Intl.NumberFormat {
+  if (countFormat?.locale !== current) countFormat = { locale: current, format: new Intl.NumberFormat(current) };
+  return countFormat.format;
+}
 
 /** A size in bytes, as a person reads it: 100 bytes, 12.5 kB, 1.2 MB, in the locale's digits. */
 export function formatSize(bytes: number): string {

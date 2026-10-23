@@ -3687,6 +3687,7 @@
           "secretsIn: (text: string) => string[]",
           "secretsInGraph: (g: GraphSpecCheck.Graph) => [string, string][]",
           "shownText: (g: GraphSpecCheck.Graph, id: string, shared?: GraphSpecCheck.Graph) => [string, string | null]",
+          "shownTexts: (g: GraphSpecCheck.Graph, shared?: GraphSpecCheck.Graph) => (id: string) => [string, string | null]",
           "SPEC_NODES: Array<string>",
           "splitChangeset: (block: string) => { additions: string; changes: { line: number; lines: number[]; text: string; reason: string | null; }[]; basisOk: boolean; }",
           "Store: typeof GraphSpecCheck.Store",
@@ -3951,6 +3952,9 @@
         ],
         "shownText": [
           "value: (g: GraphSpecCheck.Graph, id: string, shared?: GraphSpecCheck.Graph) => [string, string | null]"
+        ],
+        "shownTexts": [
+          "value: (g: GraphSpecCheck.Graph, shared?: GraphSpecCheck.Graph) => (id: string) => [string, string | null]"
         ],
         "SPEC_NODES": [
           "value: Array<string>"

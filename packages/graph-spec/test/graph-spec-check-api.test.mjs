@@ -85,6 +85,8 @@ const NAMES = [
   'secretsIn',
   'secretsInGraph',
   'shownText',
+  // the same text for every thing of a graph, its schema read once (instructions_naming, 23 Oct 2026)
+  'shownTexts',
   'clipShown',
   // groups found by how things link, for clusters and big-graph groups (wiki/Clusters-design.md)
   'louvain',

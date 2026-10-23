@@ -22,11 +22,19 @@ export function blockItems(text: string): { text: string; line: number; end: num
 }
 
 /** The text with strings and comments blanked to spaces, so positions hold and words in them never match. */
-export const blankText = (text: string): string =>
-  text
+export function blankText(text: string): string {
+  // one reading blanks the same block several times (schema checks, written things): the last answer is kept
+  if (text === lastBlanked.text) return lastBlanked.blanked;
+  const blanked = text
     // [^\n] where the Python reader has `.`: JavaScript's `.` also stops at CR, U+2028 and U+2029
     .replace(/'(?:[^'\\\n]|\\[^\n])*'?/g, (m) => ' '.repeat(m.length))
     .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length));
+  lastBlanked = { text, blanked };
+  return blanked;
+}
+
+/** The last text `blankText` blanked, and its answer. */
+let lastBlanked = { text: '', blanked: '' };
 
 const BARE = new RegExp(`-\\[${S}*([A-Za-z_]\\w*)(?=${S}*[\\]{])`, 'g');
 
