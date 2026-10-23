@@ -78,6 +78,15 @@ test('a note above the ceiling for VS Code’s models is refused before anything
   assert.equal(file(), NOTE.replace('Public', 'Confidential'));
 });
 
+test('a ceiling that is not one of the classifications, such as a typo, sends nothing', async () => {
+  const { vs, model } = await ready(NOTE, { ...ON, 'thoughtknot.ai.ceiling': 'Intrnal' });
+  vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'), pick('Send'));
+  await vs.ask();
+  assert.equal(model.sent.length, 0);
+  assert.equal(vs.shown.length, 0);
+  assert.match(vs.said.at(-1), /Intrnal/);
+});
+
 test('turning away from the request shown sends nothing and leaves the note as it was', async () => {
   const { vs, model, file } = await ready();
   vs.answers.push(pick('Copilot'), pick('The whole graph'), type('What is missing?'));
