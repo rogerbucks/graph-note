@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/format-version.test.mjs",
+  "test": "format_version_named > a block in a newer minor of this format",
+  "seen_failing_first": false,
+  "evidence": "A block the reader reads already: the case holds that naming a format keeps it read, beside the refusals that failed first."
+}
