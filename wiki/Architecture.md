@@ -66,3 +66,5 @@ flowchart LR
   [massive graphs design](Massive-graphs-design).
 - Clusters a person writes or an algorithm finds, and the centroids that sum them up, on the big-graph groups engine:
   [clusters design](Clusters-design).
+- Formatting by rule, intents that things support or contradict, and calculated values with totals:
+  [rules, intents and calculated values design](Rules-intents-and-calculated-values-design).

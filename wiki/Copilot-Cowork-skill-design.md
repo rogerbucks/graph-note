@@ -6,7 +6,7 @@ request. Not built yet.
 
 The requirements are section 46 of
 [`requirements/editor-requirements.md`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/editor-requirements.md),
-slice 10, in workstream M1. They are built in Wave 18 of
+slice 10, in workstream M1. They are built in Wave 23 of
 [`requirements/waves.json`](https://github.com/rogerbucks/thoughtknot/blob/main/requirements/waves.json), after the
 Obsidian community release (R2) and the whiteboard. Roger's rule is that what he adds now goes after R2.
 
