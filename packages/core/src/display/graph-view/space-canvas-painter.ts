@@ -1,7 +1,8 @@
 // The 2D canvas painter of the 3D view (editor spec §53, scale_space_painters), for a device with neither WebGPU nor
-// WebGL 2. And the 3D view's text, which the 2D canvas always paints, on a canvas laid over the shapes. At most
-// LABELS_MOST labels are painted (space-view.ts), nearest on top.
-import type { Block, ScreenLabel, Vec3 } from '../../space-view.ts';
+// WebGL 2. And the 3D view's text, which the 2D canvas always paints, on a canvas laid over the shapes. Which names
+// are painted, and how big, space-labels.ts picks.
+import type { Block, Vec3 } from '../../space-view.ts';
+import type { ScreenLabel } from '../../space-labels.ts';
 import { projectPoint } from '../../space-view.ts';
 import type { Paints } from './mark-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
@@ -121,8 +122,9 @@ export function paintSpaceLabels(
   for (const l of [...labels].reverse()) {
     const text = paints(l.style).text;
     if (!text) continue;
-    ctx.font = `${l.size}px sans-serif`;
-    ctx.lineWidth = Math.max(2, l.size / 5);
+    // the picked thing's name is bold, with a wider halo, so it stands out from the rest
+    ctx.font = `${l.picked ? 'bold ' : ''}${l.size}px sans-serif`;
+    ctx.lineWidth = Math.max(l.picked ? 4 : 2, l.size / (l.picked ? 3 : 5));
     ctx.strokeStyle = halo;
     ctx.strokeText(l.text, l.x, l.y);
     ctx.fillStyle = text;

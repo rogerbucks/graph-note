@@ -135,4 +135,6 @@ export const CORE_KEPT = {
   // the standard schema, written into a note as GQL, and the words GQL keeps for itself
   'packages/core/src/standard-schemas.ts': '*',
   'packages/core/src/name-suggestions.ts': '*',
+  // a CSS media query asking whether the screen is touched, never shown to a person
+  'packages/core/src/display/graph-view/space-view-panel.ts': ['(pointer: coarse)'],
 };
