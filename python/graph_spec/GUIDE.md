@@ -3,6 +3,12 @@
 A host puts `src/` on `sys.path` and imports the four entry points by name. Each re-exports every name it has always
 had, from where it lives now; the code is in `src/graphspec/`, one feature to a module.
 
+## A first call
+
+[`examples/python/read_and_check.py`](../../examples/python/read_and_check.py) reads one graph block and checks it.
+Run it with `uv run --project python/graph_spec python examples/python/read_and_check.py`. CI runs it from the release
+archive's layout on every pull request, so it always works with the library as shipped.
+
 ## The entry points, in `src/`
 
 - `gql_profile.py` — reads data blocks in the document profile (§3) into a plain graph, with no database. It also reads
