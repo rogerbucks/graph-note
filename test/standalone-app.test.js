@@ -93,7 +93,13 @@ describe('the desktop app, run for real: open a folder, draw a note, edit it, of
     for (;;) {
       const value = await run(script).catch(() => null);
       if (value) return value;
-      if (Date.now() > end) throw new Error(`the app never showed: ${script}`);
+      if (Date.now() > end) {
+        // what the window showed instead, so a failure in CI says where the app stopped
+        const seen = await run(
+          "return location.href + ' (' + document.readyState + '): ' + (document.body?.innerText ?? '').slice(0, 300)",
+        ).catch((e) => `nothing: ${e.message}`);
+        throw new Error(`the app never showed: ${script}\n  it showed ${seen}`);
+      }
       await pause(250);
     }
   };
