@@ -3,7 +3,19 @@
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
 // is (spec §9). A graph typed or pasted past a limit is not drawn, and a banner beside its text says why. A graph too
 // large to lay out is shown as its overview under the banner, where the host gives its colours (§53, scale_massive_card).
-import { depthOf, parked, readStyle, startingSwitches, ViewState, word } from '@thoughtknot/core';
+// A block too large to read at once is read into a store in memory, a part at a time. It is shown as its overview
+// from there, under the banner (§53, scale_in_parts).
+import {
+  depthOf,
+  MeshIndex,
+  memoryBackend,
+  parked,
+  readStyle,
+  startingSwitches,
+  storedGraphs,
+  ViewState,
+  word,
+} from '@thoughtknot/core';
 import type { Drawn, FocusDepth, GraphDrawing, NoteReading, PaneSession, Refusal, Settings } from '@thoughtknot/core';
 import type { FilterKeep } from '../../filter-saved.ts';
 import type { Palette } from '../../palette.ts';
@@ -100,6 +112,8 @@ export class PaneDrawing extends Lifecycle {
   private readonly host: PaneHost;
   /** The pane's View menu (§25): started from the settings, kept while the pane redraws what is typed. */
   private state: ViewState | null = null;
+  /** The store a block too large to read at once is read into, made when first needed. */
+  private store: MeshIndex | null = null;
 
   constructor(host: PaneHost) {
     super();
@@ -118,6 +132,28 @@ export class PaneDrawing extends Lifecycle {
       props: (key) => reading.world[d.graph]?.p(key) ?? {},
       chosen: style.filters.find((f) => f.view === undefined)?.keep,
       ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(d.graph, keep) } : {}),
+    });
+  }
+
+  /**
+   * Shows the session's block, too large to read at once, as its overview under the banner. It is read into the store a
+   * part at a time, with the page's own work done between parts. Nothing is shown for any other refusal.
+   */
+  private inParts(host: HTMLElement, s: PaneSession, why: Refusal, stale: () => boolean): void {
+    const { palette } = this.host;
+    const over = 'limit' in why ? why.limit : undefined;
+    if (!palette || (over !== 'text-bytes' && over !== 'text-lines')) return;
+    const ix = (this.store ??= new MeshIndex(memoryBackend()));
+    const pause = () => new Promise<void>((done) => host.win.setTimeout(done, 0));
+    void storedGraphs(ix, 'pane', `\`\`\`gql\n${s.text}\n\`\`\`\n`, pause).then((graphs) => {
+      const stored = graphs.get(s.graph);
+      if (!stored || stale()) return;
+      massiveView(host.createDiv(), stored.drawing, {
+        graph: s.graph,
+        palette,
+        layout: (part, by) => this.host.layout(part, by),
+        props: stored.props,
+      });
     });
   }
 
@@ -156,6 +192,7 @@ export class PaneDrawing extends Lifecycle {
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);
+          if (reading.tooLarge) this.inParts(host, s, reading.tooLarge, stale);
           return;
         }
         this.view = view;
