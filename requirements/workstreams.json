@@ -949,6 +949,7 @@
       "scale_layout_static",
       "scale_filter_live",
       "scale_search_fly",
+      "scale_massive_card",
       "scale_expand_on_demand",
       "scale_facet_counts",
       "scale_explore_trail",

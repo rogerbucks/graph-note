@@ -17,7 +17,7 @@ import type { ViewOptions } from './view-options';
 let described = 0;
 
 /** The SVG text parsed into an element of the page, its blends plain where the browser cannot mix colours. */
-function parsed(drawn: Drawn): SVGSVGElement {
+export function parsedSvg(drawn: Drawn): SVGSVGElement {
   // CSS color-mix arrived in iOS 16.2, and Obsidian runs on iOS 15: without it a blend would draw black, so use the plain hue
   const mixes = typeof CSS === 'undefined' || CSS.supports('color', 'color-mix(in srgb, red 50%, blue)');
   const text = mixes ? drawn.svg : withoutColorMix(drawn.svg);
@@ -63,7 +63,7 @@ export function insertSvg(
   plan?: Folding,
   o?: ViewOptions,
 ): SVGSVGElement {
-  const svg = viewport.appendChild(parsed(drawn));
+  const svg = viewport.appendChild(parsedSvg(drawn));
   svg.removeAttribute('style');
   svg.classList.add('thoughtknot-svg');
   decorate(svg, drawn, d, plan, o);
@@ -78,7 +78,7 @@ export function swapSvg(
   plan?: Folding,
   o?: ViewOptions,
 ): void {
-  const fresh = parsed(drawn);
+  const fresh = parsedSvg(drawn);
   svg.replaceChildren(...Array.from(fresh.children));
   const box = fresh.getAttribute('viewBox');
   if (box) svg.setAttribute('viewBox', box);

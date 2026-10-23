@@ -93,4 +93,12 @@ export const DISPLAY_SOURCE_WORDS = {
   'space.flatten': 'Back to 2D',
   'space.height-groups': 'Height: groups',
   'space.height-links': 'Height: links',
+  // a graph too large to draw, as its overview (§53, massive-view.ts)
+  'massive.name':
+    'Overview of {graph}: {things} things in {groups} groups. Drag to move, scroll to zoom, or find a thing by name.',
+  'massive.search': 'Find a thing',
+  'massive.found': '{count} found',
+  'massive.opening': 'Opening {group}…',
+  'massive.at': '{name}, in {group}',
+  'massive.not-drawn': '{group} is too large to draw on its own: showing its box',
 } as const;
