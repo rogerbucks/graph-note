@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/mesh-parity.test.mjs",
+  "test": "mesh_engine_parity > join: a link from a contested thing to a well-supported one is marked, and the well-supported one is unchanged",
+  "seen_failing_first": false,
+  "evidence": "A parity check over engines already built and agreeing: its hashes were recorded from them, so it guards against drift and cannot fail first."
+}
