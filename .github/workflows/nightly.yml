@@ -181,7 +181,8 @@ jobs:
         # ThoughtKnot_0.7.1_aarch64.dmg becomes thoughtknot-app-0.7.2-nightly.20261023-aarch64.dmg
         run: |
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}(\.[b-z])?$ ]] || { echo "::error::$VERSION is not a nightly version"; exit 1; }
-          for f in app/*/*; do
+          # each artifact may keep its bundle folder (dmg/, nsis/, deb/), so every file is found at any depth
+          find app -type f -print0 | while IFS= read -r -d '' f; do
             rest="$(basename "$f")"; rest="${rest#*_}"; rest="${rest#*_}"
             mv "$f" "nightly/thoughtknot-app-$VERSION-$rest"
           done

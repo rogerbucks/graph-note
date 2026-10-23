@@ -186,6 +186,9 @@ describe('the nightly workflow', () => {
     assert.match(publish, /pattern: thoughtknot-app-\*/);
     const runs = runCommands(publish).join('\n');
     assert.match(runs, /mv "\$f" "nightly\/thoughtknot-app-\$VERSION-\$rest"/);
+    // an artifact may keep its bundle folder, so each file is found at any depth, never a folder by a glob
+    assert.match(runs, /find app -type f -print0/);
+    assert.doesNotMatch(runs, /for f in app\//);
     assert.match(runs, /sha256sum thoughtknot-app-\* >> SHA256SUMS/);
     const create = runCommands(publish).find((r) => /gh release create/.test(r));
     assert.match(create, /"\$\{installers\[@\]\}" SHA256SUMS/);
