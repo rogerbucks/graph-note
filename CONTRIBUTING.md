@@ -987,6 +987,8 @@ These test behaviour across modules, or the repository itself, so they are named
   - The judging is tried first on made-up measures and planted faults.
   - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
     except in CI.
+### Languages laid out in a browser
+
 - `test/pseudo-layout.test.js` — the test languages laid out in a real Chrome (editor spec §42,
   pseudo_locales_checked; `scripts/pseudo-layout.mjs`).
   - It runs every view of both hosts, as the reflow check does, in `en-XA` and then in `ar-XB`.
@@ -995,6 +997,15 @@ These test behaviour across modules, or the repository itself, so they are named
   - The judging is tried first on made-up measures and planted faults.
   - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
     except in CI.
+- `test/label-fit.test.js` — right-to-left labels fit their boxes in a real Chrome (editor spec §42, bidi_labels;
+  `scripts/label-fit.mjs`).
+  - The Claude Code host's page draws a note named in Arabic, Hebrew, and both mixed with English and numbers.
+  - Each thing's words must sit inside its box. The judging is tried first on made-up measures and a planted fault.
+  - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
+    except in CI.
+
+### Drawings against their references
+
 - `test/visual-regression.test.js` — every view's drawing against its committed reference, in the light and the dark
   theme (spec §41, visual_regression_auto).
   - The views are each view of each host that draws, the views `test/wcag.test.js` checks.
