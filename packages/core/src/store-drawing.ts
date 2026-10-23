@@ -16,7 +16,9 @@ import type { Edit } from './inspector.ts';
 import { noteRowsPaced } from './mesh-index-rows.ts';
 import type { MeshIndex } from './mesh-index.ts';
 import type { GraphDrawing, Problem } from './note-reading.ts';
+import { styleOf } from './blocks.ts';
 import { readStyle } from './style.ts';
+import { emptyStyle } from './style-graph.ts';
 import type { StyleGraph } from './style-graph.ts';
 import { word } from './words.ts';
 
@@ -116,15 +118,14 @@ export function editInParts(
 /**
  * The style of a graph of a note too big to read at once, read from its style blocks (§2). Its names are checked
  * against the graph as the store holds it, as a whole reading checks them. The note's data blocks are never read here.
+ * With no style block for the graph, the graph is not built for the checks, so a draw costs a scan of the fences.
  */
 export function storedStyle(text: string, stored: StoredGraph): { style: StyleGraph; problems: Problem[] } {
   const graph = stored.drawing.graph;
+  const texts = gqlBlocks(text).map((b) => b.text);
+  if (!texts.some((t) => styleOf(t) === graph)) return { style: emptyStyle(), problems: [] };
   const world = Object.assign(Object.create(null) as Record<string, gs.Graph>, {
     [graph]: stored.world(),
   });
-  return readStyle(
-    gqlBlocks(text).map((b) => b.text),
-    graph,
-    { world, whole: Object.create(null) as typeof world },
-  );
+  return readStyle(texts, graph, { world, whole: Object.create(null) as typeof world });
 }

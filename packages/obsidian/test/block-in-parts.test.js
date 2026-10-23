@@ -132,3 +132,20 @@ test('a huge note starts with the filter saved in its style block, and a filter 
     env.uninstall();
   }
 });
+
+test('a problem in a huge note’s style block is shown under its overview', async () => {
+  const source = huge();
+  const style = ['```gql', '// graph: big_style · STYLE big', "(filter_1:Filter {keep: 'Kind: Plaec'})", '```', ''];
+  const note = ['# Big', '', '```gql', source, '```', '', ...style].join('\n');
+  const env = await load({ files: { [PATH]: note } });
+  try {
+    const el = env.doc.body.createDiv({ cls: 'markdown-source-view' }).createDiv({ cls: 'block-language-gql' });
+    await env.state.processors.get('gql')(source, el, fakeContext(note, 2));
+    await until(() => !!el.querySelector('.thoughtknot-massive-facet'));
+    const said = [...el.querySelectorAll('.thoughtknot-style-problem')].map((p) => p.textContent);
+    assert.deepEqual(said, ['In the style graph: Plaec is not a kind in graph big']);
+  } finally {
+    env.plugin.onunload();
+    env.uninstall();
+  }
+});
