@@ -1,7 +1,9 @@
 // The app's first page (spec §41, standalone_app): pick a folder of notes, then open one. A note opens in the browser
 // editor's page (editor.html), the same page the Claude Code host serves, with its calls answered in the window.
-// The folder is kept by the app for as long as it runs, so going back lists it again without asking.
-import { word } from '../../core/src/words.ts';
+// The folder is kept by the app for as long as it runs, so going back lists it again without asking. The page speaks
+// the system's language, as the editor's page speaks the browser's (language_follows_host).
+import { setLocale } from '../../core/src/locale-formats.ts';
+import { directionOf, setDirection, setLanguage, SOURCE_LANGUAGE, word } from '../../core/src/words.ts';
 import { tauriStorage, type Invoke } from './tauri-files.ts';
 
 /** The address of the editor for a note: its path in the fragment, as the server's address carries it. */
@@ -9,6 +11,13 @@ export const editorAddress = (path: string): string => `editor.html#token=app&no
 
 /** Fills `main` with the folder's notes, each a link to the editor; or the button to pick a folder. */
 export async function startApp(doc: Document, invoke: Invoke): Promise<void> {
+  // as installHost sets a host's language (core display/host.ts), without the rest of the core it would bring
+  const language = doc.defaultView?.navigator.language || SOURCE_LANGUAGE;
+  const root = doc.documentElement;
+  root.lang = setLanguage(language);
+  setLocale(language);
+  setDirection(directionOf(language));
+  root.dir = directionOf(language);
   const main = doc.getElementById('gn-app') as HTMLElement;
   const say = (text: string, tag = 'p') =>
     main.appendChild(Object.assign(doc.createElement(tag), { textContent: text }));
