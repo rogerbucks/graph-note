@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/note-reading-codes.test.js",
+  "test": "editor spec §42, problem_codes: the drawing reader’s table > every code is GN7 or GN8 and two digits, given once, apart from the reader’s, with its words and readers",
+  "seen_failing_first": false,
+  "evidence": "renamed from the GN7 test: the old table it checks already held only GN7 codes, which pass the widened pattern"
+}
