@@ -994,6 +994,8 @@ These test behaviour across modules, or the repository itself, so they are named
   must paint with no error.
 - `test/space-painters.test.js` — the 3D view's painters in headless Chrome (editor spec §53, scale_space_painters).
   WebGL 2 must paint the city where the 2D canvas does. The drawing on screen must read as marks with its colours.
+- `test/massive-view.test.js` — a graph too large to draw, shown as its overview, in headless Chrome (editor spec §53,
+  scale_massive_card). Its search must find a thing in any group and fly there.
 
 ## The requirements in a GitHub Project
 

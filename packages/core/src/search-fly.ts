@@ -106,7 +106,8 @@ const INSIDE_FILLS = 0.92;
 /**
  * The overview with group `id` opened. Its name and count go, and `inside` (the group laid out on its own)
  * is put in its box. The inside is scaled to fit and centred, keeping its shape. Each inside mark records the group
- * it sits in. Every other mark stays as it was, so the rest of the picture does not move.
+ * it sits in, and its id starts with the group's, as `group:a/t:ada`. Opened again, its old inside is taken away, so
+ * nothing is drawn twice. Every other mark stays as it was, so the rest of the picture does not move.
  */
 export function openGroup(overview: LaidMarks, id: string, inside: LaidMarks): LaidMarks {
   const box = overview.marks.find((m) => m.id === id && m.kind === 'group');
@@ -116,14 +117,20 @@ export function openGroup(overview: LaidMarks, id: string, inside: LaidMarks): L
   const dx = box.x + (box.width - width * k) / 2,
     dy = box.y + (box.height - height * k) / 2;
   const moved = inside.marks.map((m) => placed(m, k, dx, dy, id));
-  const kept = overview.marks.filter((m) => m.id !== `${id}:name` && m.id !== `${id}:count`);
+  const kept = overview.marks.filter(
+    (m) => m.id !== `${id}:name` && m.id !== `${id}:count` && !m.id.startsWith(`${id}/`),
+  );
   return { space: overview.space, marks: [...kept, ...moved] };
 }
 
-/** `m` scaled by `k` and moved by (`dx`, `dy`), inside group `group`; its own group, if any, is kept. */
+/** `m` scaled by `k` and moved by (`dx`, `dy`), inside group `group`. Its id, and its own group if any, start with it. */
 function placed(m: DrawMark, k: number, dx: number, dy: number, group: string): DrawMark {
   const at = (x: number, y: number): [number, number] => [x * k + dx, y * k + dy];
-  const within = { group: m.group ?? group, z: (m.z ?? 0) + 3 };
+  const within = {
+    id: `${group}/${m.id}`,
+    group: m.group === undefined ? group : `${group}/${m.group}`,
+    z: (m.z ?? 0) + 3,
+  };
   if (m.kind === 'link') return { ...m, ...within, points: m.points.map(([x, y]) => at(x, y)), outline: undefined };
   const [x, y] = at(m.x, m.y);
   if (m.kind === 'label') {

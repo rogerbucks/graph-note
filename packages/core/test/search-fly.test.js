@@ -92,8 +92,8 @@ test('opening a group puts its inside in its box, and leaves the rest of the pic
   assert.deepEqual(opened.space, overview.space);
   for (const m of overview.marks)
     if (!m.id.startsWith('group:a:')) assert.ok(opened.marks.includes(m), `${m.id} stays as it was`);
-  const a1 = opened.marks.find((m) => m.id === 't:a1');
-  const a2 = opened.marks.find((m) => m.id === 't:a2');
+  const a1 = opened.marks.find((m) => m.id === 'group:a/t:a1');
+  const a2 = opened.marks.find((m) => m.id === 'group:a/t:a2');
   assert.equal(a1.group, 'group:a');
   assert.equal(a1.outline, undefined, 'an outline drawn at the old size is dropped');
   const right = a2.x + a2.width,
@@ -101,9 +101,11 @@ test('opening a group puts its inside in its box, and leaves the rest of the pic
   assert.ok(a1.x >= group.x && a1.y >= group.y, 'inside the box, top left');
   assert.ok(right <= group.x + group.width + 1e-9 && bottom <= group.y + group.height + 1e-9, 'and bottom right');
   assert.ok(Math.abs(a1.width / a1.height - 2) < 1e-9, 'it keeps its shape');
-  const label = opened.marks.find((m) => m.id === 'l:a1');
+  const label = opened.marks.find((m) => m.id === 'group:a/l:a1');
   assert.ok(Math.abs(label.size / 10 - a1.width / 100) < 1e-9, 'text is scaled with the boxes');
   assert.equal(openGroup(overview, 'group:none', inside), overview, 'a group not there leaves it as it was');
+  const twice = openGroup(opened, 'group:a', inside);
+  assert.equal(twice.marks.length, opened.marks.length, 'opened again, its inside is replaced, never drawn twice');
 });
 
 test('a thing is found in the picture once its group is open, and not before', () => {
