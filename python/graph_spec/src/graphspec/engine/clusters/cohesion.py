@@ -1,4 +1,4 @@
-"""How tightly each cluster holds together, and the certainty its centroid states (§31).
+"""How tightly each cluster holds together, and its centroid's stated certainty (editor spec §31).
 
 This is the twin of the JavaScript library's src/clusters/cohesion.js. The shared cases in
 packages/graph-spec/test/cohesion-cases.json prove both give the same answers.
@@ -19,6 +19,9 @@ answer still ends.
 """
 
 from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any
 
 from ...rules.likelihood import RANGE
 from ...rules.plain_graph import Graph
@@ -46,7 +49,7 @@ def _links_inside(graph, members):
     return len(pairs)
 
 
-def cluster_certainty(graph: Graph, floor=(), **options) -> dict:
+def cluster_certainty(graph: Graph, floor: Iterable[str] = (), **options: Any) -> dict:
     """Each cluster's cohesion and the certainty its centroid states (editor spec §31).
 
     `floor` names the clusters that opt in to a floor, beside those written with `floor: true`.
