@@ -118,6 +118,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
   change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
   source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
+- `rename-across.ts` — a thing renamed in every note that names it (editor spec §27, rename_follows_notes; NEURO-10).
+  `renameAcross` gives each note's new text, as one bundle a person applies. A note it cannot read, or a name already
+  taken, is listed with why. Only the names change.
 
 #### Deferred things
 

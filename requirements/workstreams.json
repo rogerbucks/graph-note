@@ -349,6 +349,7 @@
       "mesh_one_format",
       "format_version_named",
       "schema_version_moves",
+      "rename_follows_notes",
       "mesh_text_canonical",
       "mesh_index_rebuilds",
       "mesh_work_in_engine",

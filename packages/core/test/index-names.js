@@ -424,6 +424,7 @@ export const VALUES = [
   'refusedWords',
   'remoteImagesIn',
   'removeFromList',
+  'renameAcross',
   'renameProperty',
   'renamedLinks',
   'replaceBlock',

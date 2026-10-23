@@ -382,7 +382,7 @@ export type {
   SqlEngine,
   ThingRow,
 } from './mesh-index.ts';
-export { MeshHistory } from './mesh-history.ts';
-export type { LogEntry, LogKind } from './mesh-history.ts';
+export { MeshHistory, type LogEntry, type LogKind } from './mesh-history.ts';
+export { renameAcross, type NotRewritten, type RenameAcross } from './rename-across.ts';
 export { CERTAINTY_LEVELS, CERTAINTY_LOOKS, certaintyLevel } from './certainty-drawn.ts';
 export type { CertaintyLevel, CertaintyLook } from './certainty-drawn.ts';
