@@ -31,7 +31,13 @@ describe('a large graph', () => {
       laid.map((d) => d.rankdir),
       [STYLE.directions[0]],
     );
-    assert.match(laid[0].dot, /^ {2}graph \[splines=line, nslimit=0\.5, mclimit=0\.05\];$/m);
+    assert.match(laid[0].dot, /^ {2}graph \[nslimit=0\.5, mclimit=0\.05\];$/m);
+  });
+
+  // proves: large_drawn_curved
+  test('keeps its links curved: the quick settings never draw them straight (Roger, 23 Oct 2026)', () => {
+    const [laid] = directions(chain(QUICK_LAYOUT + 1));
+    assert.doesNotMatch(laid?.dot ?? '', /splines/, 'Graphviz curves links unless told otherwise');
   });
 
   // proves: large_drawn_quick

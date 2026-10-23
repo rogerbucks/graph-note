@@ -8,9 +8,9 @@ from graphspec.style.words import DIRECTIONS
 
 # Past this many things a graph is laid out quickly (render.ts, QUICK_LAYOUT).
 QUICK_LAYOUT = 300
-# Graphviz's quick settings: straight links, rows placed and uncrossed with less effort
+# Graphviz's quick settings: links keep their curves, rows placed and uncrossed with less effort
 # (render.ts, QUICK_SETTINGS).
-QUICK_SETTINGS = "  graph [splines=line, nslimit=0.5, mclimit=0.05];"
+QUICK_SETTINGS = "  graph [nslimit=0.5, mclimit=0.05];"
 
 
 def quick_source(dot: str, things: int) -> str:
