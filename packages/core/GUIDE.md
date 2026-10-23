@@ -123,6 +123,9 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `rename-across.ts` — a thing renamed in every note that names it (editor spec §27, rename_follows_notes; NEURO-10).
   `renameAcross` gives each note's new text, as one bundle a person applies. A note it cannot read, or a name already
   taken, is listed with why. Only the names change.
+- `schema-version-moves.ts` — a graph moved to another version of its shared schema (editor spec §27,
+  schema_version_moves; ARCH-4). `schemaMove` gives the block with its graph line changed, and what the new version adds
+  and drops. A person applies it; reading never moves a graph. `schemaVersions` lists the versions there are.
 
 #### Deferred things
 
