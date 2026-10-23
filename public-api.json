@@ -3646,9 +3646,11 @@
     "entries": {
       ".": {
         "export =": [
+          "byCertainty: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]",
           "canon: (g: GraphSpecCheck.Graph) => string",
           "centroidId: (cluster: string) => string",
           "centroidsOf: (graph: GraphSpecCheck.Graph, options?: { previous?: GraphSpecCheck.Centroids; passes?: number; threshold?: number; budget?: number; clock?: () => number; }) => GraphSpecCheck.Centroids",
+          "certaintyOf: (claim: GraphSpecCheck.MeshClaim) => { range: [number, number]; sort_key: number; } | null",
           "changeId: (change: GraphSpecCheck.ReadChange) => string",
           "changesetHeader: (block: string) => { graph: string; id: string; against: string; by: string; } | null",
           "check: (world: GraphSpecCheck.World, graph: string, matrix?: unknown, switches?: Set<string>) => [string, boolean][]",
@@ -3670,6 +3672,7 @@
           "LIMITS: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }",
           "lint: (text: string) => { trap: string; line: number; }[]",
           "louvain: (n: number, links: readonly (readonly [number, number])[]) => number[]",
+          "meshJoin: (q: { docs: string[]; config?: object; findings?: { confirms: string; refutes: string[]; }[]; spread?: string[]; sameDomain?: [string, string][]; }) => GraphSpecCheck.MeshJoin",
           "named: (digits: string) => string",
           "notes: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }",
           "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
@@ -3693,6 +3696,9 @@
         ],
         "BlockKind": [
           "type = 'data' | 'schema' | 'query' | 'excerpt' | 'changeset'"
+        ],
+        "byCertainty": [
+          "value: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]"
         ],
         "canon": [
           "value: (g: GraphSpecCheck.Graph) => string"
@@ -3724,6 +3730,9 @@
         ],
         "centroidsOf": [
           "value: (graph: GraphSpecCheck.Graph, options?: { previous?: GraphSpecCheck.Centroids; passes?: number; threshold?: number; budget?: number; clock?: () => number; }) => GraphSpecCheck.Centroids"
+        ],
+        "certaintyOf": [
+          "value: (claim: GraphSpecCheck.MeshClaim) => { range: [number, number]; sort_key: number; } | null"
         ],
         "changeId": [
           "value: (change: GraphSpecCheck.ReadChange) => string"
@@ -3837,6 +3846,30 @@
         "louvain": [
           "value: (n: number, links: readonly (readonly [number, number])[]) => number[]"
         ],
+        "MeshClaim": [
+          "interface",
+          "confidence?: unknown",
+          "id: string",
+          "likelihood?: unknown",
+          "likelihood_to?: unknown",
+          "status?: unknown"
+        ],
+        "meshJoin": [
+          "value: (q: { docs: string[]; config?: object; findings?: { confirms: string; refutes: string[]; }[]; spread?: string[]; sameDomain?: [string, string][]; }) => GraphSpecCheck.MeshJoin"
+        ],
+        "MeshJoin": [
+          "interface",
+          "claims: Array<GraphSpecCheck.RankedClaim>",
+          "clusters: Array<[cluster: string, standing: 'asserted' | 'contested', disputed: Array<string>]>",
+          "conflicts: Array<{ subject: string; about: string; sides: [value: unknown, statedIn: string[]][]; }>",
+          "flags: Array<[kind: 'numeric-certainty', subject: string, property: string, document: string]>",
+          "gaps: Array<[kind: 'thing' | 'property' | 'relationship', subject: string, attribute: string, has: Array<string>, lacks: Array<string>]>",
+          "links: Array<[link: string, standing: 'asserted' | 'contested', contestedLink: boolean]>",
+          "nodes: Record<string, Record<string, unknown>>",
+          "shaky: Array<string>",
+          "standing: Record<string, 'asserted' | 'contested' | 'in-doubt' | 'guess'>",
+          "states: Array<[name: string, things: Array<string>, documents: Array<string>, match: 'guess' | 'confirmed']>"
+        ],
         "named": [
           "value: (digits: string) => string"
         ],
@@ -3872,6 +3905,16 @@
         ],
         "quote": [
           "value: (s: string) => string"
+        ],
+        "RankedClaim": [
+          "interface",
+          "confidence: string",
+          "id: string",
+          "likelihood: string",
+          "likelihood_to: string",
+          "range: [number, number]",
+          "sort_key: number",
+          "status: string"
         ],
         "readChange": [
           "value: (text: string) => GraphSpecCheck.ReadChange"

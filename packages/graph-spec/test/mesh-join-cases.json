@@ -1,0 +1,530 @@
+{
+  "about": "The graph mesh's join (editor spec §28 and §30), one case per rule. Each case's documents are joined by meshJoin (packages/graph-spec/src/mesh/mesh-join.js) and mesh_join (python/graph_spec/src/graphspec/engine/mesh/mesh_join.py), and each part named under answer must be the same from both. A document is written as its id and its lines; the header line is added. A case with query also ranks the answer's claims by certainty with that query.",
+  "cases": [
+    {
+      "name": "a clash keeps both sides, flags the conflict and overwrites neither",
+      "requirement": "conflicts_flagged_kept",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": ["(widget:Product {name: 'Widget', price: 10})"]
+        },
+        {
+          "id": "doc:b",
+          "lines": ["(widget:Product {name: 'Widget', price: 12})"]
+        }
+      ],
+      "answer": {
+        "conflicts": [
+          {
+            "subject": "widget",
+            "about": "price",
+            "sides": [
+              [10, ["doc:a"]],
+              [12, ["doc:b"]]
+            ]
+          }
+        ],
+        "nodes": {
+          "widget": {
+            "id": "widget",
+            "name": "Widget"
+          }
+        },
+        "standing": {
+          "widget": "contested"
+        }
+      }
+    },
+    {
+      "name": "overlapping graphs keep both sets and list the contradictions and the gaps",
+      "requirement": "mesh_join_reports_gaps",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 10}),",
+            "(bolt:Part {name: 'Bolt'}),",
+            "(widget)-[:USES]->(bolt)"
+          ]
+        },
+        {
+          "id": "doc:b",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 12, colour: 'red'}),",
+            "(bolt:Part {name: 'Bolt'}),",
+            "(nut:Part {name: 'Nut'})"
+          ]
+        }
+      ],
+      "answer": {
+        "conflicts": [
+          {
+            "subject": "widget",
+            "about": "price",
+            "sides": [
+              [10, ["doc:a"]],
+              [12, ["doc:b"]]
+            ]
+          }
+        ],
+        "gaps": [
+          ["property", "widget", "colour", ["doc:b"], ["doc:a"]],
+          ["relationship", "widget-[:USES]->bolt", "", ["doc:a"], ["doc:b"]],
+          ["thing", "nut", "", ["doc:b"], ["doc:a"]]
+        ],
+        "nodes": {
+          "bolt": {
+            "id": "bolt",
+            "name": "Bolt"
+          },
+          "nut": {
+            "id": "nut",
+            "name": "Nut"
+          },
+          "widget": {
+            "colour": "red",
+            "id": "widget",
+            "name": "Widget"
+          }
+        }
+      }
+    },
+    {
+      "name": "disagreeing claims are both contested, in words, and a certainty typed as a number is flagged",
+      "requirement": "certainty_in_words",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 10}),",
+            "(k1:Claim {likelihood: 0.7, confidence: 'high', status: 'asserted'})"
+          ]
+        },
+        {
+          "id": "doc:b",
+          "lines": ["(widget:Product {name: 'Widget', price: 12})"]
+        }
+      ],
+      "answer": {
+        "claims": [
+          {
+            "id": "claim:join/widget/price=10@a",
+            "status": "contested",
+            "likelihood": "cannot-judge",
+            "likelihood_to": "cannot-judge",
+            "confidence": "low",
+            "range": [0, 100],
+            "sort_key": 200
+          },
+          {
+            "id": "claim:join/widget/price=12@b",
+            "status": "contested",
+            "likelihood": "cannot-judge",
+            "likelihood_to": "cannot-judge",
+            "confidence": "low",
+            "range": [0, 100],
+            "sort_key": 200
+          }
+        ],
+        "shaky": ["claim:join/widget/price=10@a", "claim:join/widget/price=12@b"],
+        "flags": [["numeric-certainty", "k1", "likelihood", "doc:a"]]
+      }
+    },
+    {
+      "name": "a finding settles a dispute: the confirmed side is asserted, the other refuted",
+      "requirement": "certainty_in_words",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": ["(widget:Product {name: 'Widget', price: 10})"]
+        },
+        {
+          "id": "doc:b",
+          "lines": ["(widget:Product {name: 'Widget', price: 12})"]
+        }
+      ],
+      "findings": [
+        {
+          "confirms": "claim:join/widget/price=12@b",
+          "refutes": ["claim:join/widget/price=10@a"]
+        }
+      ],
+      "answer": {
+        "claims": [
+          {
+            "id": "claim:join/widget/price=10@a",
+            "status": "refuted",
+            "likelihood": "cannot-judge",
+            "likelihood_to": "cannot-judge",
+            "confidence": "low",
+            "range": [0, 100],
+            "sort_key": 200
+          },
+          {
+            "id": "claim:join/widget/price=12@b",
+            "status": "confirmed",
+            "likelihood": "cannot-judge",
+            "likelihood_to": "cannot-judge",
+            "confidence": "low",
+            "range": [0, 100],
+            "sort_key": 200
+          }
+        ],
+        "conflicts": [],
+        "nodes": {
+          "widget": {
+            "id": "widget",
+            "name": "Widget",
+            "price": 12
+          }
+        },
+        "standing": {
+          "widget": "asserted"
+        }
+      }
+    },
+    {
+      "name": "claims rank by a key made from their words, and the shaky ones are found; a sort key in the text is ignored",
+      "requirement": "certainty_query_dimension",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 10}),",
+            "(k1:Claim {likelihood: 'unlikely', confidence: 'moderate', status: 'asserted', sort_key: 999}),",
+            "(k2:Claim {likelihood: 'very-likely', confidence: 'high', status: 'asserted'}),",
+            "(k3:Claim {likelihood: 'likely', confidence: 'low', status: 'asserted'})"
+          ]
+        },
+        {
+          "id": "doc:b",
+          "lines": ["(widget:Product {name: 'Widget', price: 12})"]
+        }
+      ],
+      "answer": {
+        "claims": [
+          {
+            "id": "k2",
+            "status": "asserted",
+            "likelihood": "very-likely",
+            "likelihood_to": "very-likely",
+            "confidence": "high",
+            "range": [80, 95],
+            "sort_key": 352
+          },
+          {
+            "id": "k3",
+            "status": "asserted",
+            "likelihood": "likely",
+            "likelihood_to": "likely",
+            "confidence": "low",
+            "range": [55, 80],
+            "sort_key": 270
+          },
+          {
+            "id": "claim:join/widget/price=10@a",
+            "status": "contested",
+            "likelihood": "cannot-judge",
+            "likelihood_to": "cannot-judge",
+            "confidence": "low",
+            "range": [0, 100],
+            "sort_key": 200
+          },
+          {
+            "id": "claim:join/widget/price=12@b",
+            "status": "contested",
+            "likelihood": "cannot-judge",
+            "likelihood_to": "cannot-judge",
+            "confidence": "low",
+            "range": [0, 100],
+            "sort_key": 200
+          },
+          {
+            "id": "k1",
+            "status": "asserted",
+            "likelihood": "unlikely",
+            "likelihood_to": "unlikely",
+            "confidence": "moderate",
+            "range": [20, 45],
+            "sort_key": 131
+          }
+        ],
+        "shaky": ["claim:join/widget/price=10@a", "claim:join/widget/price=12@b", "k1"]
+      }
+    },
+    {
+      "name": "a query keeps the claims at least as likely as a word",
+      "requirement": "certainty_query_dimension",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(k1:Claim {likelihood: 'unlikely', confidence: 'moderate', status: 'asserted'}),",
+            "(k2:Claim {likelihood: 'very-likely', confidence: 'high', status: 'asserted'}),",
+            "(k3:Claim {likelihood: 'likely', confidence: 'low', status: 'asserted'})"
+          ]
+        }
+      ],
+      "query": {
+        "at_least": "likely"
+      },
+      "answer": {
+        "ranked": [
+          {
+            "id": "k2",
+            "status": "asserted",
+            "likelihood": "very-likely",
+            "likelihood_to": "very-likely",
+            "confidence": "high",
+            "range": [80, 95],
+            "sort_key": 352
+          },
+          {
+            "id": "k3",
+            "status": "asserted",
+            "likelihood": "likely",
+            "likelihood_to": "likely",
+            "confidence": "low",
+            "range": [55, 80],
+            "sort_key": 270
+          }
+        ]
+      }
+    },
+    {
+      "name": "contesting one thing in a cluster leaves its neighbours as they were",
+      "requirement": "doubt_stays_local",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 10}),",
+            "(bolt:Part {name: 'Bolt'}),",
+            "(c1:Cluster {name: 'Hardware'}),",
+            "(widget)-[:MEMBER_OF]->(c1),",
+            "(bolt)-[:MEMBER_OF]->(c1)"
+          ]
+        },
+        {
+          "id": "doc:b",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 12}),",
+            "(bolt:Part {name: 'Bolt'}),",
+            "(c1:Cluster {name: 'Hardware'}),",
+            "(widget)-[:MEMBER_OF]->(c1),",
+            "(bolt)-[:MEMBER_OF]->(c1)"
+          ]
+        }
+      ],
+      "answer": {
+        "standing": {
+          "bolt": "asserted",
+          "c1": "asserted",
+          "widget": "contested"
+        },
+        "clusters": [["c1", "asserted", []]]
+      }
+    },
+    {
+      "name": "doubt passes across a cluster only when a view asks for it",
+      "requirement": "doubt_stays_local",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 10}),",
+            "(bolt:Part {name: 'Bolt'}),",
+            "(c1:Cluster {name: 'Hardware'}),",
+            "(widget)-[:MEMBER_OF]->(c1),",
+            "(bolt)-[:MEMBER_OF]->(c1)"
+          ]
+        },
+        {
+          "id": "doc:b",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 12}),",
+            "(bolt:Part {name: 'Bolt'}),",
+            "(c1:Cluster {name: 'Hardware'}),",
+            "(widget)-[:MEMBER_OF]->(c1),",
+            "(bolt)-[:MEMBER_OF]->(c1)"
+          ]
+        }
+      ],
+      "spread": ["c1"],
+      "answer": {
+        "standing": {
+          "bolt": "in-doubt",
+          "c1": "asserted",
+          "widget": "contested"
+        }
+      }
+    },
+    {
+      "name": "a link from a contested thing to a well-supported one is marked, and the well-supported one is unchanged",
+      "requirement": "contested_link_marker",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 10}),",
+            "(bolt:Part {name: 'Bolt'}),",
+            "(widget)-[:USES]->(bolt)"
+          ]
+        },
+        {
+          "id": "doc:b",
+          "lines": [
+            "(widget:Product {name: 'Widget', price: 12}),",
+            "(bolt:Part {name: 'Bolt'}),",
+            "(widget)-[:USES]->(bolt)"
+          ]
+        }
+      ],
+      "answer": {
+        "links": [["widget-[:USES]->bolt", "asserted", true]],
+        "standing": {
+          "bolt": "asserted",
+          "widget": "contested"
+        },
+        "nodes": {
+          "bolt": {
+            "id": "bolt",
+            "name": "Bolt"
+          },
+          "widget": {
+            "id": "widget",
+            "name": "Widget"
+          }
+        }
+      }
+    },
+    {
+      "name": "a cluster made by hand starts as asserted",
+      "requirement": "hand_clusters_contestable",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(bolt:Part {name: 'Bolt'}),",
+            "(nut:Part {name: 'Nut'}),",
+            "(c1:Cluster {name: 'Hardware'}),",
+            "(bolt)-[:MEMBER_OF]->(c1),",
+            "(nut)-[:MEMBER_OF]->(c1)"
+          ]
+        }
+      ],
+      "answer": {
+        "clusters": [["c1", "asserted", []]]
+      }
+    },
+    {
+      "name": "a join that leaves a member out of a hand-made cluster makes the cluster contested",
+      "requirement": "hand_clusters_contestable",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(bolt:Part {name: 'Bolt'}),",
+            "(nut:Part {name: 'Nut'}),",
+            "(c1:Cluster {name: 'Hardware'}),",
+            "(bolt)-[:MEMBER_OF]->(c1),",
+            "(nut)-[:MEMBER_OF]->(c1)"
+          ]
+        },
+        {
+          "id": "doc:b",
+          "lines": [
+            "(bolt:Part {name: 'Bolt'}),",
+            "(nut:Part {name: 'Nut'}),",
+            "(c1:Cluster {name: 'Hardware'}),",
+            "(nut)-[:MEMBER_OF]->(c1)"
+          ]
+        }
+      ],
+      "answer": {
+        "clusters": [["c1", "contested", ["bolt"]]]
+      }
+    },
+    {
+      "name": "a join that disagrees about a hand-made cluster's own values makes it contested",
+      "requirement": "hand_clusters_contestable",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": ["(bolt:Part {name: 'Bolt'}),", "(c1:Cluster {name: 'Hardware'}),", "(bolt)-[:MEMBER_OF]->(c1)"]
+        },
+        {
+          "id": "doc:b",
+          "lines": ["(bolt:Part {name: 'Bolt'}),", "(c1:Cluster {name: 'Fixings'}),", "(bolt)-[:MEMBER_OF]->(c1)"]
+        }
+      ],
+      "answer": {
+        "clusters": [["c1", "contested", []]]
+      }
+    },
+    {
+      "name": "two machines' Approved states join as a guess",
+      "requirement": "state_names_start_doubtful",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(draft:State {name: 'Draft'}),",
+            "(approved:State {name: 'Approved'}),",
+            "(draft)-[:TRANSITION {event: 'approve'}]->(approved)"
+          ]
+        },
+        {
+          "id": "doc:b",
+          "lines": [
+            "(review:State {name: 'Review'}),",
+            "(ok:State {name: 'Approved'}),",
+            "(review)-[:TRANSITION {event: 'pass'}]->(ok)"
+          ]
+        }
+      ],
+      "answer": {
+        "states": [["Approved", ["approved", "ok"], ["doc:a", "doc:b"], "guess"]],
+        "standing": {
+          "approved": "guess",
+          "draft": "asserted",
+          "ok": "guess",
+          "review": "asserted"
+        }
+      }
+    },
+    {
+      "name": "the match is confirmed once the user says the two are in one domain",
+      "requirement": "state_names_start_doubtful",
+      "docs": [
+        {
+          "id": "doc:a",
+          "lines": [
+            "(draft:State {name: 'Draft'}),",
+            "(approved:State {name: 'Approved'}),",
+            "(draft)-[:TRANSITION {event: 'approve'}]->(approved)"
+          ]
+        },
+        {
+          "id": "doc:b",
+          "lines": [
+            "(review:State {name: 'Review'}),",
+            "(ok:State {name: 'Approved'}),",
+            "(review)-[:TRANSITION {event: 'pass'}]->(ok)"
+          ]
+        }
+      ],
+      "same_domain": [["doc:b", "doc:a"]],
+      "answer": {
+        "states": [["Approved", ["approved", "ok"], ["doc:a", "doc:b"], "confirmed"]],
+        "standing": {
+          "approved": "asserted",
+          "draft": "asserted",
+          "ok": "asserted",
+          "review": "asserted"
+        }
+      }
+    }
+  ]
+}
