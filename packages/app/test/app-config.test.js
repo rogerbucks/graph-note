@@ -72,3 +72,16 @@ test('the one advisory the dependency review allows is for glib 0.18, and goes o
     'glib 0.18 is gone: remove GHSA-wrw7-89jp-8q8g from .github/workflows/dependency-review.yml and close SEC-16',
   );
 });
+
+test('CI builds an installer for each system, unsigned, and none on Linux that carries its own WebKitGTK', () => {
+  // a .dmg on macOS, an NSIS installer on Windows and a .deb on Linux. An AppImage carries WebKitGTK (LGPL), so it
+  // waits for the licence check that the desktop libraries' allowance names (licences/bundled.json).
+  assert.equal(config.bundle.active, true);
+  assert.deepEqual([...config.bundle.targets].sort(), ['app', 'deb', 'dmg', 'nsis']);
+  const workflow = readFileSync(new URL('../../../.github/workflows/desktop-app.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /cargo install tauri-cli --locked --version \d+\.\d+\.\d+\n/, 'the Tauri CLI is pinned');
+  assert.match(workflow, /run: cargo tauri build --ci\n/);
+  for (const kind of ['dmg/\\*\\.dmg', 'nsis/\\*\\.exe', 'deb/\\*\\.deb'])
+    assert.match(workflow, new RegExp(`target/release/bundle/${kind}\\n`), `the ${kind} installer is kept`);
+  assert.doesNotMatch(workflow, /appimage|TAURI_SIGNING|APPLE_CERTIFICATE|signCommand/i, 'unsigned, and no AppImage');
+});

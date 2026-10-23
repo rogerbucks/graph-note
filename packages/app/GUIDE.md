@@ -74,3 +74,21 @@ cargo install tauri-driver --locked --version 2.1.0
 cd packages/app/src-tauri && cargo build && cd ../../..
 xvfb-run -a npm run test:ai -- test/standalone-app.test.js
 ```
+
+## Installers
+
+The same workflow builds an installer on each system and keeps it as a download of the run:
+
+- macOS: a `.dmg`;
+- Windows: an NSIS setup `.exe`;
+- Linux: a `.deb`.
+
+They are not signed yet, so macOS and Windows warn the first time the app opens. On a Mac, right-click the app and
+choose Open. On Windows, choose "More info", then "Run anyway". The `.deb` uses the system's own WebKitGTK and carries
+none of it. A Linux package that carries WebKitGTK waits for the licence check named in `licences/bundled.json`.
+
+```
+cargo install tauri-cli --locked --version 2.12.4
+npm run build --workspace packages/app
+cd packages/app/src-tauri && cargo tauri build      # the installer, in target/release/bundle/
+```

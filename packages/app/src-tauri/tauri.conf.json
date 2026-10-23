@@ -23,8 +23,8 @@
     }
   },
   "bundle": {
-    "active": false,
-    "targets": "all",
+    "active": true,
+    "targets": ["app", "dmg", "nsis", "deb"],
     "category": "Productivity",
     "shortDescription": "Draw, edit and keep graph notes, offline.",
     "licenseFile": "../../../LICENSE",
