@@ -1,0 +1,6 @@
+{
+  "file": "test/massive-graphs-limits.test.js",
+  "test": "the raised read limit is still within what the library reads in one block",
+  "seen_failing_first": false,
+  "evidence": "A guard: the old limit was already inside the library's block limit, and this holds the raised one there too."
+}
