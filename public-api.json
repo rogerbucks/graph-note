@@ -2735,6 +2735,18 @@
           "after: (ms: number, run: () => void) => unknown",
           "cancel: (handle: unknown) => void"
         ],
+        "schemaMove": [
+          "value: (block: string, to: string, schemas: readonly string[]) => SchemaMove | null"
+        ],
+        "SchemaMove": [
+          "interface",
+          "adds: Array<string>",
+          "drops: Array<string>",
+          "from: string",
+          "text: string",
+          "to: string",
+          "used: Array<string>"
+        ],
         "schemaPicture": [
           "value: (texts: string[], index: number, shared?: string[]) => SchemaPicture | null"
         ],
@@ -2742,6 +2754,9 @@
           "interface",
           "graph: string",
           "reading: NoteReading"
+        ],
+        "schemaVersions": [
+          "value: (name: string, schemas: readonly string[]) => string[]"
         ],
         "ScopeChoice": [
           "type = { graph: string; what: 'graph'; } | { graph: string; what: 'view'; view: string; } | { graph: string; what: 'things'; things: string[]; }"
@@ -3809,6 +3824,7 @@
     "entries": {
       ".": {
         "export =": [
+          "afterTextMerge: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }",
           "asAt: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph",
           "byCertainty: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]",
           "canon: (g: GraphSpecCheck.Graph) => string",
@@ -3860,6 +3876,9 @@
           "tokens: (text: string) => [string, string, number, string, number][]",
           "word: (readings: Map<string, [string | undefined, string | undefined]>, type: string) => string",
           "worldFromStore: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
+        ],
+        "afterTextMerge": [
+          "value: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }"
         ],
         "asAt": [
           "value: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph"
@@ -4021,6 +4040,14 @@
         ],
         "louvain": [
           "value: (n: number, links: readonly (readonly [number, number])[]) => number[]"
+        ],
+        "MergePick": [
+          "interface",
+          "about: string",
+          "claim: string",
+          "over: Array<string>",
+          "subject: string",
+          "value: unknown"
         ],
         "MeshClaim": [
           "interface",

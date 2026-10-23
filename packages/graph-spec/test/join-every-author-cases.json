@@ -1,0 +1,45 @@
+{
+  "about": "The same join for every author (editor spec §30, same_join_every_author). Each case is a base, two edits of it (ours and theirs) and a merge of their text. The edits are joined over the base by the §21 join, and the merged text is read against it: afterTextMerge (packages/graph-spec/src/mesh/after-text-merge.js) and after_text_merge (python/graph_spec/src/graphspec/engine/mesh/after_text_merge.py) must give each answer. A document is its lines; its header line is added, ours and theirs and the merge as revisions of the base. The tests also run each case with ours made on a desktop, a phone and by an AI, and the answers must match apart from who made the edit.",
+  "cases": [
+    {
+      "name": "a text merge that picks one of two values is followed by the join, which keeps the dispute for a person",
+      "base": ["(w:Product {name: 'Widget', price: 10})"],
+      "ours": ["(w:Product {name: 'Widget', price: 12})"],
+      "theirs": ["(w:Product {name: 'Widget', price: 14})"],
+      "merged": ["(w:Product {name: 'Widget', price: 14})"],
+      "answer": {
+        "contested": ["claim:join/w/price=12@ours", "claim:join/w/price=14@theirs"],
+        "picked": [
+          {
+            "subject": "w",
+            "about": "price",
+            "value": 14,
+            "claim": "claim:join/w/price=14@theirs",
+            "over": ["claim:join/w/price=12@ours"]
+          }
+        ],
+        "settled": false
+      }
+    },
+    {
+      "name": "edits that do not disagree leave the merge nothing to decide",
+      "base": ["(w:Product {name: 'Widget', price: 10})"],
+      "ours": ["(w:Product {name: 'Widget', price: 12})"],
+      "theirs": ["(w:Product {name: 'Widget Pro', price: 10})"],
+      "merged": ["(w:Product {name: 'Widget Pro', price: 12})"],
+      "answer": { "contested": [], "picked": [], "settled": true }
+    },
+    {
+      "name": "a merge that keeps neither value still leaves the dispute, with nothing picked",
+      "base": ["(w:Product {name: 'Widget', price: 10})"],
+      "ours": ["(w:Product {name: 'Widget', price: 12})"],
+      "theirs": ["(w:Product {name: 'Widget', price: 14})"],
+      "merged": ["(w:Product {name: 'Widget', price: 10})"],
+      "answer": {
+        "contested": ["claim:join/w/price=12@ours", "claim:join/w/price=14@theirs"],
+        "picked": [],
+        "settled": false
+      }
+    }
+  ]
+}
