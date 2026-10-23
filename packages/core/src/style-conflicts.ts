@@ -43,7 +43,7 @@ function settleNudges(nudges: Nudge[], graph: string, out: Problem[]): { kept: N
     groups = new Map<string, Nudge>(),
     after = new Map<string, string[]>();
   let direction: Nudge | undefined;
-  const conflict = (n: Nudge, message: string) => out.push(styleProblem(graph, n.at, message, remove()));
+  const conflict = (n: Nudge, message: string) => out.push(styleProblem(graph, n.at, 'GN808', message, remove()));
   for (const n of nudges) {
     if (n.word === 'direction') {
       if (direction && direction.direction !== n.direction) {
@@ -108,6 +108,7 @@ function settleLooks(looks: Look[], graph: string, out: Problem[]): Look[] {
       styleProblem(
         graph,
         l.at,
+        'GN808',
         word(l.view !== undefined ? 'styling.conflict.colour-view' : 'styling.conflict.colour-path', {
           colour: l.colour,
           means: first.means ?? '',
@@ -140,7 +141,7 @@ function settleChoices<T extends { at: StyleAt }>(
     const was = first.get(placeOf(t));
     if (!was) first.set(placeOf(t), t);
     if (!was || choiceOf(was) === choiceOf(t)) return true;
-    out.push(styleProblem(graph, t.at, said(was, t), remove()));
+    out.push(styleProblem(graph, t.at, 'GN808', said(was, t), remove()));
     return false;
   });
 }
@@ -295,6 +296,7 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
         styleProblem(
           graph,
           at,
+          'GN808',
           word('styling.conflict.view', { view, first: first.outside, line: String(viewAt.get(view)), outside }),
           remove(),
         ),
@@ -311,6 +313,7 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
         styleProblem(
           graph,
           at,
+          'GN808',
           word('styling.conflict.shown-twice', { view, line: String(shownAt.get(view)) }),
           remove(),
         ),

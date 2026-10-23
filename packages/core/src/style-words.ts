@@ -35,6 +35,7 @@ export function unknownKeys(
       return styleProblem(
         graph,
         at,
+        'GN806',
         // the kind is the style graph's own label, such as Look or Arrows, so it takes the article English gives it
         word(article(kind) === 'an' ? 'styling.key-unknown.an' : 'styling.key-unknown.a', { key: k, kind }),
         by.length > 1

@@ -14,7 +14,7 @@ export type ThingReader = ReturnType<typeof reader>;
 /** Reads one thing's properties, reporting each fault: a value of the wrong type, a word not allowed, a name not there. */
 export function reader(raw: RawThing, names: StyledNames, out: Problem[]) {
   const report = (message: string, fix: string, edit: Pick<Problem, 'replace' | 'span'> = {}) =>
-    out.push(styleProblem(names.graph, raw.at, message, fix, edit));
+    out.push(styleProblem(names.graph, raw.at, 'GN805', message, fix, edit));
   const edit = (key: string, written: string, by: string[]) => {
     const span = raw.span(key);
     return by.length ? { replace: { written, with: by }, ...(span ? { span } : {}) } : {};

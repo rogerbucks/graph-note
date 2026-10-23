@@ -68,6 +68,7 @@ def _data_kind(text):
             "severity": "error",
             "message": "this style block names no graph to style, so it is not read",
             "fix": f"write the graph it styles after STYLE: '// graph: {own} · STYLE <graph>'",
+            "code": "GN708",
         }
     try:
         _, kind = header(text)
@@ -82,6 +83,7 @@ def _data_kind(text):
             "severity": "error",
             "message": e.message,
             "fix": e.fix,
+            "code": e.code,
         }
 
 
@@ -122,6 +124,7 @@ def _line_end_comments(text):
                 "severity": "warning",
                 "message": COMMENT_RULE,
                 "fix": COMMENT_FIX,
+                "code": "GN103",
                 "character": _u16(line[:start]),
             }
         )
@@ -143,6 +146,7 @@ def _dangling_comma(text):
         "severity": "warning",
         "message": "a comma with nothing after it; it is read as if it were not there",
         "fix": "remove the comma, or write the next pattern after it",
+        "code": "GN701",
         "character": _u16(before[-1]),
     }
 
@@ -170,9 +174,9 @@ def read_for_drawing(
 
     Each block is applied in order to a fresh store, after the shared schemas; when one fails, the
     item at the failing line is blanked and the whole read starts again, so a block that cannot
-    be read is drawn in part. Each problem is {graph, block, line, severity, message, fix} and,
-    for an error, dropped: the text left out. A comma with nothing after it at a block's end is a
-    warning, with the character it is at on its line, and is read as if it were not there. A
+    be read is drawn in part. Each problem is {graph, block, line, severity, message, fix, code}
+    and, for an error, dropped: the text left out. A comma with nothing after it at a block's end
+    is a warning, with the character it is at on its line, and is read as if it were not there. A
     thing written with text and no name is read under the name suggested for it, from a copy of
     its block, with a warning whose suggested is that name and whose character is the place after
     its ( where the name would go (10 Oct 2026). Reading again is capped by `budget`, in UTF-16
@@ -211,6 +215,7 @@ def read_for_drawing(
                     "severity": "warning",
                     "message": f"this thing has no name; suggested: {n['name']}",
                     "fix": f"add the name {n['name']} after the (, or write one of your own",
+                    "code": "GN704",
                     "character": n["character"],
                     "suggested": n["name"],
                 }
@@ -245,6 +250,7 @@ def read_for_drawing(
             "severity": "error",
             "message": pe.message if pe else "this could not be read",
             "fix": pe.fix if pe else "check the line against the guide to writing a graph note",
+            "code": pe.code if pe else "GN706",
         }
         every = _items(text)
         # "unexpected '('" straight after a path that ends its line with no comma: say so

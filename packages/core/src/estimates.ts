@@ -297,6 +297,7 @@ export function estimate(
       line: at.line,
       severity: 'warning',
       kind: 'unknown-types',
+      code: 'GN712',
       message: word('reading.estimate.type', { type: l.type, graph, taken: near.one }),
       fix: word('reading.estimate.change-to', { written: l.type, taken: near.one }),
       replace: { written: l.type, with: [near.one] },

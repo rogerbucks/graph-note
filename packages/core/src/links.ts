@@ -200,6 +200,7 @@ export function brokenLinks(reading: NoteReading, graph: string, vault: LinkVaul
       line: (place?.line ?? 0) + 1,
       severity: 'warning',
       message: word('reading.broken', { written: link.written }),
+      code: 'GN709',
       fix,
       ...(span ? { span } : {}),
       ...(span && written && meant.length ? { replace: { written, with: meant.map((m) => asWritten(link, m)) } } : {}),

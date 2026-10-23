@@ -423,6 +423,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_problem_codes.py` — every problem the Python reader raises passes the stable code
   `problem-codes.json` gives it, the same as the JavaScript reader's. The blocks of `problem-code-cases.json` are
   refused with the same codes (editor spec §42, problem_codes).
+- `python/graph_spec/tests/test_drawing_problem_codes.py` — each problem the Python drawing reader finds in a note or
+  a style graph has a stable code. It comes from `packages/core/src/drawing-problem-codes.json` or the reader's own
+  table. The notes of `drawing-problem-cases.json` give the same codes as the core gives them (editor spec §42, problem_codes).
 - `python/graph_spec/tests/test_escapes.py` — the Python reader answers `escape-cases.json` as the JavaScript one does, and what the engine writes for Grafeo keeps a text's escapes (req:3.gql-escapes).
 ### The Python library: ids, limits and layout
 

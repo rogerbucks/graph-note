@@ -52,6 +52,7 @@ export function undeclared(whole: World, texts: string[]): Problem[] {
       line: blanked.slice(0, first.index).split('\n').length,
       severity: 'warning',
       message: metas.length ? word('reading.schema.undeclared', { names }) : word('reading.schema.no-meta', { names }),
+      code: metas.length ? 'GN713' : 'GN714',
       fix: meta ? word('reading.schema.undeclared.fix', { meta }) : word('reading.schema.no-meta.fix'),
       ...(meta
         ? {
@@ -104,6 +105,7 @@ export function undeclaredUse(whole: World, texts: string[], problems: Problem[]
           graph,
         }),
         fix: word('reading.schema.use-undeclared.fix', { name, graph }),
+        code: what === 'kind' ? 'GN715' : 'GN716',
       });
     };
     for (const m of blanked.matchAll(THING))

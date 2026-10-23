@@ -2290,7 +2290,7 @@
           "interface",
           "also?: Array<{ span: { line: number; character: number; end: number; }; text: string; }> | undefined",
           "block: number",
-          "code?: string | undefined",
+          "code: string",
           "departure?: Departure | undefined",
           "dropped?: string | undefined",
           "fix: string",

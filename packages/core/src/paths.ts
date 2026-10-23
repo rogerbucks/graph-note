@@ -308,6 +308,7 @@ function missingStep(reading: PathReading, graph: string, path: WalkedPath, x: G
     line: p.line,
     severity: p.severity,
     kind: 'broken-links',
+    code: 'GN710',
     message,
     fix: near.length
       ? word('paths.missing-step.fix-near', { thing: x.key, near: formatList(near, 'disjunction') })
@@ -356,6 +357,7 @@ export function pathProblems(reading: PathReading, graph?: string): Problem[] {
         line: thing ? lineAt(reading.texts[block] ?? '', thing.open) : 1,
         severity: 'warning',
         message: word('paths.no-steps', { path: path.title }),
+        code: 'GN711',
         fix: word('paths.no-steps.fix'),
       });
     }

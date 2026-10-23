@@ -205,7 +205,7 @@ export function diagnostics(
         out.push({
           range,
           severity: SEVERITY.Warning,
-          code: 'near-duplicate',
+          code: 'GN721',
           source: 'thoughtknot',
           message: word(dist === 1 ? 'reading.near-kind-one' : 'reading.near-kind-two', { kind: k, near: u }),
           data: {

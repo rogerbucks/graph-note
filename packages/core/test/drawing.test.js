@@ -420,6 +420,7 @@ describe('a relationship type written without its colon', () => {
         line: 3,
         severity: 'warning',
         message: '[favours] has no colon; it is read as the relationship type FAVOURS',
+        code: 'GN703',
         fix: 'write it with its colon: [:FAVOURS]',
         replace: { written: 'favours', with: [':FAVOURS'] },
         fixTitle: 'Write the colon: [:FAVOURS]',
@@ -473,6 +474,7 @@ describe('a schema whose types its GraphMeta does not declare', () => {
         line: 3,
         severity: 'warning',
         message: 'the schema does not declare Book and Person: its GraphMeta must DECLARE each type',
+        code: 'GN713',
         fix: 'add a DECLARES link from g_schema to each',
         insert: {
           line: 3,

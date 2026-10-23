@@ -408,7 +408,8 @@ own handlers. Nothing here reaches the network.
 #### Help while typing
 
 - `help.ts` — diagnostics, fixes, completions and the read-back, in the shapes of the Language Server Protocol. A
-  diagnostic's `code` is its `Problem.code`, the graph spec reader's stable code (editor spec §42, problem_codes).
+  diagnostic's `code` is its `Problem.code`, a stable code (editor spec §42, problem_codes). It is the graph spec
+  reader's own, or one from `drawing-problem-codes.json`: GN7xx in a note, GN8xx in a style graph.
 - `tokens.ts` — the gql-highlight tokenizer, for colouring.
 - `name-suggestions.ts` — a name from a text, in the style of the graph's names and never one of them or a reserved word.
   Also a text from a name, and the ASCII words and slug of a text (`nameWords`, `nameSlug`), as the graph reader's names

@@ -348,18 +348,18 @@ export function emptyStyle(): StyleGraph {
 }
 
 /**
- * A problem with the style of `graph`, on the line of the style thing at `at`. It is an error, as what it names is
- * left out of the style. The graph is drawn without it. Listed with the graph it styles, so it is shown with that
- * drawing.
+ * A problem with the style of `graph`, on the line of the style thing at `at`, with its stable code (editor spec §42).
+ * An error: what it names is left out of the style, and the graph is drawn without it. Listed with the graph it styles.
  */
 export function styleProblem(
   graph: string,
   at: StyleAt,
+  code: string,
   message: string,
   fix: string,
   edit: Pick<Problem, 'replace' | 'span'> = {},
 ): Problem {
-  return { graph, block: at.block, line: at.line, severity: 'error', message, fix, ...edit };
+  return { graph, block: at.block, line: at.line, severity: 'error', code, message, fix, ...edit };
 }
 
 /** Words joined as a choice in the reader's locale: "a, b or c" in UK English. */

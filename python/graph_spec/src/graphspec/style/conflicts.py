@@ -41,7 +41,7 @@ def settle_nudges(nudges: list[dict], graph: str) -> tuple[list[dict], str | Non
     direction = None
 
     def conflict(n, message):
-        out.append(style_problem(graph, n["at"], message, REMOVE))
+        out.append(style_problem(graph, n["at"], "GN808", message, REMOVE))
 
     for n in nudges:
         if n["word"] == "direction":
@@ -97,7 +97,7 @@ def _settle_choices(things, place_of, choice_of, said, graph):
         if was is t or choice_of(was) == choice_of(t):
             kept.append(t)
         else:
-            out.append(style_problem(graph, t["at"], said(was, t), REMOVE))
+            out.append(style_problem(graph, t["at"], "GN808", said(was, t), REMOVE))
     return kept, out
 
 
@@ -234,7 +234,7 @@ def settle_shown(shown: list[dict], graph: str) -> tuple[dict[str, dict], list[d
         if view in first:
             line = first[view]["at"]["line"]
             message = f"view {view} is saved as shown twice, here and on line {line}"
-            out.append(style_problem(graph, s["at"], message, REMOVE))
+            out.append(style_problem(graph, s["at"], "GN808", message, REMOVE))
         else:
             first[view] = s
     kept = {

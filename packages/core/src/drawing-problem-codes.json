@@ -1,0 +1,190 @@
+{
+  "about": "Editor spec §42, problem_codes: the stable code of every problem the drawing reader finds in a note, beyond what the graph spec's reader refuses (packages/graph-spec/src/reader/problem-codes.json, GN1xx to GN6xx). It is given as the Language Server Protocol diagnostic's code, so a problem can be looked up and its words translated. The numbering goes on from that table: 7xx is what the drawing reader finds in a note, 8xx what it finds in a style graph. A code is never reused and never renumbered: a problem that goes keeps its code retired, and a new one takes the next free number. words are the catalogue keys its message is said with; a code that covers a family of faults, such as a style property written wrongly, names its main ones; in packages/core/src/*-source-words.ts; section is the spec § the rule comes from, or null. libraries says which reader raises it: core is the editor's core (packages/core), py the Python library's drawing reader. Where both raise it, both give the same code: drawing-problem-cases.json holds notes each must read to the same codes. Every raise site passes its code as a literal; packages/core/test/note-reading-codes.test.js and python/graph_spec/tests/test_drawing_problem_codes.py hold each reader to this table.",
+  "codes": [
+    {
+      "code": "GN701",
+      "section": "3",
+      "words": ["reading.comma-trailing"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN702",
+      "section": "3",
+      "words": ["reading.comma-missing"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN703",
+      "section": "3",
+      "words": ["reading.bare-type"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN704",
+      "section": "4",
+      "words": ["reading.no-name"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN705",
+      "section": "4",
+      "words": ["reading.no-text"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN706",
+      "section": null,
+      "words": ["reading.unreadable"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN707",
+      "section": "3",
+      "words": ["reading.graph-line"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN708",
+      "section": "2",
+      "words": ["reading.style-no-graph"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN709",
+      "section": "18",
+      "words": ["reading.broken"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN710",
+      "section": "7",
+      "words": ["paths.missing-step", "paths.missing-step.estimate", "paths.missing-step.tied"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN711",
+      "section": "7",
+      "words": ["paths.no-steps"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN712",
+      "section": "3",
+      "words": ["reading.estimate.type"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN713",
+      "section": "5",
+      "words": ["reading.schema.undeclared"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN714",
+      "section": "5",
+      "words": ["reading.schema.no-meta"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN715",
+      "section": "5",
+      "words": ["reading.schema.kind-undeclared"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN716",
+      "section": "5",
+      "words": ["reading.schema.type-undeclared"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN717",
+      "section": "27",
+      "words": ["reading.schema.missing"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN718",
+      "section": "24",
+      "words": ["reading.note.shared"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN719",
+      "section": "24",
+      "words": ["reading.note.duplicate"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN720",
+      "section": "24",
+      "words": ["reading.note.lost"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN721",
+      "section": "5",
+      "words": ["reading.near-kind-one", "reading.near-kind-two"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN801",
+      "section": "2",
+      "words": ["styling.link"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN802",
+      "section": "2",
+      "words": ["styling.too-large-lines", "styling.too-large-bytes"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN803",
+      "section": "2",
+      "words": ["styling.no-graph"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN804",
+      "section": "2",
+      "words": ["styling.named-as-data"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN805",
+      "section": "2",
+      "words": ["styling.must-be-text", "styling.must-be-number", "styling.not-in-graph", "styling.must-be"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN806",
+      "section": "2",
+      "words": ["styling.key-unknown.a", "styling.key-unknown.an"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN807",
+      "section": "2",
+      "words": ["styling.kind-unknown", "styling.kind-one"],
+      "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN808",
+      "section": "2",
+      "words": [
+        "styling.conflict.direction",
+        "styling.conflict.groups",
+        "styling.conflict.beside-before",
+        "styling.conflict.loop",
+        "styling.conflict.colour-view",
+        "styling.conflict.colour-path",
+        "styling.conflict.type-along",
+        "styling.conflict.flow-meaning",
+        "styling.conflict.view",
+        "styling.conflict.shown-twice"
+      ],
+      "libraries": ["core", "py"]
+    }
+  ]
+}
