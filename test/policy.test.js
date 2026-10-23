@@ -416,7 +416,7 @@ describe('GitHub Actions', () => {
         d.startsWith('@thoughtknot/'),
       );
     const bundled = new Set();
-    for (const todo = deps('@thoughtknot/obsidian'); todo.length; ) {
+    for (const todo = deps('@thoughtknot/obsidian'); todo.length;) {
       const name = todo.pop();
       if (!bundled.has(name)) {
         bundled.add(name);
