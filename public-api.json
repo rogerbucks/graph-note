@@ -2735,6 +2735,18 @@
           "after: (ms: number, run: () => void) => unknown",
           "cancel: (handle: unknown) => void"
         ],
+        "schemaMove": [
+          "value: (block: string, to: string, schemas: readonly string[]) => SchemaMove | null"
+        ],
+        "SchemaMove": [
+          "interface",
+          "adds: Array<string>",
+          "drops: Array<string>",
+          "from: string",
+          "text: string",
+          "to: string",
+          "used: Array<string>"
+        ],
         "schemaPicture": [
           "value: (texts: string[], index: number, shared?: string[]) => SchemaPicture | null"
         ],
@@ -2742,6 +2754,9 @@
           "interface",
           "graph: string",
           "reading: NoteReading"
+        ],
+        "schemaVersions": [
+          "value: (name: string, schemas: readonly string[]) => string[]"
         ],
         "ScopeChoice": [
           "type = { graph: string; what: 'graph'; } | { graph: string; what: 'view'; view: string; } | { graph: string; what: 'things'; things: string[]; }"
