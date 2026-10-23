@@ -112,6 +112,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   notes' text and can always be built again from it. Its reads are the ones a huge graph is drawn in parts from:
   `groups`, `inGroups`, `sourceSpan`, `version` and `find`.
 - `mesh-index-rows.ts` — the rows one note gives the store: things, links and groups, each with its note lines.
+- `note-parts.ts` — a note too big to read at once, read in parts (editor spec §53, scale_in_parts). Each part is
+  within a quarter of the read limits, and gives the store the same rows as a whole reading would.
 - `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
   host hands in (sql.js). No server and no JVM (embedded_backends).
 
