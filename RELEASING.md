@@ -17,8 +17,10 @@ publishes a GitHub pre-release named for the next patch and the day (`0.6.1-nigh
 waiting for 16:00 UTC (Roger, 23 Oct 2026). To trigger it, the pull request that finishes a wave gets the label
 `wave-done` and a line of its own in its body, `Wave: 9`.
 
-When it merges to main, a gate (`scripts/wave-gate.mjs`) reads the board "ThoughtKnot requirements". Every item of that wave must be Done and proved, or nothing is built. The run
-fails and lists the open items in its log and summary. The board lags a merge by minutes, so the gate waits up to 15.
+When it merges to main, a gate (`scripts/wave-gate.mjs`) reads the board "ThoughtKnot requirements". Every item of that
+wave must be Done and proved, or nothing is built. The run fails and lists the open items in its log and summary. The
+board lags a merge by minutes, so the gate waits up to 15.
+
 If all is done it calls the nightly above. A second build the same day takes the next letter (`…20261023.b`), so BRAT
 sees it as an update. It needs the secret `PROJECT_TOKEN`, as the project mirror does.
 
