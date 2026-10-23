@@ -1,0 +1,6 @@
+{
+  "file": "test/pseudo-locales.test.js",
+  "test": "the VS Code tab: the note drawn and edited, in each test language > the tab and the extension's own words, with VS Code in ar-XB",
+  "seen_failing_first": false,
+  "evidence": "Checks only: the VS Code tab already followed VS Code's language when it merged in #1068, so this guards it."
+}

@@ -201,6 +201,34 @@ jobs:
         run: "! uv run --locked --no-default-groups python -c 'import grafeo'"
       - run: node ../../scripts/run-ceiling.mjs uv run --locked --no-default-groups python -m unittest discover -s tests
 
+  # The libraries' runnable examples (risk API-12), run as a reader runs them: from the release archive's layout, where
+  # the JavaScript entry point is the built file. Each one reads a block, checks it and exits non-zero on a failed rule.
+  # Every file in examples/js and examples/python is run (test/library-examples.test.js holds this list to the folders).
+  examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build --workspace packages/graph-spec
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - name: Lay out the libraries as the release archive does, with the examples beside them
+        run: |
+          git archive --format=tar --prefix=packages/graph-spec/src/ --add-file=packages/graph-spec/dist/graph-spec-check.js --prefix= HEAD LICENSE packages/graph-spec/package.json packages/graph-spec/src ':(exclude)packages/graph-spec/src/graph-spec-check.js' packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src examples/js examples/python | tar -x -C "$RUNNER_TEMP"
+      - name: Run each example
+        working-directory: ${{ runner.temp }}
+        run: |
+          node examples/js/read-and-check.cjs
+          uv run --locked --no-default-groups --project python/graph_spec python examples/python/read_and_check.py
+
   # Every test is seen to fail before its code (spec §12): each new commit is replayed, its tests run against its
   # parent's code, and a new test that passes there fails the build unless its reason is kept in test/seen-failing/.
   # It reads only that folder, never the record in test/tests-first/, so the record cannot weaken it.

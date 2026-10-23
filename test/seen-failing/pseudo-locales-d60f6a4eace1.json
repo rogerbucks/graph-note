@@ -1,0 +1,6 @@
+{
+  "file": "test/pseudo-locales.test.js",
+  "test": "the VS Code tab: the note drawn and edited, in each test language > the words the code still says itself are no more than before",
+  "seen_failing_first": false,
+  "evidence": "Checks only: the VS Code tab already followed VS Code's language when it merged in #1068, so this guards it."
+}
