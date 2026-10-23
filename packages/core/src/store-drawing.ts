@@ -5,10 +5,16 @@
 //
 // The rows are refused when they were built from other text than the note has now, so a stale store is never drawn.
 // The note is read a part at a time, with the page's own work done between parts.
+//
+// An edit is written to the note's text first, never to the store. The text stays the only store of the graph
+// (text_is_the_store). Only the lines that wrote the thing are edited, so the note is never read whole. The host
+// writes the new text to the note, and the store then reads the changed note again.
 import { sha256 } from './ai-digest.ts';
+import type { Edit } from './inspector.ts';
 import { noteRowsPaced } from './mesh-index-rows.ts';
 import type { MeshIndex } from './mesh-index.ts';
 import type { GraphDrawing } from './note-reading.ts';
+import { word } from './words.ts';
 
 /** One graph of a note as the store gives it: a drawing to show as its overview, and each thing's properties. */
 export interface StoredGraph {
@@ -56,4 +62,26 @@ export async function storedGraphs(
     });
   }
   return out;
+}
+
+/**
+ * The note's new text, after `change` edits the lines that wrote thing `key` in `graph`. `change` is given those lines
+ * and gives them back edited, as setProperty in inspector.ts does. Refused when the store was read from other text
+ * than `text`, so an edit never lands on the wrong lines.
+ */
+export function editInParts(
+  ix: MeshIndex,
+  note: string,
+  text: string,
+  graph: string,
+  key: string,
+  change: (lines: string) => Edit,
+): Edit {
+  if (ix.version(note) !== sha256(text)) return { ok: false, reason: word('editing.note-changed') };
+  const span = ix.sourceSpan(note, graph, key);
+  if (!span) return { ok: false, reason: word('editing.not-stored', { thing: key, graph }) };
+  const lines = text.split('\n');
+  const done = change(lines.slice(span.line - 1, span.end).join('\n'));
+  if (!done.ok) return done;
+  return { ok: true, text: [...lines.slice(0, span.line - 1), done.text, ...lines.slice(span.end)].join('\n') };
 }

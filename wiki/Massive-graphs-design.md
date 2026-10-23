@@ -195,7 +195,9 @@ Step 7 comes in three parts:
    the store, above the note's text and why it was not read whole. The note is read a part at a time, and Obsidian
    does its own work between parts, so it keeps answering. Drawn again, the note is not read again until its text
    changes. Its style graph is not read yet, so a filter chosen there is only tried, not saved.
-3. **An edit in an opened group** is written to the note's text first. Then the store reads that note again.
+3. **An edit is written to the note's text first** (`editInParts`, in `store-drawing.ts`). Only the lines that wrote
+   the thing change, so the note is never read whole. Then the store reads that note again. A store read from other
+   text refuses the edit, so it never lands on the wrong lines. Editing inside an opened group in Obsidian comes next.
 
 ## Decision
 

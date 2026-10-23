@@ -116,6 +116,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   within a quarter of the read limits, and gives the store the same rows as a whole reading would.
 - `store-drawing.ts` — a too-big note's graphs from the store, as the overview draws them (scale_in_parts). The note is
   read a part at a time, with the page's own work done between parts. Rows built from older text are never drawn.
+  `editInParts` edits only the lines that wrote a thing, in the note's text. The store then reads the changed note again.
 - `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
   host hands in (sql.js). No server and no JVM (embedded_backends).
 

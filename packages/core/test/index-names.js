@@ -254,6 +254,7 @@ export const VALUES = [
   'drawOrder',
   'drawingSource',
   'edgesOf',
+  'editInParts',
   'embedParts',
   'embeddedMarkdown',
   'embeddedRemoteImages',
