@@ -32,6 +32,7 @@ import { bindViewportEvents } from './viewport-events';
 import { FullScreen } from './full-screen';
 import { Aids } from './viewer-aids';
 import { viewportSize, zoomSize } from './viewport-size';
+import type { Measured } from './viewport-size';
 import type { ViewOptions } from './view-options';
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
@@ -307,14 +308,26 @@ export class GraphView extends Lifecycle {
     return playablePaths(this.o.reading, this.o.graph);
   }
 
+  /**
+   * The viewport's size as read once while a view is applied, or none. Reading an element's size makes the browser lay
+   * the page out again whenever something changed since. A drag applies a view many times a second. So it reads the
+   * size once, before it changes anything. The mini-map and the selection's arrow use that (pan_measured_once).
+   */
+  private measured: Measured | null = null;
+
+  /** The viewport, or its size as read for the view being applied. */
+  private box(): Measured {
+    return this.measured ?? this.viewport;
+  }
+
   /** The viewport's size to draw it at (viewport-size.ts), kept as tall while regrouped. */
   private viewportSize() {
-    return this.sel.held(viewportSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
+    return this.sel.held(viewportSize(this.box(), this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
   }
 
   /** The viewport's size to tell the zoom: none while hidden or not yet laid out, so the zoom keeps its view (§25). */
   private zoomSize() {
-    return this.sel.held(zoomSize(this.viewport, this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
+    return this.sel.held(zoomSize(this.box(), this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
   }
 
   /**
@@ -351,6 +364,18 @@ export class GraphView extends Lifecycle {
   }
 
   private apply(v: View): void {
+    // measured first, before anything changes the page, so the browser need not lay it out again to answer
+    const { clientWidth, clientHeight } = this.viewport;
+    this.measured = { clientWidth, clientHeight };
+    try {
+      this.applyMeasured(v);
+    } finally {
+      this.measured = null;
+    }
+  }
+
+  /** The view applied, with the viewport's size as measured just before. */
+  private applyMeasured(v: View): void {
     this.svg?.setAttribute('width', String(v.width));
     this.svg?.setAttribute('height', String(v.height));
     // labels by zoom: link labels hidden while too small to read, but on a link in focus or highlighted (§25)

@@ -7,6 +7,9 @@
 // shown among it, for when the card shows (zoom_fit_recomputed).
 import type { Mode, Size } from '@thoughtknot/core';
 
+/** A viewport as measured: an element, or its size read once and held (graph-view.ts). */
+export type Measured = Pick<HTMLElement, 'clientWidth' | 'clientHeight'>;
+
 /** How much of the window's height a drawing scrolled across may take, at most (§15, wide_types_phone). */
 const ACROSS_HEIGHT = 0.6;
 
@@ -15,7 +18,7 @@ const NOTE_HEIGHT = 0.75;
 
 /** The viewport's size to draw it at: the drawing's own size stands in for a size the page has not given it. */
 export function viewportSize(
-  viewport: HTMLElement,
+  viewport: Measured,
   drawn: Size,
   mode: Mode,
   across: boolean,
@@ -33,13 +36,7 @@ export function viewportSize(
  * screen and the pane are as tall as the page makes them. A thing's details can squeeze them to no height. That is no
  * size too, so closing the details gives back the zoom and place the drawing had (details_keep_view).
  */
-export function zoomSize(
-  viewport: HTMLElement,
-  drawn: Size,
-  mode: Mode,
-  across: boolean,
-  tallest?: number | null,
-): Size {
+export function zoomSize(viewport: Measured, drawn: Size, mode: Mode, across: boolean, tallest?: number | null): Size {
   const squeezed = mode !== 'note' && !viewport.clientHeight;
   return viewport.clientWidth && !squeezed
     ? viewportSize(viewport, drawn, mode, across, tallest)

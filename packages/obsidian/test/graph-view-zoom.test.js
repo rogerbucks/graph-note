@@ -73,6 +73,40 @@ describe('zoom in the note', () => {
   });
 });
 
+describe('a view applied measures the viewport once', () => {
+  // proves: pan_measured_once
+  test('each zoom or pan reads the viewport’s size once, so the page is laid out at most once a step', async () => {
+    const env = await load({ width: 300, data: { settings: { miniMap: 'always' } } });
+    try {
+      const { el } = await show(env, fence(GRAPH));
+      const vp = el.querySelector('.thoughtknot-viewport');
+      // each read of an element's size makes a browser lay the page out again if anything changed since
+      let reads = 0;
+      const proto = Object.getPrototypeOf(vp);
+      for (const name of ['clientWidth', 'clientHeight']) {
+        const { get } = Object.getOwnPropertyDescriptor(proto, name);
+        Object.defineProperty(vp, name, {
+          get() {
+            reads++;
+            return get.call(this);
+          },
+        });
+      }
+      const widths = new Set();
+      const steps = 6;
+      for (let i = 0; i < steps; i++) {
+        vp.dispatch('keydown', { key: '+' });
+        widths.add(svgOf(el).getAttribute('width'));
+      }
+      assert.equal(widths.size, steps, 'each step changed the view');
+      // the width and the height, once each a step: before, the mini-map and the card read them again
+      assert.ok(reads <= steps * 2, `${reads} reads for ${steps} steps`);
+    } finally {
+      env.uninstall();
+    }
+  });
+});
+
 describe('a touch the drawing uses goes no further', () => {
   // device check Z-12 (Roger, 18 Oct 2026): "Dragging the graph around on mobile causes the left/right Obsidian panels
   // to slide in with the window moving": Obsidian opens its side panels on a swipe that reaches the page
