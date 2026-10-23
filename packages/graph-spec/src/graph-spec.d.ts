@@ -127,6 +127,8 @@ declare namespace GraphSpecCheck {
   function quote(s: string): string;
   /** A text's tokens: [kind, the text as written, line, the value, column]. Throws ProfileError. */
   function tokens(text: string): [string, string, number, string, number][];
+  /** A value as canonical JSON (RFC 8785), a date or time as its text. */
+  function jcs(value: unknown): string;
   /** The first sixteen hexadecimal digits of the SHA-256 of an object in canonical JSON (RFC 8785). */
   function hash16(value: unknown): string;
   /** A hash written with its algorithm's name: `sha-256-64:` for 16 digits, `sha-256:` for 64 (editor spec §51). */

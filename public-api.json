@@ -132,6 +132,14 @@
         "basisOf": [
           "value: (note: string, graph: string, shared?: string[]) => string"
         ],
+        "BetweenRow": [
+          "interface",
+          "from: string",
+          "graph: string",
+          "links: number",
+          "note: string",
+          "to: string"
+        ],
         "BIG_PROPOSAL": [
           "value: 8"
         ],
@@ -1104,6 +1112,16 @@
           "points: Array<StepPoint>",
           "rule: StepRule"
         ],
+        "GroupRow": [
+          "interface",
+          "by: GroupedBy",
+          "graph: string",
+          "id: string",
+          "label: string",
+          "links: number",
+          "note: string",
+          "things: number"
+        ],
         "groupSaid": [
           "value: (g: SummaryGroup) => string"
         ],
@@ -1221,7 +1239,7 @@
           "value: (reading: NoteReading, graph: string, text: string, caret: number) => Inline | null"
         ],
         "InlineKind": [
-          "type = 'type' | 'closer' | 'keyword' | 'kind' | 'property' | 'value'"
+          "type = 'type' | 'kind' | 'closer' | 'keyword' | 'property' | 'value'"
         ],
         "InlineProperties": [
           "interface",
@@ -1317,7 +1335,7 @@
           "interface",
           "className: string",
           "id: string",
-          "kind: 'graph' | 'cluster' | 'node' | 'edge'",
+          "kind: 'cluster' | 'graph' | 'node' | 'edge'",
           "marks: Array<string>",
           "title: string"
         ],
@@ -1505,6 +1523,18 @@
         ],
         "LinkKind": [
           "type = 'note' | 'file' | 'web' | 'mail' | 'refused'"
+        ],
+        "LinkRow": [
+          "interface",
+          "from: string",
+          "fromGroup: string",
+          "graph: string",
+          "n: number",
+          "note: string",
+          "span: Span | null",
+          "to: string",
+          "toGroup: string",
+          "type: string"
         ],
         "Links": [
           "interface",
@@ -1697,11 +1727,45 @@
         "MAX_SCALE": [
           "value: 4"
         ],
+        "memoryBackend": [
+          "value: () => MeshBackend"
+        ],
         "memoryStorage": [
           "value: (seed?: Record<string, string>) => NoteStorage"
         ],
         "mergePathProblems": [
           "value: (reading: PathReading) => Problem[]"
+        ],
+        "MeshBackend": [
+          "interface",
+          "drop: (note: string) => void",
+          "groups: (note: string) => { groups: GroupRow[]; between: BetweenRow[]; }",
+          "readonly kind: 'memory' | 'sqlite'",
+          "links: (note: string) => LinkRow[]",
+          "notes: () => string[]",
+          "put: (rows: NoteRows) => void",
+          "things: (note: string, groups: readonly string[]) => ThingRow[]",
+          "version: (note: string) => string | null"
+        ],
+        "MeshFound": [
+          "interface",
+          "graph: string",
+          "group: string",
+          "key: string"
+        ],
+        "MeshIndex": [
+          "class",
+          "static new (backend: MeshBackend): MeshIndex",
+          "readonly backend: MeshBackend",
+          "dump: () => string",
+          "find: (note: string, query: { name?: string; property?: string; value?: unknown; }, page?: Page) => Found[]",
+          "groups: (note: string) => { groups: GroupRow[]; between: BetweenRow[]; }",
+          "inGroups: (note: string, groups: readonly string[], page?: Page) => { things: ThingRow[]; links: LinkRow[]; stubs: { from: string; to: string; toGroup: string; type: string; }[]; }",
+          "rebuild: (notes: Record<string, string>) => void",
+          "remove: (note: string) => void",
+          "sourceSpan: (note: string, graph: string, what: string | number) => Span | null",
+          "update: (note: string, text: string) => void",
+          "version: (note: string) => string | null"
         ],
         "MiniMapSetting": [
           "type = 'off' | 'auto' | 'always'"
@@ -1817,6 +1881,18 @@
           "whole: World",
           "world: World"
         ],
+        "noteRows": [
+          "value: (note: string, text: string) => NoteRows"
+        ],
+        "NoteRows": [
+          "interface",
+          "between: Array<BetweenRow>",
+          "groups: Array<GroupRow>",
+          "links: Array<LinkRow>",
+          "note: string",
+          "things: Array<ThingRow>",
+          "version: string"
+        ],
         "NoteStorage": [
           "interface",
           "change?: ((path: string, edit: NoteEdit, options?: Pick<WriteOptions, 'author'>) => Promise<ChangeOutcome>) | undefined",
@@ -1914,8 +1990,16 @@
         "paceSaid": [
           "value: (ms: number) => string"
         ],
+        "Page": [
+          "interface",
+          "after?: string | undefined",
+          "limit?: number | undefined"
+        ],
         "PAGE_LIMITS": [
           "value: LayoutLimits"
+        ],
+        "PAGE_MOST": [
+          "value: 500"
         ],
         "pageSvg": [
           "value: (svg: string, page: PngPage) => string"
@@ -2863,6 +2947,11 @@
           "source: Source",
           "why: 'missing' | 'moved' | 'unreadable' | 'no-graph'"
         ],
+        "SourceSpan": [
+          "interface",
+          "end: number",
+          "line: number"
+        ],
         "Span": [
           "interface",
           "close: number",
@@ -2871,6 +2960,13 @@
         ],
         "spanOf": [
           "value: (block: string, t: Target, unnamed?: { line: number; character: number; }) => { from: number; to: number; } | null"
+        ],
+        "SqlEngine": [
+          "interface",
+          "run: (sql: string, params?: readonly (string | number | null)[]) => Record<string, unknown>[]"
+        ],
+        "sqliteBackend": [
+          "value: (engine: SqlEngine) => MeshBackend"
         ],
         "Stale": [
           "interface",
@@ -3158,6 +3254,17 @@
           "block: number",
           "lines: Array<number>",
           "summary: string",
+          "text: string"
+        ],
+        "ThingRow": [
+          "interface",
+          "graph: string",
+          "group: string",
+          "key: string",
+          "kind: string",
+          "note: string",
+          "props: string",
+          "span: Span | null",
           "text: string"
         ],
         "thingSaid": [
@@ -3669,6 +3776,7 @@
           "hash16: (value: unknown) => string",
           "header: (block: string) => [string | null, GraphSpecCheck.BlockKind]",
           "isNamed: (value: unknown) => boolean",
+          "jcs: (value: unknown) => string",
           "LIMITS: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }",
           "lint: (text: string) => { trap: string; line: number; }[]",
           "louvain: (n: number, links: readonly (readonly [number, number])[]) => number[]",
@@ -3836,6 +3944,9 @@
         ],
         "isNamed": [
           "value: (value: unknown) => boolean"
+        ],
+        "jcs": [
+          "value: (value: unknown) => string"
         ],
         "LIMITS": [
           "value: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }"

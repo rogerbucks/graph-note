@@ -15,6 +15,7 @@ export const VALUES_LATE = [
   'sourceFor',
   'sourceOf',
   'spanOf',
+  'sqliteBackend',
   'standardBlocks',
   'startOf',
   'startingSwitches',
