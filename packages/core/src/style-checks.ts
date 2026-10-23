@@ -7,6 +7,8 @@
 import { STYLE } from './layout.ts';
 import { flowOf } from './link-flow.ts';
 import type { Problem } from './note-reading.ts';
+import { filterOf } from './filter-saved.ts';
+import type { SavedFilter } from './filter-saved.ts';
 import { pictureOf } from './picture.ts';
 import { arrowsOf, diagramOf, linksOf } from './style-choice-checks.ts';
 import {
@@ -78,6 +80,7 @@ export interface Checked {
   flows: Flow[];
   links: Links[];
   pictures: Picture[];
+  filters: SavedFilter[];
   problems: Problem[];
 }
 
@@ -275,6 +278,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     flows: [],
     links: [],
     pictures: [],
+    filters: [],
     problems: [],
   };
   for (const raw of raws) {
@@ -311,6 +315,7 @@ export function checkThings(raws: RawThing[], names: StyledNames): Checked {
     else if (kinds[0] === 'Flow') push(c.flows, kept(flowOf(thing, names, p)));
     else if (kinds[0] === 'Links') push(c.links, kept(linksOf(thing, names, p)));
     else if (kinds[0] === 'Picture') push(c.pictures, kept(pictureOf(thing, names, p)));
+    else if (kinds[0] === 'Filter') push(c.filters, kept(filterOf(thing, names, p)));
     else push(c.shown, kept(shownOf(thing, names, p)));
   }
   return c;

@@ -1,23 +1,36 @@
 // A graph too large to draw, shown in its Obsidian card as its overview (editor spec §53, scale_massive_card). The
 // overview is the display layer's (massive-view.ts). Obsidian gives it its colours, its layouts and each thing's
 // properties, for the filters.
-import { PALETTES } from '@thoughtknot/core';
-import type { GraphDrawing, NoteReading } from '@thoughtknot/core';
+//
+// It starts with the filter saved in the style graph (scale_filter_live). A filter chosen in edit mode is saved there;
+// in reading view it is only tried. Saving draws the card again, so the overview starts again with that filter.
+import { PALETTES, word } from '@thoughtknot/core';
+import type { GraphDrawing, NoteReading, StyleGraph } from '@thoughtknot/core';
 import { massiveView } from '@thoughtknot/core/display/graph-view/massive-view';
 import type ThoughtKnotPlugin from './main';
+import { writeStyle } from './view-block';
 
-/** Shows `drawing`, graph `graph` of `reading`, as its overview at the end of `root`. */
-export function showMassive(
-  plugin: ThoughtKnotPlugin,
-  root: HTMLElement,
-  drawing: GraphDrawing,
-  graph: string,
-  reading: NoteReading,
-): void {
+/** Where the overview is drawn from: the note's file and graph, its reading and style, and if the card is read only. */
+export interface MassiveCard {
+  path: string;
+  graph: string;
+  reading: NoteReading;
+  styling: { style: StyleGraph };
+  readOnly: (card: HTMLElement) => boolean;
+}
+
+/** Shows `drawing` as its overview at the end of `root`. */
+export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawing: GraphDrawing, c: MassiveCard): void {
+  const { path, graph, reading } = c;
   massiveView(root, drawing, {
     graph,
     palette: PALETTES.obsidian,
     layout: (part, by) => plugin.layout(part, by),
     props: (key) => reading.world[graph]?.p(key) ?? {},
+    // the Filter for the whole graph: a view's own is for when views are drawn as overviews
+    chosen: c.styling.style.filters.find((f) => f.view === undefined)?.keep,
+    chose: (keep) => {
+      if (!c.readOnly(root)) void writeStyle(plugin, path, graph, { filter: { keep } }, word('massive.filter-saved'));
+    },
   });
 }
