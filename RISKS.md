@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (91)
+## Open (90)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -79,7 +79,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-8 | graph-spec is CommonJS-only with a partial d.ts and mixed errors | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
-| API-12 | No runnable examples for either library, none in CI | ●●● | ●○○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
 | AI-2 | Classification gate guards the pane only, not Claude's own reads | ●●● | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | AI-4 | Answers are free text parsed by brace slicing, not structured output | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | AI-5 | No cost ceiling, token cap, usage record or prompt caching | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -803,16 +802,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** manual
 
-### API-12 No runnable examples for either library, none in CI
-
-**Who found it:** API design expert. **Where:** `packages/graph-spec/GUIDE.md`, `python/graph_spec/GUIDE.md`, `.github/workflows/ci.yml`.
-
-**Risk:** There is no examples folder, no doctest and no CI step that runs a usage sample. The only end-to-end sample is the Node stdin adapter's comment. A reader of the GUIDEs copies module descriptions, not a working call. A doc that drifts from the API is never caught.
-
-**Fix:** Add examples/js/read-and-check.cjs and examples/python/read_and_check.py, each ten lines. Add a CI step that runs both against the built archive layout.
-
-**Check:** ci.yml job 'examples' runs each file and fails on a non-zero exit.
-
 ### AI-2 Classification gate guards the pane only, not Claude's own reads
 
 **Who found it:** AI product and engineering expert. **Where:** `packages/claude-code/mod/hooks/register.tsx`, `packages/claude-code/src/**`, `README.md`.
@@ -1013,7 +1002,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (38)
+## Done or accepted (39)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1037,6 +1026,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-3 | Host contract version is a hand-typed number | done | #614 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |
 | API-10 | Plug-in API version is one string, no host loads third parties | done | #908 |
+| API-12 | No runnable examples for either library, none in CI | done | #1083 |
 | AI-1 | In Claude Code the proposal route is optional, not mandatory | done | #618 |
 | AI-3 | Note text enters prompts with no data boundary or injection test | done | #618 |
 | AI-11 | Consent is per send, but residency and retention are unsaid | done | #618 |

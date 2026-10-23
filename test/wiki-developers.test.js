@@ -83,7 +83,15 @@ describe('the architecture graph', () => {
     const chart = architectureChart(arch);
     for (const p of arch.parts) assert.match(chart, new RegExp(`${p.id}\\[".*<i>:Part</i>"\\]`));
     for (const i of arch.interfaces) assert.match(chart, new RegExp(`${i.id}\\{\\{".*<i>:Interface</i>"\\}\\}`));
-    assert.match(chart, /class vscode planned/);
+    // every part is built now, so a planned one is shown in an architecture with one more, not built yet
+    assert.doesNotMatch(chart, /class \S+ planned/);
+    const more = readArchitecture(
+      architectureText.replace(
+        '// ── Interfaces ──',
+        "(sync:Part {name: 'Sync', requirement: 'vscode_plugin'}),\n(sync)-[:IN_LAYER]->(apps),\n// ── Interfaces ──",
+      ),
+    );
+    assert.match(architectureChart(more), /class sync planned/);
   });
 });
 

@@ -21,6 +21,7 @@
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { build, load, until } from '../packages/obsidian/test/host/load-plugin.js';
 import { styles } from '../packages/obsidian/test/host/view-notes.js';
 import { editing, row, tapKey } from '../packages/obsidian/test/host/inspector-steps.js';
@@ -29,6 +30,12 @@ import { built, cleanUp } from '../packages/claude-code/test/editor-page-support
 import { THEMES, audit, auditView, openWindow, pageFor, obsidianVariables } from './repository/wcag.js';
 import { PAGE_NOTE, auditPage, openEditorPage } from './repository/wcag-page.js';
 import { builtApp, cleanUpApp, emptyFolder, openAppEditor, openAppStart } from '../packages/app/test/app-window.js';
+import {
+  builtExtension,
+  cleanUpVscode,
+  emptyFolder as emptyWorkspace,
+  openVscodeTab,
+} from '../packages/vscode/test/vscode-window.js';
 import { OBSIDIAN } from './repository/views-obsidian.js';
 import { pageStates } from './repository/views-page.js';
 
@@ -220,6 +227,30 @@ describe('the desktop app: its first page and its editor, in both themes', () =>
       });
 });
 
+describe('VS Code: the editor in its tab, in both themes', () => {
+  let dir;
+  const opened = [];
+  before(async () => {
+    dir = join(await builtExtension(), 'dist/webview');
+  });
+  after(async () => {
+    await Promise.all(opened.map((o) => o.stop()));
+    cleanUpVscode();
+  });
+
+  for (const theme of THEMES)
+    test(`the editor in its VS Code tab meets WCAG 2.2 AA in the ${theme} theme`, async () => {
+      const folder = emptyWorkspace();
+      writeFileSync(`${folder}/Reader.md`, PAGE_NOTE);
+      const page = await openVscodeTab(folder, 'Reader.md');
+      opened.push(page);
+      await until(() => !!page.doc.querySelector('.thoughtknot-svg g.node'), 8000);
+      const result = await auditPage(dir, page, theme);
+      assert.ok(result.rules >= 5, 'the check ran its rules');
+      assert.deepEqual(found(result), []);
+    });
+});
+
 describe('every host', () => {
   /** The packages that are hosts, which draw an interface: the others are libraries with none. */
   const LIBRARIES = ['core', 'graph-spec'];
@@ -228,6 +259,7 @@ describe('every host', () => {
     obsidian: Object.keys(OBSIDIAN),
     'claude-code': ['the browser editor’s page'],
     app: ['the first page', 'the editor in the app'],
+    vscode: ['the editor in its VS Code tab'],
   };
 
   test('has its views checked here before it can be released: a new host with no entry fails', () => {

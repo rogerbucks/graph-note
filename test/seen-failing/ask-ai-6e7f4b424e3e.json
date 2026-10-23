@@ -1,0 +1,6 @@
+{
+  "file": "packages/vscode/test/ask-ai.test.js",
+  "test": "a ceiling that is not one of the classifications, such as a typo, sends nothing",
+  "seen_failing_first": false,
+  "evidence": "Guards behaviour already built: the core refuses a ceiling that is not a classification. Added after review asked for it."
+}
