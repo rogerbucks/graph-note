@@ -1,6 +1,0 @@
-{
-  "file": "test/policy.test.js",
-  "test": "GitHub Actions > only sixteen jobs may write: the release, the nightly, its draft check and its wave-end call, the lock, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes",
-  "seen_failing_first": false,
-  "evidence": "Only the test's title and its list of allowed writers changed, to admit the wave-end call. It checks existing workflows, so it passed before the workflow existed; the new workflow's own tests were seen failing first."
-}
