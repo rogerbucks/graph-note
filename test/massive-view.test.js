@@ -25,9 +25,11 @@ const CAUGHT = "addEventListener('error', (e) => (window.failed ??= String(e.err
 /** The page's script: a graph of 3,000 things in chains of 20, shown as its overview, its layouts faked. */
 const PAGE = `
 import { installDomHelpers } from './packages/core/src/display/dom-helpers.ts';
+import { installHost } from './packages/core/src/display/host.ts';
 import { massiveView } from './packages/core/src/display/graph-view/massive-view.ts';
 import { PALETTES } from './packages/core/src/palette.ts';
 installDomHelpers(window);
+installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
 const boxes = [], links = [];
 for (let i = 0; i < 3000; i++) {
   boxes.push({ key: 't' + i, kind: 'Thing', text: i === 1234 ? 'Needle in the stack' : 'Thing ' + i });
@@ -86,6 +88,15 @@ window.wordsInMiddle = () => {
   let n = 0;
   for (let i = 3; i < data.length; i += 4) if (data[i] > 0) n++;
   return n;
+};
+// presses a button of the grow bar by its name, and gives what was said once the view has flown
+window.grow = async (name) => {
+  const button = card.querySelector('.thoughtknot-massive-grow [aria-label="' + name + '"]');
+  button.click();
+  for (let i = 0; i < 100 && view.view() === window.lastView; i++) await new Promise((r) => setTimeout(r, 20));
+  await new Promise((r) => setTimeout(r, 800));
+  window.lastView = view.view();
+  return card.querySelector('.thoughtknot-massive-said').textContent;
 };
 window.flyToNeedle = async () => {
   const [match] = view.find('needle');
@@ -172,4 +183,23 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     await run('flyToNeedle()');
     assert.equal((await run('parts')).length, 1, 'a group opened once is not laid out again');
   });
+
+  test(
+    'from the thing flown to, the picture grows one ring of neighbours at a time, and steps back',
+    options,
+    async () => {
+      // in its chain of 20, t1234 links to t1233 and t1235 only
+      assert.equal(await run("grow('Show neighbours')"), 'Needle in the stack and the 2 things near it');
+      const parts = await run('parts');
+      assert.deepEqual(
+        [...parts.at(-1)].sort(),
+        ['t1233', 't1234', 't1235'],
+        'only it and its neighbours are laid out',
+      );
+      assert.equal(await run("grow('Show neighbours')"), 'Needle in the stack and the 4 things near it');
+      assert.deepEqual([...(await run('parts')).at(-1)].sort(), ['t1232', 't1233', 't1234', 't1235', 't1236']);
+      assert.equal(await run("grow('One step back')"), 'Needle in the stack and the 2 things near it');
+      assert.ok((await run('wordsInMiddle()')) > 50, 'the grown picture is painted where the view looks');
+    },
+  );
 });

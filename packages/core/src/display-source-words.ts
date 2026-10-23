@@ -101,4 +101,16 @@ export const DISPLAY_SOURCE_WORDS = {
   'massive.opening': 'Opening {group}…',
   'massive.at': '{name}, in {group}',
   'massive.not-drawn': '{group} is too large to draw on its own: showing its box',
+  'massive.more': 'Show neighbours',
+  'massive.fewer': 'One step back',
+  'massive.grown': {
+    one: '{name} and the {count} thing near it',
+    other: '{name} and the {count} things near it',
+  },
+  'massive.grown-cut': {
+    one: '{name} and the {count} thing best linked near it; {cut} more left out',
+    other: '{name} and the {count} things best linked near it; {cut} more left out',
+  },
+  'massive.no-more': '{name} has no more neighbours to show',
+  'massive.grow-too-large': 'Too many things near {name} to draw at once',
 } as const;
