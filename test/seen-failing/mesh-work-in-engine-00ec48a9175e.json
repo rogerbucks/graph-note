@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/mesh-work-in-engine.test.js",
+  "test": "mesh_work_in_engine > the engine offers pathfinding, centroids, altitude and the join of transitions",
+  "seen_failing_first": false,
+  "evidence": "A check over code already in place: the engine already offers the work and no host computes it, so it guards against a host that starts to."
+}
