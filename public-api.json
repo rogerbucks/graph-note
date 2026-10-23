@@ -2826,6 +2826,9 @@
         "setDirection": [
           "value: (to: 'ltr' | 'rtl') => void"
         ],
+        "setInParts": [
+          "value: (ix: MeshIndex, at: { note: string; text: string; graph: string; }, key: string, prop: string, type: PropType, words: string) => Edit"
+        ],
         "setLanguage": [
           "value: (tag: string) => string"
         ],

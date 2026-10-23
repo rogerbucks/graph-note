@@ -11,15 +11,26 @@ import {
   memoryBackend,
   parked,
   readStyle,
+  setInParts,
   startingSwitches,
   storedGraphs,
   ViewState,
   word,
 } from '@thoughtknot/core';
-import type { Drawn, FocusDepth, GraphDrawing, NoteReading, PaneSession, Refusal, Settings } from '@thoughtknot/core';
+import type {
+  Drawn,
+  FocusDepth,
+  GraphDrawing,
+  NoteReading,
+  PaneSession,
+  PropType,
+  Refusal,
+  Settings,
+} from '@thoughtknot/core';
 import type { FilterKeep } from '../../filter-saved.ts';
 import type { Palette } from '../../palette.ts';
 import { massiveView } from '../graph-view/massive-view';
+import { massiveThing } from '../graph-view/massive-thing';
 import { Lifecycle } from '../lifecycle';
 import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
@@ -139,20 +150,31 @@ export class PaneDrawing extends Lifecycle {
    * Shows the session's block, too large to read at once, as its overview under the banner. It is read into the store a
    * part at a time, with the page's own work done between parts. Nothing is shown for any other refusal.
    */
-  private inParts(host: HTMLElement, s: PaneSession, why: Refusal, stale: () => boolean): void {
+  private inParts(host: HTMLElement, s: PaneSession, why: Refusal, stale: () => boolean, on: Choosing): void {
     const { palette } = this.host;
     const over = 'limit' in why ? why.limit : undefined;
     if (!palette || (over !== 'text-bytes' && over !== 'text-lines')) return;
     const ix = (this.store ??= new MeshIndex(memoryBackend()));
     const pause = () => new Promise<void>((done) => host.win.setTimeout(done, 0));
-    void storedGraphs(ix, 'pane', `\`\`\`gql\n${s.text}\n\`\`\`\n`, pause).then((graphs) => {
+    const was = s.text,
+      text = `\`\`\`gql\n${was}\n\`\`\`\n`;
+    // a change to a thing chosen: made on its lines in the block, then put in the pane's text, as a quick fix is
+    const change = (key: string) => (prop: string, type: PropType, words: string) => {
+      const edit = setInParts(ix, { note: 'pane', text, graph: s.graph }, key, prop, type, words);
+      return Promise.resolve(
+        edit.ok ? fixInPane(s, on, was, edit.text.split('\n').slice(1, -2).join('\n')) : edit.reason,
+      );
+    };
+    void storedGraphs(ix, 'pane', text, pause).then((graphs) => {
       const stored = graphs.get(s.graph);
       if (!stored || stale()) return;
-      massiveView(host.createDiv(), stored.drawing, {
+      const slot = host.createDiv();
+      massiveView(slot, stored.drawing, {
         graph: s.graph,
         palette,
         layout: (part, by) => this.host.layout(part, by),
         props: stored.props,
+        picked: (key) => massiveThing(slot, { key, props: stored.props(key), readOnly: false, change: change(key) }),
       });
     });
   }
@@ -192,7 +214,7 @@ export class PaneDrawing extends Lifecycle {
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);
-          if (reading.tooLarge) this.inParts(host, s, reading.tooLarge, stale);
+          if (reading.tooLarge) this.inParts(host, s, reading.tooLarge, stale, on);
           return;
         }
         this.view = view;
