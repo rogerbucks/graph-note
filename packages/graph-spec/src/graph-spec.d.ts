@@ -284,6 +284,35 @@ declare namespace GraphSpecCheck {
   function clusterCycles(graph: Graph): string[][];
   /** What a view shows with a graph's cycles hidden or highlighted. */
   function cycleView(graph: Graph, how: 'hide' | 'highlight'): { shown: string[]; highlighted: string[] };
+  /** How tightly a cluster holds together: links between its members, and how many are contested. */
+  interface Cohesion {
+    members: number;
+    links: number;
+    /** The share of the members' pairs a link joins. */
+    density: number;
+    contested: string[];
+    /** The share of members not contested; a member cluster counts its own score. */
+    support: number;
+    /** The mean of density and support. */
+    score: number;
+  }
+  /** A cluster's certainty as its centroid states it, after cohesion and any floor (editor spec §31). */
+  interface ClusterCertainty {
+    cluster: string;
+    centroid: string;
+    certainty: { low: number; high: number } | null;
+    cohesion: Cohesion;
+    stated: { low: number; high: number } | null;
+    /** Whether the cluster opted in to a floor. */
+    floor: boolean;
+    /** The least certain member that lowered the stated certainty, or null. */
+    floored_by: string | null;
+  }
+  /** Each cluster's cohesion and stated certainty. `floor` names the clusters that opt in to a floor. */
+  function clusterCertainty(
+    graph: Graph,
+    options?: { floor?: string[]; passes?: number; threshold?: number; budget?: number; clock?: () => number },
+  ): { clusters: ClusterCertainty[]; settled: boolean };
 
   /** A claim as a person ranks it (editor spec §28): its words, never a number typed in. */
   interface MeshClaim {

@@ -3849,6 +3849,7 @@
           "checkChangeset: (base: string[], block: string, matrix?: unknown, switches?: Set<string>, session?: string | null) => { results: [string, boolean][]; header: ({ graph: string; id: string; against: string; by: string; } & { refreshes?: [string, string, GraphSpecCheck.Value | null, GraphSpecCheck.Value][]; claimed?: string; changes?: { id: string; op: string; reason: string | null; links?: [string, string, string][]; }[]; }) | null; after: string | null; }",
           "checkSyntax: (block: string) => GraphSpecCheck.ProfileError | null",
           "clipShown: (text: string) => string",
+          "clusterCertainty: (graph: GraphSpecCheck.Graph, options?: { floor?: string[]; passes?: number; threshold?: number; budget?: number; clock?: () => number; }) => { clusters: GraphSpecCheck.ClusterCertainty[]; settled: boolean; }",
           "clusterCycles: (graph: GraphSpecCheck.Graph) => string[][]",
           "clustersOf: (graph: GraphSpecCheck.Graph, kind?: 'asserted' | 'found') => { clusters: GraphSpecCheck.Cluster[]; memberships: GraphSpecCheck.ClusterMembership[]; }",
           "COMMENT_FIX: string",
@@ -3960,6 +3961,19 @@
           "kind: 'asserted' | 'found'",
           "members: Array<string>"
         ],
+        "clusterCertainty": [
+          "value: (graph: GraphSpecCheck.Graph, options?: { floor?: string[]; passes?: number; threshold?: number; budget?: number; clock?: () => number; }) => { clusters: GraphSpecCheck.ClusterCertainty[]; settled: boolean; }"
+        ],
+        "ClusterCertainty": [
+          "interface",
+          "centroid: string",
+          "certainty: { low: number; high: number; } | null",
+          "cluster: string",
+          "cohesion: GraphSpecCheck.Cohesion",
+          "floor: boolean",
+          "floored_by: string | null",
+          "stated: { low: number; high: number; } | null"
+        ],
         "clusterCycles": [
           "value: (graph: GraphSpecCheck.Graph) => string[][]"
         ],
@@ -3972,6 +3986,15 @@
         ],
         "clustersOf": [
           "value: (graph: GraphSpecCheck.Graph, kind?: 'asserted' | 'found') => { clusters: GraphSpecCheck.Cluster[]; memberships: GraphSpecCheck.ClusterMembership[]; }"
+        ],
+        "Cohesion": [
+          "interface",
+          "contested: Array<string>",
+          "density: number",
+          "links: number",
+          "members: number",
+          "score: number",
+          "support: number"
         ],
         "COMMENT_FIX": [
           "value: string"

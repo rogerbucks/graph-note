@@ -1,0 +1,774 @@
+{
+  "about": "Shared cases for each cluster's cohesion and the certainty its centroid states (editor spec §31). Both libraries must give each expected answer. Made once by the JavaScript library.",
+  "cases": [
+    {
+      "name": "a tight, well-supported cluster states more certainty than a loose, contested one",
+      "graph": {
+        "nodes": [
+          ["tight", ["Cluster"], {}],
+          ["loose", ["Cluster"], {}],
+          [
+            "a1",
+            ["Idea"],
+            {
+              "likelihood": "likely"
+            }
+          ],
+          [
+            "a2",
+            ["Idea"],
+            {
+              "likelihood": "likely"
+            }
+          ],
+          [
+            "a3",
+            ["Idea"],
+            {
+              "likelihood": "likely"
+            }
+          ],
+          [
+            "b1",
+            ["Idea"],
+            {
+              "likelihood": "likely"
+            }
+          ],
+          [
+            "b2",
+            ["Idea"],
+            {
+              "likelihood": "likely",
+              "status": "contested"
+            }
+          ],
+          [
+            "b3",
+            ["Idea"],
+            {
+              "likelihood": "likely"
+            }
+          ]
+        ],
+        "edges": [
+          ["a1", "MEMBER_OF", "tight"],
+          ["a2", "MEMBER_OF", "tight"],
+          ["a3", "MEMBER_OF", "tight"],
+          ["a1", "SUPPORTS", "a2"],
+          ["a2", "SUPPORTS", "a3"],
+          ["a3", "SUPPORTS", "a1"],
+          ["b1", "MEMBER_OF", "loose"],
+          ["b2", "MEMBER_OF", "loose"],
+          ["b3", "MEMBER_OF", "loose"],
+          ["b1", "SUPPORTS", "b2"]
+        ]
+      },
+      "expected": {
+        "clusters": [
+          {
+            "cluster": "tight",
+            "centroid": "sha-256:6b307fc3d6db6dfafc8fb5c9c2ee6e6fdd1dfd4e283637852da7b8dd62fae978",
+            "certainty": {
+              "low": 55,
+              "high": 80
+            },
+            "cohesion": {
+              "members": 3,
+              "links": 3,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 55,
+              "high": 80
+            },
+            "floor": false,
+            "floored_by": null
+          },
+          {
+            "cluster": "loose",
+            "centroid": "sha-256:89521b364f3d8f298a97e0a81a768c8acb27a3564675f116e974a1b39addbbae",
+            "certainty": {
+              "low": 55,
+              "high": 80
+            },
+            "cohesion": {
+              "members": 3,
+              "links": 1,
+              "density": 0.3333333333333333,
+              "contested": ["b2"],
+              "support": 0.6666666666666666,
+              "score": 0.5
+            },
+            "stated": {
+              "low": 27.5,
+              "high": 80
+            },
+            "floor": false,
+            "floored_by": null
+          },
+          {
+            "cluster": "found:a1",
+            "centroid": "sha-256:03d124782fc1dd482be7fa16ed3f374d65f8300d6c8c4034d8878756f4785137",
+            "certainty": {
+              "low": 55,
+              "high": 80
+            },
+            "cohesion": {
+              "members": 3,
+              "links": 3,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 55,
+              "high": 80
+            },
+            "floor": false,
+            "floored_by": null
+          },
+          {
+            "cluster": "found:b1",
+            "centroid": "sha-256:8c167612372200385162ff14359d926c4ceaf8073345aee28976f7237f616da6",
+            "certainty": {
+              "low": 55,
+              "high": 80
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": ["b2"],
+              "support": 0.5,
+              "score": 0.75
+            },
+            "stated": {
+              "low": 41.25,
+              "high": 80
+            },
+            "floor": false,
+            "floored_by": null
+          }
+        ],
+        "settled": true
+      }
+    },
+    {
+      "name": "friction deep inside a cluster shows in the cluster above it",
+      "graph": {
+        "nodes": [
+          ["cell", ["Cluster"], {}],
+          ["molecule", ["Cluster"], {}],
+          [
+            "h",
+            ["Atom"],
+            {
+              "likelihood": "likely"
+            }
+          ],
+          [
+            "o",
+            ["Atom"],
+            {
+              "likelihood": "likely",
+              "status": "contested"
+            }
+          ],
+          [
+            "wall",
+            ["Part"],
+            {
+              "likelihood": "likely"
+            }
+          ]
+        ],
+        "edges": [
+          ["h", "MEMBER_OF", "molecule"],
+          ["o", "MEMBER_OF", "molecule"],
+          ["h", "BONDS", "o"],
+          ["molecule", "MEMBER_OF", "cell"],
+          ["wall", "MEMBER_OF", "cell"],
+          ["wall", "HOLDS", "molecule"]
+        ]
+      },
+      "expected": {
+        "clusters": [
+          {
+            "cluster": "cell",
+            "centroid": "sha-256:9b768c8257331f7229028eb3bf6a819fa9de33337934bb1391b3ca1af78c0544",
+            "certainty": {
+              "low": 55,
+              "high": 80
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 0.875,
+              "score": 0.9375
+            },
+            "stated": {
+              "low": 51.5625,
+              "high": 80
+            },
+            "floor": false,
+            "floored_by": null
+          },
+          {
+            "cluster": "molecule",
+            "centroid": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd",
+            "certainty": {
+              "low": 55,
+              "high": 80
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": ["o"],
+              "support": 0.5,
+              "score": 0.75
+            },
+            "stated": {
+              "low": 41.25,
+              "high": 80
+            },
+            "floor": false,
+            "floored_by": null
+          },
+          {
+            "cluster": "found:h",
+            "centroid": "sha-256:c122ba1b4e6765c3a372880035a2c57fca157cf4f51c5c32445e0f7f272edf5a",
+            "certainty": {
+              "low": 55,
+              "high": 80
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": ["o"],
+              "support": 0.5,
+              "score": 0.75
+            },
+            "stated": {
+              "low": 41.25,
+              "high": 80
+            },
+            "floor": false,
+            "floored_by": null
+          }
+        ],
+        "settled": true
+      }
+    },
+    {
+      "name": "an opted-in parent is never more certain than its least certain member",
+      "graph": {
+        "nodes": [
+          [
+            "floored",
+            ["Cluster"],
+            {
+              "floor": true
+            }
+          ],
+          ["plain", ["Cluster"], {}],
+          [
+            "x",
+            ["Idea"],
+            {
+              "likelihood": "very-likely"
+            }
+          ],
+          [
+            "y",
+            ["Idea"],
+            {
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "x2",
+            ["Idea"],
+            {
+              "likelihood": "very-likely"
+            }
+          ],
+          [
+            "y2",
+            ["Idea"],
+            {
+              "likelihood": "unlikely"
+            }
+          ]
+        ],
+        "edges": [
+          ["x", "MEMBER_OF", "floored"],
+          ["y", "MEMBER_OF", "floored"],
+          ["x", "SUPPORTS", "y"],
+          ["x2", "MEMBER_OF", "plain"],
+          ["y2", "MEMBER_OF", "plain"],
+          ["x2", "SUPPORTS", "y2"]
+        ]
+      },
+      "expected": {
+        "clusters": [
+          {
+            "cluster": "floored",
+            "centroid": "sha-256:295ab7253023eefe5a69019e8b3666ee647976fbcd9ec48dd38c8c0048dece36",
+            "certainty": {
+              "low": 50,
+              "high": 70
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 20,
+              "high": 45
+            },
+            "floor": true,
+            "floored_by": "y"
+          },
+          {
+            "cluster": "plain",
+            "centroid": "sha-256:c5fb719daa0bbe54de8cb2fcd13dc0ae4ceceaafbfcd5508dba7ce7a2b8deda1",
+            "certainty": {
+              "low": 50,
+              "high": 70
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 50,
+              "high": 70
+            },
+            "floor": false,
+            "floored_by": null
+          },
+          {
+            "cluster": "found:x",
+            "centroid": "sha-256:837729337bb936901a64c19b4eaad536f5fcfa4acdd8a8d1d8cad675066ebfbb",
+            "certainty": {
+              "low": 50,
+              "high": 70
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 50,
+              "high": 70
+            },
+            "floor": false,
+            "floored_by": null
+          },
+          {
+            "cluster": "found:x2",
+            "centroid": "sha-256:f35b8afbdaf031fce598902dafeea434c03b779f360d69d54197c87c98dc5ba1",
+            "certainty": {
+              "low": 50,
+              "high": 70
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 50,
+              "high": 70
+            },
+            "floor": false,
+            "floored_by": null
+          }
+        ],
+        "settled": true
+      }
+    },
+    {
+      "name": "a floor named in the options works as one written on the cluster",
+      "options": {
+        "floor": ["plain"]
+      },
+      "graph": {
+        "nodes": [
+          [
+            "floored",
+            ["Cluster"],
+            {
+              "floor": true
+            }
+          ],
+          ["plain", ["Cluster"], {}],
+          [
+            "x",
+            ["Idea"],
+            {
+              "likelihood": "very-likely"
+            }
+          ],
+          [
+            "y",
+            ["Idea"],
+            {
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "x2",
+            ["Idea"],
+            {
+              "likelihood": "very-likely"
+            }
+          ],
+          [
+            "y2",
+            ["Idea"],
+            {
+              "likelihood": "unlikely"
+            }
+          ]
+        ],
+        "edges": [
+          ["x", "MEMBER_OF", "floored"],
+          ["y", "MEMBER_OF", "floored"],
+          ["x", "SUPPORTS", "y"],
+          ["x2", "MEMBER_OF", "plain"],
+          ["y2", "MEMBER_OF", "plain"],
+          ["x2", "SUPPORTS", "y2"]
+        ]
+      },
+      "expected": {
+        "clusters": [
+          {
+            "cluster": "floored",
+            "centroid": "sha-256:295ab7253023eefe5a69019e8b3666ee647976fbcd9ec48dd38c8c0048dece36",
+            "certainty": {
+              "low": 50,
+              "high": 70
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 20,
+              "high": 45
+            },
+            "floor": true,
+            "floored_by": "y"
+          },
+          {
+            "cluster": "plain",
+            "centroid": "sha-256:c5fb719daa0bbe54de8cb2fcd13dc0ae4ceceaafbfcd5508dba7ce7a2b8deda1",
+            "certainty": {
+              "low": 50,
+              "high": 70
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 20,
+              "high": 45
+            },
+            "floor": true,
+            "floored_by": "y2"
+          },
+          {
+            "cluster": "found:x",
+            "centroid": "sha-256:837729337bb936901a64c19b4eaad536f5fcfa4acdd8a8d1d8cad675066ebfbb",
+            "certainty": {
+              "low": 50,
+              "high": 70
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 50,
+              "high": 70
+            },
+            "floor": false,
+            "floored_by": null
+          },
+          {
+            "cluster": "found:x2",
+            "centroid": "sha-256:f35b8afbdaf031fce598902dafeea434c03b779f360d69d54197c87c98dc5ba1",
+            "certainty": {
+              "low": 50,
+              "high": 70
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 50,
+              "high": 70
+            },
+            "floor": false,
+            "floored_by": null
+          }
+        ],
+        "settled": true
+      }
+    },
+    {
+      "name": "a floor over a cluster takes the member cluster at its own floored certainty",
+      "graph": {
+        "nodes": [
+          [
+            "top",
+            ["Cluster"],
+            {
+              "floor": true
+            }
+          ],
+          [
+            "inner",
+            ["Cluster"],
+            {
+              "floor": true
+            }
+          ],
+          [
+            "p",
+            ["Idea"],
+            {
+              "likelihood": "likely"
+            }
+          ],
+          [
+            "q",
+            ["Idea"],
+            {
+              "likelihood": "very-unlikely"
+            }
+          ],
+          [
+            "r",
+            ["Idea"],
+            {
+              "likelihood": "likely"
+            }
+          ]
+        ],
+        "edges": [
+          ["p", "MEMBER_OF", "inner"],
+          ["q", "MEMBER_OF", "inner"],
+          ["p", "LINKS", "q"],
+          ["inner", "MEMBER_OF", "top"],
+          ["r", "MEMBER_OF", "top"],
+          ["r", "LINKS", "inner"]
+        ]
+      },
+      "expected": {
+        "clusters": [
+          {
+            "cluster": "top",
+            "centroid": "sha-256:1df3f9d2271cc8e49093f8cc37db071d6c03e81147005fe9553fdeda85a15cfc",
+            "certainty": {
+              "low": 42.5,
+              "high": 65
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 5,
+              "high": 20
+            },
+            "floor": true,
+            "floored_by": "inner"
+          },
+          {
+            "cluster": "inner",
+            "centroid": "sha-256:5844c65293231f0178077141d0087c5fc8e6fed8de002d93c84fcac90977af7a",
+            "certainty": {
+              "low": 30,
+              "high": 50
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 5,
+              "high": 20
+            },
+            "floor": true,
+            "floored_by": "q"
+          },
+          {
+            "cluster": "found:p",
+            "centroid": "sha-256:50f4fc4f4110b2264c2632029d02371ee5b9205f55914f4e0ef000a21f2f5e0c",
+            "certainty": {
+              "low": 30,
+              "high": 50
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 1,
+              "density": 1,
+              "contested": [],
+              "support": 1,
+              "score": 1
+            },
+            "stated": {
+              "low": 30,
+              "high": 50
+            },
+            "floor": false,
+            "floored_by": null
+          }
+        ],
+        "settled": true
+      }
+    },
+    {
+      "name": "floored clusters inside each other in a cycle still end",
+      "graph": {
+        "nodes": [
+          [
+            "a",
+            ["Cluster"],
+            {
+              "floor": true
+            }
+          ],
+          [
+            "b",
+            ["Cluster"],
+            {
+              "floor": true
+            }
+          ],
+          [
+            "m",
+            ["Idea"],
+            {
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "n",
+            ["Idea"],
+            {
+              "status": "contested"
+            }
+          ]
+        ],
+        "edges": [
+          ["m", "MEMBER_OF", "a"],
+          ["b", "MEMBER_OF", "a"],
+          ["a", "MEMBER_OF", "b"],
+          ["n", "MEMBER_OF", "b"]
+        ]
+      },
+      "expected": {
+        "clusters": [
+          {
+            "cluster": "a",
+            "centroid": "sha-256:12e54a7615522b504a83334a9fcaffcf53b2d818bf750c303cac4d489341e7f5",
+            "certainty": {
+              "low": 46.66666666686069,
+              "high": 63.333333333466726
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 0,
+              "density": 0,
+              "contested": [],
+              "support": 0.625,
+              "score": 0.3125
+            },
+            "stated": {
+              "low": 14.583333333393966,
+              "high": 45
+            },
+            "floor": true,
+            "floored_by": "m"
+          },
+          {
+            "cluster": "b",
+            "centroid": "sha-256:71ab67101d33f0065fe06bac31066d4d8f0d03e17f02608750498450dac5e3e0",
+            "certainty": {
+              "low": 73.33333333313931,
+              "high": 81.66666666653327
+            },
+            "cohesion": {
+              "members": 2,
+              "links": 0,
+              "density": 0,
+              "contested": ["n"],
+              "support": 0.5,
+              "score": 0.25
+            },
+            "stated": {
+              "low": 18.333333333284827,
+              "high": 63.333333333466726
+            },
+            "floor": true,
+            "floored_by": "a"
+          }
+        ],
+        "settled": true
+      }
+    }
+  ]
+}

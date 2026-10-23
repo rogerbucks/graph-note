@@ -104,6 +104,8 @@ const NAMES = [
   'lensAsAt',
   // a text merge checked by the meaning-level join (editor spec §30)
   'afterTextMerge',
+  // each cluster's cohesion and the certainty its centroid states (editor spec §31)
+  'clusterCertainty',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {
