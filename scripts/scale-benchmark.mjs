@@ -22,7 +22,9 @@ import { gqlBlocks } from '../packages/core/src/blocks.ts';
 import { readNote } from '../packages/core/src/drawing.ts';
 import { LAYOUT_LIMITS, tooLarge } from '../packages/core/src/layout-limits.ts';
 import { setNote } from '../packages/core/src/note-edit.ts';
-import { MarkIndex } from '../packages/core/src/mark-index.ts';
+import { MarkIndex, visibleOf } from '../packages/core/src/mark-index.ts';
+import { FacetIndex } from '../packages/core/src/facet-counts.ts';
+import { LiveFilter, glide } from '../packages/core/src/filter-live.ts';
 import { overviewOf } from '../packages/core/src/overview.ts';
 import { groupsOf } from '../packages/core/src/scale-groups.ts';
 import { SCALE_BUDGETS } from './benchmarks/scale-budgets.mjs';
@@ -112,6 +114,35 @@ export const STEPS = {
       drawn = Math.max(drawn, shown.length);
     }
     return { outcome: `done: at most ${drawn} marks a frame`, ms: slowest };
+  },
+  filter({ grouping, overview }) {
+    if (!grouping || !overview) return { outcome: 'not built: no overview' };
+    // a filter of one hundred values, each held by every hundredth thing, so a choice keeps about the share asked for.
+    // The index and the order are made when the overview opens, so their time is not counted. Each filter counts the
+    // values and keeps the things. It lays out what is kept in the whole order, indexes it and works out one frame of
+    // the glide. The time is the slower filter's
+    const keys = grouping.groups.flatMap((g) => g.keys);
+    const live = new LiveFilter(
+      grouping,
+      new FacetIndex(keys, [{ name: 'share', values: keys.map((_, i) => `s${i % 100}`) }]),
+    );
+    const from = { space: { width: 1, height: 1 }, marks: overview.marks };
+    let slowest = 0;
+    const kept = [];
+    for (const want of [2000, 10_000]) {
+      if (want > keys.length) continue;
+      const shares = Math.max(1, Math.round((want / keys.length) * 100));
+      const chosen = { share: new Set(Array.from({ length: shares }, (_, i) => `s${i}`)) };
+      const start = performance.now();
+      live.index.counts(chosen);
+      const { laid, kept: n } = live.filter(chosen);
+      new MarkIndex(laid);
+      const half = glide(from, laid)(0.5);
+      visibleOf(half.marks, { x: 0, y: 0, ...half.space }, 1);
+      slowest = Math.max(slowest, performance.now() - start);
+      kept.push(n);
+    }
+    return { outcome: `done: ${kept.join(' and ')} things kept`, ms: slowest };
   },
   edit({ block }) {
     const first = block.match(/^\((\w+)[:\s)]/m)?.[1];

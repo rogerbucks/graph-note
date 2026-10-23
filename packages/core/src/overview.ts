@@ -95,21 +95,41 @@ function sets({ groups, between }: Grouping): number[][] {
   return out;
 }
 
-/** The overview of `grouping` as marks: a box for each group with its name and count, and a line for each link between. */
-export function overviewOf(grouping: Grouping): LaidMarks {
+/**
+ * The order the overview lays out `grouping`'s groups in, by their ids. They come in sets of groups that link to each
+ * other, the largest set first. In each set the largest group comes first. Ties keep the written order.
+ */
+export function overviewOrder(grouping: Grouping): string[][] {
+  const { groups } = grouping;
+  // largest first, as the treemap needs to keep its boxes near square
+  const size = (g: number) => groups[g]?.keys.length ?? 0;
+  return sets(grouping)
+    .map((p) => p.sort((a, b) => size(b) - size(a) || a - b))
+    .map((p) => ({ p, n: p.reduce((n, g) => n + size(g), 0) }))
+    .sort((a, b) => b.n - a.n || (a.p[0] ?? 0) - (b.p[0] ?? 0))
+    .map(({ p }) => p.map((g) => groups[g]?.id ?? ''));
+}
+
+/**
+ * The overview of `grouping` as marks: a box for each group with its name and count, and a line for each link between.
+ * The groups are laid out in `order` (`overviewOrder`). A filter gives the whole graph's order, so the groups it keeps
+ * stay in the same order. A group `order` does not name is put last.
+ */
+export function overviewOf(
+  grouping: Grouping,
+  order: readonly (readonly string[])[] = overviewOrder(grouping),
+): LaidMarks {
   const { groups, between } = grouping;
   const things = groups.reduce((n, g) => n + g.keys.length, 0);
   const side = Math.ceil(Math.sqrt(Math.max(1, things) * THING_ROOM));
   const space = { width: side, height: side };
   if (!groups.length) return { space, marks: [] };
   const room = (n: number) => (n / Math.max(1, things)) * side * side;
-  // largest first, as the treemap needs to keep its boxes near square; ties keep the written order
   const size = (g: number) => groups[g]?.keys.length ?? 0;
-  const parts = sets(grouping)
-    .map((p) => p.sort((a, b) => size(b) - size(a) || a - b))
-    .map((p) => ({ p, n: p.reduce((n, g) => n + size(g), 0) }))
-    .sort((a, b) => b.n - a.n || (a.p[0] ?? 0) - (b.p[0] ?? 0))
-    .map(({ p }) => p);
+  const at = new Map(groups.map((g, i) => [g.id, i]));
+  const parts = order.map((p) => p.flatMap((id) => at.get(id) ?? [])).filter((p) => p.length);
+  const named = new Set(parts.flat());
+  for (let g = 0; g < groups.length; g++) if (!named.has(g)) parts.push([g]);
   const place: Rect[] = [];
   squarify(
     parts.map((p) => room(p.reduce((n, g) => n + size(g), 0))),

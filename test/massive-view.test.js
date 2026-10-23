@@ -106,20 +106,16 @@ window.tick = (facet, value) => {
   box.dispatchEvent(new Event('change'));
   return card.querySelector('.thoughtknot-massive-said').textContent;
 };
-// the filter lists as shown: each facet's name, and each value with its count
-window.filters = () =>
-  [...card.querySelectorAll('.thoughtknot-massive-facet')].map((f) => ({
-    name: f.querySelector('legend').textContent,
-    values: [...f.querySelectorAll('label')].map((l) => l.textContent),
-  }));
-// ticks or unticks a value of a facet, and gives what was said
-window.tick = (facet, value) => {
-  const f = [...card.querySelectorAll('.thoughtknot-massive-facet')].find((x) => x.querySelector('legend').textContent === facet);
-  const label = [...f.querySelectorAll('label')].find((l) => l.querySelector('span').textContent === value);
-  const box = label.querySelector('input');
-  box.checked = !box.checked;
-  box.dispatchEvent(new Event('change'));
-  return card.querySelector('.thoughtknot-massive-said').textContent;
+// the scales the view takes, a frame at a time, until it has held still for three frames
+window.scales = async () => {
+  const seen = [view.view().scale];
+  for (let still = 0; still < 3 && seen.length < 200; ) {
+    await new Promise((r) => requestAnimationFrame(r));
+    const scale = view.view().scale;
+    still = scale === seen.at(-1) ? still + 1 : 0;
+    if (!still) seen.push(scale);
+  }
+  return seen;
 };
 // presses a button of the grow bar by its name, and gives what was said once the view has flown
 window.grow = async (name) => {
@@ -234,18 +230,27 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
       assert.ok((await run('wordsInMiddle()')) > 50, 'the grown picture is painted where the view looks');
     },
   );
-  test('filters list each value with its count, and ticking one keeps only those things', options, async () => {
-    const shown = await run('filters()');
-    assert.deepEqual(
-      shown.map((f) => f.name),
-      ['Kind', 'status'],
-    );
-    assert.deepEqual(shown[1].values, ['open2,000', 'done1,000']);
-    assert.equal(await run("tick('status', 'done')"), '1,000 things kept');
-    assert.match((await run('stage()')).label, /^Overview of Big: 1,000 things in \d+ groups\./);
-    assert.deepEqual(await run("view.find('needle')"), [], 'the needle is open, so it is filtered out');
-    assert.deepEqual((await run('filters()'))[0].values, ['Thing1,000'], 'the kinds count what the status keeps');
-    assert.equal(await run("tick('status', 'done')"), '3,000 things kept', 'unticked, every thing is back');
-    assert.equal((await run("view.find('needle')")).length, 1);
-  });
+  test(
+    'filters list each value with its count; ticking one keeps only those things, which glide to their places',
+    options,
+    async () => {
+      const shown = await run('filters()');
+      assert.deepEqual(
+        shown.map((f) => f.name),
+        ['Kind', 'status'],
+      );
+      assert.deepEqual(shown[1].values, ['open2,000', 'done1,000']);
+      assert.equal(await run("tick('status', 'done')"), '1,000 things kept');
+      const glided = await run('scales()');
+      assert.ok(glided.length > 2, 'the groups glide through frames between, never jumping');
+      assert.ok(glided.at(-1) > glided[0], 'the view follows them in, as fewer things leave a smaller overview');
+      assert.ok((await run("press('+', 4)")) > 1000, 'the groups kept are painted where they end');
+      await run("press('Home', 1)");
+      assert.match((await run('stage()')).label, /^Overview of Big: 1,000 things in \d+ groups\./);
+      assert.deepEqual(await run("view.find('needle')"), [], 'the needle is open, so it is filtered out');
+      assert.deepEqual((await run('filters()'))[0].values, ['Thing1,000'], 'the kinds count what the status keeps');
+      assert.equal(await run("tick('status', 'done')"), '3,000 things kept', 'unticked, every thing is back');
+      assert.equal((await run("view.find('needle')")).length, 1);
+    },
+  );
 });

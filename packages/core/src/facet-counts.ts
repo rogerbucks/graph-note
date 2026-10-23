@@ -31,6 +31,8 @@ export class FacetIndex {
   readonly facets: readonly Facet[];
   /** Each facet's values, most common first, ties by name, so the list keeps its order as choices change. */
   private readonly order: string[][];
+  /** Each facet's value for each thing, as its place in `order`, or -1 where it has none: numbers compare fast. */
+  private readonly codes: Int32Array[];
 
   constructor(keys: readonly string[], facets: readonly Facet[]) {
     this.keys = keys;
@@ -40,24 +42,47 @@ export class FacetIndex {
       for (const v of f.values) if (v !== undefined) n.set(v, (n.get(v) ?? 0) + 1);
       return [...n].sort(([a, x], [b, y]) => y - x || (a < b ? -1 : a > b ? 1 : 0)).map(([v]) => v);
     });
+    this.codes = facets.map((f, i) => {
+      const place = new Map((this.order[i] ?? []).map((v, k) => [v, k]));
+      return Int32Array.from({ length: keys.length }, (_, k) => {
+        const v = f.values[k];
+        return v === undefined ? -1 : (place.get(v) ?? -1);
+      });
+    });
+  }
+
+  /** For each facet with a choice, which of its values are kept, by place; null for a facet that keeps everything. */
+  private wanted(chosen: Chosen): (Uint8Array | null)[] {
+    return this.facets.map((facet, f) => {
+      const want = chosen[facet.name];
+      if (!want || !want.size) return null;
+      return Uint8Array.from(this.order[f] ?? [], (v) => (want.has(v) ? 1 : 0));
+    });
   }
 
   /** Whether the thing at place `i` is kept by every facet's choice but `skip`'s. */
-  private keeps(i: number, chosen: Chosen, skip = -1): boolean {
-    for (let f = 0; f < this.facets.length; f++) {
-      if (f === skip) continue;
-      const facet = this.facets[f] as Facet;
-      const want = chosen[facet.name];
-      if (!want || !want.size) continue;
-      const v = facet.values[i];
-      if (v === undefined || !want.has(v)) return false;
+  private keeps(i: number, wanted: readonly (Uint8Array | null)[], skip = -1): boolean {
+    for (let f = 0; f < wanted.length; f++) {
+      const want = wanted[f];
+      if (f === skip || !want) continue;
+      const v = (this.codes[f] as Int32Array)[i] as number;
+      if (v < 0 || !want[v]) return false;
     }
     return true;
   }
 
+  /** Which things `chosen` keeps, by their place in the keys: 1 kept, 0 not. */
+  keptMask(chosen: Chosen): Uint8Array {
+    const wanted = this.wanted(chosen);
+    const mask = new Uint8Array(this.keys.length);
+    for (let i = 0; i < mask.length; i++) if (this.keeps(i, wanted)) mask[i] = 1;
+    return mask;
+  }
+
   /** The keys of the things kept by `chosen`, in written order. */
   kept(chosen: Chosen): string[] {
-    return this.keys.filter((_, i) => this.keeps(i, chosen));
+    const mask = this.keptMask(chosen);
+    return this.keys.filter((_, i) => mask[i]);
   }
 
   /**
@@ -66,15 +91,18 @@ export class FacetIndex {
    */
   counts(chosen: Chosen): Map<string, FacetCount[]> {
     const out = new Map<string, FacetCount[]>();
+    const wanted = this.wanted(chosen);
     this.facets.forEach((facet, f) => {
-      const n = new Map<string, number>((this.order[f] ?? []).map((v) => [v, 0]));
+      const order = this.order[f] ?? [],
+        codes = this.codes[f] as Int32Array;
+      const n = new Float64Array(order.length);
       for (let i = 0; i < this.keys.length; i++) {
-        const v = facet.values[i];
-        if (v !== undefined && this.keeps(i, chosen, f)) n.set(v, (n.get(v) ?? 0) + 1);
+        const v = codes[i] as number;
+        if (v >= 0 && this.keeps(i, wanted, f)) n[v] = (n[v] as number) + 1;
       }
       out.set(
         facet.name,
-        [...n].map(([value, count]) => ({ value, count })),
+        order.map((value, k) => ({ value, count: n[k] as number })),
       );
     });
     return out;
@@ -128,12 +156,16 @@ export function facetsOf(
 /**
  * `grouping` with only the things `kept` names. Each group keeps its kept things in their order. A group left empty is
  * taken away, with its links to other groups. The groups that stay keep their order. Link counts stay the whole graph's.
+ * `kept` may instead say whether to keep a thing by its group's place and its own place in the group.
  */
-export function keptGrouping(grouping: Grouping, kept: ReadonlySet<string>): Grouping {
+export function keptGrouping(
+  grouping: Grouping,
+  kept: ReadonlySet<string> | ((group: number, at: number) => boolean),
+): Grouping {
   const place = new Map<number, number>();
   const groups: ThingGroup[] = [];
   grouping.groups.forEach((g, i) => {
-    const keys = g.keys.filter((k) => kept.has(k));
+    const keys = typeof kept === 'function' ? g.keys.filter((_, j) => kept(i, j)) : g.keys.filter((k) => kept.has(k));
     if (!keys.length) return;
     place.set(i, groups.length);
     groups.push({ ...g, keys });

@@ -117,3 +117,15 @@ function seen(m: DrawMark, b: MarkBounds, scale: number): boolean {
   if (m.kind === 'arrowhead') return m.size * scale >= SEEN_LEAST;
   return Math.max(b.width, b.height) * scale >= SEEN_LEAST;
 }
+
+/**
+ * The marks of `marks` to draw for `view` at `scale`, as `MarkIndex.visible` gives them, by walking every mark once.
+ * For marks that move on every frame, such as groups gliding after a filter, where building an index each frame would
+ * cost more. `marks` must be in drawing order already.
+ */
+export function visibleOf(marks: readonly DrawMark[], view: MarkBounds, scale: number): DrawMark[] {
+  return marks.filter((m) => {
+    const b = markBounds(m);
+    return touches(b, view) && seen(m, b, scale);
+  });
+}
