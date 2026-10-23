@@ -198,7 +198,9 @@ jobs:
           cd nightly
           shopt -s nullglob
           installers=(thoughtknot-app-*)
-          gh release create "$VERSION" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" "${installers[@]}" SHA256SUMS --repo "$GITHUB_REPOSITORY" --prerelease --target "$SHA" --title "Nightly $VERSION" --notes "A nightly build of main at $SHA. Every test passed on it, but it has not been through a stable release's checks. For the newest work only; most people should use the latest stable release. The desktop app's installers (thoughtknot-app-*) are signed only where signing keys are set, so the system may warn before it opens one."
+          app=""
+          if (( ${#installers[@]} )); then app=" The desktop app's installers (thoughtknot-app-*) are signed only where signing keys are set, so the system may warn before it opens one."; fi
+          gh release create "$VERSION" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" "${installers[@]}" SHA256SUMS --repo "$GITHUB_REPOSITORY" --prerelease --target "$SHA" --title "Nightly $VERSION" --notes "A nightly build of main at $SHA. Every test passed on it, but it has not been through a stable release's checks. For the newest work only; most people should use the latest stable release.$app"
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease,createdAt --jq '[.[] | select(.isPrerelease and (.tagName | test("-nightly\\.")))] | sort_by(.createdAt) | reverse | .[7:] | .[].tagName' |
             while read -r old; do gh release delete "$old" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes; done
 

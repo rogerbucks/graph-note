@@ -192,7 +192,12 @@ describe('the nightly workflow', () => {
     assert.match(runs, /sha256sum thoughtknot-app-\* >> SHA256SUMS/);
     const create = runCommands(publish).find((r) => /gh release create/.test(r));
     assert.match(create, /"\$\{installers\[@\]\}" SHA256SUMS/);
-    assert.match(create, /signed only where signing keys are set/);
+    // the notes speak of installers only on a night that carries them
+    assert.match(
+      runs,
+      /if \(\( \$\{#installers\[@\]\} \)\); then app=" The desktop app's installers .*signed only where signing keys are set/,
+    );
+    assert.match(create, /latest stable release\.\$app"/);
   });
 
   // Risk OPS-3: a draft release tells no one it waits. GitHub lists drafts only to a token that may write contents.
