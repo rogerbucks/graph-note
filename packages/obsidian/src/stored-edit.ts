@@ -6,6 +6,7 @@ import { editInParts, parseValue, setProperty, word } from '@thoughtknot/core';
 import type { MeshIndex, PropType } from '@thoughtknot/core';
 import { Notice } from 'obsidian';
 import type ThoughtKnotPlugin from './main';
+import { changeVaultNote } from './storage/plugin-notes';
 
 /** Where the chosen thing is: its store, its note's path and text as read, its graph, and if the card is read only. */
 export interface StoredThing {
@@ -41,14 +42,13 @@ async function write(
   );
   if (!edit.ok) return void new Notice(word('properties.refused', { name, why: edit.reason }));
   // read and written in one step, so a change made since the store read the note is never written over
-  const file = plugin.app.vault.getFileByPath(at.path);
   let written = false;
-  if (file)
-    await plugin.app.vault.process(file, (now) => {
-      written = now === at.note;
-      return written ? edit.text : now;
-    });
-  if (!written) new Notice(word('properties.refused', { name, why: word('editing.note-changed') }));
+  const done = await changeVaultNote(plugin.app, at.path, (now) => {
+    written = now === at.note;
+    return written ? edit.text : now;
+  });
+  const why = !done.ok ? done.reason : !written ? word('editing.note-changed') : null;
+  if (why) new Notice(word('properties.refused', { name, why }));
 }
 
 /** Shows thing `key`'s properties at the end of `parent`, in place of any thing shown there before. */
