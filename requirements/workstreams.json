@@ -626,7 +626,8 @@
     "title": "Standalone app",
     "size": "L",
     "requirements": [
-      "standalone_app"
+      "standalone_app",
+      "app_signed"
     ]
   },
   "H2": {

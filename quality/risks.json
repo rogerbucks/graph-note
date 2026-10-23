@@ -4068,6 +4068,35 @@
       "status": "accepted",
       "accepted_by": "Roger, 22 Oct 2026 (decision card on PR #905)",
       "accepted_reason": "No code in the app's dependencies calls VariantStrIter. It is the Linux build only. No fixed glib works with Tauri yet. Undo when Tauri supports GTK 4."
+    },
+    {
+      "id": "SEC-17",
+      "role": "Senior security engineer",
+      "area": "supply-chain",
+      "title": "The desktop app's signing keys sit in the build step on main",
+      "risk": "On a push to main the desktop build step holds the Apple certificate and the Linux GPG key, because Tauri signs while it builds. A crate's build script runs in that step and could read them. A pull request build never gets them.",
+      "evidence": [
+        ".github/workflows/desktop-app.yml",
+        "scripts/desktop-build.mjs",
+        "docs/app-signing.md"
+      ],
+      "likelihood": "low",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Sign the Linux .deb in a job of its own, which downloads the built file and runs no repository build. Give the macOS keys to the bundling step alone, after the Rust build ends in a step without them.",
+      "check": "test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.",
+      "paths": [
+        ".github/workflows/desktop-app.yml",
+        "scripts/desktop-build.mjs"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-23",
+      "reviewed": {
+        "date": "2026-10-23",
+        "commit": "29ccf86e02a62b736f11b3eabb55fc1f94ff32bf"
+      },
+      "status": "open",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
     }
   ]
 }

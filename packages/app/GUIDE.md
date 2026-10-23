@@ -83,12 +83,16 @@ The same workflow builds an installer on each system and keeps it as a download 
 - Windows: an NSIS setup `.exe`;
 - Linux: a `.deb`.
 
-They are not signed yet, so macOS and Windows warn the first time the app opens. On a Mac, right-click the app and
-choose Open. On Windows, choose "More info", then "Run anyway". The `.deb` uses the system's own WebKitGTK and carries
-none of it. A Linux package that carries WebKitGTK waits for the licence check named in `licences/bundled.json`.
+They are signed where Roger has set the keys: macOS signed and notarised, and the `.deb` with a `.asc` GPG signature
+beside it. Windows is not signed (Roger, 23 Oct 2026). A pull request build is never signed. How to get each key, and
+what it costs: [docs/app-signing.md](../../docs/app-signing.md).
+
+An unsigned app makes macOS and Windows warn the first time it opens. On a Mac, right-click the app and choose Open.
+On Windows, choose "More info", then "Run anyway". The `.deb` uses the system's own WebKitGTK and carries none of it.
+A Linux package that carries WebKitGTK waits for the licence check named in `licences/bundled.json`.
 
 ```
 cargo install tauri-cli --locked --version 2.12.4
 npm run build --workspace packages/app
-cd packages/app/src-tauri && cargo tauri build      # the installer, in target/release/bundle/
+cd packages/app/src-tauri && cargo tauri build      # the installer, in target/release/bundle/, unsigned
 ```

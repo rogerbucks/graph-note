@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (91)
+## Open (92)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -100,6 +100,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| SEC-17 | The desktop app's signing keys sit in the build step on main | ●○○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 
 ## Each open risk
 
@@ -1012,6 +1013,16 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Hold each schema to the class of the note it came from. Leave out one above the ceiling, and show the reason.
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
+
+### SEC-17 The desktop app's signing keys sit in the build step on main
+
+**Who found it:** Senior security engineer. **Where:** `.github/workflows/desktop-app.yml`, `scripts/desktop-build.mjs`.
+
+**Risk:** On a push to main the desktop build step holds the Apple certificate and the Linux GPG key, because Tauri signs while it builds. A crate's build script runs in that step and could read them. A pull request build never gets them.
+
+**Fix:** Sign the Linux .deb in a job of its own, which downloads the built file and runs no repository build. Give the macOS keys to the bundling step alone, after the Rust build ends in a step without them.
+
+**Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
 ## Done or accepted (33)
 
