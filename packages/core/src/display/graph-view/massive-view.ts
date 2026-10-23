@@ -5,7 +5,8 @@
 // A search box finds any thing by name, in every group. Choosing a match lays its group out on its own, puts it in the
 // group's box (core search-fly.ts) and flies the view there. Under reduced motion the view is there at once.
 // Filtering keeps the groups' order: they glide to their new places (core filter-live.ts), at once under reduced motion.
-// Drag to move, scroll to zoom. The keyboard does the same: arrows move, + and - zoom, Home shows it all again.
+// Each search, grown thing and filter is a step on a trail (core explore-trail.ts). Back and Forward draw any earlier
+// picture again, exactly as it was. Moving about is massive-moves.ts.
 // It only looks: nothing is edited here, and nothing reaches the note.
 import { formatCount, word } from '@thoughtknot/core';
 import type { Drawn, GraphDrawing, Refusal } from '@thoughtknot/core';
@@ -19,6 +20,8 @@ import { MarkIndex, visibleOf } from '../../mark-index.ts';
 import { overviewOf } from '../../overview.ts';
 import type { Palette } from '../../palette.ts';
 import { groupsOf } from '../../scale-groups.ts';
+import type { Grouping } from '../../scale-groups.ts';
+import { Trail } from '../../explore-trail.ts';
 import { FLY_MS, ThingSearch, flyPath, openGroup, placeOf, viewOnto } from '../../search-fly.ts';
 import type { FlyView, Match, Rect } from '../../search-fly.ts';
 import { reducedMotion } from './details-nav';
@@ -29,7 +32,11 @@ import { canvasPainter, paintsOf, pickPainter } from './mark-painter.ts';
 import type { MarkPainter, Paint, PainterKind, Paints } from './mark-painter.ts';
 import { filterPanel } from './massive-filter.ts';
 import { growBar } from './massive-grow.ts';
+import type { GrowState } from './massive-grow.ts';
+import { moveControls } from './massive-moves.ts';
 import { plainPaints } from './massive-paints.ts';
+import { LISTED, searchBox } from './massive-search.ts';
+import { button } from './view-bar';
 import { marksOfSvg } from './svg-marks.ts';
 
 /** What the overview needs from its host. */
@@ -52,10 +59,19 @@ export interface MassiveView {
   flyTo(match: Match): Promise<void>;
 }
 
-/** How many matches the list shows. */
-const LISTED = 8;
-/** How far a key press moves the view, in screen pixels. */
-const KEY_STEP = 48;
+/** One picture of the overview, kept whole on the trail, so going back draws it exactly as it was. */
+interface Picture {
+  chosen: Chosen;
+  grouping: Grouping;
+  search: ThingSearch;
+  laid: LaidMarks;
+  index: MarkIndex;
+  opened: Set<string>;
+  inside: Map<string, Paint>;
+  camera: FlyView;
+  said: string;
+  grow: GrowState | null;
+}
 
 let made = 0;
 
@@ -82,20 +98,12 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
 
   const el = parent.createDiv({ cls: 'thoughtknot-massive' });
   const id = `thoughtknot-massive-${++made}`;
-  const input = el.createEl('input', {
-    cls: 'thoughtknot-massive-search',
-    type: 'search',
-    placeholder: word('massive.search'),
-    attr: {
-      'aria-label': word('massive.search'),
-      role: 'combobox',
-      'aria-expanded': 'false',
-      'aria-controls': `${id}-list`,
-      'aria-autocomplete': 'list',
-    },
+  searchBox(el, id, {
+    find: (q, most) => search.find(q, most),
+    named: (group) => names.get(group) ?? group,
+    choose: (m) => void flyTo(m),
+    say: (text) => said.setText(text),
   });
-  const list = el.createEl('ul', { cls: 'thoughtknot-massive-list', attr: { role: 'listbox', id: `${id}-list` } });
-  list.hidden = true;
   const named = () =>
     word('massive.name', {
       graph: o.graph,
@@ -150,6 +158,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     if (!fitted && width > 1 && height > 1) {
       camera = fit();
       fitted = true;
+      record();
     }
     again();
   };
@@ -221,11 +230,12 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     });
   };
 
-  const grower = growBar(el, { drawing, layIn, flyOnto, say: (text) => said.setText(text) });
+  const grower = growBar(el, { drawing, layIn, flyOnto, say: (text) => said.setText(text), stepped: () => record() });
 
   // the filters: the overview drawn again from the things kept, its groups in the same order, gliding there
-  const regroup = (chosen: Chosen) => {
-    const f = live.filter(chosen);
+  const regroup = (now: Chosen) => {
+    chosen = now;
+    const f = live.filter(now);
     const from = gliding ?? laid;
     grouping = f.grouping;
     search = new ThingSearch(f.mask ? drawing.boxes.filter((_, i) => f.mask?.[i]) : drawing.boxes, grouping);
@@ -236,6 +246,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     opened.clear();
     stage.setAttribute('aria-label', named());
     said.setText(word('massive.kept', { count: search.size }));
+    record(fit(laid.space));
     const at = glide(from, laid),
       mine = ++flight,
       start = win.performance.now(),
@@ -254,7 +265,57 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   };
   const tools = el.createDiv({ cls: 'thoughtknot-massive-tools' });
   el.insertBefore(tools, stage);
-  filterPanel(tools, live.index, regroup);
+  const filters = filterPanel(tools, live.index, regroup);
+
+  // the trail: each search, grown thing and filter is a step, and back and forward draw that step's picture again
+  const trail = new Trail<Picture>();
+  let chosen: Chosen = {};
+  const backButton = button(tools, word('massive.back'), 'arrow-left', () => go(trail.back()), word('massive.back'));
+  const forwardButton = button(
+    tools,
+    word('massive.forward'),
+    'arrow-right',
+    () => go(trail.forward()),
+    word('massive.forward'),
+  );
+  const steps = () => {
+    backButton.disabled = !trail.canBack;
+    forwardButton.disabled = !trail.canForward;
+  };
+  const record = (at = camera) => {
+    const kept = Object.entries(chosen).map(([k, v]) => [k, new Set(v)] as const);
+    trail.push({
+      chosen: Object.fromEntries(kept),
+      grouping,
+      search,
+      laid,
+      index,
+      opened: new Set(opened),
+      inside: new Map(insidePaints),
+      camera: at,
+      said: said.textContent ?? '',
+      grow: grower.state(),
+    });
+    steps();
+  };
+  const go = (p: Picture | undefined) => {
+    if (!p) return;
+    flight++;
+    gliding = null;
+    ({ grouping, search, laid, index, camera, chosen } = p);
+    names = new Map(grouping.groups.map((g) => [g.id, g.label]));
+    keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
+    opened.clear();
+    for (const g of p.opened) opened.add(g);
+    insidePaints.clear();
+    for (const [k, v] of p.inside) insidePaints.set(k, v);
+    filters.set(p.chosen);
+    grower.restore(p.grow);
+    stage.setAttribute('aria-label', named());
+    said.setText(p.said);
+    steps();
+    again();
+  };
 
   const flyTo = async (match: Match) => {
     const group = names.get(match.group) ?? match.group;
@@ -268,54 +329,8 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     said.setText(word(drawn ? 'massive.at' : 'massive.not-drawn', { name: match.text, group }));
     if (thing) grower.start(match.key, match.text, thing);
     await flyOnto(place);
+    record();
   };
-
-  // the search box and its list of matches
-  let matches: Match[] = [],
-    active = -1;
-  const show = () => {
-    list.empty();
-    matches.forEach((m, i) => {
-      list.createEl('li', {
-        text: `${m.text} · ${names.get(m.group) ?? m.group}`,
-        attr: { role: 'option', id: `${id}-${i}`, 'aria-selected': i === active ? 'true' : 'false' },
-      });
-    });
-    list.hidden = !matches.length;
-    input.setAttribute('aria-expanded', matches.length ? 'true' : 'false');
-    if (active >= 0) input.setAttribute('aria-activedescendant', `${id}-${active}`);
-    else input.removeAttribute('aria-activedescendant');
-  };
-  const choose = (i: number) => {
-    const m = matches[i];
-    if (!m) return;
-    matches = [];
-    active = -1;
-    show();
-    void flyTo(m);
-  };
-  input.addEventListener('input', () => {
-    matches = search.find(input.value, LISTED);
-    active = matches.length ? 0 : -1;
-    show();
-    said.setText(input.value.trim() ? word('massive.found', { count: matches.length }) : '');
-  });
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      if (!matches.length) return;
-      active = (active + (e.key === 'ArrowDown' ? 1 : matches.length - 1)) % matches.length;
-      show();
-    } else if (e.key === 'Enter') choose(Math.max(0, active));
-    else if (e.key === 'Escape' && matches.length) {
-      matches = [];
-      show();
-    } else return;
-    e.preventDefault();
-  });
-  list.addEventListener('click', (e) => {
-    const li = (e.target as Element | null)?.closest('li');
-    if (li) choose(Array.from(list.children).indexOf(li));
-  });
 
   // moving and zooming the view
   const zoom = (k: number, sx = width / 2, sy = height / 2) => {
@@ -329,46 +344,12 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     flight++;
     again();
   };
-  let dragging: { id: number; x: number; y: number } | null = null;
-  stage.addEventListener('pointerdown', (e) => {
-    dragging = { id: e.pointerId, x: e.clientX, y: e.clientY };
-    stage.setPointerCapture(e.pointerId);
-  });
-  stage.addEventListener('pointermove', (e) => {
-    if (!dragging || dragging.id !== e.pointerId) return;
-    move(e.clientX - dragging.x, e.clientY - dragging.y);
-    dragging = { id: e.pointerId, x: e.clientX, y: e.clientY };
-  });
-  const letGo = () => (dragging = null);
-  stage.addEventListener('pointerup', letGo);
-  stage.addEventListener('pointercancel', letGo);
-  stage.addEventListener(
-    'wheel',
-    (e) => {
-      e.preventDefault();
-      const at = stage.getBoundingClientRect();
-      zoom(Math.pow(1.0015, -e.deltaY), e.clientX - at.left, e.clientY - at.top);
-    },
-    { passive: false },
-  );
-  stage.addEventListener('keydown', (e) => {
-    const moves: Record<string, [number, number]> = {
-      ArrowLeft: [KEY_STEP, 0],
-      ArrowRight: [-KEY_STEP, 0],
-      ArrowUp: [0, KEY_STEP],
-      ArrowDown: [0, -KEY_STEP],
-    };
-    const by = moves[e.key];
-    if (by) move(...by);
-    else if (e.key === '+' || e.key === '=') zoom(1.25);
-    else if (e.key === '-') zoom(0.8);
-    else if (e.key === 'Home') {
-      camera = fit();
-      flight++;
-      again();
-    } else return;
-    e.preventDefault();
-  });
+  const home = () => {
+    camera = fit();
+    flight++;
+    again();
+  };
+  moveControls(stage, { zoom, move, home, back: () => go(trail.back()), forward: () => go(trail.forward()) });
 
   resize();
   return {
