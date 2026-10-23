@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (95)
+## Open (94)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -100,7 +100,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
-| LEGAL-1 | The iPhone app names install ways Apple keeps for testers, not the public | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
 | LEGAL-2 | No privacy page the apps and the App Store can link to | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | LEGAL-3 | The iPhone app's encryption has no export answer yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 | LEGAL-4 | Notarising signs in with Roger's Apple Account, not a key of its own | ●○○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
@@ -1017,16 +1016,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
 
-### LEGAL-1 The iPhone app names install ways Apple keeps for testers, not the public
-
-**Who found it:** Workflow designer and open-source maintainer. **Where:** `requirements/editor-requirements.md`, `docs/apple-terms.md`.
-
-**Risk:** ios_app lists ad hoc builds, an install from Xcode and SideStore beside TestFlight. Apple keeps ad hoc builds for people working with the developer, on a few listed devices. Offered to the public, they would break the program terms Roger agreed to.
-
-**Fix:** Roger chooses how the public gets the iPhone app. Then ios_app names TestFlight and the App Store for the public, and the other ways for Roger's own devices and testers only.
-
-**Check:** A person checks: ios_app and the iPhone app's guide name only TestFlight or the App Store as the public way in.
-
 ### LEGAL-2 No privacy page the apps and the App Store can link to
 
 **Who found it:** AI product expert. **Where:** `site/**`, `README.md`, `packages/app/**`.
@@ -1035,7 +1024,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Fix:** Add a privacy page to thoughtknot.app, made from the README's privacy part and the word catalogue. It says what is kept, where, for how long, and how to delete it, and names AI models as a place text can go. Link it from the app's About and the store listing.
 
-**Check:** test/site.test.js: the home page builds a privacy page from the catalogue and links to it; the app links to the same address.
+**Check:** test/site.test.js: the home page builds a privacy page from the catalogue. The app links to it.
 
 ### LEGAL-3 The iPhone app's encryption has no export answer yet
 
@@ -1053,11 +1042,11 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Risk:** The signing set-up notarises with Roger's Apple Account and an app-specific password. That password reaches more of his account than notarising needs. An App Store Connect API key can be limited, and revoked on its own.
 
-**Fix:** If Roger agrees, notarise with an App Store Connect API key instead: APPLE_API_ISSUER, APPLE_API_KEY and the key file. Then drop APPLE_ID and APPLE_PASSWORD.
+**Fix:** Roger chose the API key (23 Oct 2026). Notarise with an App Store Connect API key: APPLE_API_ISSUER, APPLE_API_KEY and the key file. Then drop APPLE_ID and APPLE_PASSWORD.
 
 **Check:** test/desktop-build.test.js: notarising takes the API key, and the Apple Account secrets are named nowhere.
 
-## Done or accepted (33)
+## Done or accepted (34)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1094,3 +1083,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-14 | A name in a graph could reach an object's prototype | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
 | SEC-15 | Page code built from text without escaping | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
 | SEC-16 | The desktop app's Linux build carries glib 0.18, with a known unsoundness | accepted | Roger, 22 Oct 2026 (decision card on PR #905): No code in the app's dependencies calls VariantStrIter. It is the Linux build only. No fixed glib works with Tauri yet. Undo when Tauri supports GTK 4. |
+| LEGAL-1 | The iPhone app names install ways Apple keeps for testers, not the public | done | #1057 |

@@ -4095,8 +4095,9 @@
         "date": "2026-10-23",
         "commit": "d3e541fab5245380c8b48a7b4a542e54217fc135"
       },
-      "status": "open",
-      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
+      "status": "done",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS",
+      "done_in": "#1057"
     },
     {
       "id": "LEGAL-2",
@@ -4113,7 +4114,7 @@
       "impact": "medium",
       "decision": "fix-later",
       "fix": "Add a privacy page to thoughtknot.app, made from the README's privacy part and the word catalogue. It says what is kept, where, for how long, and how to delete it, and names AI models as a place text can go. Link it from the app's About and the store listing.",
-      "check": "test/site.test.js: the home page builds a privacy page from the catalogue and links to it; the app links to the same address.",
+      "check": "test/site.test.js: the home page builds a privacy page from the catalogue. The app links to it.",
       "paths": [
         "site/**",
         "README.md",
@@ -4169,7 +4170,7 @@
       "likelihood": "low",
       "impact": "medium",
       "decision": "fix-later",
-      "fix": "If Roger agrees, notarise with an App Store Connect API key instead: APPLE_API_ISSUER, APPLE_API_KEY and the key file. Then drop APPLE_ID and APPLE_PASSWORD.",
+      "fix": "Roger chose the API key (23 Oct 2026). Notarise with an App Store Connect API key: APPLE_API_ISSUER, APPLE_API_KEY and the key file. Then drop APPLE_ID and APPLE_PASSWORD.",
       "check": "test/desktop-build.test.js: notarising takes the API key, and the Apple Account secrets are named nowhere.",
       "paths": [
         ".github/workflows/desktop-app.yml",

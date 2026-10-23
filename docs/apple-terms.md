@@ -23,7 +23,7 @@ Apple's own pages are the source. Read them there, since Apple changes them:
 | Privacy                  | No data collected; a privacy page the app and store can link to                    | Gap: no privacy page yet |
 | AI                       | Nothing goes to an AI model unless the person sets it up and presses Send          | Met in the plugin; the apps send nothing |
 | Encryption and export    | Know which export rules apply before the iPhone app ships                          | Gap: needs a lawyer |
-| The iPhone app           | Reaches the public only through TestFlight or the App Store                        | Gap: needs Roger's choice |
+| The iPhone app           | Reaches the public only through TestFlight or the App Store                        | Met: Roger chose TestFlight, then the App Store |
 | Our name and the app id  | The app id sits under thoughtknot.app, so it never has to change                    | Met, checked by a test |
 | Who signs up and submits | Roger, in person, from his own account                                             | Met |
 
@@ -43,7 +43,7 @@ The Mac app is signed with Roger's Developer ID certificate, then notarised. `do
 - **The Apple tools run on Apple computers only.** Mac builds run on macOS runners, which are Apple hardware. We never
   build the Mac app on Linux or Windows with copied Apple tools.
 - **Notarising is better done with an App Store Connect API key** than with Roger's Apple Account and an app password.
-  An API key can be limited and revoked on its own. Roger chooses which (LEGAL-4).
+  An API key can be limited and revoked on its own. Roger chose the API key on 23 Oct 2026 (LEGAL-4).
 
 ## What we say about Apple
 
@@ -97,10 +97,10 @@ notes encrypted with keys in the iPhone's Keychain (`ios_app`), and sync may add
 ## The iPhone app
 
 Apple allows three ways to put an app on other people's iPhones: the App Store, TestFlight, and ad hoc builds. Ad hoc
-builds are only for people working with you, on a small number of listed devices. So the public gets the iPhone app
-through TestFlight or the App Store (LEGAL-1).
+builds are only for people working with you, on a small number of listed devices.
 
-- `ios_app` also names ad hoc builds, an install from Xcode and SideStore. Those suit Roger's own devices and testers.
+- **Roger chose (23 Oct 2026):** the public gets the iPhone app through TestFlight now, and the App Store later.
+- Ad hoc builds, an install from Xcode and SideStore are for Roger's own devices and his testers only.
 - The App Store also asks that the app is sandboxed on the Mac, uses Apple's WebKit, and does more than show a website.
   The Tauri app already uses WebKit and works offline. The Mac App Store would need the sandbox.
 - In the EU, the App Store asks whether the seller is a trader. If yes, it shows Roger's address and phone number.
