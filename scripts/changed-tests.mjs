@@ -44,11 +44,12 @@ const DEVICE_QUOTES = 'test/device-check-quotes.test.js';
  * - test-vault.test.js reads test-vault/ and its reset script;
  * - device-check-notes.test.js reads its Device checks notes and the device checklist;
  * - requirements.test.js reads requirements/ and its check;
- * - cheap-checks.test.js reads AGENTS.md, CLAUDE.md, .ignore and its own three tools;
+ * - cheap-checks.test.js reads AGENTS.md, its handbook, CLAUDE.md, .ignore and its own three tools;
  * - run-ceiling.test.js reads AGENTS.md and changed-tests.mjs as well as its own runner, and runs quality-suite.mjs.
  */
 const READERS = [
-  [/^(AGENTS\.md|scripts\/changed-tests\.mjs)$/, [CHEAP, CEILING]],
+  [/^(AGENTS\.md|scripts\/changed-tests\.mjs)$/, [CHEAP, CEILING, 'test/community-files.test.js']],
+  [/^docs\/agents\/HANDBOOK\.md$/, [CHEAP, 'test/community-files.test.js', 'test/public-readiness.test.js']],
   [/^scripts\/import-graph\.mjs$/, [CHEAP, 'test/import-graph.test.js']],
   [/^(CLAUDE\.md|\.ignore|scripts\/quiet-reporter\.mjs|scripts\/quiet_unittest\.py)$/, [CHEAP]],
   [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/(GUIDE\.md|guide\/[^/]+\.md))$/, [CONVENTIONS]],

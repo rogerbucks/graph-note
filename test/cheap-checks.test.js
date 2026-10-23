@@ -501,10 +501,26 @@ describe('finding what changed, on a branch and on main', () => {
 });
 
 describe('a short guide for AI sessions', () => {
-  const guide = () => read('AGENTS.md');
+  // AGENTS.md is loaded into every session, so it holds only the rules; the handbook holds the detail.
+  const guide = () => `${read('AGENTS.md')}\n${read('docs/agents/HANDBOOK.md')}`;
 
-  test('AGENTS.md is short and gives the cheap commands and the full ones', () => {
-    assert.ok(guide().split('\n').length <= 70, 'under about 70 lines: 60, and 10 for the pull request rules');
+  test('AGENTS.md stays slim: the rules only, and a link to the handbook for the rest', () => {
+    const agents = read('AGENTS.md');
+    assert.ok(agents.split('\n').length <= 35, 'about 30 lines');
+    assert.ok(agents.length <= 2600, 'about 2.5 KB, read by every session');
+    assert.ok(agents.includes('(docs/agents/HANDBOOK.md)'));
+    for (const rule of [
+      '## Guards',
+      'Sign off as Roger',
+      'never squash',
+      '--log-failed',
+      'bare `node --test`',
+      '.ignore',
+    ])
+      assert.ok(agents.includes(rule), rule);
+  });
+
+  test('the guide and its handbook give the cheap commands and the full ones', () => {
     for (const cmd of [
       'npm run test:ai',
       'npm run test:changed',
@@ -520,12 +536,13 @@ describe('a short guide for AI sessions', () => {
   });
 
   test('it links CONTRIBUTING.md and the guide of every package', () => {
-    assert.ok(guide().includes('(CONTRIBUTING.md)'));
+    assert.ok(read('AGENTS.md').includes('(CONTRIBUTING.md)'));
+    const handbook = read('docs/agents/HANDBOOK.md');
     const guides = walk('packages')
       .concat(walk('python'))
       .filter((f) => /^(packages|python)\/[^/]+\/GUIDE\.md$/.test(f));
     assert.ok(guides.length >= 4);
-    for (const g of guides) assert.ok(guide().includes(`(${g})`), g);
+    for (const g of guides) assert.ok(handbook.includes(`(../../${g})`), g);
   });
 
   test('it says which files never to read, and names each file the search ignores', () => {
