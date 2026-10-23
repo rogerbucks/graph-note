@@ -1022,7 +1022,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-2 | A tag on any commit becomes a stable release | done | #614 |
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
-| ARCH-4 | The note format carries no version and has no migration story | done | #1073 |
+| ARCH-4 | The note format carries no version and has no migration story | done | #1073, #1076 |
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
