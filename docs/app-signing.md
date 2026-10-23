@@ -47,7 +47,7 @@ Apple must know who made the app (signing), and must scan it (notarising). Then 
 ### 1. Join the Apple Developer Program
 
 1. In Chrome, open https://developer.apple.com/programs/enroll/ and sign in with your Apple Account.
-2. Enrol as an individual. It costs $99 a year (about £79 in the UK). The app then shows your own name as its maker.
+2. Enrol as an individual. It costs $99 a year (about £79 in the UK). The app then shows your legal name as its maker.
    To show a company name, you enrol as an organisation instead, which needs a D-U-N-S number.
 3. Wait for the email that says you are in. It often takes a day or two.
 
@@ -63,7 +63,7 @@ The same membership covers the iPhone app later.
 ### 3. Get the other values
 
 - Its name, for `APPLE_SIGNING_IDENTITY`: run `security find-identity -v -p codesigning` and copy the text in quotes,
-  such as `Developer ID Application: Roger Bucks (AB12CD34EF)`.
+  such as `Developer ID Application: Your Legal Name (AB12CD34EF)`.
 - Your team ID, for `APPLE_TEAM_ID`: the 10 characters in brackets at the end of that name. It is also on
   https://developer.apple.com/account under Membership details.
 - An app-specific password, for `APPLE_PASSWORD`: in Chrome, open https://account.apple.com, then "Sign-In and
