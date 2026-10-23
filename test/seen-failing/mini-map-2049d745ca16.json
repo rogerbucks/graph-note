@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/mini-map.test.js",
+  "test": "mini_map_shape: a tall or wide drawing keeps a mini-map of the whole of it > a tap anywhere on it goes to that part of a tall drawing, the end among it",
+  "seen_failing_first": false,
+  "evidence": "The old sliding window also took a tap to the drawing's ends; the test guards that the whole-drawing copy keeps doing so."
+}
