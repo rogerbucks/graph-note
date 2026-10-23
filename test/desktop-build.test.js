@@ -39,16 +39,33 @@ describe('what the desktop build signs', () => {
     assert.deepEqual(plan.warnings, []);
   });
 
-  test('on macOS, the certificate signs and the Apple ID notarises', () => {
+  test('on macOS, the certificate signs and the App Store Connect API key notarises', () => {
     const plan = signingPlan('macOS', { ...all('macOS'), ...all('notarise'), ...all('Linux') });
     assert.deepEqual(plan.signed, { macOS: true, notarise: true, Linux: false });
-    assert.deepEqual(Object.keys(plan.env).sort(), [...KEYS.macOS, ...KEYS.notarise].sort(), 'no Linux key');
+    assert.deepEqual(
+      Object.keys(plan.env).sort(),
+      [...KEYS.macOS, 'APPLE_API_ISSUER', 'APPLE_API_KEY'].sort(),
+      'no Linux key, and the private API key only as the file Tauri reads',
+    );
+    assert.equal(plan.apiKey, 'apple_api_private_key-value');
+  });
+
+  test('notarising uses an API key, never an Apple ID and password (Roger, 23 Oct 2026; LEGAL-4)', () => {
+    const plan = signingPlan('macOS', { ...all('macOS'), APPLE_ID: 'a', APPLE_PASSWORD: 'b', APPLE_TEAM_ID: 'c' });
+    assert.equal(plan.signed.notarise, false);
+    assert.equal(plan.apiKey, null);
+    assert.ok(
+      !Object.values(KEYS)
+        .flat()
+        .some((k) => /^APPLE_(ID|PASSWORD)$/.test(k)),
+    );
   });
 
   test('notarising without a signed app is skipped, with a warning', () => {
     const plan = signingPlan('macOS', all('notarise'));
     assert.equal(plan.signed.notarise, false);
     assert.deepEqual(plan.env, {});
+    assert.equal(plan.apiKey, null);
     assert.match(plan.warnings.join(), /notarise skipped/);
   });
 

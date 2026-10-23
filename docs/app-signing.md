@@ -64,24 +64,31 @@ The same membership covers the iPhone app later.
 
 - Its name, for `APPLE_SIGNING_IDENTITY`: run `security find-identity -v -p codesigning` and copy the text in quotes,
   such as `Developer ID Application: Your Legal Name (AB12CD34EF)`.
-- Your team ID, for `APPLE_TEAM_ID`: the 10 characters in brackets at the end of that name. It is also on
-  https://developer.apple.com/account under Membership details.
-- An app-specific password, for `APPLE_PASSWORD`: in Chrome, open https://account.apple.com, then "Sign-In and
-  Security", then "App-Specific Passwords". Make one called "ThoughtKnot notarising". It is not your Apple password.
+### 4. Make an API key for notarising
 
-### 4. Add the six secrets
+Apple notarises with an App Store Connect API key, not your Apple ID and password (Roger, 23 Oct 2026; LEGAL-4). The
+key can only notarise and manage builds, and you can revoke it on its own.
+
+1. In Chrome, open https://appstoreconnect.apple.com and sign in.
+2. Choose "Users and Access", then "Integrations", then "App Store Connect API". Under "Team Keys", press `+`.
+3. Name it "ThoughtKnot notarising" and give it the "Developer" access. Press Generate.
+4. Copy the **Issuer ID** at the top of the page, for `APPLE_API_ISSUER`.
+5. Copy the key's **Key ID**, for `APPLE_API_KEY`.
+6. Press "Download API Key". It saves `AuthKey_<Key ID>.p8` in Downloads. Apple lets you download it **once only**.
+
+### 5. Add the six secrets
 
 ```sh
 cd ~/Dev/thoughtknot && base64 -i ~/Desktop/thoughtknot-developer-id.p12 | gh secret set APPLE_CERTIFICATE
 cd ~/Dev/thoughtknot && gh secret set APPLE_CERTIFICATE_PASSWORD   # the .p12 password from step 2
 cd ~/Dev/thoughtknot && gh secret set APPLE_SIGNING_IDENTITY       # the name from step 3
-cd ~/Dev/thoughtknot && gh secret set APPLE_ID                     # your Apple Account email
-cd ~/Dev/thoughtknot && gh secret set APPLE_PASSWORD               # the app-specific password
-cd ~/Dev/thoughtknot && gh secret set APPLE_TEAM_ID                # the 10-character team ID
-rm ~/Desktop/thoughtknot-developer-id.p12
+cd ~/Dev/thoughtknot && gh secret set APPLE_API_ISSUER             # the Issuer ID from step 4
+cd ~/Dev/thoughtknot && gh secret set APPLE_API_KEY                # the Key ID from step 4
+cd ~/Dev/thoughtknot && gh secret set APPLE_API_PRIVATE_KEY < ~/Downloads/AuthKey_*.p8
+rm ~/Desktop/thoughtknot-developer-id.p12 ~/Downloads/AuthKey_*.p8
 ```
 
-Keep a copy of the `.p12` and its password in your password manager. Then delete the file from the Desktop.
+Keep a copy of the `.p12`, its password and the `.p8` file in your password manager first. Then delete the files.
 
 ## Linux: a GPG signature beside the `.deb`
 
