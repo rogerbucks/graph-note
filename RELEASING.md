@@ -13,6 +13,11 @@ run by hand, if main moved since the last one. It runs the full suite and publis
 publishes a GitHub pre-release named for the next patch and the day (`0.6.1-nightly.20261018`, from
 `scripts/nightly-version.mjs`), keeping the last seven.
 
+Each nightly also carries the desktop app's installers: a `.dmg`, an NSIS `.exe` and a `.deb`, named
+`thoughtknot-app-<version>-<system>`. The Desktop app workflow builds them at the same commit. Each is signed where its
+keys are set and unsigned where not, so a system may warn before it opens one. A night they fail still publishes the
+plugin. For now every release is a private nightly (Roger, 23 Oct 2026).
+
 The nightly skips the quality ratchet and the walk-through below. So it is for those who want the newest work: in
 Obsidian, BRAT with pre-releases on follows it. A pre-release never counts as a release: the build status and the wiki
 leave it out.
