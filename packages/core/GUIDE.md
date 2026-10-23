@@ -1008,8 +1008,9 @@ The host does what needs a canvas, the file system or a dialog; the core decides
   - Each translation is a plain JSON file in `packages/core/translations/`, with a guide for translators there.
     `node scripts/translations.mjs` lists the files in `translation-files.ts`; each that holds to the source is used.
   - `setLanguage` picks a language's translation, or its base language's, else UK English.
-  - `chooseLanguage(setting)` in `display/host.ts` calls it, with the locale and direction. `host` follows the host's
-    `language()`; `installHost` uses that. Obsidian passes the `language` setting, which may name one instead.
+  - `installHost` calls it with the host's `language()`, and sets the locale and direction too.
+  - `chooseLanguage(setting)` in `display/language.ts` does the same from the `language` setting. `host` follows the
+    host; any other names a language. Obsidian calls it on load and when the setting changes.
   - A word a translation lacks is said in UK English, never as its key.
   - Places move their words into `source-words.ts` one at a time.
   - Some words sit apart, each spread into `SOURCE_WORDS`:

@@ -4,7 +4,8 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { addTranslation, currentLanguage, setLanguage, SOURCE_LANGUAGE, word } from '../src/words.ts';
-import { chooseLanguage, installHost } from '../src/display/host.ts';
+import { installHost } from '../src/display/host.ts';
+import { chooseLanguage } from '../src/display/language.ts';
 import { currentDirection } from '../src/words.ts';
 import { DEFAULT_SETTINGS, OPTIONS, settingsFrom } from '../src/settings.ts';
 import { languageChoice } from '../src/settings-language.ts';

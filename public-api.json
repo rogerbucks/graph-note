@@ -3509,9 +3509,6 @@
         ]
       },
       "./display/host": {
-        "chooseLanguage": [
-          "value: (setting?: string) => string"
-        ],
         "displayHost": [
           "value: () => DisplayHost"
         ],
