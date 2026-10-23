@@ -25,6 +25,11 @@ on:
   workflow_dispatch:
   # Called by wave-nightly.yml when a pull request labelled wave-done merges, so a wave can be tested the day it ends.
   workflow_call:
+    inputs:
+      wave:
+        description: True when a wave's end made this run, which leaves the draft check to the night
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -213,7 +218,7 @@ jobs:
   # publish, it runs no code of the repository: no checkout, no install, no Node, only gh.
   drafts:
     # the nightly's own check; a wave-end build leaves it to the night
-    if: github.event_name != 'pull_request'
+    if: ${{ !inputs.wave }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

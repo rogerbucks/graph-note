@@ -49,4 +49,6 @@ jobs:
       contents: write
       security-events: read
     uses: ./.github/workflows/nightly.yml
+    with:
+      wave: true
     secrets: inherit

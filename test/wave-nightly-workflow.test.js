@@ -38,6 +38,13 @@ describe('the wave nightly workflow', () => {
     assert.match(call, /contents: write\s*\n\s*security-events: read/);
   });
 
+  test('tells the nightly it is a wave build, which leaves the draft check to the night', () => {
+    assert.match(jobs(text)['wave-nightly'].join('\n'), /with:\s*\n\s*wave: true/);
+    const nightly = read('.github/workflows/nightly.yml');
+    assert.match(block(nightly.split('\n'), 'on', 0).join('\n'), /workflow_call:\s*\n\s*inputs:\s*\n\s*wave:/);
+    assert.match(jobs(nightly).drafts.join('\n'), /if: \$\{\{ !inputs\.wave \}\}/);
+  });
+
   test('a second build the same day takes the next letter', () => {
     const first = nightlyVersion('0.7.1', '20261023');
     assert.equal(nightlyVersion('0.7.1', '20261023', [first]), `${first}.b`);
