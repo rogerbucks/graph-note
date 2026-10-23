@@ -242,6 +242,11 @@
   fill: var(--gn-text-error);
   font-weight: var(--gn-font-weight-semibold);
 }
+/* How sure a thing is (spec §36): its line weight and dash are set on the drawing; the mark in words is small. */
+.thoughtknot-svg .thoughtknot-certainty-mark {
+  font-size: 9pt;
+  fill: var(--gn-text-muted);
+}
 /* A look colour's tag (§44, colour_never_alone): the same tag is on each box or link of that colour and in the legend. */
 .thoughtknot-svg .thoughtknot-look-tag {
   font-size: 10px;

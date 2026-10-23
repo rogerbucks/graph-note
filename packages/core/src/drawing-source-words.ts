@@ -109,4 +109,12 @@ export const DRAWING_SOURCE_WORDS = {
   'completeness.unchecked': 'cannot be checked',
   // a field a view needs and a thing lacks (view-scaffold.ts)
   'scaffold.prompt': 'Add {field} for {thing}',
+  // how sure a thing is: its mark on the drawing, and what is said to screen readers (certainty-drawn.ts)
+  'certainty.mark.likely': '~ likely',
+  'certainty.mark.doubtful': '? doubtful',
+  'certainty.mark.contested': '⚡ contested',
+  'certainty.said.sure': 'sure',
+  'certainty.said.likely': 'likely',
+  'certainty.said.doubtful': 'doubtful',
+  'certainty.said.contested': 'contested',
 } as const;

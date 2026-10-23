@@ -1,6 +1,10 @@
-// The last part of the types src/index.ts exports, from LineStyle on, sorted: test support only, nothing here ships. It
+// The last part of the types src/index.ts exports, from LaidMarks on, sorted: test support only, nothing here ships. It
 // is kept apart from index-names.js, which joins it to the types before it, so neither file passes the test file size.
 export const TYPES_LATE = [
+  'LaidMarks',
+  'LaidPart',
+  'Landing',
+  'Layers',
   'LayoutLimits',
   'LayoutPort',
   'LayoutReply',
@@ -50,6 +54,7 @@ export const TYPES_LATE = [
   'NamedImage',
   'NamedView',
   'NewThing',
+  'NotRewritten',
   'NoteClassification',
   'NoteEdit',
   'NoteReading',
@@ -116,6 +121,7 @@ export const TYPES_LATE = [
   'ReadLimits',
   'Refusal',
   'RegistryOptions',
+  'RenameAcross',
   'ReviewItem',
   'ReviewLevels',
   'ReviewSource',
