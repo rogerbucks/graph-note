@@ -70,6 +70,7 @@ STYLE_KINDS = (
     "Flow",
     "Links",
     "Picture",
+    "Filter",
 )
 # The keys each kind of style thing may have (editor spec §2, style_words_checked); a thing's
 # id is its name.
@@ -96,6 +97,8 @@ STYLE_KEYS = {
     "Flow": ("motion", "means", "type", "view"),
     "Links": ("view", "routing", "merge"),
     "Picture": ("property", "kind", "thing", "view"),
+    # a huge graph's filter (editor spec §53), checked in filter_saved.py
+    "Filter": ("keep", "view"),
 }
 
 

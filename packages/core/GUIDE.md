@@ -620,11 +620,24 @@ never data.
   - The Python library keeps the same room (`graphspec/style/picture.py`). It is held to the core byte for byte on
     `python/graph_spec/tests/picture_cases.json` by `test/picture-parity.test.js`.
 
+#### A huge graph's saved filter
+
+- `filter-saved.ts` — a filter saved for a huge graph's overview (§53, scale_filter_live).
+  - A `Filter` in the style graph, `(filter_1:Filter {keep: 'Kind: Task; status: done'})`, says what the overview keeps.
+    Each part is a filter's name, a colon, then the values kept. `Kind` filters by kind; any other name is a property.
+  - `filterOf` checks one. A part it cannot read, a filter named twice or a kind the graph lacks is a problem with its
+    fix. The rest is kept.
+  - `savedFilterFor` gives the Filter for the whole graph or a view. `filterText` writes one; `filterRefusal` says why
+    a choice cannot be written.
+  - A host saves it only where the note is edited. In reading view a filter is only tried.
+  - The Python library gives the same problems (`graphspec/style/filter_saved.py`), on
+    `python/graph_spec/tests/style_cases.json`.
+
 #### Writing a style
 
 - `style-edit.ts` — `styleEdit` writes a choice as text into the graph's style block.
   - The choices are a nudge, a look, a view's fade or hide, or how a view was shown. They are also a property switched
-    on or off inline, arrowheads hidden or shown, or the diagram type chosen.
+    on or off inline, arrowheads hidden or shown, the diagram type chosen, or a huge graph's filter.
   - The style block is made after the graph's last block when there is none.
   - A view's setting, or a choice of properties, arrowheads or diagram type for one place, is changed in place. It is
     never written twice.

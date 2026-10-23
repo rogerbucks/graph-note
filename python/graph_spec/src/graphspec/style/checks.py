@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from graphspec.style.filter_saved import filter_of
 from graphspec.style.flow import MEANS_NEEDED
 from graphspec.style.legend import legend_checked
 from graphspec.style.near_names import nearest
@@ -344,28 +345,20 @@ _CHECKS = {
     "Links": (_links_of, "links"),
     "Shown": (_shown_of, "shown"),
     "Picture": (_picture_of, "pictures"),
+    "Filter": (lambda raw, names, out: filter_of(_Reader(raw, names, out), raw, names), "filters"),
 }
 
 
 def check_things(raws: list[dict], names: dict) -> dict[str, list[dict]]:
     """Each thing of a style graph checked on its own, in the order written: the nudges, Shows,
-    Arrows, Diagrams, Flows, Links, Shown and Pictures that are sound, and the problems found
-    ({nudges, shows, arrows, diagrams, flows, links, shown, pictures, problems}). A raw thing
-    is {labels (in the order written), props, at: {block, line, id}}; names is {graph, things,
-    kinds, types: names in the graph styled, properties(of): the property names of a kind's things,
-    a thing or a type's links}. A thing that writes a key its kind does not know is reported on
-    the key and left out, and what it lacks is not yet said: it may be that key, misspelt."""
-    c: dict[str, list[dict]] = {
-        "nudges": [],
-        "shows": [],
-        "arrows": [],
-        "diagrams": [],
-        "flows": [],
-        "links": [],
-        "shown": [],
-        "pictures": [],
-        "problems": [],
-    }
+    Arrows, Diagrams, Flows, Links, Shown, Pictures and Filters that are sound, and the problems
+    found ({nudges, shows, arrows, diagrams, flows, links, shown, pictures, filters, problems}).
+    A raw thing is {labels (in the order written), props, at: {block, line, id}}; names is
+    {graph, things, kinds, types: names in the graph styled, properties(of): the property names of
+    a kind's things, a thing or a type's links}. A thing that writes a key its kind does not know
+    is reported on the key and left out, and what it lacks is not yet said: it may be that key,
+    misspelt."""
+    c: dict[str, list[dict]] = {into: [] for _, into in _CHECKS.values()} | {"problems": []}
     problems = c["problems"]
     for raw in raws:
         kinds = [x for x in raw["labels"] if x in STYLE_KINDS]

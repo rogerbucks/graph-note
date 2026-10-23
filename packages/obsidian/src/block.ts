@@ -310,7 +310,7 @@ export async function renderBlock(
       run: (ask) => plugin.exportGraph(ask),
     });
     // too large to draw whole: its overview, to search and fly to any thing in it (§53, scale_massive_card)
-    if (drawn.reason === 'too-large') showMassive(plugin, root, drawing, graph, reading);
+    if (drawn.reason === 'too-large') showMassive(plugin, root, drawing, { ...target, reading, styling, readOnly });
     asText(plugin, root, source, drawn, problems, target, readOnly);
     return;
   }

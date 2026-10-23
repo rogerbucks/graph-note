@@ -288,6 +288,8 @@ export function settle(checked: Checked, graph: string): { style: StyleGraph; pr
   style.looks = settleLooks(checked.looks, graph, problems);
   // a box's picture is the most particular Picture's, the first written of two alike (picture.ts): none conflicts
   style.pictures = checked.pictures;
+  // a graph's filter is the first written for it (filter-saved.ts): none conflicts
+  style.filters = checked.filters;
   const viewAt = new Map<string, number>();
   for (const { view, outside, at } of checked.views) {
     const first = style.views.get(view);

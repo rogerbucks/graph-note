@@ -7,7 +7,8 @@
 // Filtering keeps the groups' order: they glide to their new places (core filter-live.ts), at once under reduced motion.
 // Each search, grown thing and filter is a step on a trail (core explore-trail.ts). Back and Forward draw any earlier
 // picture again, exactly as it was. Moving about is massive-moves.ts.
-// It only looks: nothing is edited here, and nothing reaches the note.
+// Nothing is edited here. A filter chosen goes to the host, which saves it where the note is edited (filter-saved.ts).
+// A filter the host gives is the one the overview starts with.
 import { formatCount, word } from '@thoughtknot/core';
 import type { Drawn, GraphDrawing, Refusal } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
@@ -15,6 +16,7 @@ import type { LaidMarks } from '../../graphviz-marks.ts';
 import { partOf } from '../../expand-on-demand.ts';
 import { FacetIndex, facetsOf } from '../../facet-counts.ts';
 import type { Chosen } from '../../facet-counts.ts';
+import type { FilterKeep } from '../../filter-saved.ts';
 import { GLIDE_MS, LiveFilter, glide } from '../../filter-live.ts';
 import { MarkIndex, visibleOf } from '../../mark-index.ts';
 import { overviewOf } from '../../overview.ts';
@@ -48,6 +50,10 @@ export interface MassiveOptions {
   layout: (part: GraphDrawing, owner: object) => Promise<Drawn | Refusal | null>;
   /** A thing's properties by its key, for the filters. Not set: things filter by kind alone. */
   props?: (key: string) => Readonly<Record<string, unknown>>;
+  /** The filter the overview starts with, as saved. Not set: everything is kept. */
+  chosen?: FilterKeep;
+  /** Told each filter the user chooses, to save it. Going back or forward is not a choice. */
+  chose?: (keep: FilterKeep) => void;
 }
 
 /** The overview on screen: how to close it, its painter, where it looks, and how to find and fly to a thing. */
@@ -232,11 +238,10 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
 
   const grower = growBar(el, { drawing, layIn, flyOnto, say: (text) => said.setText(text), stepped: () => record() });
 
-  // the filters: the overview drawn again from the things kept, its groups in the same order, gliding there
-  const regroup = (now: Chosen) => {
+  /** The overview drawn from the things `now` keeps, at once. */
+  const kept = (now: Chosen) => {
     chosen = now;
     const f = live.filter(now);
-    const from = gliding ?? laid;
     grouping = f.grouping;
     search = new ThingSearch(f.mask ? drawing.boxes.filter((_, i) => f.mask?.[i]) : drawing.boxes, grouping);
     names = new Map(grouping.groups.map((g) => [g.id, g.label]));
@@ -246,7 +251,13 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     opened.clear();
     stage.setAttribute('aria-label', named());
     said.setText(word('massive.kept', { count: search.size }));
+  };
+  // the filters: the overview drawn again from the things kept, its groups in the same order, gliding there
+  const regroup = (now: Chosen) => {
+    const from = gliding ?? laid;
+    kept(now);
     record(fit(laid.space));
+    o.chose?.(Object.fromEntries(Object.entries(now).map(([k, v]) => [k, [...v]])));
     const at = glide(from, laid),
       mine = ++flight,
       start = win.performance.now(),
@@ -351,6 +362,11 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   };
   moveControls(stage, { zoom, move, home, back: () => go(trail.back()), forward: () => go(trail.forward()) });
 
+  // a saved filter: the overview starts with it, the first step on the trail
+  if (o.chosen && Object.values(o.chosen).some((v) => v.length)) {
+    kept(Object.fromEntries(Object.entries(o.chosen).map(([k, v]) => [k, new Set(v)])));
+    filters.set(chosen);
+  }
   resize();
   return {
     close,

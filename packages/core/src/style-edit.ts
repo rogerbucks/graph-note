@@ -1,31 +1,32 @@
 // Writing to the style graph (editor spec §2, §6, §7, §14, §15). It writes a nudge, a look, and whether a view fades
-// or hides what is outside it. It writes how a view was shown, a property switched on or off inline, arrowheads hidden
-// or shown, and the diagram type chosen. Each is written as text into the graph's style block, never a data block. A
+// or hides what is outside it. It writes how a view was shown, a property switched on or off inline, and arrowheads
+// hidden or shown. It writes the diagram type chosen, and a huge graph's filter (§53). Each is written as text into the
+// graph's style block, never a data block. A
 // note with no style block for the graph gets one after its last block. It has its graph line and a comment saying
 // whose style it is. A view's setting and how it was shown are changed in place when already written for the same
-// place. So is a choice of properties, arrowheads or diagram type. None is ever written twice.
+// place. So is a choice of properties, arrowheads, diagram type or filter. None is ever written twice.
 import { dataKind, gqlSpans, graphOf, styleOf } from './blocks.ts';
 import type { Span } from './blocks.ts';
 import { items } from './block-items.ts';
-import { STYLE } from './layout.ts';
 import { quoted } from './lock.ts';
 import { insertBlockAfter, replaceBlock } from './store.ts';
-import { centreRefusal, diagramTypeKnown, showFor, timelineRefusal, treeOnly } from './style-checks.ts';
 import {
-  ARROWHEADS,
-  DIAGRAM_TYPES,
-  FORMATS,
-  INLINE,
-  LINES,
-  NUDGE_WORDS,
-  ON_OFF,
-  OUTSIDE,
-  STYLE_HUES,
-  orList,
-} from './style-graph.ts';
+  SWITCH_KEYS,
+  arrowsRefusal,
+  diagramRefusal,
+  lookRefusal,
+  mustBe,
+  noViewName,
+  nudgeRefusal,
+  showRefusal,
+  shownRefusal,
+} from './style-edit-checks.ts';
+import { filterRefusal, filterText } from './filter-saved.ts';
+import type { FilterKeep } from './filter-saved.ts';
+import { OUTSIDE } from './style-graph.ts';
 import type { Frame, LinkTarget } from './style-graph.ts';
 import { acceptNameFirst, unnamedIn } from './suggested-names.ts';
-import { legendRefusal, legendText } from './untangle-saved.ts';
+import { legendText } from './untangle-saved.ts';
 import type { LegendChoice } from './untangle-saved.ts';
 import { word } from './words.ts';
 import { writtenIn } from './written-things.ts';
@@ -66,9 +67,6 @@ export interface ShownWrite {
   legend?: readonly LegendChoice[];
 }
 
-/** The switches a view saved as shown keeps, in the order they are written. */
-const SWITCH_KEYS = ['labels', 'hubs', 'groups', 'merge'] as const;
-
 /** A property to switch on or off for showing inline (§14): for one kind, thing or relationship type, in a view or not. */
 export interface ShowWrite {
   property: string;
@@ -97,6 +95,12 @@ export interface DiagramWrite {
   show?: string;
 }
 
+/** A filter to save for a graph too large to draw (§53): what it keeps, for the whole graph or a view. */
+export interface FilterWrite {
+  keep: FilterKeep;
+  view?: string;
+}
+
 /** One change to a graph's style. */
 export type StyleChange =
   | { nudge: NudgeWrite }
@@ -105,7 +109,8 @@ export type StyleChange =
   | { shown: ShownWrite }
   | { show: ShowWrite }
   | { arrows: ArrowsWrite }
-  | { diagram: DiagramWrite };
+  | { diagram: DiagramWrite }
+  | { filter: FilterWrite };
 
 /** What a style edit gives: the new note, or the reason nothing was written. */
 export type StyleEdit = { note: string } | { refused: string };
@@ -116,77 +121,6 @@ type Value = string | number | undefined;
 function thingText(id: string, kind: string, props: [string, Value][]): string {
   const given = props.filter((p): p is [string, string | number] => p[1] !== undefined);
   return `(${id}:${kind} {${given.map(([k, v]) => `${k}: ${typeof v === 'string' ? quoted(v) : String(v)}`).join(', ')}})`;
-}
-
-/** That `key` must be one of `among`, said as the style graph's check says it. */
-const mustBe = (key: string, among: readonly string[]) => word('styling.must-be', { key, among: orList(among) });
-
-/** That a view needs a name. */
-const noViewName = () => word('editing.style.view-name');
-
-/** Why a nudge cannot be written, or null. */
-function nudgeRefusal(n: NudgeWrite): string | null {
-  if (!(NUDGE_WORDS as readonly string[]).includes(n.word)) return word('styling.nudge.four-words');
-  if ((n.word === 'beside' || n.word === 'before') && !(n.thing && n.other))
-    return word('styling.nudge.two-things', { word: n.word });
-  if (n.word === 'group' && !(n.thing && n.group)) return word('styling.nudge.group');
-  if (n.word === 'direction' && !STYLE.directions.includes(n.direction ?? ''))
-    return word('editing.style.direction', { among: orList(STYLE.directions) });
-  return null;
-}
-
-/** Why a look cannot be written, or null: the checks the style graph would make of its words, made before writing. */
-function lookRefusal(l: LookWrite): string | null {
-  if (!l.view === !l.path) return word('editing.style.look-place');
-  if ([l.thing, l.kind, l.link].filter(Boolean).length !== 1) return word('editing.style.look-target');
-  if (!l.colour && !l.line && !l.format) return word('editing.style.look-change');
-  if (l.colour && !STYLE_HUES.includes(l.colour)) return word('styling.look.colour-unknown', { written: l.colour });
-  if (l.colour && !l.means) return word('editing.style.means', { colour: l.colour });
-  if (l.line && !(LINES as readonly string[]).includes(l.line)) return mustBe('line', LINES);
-  if (l.format && !(FORMATS as readonly string[]).includes(l.format)) return mustBe('format', FORMATS);
-  return null;
-}
-
-/** Why how a view was shown cannot be written, or null. */
-function shownRefusal(s: ShownWrite): string | null {
-  if (!s.view) return noViewName();
-  if (![s.zoom, s.x, s.y].every(Number.isFinite) || s.zoom <= 0) return word('editing.style.shown-numbers');
-  const f = s.frame;
-  if (f && ![f.x, f.y, f.width, f.height].every(Number.isFinite)) return word('editing.style.frame');
-  if (s.selected !== undefined && !s.selected) return word('editing.style.selected');
-  const wrong = SWITCH_KEYS.find(
-    (k) => s.switches?.[k] !== undefined && !(ON_OFF as readonly string[]).includes(s.switches[k] ?? ''),
-  );
-  if (wrong) return mustBe(wrong, ON_OFF);
-  return legendRefusal(s.legend ?? []);
-}
-
-/** Why a property cannot be switched on or off, or null. */
-function showRefusal(s: ShowWrite): string | null {
-  if (!s.property) return word('styling.show.property');
-  if ([s.kind, s.thing, s.type].filter(Boolean).length !== 1) return showFor();
-  if (!(INLINE as readonly string[]).includes(s.inline)) return mustBe('inline', INLINE);
-  if (s.view === '') return noViewName();
-  return null;
-}
-
-/** Why arrowheads cannot be hidden or shown so, or null. */
-function arrowsRefusal(a: ArrowsWrite): string | null {
-  if (!(ARROWHEADS as readonly string[]).includes(a.arrowheads)) return mustBe('arrowheads', ARROWHEADS);
-  if (a.type === '') return word('editing.style.type-name');
-  if (a.view === '') return noViewName();
-  return null;
-}
-
-/** Why a diagram type cannot be chosen so, or null. */
-function diagramRefusal(d: DiagramWrite): string | null {
-  if (!diagramTypeKnown(d.type)) return mustBe('type', DIAGRAM_TYPES);
-  if (d.relationship !== undefined && d.type !== 'tree') return treeOnly();
-  if (d.relationship === '') return word('editing.style.type-name');
-  const chosen = centreRefusal(d) ?? timelineRefusal(d);
-  if (chosen) return chosen;
-  if (d.view === '') return noViewName();
-  return null;
 }
 
 /** A thing to write: its kind and properties, and the values that find one already written to change in place. */
@@ -269,6 +203,20 @@ function thingFor(change: StyleChange): ToWrite | { refused: string } {
     props.push(['colour', l.colour], ['line', l.line], ['format', l.format], ['means', l.means]);
     return { kind: 'Look', props };
   }
+  if ('filter' in change) {
+    const { keep, view } = change.filter,
+      why = filterRefusal(keep) ?? (view === '' ? noViewName() : null);
+    if (why) return { refused: why };
+    // changed in place for the same view, so a graph keeps one filter
+    return {
+      kind: 'Filter',
+      props: [
+        ['keep', filterText(keep)],
+        ['view', view],
+      ],
+      match: [['view', view]],
+    };
+  }
   if ('outside' in change) {
     const { view, outside } = change.outside;
     if (!view) return { refused: noViewName() };
@@ -321,6 +269,7 @@ const PREFIX: Record<string, string> = {
   Show: 'show',
   Arrows: 'arrows',
   Diagram: 'diagram',
+  Filter: 'filter',
 };
 
 /** The block with a thing written after its last item, comma-joined, the rest of the block kept as it was. */
