@@ -122,6 +122,8 @@ export { inlineCompletion, stepOver } from './autocomplete.ts';
 export type { Inline, InlineKind } from './autocomplete.ts';
 export { isDraft, lockBlock, reverseGuess } from './lock.ts';
 export { schemaPicture } from './schema-picture.ts';
+// a graph too large to draw, as its overview of groups (§53)
+export { overviewPicture } from './overview-svg.ts';
 export { withStandardSchemas } from './standard-schemas.ts';
 export type { SchemaPicture } from './schema-picture.ts';
 export { PaneSession } from './pane.ts';

@@ -52,13 +52,15 @@ describe('never a blank pane', () => {
     assert.match(view.why ?? '', /too large/i);
   });
 
-  test('a graph over the layout limits is never handed to Graphviz', async () => {
+  test('a graph over the layout limits is never handed to Graphviz: the pane shows its overview', async () => {
     const big = `\`\`\`gql\n// graph: big\n${Array.from({ length: LAYOUT_LIMITS.things + 1 }, (_, i) => `(t${i}:Thing {name: 'T ${i}'})`).join(',\n')}\n\`\`\``;
     let ran = false;
     const view = await viewOf(big, async (dots) => ((ran = true), graphviz(dots)), PALETTES.dark);
     assert.equal(ran, false);
-    assert.match(view.why ?? '', /too large to draw/i);
-    assert.match(view.why ?? '', /things/);
+    assert.match(view.alt, /^Overview of big: [\d,]+ things in \d+ groups?\. Too large to draw/);
+    assert.match(view.svg ?? '', /^<svg [^>]*role="img"/, 'its overview, a box for each group');
+    assert.equal(view.lines[0], view.alt);
+    assert.equal(view.why, undefined, 'a picture, not text');
   });
 
   test('a note with no graph says so', async () => {

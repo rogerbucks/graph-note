@@ -2,6 +2,7 @@
 // - its first graph, read and themed by the core in the host's palette from the one table. Graphviz lays it out through
 //   node (graphviz-process.ts).
 // - always the same graph as lines of text. They stand in, with the reason, wherever no drawing can be (spec §9).
+// - a graph too large to draw as its overview: a box for each group, saying why at the top (spec §53).
 // It is never a blank pane.
 import {
   chosen,
@@ -9,12 +10,13 @@ import {
   formatCount,
   gqlBlocks,
   LAYOUT_LIMITS,
+  overviewPicture,
   PALETTES,
   readNote,
   tooLarge,
   word,
 } from '@thoughtknot/core';
-import type { Palette, Refusal } from '@thoughtknot/core';
+import type { GraphDrawing, Palette, Refusal } from '@thoughtknot/core';
 import type { Laid } from './graphviz-process.ts';
 
 /** One graph as the pane shows it: the SVG where it could be drawn, and always the same graph as lines of text. */
@@ -87,7 +89,7 @@ export async function viewOf(
     lines: [alt, ...drawing.links.map((l) => `${l.from} —${l.reading}→ ${l.to}`)],
   };
   const refused = tooLarge(drawing, LAYOUT_LIMITS);
-  if (refused) return { ...asText, why: refusalWords(refused) };
+  if (refused) return overviewView(asText, drawing, refusalWords(refused), palette);
 
   const laid = directions(drawing);
   const drawn = await lay(laid.map((d) => d.dot));
@@ -96,6 +98,25 @@ export async function viewOf(
   if (svg.length > SVG_MAX)
     return { ...asText, why: word('cc.too-large-for-pane', { most: SVG_MAX, instead: instead() }) };
   return { ...asText, svg };
+}
+
+/**
+ * A graph too large to draw, as its overview (spec §53, scale_massive_card). It is a picture of its groups, each a box
+ * sized by its things. The picture says why at its top. Past what a pane takes, it is the text, with why.
+ */
+function overviewView(asText: GraphView, drawing: GraphDrawing, why: string, palette: Palette): GraphView {
+  const { svg, caption } = overviewPicture(drawing, palette, (groups) => [
+    word('cc.overview', {
+      graph: drawing.graph,
+      things: word('cc.things', { count: drawing.boxes.length }),
+      groups: word('cc.groups', { count: groups }),
+    }),
+    why.replace(` ${word('cc.instead')}`, ''),
+    word('cc.as-overview'),
+  ]);
+  if (svg.length > SVG_MAX) return { ...asText, why };
+  const alt = caption.join(' ');
+  return { ...asText, alt, lines: [alt, ...asText.lines.slice(1)], svg };
 }
 
 /**

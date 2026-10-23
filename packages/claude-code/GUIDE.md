@@ -23,6 +23,8 @@ Whether the desktop app does, and keeps the drawing's style sheet, is checked by
   - It draws the first graph in a palette. It always gives the same graph as lines of text too.
   - The text stands in, with the reason, when the graph cannot be drawn. The reasons: over the layout limits, over
     what a pane takes, or Graphviz not run.
+  - A graph too large to draw shows its overview instead: a box for each group, sized by its things. It says why at
+    its top (core `overview-svg.ts`).
   - A note too large to read says so, never "no graph". So does an empty graph, and a graph that could not be read (its
     errors, with their note lines).
   - Also `PANE_PALETTE` (the system palette, and why) and `notePath` (/graph's argument).
