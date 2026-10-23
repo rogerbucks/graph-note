@@ -274,7 +274,7 @@ describe('mini_map: in the pane as in a card', () => {
   });
 });
 
-describe('mini_map_shape: a tall or wide drawing keeps a mini-map you can read', () => {
+describe('mini_map_shape: a tall or wide drawing keeps a mini-map of the whole of it', () => {
   /** A chain of 40 things, one under the next: a drawing many times taller than it is wide. */
   const TALL = ['// graph: tall · SOURCE']
     .concat(Array.from({ length: 40 }, (_, i) => `(n${i}:Step {title: 'Step ${i}'}),`))
@@ -288,47 +288,36 @@ describe('mini_map_shape: a tall or wide drawing keeps a mini-map you can read',
     return { top: (vy - dy) / dh, bottom: (vy + vh - dy) / dh };
   }
 
-  test('the copy is never a sliver: wide enough to read, and no taller than a set height', async () => {
+  // proves: mini_map_shape
+  test('it shows the whole drawing, never only the part on screen, and is no taller than a set height', async () => {
     const env = await load({ width: WIDTH, data: { settings: { miniMap: 'always' } } });
     try {
       const { el } = await show(env, fence(TALL));
-      const [w, h] = size(el);
-      assert.ok(w >= 40, `wide enough to read, not ${w}px`);
+      zoomIn(el, 3);
+      const [, h] = size(el);
       assert.ok(h <= 200, `no taller than a set height, not ${h}px`);
       const shows = window(el);
-      assert.ok(shows.bottom - shows.top < 0.5, 'it shows a window onto the drawing, not all of it');
-      assert.ok(shows.top < 0.001, 'with all of the drawing in view, the window is at its top');
-      // every thing is still in the copy, ready for the window to slide to
+      assert.ok(shows.top < 0.001 && shows.bottom > 0.999, 'the whole drawing, top to bottom');
       assert.equal(mapOf(el).querySelectorAll('.thoughtknot-mini-box').length, 40);
+      const f = framed(el);
+      assert.ok(f.bottom - f.top < 0.99, 'zoomed in: the outline is a part of the copy');
     } finally {
       env.uninstall();
     }
   });
 
-  test('the window slides with the view, like a scroll bar, and a drag past its edge reaches the rest', async () => {
+  // proves: mini_map_shape
+  test('a tap anywhere on it goes to that part of a tall drawing, the end among it', async () => {
     const env = await load({ width: WIDTH, data: { settings: { miniMap: 'always' } } });
     try {
       const { el } = await show(env, fence(TALL));
       zoomIn(el, 3);
-      const first = window(el);
-      // drag down past the copy's bottom edge: the view keeps going, to the end of the drawing
-      at(el, 'pointerdown', 0.5, 0.5);
-      at(el, 'pointermove', 0.5, 0.9);
-      assert.deepEqual(window(el), first, 'held still while the pointer drags');
-      at(el, 'pointermove', 0.5, 40);
-      at(el, 'pointerup', 0.5, 40);
-      const last = window(el);
-      assert.ok(last.bottom > 0.999, 'slid to the bottom of the drawing');
-      assert.ok(last.top > first.top, 'it moved down from where it was');
-      // zoomed in so the outline is smaller than the window, it stays inside it wherever the view goes
-      for (let i = 0; i < 20 && framed(el).bottom - framed(el).top >= 1; i++) zoomIn(el, 1);
-      assert.ok(framed(el).bottom - framed(el).top < 1, 'zoomed in that far');
-      for (const fy of [0.1, 0.5, 0.9]) {
-        at(el, 'pointerdown', 0.5, fy);
-        at(el, 'pointerup', 0.5, fy);
-        const f = framed(el);
-        assert.ok(f.top > -0.001 && f.bottom < 1.001, `the outline is inside the window, at ${fy}`);
-      }
+      at(el, 'pointerdown', 0.5, 0.98);
+      at(el, 'pointerup', 0.5, 0.98);
+      assert.ok(framed(el).bottom > 0.99, 'tapped near the bottom: the view is at the end of the drawing');
+      at(el, 'pointerdown', 0.5, 0.02);
+      at(el, 'pointerup', 0.5, 0.02);
+      assert.ok(framed(el).top < 0.01, 'tapped near the top: the view is at its start');
     } finally {
       env.uninstall();
     }

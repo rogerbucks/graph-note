@@ -5,9 +5,8 @@
 // Its look is the style sheet's alone (`thoughtknot-mini-*`). Pointer only: the drawing is moved from the keyboard by
 // its own keys.
 //
-// A tall or wide drawing is not squeezed to a sliver. The copy keeps a readable short side, and its long side is capped,
-// so it shows a window onto the drawing. The window slides with the view, the way a code editor's mini-map does, and
-// holds still while a pointer drags on it.
+// It always shows the whole drawing, however tall or wide (Roger, 23 Oct 2026). Its long side is capped. Its short side
+// is kept readable while the whole drawing still fits in that cap.
 import { hitAreas, word } from '@thoughtknot/core';
 import type { Drawn, HitAreas, MiniMapSetting, Size, View, Zoom } from '@thoughtknot/core';
 import type { Lifecycle } from '../lifecycle';
@@ -15,27 +14,16 @@ import { make } from './note-callouts';
 
 /** The longest side of the copy, in pixels, for a drawing of an ordinary shape. */
 const LONGEST = 120;
-/** The shortest side of the copy, in pixels: a tall or wide drawing is drawn this wide (or tall) at least. */
+/** The shortest side of the copy, in pixels, kept while the whole drawing still fits in the longest. */
 const SHORTEST = 48;
-/** The longest side of the copy for a tall or wide drawing, in pixels; the rest of it is reached by sliding. */
+/** The longest side of the copy for a tall or wide drawing, in pixels. */
 const TALLEST = 200;
 
-/** How a drawing of this size is copied: the copy's size in pixels, and how much of the drawing it shows at once. */
-export function miniScale(width: number, height: number): { width: number; height: number; shows: Size } {
-  const k = Math.max(LONGEST / Math.max(width, height), SHORTEST / Math.min(width, height));
-  const fit = (length: number) => (length * k > TALLEST ? [TALLEST, TALLEST / k] : [Math.round(length * k), length]);
-  const [w = 0, across = width] = fit(width),
-    [h = 0, down = height] = fit(height);
-  return { width: w, height: h, shows: { width: across, height: down } };
-}
-
-/** Where a window of `room` sits on a drawing from `start`, `length` long, for an outline at `at`, `size` long. It works
- * like a scroll bar. An outline at the top puts the window at the top, and one at the bottom puts it at the bottom. So
- * an outline that fits in the window is always inside it. */
-function slide(at: number, size: number, room: number, start: number, length: number): number {
-  if (room >= length) return start;
-  const travel = length - size;
-  return start + (travel > 0 ? clamp((at - start) / travel) : 0) * (length - room);
+/** The copy's size in pixels for a drawing of this size: always the whole drawing (mini_map_shape). */
+export function miniScale(width: number, height: number): Size {
+  const long = Math.max(width, height);
+  const k = Math.min(TALLEST / long, Math.max(LONGEST / long, SHORTEST / Math.min(width, height)));
+  return { width: Math.max(1, Math.round(width * k)), height: Math.max(1, Math.round(height * k)) };
 }
 
 /** Whether an event's target is the mini-map, which a press on is never a press on the drawing. */
@@ -58,8 +46,6 @@ export class MiniMap {
   private svg: SVGSVGElement | null = null;
   private frame: SVGRectElement | null = null;
   private areas: HitAreas | null = null;
-  /** The part of the drawing the copy shows, in the drawing's units: all of it unless the drawing is tall or wide. */
-  private window = { x: 0, y: 0, width: 0, height: 0 };
   /** The pointer that is dragging on it, if one is. */
   private drag: number | null = null;
   private readonly host: MiniMapHost;
@@ -86,7 +72,6 @@ export class MiniMap {
       if (this.drag !== e.pointerId) return;
       this.drag = null;
       this.el.releasePointerCapture(e.pointerId);
-      this.update(this.host.zoom().view()); // the window, held still while dragged, catches up
     };
     card.registerDomEvent(this.el, 'pointerup', end);
     card.registerDomEvent(this.el, 'pointercancel', end);
@@ -99,11 +84,10 @@ export class MiniMap {
     this.areas = hitAreas(drawn.svg);
     const { viewBox: vb, shapes } = this.areas;
     if (!vb.width || !vb.height) return;
-    const { width, height, shows } = miniScale(vb.width, vb.height);
-    this.window = { x: vb.x, y: vb.y, ...shows };
+    const { width, height } = miniScale(vb.width, vb.height);
     const svg = make('svg', {
       class: 'thoughtknot-mini-svg',
-      viewBox: `${vb.x} ${vb.y} ${this.window.width} ${this.window.height}`,
+      viewBox: `${vb.x} ${vb.y} ${vb.width} ${vb.height}`,
       width,
       height,
       'aria-hidden': 'true',
@@ -173,26 +157,18 @@ export class MiniMap {
       ['height', fh],
     ] as const)
       this.frame.setAttribute(name, String(value));
-    // the window slides with the outline, but holds still under a dragging pointer
-    if (this.drag !== null || !this.svg) return;
-    const w = this.window;
-    w.x = slide(fx, fw, w.width, vb.x, vb.width);
-    w.y = slide(fy, fh, w.height, vb.y, vb.height);
-    this.svg.setAttribute('viewBox', `${w.x} ${w.y} ${w.width} ${w.height}`);
   }
 
-  /** Puts the middle of the view where the pointer is on the copy, as far as the drawing's edges allow. A pointer
-   * dragged past the copy's edge keeps going, so the parts of a tall drawing outside the window are reached too. */
+  /** Puts the middle of the view where the pointer is on the copy, as far as the drawing's edges allow. */
   private moveTo(e: PointerEvent): void {
     const r = this.svg?.getBoundingClientRect(),
-      vb = this.areas?.viewBox,
-      w = this.window;
+      vb = this.areas?.viewBox;
     if (!r?.width || !r.height || !vb?.width || !vb.height) return;
     const zoom = this.host.zoom(),
       v = zoom.view(),
       size = this.host.size();
-    const fx = clamp((w.x + ((e.clientX - r.left) / r.width) * w.width - vb.x) / vb.width),
-      fy = clamp((w.y + ((e.clientY - r.top) / r.height) * w.height - vb.y) / vb.height);
+    const fx = clamp((e.clientX - r.left) / r.width),
+      fy = clamp((e.clientY - r.top) / r.height);
     // a drag on the drawing pans freely (pan_freely), but a tap here goes to a part of it, so it shows no empty space
     const edged = (to: number, length: number, room: number) =>
       length <= room ? (room - length) / 2 : Math.min(0, Math.max(room - length, to));
