@@ -3138,7 +3138,8 @@
         "StoredGraph": [
           "interface",
           "drawing: GraphDrawing",
-          "props: (key: string) => Readonly<Record<string, unknown>>"
+          "props: (key: string) => Readonly<Record<string, unknown>>",
+          "world: () => Graph"
         ],
         "storedGraphs": [
           "value: (ix: MeshIndex, note: string, text: string, pause: () => Promise<void>) => Promise<Map<string, StoredGraph>>"
@@ -3147,6 +3148,9 @@
           "interface",
           "text: string",
           "version: string"
+        ],
+        "storedStyle": [
+          "value: (text: string, stored: StoredGraph) => { style: StyleGraph; problems: Problem[]; }"
         ],
         "Strictness": [
           "type = 'standard' | 'forgiving' | 'simplified'"

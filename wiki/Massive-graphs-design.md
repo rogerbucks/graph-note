@@ -193,8 +193,8 @@ Step 7 comes in four parts:
    things goes into the store in about 2 seconds.
 2. **A too-big note opens as its groups** (`store-drawing.ts`), in Obsidian first. The card shows the overview from
    the store, above the note's text and why it was not read whole. The note is read a part at a time, and Obsidian
-   does its own work between parts, so it keeps answering. Drawn again, the note is not read again until its text
-   changes. Its style graph is not read yet, so a filter chosen there is only tried, not saved.
+   does its own work between parts, so it keeps answering. Drawn again, it is only read again once its text changes.
+   - It starts with the filter saved in its style block. In edit mode, a filter chosen is saved there.
 3. **An edit is written to the note's text first** (`editInParts`, in `store-drawing.ts`). Only the lines that wrote
    the thing change, so the note is never read whole. Then the store reads that note again. A store read from other
    text refuses the edit, so it never lands on the wrong lines.
