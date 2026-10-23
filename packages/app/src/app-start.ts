@@ -9,6 +9,9 @@ import { tauriStorage, type Invoke } from './tauri-files.ts';
 /** The address of the editor for a note: its path in the fragment, as the server's address carries it. */
 export const editorAddress = (path: string): string => `editor.html#token=app&note=${encodeURIComponent(path)}`;
 
+/** The project's privacy page (risk LEGAL-2), shown on the first page as an address to type or copy. */
+export const PRIVACY_PAGE = 'https://thoughtknot.app/privacy.html';
+
 /** Fills `main` with the folder's notes, each a link to the editor; or the button to pick a folder. */
 export async function startApp(doc: Document, invoke: Invoke): Promise<void> {
   // as installHost sets a host's language (core display/host.ts), without the rest of the core it would bring
@@ -18,6 +21,8 @@ export async function startApp(doc: Document, invoke: Invoke): Promise<void> {
   setLocale(language);
   setDirection(directionOf(language));
   root.dir = directionOf(language);
+  const privacy = doc.body.appendChild(Object.assign(doc.createElement('footer'), { className: 'gn-app-privacy' }));
+  privacy.textContent = word('app.privacy', { address: PRIVACY_PAGE });
   const main = doc.getElementById('gn-app') as HTMLElement;
   const say = (text: string, tag = 'p') =>
     main.appendChild(Object.assign(doc.createElement(tag), { textContent: text }));

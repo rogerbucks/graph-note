@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="{{@lang}}" dir="{{@dir}}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{privacy.title}}</title>
+    <meta name="description" content="{{privacy.description}}" />
+    <link rel="canonical" href="{{@url}}privacy.html" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="site.css" />
+    <meta name="color-scheme" content="light dark" />
+  </head>
+  <body>
+    <a class="skip" href="#content">{{page.skip}}</a>
+    <header class="top">
+      <a class="brand" href="{{@url}}"><img src="icon.svg" alt="" width="28" height="28" />ThoughtKnot</a>
+      <nav aria-label="{{nav.label}}">
+        <ul>
+          <li><a href="{{@wiki}}">{{nav.guide}}</a></li>
+          <li><a href="{{@repo}}/releases">{{nav.releases}}</a></li>
+          <li><a href="{{@repo}}">{{nav.source}}</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="content">
+      <section class="hero" aria-labelledby="privacy-title">
+        <h1 id="privacy-title">{{privacy.heading}}</h1>
+        <p class="lede">{{privacy.lede}}</p>
+      </section>
+      <section aria-labelledby="kept-title">
+        <h2 id="kept-title">{{privacy.kept.title}}</h2>
+        <ul class="said">
+          <li>{{privacy.kept.notes}}</li>
+          <li>{{privacy.kept.settings}}</li>
+          <li>{{privacy.kept.drafts}}</li>
+          <li>{{privacy.kept.nothing}}</li>
+        </ul>
+      </section>
+      <section aria-labelledby="ai-title">
+        <h2 id="ai-title">{{privacy.ai.title}}</h2>
+        <ul class="said">
+          <li>{{privacy.ai.off}}</li>
+          <li>{{privacy.ai.send}}</li>
+          <li>{{privacy.ai.where}}</li>
+          <li>{{privacy.ai.record}}</li>
+          <li>{{privacy.ai.keys}}</li>
+        </ul>
+      </section>
+      <section aria-labelledby="site-title">
+        <h2 id="site-title">{{privacy.site.title}}</h2>
+        <p>{{privacy.site.text}}</p>
+      </section>
+      <section aria-labelledby="contact-title">
+        <h2 id="contact-title">{{privacy.contact.title}}</h2>
+        <p><a href="{{@repo}}/discussions">{{privacy.contact.text}}</a></p>
+      </section>
+    </main>
+    <footer class="bottom">
+      <p>{{footer.trademark}}</p>
+      <p class="made">{{privacy.changed}}</p>
+    </footer>
+  </body>
+</html>

@@ -11,5 +11,6 @@ export const APP_SOURCE_WORDS = {
   'app.no-notes': 'This folder has no notes yet. A note is a Markdown file, ending in .md.',
   'app.cannot-read': 'Could not open the folder: {why}',
   'app.back': 'All notes',
+  'app.privacy': 'ThoughtKnot keeps no data about you. Its privacy page: {address}',
   'app.not-yet': 'This is not in the app yet. Open the note in Obsidian or the browser editor for it.',
 } as const;
