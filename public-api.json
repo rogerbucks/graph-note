@@ -1551,6 +1551,7 @@
           "graph: string",
           "n: number",
           "note: string",
+          "reading: string",
           "span: Span | null",
           "to: string",
           "toGroup: string",
@@ -3112,6 +3113,14 @@
           "author?: string | undefined",
           "before: string | null",
           "path: string"
+        ],
+        "StoredGraph": [
+          "interface",
+          "drawing: GraphDrawing",
+          "props: (key: string) => Readonly<Record<string, unknown>>"
+        ],
+        "storedGraphs": [
+          "value: (ix: MeshIndex, note: string, text: string, pause: () => Promise<void>) => Promise<Map<string, StoredGraph>>"
         ],
         "StoredNote": [
           "interface",

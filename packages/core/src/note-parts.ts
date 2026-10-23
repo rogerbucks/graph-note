@@ -195,6 +195,12 @@ export function readWhole(blocks: { text: string; line: number }[]): Map<string,
   return out;
 }
 
+/** A note's graphs read in parts, and how many items were left out as too big for any part. */
+export interface InParts {
+  graphs: Map<string, GraphRead>;
+  skipped: number;
+}
+
 /**
  * A note's graphs read one part at a time, so no reading holds the whole graph. A thing must be written before it is
  * linked (GN309). So a part is given a stand-in for each thing it names from an earlier part. Null when the note
@@ -203,7 +209,30 @@ export function readWhole(blocks: { text: string; line: number }[]): Map<string,
 export function readInParts(
   blocks: { text: string; line: number }[],
   limits: ReadLimits = READ_LIMITS,
-): { graphs: Map<string, GraphRead>; skipped: number } | null {
+): InParts | null {
+  const run = partByPart(blocks, limits);
+  let step = run.next();
+  while (!step.done) step = run.next();
+  return step.value;
+}
+
+/** As `readInParts`, waiting on `pause` between parts, so a page that reads a huge note never stops answering (§9). */
+export async function readInPartsPaced(
+  blocks: { text: string; line: number }[],
+  pause: () => Promise<void>,
+  limits: ReadLimits = READ_LIMITS,
+): Promise<InParts | null> {
+  const run = partByPart(blocks, limits);
+  let step = run.next();
+  while (!step.done) {
+    await pause();
+    step = run.next();
+  }
+  return step.value;
+}
+
+/** Reads a note's parts in turn, stopping after each. */
+function* partByPart(blocks: { text: string; line: number }[], limits: ReadLimits): Generator<void, InParts | null> {
   const cutUp = noteParts(blocks, limits);
   if (!cutUp) return null;
   const out = new Map<string, GraphRead>();
@@ -228,6 +257,7 @@ export function readInParts(
       return `${p.head}\n${lines.join(',\n')}${CLAUSE.test(p.items[0]?.text ?? '') ? '\n' : ',\n'}${body}`;
     });
     gather(out, readNote([...cutUp.context, ...texts]), pieces, standing);
+    yield;
   }
   return { graphs: out, skipped: cutUp.skipped };
 }

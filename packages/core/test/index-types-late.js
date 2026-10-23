@@ -169,6 +169,7 @@ export const TYPES_LATE = [
   'StorageCheck',
   'StorageLayer',
   'StoredChange',
+  'StoredGraph',
   'StoredNote',
   'Strictness',
   'StrictnessSettings',

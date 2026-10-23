@@ -5,7 +5,7 @@ import { sha256 } from './ai-digest.ts';
 import { dataKind } from './blocks.ts';
 import { gqlBlocks } from './fences.ts';
 import { textTooLarge } from './layout-limits.ts';
-import { namedKeys, readInParts, readWhole } from './note-parts.ts';
+import { namedKeys, readInParts, readInPartsPaced, readWhole } from './note-parts.ts';
 import type { GraphRead, PartItem } from './note-parts.ts';
 import type { Link } from './note-reading.ts';
 import { groupsOf } from './scale-groups.ts';
@@ -37,6 +37,8 @@ export interface LinkRow {
   n: number;
   from: string;
   type: string;
+  /** The words it is drawn with, from its graph's schema. */
+  reading: string;
   to: string;
   fromGroup: string;
   toGroup: string;
@@ -155,10 +157,23 @@ function spans(items: PartItem[]): { thing: (key: string) => Span | null; link: 
  */
 export function noteRows(note: string, text: string): NoteRows {
   const blocks = gqlBlocks(text);
-  const sized = blocks.map((b) => b.text).filter((t) => typeof dataKind(t) === 'string');
-  const reading = textTooLarge(sized)
-    ? (readInParts(blocks)?.graphs ?? new Map<string, GraphRead>())
-    : readWhole(blocks);
+  if (!tooLarge(blocks)) return rowsOf(note, text, readWhole(blocks));
+  return rowsOf(note, text, readInParts(blocks)?.graphs ?? new Map<string, GraphRead>());
+}
+
+/** As `noteRows`, waiting on `pause` between the parts of a note too big to read at once. */
+export async function noteRowsPaced(note: string, text: string, pause: () => Promise<void>): Promise<NoteRows> {
+  const blocks = gqlBlocks(text);
+  if (!tooLarge(blocks)) return rowsOf(note, text, readWhole(blocks));
+  return rowsOf(note, text, (await readInPartsPaced(blocks, pause))?.graphs ?? new Map<string, GraphRead>());
+}
+
+/** Whether a note's blocks are past the read limits, measured as the reader measures them. */
+const tooLarge = (blocks: { text: string }[]): boolean =>
+  textTooLarge(blocks.map((b) => b.text).filter((t) => typeof dataKind(t) === 'string')) !== null;
+
+/** The rows of a note's graphs, as read. */
+function rowsOf(note: string, text: string, reading: Map<string, GraphRead>): NoteRows {
   const out: NoteRows = { note, version: sha256(text), things: [], links: [], groups: [], between: [] };
   for (const [graph, { drawing, props, items }] of reading) {
     const grouping = groupsOf(drawing);
@@ -183,6 +198,7 @@ export function noteRows(note: string, text: string): NoteRows {
         n,
         from: l.from,
         type: l.type,
+        reading: l.reading,
         to: l.to,
         fromGroup: groupOf.get(l.from) ?? '',
         toGroup: groupOf.get(l.to) ?? '',

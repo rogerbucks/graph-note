@@ -46,6 +46,7 @@ import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-li
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
 import { showMassive } from './massive-card';
+import { overviewInParts } from './note-store';
 import type { ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
@@ -194,8 +195,10 @@ export async function renderBlock(
   const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) };
   const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
   if (reading.tooLarge) {
-    // too large to read (spec §9): nothing was read, so the text is shown, and why
-    asText(plugin, el.createDiv({ cls: 'thoughtknot' }), source, reading.tooLarge, [], target, readOnly);
+    // too large to read at once (spec §9): its overview, read in parts (§53), above its text and why
+    const card = el.createDiv({ cls: 'thoughtknot' });
+    await overviewInParts(plugin, card, { path: target.path, note: info?.text, source, graph }, reading.tooLarge);
+    asText(plugin, card, source, reading.tooLarge, [], target, readOnly);
     return;
   }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
