@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (91)
+## Open (95)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -100,6 +100,10 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| LEGAL-1 | The iPhone app names install ways Apple keeps for testers, not the public | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | hours |
+| LEGAL-2 | No privacy page the apps and the App Store can link to | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
+| LEGAL-3 | The iPhone app's encryption has no export answer yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
+| LEGAL-4 | Notarising signs in with Roger's Apple Account, not a key of its own | ●○○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 
 ## Each open risk
 
@@ -1012,6 +1016,46 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Hold each schema to the class of the note it came from. Leave out one above the ceiling, and show the reason.
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
+
+### LEGAL-1 The iPhone app names install ways Apple keeps for testers, not the public
+
+**Who found it:** Workflow designer and open-source maintainer. **Where:** `requirements/editor-requirements.md`, `docs/apple-terms.md`.
+
+**Risk:** ios_app lists ad hoc builds, an install from Xcode and SideStore beside TestFlight. Apple keeps ad hoc builds for people working with the developer, on a few listed devices. Offered to the public, they would break the program terms Roger agreed to.
+
+**Fix:** Roger chooses how the public gets the iPhone app. Then ios_app names TestFlight and the App Store for the public, and the other ways for Roger's own devices and testers only.
+
+**Check:** A person checks: ios_app and the iPhone app's guide name only TestFlight or the App Store as the public way in.
+
+### LEGAL-2 No privacy page the apps and the App Store can link to
+
+**Who found it:** AI product expert. **Where:** `site/**`, `README.md`, `packages/app/**`.
+
+**Risk:** Apple asks every app for a privacy policy: in the app, on its website or its store page. The App Store needs a link in both places. ThoughtKnot has only the Privacy and network use part of README.md.
+
+**Fix:** Add a privacy page to thoughtknot.app, made from the README's privacy part and the word catalogue. It says what is kept, where, for how long, and how to delete it, and names AI models as a place text can go. Link it from the app's About and the store listing.
+
+**Check:** test/site.test.js: the home page builds a privacy page from the catalogue and links to it; the app links to the same address.
+
+### LEGAL-3 The iPhone app's encryption has no export answer yet
+
+**Who found it:** Senior security engineer. **Where:** `requirements/editor-requirements.md`, `packages/app/**`.
+
+**Risk:** ios_app keeps notes encrypted with keys in the Keychain, and sync may add more. TestFlight, the App Store and notarising each ask about encryption, and some answers need a report in the US or France. A wrong answer can pull the app.
+
+**Fix:** Before the first TestFlight build, a lawyer confirms the export answer and any report due. Use Apple's own encryption where possible. Set ITSAppUsesNonExemptEncryption to match.
+
+**Check:** A person checks, with a lawyer, before the first TestFlight build. Then a test holds the Info.plist value.
+
+### LEGAL-4 Notarising signs in with Roger's Apple Account, not a key of its own
+
+**Who found it:** Senior security engineer. **Where:** `.github/workflows/desktop-app.yml`, `scripts/desktop-build.mjs`.
+
+**Risk:** The signing set-up notarises with Roger's Apple Account and an app-specific password. That password reaches more of his account than notarising needs. An App Store Connect API key can be limited, and revoked on its own.
+
+**Fix:** If Roger agrees, notarise with an App Store Connect API key instead: APPLE_API_ISSUER, APPLE_API_KEY and the key file. Then drop APPLE_ID and APPLE_PASSWORD.
+
+**Check:** test/desktop-build.test.js: notarising takes the API key, and the Apple Account secrets are named nowhere.
 
 ## Done or accepted (33)
 
