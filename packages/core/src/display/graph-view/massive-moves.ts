@@ -1,6 +1,7 @@
 // Moving about a graph too large to draw (editor spec §53, scale_massive_card, scale_explore_trail). Drag to move,
 // scroll to zoom. The keyboard does the same: arrows move, + and - zoom, Home shows it all again. Alt with the left or
-// right arrow steps back or forward along the trail. The view itself is massive-view.ts.
+// right arrow steps back or forward along the trail. A click that does not move chooses what is under it (a thing
+// found by search is chosen too). The view itself is massive-view.ts.
 
 /** How far a key press moves the view, in screen pixels. */
 const KEY_STEP = 48;
@@ -15,23 +16,32 @@ export interface MoveHooks {
   home(): void;
   back(): void;
   forward(): void;
+  /** Chooses what is at the screen point `sx`, `sy`. */
+  pick(sx: number, sy: number): void;
 }
+
+/** How far a press may move, in screen pixels, and still be a click rather than a drag. */
+const STILL = 4;
 
 /** Listens on `stage` for drags, scrolls and keys, and does each as `h` says. */
 export function moveControls(stage: HTMLElement, h: MoveHooks): void {
-  let dragging: { id: number; x: number; y: number } | null = null;
+  let dragging: { id: number; x: number; y: number; moved: number } | null = null;
   stage.addEventListener('pointerdown', (e) => {
-    dragging = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    dragging = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 };
     stage.setPointerCapture(e.pointerId);
   });
   stage.addEventListener('pointermove', (e) => {
     if (!dragging || dragging.id !== e.pointerId) return;
-    h.move(e.clientX - dragging.x, e.clientY - dragging.y);
-    dragging = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    const [dx, dy] = [e.clientX - dragging.x, e.clientY - dragging.y];
+    h.move(dx, dy);
+    dragging = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: dragging.moved + Math.hypot(dx, dy) };
   });
-  const letGo = () => (dragging = null);
-  stage.addEventListener('pointerup', letGo);
-  stage.addEventListener('pointercancel', letGo);
+  stage.addEventListener('pointerup', (e) => {
+    const at = stage.getBoundingClientRect();
+    if (dragging?.id === e.pointerId && dragging.moved < STILL) h.pick(e.clientX - at.left, e.clientY - at.top);
+    dragging = null;
+  });
+  stage.addEventListener('pointercancel', () => (dragging = null));
   stage.addEventListener(
     'wheel',
     (e) => {

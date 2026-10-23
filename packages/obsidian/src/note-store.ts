@@ -4,6 +4,7 @@
 // next drawn.
 import { MeshIndex, memoryBackend, storedGraphs } from '@thoughtknot/core';
 import type { Refusal } from '@thoughtknot/core';
+import { readOnlyHere } from '@thoughtknot/core/display/graph-view/placement';
 import { showStoredMassive } from './massive-card';
 import type ThoughtKnotPlugin from './main';
 
@@ -52,8 +53,11 @@ export async function overviewInParts(
   // a block shown on its own is kept apart from its note's other blocks, so they never take each other's place
   const [note, text] = at.note === undefined ? [`${at.path} · ${at.graph}`, fenced(at.source)] : [at.path, at.note];
   try {
-    const stored = (await storedGraphs(storeOf(plugin), note, text, pause)).get(at.graph);
-    if (stored) showStoredMassive(plugin, slot, at.graph, stored);
+    const ix = storeOf(plugin);
+    const stored = (await storedGraphs(ix, note, text, pause)).get(at.graph);
+    // a block shown on its own is not edited here: its note's text was not given
+    const editing = at.note === undefined ? null : { ix, path: at.path, note: at.note, graph: at.graph };
+    if (stored) showStoredMassive(plugin, slot, stored, editing && { ...editing, readOnly: readOnlyHere(card) });
     else slot.remove();
   } catch (e) {
     slot.remove(); // the text and why are still there

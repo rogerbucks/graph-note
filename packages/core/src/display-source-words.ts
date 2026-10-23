@@ -135,4 +135,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'massive.forward': 'Forward',
   'massive.kept': { one: '{count} thing kept', other: '{count} things kept' },
   'massive.filter-saved': 'Saved the filter in the style graph. The overview starts with it next time.',
+  // a thing chosen in the overview of a note too big to read at once (§53, scale_in_parts)
+  'massive.thing': 'Properties of {name}',
+  'massive.read-only': 'Switch to edit mode to change these.',
 } as const;

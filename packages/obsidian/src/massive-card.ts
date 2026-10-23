@@ -8,6 +8,8 @@ import { PALETTES, word } from '@thoughtknot/core';
 import type { GraphDrawing, NoteReading, StoredGraph, StyleGraph } from '@thoughtknot/core';
 import { massiveView } from '@thoughtknot/core/display/graph-view/massive-view';
 import type ThoughtKnotPlugin from './main';
+import { showStoredThing } from './stored-edit';
+import type { StoredThing } from './stored-edit';
 import { writeStyle } from './view-block';
 
 /** Where the overview is drawn from: the note's file and graph, its reading and style, and if the card is read only. */
@@ -37,18 +39,20 @@ export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawin
 
 /**
  * Shows a graph from a note too big to read at once as its overview, from the local store (§53, scale_in_parts). Its
- * style graph is not read with it, so it starts with nothing filtered, and a filter chosen is only tried.
+ * style graph is not read with it, so it starts with nothing filtered, and a filter chosen is only tried. A thing
+ * chosen shows its properties under it, to change in the note's text (stored-edit.ts). Without `at`, they are not shown.
  */
 export function showStoredMassive(
   plugin: ThoughtKnotPlugin,
   root: HTMLElement,
-  graph: string,
   stored: StoredGraph,
+  at: StoredThing | null,
 ): void {
   massiveView(root, stored.drawing, {
-    graph,
+    graph: stored.drawing.graph,
     palette: PALETTES.obsidian,
     layout: (part, by) => plugin.layout(part, by),
     props: stored.props,
+    ...(at ? { picked: (key: string) => showStoredThing(plugin, root, at, key, stored.props(key)) } : {}),
   });
 }
