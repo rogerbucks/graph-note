@@ -1,0 +1,61 @@
+{
+  "name": "thoughtknot-vscode",
+  "displayName": "ThoughtKnot",
+  "description": "Draw and edit the graph blocks of your Markdown notes, in a VS Code tab.",
+  "version": "0.7.1",
+  "private": true,
+  "type": "module",
+  "publisher": "thoughtknot",
+  "license": "MPL-2.0",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "main": "./dist/extension.cjs",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "thoughtknot.openGraph",
+        "title": "Open in ThoughtKnot",
+        "category": "ThoughtKnot",
+        "icon": "$(type-hierarchy)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "thoughtknot.openGraph",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "thoughtknot.openGraph",
+          "when": "resourceLangId == markdown"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "thoughtknot.openGraph",
+          "when": "editorLangId == markdown"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs"
+  },
+  "dependencies": {
+    "@thoughtknot/app": "0.7.1",
+    "@thoughtknot/claude-code": "0.7.1",
+    "@thoughtknot/core": "0.7.1"
+  },
+  "devDependencies": {
+    "@types/vscode": "1.95.0"
+  }
+}
