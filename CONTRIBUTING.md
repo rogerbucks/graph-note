@@ -980,6 +980,14 @@ These test behaviour across modules, or the repository itself, so they are named
   - The judging is tried first on made-up measures and planted faults.
   - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
     except in CI.
+- `test/pseudo-layout.test.js` — the test languages laid out in a real Chrome (editor spec §42,
+  pseudo_locales_checked; `scripts/pseudo-layout.mjs`).
+  - It runs every view of both hosts, as the reflow check does, in `en-XA` and then in `ar-XB`.
+  - No words may be cut off by their box, or drawn over other words in the same layer. A menu or sheet over the page
+    is a layer of its own.
+  - The judging is tried first on made-up measures and planted faults.
+  - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
+    except in CI.
 - `test/visual-regression.test.js` — every view's drawing against its committed reference, in the light and the dark
   theme (spec §41, visual_regression_auto).
   - The views are each view of each host that draws, the views `test/wcag.test.js` checks.
