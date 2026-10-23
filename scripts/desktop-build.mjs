@@ -111,7 +111,13 @@ function main() {
     const debs = readdirSync(DEB)
       .filter((f) => f.endsWith('.deb'))
       .map((f) => join(DEB, f));
-    gpgSign(debs, process.env.LINUX_GPG_PRIVATE_KEY, process.env.LINUX_GPG_PASSPHRASE);
+    // no .deb to sign would make the summary's "Linux: yes" false, so it fails instead
+    if (debs.length === 0) {
+      console.log(`::error::Linux keys are set, but there is no .deb in ${DEB} to sign`);
+      process.exit(1);
+    }
+    const signatures = gpgSign(debs, process.env.LINUX_GPG_PRIVATE_KEY, process.env.LINUX_GPG_PASSPHRASE);
+    console.log(`Signed ${signatures.length} .deb file(s): ${signatures.join(', ')}`);
   }
   const said = Object.entries(plan.signed)
     .filter(([kind]) => kind === os || (os === 'macOS' && kind === 'notarise'))
