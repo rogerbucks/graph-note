@@ -7,6 +7,7 @@
 import { formatCount } from './locale-formats.ts';
 import { PSEUDO_LANGUAGES, pseudoWords } from './pseudo-words.ts';
 import { SOURCE_WORDS } from './source-words.ts';
+import { TRANSLATION_FILES } from './translation-files.ts';
 
 /** The language of the source words, which every translation falls back to. */
 export const SOURCE_LANGUAGE = 'en-GB';
@@ -106,6 +107,14 @@ export function addTranslation(tag: string, translation: Catalogue): void {
   if (problems.length) throw new Error(`The translation ${tag} was not added:\n${problems.join('\n')}`);
   translations.set(canonical(tag) as string, { ...translation });
 }
+
+// each translation file that holds to the source; CI fails on one that does not (test/words-files.test.js)
+for (const [tag, file] of Object.entries(TRANSLATION_FILES))
+  if (file && typeof file === 'object' && !translationProblems(SOURCE_WORDS, file as Catalogue, tag).length)
+    translations.set(canonical(tag) as string, file as Catalogue);
+
+/** The language tag of each translation file, sorted: the languages the settings offer besides UK English. */
+export const translatedLanguages = (): string[] => Object.keys(TRANSLATION_FILES).sort();
 
 /**
  * Sets the language the words are said in: its translation, else that of its base language (`fr` for `fr-CA`), else UK

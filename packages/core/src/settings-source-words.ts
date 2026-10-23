@@ -44,6 +44,11 @@ export const SETTINGS_SOURCE_WORDS = {
   'settings.ai-class-map.name': 'Matrix classes',
   'settings.ai-class-map.sentence':
     'Classes of the matrix that go by another name than a classification, one per line as matrix name: classification. A class matched by neither is flagged and never sent.',
+  'settings.section.language': 'Language',
+  'settings.language.name': 'Language',
+  'settings.language.sentence': 'The language the editor speaks: the same as the app it runs in, or one chosen here.',
+  'settings.language.host': 'Same as the app',
+  'settings.language.en-gb': 'English (UK)',
   'settings.indent.name': 'Indent',
   'settings.indent.sentence': 'How the editor indents the later lines of a thing it writes.',
   'settings.indent.two': 'Two spaces',

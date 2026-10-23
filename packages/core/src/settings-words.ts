@@ -19,10 +19,13 @@ export function optionWordKeys(o: Option): string[] {
   return [
     `${k}.name`,
     `${k}.sentence`,
-    ...(o.choices ?? []).flatMap((c) => [
-      `${k}.${c.value.toLowerCase()}`,
-      ...(c.sentence ? [`${k}.${c.value.toLowerCase()}.sentence`] : []),
-    ]),
+    // a language's own name is said the same in every language
+    ...(o.choices ?? [])
+      .filter((c) => !c.own)
+      .flatMap((c) => [
+        `${k}.${c.value.toLowerCase()}`,
+        ...(c.sentence ? [`${k}.${c.value.toLowerCase()}.sentence`] : []),
+      ]),
   ];
 }
 
@@ -30,6 +33,7 @@ export function optionWordKeys(o: Option): string[] {
 export function optionSaid(o: Option): Option {
   const k = keyOf(o);
   const choice = (c: Choice): Choice => {
+    if (c.own) return c;
     const at = `${k}.${c.value.toLowerCase()}`;
     return {
       ...c,

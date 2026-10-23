@@ -1018,8 +1018,12 @@ The host does what needs a canvas, the file system or a dialog; the core decides
     picked for `count` by `Intl.PluralRules`.
   - `SOURCE_WORDS` is UK English.
   - A translation is checked by `translationProblems` and added by `addTranslation`.
-  - `setLanguage`, called by `installHost` with the host's `language()`, picks it, or its base language's, else UK
-    English.
+  - Each translation is a plain JSON file in `packages/core/translations/`, with a guide for translators there.
+    `node scripts/translations.mjs` lists the files in `translation-files.ts`; each that holds to the source is used.
+  - `setLanguage` picks a language's translation, or its base language's, else UK English.
+  - `installHost` calls it with the host's `language()`, and sets the locale and direction too.
+  - `chooseLanguage(setting)` in `display/language.ts` does the same from the `language` setting. `host` follows the
+    host; any other names a language. Obsidian calls it on load and when the setting changes.
   - A word a translation lacks is said in UK English, never as its key.
   - Places move their words into `source-words.ts` one at a time.
   - Some words sit apart, each spread into `SOURCE_WORDS`:
