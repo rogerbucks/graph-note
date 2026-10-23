@@ -124,5 +124,9 @@ function suggest(
 }
 
 /** The note with the suggestion written after its blocks as a change set, where the review lens takes it up. */
-export const withSuggestion = (note: string, s: TypeSuggestion): string =>
-  `${note.replace(/\n*$/, '\n')}\n\`\`\`gql\n${changeSetText(s.proposal)}\n\`\`\`\n`;
+export function withSuggestion(note: string, s: TypeSuggestion): string {
+  // the note's last newlines cut by a count, never by a pattern that runs slow on a long run of them
+  let end = note.length;
+  while (end > 0 && note[end - 1] === '\n') end--;
+  return `${note.slice(0, end)}\n\n\`\`\`gql\n${changeSetText(s.proposal)}\n\`\`\`\n`;
+}

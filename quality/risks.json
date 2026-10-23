@@ -3883,7 +3883,8 @@
         "packages/core/src/theme.ts:70",
         "packages/core/src/view-profile.ts:104",
         "packages/graph-spec/src/rules/lenses.js:11",
-        "packages/graph-spec/src/rules/lenses.js:18"
+        "packages/graph-spec/src/rules/lenses.js:18",
+        "packages/core/src/type-suggestion.ts:128"
       ],
       "likelihood": "low",
       "impact": "high",
