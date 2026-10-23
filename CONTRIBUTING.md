@@ -599,6 +599,8 @@ These test behaviour across modules, or the repository itself, so they are named
   marks as Apple's. The app id stays under thoughtknot.app, and no workflow holds an App Store key.
 - `test/working-group.test.js` — `docs/agents/ROLES.md` gives Roger, Claude, Antigravity and graph-note their work,
   labels and branches, and repeats the rules each keeps. `AGENTS.md` points to it.
+- `test/desktop-build.test.js` — the desktop installers are signed only where every key is set. A pull request build
+  never gets a key (editor spec §41, app_signed).
 - `test/device-check-notes.test.js` — the device checklist numbers every item (editor spec §3, tried first in a test
   vault).
   - The test vault holds one note for each item after Before in `Device checks/`. The note's checklist line is the

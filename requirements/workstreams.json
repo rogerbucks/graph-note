@@ -627,6 +627,7 @@
     "size": "L",
     "requirements": [
       "standalone_app",
+      "app_signed",
       "apple_terms"
     ]
   },

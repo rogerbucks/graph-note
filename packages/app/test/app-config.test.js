@@ -73,15 +73,17 @@ test('the one advisory the dependency review allows is for glib 0.18, and goes o
   );
 });
 
-test('CI builds an installer for each system, unsigned, and none on Linux that carries its own WebKitGTK', () => {
+test('CI builds an installer for each system, through the signing script, and none on Linux that carries WebKitGTK', () => {
   // a .dmg on macOS, an NSIS installer on Windows and a .deb on Linux. An AppImage carries WebKitGTK (LGPL), so it
   // waits for the licence check that the desktop libraries' allowance names (licences/bundled.json).
   assert.equal(config.bundle.active, true);
   assert.deepEqual([...config.bundle.targets].sort(), ['app', 'deb', 'dmg', 'nsis']);
   const workflow = readFileSync(new URL('../../../.github/workflows/desktop-app.yml', import.meta.url), 'utf8');
   assert.match(workflow, /cargo install tauri-cli --locked --version \d+\.\d+\.\d+\n/, 'the Tauri CLI is pinned');
-  assert.match(workflow, /run: cargo tauri build --ci\n/);
+  // scripts/desktop-build.mjs runs `cargo tauri build --ci`, adding the keys only off pull requests (app_signed)
+  assert.match(workflow, /run: node scripts\/desktop-build\.mjs\n/);
   for (const kind of ['dmg/\\*\\.dmg', 'nsis/\\*\\.exe', 'deb/\\*\\.deb'])
     assert.match(workflow, new RegExp(`target/release/bundle/${kind}\\n`), `the ${kind} installer is kept`);
-  assert.doesNotMatch(workflow, /appimage|TAURI_SIGNING|APPLE_CERTIFICATE|signCommand/i, 'unsigned, and no AppImage');
+  assert.doesNotMatch(workflow, /appimage/i, 'no AppImage');
+  assert.doesNotMatch(workflow + JSON.stringify(config), /signCommand|AZURE_/, 'Windows unsigned (Roger, 23 Oct 2026)');
 });

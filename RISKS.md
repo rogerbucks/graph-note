@@ -102,7 +102,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | LEGAL-2 | No privacy page the apps and the App Store can link to | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | LEGAL-3 | The iPhone app's encryption has no export answer yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
-| LEGAL-4 | Notarising signs in with Roger's Apple Account, not a key of its own | ●○○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
+| SEC-17 | The desktop app's signing keys sit in the build step on main | ●○○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 
 ## Each open risk
 
@@ -1036,17 +1036,17 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** A person checks, with a lawyer, before the first TestFlight build. Then a test holds the Info.plist value.
 
-### LEGAL-4 Notarising signs in with Roger's Apple Account, not a key of its own
+### SEC-17 The desktop app's signing keys sit in the build step on main
 
 **Who found it:** Senior security engineer. **Where:** `.github/workflows/desktop-app.yml`, `scripts/desktop-build.mjs`.
 
-**Risk:** The signing set-up notarises with Roger's Apple Account and an app-specific password. That password reaches more of his account than notarising needs. An App Store Connect API key can be limited, and revoked on its own.
+**Risk:** On a push to main the desktop build step holds the Apple certificate and the Linux GPG key, because Tauri signs while it builds. A crate's build script runs in that step and could read them. A pull request build never gets them.
 
-**Fix:** Roger chose the API key (23 Oct 2026). Notarise with an App Store Connect API key: APPLE_API_ISSUER, APPLE_API_KEY and the key file. Then drop APPLE_ID and APPLE_PASSWORD.
+**Fix:** Sign the Linux .deb in a job of its own, which downloads the built file and runs no repository build. Give the macOS keys to the bundling step alone, after the Rust build ends in a step without them.
 
-**Check:** test/desktop-build.test.js: notarising takes the API key, and the Apple Account secrets are named nowhere.
+**Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (34)
+## Done or accepted (35)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1084,3 +1084,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-15 | Page code built from text without escaping | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
 | SEC-16 | The desktop app's Linux build carries glib 0.18, with a known unsoundness | accepted | Roger, 22 Oct 2026 (decision card on PR #905): No code in the app's dependencies calls VariantStrIter. It is the Linux build only. No fixed glib works with Tauri yet. Undo when Tauri supports GTK 4. |
 | LEGAL-1 | The iPhone app names install ways Apple keeps for testers, not the public | done | #1057 |
+| LEGAL-4 | Notarising signs in with Roger's Apple Account, not a key of its own | done | #1054; kept out by `test/desktop-build.test.js` |
