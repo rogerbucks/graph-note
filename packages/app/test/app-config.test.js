@@ -87,3 +87,11 @@ test('CI builds an installer for each system, through the signing script, and no
   assert.doesNotMatch(workflow, /appimage/i, 'no AppImage');
   assert.doesNotMatch(workflow + JSON.stringify(config), /signCommand|AZURE_/, 'Windows unsigned (Roger, 23 Oct 2026)');
 });
+
+test('the app is built before its Rust tests, so no packed window file is half-written', () => {
+  const workflow = readFileSync(new URL('../../../.github/workflows/desktop-app.yml', import.meta.url), 'utf8');
+  const build = workflow.indexOf('run: cargo build --locked'),
+    rust = workflow.indexOf('run: cargo test --locked');
+  assert.ok(build > 0 && rust > 0, 'both steps are there');
+  assert.ok(build < rust, 'the build comes first: cargo test compiles the library twice at once');
+});
