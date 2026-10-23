@@ -16,10 +16,15 @@ name: Nightly
 # release: the build status and the wiki are woken only by a stable one (types: [released]) and leave pre-releases out.
 # `drafts` runs every night, moved or not, and fails while a stable release has waited as a draft for over a day, so its
 # owner hears of it (risk OPS-3; RELEASING.md, "Cutting a release").
+#
+# A wave's end also builds one (Roger, 23 Oct 2026), through wave-nightly.yml, which calls this file. That run always
+# builds, as one by hand does. A second build on the same day takes the next letter, as the version script says.
 on:
   schedule:
     - cron: '0 16 * * *'
   workflow_dispatch:
+  # Called by wave-nightly.yml when a pull request labelled wave-done merges, so a wave can be tested the day it ends.
+  workflow_call:
 
 permissions:
   contents: read
@@ -207,6 +212,8 @@ jobs:
   # GitHub lists draft releases only to a token that may write contents, so this job has that and nothing else. Like
   # publish, it runs no code of the repository: no checkout, no install, no Node, only gh.
   drafts:
+    # the nightly's own check; a wave-end build leaves it to the night
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

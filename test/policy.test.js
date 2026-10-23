@@ -239,7 +239,7 @@ describe('GitHub Actions', () => {
     }
   });
 
-  test('only fifteen jobs may write: the release, the nightly and its draft check, the lock, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
+  test('only sixteen jobs may write: the release, the nightly, its draft check and its wave-end call, the lock, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
@@ -267,7 +267,10 @@ describe('GitHub Actions', () => {
         // the wiki, its review issue, the nightly and the home page run no repository code (their own tests say so)
         const wiki = only('/wiki.yml', 'publish', 'contents: write') || only('/wiki.yml', 'report', 'issues: write');
         const nightly =
-          only('/nightly.yml', 'publish', 'contents: write') || only('/nightly.yml', 'drafts', 'contents: write');
+          only('/nightly.yml', 'publish', 'contents: write') ||
+          only('/nightly.yml', 'drafts', 'contents: write') ||
+          // a wave's end calls the nightly, handing it the most its own jobs ask for (test/wave-nightly-workflow.test.js)
+          only('/wave-nightly.yml', 'wave-nightly', 'contents: write,security-events: read');
         // the risk panel's issue, the security issue and Claude's security branches: security-workflow.test.js
         const panel = only('/risk-panel.yml', 'report', 'issues: write');
         const pages = only('/pages.yml', 'publish', 'id-token: write,pages: write');
@@ -413,7 +416,7 @@ describe('GitHub Actions', () => {
         d.startsWith('@thoughtknot/'),
       );
     const bundled = new Set();
-    for (const todo = deps('@thoughtknot/obsidian'); todo.length;) {
+    for (const todo = deps('@thoughtknot/obsidian'); todo.length; ) {
       const name = todo.pop();
       if (!bundled.has(name)) {
         bundled.add(name);

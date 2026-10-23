@@ -1,0 +1,52 @@
+name: Wave nightly
+
+# A build for testing as soon as a wave ends, instead of at the next 16:00 UTC nightly (Roger, 23 Oct 2026).
+# The trigger is a label. The pull request that finishes a wave carries `wave-done` and, once it merges to main, this
+# workflow runs the nightly (nightly.yml) on it: the same suite, the same pre-release for BRAT, the same last-seven
+# rule. A label is simple and sure; it needs no reading of requirements/waves.json, and a person or a thread can add it
+# to any pull request that closes a wave. A second build on the same day takes the next letter, so it never clashes.
+# Only a pull request from this repository counts; a fork's merge never builds.
+#
+# First a gate (scripts/wave-gate.mjs) reads the project board, "ThoughtKnot requirements". The pull request names its
+# wave on a line of its own, `Wave: 9`. Every item of that wave must be Done and proved, or nothing is built and the
+# run fails, listing the items still open in its log and summary. The board follows a merge by a few minutes, so the
+# gate waits up to 15 minutes for it to settle. The gate runs main's own code, with only the project token.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    if: >-
+      github.event.pull_request.merged == true
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && contains(github.event.pull_request.labels.*.name, 'wave-done')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Every item of the wave is Done and proved on the board
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: node scripts/wave-gate.mjs --wait-minutes 15
+
+  wave-nightly:
+    needs: gate
+    # the most the nightly's own jobs ask for: publish writes contents, security reads alerts
+    permissions:
+      contents: write
+      security-events: read
+    uses: ./.github/workflows/nightly.yml
+    secrets: inherit
