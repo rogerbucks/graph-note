@@ -627,7 +627,8 @@
     "size": "L",
     "requirements": [
       "standalone_app",
-      "app_signed"
+      "app_signed",
+      "apple_terms"
     ]
   },
   "H2": {

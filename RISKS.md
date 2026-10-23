@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (92)
+## Open (94)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -100,6 +100,8 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-11 | /graph checks the note, then reads it again to draw | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-12 | The gate settings and the confirmed digest travel in the environment | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
+| LEGAL-2 | No privacy page the apps and the App Store can link to | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
+| LEGAL-3 | The iPhone app's encryption has no export answer yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 | SEC-17 | The desktop app's signing keys sit in the build step on main | ●○○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 
 ## Each open risk
@@ -1014,6 +1016,26 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** packages/core/test/ai-scope.test.js: a schema from a note above the ceiling is left out and named.
 
+### LEGAL-2 No privacy page the apps and the App Store can link to
+
+**Who found it:** AI product expert. **Where:** `site/**`, `README.md`, `packages/app/**`.
+
+**Risk:** Apple asks every app for a privacy policy: in the app, on its website or its store page. The App Store needs a link in both places. ThoughtKnot has only the Privacy and network use part of README.md.
+
+**Fix:** Add a privacy page to thoughtknot.app, made from the README's privacy part and the word catalogue. It says what is kept, where, for how long, and how to delete it, and names AI models as a place text can go. Link it from the app's About and the store listing.
+
+**Check:** test/site.test.js: the home page builds a privacy page from the catalogue. The app links to it.
+
+### LEGAL-3 The iPhone app's encryption has no export answer yet
+
+**Who found it:** Senior security engineer. **Where:** `requirements/editor-requirements.md`, `packages/app/**`.
+
+**Risk:** ios_app keeps notes encrypted with keys in the Keychain, and sync may add more. TestFlight, the App Store and notarising each ask about encryption, and some answers need a report in the US or France. A wrong answer can pull the app.
+
+**Fix:** Before the first TestFlight build, a lawyer confirms the export answer and any report due. Use Apple's own encryption where possible. Set ITSAppUsesNonExemptEncryption to match.
+
+**Check:** A person checks, with a lawyer, before the first TestFlight build. Then a test holds the Info.plist value.
+
 ### SEC-17 The desktop app's signing keys sit in the build step on main
 
 **Who found it:** Senior security engineer. **Where:** `.github/workflows/desktop-app.yml`, `scripts/desktop-build.mjs`.
@@ -1024,7 +1046,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (33)
+## Done or accepted (35)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1061,3 +1083,5 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | SEC-14 | A name in a graph could reach an object's prototype | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
 | SEC-15 | Page code built from text without escaping | done | #901; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
 | SEC-16 | The desktop app's Linux build carries glib 0.18, with a known unsoundness | accepted | Roger, 22 Oct 2026 (decision card on PR #905): No code in the app's dependencies calls VariantStrIter. It is the Linux build only. No fixed glib works with Tauri yet. Undo when Tauri supports GTK 4. |
+| LEGAL-1 | The iPhone app names install ways Apple keeps for testers, not the public | done | #1057 |
+| LEGAL-4 | Notarising signs in with Roger's Apple Account, not a key of its own | done | #1054; kept out by `test/desktop-build.test.js` |

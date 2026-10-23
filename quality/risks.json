@@ -4070,6 +4070,126 @@
       "accepted_reason": "No code in the app's dependencies calls VariantStrIter. It is the Linux build only. No fixed glib works with Tauri yet. Undo when Tauri supports GTK 4."
     },
     {
+      "id": "LEGAL-1",
+      "role": "Workflow designer and open-source maintainer",
+      "area": "licence",
+      "title": "The iPhone app names install ways Apple keeps for testers, not the public",
+      "risk": "ios_app lists ad hoc builds, an install from Xcode and SideStore beside TestFlight. Apple keeps ad hoc builds for people working with the developer, on a few listed devices. Offered to the public, they would break the program terms Roger agreed to.",
+      "evidence": [
+        "requirements/editor-requirements.md",
+        "docs/apple-terms.md",
+        "https://developer.apple.com/support/terms/"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Roger chooses how the public gets the iPhone app. Then ios_app names TestFlight and the App Store for the public, and the other ways for Roger's own devices and testers only.",
+      "check": "A person checks: ios_app and the iPhone app's guide name only TestFlight or the App Store as the public way in.",
+      "paths": [
+        "requirements/editor-requirements.md",
+        "docs/apple-terms.md"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-23",
+      "reviewed": {
+        "date": "2026-10-23",
+        "commit": "d3e541fab5245380c8b48a7b4a542e54217fc135"
+      },
+      "status": "done",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS",
+      "done_in": "#1057"
+    },
+    {
+      "id": "LEGAL-2",
+      "role": "AI product expert",
+      "area": "privacy",
+      "title": "No privacy page the apps and the App Store can link to",
+      "risk": "Apple asks every app for a privacy policy: in the app, on its website or its store page. The App Store needs a link in both places. ThoughtKnot has only the Privacy and network use part of README.md.",
+      "evidence": [
+        "README.md",
+        "site/index.html",
+        "docs/apple-terms.md"
+      ],
+      "likelihood": "high",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Add a privacy page to thoughtknot.app, made from the README's privacy part and the word catalogue. It says what is kept, where, for how long, and how to delete it, and names AI models as a place text can go. Link it from the app's About and the store listing.",
+      "check": "test/site.test.js: the home page builds a privacy page from the catalogue. The app links to it.",
+      "paths": [
+        "site/**",
+        "README.md",
+        "packages/app/**"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-23",
+      "reviewed": {
+        "date": "2026-10-23",
+        "commit": "d3e541fab5245380c8b48a7b4a542e54217fc135"
+      },
+      "status": "open",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+    },
+    {
+      "id": "LEGAL-3",
+      "role": "Senior security engineer",
+      "area": "release",
+      "title": "The iPhone app's encryption has no export answer yet",
+      "risk": "ios_app keeps notes encrypted with keys in the Keychain, and sync may add more. TestFlight, the App Store and notarising each ask about encryption, and some answers need a report in the US or France. A wrong answer can pull the app.",
+      "evidence": [
+        "requirements/editor-requirements.md",
+        "docs/apple-terms.md"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Before the first TestFlight build, a lawyer confirms the export answer and any report due. Use Apple's own encryption where possible. Set ITSAppUsesNonExemptEncryption to match.",
+      "check": "A person checks, with a lawyer, before the first TestFlight build. Then a test holds the Info.plist value.",
+      "paths": [
+        "requirements/editor-requirements.md",
+        "packages/app/**"
+      ],
+      "effort": "days",
+      "raised": "2026-10-23",
+      "reviewed": {
+        "date": "2026-10-23",
+        "commit": "d3e541fab5245380c8b48a7b4a542e54217fc135"
+      },
+      "status": "open",
+      "wave": "Wave 14 · Slice 9 web, corporate and iOS"
+    },
+    {
+      "id": "LEGAL-4",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "Notarising signs in with Roger's Apple Account, not a key of its own",
+      "risk": "The signing set-up notarises with Roger's Apple Account and an app-specific password. That password reaches more of his account than notarising needs. An App Store Connect API key can be limited, and revoked on its own.",
+      "evidence": [
+        "docs/apple-terms.md",
+        "scripts/desktop-build.mjs"
+      ],
+      "likelihood": "low",
+      "impact": "medium",
+      "decision": "fix-later",
+      "fix": "Roger chose the API key (23 Oct 2026). Notarise with an App Store Connect API key: APPLE_API_ISSUER, APPLE_API_KEY and the key file. Then drop APPLE_ID and APPLE_PASSWORD.",
+      "check": "test/desktop-build.test.js: notarising takes the API key, and the Apple Account secrets are named nowhere.",
+      "paths": [
+        ".github/workflows/desktop-app.yml",
+        "scripts/desktop-build.mjs"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-23",
+      "reviewed": {
+        "date": "2026-10-23",
+        "commit": "d3e541fab5245380c8b48a7b4a542e54217fc135"
+      },
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1054",
+      "prevented_by": [
+        "test/desktop-build.test.js"
+      ]
+    },
+    {
       "id": "SEC-17",
       "role": "Senior security engineer",
       "area": "supply-chain",

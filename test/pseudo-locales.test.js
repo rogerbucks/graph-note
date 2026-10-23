@@ -8,8 +8,8 @@
 // longer word is held in the style sheets. No box that holds words has a fixed width. None clips or keeps a line from
 // wrapping unless listed here with why.
 //
-// Not done here, because jsdom has no layout: whether a longer word overlaps another part as drawn. The release
-// walk-through (RELEASING.md, AX-20 and AX-21) covers that by hand, with the browser page in the test languages.
+// Not done here, because jsdom has no layout: whether a longer word is cut off or drawn over another as laid out.
+// test/pseudo-layout.test.js checks that in a real browser, in every view of both hosts.
 import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { build, speakIn } from '../packages/obsidian/test/host/load-plugin.js';

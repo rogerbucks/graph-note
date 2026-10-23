@@ -96,7 +96,7 @@ describe('the desktop app, run for real: open a folder, draw a note, edit it, of
       if (Date.now() > end) {
         // what the window showed instead, so a failure in CI says where the app stopped
         const seen = await run(
-          "return location.href + ' (' + document.readyState + ', ' + navigator.language + ', tauri ' + typeof window.__TAURI__ + '): ' + (document.body?.innerText ?? '').replace(/\\s+/g, ' ').slice(0, 300)",
+          "return location.href + ' (' + document.readyState + ', ' + navigator.language + ', tauri ' + typeof window.__TAURI__ + ', page script failures ' + (document.documentElement.dataset.pageFailures ?? 0) + '): ' + (document.body?.innerText ?? '').replace(/\\s+/g, ' ').slice(0, 300)",
         ).catch((e) => `nothing: ${e.message}`);
         // a module that failed to load or run gives its error again when imported once more. Fetched again, it says
         // what the window was given for it: its status, type, size and first letters.

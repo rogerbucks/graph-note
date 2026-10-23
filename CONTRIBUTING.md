@@ -592,6 +592,11 @@ These test behaviour across modules, or the repository itself, so they are named
   the name for the original. CONTRIBUTING.md and the pull request template ask for every commit to be signed off
   (editor spec §13, community_files). `SECURITY.md` names the supported versions, a private way to report and a
   reply time (security_policy).
+### Community rules, Apple's terms and the working group
+
+- `test/apple-terms.test.js` — the rules we keep for Apple's developer terms (spec §41, apple_terms;
+  `docs/apple-terms.md`). Nothing people read says Apple checked or endorses ThoughtKnot. `TRADEMARKS.md` names Apple's
+  marks as Apple's. The app id stays under thoughtknot.app, and no workflow holds an App Store key.
 - `test/working-group.test.js` — `docs/agents/ROLES.md` gives Roger, Claude, Antigravity and graph-note their work,
   labels and branches, and repeats the rules each keeps. `AGENTS.md` points to it.
 - `test/desktop-build.test.js` — the desktop installers are signed only where every key is set. A pull request build
@@ -979,6 +984,14 @@ These test behaviour across modules, or the repository itself, so they are named
   - Each view is run as wide as a desktop and at 320 CSS pixels. Every control is 24 by 24 at least. The drawing's
     boxes and a link in a sentence are aside.
   - There is no sideways scroll at 320. Every control seen wide is still there and in reach.
+  - The judging is tried first on made-up measures and planted faults.
+  - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
+    except in CI.
+- `test/pseudo-layout.test.js` — the test languages laid out in a real Chrome (editor spec §42,
+  pseudo_locales_checked; `scripts/pseudo-layout.mjs`).
+  - It runs every view of both hosts, as the reflow check does, in `en-XA` and then in `ar-XB`.
+  - No words may be cut off by their box, or drawn over other words in the same layer. A menu or sheet over the page
+    is a layer of its own.
   - The judging is tried first on made-up measures and planted faults.
   - Chrome is `THOUGHTKNOT_CHROME` or the first on the PATH (`scripts/chrome.mjs`). With none it skips in one line,
     except in CI.

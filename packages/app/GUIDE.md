@@ -35,6 +35,7 @@ Rust (src-tauri/)
   `tauriSaveNew`, which writes an export. `invoke` is handed in, so nothing here imports Tauri.
 - `app-start.ts`: the first page. Pick a folder with the system's dialog, then each note is a link into the editor.
 - `app-editor.ts`: runs before the editor's page. It installs `appFetch` and adds a link back to the list.
+- `page-retry.ts`: loads the page script again, under a fresh address, when the window failed to load it.
 
 ## The Rust, `src-tauri/`
 

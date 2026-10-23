@@ -150,7 +150,7 @@ export const PAGE_VIEWS = [
 ];
 
 /** Opens the page at `link` and waits until it has drawn the note, and the drawing has settled. */
-async function openPage(browser, link) {
+export async function openPage(browser, link) {
   // by way of a blank page: the same address again would only move to its fragment, and load nothing afresh
   await browser.send('Page.navigate', { url: 'about:blank' });
   await browser.send('Page.navigate', { url: link });
