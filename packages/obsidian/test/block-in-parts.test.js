@@ -105,3 +105,30 @@ test('in reading view a thing’s properties are shown, but cannot be changed', 
     env.uninstall();
   }
 });
+
+test('a huge note starts with the filter saved in its style block, and a filter chosen in edit mode is saved', async () => {
+  const source = huge();
+  const style = ['```gql', '// graph: big_style · STYLE big', "(filter_1:Filter {keep: 'Kind: Place'})", '```', ''];
+  const note = ['# Big', '', '```gql', source, '```', '', ...style].join('\n');
+  const env = await load({ files: { [PATH]: note } });
+  try {
+    const el = env.doc.body.createDiv({ cls: 'markdown-source-view' }).createDiv({ cls: 'block-language-gql' });
+    await env.state.processors.get('gql')(source, el, fakeContext(note, 2));
+    await until(() => !!el.querySelector('.thoughtknot-massive-facet'));
+    const boxes = () => [...el.querySelectorAll('.thoughtknot-massive-facet input')];
+    const ticked = boxes().filter((b) => b.checked);
+    assert.deepEqual(
+      ticked.map((b) => b.parentElement.querySelector('span').textContent),
+      ['Place'],
+      'the saved filter',
+    );
+    const person = boxes().find((b) => b.parentElement.querySelector('span').textContent === 'Person');
+    person.checked = true;
+    person.dispatch('change');
+    await until(() => env.state.files.get(PATH) !== note);
+    assert.match(env.state.files.get(PATH), /\(filter_1:Filter \{keep: 'Kind: Place, Person'\}\)/);
+  } finally {
+    env.plugin.onunload();
+    env.uninstall();
+  }
+});
