@@ -44,6 +44,15 @@ describe('a pattern that ran slow on text made for it now runs in time with its 
     assert.equal(lensBuckets(null, rule), null);
   });
 
+  test('a lens rule whose condition holds a long run of tabs, and one that joins two tests by AND', LIMIT, () => {
+    const tabs = `MATCH (n:T) RETURN n.id AS id, CASE WHEN n.a = 1${'\t'.repeat(50000)}x THEN 'b' ELSE 'x' END AS grp`;
+    assert.equal(lensBuckets(null, tabs), null);
+    const props = { k: { a: 1, b: 2 }, m: { a: 1, b: 3 } };
+    const g = { labelled: () => Object.keys(props), p: (i) => props[i] };
+    const rule = "MATCH (n:T) RETURN n.id AS id, CASE WHEN n.a = 1 AND n.b = 2 THEN 'both' ELSE 'x' END AS grp";
+    assert.deepEqual(lensBuckets(g, rule), { k: 'both', m: 'x' });
+  });
+
   test('the cuts that took the place of the slow patterns', LIMIT, () => {
     assert.equal(trimChars(`${'-'.repeat(60000)}x`, '-.'), 'x');
     assert.equal(cutAtFirst(`${'//'.repeat(60000)}`, '//'), '');
