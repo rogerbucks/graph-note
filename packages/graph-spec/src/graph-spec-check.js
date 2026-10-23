@@ -58,6 +58,7 @@ const { clustersOf } = require('./clusters/clusters.js');
 const { centroidId, centroidsOf } = require('./clusters/centroids.js');
 const { clusterCycles, cycleView } = require('./clusters/cycles.js');
 const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
+const { asAt, lensAsAt } = require('./mesh/as-at.js');
 
 // The API, its names in the order they have always had; test/graph-spec-check-api.test.mjs holds the list.
 module.exports = {
@@ -142,4 +143,6 @@ module.exports = {
   certaintyOf,
   byCertainty,
   meshJoin,
+  asAt,
+  lensAsAt,
 };

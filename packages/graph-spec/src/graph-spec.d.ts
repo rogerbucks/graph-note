@@ -129,6 +129,8 @@ declare namespace GraphSpecCheck {
   function quote(s: string): string;
   /** A text's tokens: [kind, the text as written, line, the value, column]. Throws ProfileError. */
   function tokens(text: string): [string, string, number, string, number][];
+  /** A value as canonical JSON (RFC 8785), a date or time as its text. */
+  function jcs(value: unknown): string;
   /** The first sixteen hexadecimal digits of the SHA-256 of an object in canonical JSON (RFC 8785). */
   function hash16(value: unknown): string;
   /** A hash written with its algorithm's name: `sha-256-64:` for 16 digits, `sha-256:` for 64 (editor spec §51). */
@@ -343,6 +345,11 @@ declare namespace GraphSpecCheck {
     /** Pairs of documents the user has said are one domain. */
     sameDomain?: [string, string][];
   }): MeshJoin;
+
+  /** A graph as at a date on one kind of time: when it was recorded, or when it held in the world (editor spec §29). */
+  function asAt(graph: Graph, axis: 'recorded' | 'real', date: string): Graph;
+  /** A lens run on a graph as at a date: each thing's bucket as it was then, or null for a rule it cannot run. */
+  function lensAsAt(graph: Graph, rule: string, axis: 'recorded' | 'real', date: string): Record<string, string> | null;
 
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];

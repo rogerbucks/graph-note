@@ -369,3 +369,18 @@ export type { Change, TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';
 export type { Landing, PlacedBox, Side, WrittenNudge } from './box-drag.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
+export { MeshIndex, memoryBackend, noteRows, PAGE_MOST, sqliteBackend } from './mesh-index.ts';
+export type {
+  BetweenRow,
+  Found as MeshFound,
+  GroupRow,
+  LinkRow,
+  MeshBackend,
+  NoteRows,
+  Page,
+  Span as SourceSpan,
+  SqlEngine,
+  ThingRow,
+} from './mesh-index.ts';
+export { MeshHistory } from './mesh-history.ts';
+export type { LogEntry, LogKind } from './mesh-history.ts';

@@ -106,6 +106,19 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - There is none for a text that is not that block as read, so a fix never writes blind.
 - `completeness.ts` — the completeness report behind the problems badge.
 
+#### The local store
+
+- `mesh-index.ts` — the graph mesh's local store (editor spec §27, mesh_index_rebuilds; Q-05). It is derived from the
+  notes' text and can always be built again from it. Its reads are the ones a huge graph is drawn in parts from:
+  `groups`, `inGroups`, `sourceSpan`, `version` and `find`.
+- `mesh-index-rows.ts` — the rows one note gives the store: things, links and groups, each with its note lines.
+- `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
+  host hands in (sql.js). No server and no JVM (embedded_backends).
+
+- `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
+  change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
+  source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
+
 #### Deferred things
 
 - `deferred.ts` — deferred things (§5, §8).

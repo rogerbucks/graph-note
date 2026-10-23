@@ -99,6 +99,9 @@ const NAMES = [
   'certaintyOf',
   'byCertainty',
   'meshJoin',
+  // a graph as at a date on recorded or real-world time (editor spec §29)
+  'asAt',
+  'lensAsAt',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

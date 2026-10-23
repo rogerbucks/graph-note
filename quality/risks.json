@@ -3879,7 +3879,8 @@
         "packages/core/src/hits.ts:57",
         "packages/core/src/theme.ts:70",
         "packages/core/src/view-profile.ts:104",
-        "packages/graph-spec/src/rules/lenses.js:11"
+        "packages/graph-spec/src/rules/lenses.js:11",
+        "packages/graph-spec/src/rules/lenses.js:18"
       ],
       "likelihood": "low",
       "impact": "high",
