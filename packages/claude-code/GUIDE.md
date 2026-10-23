@@ -459,6 +459,8 @@ of any other (cc_offline, cc_no_remote), and the server's policy is not loosened
   - It has the drawing with its details, the text field, problems, fixes, suggestions, Undo, Redo and Lock the graph.
     It also has the picker of the note's graph blocks and the draft banner.
   - `PageNote` is its note, the layer's `EditorNote` over the editor server's store.
+  - A graph too large to lay out is its overview, in the page's colours (scale_massive_card). The desktop app shows it
+    the same way. A filter chosen on it is written into the note's style block (scale_filter_live).
   - The core's `PaneSession` makes every write, through `EditorSession`, from the note as the page last had it. Each is
     sent whole against that version and one at a time. So the server refuses one made over a change the page has not
     seen.

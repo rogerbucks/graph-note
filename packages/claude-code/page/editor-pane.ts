@@ -7,20 +7,34 @@
 // - the drawing beside it, with its details and its quick fixes.
 // These are the page's: the note behind it (page-note.ts), the settings it reads by, and the layout worker.
 // The drawing is laid out in that worker, in the host's own colours. The page's theme names them (theme-css.ts). So the
-// drawing follows the system's scheme with no redraw.
-import { shownAsRead } from '@thoughtknot/core';
+// drawing follows the system's scheme with no redraw. A graph too large to lay out is its overview, in the same colours.
+// A filter chosen on it is saved in the note's style block, as the pane is where the note is edited (scale_filter_live).
+import { PALETTES, shownAsRead, styleEdit } from '@thoughtknot/core';
 import type { Settings } from '@thoughtknot/core';
+import { notice } from '@thoughtknot/core/display/host';
 import { BlockEditor } from '@thoughtknot/core/display/editor/block-editor';
 import { directed } from '@thoughtknot/core/display/editor/pane-drawing';
 import type { PaneHost } from '@thoughtknot/core/display/editor/pane-drawing';
 import type { LayoutRunner } from '../../core/src/layout-worker.ts';
 import type { PageNote } from './page-note.ts';
+import { word } from '../../core/src/words.ts';
 
-/** The pane's host: the settings as they are, read only, and a graph laid out by the page's worker under the core's limits. */
-export function paneHost(settings: Settings, layouts: LayoutRunner): PaneHost {
+/**
+ * The pane's host: the settings as they are, read only, and a graph laid out by the page's worker under the core's
+ * limits. With `note`, a filter chosen on an overview is written into it, and the page says whether it was.
+ */
+export function paneHost(settings: Settings, layouts: LayoutRunner, note?: PageNote): PaneHost {
   return {
     settings: () => settings,
     layout: (drawing, owner) => layouts.draw(directed(drawing, settings.direction), owner).then(shownAsRead),
+    palette: PALETTES.system,
+    ...(note && {
+      saveFilter: (graph, keep) => {
+        const r = styleEdit(note.text, graph, { filter: { keep } });
+        if ('refused' in r) return notice(r.refused);
+        void note.writeWhole(r.note).then((w) => notice(w.ok ? word('massive.filter-saved') : w.why));
+      },
+    }),
   };
 }
 
@@ -34,7 +48,7 @@ export async function openEditorPane(
   settings: Settings,
   layouts: LayoutRunner,
 ): Promise<BlockEditor> {
-  const editor = new BlockEditor(paneHost(settings, layouts), 'pane', note);
+  const editor = new BlockEditor(paneHost(settings, layouts, note), 'pane', note);
   editor.load();
   editor.mount(into);
   await editor.open('', -1);

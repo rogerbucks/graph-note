@@ -1,9 +1,13 @@
 // The drawing in the edit pane (spec §4): the graph as typed so far, drawn beside its text. Choosing a box or a link in
 // it selects where it is written in the text. Its Edit puts the focus back in the text. In place, in a drawing's card,
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
-// is (spec §9). A graph typed or pasted past a limit is not drawn, and a banner beside its text says why.
-import { depthOf, parked, startingSwitches, ViewState, word } from '@thoughtknot/core';
+// is (spec §9). A graph typed or pasted past a limit is not drawn, and a banner beside its text says why. A graph too
+// large to lay out is shown as its overview under the banner, where the host gives its colours (§53, scale_massive_card).
+import { depthOf, parked, readStyle, startingSwitches, ViewState, word } from '@thoughtknot/core';
 import type { Drawn, FocusDepth, GraphDrawing, NoteReading, PaneSession, Refusal, Settings } from '@thoughtknot/core';
+import type { FilterKeep } from '../../filter-saved.ts';
+import type { Palette } from '../../palette.ts';
+import { massiveView } from '../graph-view/massive-view';
 import { Lifecycle } from '../lifecycle';
 import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
@@ -16,6 +20,10 @@ export interface PaneHost {
   settings: () => Settings;
   /** The drawing laid out, or why it is shown as text; null when it is no longer wanted. Rejects when the engine cannot start. */
   layout: (drawing: GraphDrawing, owner: object) => Promise<Drawn | Refusal | null>;
+  /** The host's colours, for the overview of a graph too large to lay out. Not set: the banner alone. */
+  palette?: Palette;
+  /** Saves a filter chosen on the overview in the graph's style block (scale_filter_live). Not set: only tried. */
+  saveFilter?: (graph: string, keep: FilterKeep) => void;
 }
 
 /** A drawing given the direction set on the settings page, unless its own style sets one (§6, §15, §21); else the best fit. */
@@ -98,6 +106,21 @@ export class PaneDrawing extends Lifecycle {
     this.host = host;
   }
 
+  /** Shows `d`, too large to lay out, as its overview, starting with the filter saved in its style graph. */
+  private overview(host: HTMLElement, d: GraphDrawing, reading: NoteReading): void {
+    const { palette, saveFilter } = this.host;
+    if (!palette || reading.tooLarge) return;
+    const { style } = readStyle(reading.texts, d.graph, reading);
+    massiveView(host, d, {
+      graph: d.graph,
+      palette,
+      layout: (part, by) => this.host.layout(part, by),
+      props: (key) => reading.world[d.graph]?.p(key) ?? {},
+      chosen: style.filters.find((f) => f.view === undefined)?.keep,
+      ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(d.graph, keep) } : {}),
+    });
+  }
+
   /** Takes the drawing away. */
   clear(): void {
     this.view?.unload();
@@ -131,7 +154,10 @@ export class PaneDrawing extends Lifecycle {
           this.host.settings().noteCallouts === 'on',
           aidsOf(this.host.settings()),
         );
-        if (!view) return;
+        if (!view) {
+          if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);
+          return;
+        }
         this.view = view;
         this.addChild(view);
       })
