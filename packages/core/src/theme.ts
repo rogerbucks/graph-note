@@ -3,6 +3,7 @@
 // colours by default, written as inline styles. Each hue is blended with the theme's text colour. So labels reach 4.5:1
 // and lines 3:1 in both themes (the reasons are in the style file). A port of graph_svg._themed and of the direction
 // choice in graph_svg.render, proved against them by the theme tests.
+import { isolateLabels } from './bidi.ts';
 import GraphLayout from '@thoughtknot/graph-spec/src/graph-layout.js';
 import { STYLE } from './layout.ts';
 import { PALETTES } from './palette.ts';
@@ -91,6 +92,8 @@ export function themed(svg: string, kinds: string[], readings: string[], palette
     }
     return style.length ? tag.replace(' ', ` style="${style.join(';')}" `) : tag;
   });
+  // a label with a right-to-left letter reads in its own direction, set apart (§42, bidi_labels)
+  svg = isolateLabels(svg);
   // taken out until none is left: one pass could join the pieces round a removed part into a new one
   svg = removeAll(svg, /<\?xml[\s\S]*?\?>|<!DOCTYPE[\s\S]*?>|<!--[\s\S]*?-->|<title>[\s\S]*?<\/title>/g);
   const m = /<svg width="([\d.]+)pt" height="([\d.]+)pt"/.exec(svg);
