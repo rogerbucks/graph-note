@@ -178,6 +178,7 @@ function standingsOf(joined, members, spread) {
 }
 
 // Each link's standing, and the marker on a link from a contested thing to one that is not (contested_link_marker).
+// Only a thing disputed itself counts: one in doubt by spread, or a guess, marks no link, as its doubt stays local.
 function linksOf(joined, standing) {
   const disputed = new Set();
   for (const c of joined.claims.values())
