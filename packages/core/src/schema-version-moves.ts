@@ -32,7 +32,8 @@ function typesOf(schema: string): Set<string> {
   const g = (gs.worldFromStore(store) as { __schemas?: Record<string, Graph> }).__schemas?.[
     sharedSchemaName(schema) ?? ''
   ];
-  return new Set(g ? g.labelled('ElementType').map((id) => String(g.p(id).name)) : []);
+  const names = g ? g.labelled('ElementType').map((id) => g.p(id).name) : [];
+  return new Set(names.filter((n): n is string => typeof n === 'string'));
 }
 
 /** The node labels and link types a data block uses; none for a block that cannot be read. */
