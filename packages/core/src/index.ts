@@ -369,7 +369,7 @@ export type { Bounds, HitAreas, Shape } from './hits.ts';
 export type { Landing, PlacedBox, Side, WrittenNudge } from './box-drag.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
 export { MeshIndex, memoryBackend, noteRows, PAGE_MOST, sqliteBackend } from './mesh-index.ts';
-export { editInParts, storedGraphs, type StoredGraph } from './store-drawing.ts';
+export { editInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
 export type {
   BetweenRow,
   Found as MeshFound,
