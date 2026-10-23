@@ -35,7 +35,6 @@ Rust (src-tauri/)
   `tauriSaveNew`, which writes an export. `invoke` is handed in, so nothing here imports Tauri.
 - `app-start.ts`: the first page. Pick a folder with the system's dialog, then each note is a link into the editor.
 - `app-editor.ts`: runs before the editor's page. It installs `appFetch` and adds a link back to the list.
-- `page-retry.ts`: loads the page script again, under a fresh address, when the window failed to load it.
 
 ## The Rust, `src-tauri/`
 
@@ -52,9 +51,14 @@ Rust (src-tauri/)
 
 ```
 npm run build --workspace packages/app        # the window's files, into packages/app/dist
+cd packages/app/src-tauri && cargo build      # first: see below
 cd packages/app/src-tauri && cargo test       # the folder checks
 cd packages/app/src-tauri && cargo run -- path/to/notes
 ```
+
+Build before `cargo test` on a fresh checkout. `cargo test` compiles the library twice at once, and both copies pack
+the window's files into one folder. One can take in a file the other is still writing, such as `page.js`. The app
+then cannot unpack it, and serves its first page in its place.
 
 On Linux the build needs WebKitGTK 4.1 (`libwebkit2gtk-4.1-dev`). The tests in `test/` run with the rest of the
 JavaScript suite and need no Rust. `test/app-window.js` runs the built window in a DOM, over a real folder. The

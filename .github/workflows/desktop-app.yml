@@ -76,10 +76,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev webkit2gtk-driver xvfb
-      - working-directory: packages/app/src-tauri
-        run: cargo test --locked
+      # built before the Rust tests, never with them. `cargo test` compiles the app's library twice at once, as a library
+      # and as its tests. Each copy packs the window's files into the same folder, and skips a file already there. So one
+      # could take in a half-written page.js, which the app then cannot unpack: it served its first page instead, and
+      # the editor never showed (23 Oct 2026). Built first, every packed file is whole before the tests compile.
       - working-directory: packages/app/src-tauri
         run: cargo build --locked
+      - working-directory: packages/app/src-tauri
+        run: cargo test --locked
       - if: runner.os == 'Linux'
         run: cargo install tauri-driver --locked --version 2.1.0
       # missing app, driver or display fails here, never skips

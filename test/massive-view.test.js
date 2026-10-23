@@ -33,6 +33,12 @@ import { readNote } from './packages/core/src/drawing.ts';
 import { DEFAULT_SETTINGS } from './packages/core/src/settings.ts';
 installDomHelpers(window);
 installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
+// a clock that moves 16 ms a frame. A glide or a flight then takes the same number of frames on a busy machine. The
+// frames are counted, never the time
+let clock = performance.now();
+const nextFrame = window.requestAnimationFrame.bind(window);
+performance.now = () => clock;
+window.requestAnimationFrame = (run) => nextFrame(() => run((clock += 16)));
 const boxes = [], links = [];
 for (let i = 0; i < 3000; i++) {
   boxes.push({ key: 't' + i, kind: 'Thing', text: i === 1234 ? 'Needle in the stack' : 'Thing ' + i });
@@ -133,12 +139,22 @@ window.scales = async () => {
   }
   return seen;
 };
+// waits until the view has held still for three frames: a flight or a glide is over
+window.settled = async () => {
+  let last = JSON.stringify(view.view());
+  for (let still = 0, frames = 0; still < 3 && frames < 400; frames++) {
+    await new Promise((r) => requestAnimationFrame(r));
+    const now = JSON.stringify(view.view());
+    still = now === last ? still + 1 : 0;
+    last = now;
+  }
+};
 // presses a button of the grow bar by its name, and gives what was said once the view has flown
 window.grow = async (name) => {
   const button = card.querySelector('.thoughtknot-massive-grow [aria-label="' + name + '"]');
   button.click();
   for (let i = 0; i < 100 && view.view() === window.lastView; i++) await new Promise((r) => setTimeout(r, 20));
-  await new Promise((r) => setTimeout(r, 800));
+  await window.settled();
   window.lastView = view.view();
   return card.querySelector('.thoughtknot-massive-said').textContent;
 };
