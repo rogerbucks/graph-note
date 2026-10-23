@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/mesh-surfaces.test.js",
+  "test": "mesh_surfaces_share_data > an edit made in the web view shows in the other two from the same data",
+  "seen_failing_first": false,
+  "evidence": "a check over storage already built: each host's storage reads and writes one folder, so it passes on the code before it"
+}

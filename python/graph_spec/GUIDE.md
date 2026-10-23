@@ -151,6 +151,9 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
   `mesh-join-cases.json`.
 - `src/graphspec/engine/mesh/as_at.py` — editor spec §29. `as_at` gives a graph as at a date on recorded or
   real-world time, and `lens_as_at` runs a lens on it. The twin of `as-at.js`, held to `two-times-cases.json`.
+- `src/graphspec/engine/mesh/after_text_merge.py` — editor spec §30. `after_text_merge` joins two edits over their
+  base and reads their text merge against it. Each value the merge picked in a dispute is listed for a person. The
+  twin of `after-text-merge.js`, held to `join-every-author-cases.json`.
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).

@@ -1,8 +1,26 @@
-// The last part of the values src/index.ts exports, from sheetBounds on, sorted: test support only, nothing here ships. It
-// is kept apart from index-names.js, which joins it to the values before it, so neither file passes the test file size.
+// The last part of the values src/index.ts exports, from schemaMove on, sorted: test support only, nothing here ships.
+// It is kept apart from index-names.js, which joins it to the values before it, so neither file passes the test file
+// size.
 // TIMELINE_ORDERS, TIMELINE_SHOWS and chosenDiagram, listed in index-names.js, came on 22 Oct 2026 (timeline_order,
 // timeline_show, timeline_choice_card).
 export const VALUES_LATE = [
+  'schemaMove',
+  'schemaPicture',
+  'schemaVersions',
+  'scrollsOneWay',
+  'sealCode',
+  'sealOutside',
+  'sendPrepared',
+  'serveLayouts',
+  'servePlugin',
+  'setDirection',
+  'setLanguage',
+  'setLocale',
+  'setNote',
+  'setProperty',
+  'settingsFrom',
+  'sha256',
+  'shapeOf',
   'sheetBounds',
   'sheetLimit',
   'sheetSpan',

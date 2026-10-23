@@ -102,6 +102,8 @@ const NAMES = [
   // a graph as at a date on recorded or real-world time (editor spec §29)
   'asAt',
   'lensAsAt',
+  // a text merge checked by the meaning-level join (editor spec §30)
+  'afterTextMerge',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {
