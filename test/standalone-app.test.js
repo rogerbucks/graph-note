@@ -98,7 +98,7 @@ describe('the desktop app, run for real: open a folder, draw a note, edit it, of
         const seen = await run(
           "return location.href + ' (' + document.readyState + '): ' + (document.body?.innerText ?? '').slice(0, 300)",
         ).catch((e) => `nothing: ${e.message}`);
-        throw new Error(`the app never showed: ${script}\n  it showed ${seen}`);
+        throw new Error(`the app never showed: ${script}; it showed ${seen}`);
       }
       await pause(250);
     }
