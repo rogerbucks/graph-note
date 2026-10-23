@@ -68,7 +68,7 @@ describe('a block drawn from a .gql file', () => {
 
   // proves: gql_file_source
   test('a file too large to read is not read, and says so under the banner a note’s blocks get', async () => {
-    const { env, el } = await card({ [FILE]: `${TRIP}\n${'// padding\n'.repeat(10_010)}` });
+    const { env, el } = await card({ [FILE]: `${TRIP}\n${'// padding\n'.repeat(20_010)}` });
     try {
       assert.match(el.querySelector('.thoughtknot-banner').textContent, /too large to read/i);
       assert.equal(el.querySelector('svg'), null);
@@ -79,7 +79,7 @@ describe('a block drawn from a .gql file', () => {
 
   // proves: gql_file_source
   test('a file larger than the bytes a note’s blocks may hold is never read: its size says so first', async () => {
-    const env = await load({ files: { 'Some note.md': note, [FILE]: `${TRIP}\n// ${'x'.repeat(600_000)}` } });
+    const env = await load({ files: { 'Some note.md': note, [FILE]: `${TRIP}\n// ${'x'.repeat(1_200_000)}` } });
     let reads = 0;
     const cachedRead = env.app.vault.cachedRead;
     env.app.vault.cachedRead = async (f) => {

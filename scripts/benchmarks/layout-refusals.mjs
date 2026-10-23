@@ -2,7 +2,7 @@
 // layout_contained). It counts three refusals:
 // - a 5 MB broken block, refused before it is read;
 // - a word of 999,000 characters, refused on the page's own thread before its drawing instructions are written;
-// - a 600 kB note, refused by the plugin card's own path to the refusal. It costs less than reading a tenth of it by
+// - a 1.2 MB note, refused by the plugin card's own path to the refusal. It costs less than reading a tenth of it by
 //   the same path. The tests count what is never read or written
 // (layout-limits.test.js); the cost of refusing is counted here. Run by scripts/instruction-counts.mjs.
 import { gqlBlocks, graphOfBlock, namesSharedSchema, styleOf } from '../../packages/core/src/blocks.ts';
@@ -63,9 +63,9 @@ export const BENCHMARK = {
   proves: 'a block, a word or a note over a limit is refused at once, for less than reading a tenth of the note',
   setup() {
     // warm: each case's code path once, as small as still takes that path. So the compiling a first refusal or a first
-    // read does is in the setup, and never inside the claim. A refusal needs a text over the limit: 10,500 lines, about
-    // 530 kB, is over the 512 kB the 5 MB block and the 600 kB note are refused by
-    const over = `// graph: g\n${open(10_500)}`;
+    // read does is in the setup, and never inside the claim. A refusal needs a text over the limit: 21,000 lines, about
+    // 1.07 MB, is over the 1 MB the 5 MB block and the 1.2 MB note are refused by
+    const over = `// graph: g\n${open(21_000)}`;
     expect(true, readNote([over]), 'the warming block');
     expect(true, tooLarge(worded(1_001), PAGE_LIMITS), 'the warming word');
     expect(true, asCard(note(over)), 'the warming note');
@@ -73,18 +73,21 @@ export const BENCHMARK = {
     return {
       block: `// graph: g\n${open(100_000)}`,
       word: worded(999_000),
-      whole: note(`// graph: g\n${open(12_000)}`),
-      tenth: note(`// graph: g\n${open(1_200)}`),
+      whole: note(`// graph: g\n${open(24_000)}`),
+      tenth: note(`// graph: g\n${open(2_400)}`),
     };
   },
   cases: {
     'block-5mb': ({ block }) => expect(true, readNote([block]), 'the 5 MB block'),
     'word-999k': ({ word }) => expect(true, tooLarge(word, PAGE_LIMITS), 'the word of 999,000 characters'),
-    'note-600k': ({ whole }) => expect(true, asCard(whole), 'the 600 kB note'),
+    'note-1200k': ({ whole }) => expect(true, asCard(whole), 'the 1.2 MB note'),
     'note-tenth': ({ tenth }) => expect(false, asCard(tenth), 'a tenth of the note'),
   },
-  counted: ['block-5mb', 'word-999k', 'note-600k'],
+  counted: ['block-5mb', 'word-999k', 'note-1200k'],
   claims: [
-    { says: 'a 600 kB note refused for less than reading a tenth of it', of: (n) => [n['note-600k'], n['note-tenth']] },
+    {
+      says: 'a 1.2 MB note refused for less than reading a tenth of it',
+      of: (n) => [n['note-1200k'], n['note-tenth']],
+    },
   ],
 };

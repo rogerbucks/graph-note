@@ -32,8 +32,8 @@ FROM_WORD = re.compile(rf"{S}*//{S}*graph:[^\n]*·{S}*FROM(?:{S}|·|\Z)")
 # from a copy of its block. The note is never changed.
 # The one exception is the plugin's alone (10 Oct 2026). A note whose graph blocks are too large
 # to read on a phone without freezing it is not read by the plugin at all. So it draws nothing to
-# compare. The limits are READ_LIMITS in packages/core/src/layout-limits.ts: 512 kB or 10,000
-# lines.
+# compare. The limits are READ_LIMITS in packages/core/src/layout-limits.ts: 1 MB or 20,000
+# lines (raised from 512 kB and 10,000 lines on 23 Oct 2026).
 
 
 def _first_line(text):

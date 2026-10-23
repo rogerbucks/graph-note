@@ -32,8 +32,8 @@ import { NOTE } from './make-huge-graph.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** The sizes measured, as copies of the V-10 graph: 2,666 things up to 266,600. */
-export const SIZES = [1, 10, 100];
+/** The sizes measured, as copies of the V-10 graph: 2,666 things up to 266,600. 2× is the most the read limit holds. */
+export const SIZES = [1, 2, 10, 100];
 
 /** The graph block of the V-10 note. */
 export function hugeBlock() {

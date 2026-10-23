@@ -398,7 +398,7 @@ describe('a style block that cannot be read', () => {
 
   // proves: broken_style_block
   test('a style block too large to read is not read: the graph keeps the locked style, and says why', () => {
-    const many = Array.from({ length: 12_000 }, (_, i) => `(n${i}:Nudge {word: 'direction', direction: 'TB'}),`);
+    const many = Array.from({ length: 24_000 }, (_, i) => `(n${i}:Nudge {word: 'direction', direction: 'TB'}),`);
     const block = styleBlock(...many, "(z:Nudge {word: 'direction', direction: 'TB'})");
     const { style, problems } = styleIn(TRIP, block);
     assert.equal(style.direction, undefined);

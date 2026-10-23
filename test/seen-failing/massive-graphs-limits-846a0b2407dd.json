@@ -1,0 +1,6 @@
+{
+  "file": "test/massive-graphs-limits.test.js",
+  "test": "a hostile graph past the new limits is still refused unread, saying which limit it is over",
+  "seen_failing_first": false,
+  "evidence": "A guard: the refusal itself was already there; this proves it still refuses past the raised limits (scale_limits_revisited)."
+}

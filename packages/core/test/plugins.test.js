@@ -159,7 +159,7 @@ describe('what a plug-in’s call says when it fails, in the person’s language
       };
       points.exports.add({ format: 'ink', title: 'Ink', extension: 'txt', mime: 'text/plain', write });
       points.commands.add({ id: 'acme.faulty.go', title: 'Go', run: () => void (clock.now += 5000) });
-      points.sources.add({ scheme: 'faulty', title: 'Faulty', read: () => ({ text: 'x'.repeat(600_000) }) });
+      points.sources.add({ scheme: 'faulty', title: 'Faulty', read: () => ({ text: 'x'.repeat(1_200_000) }) });
       points.diagrams.add({ type: 'acme.faulty.chart', title: 'Chart', draw: () => 'no marks' });
     },
   });

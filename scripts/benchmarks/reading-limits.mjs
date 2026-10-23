@@ -20,8 +20,8 @@ function texts() {
     'mended-2000': block(2000, () => false),
     'one-line-broken': oneLine,
     'one-line-mended': oneLine.replace("{name '", "{name: '"),
-    'every-line-broken': block(9800, () => true, long),
-    'every-line-mended': block(9800, () => false, long),
+    'every-line-broken': block(19_000, () => true, long),
+    'every-line-mended': block(19_000, () => false, long),
   };
 }
 
@@ -64,7 +64,7 @@ export const BENCHMARK = {
       of: inBudget('one-line-broken', 'one-line-mended'),
     },
     {
-      says: 'nearly 512 kB, every line broken, read within the budget',
+      says: 'nearly 1 MB, every line broken, read within the budget',
       of: inBudget('every-line-broken', 'every-line-mended'),
     },
   ],

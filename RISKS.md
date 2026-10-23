@@ -460,7 +460,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Who found it:** Enterprise, solution and data architect. **Where:** `packages/core/src/sources.ts`, `packages/core/src/hosts/vault-folder.ts`, `scripts/instruction-counts.mjs`.
 
-**Risk:** Limits inside one note are stated and tested (2,000 things, 512 kB, 10,000 lines). Beyond one note there is no index. Views across notes and the mesh will reread every file, and no test holds a vault of thousands of notes.
+**Risk:** Limits inside one note are stated and tested (2,000 things drawn, 1 MB and 20,000 lines read). Beyond one note there is no index. Views across notes and the mesh will reread every file, and no test holds a vault of thousands of notes.
 
 **Fix:** Before W10 (sources across notes) widens, add a derived-store seam. This is an index rebuilt from text, as five_layer_stack already asks. Add one benchmark over a 5,000-note vault in scripts/instruction-counts.mjs.
 
