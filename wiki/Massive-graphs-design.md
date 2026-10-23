@@ -185,7 +185,7 @@ store, which came in on 23 October 2026 (#1071).
 
 ### Step 7: reading in parts
 
-Step 7 comes in three parts:
+Step 7 comes in four parts:
 
 1. **The store reads a note in parts** (`note-parts.ts`). A note past the read limits is cut between its items.
    Each part is within a quarter of the limits. A part is given a stand-in for each thing it names from an earlier
@@ -197,7 +197,10 @@ Step 7 comes in three parts:
    changes. Its style graph is not read yet, so a filter chosen there is only tried, not saved.
 3. **An edit is written to the note's text first** (`editInParts`, in `store-drawing.ts`). Only the lines that wrote
    the thing change, so the note is never read whole. Then the store reads that note again. A store read from other
-   text refuses the edit, so it never lands on the wrong lines. Editing inside an opened group in Obsidian comes next.
+   text refuses the edit, so it never lands on the wrong lines.
+4. **A thing chosen shows its properties**, in Obsidian first. Find it by search, or click it in an opened group. Its
+   properties show under the overview, and a change to one is written as in part 3. In reading view they are only
+   shown.
 
 ## Decision
 

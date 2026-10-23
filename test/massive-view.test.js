@@ -67,7 +67,10 @@ const props = (key) => ({ status: Number(key.slice(1)) % 3 ? 'open' : 'done' });
 // each filter chosen, as the host is told it to save
 window.chose = [];
 const chose = (keep) => window.chose.push(keep);
-window.view = massiveView(card, drawing, { graph: 'Big', palette: PALETTES.light, layout, props, chose });
+// each thing chosen, as the host is told it to show
+window.picked = [];
+const picked = (key) => window.picked.push(key);
+window.view = massiveView(card, drawing, { graph: 'Big', palette: PALETTES.light, layout, props, chose, picked });
 // a second card, which starts with a saved filter: what it is named and which values are ticked
 window.saved = () => {
   const again = document.body.appendChild(document.createElement('div'));
@@ -103,6 +106,17 @@ window.press = async (key, times) => {
   for (let i = 0; i < times; i++) stage.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   return inked();
+};
+// clicks the middle of the overview, the pointer moving that many pixels before it lets go
+window.clickMiddle = (by = 0) => {
+  const stage = card.querySelector('.thoughtknot-massive-stage');
+  const at = stage.getBoundingClientRect(), x = at.left + at.width / 2, y = at.top + at.height / 2;
+  const press = (type, dx) =>
+    stage.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x + dx, clientY: y, bubbles: true }));
+  press('pointerdown', 0);
+  if (by) press('pointermove', by);
+  press('pointerup', by);
+  return window.picked.slice();
 };
 // the ink of the words in the middle of the view, a band 160 by 30 pixels
 window.wordsInMiddle = () => {
@@ -289,6 +303,21 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     await run('flyToNeedle()');
     assert.equal((await run('parts')).length, 1, 'a group opened once is not laid out again');
   });
+
+  test(
+    'a thing found, or clicked in its opened group, is the one chosen; a drag chooses nothing',
+    options,
+    async () => {
+      await run('flyToNeedle()');
+      assert.equal((await run('picked')).at(-1), 't1234', 'found by search');
+      const before = (await run('picked')).length;
+      assert.equal((await run('clickMiddle(20)')).length, before, 'a drag is not a click');
+      await run('flyToNeedle()');
+      const clicked = await run('clickMiddle()');
+      assert.equal(clicked.length, before + 2, 'the click chose one');
+      assert.equal(clicked.at(-1), 't1234', 'the thing under the click');
+    },
+  );
 
   test(
     'from the thing flown to, the picture grows one ring of neighbours at a time, and steps back',
