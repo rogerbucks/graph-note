@@ -1,5 +1,6 @@
 // Numbers, sizes, dates and lists shown in the reader's locale (editor spec §42, locale_formats), through the platform's
-// formatters. UK English is used until a host says another, with the same words as before for UK English.
+// formatters. UK English is used until a host says another, with the same words as before for UK English. Each host
+// says it by the language it is installed with: Obsidian's own, the browser's, the system's for the desktop app.
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -12,8 +13,22 @@ import {
   formatSize,
   setLocale,
 } from '../src/locale-formats.ts';
+import { installHost } from '../src/display/host.ts';
+import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
 
-afterEach(() => setLocale(DEFAULT_LOCALE));
+afterEach(() => {
+  setLocale(DEFAULT_LOCALE);
+  setLanguage(SOURCE_LANGUAGE);
+});
+
+/** A host that says only its language, or none. */
+const host = (language) => ({
+  icon: () => {},
+  isPhone: () => false,
+  notice: () => {},
+  menu: () => {},
+  ...(language && { language: () => language }),
+});
 
 describe('shown in the reader’s locale', () => {
   test('until a host says another, it is UK English, with the words every message had before', () => {
@@ -54,5 +69,19 @@ describe('shown in the reader’s locale', () => {
 
   test('a day that is not YYYY-MM-DD is shown as written', () => {
     assert.equal(formatDay('sometime'), 'sometime');
+  });
+
+  test('follows the language of the host installed, and a host that says none is UK English', () => {
+    installHost(host('de-DE'));
+    assert.equal(currentLocale(), 'de-DE');
+    assert.equal(formatCount(12345), '12.345');
+    installHost(host('ar-EG'));
+    assert.equal(currentLocale(), 'ar-EG');
+    installHost(host());
+    assert.equal(currentLocale(), 'en-GB');
+    assert.equal(formatCount(12345), '12,345');
+    installHost(host('en'));
+    assert.equal(currentLocale(), 'en-GB', 'English with no region is the source’s UK English');
+    assert.equal(formatList(['a', 'b', 'c']), 'a, b and c');
   });
 });

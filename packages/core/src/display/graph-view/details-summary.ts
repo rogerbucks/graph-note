@@ -1,7 +1,7 @@
 // The graph's summary (editor spec §24, details_always_visible). The details panel shows it when it is kept open while
 // nothing is chosen. It says how many things and links the graph has, of which kinds, and how many problems, as text.
 import type { NoteReading } from '@thoughtknot/core';
-import { word } from '@thoughtknot/core';
+import { sortedForReader, word } from '@thoughtknot/core';
 
 /** The summary of graph `graph`, drawn into `body`. */
 export function renderSummary(body: HTMLElement, reading: NoteReading, graph: string): void {
@@ -25,6 +25,7 @@ export function renderSummary(body: HTMLElement, reading: NoteReading, graph: st
   if (!kinds.size) return;
   body.createEl('h4', { text: word('summary.kinds') });
   const ul = body.createEl('ul', { cls: 'thoughtknot-summary-kinds' });
-  for (const [kind, n] of [...kinds].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)))
-    ul.createEl('li', { text: `${kind}: ${n}` });
+  // the most common first; kinds as common as each other in the reader's order (a stable sort keeps it)
+  for (const kind of sortedForReader([...kinds.keys()]).sort((a, b) => kinds.get(b)! - kinds.get(a)!))
+    ul.createEl('li', { text: `${kind}: ${kinds.get(kind)}` });
 }

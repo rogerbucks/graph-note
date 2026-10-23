@@ -17,6 +17,7 @@ import {
   propertyNames,
   renameProperty,
   setProperty,
+  sortedForReader,
   word,
 } from '@thoughtknot/core';
 import type { ListShape, NoteReading, Property, PropType, Target } from '@thoughtknot/core';
@@ -281,8 +282,8 @@ export function renderProperties(parent: HTMLElement, o: PropertiesOptions): voi
       if (thing === null) return;
       valueEl.empty();
       const g = o.reading.graphs.get(o.graph);
-      const kinds = [...new Set((g?.boxes ?? []).flatMap((b) => b.kind.split(' · ').filter(Boolean)))].sort();
-      const rels = [...new Set((g?.links ?? []).map((l) => l.type))].sort();
+      const kinds = sortedForReader([...new Set((g?.boxes ?? []).flatMap((b) => b.kind.split(' · ').filter(Boolean)))]);
+      const rels = sortedForReader([...new Set((g?.links ?? []).map((l) => l.type))]);
       listForm(valueEl, { kinds, rels, suggested: suggestShape(state.key), property: state.key }, (shape) => {
         if (!shape) {
           alert.hidden = true;
