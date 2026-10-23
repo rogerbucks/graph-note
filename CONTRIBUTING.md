@@ -749,6 +749,9 @@ These test behaviour across modules, or the repository itself, so they are named
   reaches no other origin, and calls only the app's seven folder commands (spec §41, standalone_app).
 - `test/standalone-app.test.js` — the built desktop app, driven through tauri-driver. It lists, draws and writes
   notes. Its window refuses any other address (spec §41, standalone_app).
+- `test/vscode-plugin.test.js` — the built VS Code extension, against a stand-in for VS Code. Its tab draws a note
+  and writes an edit to it in a real browser. It reaches the folder only through checked calls, and loads only its own
+  files (spec §41, vscode_plugin).
 - `test/releasing.test.js` — RELEASING.md lists the steps of a release in order and how to go back. It names every
   secret a workflow uses (editor spec §13, release_steps_written).
 - `test/release-prepare.test.js` — one command bumps every file that carries the version, both lockfiles included

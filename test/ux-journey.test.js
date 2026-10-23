@@ -46,7 +46,7 @@ describe('the counting itself', () => {
     for (const s of STAGES.slice(1)) person.stage(s);
     await person.use('Export it', () => {});
     assert.deepEqual(person.metrics(), { journey_steps_obsidian: 2, journey_interactions_obsidian: 2 });
-    assert.throws(() => new Journey('vscode'), /no such host/);
+    assert.throws(() => new Journey('emacs'), /no such host/);
   });
 
   test('a control is found by the name a screen reader says: its label, what labels it, or its own text', () => {
