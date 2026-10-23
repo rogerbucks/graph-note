@@ -2464,3 +2464,29 @@ pre.thoughtknot-code {
   display: flex;
   gap: var(--gn-space-2);
 }
+.thoughtknot-massive-tools {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-2);
+}
+.thoughtknot-massive-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-2);
+}
+.thoughtknot-massive-facet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gn-space-1);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+}
+.thoughtknot-massive-facet > label {
+  display: flex;
+  gap: var(--gn-space-2);
+  align-items: center;
+}
+.thoughtknot-massive-count {
+  margin-inline-start: auto;
+  color: var(--gn-text-muted);
+}

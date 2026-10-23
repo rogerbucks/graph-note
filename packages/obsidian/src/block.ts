@@ -13,7 +13,6 @@ import {
   graphOfBlock,
   isSourceBlock,
   namesSharedSchema,
-  PALETTES,
   parked,
   readNote,
   readStyle,
@@ -46,7 +45,7 @@ import { readOnlyHere, settlePlacements, whenPlaced } from '@thoughtknot/core/di
 import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-list';
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
-import { massiveView } from '@thoughtknot/core/display/graph-view/massive-view';
+import { showMassive } from './massive-card';
 import type { ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
@@ -311,8 +310,7 @@ export async function renderBlock(
       run: (ask) => plugin.exportGraph(ask),
     });
     // too large to draw whole: its overview, to search and fly to any thing in it (§53, scale_massive_card)
-    if (drawn.reason === 'too-large')
-      massiveView(root, drawing, { graph, palette: PALETTES.obsidian, layout: (part, by) => plugin.layout(part, by) });
+    if (drawn.reason === 'too-large') showMassive(plugin, root, drawing, graph, reading);
     asText(plugin, root, source, drawn, problems, target, readOnly);
     return;
   }

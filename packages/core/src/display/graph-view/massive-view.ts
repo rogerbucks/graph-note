@@ -10,6 +10,8 @@ import { formatCount, word } from '@thoughtknot/core';
 import type { Drawn, GraphDrawing, Refusal } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import type { LaidMarks } from '../../graphviz-marks.ts';
+import { partOf } from '../../expand-on-demand.ts';
+import { FacetIndex, facetsOf, keptGrouping } from '../../facet-counts.ts';
 import { MarkIndex } from '../../mark-index.ts';
 import { overviewOf } from '../../overview.ts';
 import type { Palette } from '../../palette.ts';
@@ -22,7 +24,9 @@ import { webgl2Painter } from './gl-painter.ts';
 import { webgpuPainter } from './gpu-painter.ts';
 import { canvasPainter, paintsOf, pickPainter } from './mark-painter.ts';
 import type { MarkPainter, Paint, PainterKind, Paints } from './mark-painter.ts';
+import { filterPanel } from './massive-filter.ts';
 import { growBar } from './massive-grow.ts';
+import { plainPaints } from './massive-paints.ts';
 import { marksOfSvg } from './svg-marks.ts';
 
 /** What the overview needs from its host. */
@@ -32,6 +36,8 @@ export interface MassiveOptions {
   palette: Palette;
   /** Lays out a part of the graph, as the card's drawings are laid out: in the worker, under the same limits. */
   layout: (part: GraphDrawing, owner: object) => Promise<Drawn | Refusal | null>;
+  /** A thing's properties by its key, for the filters. Not set: things filter by kind alone. */
+  props?: (key: string) => Readonly<Record<string, unknown>>;
 }
 
 /** The overview on screen: how to close it, its painter, where it looks, and how to find and fly to a thing. */
@@ -50,53 +56,13 @@ const KEY_STEP = 48;
 
 let made = 0;
 
-/** The drawing cut down to the things `keys` names and the links between them, to lay out one group alone. */
-function partOf(d: GraphDrawing, keys: readonly string[]): GraphDrawing {
-  const kept = new Set(keys);
-  const { folding: _folding, ...rest } = d;
-  return {
-    ...rest,
-    boxes: d.boxes.filter((b) => kept.has(b.key)),
-    links: d.links.filter((l) => kept.has(l.from) && kept.has(l.to)),
-    estimates: [],
-  };
-}
-
-/**
- * The paint of each style, as plain colours a canvas takes. A host's colours may name its theme's variables, which a
- * canvas cannot read, so each is read back once through an element of the card.
- */
-function plainPaints(el: HTMLElement, paints: Paints): Paints {
-  const probe = el.createSpan({ cls: 'thoughtknot-massive-probe' });
-  const seen = new Map<string, string>();
-  const plain = (css: string | undefined) => {
-    if (!css) return undefined;
-    let c = seen.get(css);
-    if (c === undefined) {
-      probe.setCssProps({ '--thoughtknot-probe': css });
-      c = el.win.getComputedStyle(probe).color;
-      seen.set(css, c);
-    }
-    return c;
-  };
-  const table = new Map<string, Paint>();
-  return (style) => {
-    let p = table.get(style);
-    if (!p) {
-      const { fill, line, text } = paints(style);
-      p = { fill: plain(fill), line: plain(line), text: plain(text) };
-      table.set(style, p);
-    }
-    return p;
-  };
-}
-
 /** Shows `drawing`, too large to draw whole, as its overview at the end of `parent`, the card. */
 export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: MassiveOptions): MassiveView {
-  const grouping = groupsOf(drawing);
-  const search = new ThingSearch(drawing.boxes, grouping);
-  const names = new Map(grouping.groups.map((g) => [g.id, g.label]));
-  const keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
+  const whole = groupsOf(drawing);
+  let grouping = whole;
+  let search = new ThingSearch(drawing.boxes, grouping);
+  let names = new Map(grouping.groups.map((g) => [g.id, g.label]));
+  let keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
   const owner = {};
   let laid: LaidMarks = overviewOf(grouping);
   let index = new MarkIndex(laid);
@@ -118,12 +84,14 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   });
   const list = el.createEl('ul', { cls: 'thoughtknot-massive-list', attr: { role: 'listbox', id: `${id}-list` } });
   list.hidden = true;
-  const things = formatCount(search.size),
-    groups = formatCount(grouping.groups.length);
-  const stage = el.createDiv({
-    cls: 'thoughtknot-massive-stage',
-    attr: { tabindex: '0', role: 'img', 'aria-label': word('massive.name', { graph: o.graph, things, groups }) },
-  });
+  const named = () =>
+    word('massive.name', {
+      graph: o.graph,
+      things: formatCount(search.size),
+      groups: formatCount(grouping.groups.length),
+    });
+  const stage = el.createDiv({ cls: 'thoughtknot-massive-stage', attr: { tabindex: '0', role: 'img' } });
+  stage.setAttribute('aria-label', named());
   const shapes = stage.createEl('canvas', { cls: 'thoughtknot-massive-canvas' }),
     words = stage.createEl('canvas', { cls: 'thoughtknot-massive-canvas' });
   const said = el.createDiv({ cls: 'thoughtknot-massive-said', attr: { 'aria-live': 'polite' } });
@@ -241,6 +209,34 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   };
 
   const grower = growBar(el, { drawing, layIn, flyOnto, say: (text) => said.setText(text) });
+
+  // the filters: the overview drawn again from the things kept, its groups in the same order
+  const regroup = (kept: string[] | null) => {
+    const keep = kept && new Set(kept);
+    grouping = keep ? keptGrouping(whole, keep) : whole;
+    search = new ThingSearch(keep ? drawing.boxes.filter((b) => keep.has(b.key)) : drawing.boxes, grouping);
+    names = new Map(grouping.groups.map((g) => [g.id, g.label]));
+    keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
+    laid = overviewOf(grouping);
+    index = new MarkIndex(laid);
+    opened.clear();
+    insidePaints.clear();
+    flight++;
+    camera = fit();
+    stage.setAttribute('aria-label', named());
+    said.setText(word('massive.kept', { count: search.size }));
+    again();
+  };
+  const tools = el.createDiv({ cls: 'thoughtknot-massive-tools' });
+  el.insertBefore(tools, stage);
+  filterPanel(
+    tools,
+    new FacetIndex(
+      drawing.boxes.map((b) => b.key),
+      facetsOf(drawing.boxes, o.props),
+    ),
+    regroup,
+  );
 
   const flyTo = async (match: Match) => {
     const group = names.get(match.group) ?? match.group;

@@ -81,12 +81,18 @@ export class Expansion {
 
   /** The drawing cut down to the things kept and the links among them, to lay out on its own. */
   part(): GraphDrawing {
-    const { folding: _folding, ...rest } = this.drawing;
-    return {
-      ...rest,
-      boxes: this.drawing.boxes.filter((b) => this.kept.has(b.key)),
-      links: this.drawing.links.filter((l) => this.kept.has(l.from) && this.kept.has(l.to)),
-      estimates: [],
-    };
+    return partOf(this.drawing, this.kept);
   }
+}
+
+/** `d` cut down to the things `keys` names and the links between them, to lay out on its own. */
+export function partOf(d: GraphDrawing, keys: Iterable<string>): GraphDrawing {
+  const kept = new Set(keys);
+  const { folding: _folding, ...rest } = d;
+  return {
+    ...rest,
+    boxes: d.boxes.filter((b) => kept.has(b.key)),
+    links: d.links.filter((l) => kept.has(l.from) && kept.has(l.to)),
+    estimates: [],
+  };
 }
