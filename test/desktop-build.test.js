@@ -4,6 +4,7 @@
 // - Some keys: built unsigned, with a warning naming the missing ones.
 // - The Linux GPG signature is made, and checks out against its key.
 // - The workflow hands the keys over only off pull requests.
+// - The Linux public key is published, public only, with the fingerprint the guide gives.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -129,3 +130,18 @@ test('the workflow hands signing keys to the build only off pull requests', () =
 function hasGpg() {
   return spawnSync('gpg', ['--version']).status === 0;
 }
+
+test(
+  'the published Linux key is public only, and its fingerprint is the one the guide gives',
+  { skip: !hasGpg() && 'no gpg' },
+  () => {
+    const key = read('keys/thoughtknot-linux.asc');
+    assert.match(key, /^-----BEGIN PGP PUBLIC KEY BLOCK-----/);
+    assert.doesNotMatch(key, /PRIVATE KEY/, 'never the private key');
+    const shown = spawnSync('gpg', ['--batch', '--show-keys', '--with-colons'], { input: key, encoding: 'utf8' });
+    assert.equal(shown.status, 0);
+    const fingerprint = shown.stdout.match(/^fpr:+([0-9A-F]{40}):/m)[1];
+    const guide = read('docs/app-signing.md').replace(/\s/g, '');
+    assert.ok(guide.includes(fingerprint), `docs/app-signing.md gives the fingerprint ${fingerprint}`);
+  },
+);

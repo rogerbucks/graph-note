@@ -11,9 +11,9 @@ secret that is only half set never breaks a build: the run builds unsigned and w
 
 | What                  | What it gives people                          | Cost                 | Roger's time | Status                 |
 | --------------------- | --------------------------------------------- | -------------------- | ------------ | ---------------------- |
-| macOS                 | Opens with no warning (signed and notarised)  | $99 a year (Apple)   | About 1 hour | Wired, waits for keys  |
-| Linux `.deb`          | A `.asc` signature people can check           | Free                 | 10 minutes   | Wired, waits for keys  |
-| App updater key       | Updates people can trust, once the app has them | Free               | 5 minutes    | Make now, used later   |
+| macOS                 | Opens with no warning (signed and notarised)  | $99 a year (Apple)   | About 1 hour | Paused (Roger, 23 Oct 2026) |
+| Linux `.deb`          | A `.asc` signature people can check           | Free                 | 10 minutes   | Signed (23 Oct 2026)   |
+| App updater key       | Updates people can trust, once the app has them | Free               | 5 minutes    | Made, used later       |
 | Windows               | Opens with no SmartScreen warning             | From free to ~$10 a month | -       | Unsigned (Roger, 23 Oct 2026) |
 | iPhone                | Install through TestFlight                    | Same Apple membership | Later       | Later                  |
 
@@ -106,8 +106,25 @@ rm ~/Desktop/thoughtknot-linux.key
 If `gpg` is missing, install it first: `brew install gnupg`. Put an email address you own in place of
 `you@example.com`.
 
-The public key (`thoughtknot-linux-public.asc`) is safe to share. Send it in the project, and a thread will publish it
-so people can check the signature. Keep the private key and its passphrase in your password manager.
+The public key is safe to share. Send it in the project, and a thread will publish it so people can check the
+signature. Keep the private key and its passphrase in your password manager.
+
+### Check a Linux download
+
+The public key is in [`keys/thoughtknot-linux.asc`](../keys/thoughtknot-linux.asc). Its fingerprint is:
+
+```text
+4EA9 AE6F 55A4 6A4A E1CC  9497 F7DF 7FDB EE80 9A70
+```
+
+Download the `.deb` and its `.deb.asc` into one folder. Then:
+
+```sh
+gpg --import keys/thoughtknot-linux.asc
+gpg --verify ThoughtKnot_*.deb.asc ThoughtKnot_*.deb
+```
+
+It should say "Good signature from ThoughtKnot releases". Check that the fingerprint it shows matches the one above.
 
 ## The app updater key
 
