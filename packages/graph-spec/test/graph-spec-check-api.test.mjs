@@ -104,6 +104,22 @@ const NAMES = [
   'lensAsAt',
   // a text merge checked by the meaning-level join (editor spec §30)
   'afterTextMerge',
+  // the process core and its runs (editor spec §34)
+  'coreOfEight',
+  'transitionsOf',
+  'promoteTransition',
+  'processPath',
+  'guardOf',
+  'guardAllows',
+  'runningRuleOf',
+  'overrideRunningRule',
+  'runLog',
+  'currentOf',
+  'enterState',
+  'leaveState',
+  'moveRun',
+  'withEntries',
+  'refreshCurrent',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

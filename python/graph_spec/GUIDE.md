@@ -155,6 +155,8 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
   base and reads their text merge against it. Each value the merge picked in a dispute is listed for a person. The
   twin of `after-text-merge.js`, held to `join-every-author-cases.json`.
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
+  - `core` and `runs` are the process core of editor spec §34. They hold eight kinds, transitions, guards as data,
+    the run log and nested machines (`core.js`, `runs.js`, `process-core-cases.json`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).
   - A transition's note is found by the order the block writes it in, never the order a source gives its rows in.
