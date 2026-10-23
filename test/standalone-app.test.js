@@ -104,7 +104,8 @@ describe('the desktop app, run for real: open a folder, draw a note, edit it, of
             "const done = arguments[arguments.length - 1]; Promise.all([...document.scripts].map((s) => s.src && import(s.src).then(() => 'ran', (e) => String(e)))).then((r) => done(r.join(', ')))",
           args: [],
         }).catch((e) => `unknown: ${e.message}`);
-        throw new Error(`the app never showed: ${script}; it showed ${seen}; its scripts: ${modules}`);
+        // the scripts first: the quiet reporter cuts a message at 200 characters, and the page text is long
+        throw new Error(`the app never showed: ${script}; its scripts: ${modules}; it showed ${seen}`);
       }
       await pause(250);
     }
