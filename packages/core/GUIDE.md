@@ -144,6 +144,14 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - `readNote` sets `Box.deferred` on each such box. It takes the day as its fifth argument, the current day by
     default.
   - The layout source is untouched, so the host draws the dashing and the later mark on the finished drawing.
+#### Certainty
+
+- `certainty-drawn.ts` — how sure a thing is, drawn (editor spec §36, certainty_drawn).
+  - `certaintyLevel(props)` gives sure, likely, doubtful or contested. It reads a likelihood word, or a status of
+    contested. It gives null when neither is written, so that thing is drawn as before.
+  - `CERTAINTY_LOOKS` gives each level its line weight, its dash and its mark in words. No two levels look alike in
+    black and white. A look is a style token, never a colour.
+  - `readNote` sets `Box.certainty`. The host draws the look on the finished drawing, as it does for a parked thing.
 
 ### Drawing
 

@@ -12,6 +12,7 @@ import { textTooLarge } from './layout-limits.ts';
 import { dataKind, namesSharedSchema } from './blocks.ts';
 import { withStandardSchemas } from './standard-schemas.ts';
 import { parkedIn } from './deferred.ts';
+import { certaintyLevel } from './certainty-drawn.ts';
 import { undeclared, undeclaredUse } from './schema-checks.ts';
 import { missingSchemas } from './schema-names.ts';
 import { suggestedPlaces } from './suggested-names.ts';
@@ -39,7 +40,8 @@ function drawingOf(
     graph: name,
     boxes: ids.map((key) => {
       const place = suggested.get(key),
-        parked = later.get(key);
+        parked = later.get(key),
+        certainty = certaintyLevel(g.p(key));
       return {
         key,
         kind: [...(g.nodes.get(key)?.[0] ?? [])]
@@ -49,6 +51,7 @@ function drawingOf(
         text: shown(key)[0],
         ...(place ? { suggested: place } : {}),
         ...(parked ? { deferred: { overdue: parked.overdue, what: parked.what } } : {}),
+        ...(certainty ? { certainty } : {}),
       };
     }),
     links: g.edges

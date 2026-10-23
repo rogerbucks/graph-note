@@ -384,3 +384,5 @@ export type {
 } from './mesh-index.ts';
 export { MeshHistory } from './mesh-history.ts';
 export type { LogEntry, LogKind } from './mesh-history.ts';
+export { CERTAINTY_LEVELS, CERTAINTY_LOOKS, certaintyLevel } from './certainty-drawn.ts';
+export type { CertaintyLevel, CertaintyLook } from './certainty-drawn.ts';
