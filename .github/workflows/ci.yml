@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    # marking a draft ready for review runs everything, as the plan below says
     types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
@@ -17,8 +16,9 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # What runs: a draft pull request runs only the tests its change reaches; anything else runs everything
-  # (scripts/ci-plan.mjs). The safety checks below never wait on it. A job that waits on it still runs when it fails.
+  # What runs: a pull request runs only the tests its change reaches, unless labelled ci:full; a push to main runs
+  # everything (scripts/ci-plan.mjs). The safety checks below never wait on it. A job that waits on it still runs when
+  # it fails.
   plan:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -40,7 +40,7 @@ jobs:
       - id: plan
         env:
           EVENT: ${{ github.event_name }}
-          DRAFT: ${{ github.event.pull_request.draft }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
           BASE: ${{ github.event.pull_request.base.sha || github.sha }}
         run: node scripts/ci-plan.mjs --base "$BASE"
 
@@ -102,7 +102,7 @@ jobs:
           RESULT: ${{ needs.suite.result }}
         run: |
           if [ "$PLAN" != success ]; then echo "::warning::The CI plan failed, so the whole suite ran. Fix scripts/ci-plan.mjs."; fi
-          if [ "$TIER" = subset ]; then echo "::notice::A partial run, as this is a draft. Marking it ready for review runs everything."; fi
+          if [ "$TIER" = subset ]; then echo "::notice::A partial run: only what the change reaches. The label ci:full runs everything; main always does."; fi
           test "$RESULT" = success
 
   # The quick checks: format, lint, content, quality baseline, types, the requirements' flips and the build.
@@ -144,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: plan
-    # skipped only when a draft's plan says nothing the Python tests read changed; runs when the plan failed
+    # skipped only when a pull request's plan says nothing the Python tests read changed; runs when the plan failed
     if: ${{ !cancelled() && needs.plan.outputs.python != 'false' }}
     defaults:
       run:
@@ -177,7 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: plan
-    # skipped only when a draft's plan says nothing the Python tests read changed; runs when the plan failed
+    # skipped only when a pull request's plan says nothing the Python tests read changed; runs when the plan failed
     if: ${{ !cancelled() && needs.plan.outputs.python != 'false' }}
     defaults:
       run:

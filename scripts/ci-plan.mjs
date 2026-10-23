@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// What CI runs for a change (spec §13, touched_tests_only). A draft pull request runs only the tests its change
-// reaches, as `npm run test:changed` picks them. Everything else runs the whole suite: a push to main, a release, and a
-// pull request that is ready for review. A draft cannot merge, so every merge has had a full run on its last commit.
+// What CI runs for a change (spec §13, touched_tests_only). A pull request, draft or ready, runs only the tests its
+// change reaches, as `npm run test:changed` picks them. Everything else runs the whole suite: a push to main, the
+// nightly and a release. So every merge is checked in full on main, just after it lands. A pull request labelled
+// `ci:full` runs everything too, from its next push: use it for a change whose reach the plan may miss.
 //
 // The safety checks never depend on this plan, and always run. They are lint, the types, the build and tests-first,
 // with the history scan, the sign-off and the dependency review. When this plan fails, every job runs.
@@ -11,9 +12,10 @@
 //
 // Usage:
 //   node scripts/ci-plan.mjs --base <sha>   the plan for HEAD since its merge base with <sha>. EVENT is the
-//                                           GitHub event's name and DRAFT is true or false, both from the environment.
+//                                           GitHub event's name and LABELS the pull request's labels, as a JSON
+//                                           list, both from the environment.
 //                                           The plan goes to GITHUB_OUTPUT and GITHUB_STEP_SUMMARY when they are set.
-//   node scripts/ci-plan.mjs --list [--base <sha>]   print the plan, as a draft pull request would get it.
+//   node scripts/ci-plan.mjs --list [--base <sha>]   print the plan, as a pull request would get it.
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -28,6 +30,9 @@ const REPOSITORY_TEST = /^test\/[^/]+\.test\.(js|mjs)$/;
 /** The most machines a subset is spread over, as the whole suite is; and the test files each one is given at least. */
 export const SHARDS = 6;
 const FILES_PER_SHARD = 25;
+
+/** The label that asks for the whole suite on a pull request. */
+export const FULL_LABEL = 'ci:full';
 
 /** A path the shell can be given unquoted: it splits on spaces only, and nothing in it is a pattern or a command. */
 const SAFE_NAME = /^[\w./@-]+$/;
@@ -50,12 +55,12 @@ export function docReaders(path, tracked, read) {
  * - `tier` is `full` (the whole suite) or `subset` (only `files`, the JavaScript test files, sorted);
  * - `shards` is how many of the suite's machines a subset needs (none when it has no JavaScript test);
  * - `python` is whether the Python jobs run: always, unless a subset changed nothing their tests read.
- * `event` is the GitHub event's name, `draft` whether the pull request is a draft, `changed` the paths it changed.
+ * `event` is the GitHub event's name, `labels` the pull request's labels, `changed` the paths it changed.
  * `reach(path)` is the tests that reach a file through the import graph, and `read(path)` is a file's text.
  */
-export function ciPlan({ event, draft, changed, tracked, reach, read }) {
+export function ciPlan({ event, labels = [], changed, tracked, reach, read }) {
   if (event !== 'pull_request') return whole(`a ${event ?? 'run'} runs everything`);
-  if (draft !== true) return whole('a pull request ready for review runs everything');
+  if (labels.includes(FULL_LABEL)) return whole(`the pull request is labelled ${FULL_LABEL}`);
   if (!changed.length) return whole('no changed file was found');
   const files = new Set();
   const rest = [];
@@ -86,32 +91,42 @@ const git = (...args) =>
     .filter(Boolean);
 
 /** The plan for HEAD against `base`, read from this repository. */
-export function planHere({ base, event, draft }) {
+export function planHere({ base, event, labels }) {
   const from = git('merge-base', base, 'HEAD')[0];
   const changed = git('diff', '--name-only', from, 'HEAD');
   const tracked = git('ls-files').filter((f) => existsSync(join(ROOT, f)));
   const read = (f) => readFileSync(join(ROOT, f), 'utf8');
   const graph = importGraph(tracked, read);
-  return ciPlan({ event, draft, changed, tracked, reach: (p) => testsReaching(graph, p), read });
+  return ciPlan({ event, labels, changed, tracked, reach: (p) => testsReaching(graph, p), read });
 }
 
 /** The plan as a job summary: what runs, and why. */
 export const summary = (plan) =>
   [
-    plan.tier === 'full' ? '### CI plan: everything runs' : '### CI plan: a partial run, as this is a draft',
+    plan.tier === 'full' ? '### CI plan: everything runs' : '### CI plan: a partial run, only what the change reaches',
     '',
     plan.reason,
     ...(plan.tier === 'subset'
       ? [
           '',
           `Python jobs: ${plan.python ? 'run' : 'skipped, as nothing they read changed'}.`,
-          'Marking the pull request ready for review runs everything.',
+          `The label ${FULL_LABEL} runs everything from the next push; a merge to main runs everything.`,
           '',
           ...plan.files.map((f) => `- \`${f}\``),
         ]
       : []),
     '',
   ].join('\n');
+
+/** The labels from the LABELS JSON list. Anything else, such as on a push, is no label. */
+export function labelsFrom(text) {
+  try {
+    const names = JSON.parse(text ?? '[]');
+    return Array.isArray(names) ? names.filter((n) => typeof n === 'string') : [];
+  } catch {
+    return [];
+  }
+}
 
 function main(argv) {
   const at = argv.indexOf('--base');
@@ -122,8 +137,8 @@ function main(argv) {
   }
   const list = argv.includes('--list');
   const event = list ? 'pull_request' : process.env.EVENT;
-  const draft = list ? true : process.env.DRAFT === 'true';
-  const plan = planHere({ base, event, draft });
+  const labels = list ? [] : labelsFrom(process.env.LABELS);
+  const plan = planHere({ base, event, labels });
   if (list || !process.env.GITHUB_OUTPUT) {
     process.stdout.write(summary(plan));
     return 0;

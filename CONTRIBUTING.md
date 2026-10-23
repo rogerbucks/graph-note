@@ -766,8 +766,9 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `test/fresh-clone.test.js` — when a pull request runs the fresh clone. It runs only for a change that can alter what
   the README's steps do. That is the steps, the npm scripts, the hook or the git settings (spec §13, Delivery).
-- `test/ci-plan.test.js` — what CI runs for a change. A draft runs only the tests its change reaches. Anything else runs
-  everything, and a failed plan runs everything too (spec §13, touched_tests_only).
+- `test/ci-plan.test.js` — what CI runs for a change. A pull request, draft or ready, runs only the tests its change
+  reaches. The label `ci:full` runs everything from the next push. Main, the nightly and a release run everything, and a
+  failed plan runs everything too (spec §13, touched_tests_only).
 
 ### The quality ratchet and the test runner
 
