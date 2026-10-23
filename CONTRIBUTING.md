@@ -211,6 +211,7 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
 - `packages/core/test/mesh-work-in-engine.test.js` — pathfinding, centroids, altitude and transitions are the engine's.
+- `packages/core/test/mesh-surfaces.test.js` — Obsidian, VS Code and the web view read the same notes, so an edit shows in all three.
   No host computes them itself (editor spec §27, mesh_work_in_engine).
 - `packages/core/test/no-upkeep.test.js` — an edit refreshes a note's clusters, centroids, groups and lens lists. The
   person takes no step (editor spec §31, derivations_need_no_upkeep).
