@@ -62,6 +62,10 @@ below the hosts as it is.
 
 ## Privacy and network use
 
+The short version for every app is the [privacy page](https://thoughtknot.app/privacy.html). It says what is kept, where, for how long, and how to delete it.
+
+The short version, for the plugin, the app and the browser editor, is the [privacy page](https://thoughtknot.app/privacy.html).
+
 The plugin makes no network request of its own. There are no analytics, no update checks, no remote images and no
 databases. Graphviz, the one runtime dependency, is bundled and runs on your device.
 

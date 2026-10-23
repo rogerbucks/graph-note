@@ -5,6 +5,7 @@ import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { PSEUDO_LANGUAGES, isPseudoWord } from '@thoughtknot/core';
 import { cleanUpApp, openAppStart } from './app-window.js';
+import { PRIVACY_PAGE } from '../src/app-start.ts';
 import { until } from '../../obsidian/test/host/load-plugin.js';
 
 after(cleanUpApp);
@@ -32,4 +33,15 @@ test('the first page is in the system’s language, read in its direction', asyn
 
 test('a system language with no translation file is said in UK English', async () => {
   assert.deepEqual(await firstPage('en-US'), { button: 'Open a folder of notes', lang: 'en-GB', dir: 'ltr' });
+});
+
+test('the first page names the privacy page, where the site publishes it (LEGAL-2)', async () => {
+  assert.equal(PRIVACY_PAGE, 'https://thoughtknot.app/privacy.html');
+  const page = await openAppStart(null);
+  try {
+    await until(() => page.doc.querySelector('.gn-app-privacy'), 8000);
+    assert.match(page.doc.querySelector('.gn-app-privacy').textContent, /keeps no data about you\. .*privacy\.html$/);
+  } finally {
+    await page.stop();
+  }
 });

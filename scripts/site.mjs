@@ -43,25 +43,31 @@ const withPlaceholders = (text, values) =>
   text.replace(/\{(\w+)\}/g, (whole, name) => (Object.hasOwn(values, name) ? values[name] : whole));
 
 /**
- * `template` with each {{key}} replaced by the word `words` gives it and each {{@name}} by `values[name]`, words
- * escaped as text. Values are markup the page makes itself and are put in as they are. Throws on a key or a name with
- * nothing to fill it, and on a word nothing uses. So the catalogue and the page never drift apart.
+ * Each of `templates`, by its file name, with each {{key}} replaced by the word `words` gives it and each {{@name}} by
+ * `values[name]`. Words are escaped as text. Values are markup the site makes itself and are put in as they are.
+ * Throws on a key or a name with nothing to fill it, and on a word no page uses. So the catalogue and the pages never
+ * drift apart.
  */
-export function fillTemplate(template, words, values) {
+export function fillPages(templates, words, values) {
   const used = new Set();
-  const filled = template.replace(/\{\{(@?)([\w.-]+)\}\}/g, (_whole, at, key) => {
-    if (at) {
-      if (!Object.hasOwn(values, key)) throw new Error(`the page names {{@${key}}}, which nothing fills`);
-      return values[key];
-    }
-    if (!Object.hasOwn(words, key)) throw new Error(`the page names {{${key}}}, which the catalogue lacks`);
-    used.add(key);
-    return escapeHtml(words[key]);
-  });
+  const fill = (template) =>
+    template.replace(/\{\{(@?)([\w.-]+)\}\}/g, (_whole, at, key) => {
+      if (at) {
+        if (!Object.hasOwn(values, key)) throw new Error(`the page names {{@${key}}}, which nothing fills`);
+        return values[key];
+      }
+      if (!Object.hasOwn(words, key)) throw new Error(`the page names {{${key}}}, which the catalogue lacks`);
+      used.add(key);
+      return escapeHtml(words[key]);
+    });
+  const pages = Object.fromEntries(Object.entries(templates).map(([name, template]) => [name, fill(template)]));
   const unused = Object.keys(words).filter((k) => !used.has(k));
   if (unused.length) throw new Error(`words not used by the page: ${unused.join(', ')}`);
-  return filled;
+  return pages;
 }
+
+/** One page, `template`, filled as `fillPages` fills each. */
+export const fillTemplate = (template, words, values) => fillPages({ page: template }, words, values).page;
 
 /** The newest stable release's version from `gh release list` entries, never a pre-release; `fallback` if none. */
 export function latestVersion(releases, fallback) {
@@ -114,17 +120,19 @@ function llmsText({ words, url }) {
     '## Optional',
     '',
     `- [Home page](${url}): this page for people`,
+    `- [Privacy](${url}privacy.html): what ThoughtKnot keeps, where, and how to delete it`,
     `- [Licence](${LICENCE}): Mozilla Public License 2.0`,
     '',
   ].join('\n');
 }
 
 /**
- * Every file of the site but the ones copied as they are, by name. These are the page, robots.txt, sitemap.xml,
- * llms.txt and the .nojekyll that tells GitHub Pages to publish the folder as it is. `catalogue` is site/words.json;
- * `image` is {file, alt, width, height} or null.
+ * Every file of the site but the ones copied as they are, by name. These are the home page, the privacy page,
+ * robots.txt, sitemap.xml and llms.txt. The last is .nojekyll, which tells GitHub Pages to publish the folder as it is.
+ * `template` is site/index.html and `privacy` site/privacy.html; `catalogue` is site/words.json; `image` is
+ * {file, alt, width, height} or null.
  */
-export function renderSite({ template, catalogue, version, sha, today, url = SITE_URL, image = null }) {
+export function renderSite({ template, privacy, catalogue, version, sha, today, url = SITE_URL, image = null }) {
   const lang = catalogue.language;
   const words = Object.fromEntries(
     Object.entries(catalogue.words).map(([k, w]) => [k, withPlaceholders(w, { version, sha, date: today })]),
@@ -146,12 +154,14 @@ export function renderSite({ template, catalogue, version, sha, today, url = SIT
       : '',
   };
   return {
-    'index.html': fillTemplate(template, words, values),
+    ...fillPages({ 'index.html': template, 'privacy.html': privacy }, words, values),
     'robots.txt': `User-agent: *\nAllow: /\n\nSitemap: ${url}sitemap.xml\n`,
     'sitemap.xml': [
       '<?xml version="1.0" encoding="UTF-8"?>',
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-      `  <url>\n    <loc>${escapeHtml(url)}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`,
+      ...[url, `${url}privacy.html`].map(
+        (loc) => `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`,
+      ),
       '</urlset>',
       '',
     ].join('\n'),
@@ -177,6 +187,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const shown = picture && existsSync(picture);
   const files = renderSite({
     template: readFileSync(join(ROOT, 'site/index.html'), 'utf8'),
+    privacy: readFileSync(join(ROOT, 'site/privacy.html'), 'utf8'),
     catalogue: json('site/words.json'),
     version: latestVersion(releases, json('manifest.json').version),
     sha: (flag(args, '--sha') ?? 'main').slice(0, 7),

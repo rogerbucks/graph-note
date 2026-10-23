@@ -3,6 +3,7 @@
 // - The search and AI basics: title, description, canonical address, structured data, sitemap, robots and llms.txt.
 // - WCAG 2.2 AA in the light and the dark scheme, by the same check as every other page.
 // - No side said by left or right, so it mirrors for a right-to-left language.
+// - A privacy page from the same catalogue, linked from the home page and the app (risk LEGAL-2).
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -11,13 +12,23 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { THEMES, audit, openWindow, pageStyleFor } from './repository/wcag.js';
 import { path, read, readJSON } from './repository/repo.js';
-import { SITE_URL, fillTemplate, latestVersion, pngSize, renderSite } from '../scripts/site.mjs';
+import { SITE_URL, fillPages, fillTemplate, latestVersion, pngSize, renderSite } from '../scripts/site.mjs';
 
 const template = read('site/index.html');
+const privacy = read('site/privacy.html');
 const catalogue = readJSON('site/words.json');
 const IMAGE = { file: 'card.png', alt: 'A graph drawn in a note, with its toolbar above it', width: 800, height: 500 };
 const made = (more = {}) =>
-  renderSite({ template, catalogue, version: '0.6.0', sha: 'abc1234', today: '2026-10-18', image: IMAGE, ...more });
+  renderSite({
+    template,
+    privacy,
+    catalogue,
+    version: '0.6.0',
+    sha: 'abc1234',
+    today: '2026-10-18',
+    image: IMAGE,
+    ...more,
+  });
 const pageOf = (html) => openWindow(html).window.document;
 
 describe('the page is made from its template and its words', () => {
@@ -140,14 +151,15 @@ describe('the version it names', () => {
 describe('everyone can use it', () => {
   const sheet = read('site/site.css');
 
-  for (const theme of THEMES)
-    test(`meets WCAG 2.2 AA in the ${theme} scheme`, async () => {
-      const { style, variables } = pageStyleFor(sheet, theme);
-      const html = made()['index.html'].replace('<link rel="stylesheet" href="site.css" />', `<style>${style}</style>`);
-      const r = await audit(openWindow(html), theme, variables['--page']);
-      assert.ok(r.rules > 10, `${r.rules} rules ran`);
-      assert.deepEqual(r.problems, []);
-    });
+  for (const page of ['index.html', 'privacy.html'])
+    for (const theme of THEMES)
+      test(`${page} meets WCAG 2.2 AA in the ${theme} scheme`, async () => {
+        const { style, variables } = pageStyleFor(sheet, theme);
+        const html = made()[page].replace('<link rel="stylesheet" href="site.css" />', `<style>${style}</style>`);
+        const r = await audit(openWindow(html), theme, variables['--page']);
+        assert.ok(r.rules > 10, `${r.rules} rules ran`);
+        assert.deepEqual(r.problems, []);
+      });
 
   test('a planted fault is found, so a pass means the check looked', async () => {
     const { style, variables } = pageStyleFor(sheet, 'light');
@@ -222,6 +234,7 @@ describe('the command', () => {
       assert.equal(r.status, 0, r.stderr);
       for (const f of [
         'index.html',
+        'privacy.html',
         'site.css',
         'icon.svg',
         'card.png',
@@ -259,5 +272,50 @@ describe('a reader who is not a collaborator can find help', () => {
   test('the settings keep Discussions open to anyone, so the link leads somewhere a stranger can post', () => {
     assert.match(read('scripts/public-readiness.mjs'), /repoField\('has_discussions', true\)/);
     assert.doesNotMatch(read('.github/workflows/lock-conversations.yml'), /discussions/i);
+  });
+});
+
+// A privacy page the apps and the App Store can link to (risk LEGAL-2; Apple's App Review Guidelines 5.1.1).
+describe('the privacy page says what is kept, where, for how long, and how to delete it', () => {
+  const page = () => pageOf(made()['privacy.html']);
+  const said = () => page().querySelector('main').textContent.replace(/\s+/g, ' ');
+
+  test('is made from the same catalogue, at its own address, with no placeholder left', () => {
+    const html = made()['privacy.html'];
+    assert.doesNotMatch(html, /\{\{|\}\}/);
+    assert.equal(page().querySelector('link[rel=canonical]').getAttribute('href'), `${SITE_URL}privacy.html`);
+    assert.match(html, /<html lang="en-GB" dir="ltr">/);
+    assert.match(html, /commit abc1234 on 2026-10-18/);
+  });
+
+  test('says no data is collected, where notes and settings are kept, and how to delete them', () => {
+    const text = said();
+    assert.match(text, /collects no data about you/);
+    assert.match(text, /no account, no analytics, no tracking and no update checks/);
+    assert.match(text, /on your device/);
+    assert.match(text, /for as long as you keep those files/);
+    assert.match(text, /To delete them, delete the files/);
+    assert.match(text, /Uninstall the plugin to delete them/);
+  });
+
+  test('names AI models as the one place words can go, and only when the person sends them', () => {
+    const text = said();
+    assert.match(text, /AI is off until you turn it on and set up a model yourself/);
+    assert.match(text, /Nothing goes until you press Send/);
+    assert.match(text, /Its provider keeps them under its own terms/);
+    assert.match(text, /The last 200 sends are kept/);
+  });
+
+  test('the home page links to it, and the sitemap and llms.txt list it', () => {
+    const files = made();
+    assert.ok([...pageOf(files['index.html']).querySelectorAll('footer a')].some((a) => a.href === 'privacy.html'));
+    assert.match(files['sitemap.xml'], /<loc>https:\/\/thoughtknot\.app\/privacy\.html<\/loc>/);
+    assert.match(files['llms.txt'], /\[Privacy\]\(https:\/\/thoughtknot\.app\/privacy\.html\)/);
+  });
+
+  test('a word used by either page counts, and a word used by neither is refused', () => {
+    const words = { 'a.b': 'x', 'c.d': 'y' };
+    assert.deepEqual(fillPages({ one: '{{a.b}}', two: '{{c.d}}' }, words, {}), { one: 'x', two: 'y' });
+    assert.throws(() => fillPages({ one: '{{a.b}}' }, words, {}), /not used by the page: c\.d/);
   });
 });

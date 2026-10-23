@@ -40,6 +40,27 @@
     "footer.licence": "Free and open source under the Mozilla Public License 2.0.",
     "footer.conduct": "Code of conduct",
     "footer.trademark": "ThoughtKnot is an independent project and is not made by Obsidian.",
-    "footer.made": "Made from commit {sha} on {date}."
+    "footer.made": "Made from commit {sha} on {date}.",
+    "footer.privacy": "Privacy",
+    "privacy.title": "Privacy: ThoughtKnot keeps nothing about you",
+    "privacy.description": "What ThoughtKnot keeps, where it keeps it, for how long, and how to delete it. It collects no data about you, and sends your words to an AI model only when you set one up and press Send.",
+    "privacy.heading": "Privacy",
+    "privacy.lede": "ThoughtKnot collects no data about you. It has no account, no analytics, no tracking and no update checks. This page covers the Obsidian plugin, the desktop app and the browser editor.",
+    "privacy.kept.title": "What is kept, and where",
+    "privacy.kept.notes": "Your notes stay in your own files, on your device: your Obsidian vault, or the folder you open in the app. They are kept for as long as you keep those files. To delete them, delete the files.",
+    "privacy.kept.settings": "Your settings stay on your device too, in Obsidian's data for the plugin. Uninstall the plugin to delete them. The app keeps the folder it has open only while it runs.",
+    "privacy.kept.nothing": "Nothing is sent to us. There is no server of ours, so we never see your notes, your settings or how you use ThoughtKnot.",
+    "privacy.ai.title": "AI models: the one place your words can go",
+    "privacy.ai.off": "AI is off until you turn it on and set up a model yourself. Nothing is ever sent in the background.",
+    "privacy.ai.send": "Before anything goes, you see what will be sent and to which model. Nothing goes until you press Send.",
+    "privacy.ai.where": "A model on your own device keeps your words on your device. A model at a remote address receives the words you send. Its provider keeps them under its own terms, so they leave our control once sent.",
+    "privacy.ai.record": "Each send is recorded on your device without the words sent: the time, the model, the size and the result. The last 200 sends are kept. A command clears them.",
+    "privacy.ai.keys": "A model's key stays in Obsidian's own store for secrets. It is never written to a note, a setting or a log.",
+    "privacy.site.title": "This website",
+    "privacy.site.text": "This site sets no cookies and runs no analytics. GitHub Pages hosts it, and GitHub may keep logs of visits under GitHub's own privacy statement.",
+    "privacy.contact.title": "Questions",
+    "privacy.contact.text": "Ask about privacy in GitHub Discussions, open to everyone.",
+    "privacy.changed": "This page is made from the project's source. It last changed with commit {sha} on {date}.",
+    "privacy.kept.drafts": "A change not yet saved is kept as a draft on your device. It goes once it is saved or thrown away."
   }
 }
