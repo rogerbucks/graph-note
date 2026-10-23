@@ -4126,8 +4126,9 @@
         "date": "2026-10-23",
         "commit": "d3e541fab5245380c8b48a7b4a542e54217fc135"
       },
-      "status": "open",
-      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+      "status": "done",
+      "wave": "Wave 7 · Language, theming, the standalone app and massive graphs",
+      "done_in": "#1062"
     },
     {
       "id": "LEGAL-3",
