@@ -31,8 +31,7 @@ import { drawnApart, renderTypeStrip, TypePlace, typeLeftAt } from './type-strip
 import { bindViewportEvents } from './viewport-events';
 import { FullScreen } from './full-screen';
 import { Aids } from './viewer-aids';
-import { viewportSize, zoomSize } from './viewport-size';
-import type { Measured } from './viewport-size';
+import { Measuring, viewportSize, zoomSize } from './viewport-size';
 import type { ViewOptions } from './view-options';
 
 /** A drawn graph with its bar, zoom, full screen, details and, in edit mode, the inspector. */
@@ -68,6 +67,7 @@ export class GraphView extends Lifecycle {
   /** Where the legend of moving links is (§7). */
   private legendSlot!: HTMLElement;
   private readonly place = new TypePlace(); // where the last card was left as its type changed (§15)
+  private readonly measuring = new Measuring(() => this.viewport); // its size, read once a view (§25)
 
   constructor(containerEl: HTMLElement, options: ViewOptions) {
     super();
@@ -228,7 +228,7 @@ export class GraphView extends Lifecycle {
     this.across = mode === 'note' && scrollsOneWay(type, isPhone(), this.o.drawn.width, room);
     const size = { width: this.o.drawn.width, height: this.o.drawn.height, fromRight: !!this.o.drawn.mirrored };
     this.zoom = this.across ? new AcrossZoom(size, this.zoomSize(), mode) : new Zoom(size, this.zoomSize(), mode);
-    this.zoom.onChange = (v) => this.apply(v);
+    this.zoom.onChange = (v) => this.measuring.during(() => this.apply(v));
     this.zoom.onExit = () => this.o.onClose?.();
     // a card drawn again as a new type, as the last was left (§15); a view saved as shown (§7); a link's back step (§18)
     const was = this.place.take(this.o.diagram, mode) ?? view?.shown ?? this.o.links?.cameBack();
@@ -308,26 +308,14 @@ export class GraphView extends Lifecycle {
     return playablePaths(this.o.reading, this.o.graph);
   }
 
-  /**
-   * The viewport's size as read once while a view is applied, or none. Reading an element's size makes the browser lay
-   * the page out again whenever something changed since. A drag applies a view many times a second. So it reads the
-   * size once, before it changes anything. The mini-map and the selection's arrow use that (pan_measured_once).
-   */
-  private measured: Measured | null = null;
-
-  /** The viewport, or its size as read for the view being applied. */
-  private box(): Measured {
-    return this.measured ?? this.viewport;
-  }
-
   /** The viewport's size to draw it at (viewport-size.ts), kept as tall while regrouped. */
   private viewportSize() {
-    return this.sel.held(viewportSize(this.box(), this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
+    return this.sel.held(viewportSize(this.measuring.box, this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
   }
 
   /** The viewport's size to tell the zoom: none while hidden or not yet laid out, so the zoom keeps its view (§25). */
   private zoomSize() {
-    return this.sel.held(zoomSize(this.box(), this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
+    return this.sel.held(zoomSize(this.measuring.box, this.drawn, this.o.mode, this.across, this.o.aids?.tallest));
   }
 
   /**
@@ -364,18 +352,6 @@ export class GraphView extends Lifecycle {
   }
 
   private apply(v: View): void {
-    // measured first, before anything changes the page, so the browser need not lay it out again to answer
-    const { clientWidth, clientHeight } = this.viewport;
-    this.measured = { clientWidth, clientHeight };
-    try {
-      this.applyMeasured(v);
-    } finally {
-      this.measured = null;
-    }
-  }
-
-  /** The view applied, with the viewport's size as measured just before. */
-  private applyMeasured(v: View): void {
     this.svg?.setAttribute('width', String(v.width));
     this.svg?.setAttribute('height', String(v.height));
     // labels by zoom: link labels hidden while too small to read, but on a link in focus or highlighted (§25)
@@ -392,10 +368,8 @@ export class GraphView extends Lifecycle {
     this.sel.viewChanged(); // the arrow to a selection out of view follows (§25)
   }
 
-  /**
-   * Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25). An
-   * arrow key's `walking` only moves the selection: it never answers a question for a second thing.
-   */
+  /** Opens a box or link; with `extend` (Shift), a second thing asks for the shortest path from the one selected (§25).
+   * An arrow key's `walking` only moves the selection: it never answers a question for a second thing. */
   private open(t: Target, extend = false, walking = false): void {
     // while recording a walk, or making a view, a tap chooses rather than opening details (§7)
     if ('key' in t && (this.walk?.tap(t.key) || this.maker?.tap(t.key))) return;

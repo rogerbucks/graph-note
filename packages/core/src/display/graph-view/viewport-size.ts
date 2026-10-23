@@ -42,3 +42,34 @@ export function zoomSize(viewport: Measured, drawn: Size, mode: Mode, across: bo
     ? viewportSize(viewport, drawn, mode, across, tallest)
     : { width: 0, height: 0 };
 }
+
+/**
+ * The viewport's size, read once while a view is applied (pan_measured_once). Reading an element's size makes the
+ * browser lay the page out again if anything changed since. A drag applies a view many times a second. So the size is
+ * read once, before anything changes, and the card, the mini-map and the selection's arrow all use that.
+ */
+export class Measuring {
+  private held: Measured | null = null;
+  private readonly viewport: () => HTMLElement;
+
+  /** For the viewport, given late because the card builds it after. */
+  constructor(viewport: () => HTMLElement) {
+    this.viewport = viewport;
+  }
+
+  /** The size as read for the view being applied, or the viewport itself between views. */
+  get box(): Measured {
+    return this.held ?? this.viewport();
+  }
+
+  /** Runs `apply` with the viewport's size read once, first. */
+  during(apply: () => void): void {
+    const { clientWidth, clientHeight } = this.viewport();
+    this.held = { clientWidth, clientHeight };
+    try {
+      apply();
+    } finally {
+      this.held = null;
+    }
+  }
+}
