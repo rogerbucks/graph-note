@@ -58,6 +58,8 @@ export const READS = [
   'diagram.back',
   'diagram.centreLook',
   'diagram.putCentre',
+  'diagram.canCentre',
+  'diagram.textOf',
   'diagram.leave',
   'diagram.kept',
 ] as const;

@@ -1,7 +1,7 @@
 // What the core says of a drawing, in UK English (editor spec §42, words_catalogue). It says why a diagram type fits
 // or not, and why one is suggested. It says why a graph is too large or took too long to lay out, and what an animated
-// image may be. It also says where a link leaves the vault, and how far a completeness rule is met. source-words.ts
-// keeps these with every other word.
+// image may be. It also says where a link leaves the vault, and how far a completeness rule is met. And it says a
+// radial drawing's centre, and how to pick another. source-words.ts keeps these with every other word.
 
 /** The words of the drawing, its types, its limits and its links, by key, in UK English. */
 export const DRAWING_SOURCE_WORDS = {
@@ -107,6 +107,15 @@ export const DRAWING_SOURCE_WORDS = {
   'completeness.overdue': { one: '{count} overdue', other: '{count} overdue' },
   'completeness.missing': { one: '{count} missing', other: '{count} missing' },
   'completeness.unchecked': 'cannot be checked',
+  // a radial drawing's centre, and how to pick another (radial-centre.ts, thing-menu.ts)
+  'type.centred': 'Centred on {thing}.',
+  'type.usual-centre': 'Back to the usual centre',
+  'type.now-centre': '{thing} is now the centre',
+  'type.centre-how':
+    'To put another thing in the centre, right-click it, press C on it, or pick Centre here in its details.',
+  'type.radial-around': 'Radial, around {thing}',
+  'details.centre': 'Centre here',
+  'menu.thing': 'What to do with {thing}',
   // a field a view needs and a thing lacks (view-scaffold.ts)
   'scaffold.prompt': 'Add {field} for {thing}',
 } as const;

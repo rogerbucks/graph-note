@@ -22,7 +22,8 @@ import type {
   StyleGraph,
 } from '@thoughtknot/core';
 import type { LeftAt } from '../links/link-types';
-import { centreStrip } from './radial-centre';
+import { aroundSelected, centreShown, centreStrip } from './radial-centre';
+export { pickedCentre } from './radial-centre';
 import { renderTable, tableSize } from './table-view';
 import { button } from './view-bar';
 import { renderTimelineChoice, timelineChange } from './timeline-choice';
@@ -65,6 +66,10 @@ export interface DiagramShown extends DiagramOffer {
   centreLook?: (key: string | null) => void;
   /** Set by the strip: `centreOn`, the boxes gliding there; false where nothing can be put in the centre (radial_centre_pick). */
   putCentre?: (key: string | null) => boolean;
+  /** Set by the strip: whether thing `key` can be put in the centre now, from any type (radial_centre_anywhere). */
+  canCentre?: (key: string) => boolean;
+  /** The words of thing `key`, as its box says them. */
+  textOf?: (key: string) => string;
   /** For a card drawn as a timeline: its order and what it shows, to offer (timeline_choice_card). */
   timeline?: TimelineShown;
   /** Writes a timeline's order or what it shows into the style graph, keeping the rest of its Diagram. */
@@ -112,11 +117,6 @@ export function withTried(style: StyleGraph, change: DiagramWrite): StyleGraph {
     at: { block: -1, line: 0, id: 'tried' },
   };
   return { ...style, diagrams: [tried, ...style.diagrams.filter((d) => d.view !== change.view)] };
-}
-
-/** The centre `style` picks for a radial drawing in `view`, the view's own over the whole graph's; none if not picked. */
-export function pickedCentre(style: Pick<StyleGraph, 'diagrams'>, view?: string): string | undefined {
-  return chosenDiagram(style, view)?.centre;
 }
 
 /** The space a plug-in's diagram type is given to draw in, in pixels, by every host. */
@@ -180,35 +180,9 @@ export function diagramShown(
       : change(offer.choice.drawn);
   const plan = offer.choice.plan;
   const timeline = plan?.type === 'timeline' ? timelineChange(whole, {}) : undefined;
-  const centre = plan?.type === 'radial' ? plan.centre : undefined,
-    text = (key: string) => drawing.boxes.find((b) => b.key === key)?.text ?? key;
-  // a centre put in a radial drawing: saved, or looked at in reading view, where it can be (radial_centre_pick)
-  const radial = (key: string | null): DiagramWrite => ({
-    type: 'radial',
-    ...(view === undefined ? {} : { view }),
-    ...(key ? { centre: key } : {}),
-  });
-  const centreOn = (key: string | null) =>
-    write(radial(key), word('type.now-centre', { thing: text(key ?? centreOfUsual()) }));
-  const centreLook = (key: string | null) =>
-    trying?.tryOut(trying.saved === 'radial' && trying.savedCentre === (key ?? undefined) ? null : radial(key));
-  // the usual centre: the one the radial drawing has with none picked
-  const centreOfUsual = () => {
-    const usual = diagramOffer(
-      drawing,
-      { ...style, diagrams: [{ type: 'radial', at: { block: -1, line: 0, id: 'usual' } }] },
-      g,
-    );
-    return usual.choice.plan?.type === 'radial' ? usual.choice.plan.centre : '';
-  };
   return {
     ...offer,
-    ...(centre === undefined
-      ? {}
-      : {
-          centre: { key: centre, text: text(centre), picked: pickedCentre(style, view) !== undefined },
-          centreOn,
-        }),
+    ...centreShown(drawing, style, g, view, offer, write, trying), // a radial drawing's centre (radial_centre_pick)
     wayIn: wayIn(drawing.boxes.length),
     ...(offer.choice.drawn === 'table' ? { table: tableOf(drawing, g) } : {}),
     choose,
@@ -227,7 +201,6 @@ export function diagramShown(
           lookView: (type: string) => trying.tryOut(drawnView === type && !trying.tried ? null : viewChange(type)),
           tried: trying.tried,
           back: () => trying.tryOut(null),
-          ...(centre === undefined ? {} : { centreLook }),
           keep: () => write(whole, now(offer.choice.drawn)),
           leave: trying.leave,
           kept: trying.kept,
@@ -308,7 +281,7 @@ export function renderTypeStrip(
     toggle.setAttribute('aria-expanded', String(!list.hidden));
   };
   const toggle = button(strip, word('type.choose'), 'layout-dashboard', open, word('type.choose'));
-  toggle.setAttribute('aria-expanded', 'false');
+  const around = aroundSelected(toggle, d, where); // Radial with a thing selected (radial_centre_anywhere)
   picks(toggle, list);
   // a timeline's order and what it shows: looked at while the card is read-only, when it can be; else saved
   if (d.timeline) {
@@ -332,7 +305,10 @@ export function renderTypeStrip(
       attr: { type: 'button', 'aria-pressed': String(f.type === choice.drawn) },
     });
     b.disabled = !f.fits;
-    b.addEventListener('click', () => pick(f.type));
+    if (f.type === 'radial') around.tile(b);
+    b.addEventListener('click', () => {
+      if (!(f.type === 'radial' && around.put())) pick(f.type);
+    });
     const why = f.fits
       ? [
           f.type === choice.drawn ? word('type.drawn-now') : '',
