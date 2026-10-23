@@ -1,0 +1,19 @@
+{
+  "about": "Graph spec §3 and editor spec §27, format_version_named (risk ARCH-4): a block may name the format it is written in on its graph line, as '· format 1'. A reader reads a block in its own major format or an older one, and a block that names none. It refuses a newer major plainly, with GN106, and the note's text is kept as written. One table for both readers: format-version.test.mjs and python/graph_spec/tests/test_format_version.py.",
+  "reads": 1,
+  "cases": [
+    { "name": "a block that names no format", "block": "// graph: g\n(a:T),\n(b:T)", "things": 2 },
+    { "name": "a block in this format", "block": "// graph: g · format 1\n(a:T)", "things": 1 },
+    {
+      "name": "a block in a newer minor of this format",
+      "block": "// graph: g · SOURCE · format 1.4\n(a:T)",
+      "things": 1
+    },
+    { "name": "a block in a newer major format", "block": "// graph: g · format 2\n(a:T)", "code": "GN106" },
+    {
+      "name": "a newer major beside a shared schema",
+      "block": "// graph: g · schema decision@1 · format 3.0\n(a:T)",
+      "code": "GN106"
+    }
+  ]
+}

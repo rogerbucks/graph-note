@@ -347,6 +347,8 @@
       "instance_inherits_type",
       "type_suggestion_bundle",
       "mesh_one_format",
+      "format_version_named",
+      "schema_version_moves",
       "mesh_text_canonical",
       "mesh_index_rebuilds",
       "mesh_work_in_engine",

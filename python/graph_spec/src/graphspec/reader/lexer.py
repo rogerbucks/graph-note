@@ -43,6 +43,10 @@ SCHEMA = re.compile(rf"·{S}*SCHEMA{S}+{N}+")
 EXCERPT_OF = re.compile(rf"·{S}*excerpt\b", re.I | re.ASCII)
 QUERY = re.compile(rf"·{S}*QUERY\b", re.ASCII)
 CHANGE_SET = re.compile(rf"·{S}*CHANGE SET\b", re.ASCII)
+FORMAT = re.compile(rf"·{S}*format{S}+(\d+(?:\.\d+)?)\b", re.ASCII)
+# The newest major format this reader reads (§3). A block that names a newer one is refused
+# plainly, its text kept.
+FORMAT_READ = 1
 
 
 def header(block: str) -> tuple[str | None, str]:
@@ -76,6 +80,15 @@ def header(block: str) -> tuple[str | None, str]:
             f"the graph name '{m.group(1)}' is not one word",
             "use letters, digits and underscores only, such as reader_choice, not reader-choice",
             code="GN102",
+        )
+    fmt = FORMAT.search(rest)
+    if fmt and int(fmt.group(1).split(".")[0]) > FORMAT_READ:
+        raise ProfileError(
+            1,
+            f"the block is written in format {fmt.group(1)}, newer than this reader,"
+            f" which reads format {FORMAT_READ}",
+            "read it with a newer reader: its text is kept as written",
+            code="GN106",
         )
     return m.group(1), kind
 

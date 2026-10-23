@@ -37,6 +37,13 @@
       "libraries": ["js", "py"]
     },
     {
+      "code": "GN106",
+      "section": "3",
+      "message": "the block is written in format {version}, newer than this reader, which reads format {reads}",
+      "fix": "read it with a newer reader: its text is kept as written",
+      "libraries": ["js", "py"]
+    },
+    {
       "code": "GN201",
       "section": "3",
       "message": "expected '{expected}', found '{found}'",
