@@ -93,6 +93,10 @@ const NAMES = [
   'centroidsOf',
   'clusterCycles',
   'cycleView',
+  // the graph mesh's join: conflicts, gaps, certainty, standing (editor spec §28 and §30)
+  'certaintyOf',
+  'byCertainty',
+  'meshJoin',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

@@ -144,6 +144,11 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
   - `centroids_of` gives each cluster's centroid (`centroids.js`, `centroid-cases.json`).
   - `cluster_cycles` and `cycle_view` flag the clusters in a cycle, and hide or highlight them (`cycles.js`,
     `cycle-cases.json`).
+- `src/graphspec/engine/mesh/` — editor spec §28 and §30, the graph mesh. `mesh_join.mesh_join` joins graphs as the mesh
+  does and says what it found. That is each clash with both sides, the gaps, and each claim's certainty in words. It
+  is also each thing's standing, the marker on links to a contested thing, contested hand-made clusters and
+  same-named states held as a guess. `by_certainty` ranks claims by a key made from their words. The twin of `mesh-join.js`, held to
+  `mesh-join-cases.json`.
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).
