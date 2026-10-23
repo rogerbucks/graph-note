@@ -101,6 +101,8 @@ export const EDITING_SOURCE_WORDS = {
   'editing.no-block': 'this note has no graph block to edit',
   'editing.block-gone': 'the block is no longer in the note where the pane read it',
   'editing.block-changed': 'the block has changed since the pane read it',
+  'editing.note-changed': 'the note has changed since it was last read: open it again to edit',
+  'editing.not-stored': '{thing} is not in graph {graph} as last read',
   'editing.block-twins': 'the block cannot be told apart from more than one identical block in the note',
   // locking a graph, and two versions compared (lock.ts, changes-view.ts)
   'editing.lock.no-graph': 'there is no graph {graph} to lock',
