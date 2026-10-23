@@ -3,7 +3,7 @@
 // of the graph's names, never one of them. The name is shown before anything is written. Add the thing then writes it
 // into the text being edited, as one edit an undo takes back. A name of the user's own is kept as the text changes, and
 // held to the same rules.
-import { addThing, suggestName, word } from '@thoughtknot/core';
+import { addThing, sortedForReader, suggestName, word } from '@thoughtknot/core';
 import { button } from './view-bar';
 import type { ViewOptions } from './view-options';
 
@@ -66,7 +66,7 @@ export class AddThing {
     const kind = label(el, word('add.kind'), { list: listId });
     const kinds = el.createEl('datalist', { attr: { id: listId } });
     const boxes = this.o.reading.graphs.get(this.o.graph)?.boxes ?? [];
-    for (const k of [...new Set(boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))].sort())
+    for (const k of sortedForReader([...new Set(boxes.flatMap((b) => b.kind.split(' · ').filter(Boolean)))]))
       kinds.createEl('option', { attr: { value: k } });
     const alert = el.createDiv({ attr: { role: 'alert' } });
     // the names the note has now, with what is typed: never the card's drawing, which can be older (§4)

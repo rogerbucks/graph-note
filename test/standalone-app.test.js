@@ -96,9 +96,15 @@ describe('the desktop app, run for real: open a folder, draw a note, edit it, of
       if (Date.now() > end) {
         // what the window showed instead, so a failure in CI says where the app stopped
         const seen = await run(
-          "return location.href + ' (' + document.readyState + '): ' + (document.body?.innerText ?? '').slice(0, 300)",
+          "return location.href + ' (' + document.readyState + ', ' + navigator.language + ', tauri ' + typeof window.__TAURI__ + '): ' + (document.body?.innerText ?? '').replace(/\\s+/g, ' ').slice(0, 300)",
         ).catch((e) => `nothing: ${e.message}`);
-        throw new Error(`the app never showed: ${script}\n  it showed ${seen}`);
+        // a module that failed to load or run gives its error again when imported once more
+        const modules = await call('POST', `/session/${session}/execute/async`, {
+          script:
+            "const done = arguments[arguments.length - 1]; Promise.all([...document.scripts].map((s) => s.src && import(s.src).then(() => 'ran', (e) => String(e)))).then((r) => done(r.join(', ')))",
+          args: [],
+        }).catch((e) => `unknown: ${e.message}`);
+        throw new Error(`the app never showed: ${script}; it showed ${seen}; its scripts: ${modules}`);
       }
       await pause(250);
     }

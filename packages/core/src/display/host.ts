@@ -4,7 +4,14 @@
 // once before anything is drawn. Obsidian installs one made of its own `setIcon`, `Platform`, `Notice` and `Menu`; the
 // browser editor's page installs one of its own. The layer imports no host, so nothing else tells it which it is in.
 
-import { currentDirection, directionOf, setDirection, setLanguage, SOURCE_LANGUAGE } from '@thoughtknot/core';
+import {
+  currentDirection,
+  directionOf,
+  setDirection,
+  setLanguage,
+  setLocale,
+  SOURCE_LANGUAGE,
+} from '@thoughtknot/core';
 import type { NoteStorage } from '@thoughtknot/core';
 import type { LinkHost } from './links/link-types.ts';
 
@@ -65,7 +72,8 @@ export interface DisplayHost {
   /**
    * The language the host shows itself in, as a language tag: Obsidian's own, the display language of VS Code, the
    * system's for the app and the browser page (editor spec §42, language_follows_host). The words are said in it when a
-   * translation for it is added, else in UK English. Not set: UK English.
+   * translation for it is added, else in UK English. Numbers, days and lists are shown in its locale, and lists for the
+   * reader sorted in its order (locale_formats, locale_sorting). Not set: UK English.
    */
   language?: () => string;
   /**
@@ -116,6 +124,8 @@ export function installHost(host: DisplayHost): void {
   installed = host;
   const language = host.language?.() ?? SOURCE_LANGUAGE;
   setLanguage(language);
+  // a bare "en", as Obsidian says English, is the source's UK English, not American
+  setLocale(language === 'en' ? SOURCE_LANGUAGE : language);
   setDirection(host.direction?.() ?? directionOf(language));
 }
 
