@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/block-in-parts.test.js",
+  "test": "in reading view a thing’s properties are shown, but cannot be changed",
+  "seen_failing_first": false,
+  "evidence": "Added after review to pin a guard the code already had; removing the guard makes it fail."
+}

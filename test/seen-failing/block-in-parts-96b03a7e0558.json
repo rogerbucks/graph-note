@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/block-in-parts.test.js",
+  "test": "a note changed since the store read it is left alone, and says why",
+  "seen_failing_first": false,
+  "evidence": "Added after review to pin a guard the code already had; removing the guard makes it fail."
+}
