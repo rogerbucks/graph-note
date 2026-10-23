@@ -2460,3 +2460,7 @@ pre.thoughtknot-code {
   visibility: hidden;
   pointer-events: none;
 }
+.thoughtknot-massive-grow {
+  display: flex;
+  gap: var(--gn-space-2);
+}

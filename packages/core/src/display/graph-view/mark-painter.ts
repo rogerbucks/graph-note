@@ -80,6 +80,8 @@ export function paintsOf(palette: Palette): Paints {
     'overview.group': { fill: palette.fill('cyan'), line: palette.blend('cyan', 60) },
     'overview.name': { text: palette.text },
     'overview.count': { text: palette.muted },
+    // a picture grown from a thing covers the overview under it: the page's colour, or the system's where none is given
+    'overview.grown': { fill: palette.page ?? 'Canvas', line: palette.blend('orange', 60) },
   };
   return (style) => {
     for (let s = style; s; s = s.slice(0, Math.max(0, s.lastIndexOf('.')))) {
