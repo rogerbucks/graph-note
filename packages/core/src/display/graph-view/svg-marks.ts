@@ -1,7 +1,8 @@
 // The marks of a drawing already on screen (editor spec §53, scale_space_view), read from its SVG as Graphviz wrote it.
 // The 3D view lifts these into depth (space-view-panel.ts), so it lays nothing out. Each box, group and link keeps
 // the colours the theme gave it. So the 3D view looks like the card, in light and dark.
-// A group holds the things inside its box; a link names its two ends by its title, as Graphviz writes `a->b`.
+// A group holds the things inside its box. A link names its two ends by its title, as Graphviz writes `a->b`. The
+// plugin's own drawing has no titles: a thing is named by its data-key, and a link is joined to the things it touches.
 import type { DrawMark } from '../../drawing-marks.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 
@@ -55,20 +56,35 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     if (around) m.group = around;
   }
   const keys = new Set<string>();
+  const boxes: Placed[] = [];
   for (const g of Array.from(svg.querySelectorAll('g.node'))) {
     const shape = g.querySelector(
       ':scope > polygon, :scope > ellipse, :scope > path, :scope > a polygon, :scope > a path',
     );
     if (!shape) continue;
-    const key = titleOf(g);
+    // the plugin's own drawing names a thing by data-key and drops Graphviz's titles; a plain Graphviz SVG has titles
+    const key = g.getAttribute('data-key') ?? (titleOf(g) || g.id);
+    const name = g.getAttribute('aria-label');
     const { x, y, width, height } = boxOf(shape);
-    const text = g.querySelector('text');
+    const text = nameOf(g);
     const group = holding(x, y, width, height);
     const style = styled(shape, text);
     keys.add(key);
-    marks.push({ id: `t:${key}`, kind: 'box', style, of: key, x, y, width, height, ...(group ? { group } : {}) });
+    boxes.push({ key, x, y, width, height });
+    marks.push({
+      id: `t:${key}`,
+      kind: 'box',
+      style,
+      of: key,
+      x,
+      y,
+      width,
+      height,
+      ...(group ? { group } : {}),
+      ...(name ? { name } : {}),
+    });
     if (text?.textContent) {
-      const size = Number.parseFloat(text.getAttribute('font-size') ?? '') || 14;
+      const size = sizeOf(text);
       marks.push({
         id: `l:${key}`,
         kind: 'label',
@@ -90,10 +106,64 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
       const p = path.getPointAtLength((length * i) / LINK_STEPS);
       return [p.x, p.y] as [number, number];
     });
-    const ends = endsOf(titleOf(g), keys);
+    const title = endsOf(titleOf(g), keys);
+    // a link with no title is joined to the things its two ends touch
+    const ends = title.from !== undefined ? title : touching(points, boxes);
     marks.push({ id: `e:${g.id || marks.length}`, kind: 'link', style: styled(path, null), points, ...ends });
   }
   return { marks, paints: (style) => table.get(style) ?? {} };
+}
+
+/** A thing's box on the page, by its key. */
+interface Placed {
+  key: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** How far a link's end may stop from a thing's box, in pixels, and still be its end: room for an arrowhead. */
+const END_REACH = 24;
+
+/** The keys of the things nearest a link's first and last points, each within END_REACH. None when either has none. */
+function touching(
+  points: readonly (readonly [number, number])[],
+  boxes: readonly Placed[],
+): { from?: string; to?: string } {
+  const nearest = (p: readonly [number, number] | undefined) => {
+    let best: string | undefined,
+      bestGap = END_REACH;
+    if (p)
+      for (const b of boxes) {
+        const gap = Math.hypot(
+          Math.max(b.x - p[0], 0, p[0] - b.x - b.width),
+          Math.max(b.y - p[1], 0, p[1] - b.y - b.height),
+        );
+        if (gap <= bestGap) {
+          best = b.key;
+          bestGap = gap;
+        }
+      }
+    return best;
+  };
+  const from = nearest(points[0]),
+    to = nearest(points[points.length - 1]);
+  return from !== undefined && to !== undefined ? { from, to } : {};
+}
+
+/** The size of `text`'s letters, as Graphviz writes them; 14 when it says none. */
+const sizeOf = (text: Element) => Number.parseFloat(text.getAttribute('font-size') ?? '') || 14;
+
+/**
+ * The words naming a thing: the largest in its box. A thing may show its kind in small letters above its name, and
+ * the name is what a label should say (Roger, 23 Oct 2026). The first of the largest wins.
+ */
+function nameOf(g: Element): Element | null {
+  let best: Element | null = null;
+  for (const t of Array.from(g.querySelectorAll('text')))
+    if (t.textContent?.trim() && (!best || sizeOf(t) > sizeOf(best))) best = t;
+  return best;
 }
 
 /**

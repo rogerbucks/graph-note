@@ -18,3 +18,8 @@ test('anything else is clear, so a colour the canvas could not read is not paint
   for (const css of ['', 'red', 'var(--gn-text)', '#12345', 'rgb(1, 2)'])
     assert.deepEqual(rgbaOf(css), [0, 0, 0, 0], css);
 });
+
+test('a colour a theme mixes is read too: a canvas writes it back as color(srgb …)', () => {
+  assert.deepEqual(rgbaOf('color(srgb 1 0.5 0)'), [1, 0.5, 0, 1]);
+  assert.deepEqual(rgbaOf('color(srgb 0.2 0.4 0.6 / 0.5)'), [0.2, 0.4, 0.6, 0.5]);
+});

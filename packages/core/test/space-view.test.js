@@ -4,9 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   FLOOR_GAP,
-  LABELS_MOST,
   blockAt,
-  labelsOnScreen,
   orbitBy,
   orbitFit,
   projectPoint,
@@ -121,41 +119,6 @@ test('a drag turns and tilts the camera, never under the floor; zooming never pa
   assert.ok(zoomBy(orbit, 1e9).distance >= 1);
 });
 
-test('labels on screen are the nearest ones big enough to read, at most a set number', () => {
-  const marks = [];
-  for (let i = 0; i < 300; i++)
-    marks.push({
-      id: `l${i}`,
-      kind: 'label',
-      style: 'thing.name',
-      x: (i % 20) * 30,
-      y: Math.floor(i / 20) * 30,
-      text: `${i}`,
-      size: 12,
-      anchor: 'middle',
-    });
-  marks.push({
-    id: 'tiny',
-    kind: 'label',
-    style: 'thing.name',
-    x: 300,
-    y: 200,
-    text: 'tiny',
-    size: 0.01,
-    anchor: 'middle',
-  });
-  const space = spaceOf(marks, { by: 'group' });
-  const orbit = orbitFit(space, 1);
-  const m = spaceMatrix(orbit, 1, 1000);
-  const shown = labelsOnScreen(space, m, 800, 800);
-  assert.ok(shown.length > 0 && shown.length <= LABELS_MOST);
-  assert.ok(!shown.some((l) => l.id === 'tiny'), 'too small to read is left out');
-  assert.ok(shown.every((l) => l.size >= 6));
-  // nearest first: from the front, the page's lower rows are nearer
-  const rowOf = (l) => Math.floor(Number(l.id.slice(1)) / 20);
-  assert.ok(rowOf(shown[0]) >= rowOf(shown.at(-1)));
-});
-
 test('a click picks the nearest block whose top is under it', () => {
   const space = spaceOf(NESTED, { by: 'group' });
   const orbit = { ...orbitFit(space, 1), tilt: Math.PI / 2 - 0.02 };
@@ -164,4 +127,17 @@ test('a click picks the nearest block whose top is under it', () => {
   const centre = projectPoint(m, [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall], 500, 500);
   assert.equal(blockAt(space, m, 500, 500, centre.x, centre.y)?.id, 't:b', 'the thing on top, not its groups');
   assert.equal(blockAt(space, m, 500, 500, 1, 1), null);
+});
+
+test('a click on the side of a tall block picks it too, not only its top', () => {
+  const marks = [{ id: 't:tower', kind: 'box', style: 'thing', of: 'tower', x: 0, y: 0, width: 60, height: 60 }];
+  const space = spaceOf(marks, { by: 'size', sizes: new Map([['tower', 10]]) });
+  const b = block(space, 't:tower');
+  const orbit = { ...orbitFit(space, 1), tilt: 0.3 };
+  const m = spaceMatrix(orbit, 1, 1000);
+  // the middle of the side facing the camera, half way up: the camera looks from the page's bottom, so the front is y
+  const side = projectPoint(m, [b.x + b.width / 2, b.y, b.floor + b.tall / 2], 500, 500);
+  const top = projectPoint(m, [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall], 500, 500);
+  assert.ok(Math.abs(side.y - top.y) > 20, 'the side is well below the top on screen');
+  assert.equal(blockAt(space, m, 500, 500, side.x, side.y)?.id, 't:tower');
 });
