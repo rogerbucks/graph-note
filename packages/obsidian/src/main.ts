@@ -142,10 +142,11 @@ export default class ThoughtKnotPlugin extends Plugin {
   async sharedSchemas(): Promise<string[]> {
     if (!this.schemas) {
       const found = new Map<string, string[]>();
+      // A note that cannot be read is skipped, with a warning: one bad note never stops every graph.
+      const skip = (path: string) => (e: unknown) => console.warn('ThoughtKnot skipped a note for schemas', path, e);
       const read = async (path: string) => {
-        const blocks = gqlBlocks((await noteText(this.app, path, { shown: true })) ?? '')
-          .map((b) => b.text)
-          .filter(isSharedSchema);
+        const text = await noteText(this.app, path, { shown: true }).catch(skip(path));
+        const blocks = gqlBlocks(text ?? '').flatMap((b) => (isSharedSchema(b.text) ? [b.text] : []));
         if (blocks.length) found.set(path, blocks);
         else found.delete(path);
       };

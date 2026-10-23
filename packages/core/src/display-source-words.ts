@@ -117,4 +117,5 @@ export const DISPLAY_SOURCE_WORDS = {
   'massive.back': 'Back',
   'massive.forward': 'Forward',
   'massive.kept': { one: '{count} thing kept', other: '{count} things kept' },
+  'massive.filter-saved': 'Saved the filter in the style graph. The overview starts with it next time.',
 } as const;

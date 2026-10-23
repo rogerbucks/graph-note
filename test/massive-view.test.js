@@ -55,7 +55,20 @@ const card = document.body.appendChild(document.createElement('div'));
 card.style.width = '600px';
 // every third thing is done, the rest open
 const props = (key) => ({ status: Number(key.slice(1)) % 3 ? 'open' : 'done' });
-window.view = massiveView(card, drawing, { graph: 'Big', palette: PALETTES.light, layout, props });
+// each filter chosen, as the host is told it to save
+window.chose = [];
+const chose = (keep) => window.chose.push(keep);
+window.view = massiveView(card, drawing, { graph: 'Big', palette: PALETTES.light, layout, props, chose });
+// a second card, which starts with a saved filter: what it is named and which values are ticked
+window.saved = () => {
+  const again = document.body.appendChild(document.createElement('div'));
+  again.style.width = '600px';
+  massiveView(again, drawing, { graph: 'Big', palette: PALETTES.light, layout, props, chosen: { status: ['done'] } });
+  const ticked = [...again.querySelectorAll('.thoughtknot-massive-facet input:checked')];
+  const label = again.querySelector('.thoughtknot-massive-stage').getAttribute('aria-label');
+  again.remove();
+  return { label, ticked: ticked.map((b) => b.nextSibling.textContent) };
+};
 window.stage = () => {
   const stage = card.querySelector('.thoughtknot-massive-stage');
   return { label: stage.getAttribute('aria-label'), width: stage.clientWidth, height: stage.clientHeight };
@@ -255,6 +268,7 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
       );
       assert.deepEqual(shown[1].values, ['open2,000', 'done1,000']);
       assert.equal(await run("tick('status', 'done')"), '1,000 things kept');
+      assert.deepEqual(await run('chose'), [{ status: ['done'] }], 'the host is told the filter, to save it');
       const glided = await run('scales()');
       assert.ok(glided.length > 2, 'the groups glide through frames between, never jumping');
       assert.ok(glided.at(-1) > glided[0], 'the view follows them in, as fewer things leave a smaller overview');
@@ -278,6 +292,7 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     assert.deepEqual(back.ticked, [], 'and to its filters: none');
     assert.match(back.label, /^Overview of Big: 3,000 things/);
     assert.equal(back.forward, true);
+    assert.deepEqual((await run('chose')).at(-1), { status: ['open'] }, 'going back is not a filter chosen');
     const flownAgain = await run("trail('Back')");
     assert.equal(flownAgain.said, flown.said);
     assert.deepEqual(flownAgain.view, flown.view);
@@ -291,5 +306,11 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     const after = await run("trail('Back').then(() => trail('Forward'))");
     assert.equal(after.forward, false, 'the new step dropped the filter ahead of it');
     assert.deepEqual(after.ticked, []);
+  });
+  // proves: scale_filter_live
+  test('a card drawn with a saved filter starts with it ticked, keeping only its things', options, async () => {
+    const { label, ticked } = await run('saved()');
+    assert.match(label, /^Overview of Big: 1,000 things in \d+ groups\./);
+    assert.deepEqual(ticked, ['done']);
   });
 });

@@ -1,5 +1,5 @@
 {
-  "about": "Graphs whose style graph hides or shows arrowheads (editor spec §15: arrows_switchable, arrows_both_renderers) and shows properties inline (§14: properties_switch, properties_readable, crowded_properties), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same links drawn without their arrowheads, the same rows shown inline, and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_styled.py does the same from the Python side.",
+  "about": "Graphs whose style graph hides or shows arrowheads (editor spec §15: arrows_switchable, arrows_both_renderers) and shows properties inline (§14: properties_switch, properties_readable, crowded_properties), and saves a filter (§53: scale_filter_live), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines, and the view it is drawn in, if any (its name only: the whole graph is drawn, styled as that view is). For every case both give the same problems reading each style, the same links drawn without their arrowheads, the same rows shown inline, and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_styled.py does the same from the Python side.",
   "cases": [
     {
       "name": "arrowheads hidden for the whole graph, the link drawn backwards too",
@@ -16,7 +16,10 @@
           "(home)-[:CITES]->(guide),",
           "(park)-[:TAGGED]->(green)"
         ],
-        ["// graph: trip_style · STYLE trip", "(a1:Arrows {arrowheads: 'hide'})"]
+        [
+          "// graph: trip_style · STYLE trip",
+          "(a1:Arrows {arrowheads: 'hide'})"
+        ]
       ]
     },
     {
@@ -48,7 +51,10 @@
           "(park:Place {name: 'The park'}),",
           "(home)-[:NEAR]->(park)"
         ],
-        ["// graph: trip_style · STYLE trip", "(a1:Arrows {arrowheads: 'hide', view: 'walks'})"]
+        [
+          "// graph: trip_style · STYLE trip",
+          "(a1:Arrows {arrowheads: 'hide', view: 'walks'})"
+        ]
       ]
     },
     {
@@ -178,7 +184,10 @@
           "(:Option {name: 'Large reader', price: 300}),",
           "(large_reader)-[:ANSWERS]->(question)"
         ],
-        ["// graph: reader_style · STYLE reader", "(s1:Show {property: 'price', kind: 'Option'})"]
+        [
+          "// graph: reader_style · STYLE reader",
+          "(s1:Show {property: 'price', kind: 'Option'})"
+        ]
       ]
     },
     {
@@ -231,6 +240,30 @@
           "(s10:Show {property: 'miles', type: 'NEAR', view: 'v'}),",
           "(x1:Colour {name: 'red'}),",
           "(l1:Look {view: 'v', thing: 'home', colur: 'green'})"
+        ]
+      ]
+    },
+    {
+      "name": "a saved Filter gives the same problems in both: a part unread, a filter twice, a kind not there, no keep, a key misspelt",
+      "blocks": [
+        [
+          "// graph: trip",
+          "(home:Place {name: 'Home'}),",
+          "(park:Place {name: 'The park'}),",
+          "(cafe:Cafe {name: 'Cafe'}),",
+          "(guide:Source {name: 'The guide'}),",
+          "(green:Tag {name: 'Green'}),",
+          "(home)-[:NEAR]->(park),",
+          "(cafe)-[:SERVES]->(park),",
+          "(home)-[:CITES]->(guide),",
+          "(park)-[:TAGGED]->(green)"
+        ],
+        [
+          "// graph: trip_style · STYLE trip",
+          "(f1:Filter {keep: 'Kind: Place, Cafe; status: open'}),",
+          "(f2:Filter {keep: 'Kind: Plaice; open; Kind: Tag', view: 'v'}),",
+          "(f3:Filter {}),",
+          "(f4:Filter {kep: 'Kind: Place'})"
         ]
       ]
     }
