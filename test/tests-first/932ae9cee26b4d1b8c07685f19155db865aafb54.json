@@ -9,13 +9,12 @@
         "judging what a page measured in a test language > words drawn over other words in the same layer are named; a layer over the page may cover them",
         "judging what a page measured in a test language > a box that only touches another, within two pixels, is no fault",
         "judging what a page measured in a test language > a view the browser did not show in the test language is named",
-        "judging what a page measured in a test language > a view’s steps find each control by its words in the test language"
-      ],
-      "passedFirst": [
+        "judging what a page measured in a test language > a view’s steps find each control by its words in the test language",
         "in a real browser, every view of every host, in each test language > the check looks: words cut off and words drawn over others, planted in a real page, are found",
         "in a real browser, every view of every host, in each test language > the Obsidian host: no words cut off or drawn over others, in any view",
         "in a real browser, every view of every host, in each test language > the Claude Code host: no words cut off or drawn over others, in any view"
-      ]
+      ],
+      "passedFirst": []
     },
     {
       "file": "test/pseudo-locales.test.js",
