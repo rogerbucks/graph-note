@@ -107,7 +107,9 @@ export function textTooLarge(texts: string[], limits: ReadLimits = READ_LIMITS):
     lines = 0;
   for (const t of texts) {
     bytes += bytesOf(t);
-    lines += t.split('\n').length;
+    lines += 1;
+    // counted in place, never split: a large block's lines are not copied out to be counted (§9)
+    for (let at = t.indexOf('\n'); at !== -1; at = t.indexOf('\n', at + 1)) lines++;
   }
   if (bytes > limits.bytes) return { reason: 'too-large', limit: 'text-bytes', count: bytes, most: limits.bytes };
   if (lines > limits.lines) return { reason: 'too-large', limit: 'text-lines', count: lines, most: limits.lines };

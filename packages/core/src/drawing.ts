@@ -34,6 +34,7 @@ function drawingOf(
   const drawn = new Set(ids);
   // a thing written without a name is drawn under the name suggested for it, and marked so until the name is written (§4)
   const suggested = suggestedPlaces(problems, name);
+  const shown = gs.shownTexts(g, shared);
   return {
     graph: name,
     boxes: ids.map((key) => {
@@ -45,7 +46,7 @@ function drawingOf(
           .filter((l) => !hidden.has(l))
           .sort(byCode)
           .join(' · '),
-        text: gs.shownText(g, key, shared)[0],
+        text: shown(key)[0],
         ...(place ? { suggested: place } : {}),
         ...(parked ? { deferred: { overdue: parked.overdue, what: parked.what } } : {}),
       };
