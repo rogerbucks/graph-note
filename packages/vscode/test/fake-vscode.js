@@ -38,13 +38,55 @@ export class FileSystemError extends Error {
 }
 
 /**
- * A stand-in VS Code: `language` is its display language, `folders` its workspace folders' paths. A webview names a file
- * under `served` by its path from there, at `origin`, so a test serves that folder there.
+ * One of VS Code's language models, named `name`, that answers each request with `answer`. Each request it is sent is
+ * kept in `sent`, as its messages and options.
  */
-export function fakeVscode({ language = 'en', folders = [], origin = 'http://webview.invalid', served = '/' } = {}) {
+export function fakeModel(name, answer) {
+  const sent = [];
+  return {
+    id: name.toLowerCase(),
+    name,
+    vendor: 'test',
+    sent,
+    sendRequest: async (messages, options) => {
+      sent.push({ messages, options });
+      return {
+        text: (async function* () {
+          yield* [answer.slice(0, 5), answer.slice(5)];
+        })(),
+      };
+    },
+  };
+}
+
+/**
+ * A stand-in VS Code: `language` is its display language, `folders` its workspace folders' paths. A webview names a file
+ * under `served` by its path from there, at `origin`, so a test serves that folder there. `settings` are its settings,
+ * by their full names, and `models` its language models (`fakeModel`).
+ *
+ * What the person answers is in `answers`, in turn: each one is given what VS Code asks, `{ kind, items, options }`, and
+ * gives the answer. A pick, a question or a message with buttons, with no answer left, is turned away.
+ */
+export function fakeVscode({
+  language = 'en',
+  folders = [],
+  origin = 'http://webview.invalid',
+  served = '/',
+  settings = {},
+  models = [],
+} = {}) {
   const commands = new Map();
   const said = [];
   const tabs = [];
+  const answers = [];
+  const shown = [];
+  const ran = [];
+  const asked = (kind, items, options) => answers.shift()?.({ kind, items, options });
+  const message = async (text, ...rest) => {
+    said.push(text);
+    const buttons = rest.filter((r) => typeof r === 'string');
+    return buttons.length ? asked('message', buttons, { text, modal: rest[0]?.modal === true }) : undefined;
+  };
   const asError = (e) => (e?.code === 'ENOENT' ? new FileSystemError(e.message, 'FileNotFound') : e);
   const typeOf = async (path) => {
     const link = await fs.lstat(path);
@@ -68,14 +110,20 @@ export function fakeVscode({ language = 'en', folders = [], origin = 'http://web
     FileSystemError,
     ViewColumn: { Beside: -2 },
     env: { language },
+    LanguageModelChatMessage: { User: (content) => ({ role: 'user', content }) },
+    lm: { selectChatModels: async () => models },
     commands: {
       registerCommand: (name, run) => (commands.set(name, run), { dispose: () => commands.delete(name) }),
-      executeCommand: (name, ...args) => commands.get(name)(...args),
+      executeCommand: async (name, ...args) =>
+        commands.has(name) ? commands.get(name)(...args) : ran.push([name, ...args]),
     },
     window: {
       activeTextEditor: undefined,
-      showInformationMessage: async (text) => void said.push(text),
-      showWarningMessage: async (text) => void said.push(text),
+      showInformationMessage: message,
+      showWarningMessage: message,
+      showQuickPick: async (items, options) => asked('pick', await items, options),
+      showInputBox: async (options) => asked('input', [], options),
+      showTextDocument: async (document, options) => (document.beside = options),
       createWebviewPanel: (viewType, title, column, options) => {
         const fromPage = [];
         const disposed = [];
@@ -103,6 +151,12 @@ export function fakeVscode({ language = 'en', folders = [], origin = 'http://web
     },
     workspace: {
       textDocuments: [],
+      getConfiguration: (section) => ({ get: (key) => settings[`${section}.${key}`] }),
+      openTextDocument: async ({ content, language: lang }) => {
+        const document = { content, language: lang, getText: () => content };
+        shown.push(document);
+        return document;
+      },
       getWorkspaceFolder: (uri) => {
         const folder = folders.find((f) => uri.path.startsWith(`${f}/`));
         return folder ? { uri: Uri.file(folder) } : undefined;
@@ -119,7 +173,7 @@ export function fakeVscode({ language = 'en', folders = [], origin = 'http://web
       },
     },
   };
-  return { vscode, commands, said, tabs };
+  return { vscode, commands, said, tabs, answers, shown, ran };
 }
 
 /** The built extension at `file`, loaded with `vscode` as its `vscode` module. */
