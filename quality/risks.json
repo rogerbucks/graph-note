@@ -1356,7 +1356,7 @@
       "role": "Enterprise, solution and data architect",
       "area": "architecture",
       "title": "Whole-note text is the only store; nothing indexes across notes",
-      "risk": "Limits inside one note are stated and tested (2,000 things, 512 kB, 10,000 lines). Beyond one note there is no index. Views across notes and the mesh will reread every file, and no test holds a vault of thousands of notes.",
+      "risk": "Limits inside one note are stated and tested (2,000 things drawn, 1 MB and 20,000 lines read). Beyond one note there is no index. Views across notes and the mesh will reread every file, and no test holds a vault of thousands of notes.",
       "evidence": [
         "packages/core/src/layout-limits.ts:17-22",
         "packages/core/src/layout-limits.ts:36-45",

@@ -323,7 +323,7 @@ describe('cc_exports_new_only: the request carries the server’s checks', () =>
       [],
     );
     // larger than a note may be, smaller than an export may
-    const image = await send(server, id, [{ name: 'big.csv', text: 'x'.repeat(600_000) }]);
+    const image = await send(server, id, [{ name: 'big.csv', text: 'x'.repeat(1_200_000) }]);
     assert.equal(image.status, 200);
   });
 
@@ -335,7 +335,7 @@ describe('cc_exports_new_only: the request carries the server’s checks', () =>
       method: 'PUT',
       path: `/api/notes/${id}`,
       headers,
-      body: 'x'.repeat(600_000),
+      body: 'x'.repeat(1_200_000),
     });
     assert.equal(put.status, 413);
   });

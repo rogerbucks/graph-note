@@ -68,7 +68,10 @@ describe('a graph from a plug-in source is a joined graph (trust_source_joined)'
     });
     const r = await registry.readGraph('acme', 'x', LEVELS);
     assert.equal(r.ok, false);
-    assert.match(r.message, /Acme of acme\.db was refused: it is \d+ bytes, over the 512000 a graph may be/);
+    assert.match(
+      r.message,
+      new RegExp(`Acme of acme\\.db was refused: it is \\d+ bytes, over the ${READ_LIMITS.bytes} a graph may be`),
+    );
   });
 
   test('a source that gives no text, or fails, is named and nothing is held', async () => {
@@ -171,7 +174,12 @@ describe('a graph from a plug-in step keeps the lowest trust and strictest class
     });
     const r = await registry.runStep('acme.db.grow', [], LEVELS);
     assert.equal(r.ok, false);
-    assert.match(r.message, /The step Grow of acme\.db was refused: it is \d+ lines, over the 10000 a graph may be/);
+    assert.match(
+      r.message,
+      new RegExp(
+        `The step Grow of acme\\.db was refused: it is \\d+ lines, over the ${READ_LIMITS.lines} a graph may be`,
+      ),
+    );
   });
 });
 

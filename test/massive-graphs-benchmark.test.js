@@ -106,9 +106,9 @@ test('the command prints the records as JSON, and CI runs every size', () => {
     }
   };
   // a size with no budget passes; its records are printed as JSON
-  const ok = run('2');
+  const ok = run('3');
   assert.equal(ok.code, 0);
-  assert.equal(JSON.parse(ok.out)[0].times, 2);
+  assert.equal(JSON.parse(ok.out)[0].times, 3);
   assert.match(read('package.json'), /"bench:scale": "node --expose-gc scripts\/scale-benchmark\.mjs"/);
   assert.match(read('.github/workflows/ci.yml'), /run: npm run bench:scale/);
 });

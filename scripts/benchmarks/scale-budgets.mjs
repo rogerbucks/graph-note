@@ -9,22 +9,24 @@
 
 /** The most each step may take, by size: { ms, mb }. */
 export const SCALE_BUDGETS = {
-  // 1×: read in about 0.4 s. 10× and 100×: refused over the read limit, which still counts every byte first
-  open: { 1: { ms: 1500, mb: 50 }, 10: { ms: 150, mb: 20 }, 100: { ms: 1200, mb: 20 } },
+  // 1×: read in about 0.4 s. 2×, the most the read limit holds since 23 Oct 2026: about 0.7 s. 10× and 100×: refused
+  // over the read limit, which still counts every byte first
+  open: { 1: { ms: 1500, mb: 50 }, 2: { ms: 2100, mb: 50 }, 10: { ms: 150, mb: 20 }, 100: { ms: 1200, mb: 20 } },
   // 1×: refused over the drawing limit in under a millisecond, so shown as text
-  draw: { 1: { ms: 50, mb: 20 } },
+  draw: { 1: { ms: 50, mb: 20 }, 2: { ms: 50, mb: 20 } },
   // the groups a massive graph opens as (scale_groups): about 6 ms, 0.13 s and 1 s. Past the read limit they are found
   // on copies of the V-10 drawing, as the reader refuses the text
-  group: { 1: { ms: 100, mb: 20 }, 10: { ms: 800, mb: 50 }, 100: { ms: 5000, mb: 100 } },
+  group: { 1: { ms: 100, mb: 20 }, 2: { ms: 250, mb: 20 }, 10: { ms: 800, mb: 50 }, 100: { ms: 5000, mb: 100 } },
   // the overview as marks, and its index of where they are (scale_overview): about 5 ms, 8 ms and 57 ms
-  overview: { 1: { ms: 50, mb: 20 }, 10: { ms: 50, mb: 20 }, 100: { ms: 300, mb: 50 } },
+  overview: { 1: { ms: 50, mb: 20 }, 2: { ms: 50, mb: 20 }, 10: { ms: 50, mb: 20 }, 100: { ms: 300, mb: 50 } },
   // the slowest of 61 frames, the first with the whole overview on screen: about 0.3 ms, 1.5 ms and 14 ms. A frame
   // must stay under 16 ms to be smooth; the budget leaves room for a slower runner, and the renderer culls the rest
-  pan: { 1: { ms: 10, mb: 5 }, 10: { ms: 16, mb: 5 }, 100: { ms: 50, mb: 20 } },
+  pan: { 1: { ms: 10, mb: 5 }, 2: { ms: 10, mb: 5 }, 10: { ms: 16, mb: 5 }, 100: { ms: 50, mb: 20 } },
   // a filter keeping about 2,000 and then 10,000 things (scale_filter_live). Each is counted, laid out in the whole
   // order, indexed, and given one frame of the glide. About 4 ms, 22 ms and 106 ms (23 Oct 2026). Roger's aim is under 100 ms for
   // 10,000 kept things; 10× holds it with room. 100× is past the read limit until way E's steps 6 and 7
-  filter: { 1: { ms: 50, mb: 20 }, 10: { ms: 100, mb: 20 }, 100: { ms: 320, mb: 50 } },
-  // 1×: a note set on one thing and the note read again, about 0.7 s. 10× and 100×: refused, after reading the block
-  edit: { 1: { ms: 2500, mb: 50 }, 10: { ms: 1200, mb: 20 }, 100: { ms: 12_000, mb: 20 } },
+  filter: { 1: { ms: 50, mb: 20 }, 2: { ms: 50, mb: 20 }, 10: { ms: 100, mb: 20 }, 100: { ms: 320, mb: 50 } },
+  // 1×: a note set on one thing and the note read again, about 0.7 s; 2×, about 1.3 s. 10× and 100×: refused, after
+  // reading the block
+  edit: { 1: { ms: 2500, mb: 50 }, 2: { ms: 4000, mb: 50 }, 10: { ms: 1200, mb: 20 }, 100: { ms: 12_000, mb: 20 } },
 };

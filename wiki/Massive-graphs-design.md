@@ -63,11 +63,12 @@ JSON. So a graph seen before can open without any layout at all.
 
 The scale benchmark (`npm run bench:scale`, `scripts/scale-benchmark.mjs`) runs each step the way the hosts run it
 today. It grows the V-10 graph of 2,666 things up to 100 copies. CI runs it on every pull request, and a step over its
-budget fails the run. These are its numbers on one desktop core, on 22 October 2026.
+budget fails the run. These are its numbers on one desktop core, on 22 October 2026. The 2× row was added on 23 October 2026, when the read limit was raised.
 
 | Size | Open | Draw | Group | Overview | Pan | Edit |
 |---|---|---|---|---|---|---|
 | 1× (2,666 things, 0.4 MB) | read in 0.4 s | refused, shown as text | 20 groups, 0.006 s | 92 marks, 0.005 s | 0.3 ms a frame | 0.7 s |
+| 2× (5,332 things, 0.8 MB) | read in 0.4 s | refused, shown as text | 64 groups, 0.02 s | 306 marks, 0.002 s | 0.4 ms a frame | 1 s |
 | 10× (26,660 things, 4.2 MB) | refused over the read limit, 0.03 s | nothing to draw | 288 groups, 0.13 s | 1,554 marks, 0.008 s | 1.5 ms a frame | refused, 0.3 s |
 | 100× (266,600 things, 43 MB) | refused over the read limit, 0.3 s | nothing to draw | 2,875 groups, 1 s | 15,660 marks, 0.06 s | 14 ms a frame | refused, 3.7 s |
 
@@ -80,6 +81,26 @@ the slowest of 61 frames: the marks on a screen of 1600 by 1000 pixels, the firs
 - **A refusal reads every byte first.** Refusing 43 MB takes 0.3 seconds. It could stop at the limit.
 - **An edit past the limit gives the wrong reason.** It says to move the thing to a line of its own. The real reason is
   the size, and it takes 3.7 seconds to say so.
+
+### The limits, before and after (way E, step 6)
+
+On 23 October 2026 step 6 raised the read limits, so 2× V-10 opens. The drawing limit stays. Past it, the overview of
+groups takes over (step 4). A bigger drawing limit would only make the slow layout slower.
+
+| Limit | Before | After | Where |
+|---|---|---|---|
+| Read limit, text | 512 kB | 1 MB | `READ_LIMITS.bytes`, `packages/core/src/layout-limits.ts` |
+| Read limit, lines | 10,000 lines | 20,000 lines | `READ_LIMITS.lines`, the same file |
+| Drawing limit, things | 2,000 things | 2,000 things | `LAYOUT_LIMITS.things`, the same file |
+| Drawing limit, links | 5,000 links | 5,000 links | `LAYOUT_LIMITS.links`, the same file |
+| Library block limit | 1,000,000 characters | 1,000,000 characters | `block_chars`, `packages/graph-spec/src/reader/limits.js` |
+
+- **Why 1 MB.** The library already refuses a block over 1,000,000 characters (a Wave 6 security limit). So 1 MB is
+  the most the core can read without changing the library and the Python reader too.
+- **What it costs.** 2× V-10 reads in about 0.4 to 0.7 seconds on one desktop core, and an edit takes about 1 second.
+- **Hostile graphs.** A graph past the new limit is still refused before it is read, with the limit it is over. The
+  test `test/massive-graphs-limits.test.js` holds this.
+- **10× and more** stay refused. They wait for step 7, reading in parts.
 
 ## The ways compared
 
@@ -156,7 +177,7 @@ These were sent to the thread building the marks, to fold into its format.
 | 3 | The saved-layout cache, by content hash, per group | S |
 | 4 | The overview: WebGPU and WebGL layers reading marks, Canvas fallback, spatial index, level of detail | M to L |
 | 5 | Opening a group into today's drawing, and laying out neighbours in the background | M |
-| 6 | Raise the drawing limit, with the benchmark holding each new limit | S |
+| 6 | Raise the read limit, with the benchmark holding each new limit (done 23 October 2026) | S |
 | 7 | Read in parts from the local store (`scale_in_parts`), once Q-05's store is in | L, later |
 
 Steps 1 to 6 do not wait on anything else, except that step 4 reads the marks format. Step 7 waits for the local

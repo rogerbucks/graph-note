@@ -14,25 +14,25 @@ import { readerWork, watchedBox } from './reader-work.js';
 // count is paired with a control: the same counter, on a case that does the work, sees it.
 
 describe('the note’s text, measured before it is read', () => {
-  test('the defaults: 512 kB and 10,000 lines of graph blocks', () => {
-    assert.deepEqual(READ_LIMITS, { bytes: 512_000, lines: 10_000 });
+  test('the defaults: 1 MB and 20,000 lines of graph blocks', () => {
+    assert.deepEqual(READ_LIMITS, { bytes: 1_000_000, lines: 20_000 });
   });
 
   test('over the bytes, the refusal names the limit and the numbers', () => {
-    assert.deepEqual(textTooLarge(['// graph: g\n', 'é'.repeat(300_000)]), {
+    assert.deepEqual(textTooLarge(['// graph: g\n', 'é'.repeat(600_000)]), {
       reason: 'too-large',
       limit: 'text-bytes',
-      count: 600_012,
-      most: 512_000,
+      count: 1_200_012,
+      most: 1_000_000,
     });
   });
 
   test('over the lines, the same, in lines', () => {
-    assert.deepEqual(textTooLarge(['// graph: g\n' + '(a),\n'.repeat(10_000)]), {
+    assert.deepEqual(textTooLarge(['// graph: g\n' + '(a),\n'.repeat(20_000)]), {
       reason: 'too-large',
       limit: 'text-lines',
-      count: 10_002,
-      most: 10_000,
+      count: 20_002,
+      most: 20_000,
     });
   });
 
@@ -61,7 +61,7 @@ describe('the note’s text, measured before it is read', () => {
   });
 
   test('the shared schemas are read, so they are measured too', () => {
-    const schema = `// graph: s · SCHEMA s\n${"(k:Meta:ElementType {name: 'LINKS', kind: 'edge'}),\n".repeat(12_000)}`;
+    const schema = `// graph: s · SCHEMA s\n${"(k:Meta:ElementType {name: 'LINKS', kind: 'edge'}),\n".repeat(24_000)}`;
     const reading = readNote(["// graph: g · schema s\n(a:A {name: 'a'})"], 0, [schema]);
     assert.equal(reading.tooLarge?.limit, 'text-bytes');
     assert.equal(reading.graphs.size, 0);

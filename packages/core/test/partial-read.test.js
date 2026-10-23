@@ -272,12 +272,12 @@ describe('the worst cases under the size limits are read in time (spec §9: abou
     inBudget(text, text.replace("{name '", "{name: '"));
   });
 
-  test('nearly 512 kB with every line broken: past the budget the rest is left out at once, and said so', () => {
+  test('nearly 1 MB with every line broken: past the budget the rest is left out at once, and said so', () => {
     const everyLine = () => true,
       longText = (i) => `Thing number ${i} of many`;
     const r = inBudget(
-      block(9800, everyLine, longText),
-      block(9800, () => false, longText),
+      block(19_000, everyLine, longText),
+      block(19_000, () => false, longText),
     );
     assert.ok(
       r.graphs.get('g').boxes.some((b) => b.key === 'ok'),

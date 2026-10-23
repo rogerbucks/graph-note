@@ -72,12 +72,8 @@ describe('a view', () => {
   // layout_contained: a note whose graph blocks are over the text limit is never read. So a view in it is shown as its
   // query under the same banner a graph gets, and never as a view that "matches nothing"
   for (const [limit, pad, said] of [
-    ['10,000 lines', '// padding\n'.repeat(10_000), /holds? 10,0\d\d lines, and at most 10,000 are read/],
-    [
-      '512,000 bytes',
-      `// ${'x'.repeat(1000)}\n`.repeat(520),
-      /hold 5\d\d(\.\d)? kB of text, and at most 512 kB is read/,
-    ],
+    ['20,000 lines', '// padding\n'.repeat(20_000), /holds? 20,0\d\d lines, and at most 20,000 are read/],
+    ['1,000,000 bytes', `// ${'x'.repeat(1000)}\n`.repeat(1100), /hold 1\.1 MB of text, and at most 1 MB is read/],
   ])
     test(`in a note over the text limit of ${limit}, is its query under the “too large to read” banner, never “matches nothing”`, async () => {
       const { env, el } = await viewCard(noteOf(`${DATA}\n${pad}`, NEAR), 1);

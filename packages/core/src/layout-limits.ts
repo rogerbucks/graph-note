@@ -15,11 +15,13 @@ export interface ReadLimits {
 }
 
 /**
- * 512 kB and 10,000 lines. Take a graph at the drawing limits below: 2,000 things and 5,000 links, one to a line. At
- * about a hundred bytes each, it is about 7,000 lines and 400 kB. So these leave room for comments and blank lines. A
- * block pasted or generated past them would take seconds to read on a phone. It is shown as text unread.
+ * 1 MB and 20,000 lines. Raised from 512 kB and 10,000 lines on 23 Oct 2026 (editor spec §53, scale_limits_revisited).
+ * A graph past the drawing limits below is shown as its overview, so reading more is worth it. 1 MB is the most the
+ * graph library reads in one block (`block_chars`). Two copies of the huge graph of device check V-10 fit: 5,332
+ * things, read in about half a second on a desktop core (scripts/scale-benchmark.mjs). A block past them would take
+ * seconds to read on a phone. It is shown as text unread.
  */
-export const READ_LIMITS: ReadLimits = { bytes: 512_000, lines: 10_000 };
+export const READ_LIMITS: ReadLimits = { bytes: 1_000_000, lines: 20_000 };
 
 /** How much a graph may be before it is shown as text instead of drawn, and how long its layout may take. */
 export interface LayoutLimits {

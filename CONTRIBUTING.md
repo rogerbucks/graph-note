@@ -1010,6 +1010,8 @@ These test behaviour across modules, or the repository itself, so they are named
   in the wiki, compares the ways with measured numbers, and records Roger's pick.
 - `test/massive-graphs-benchmark.test.js` — the scale benchmark (editor spec §53, scale_benchmark). It grows the
   V-10 graph up to 100 times and records each step's time and memory. It names a step over its budget.
+- `test/massive-graphs-limits.test.js` — the limits looked at again (editor spec §53, scale_limits_revisited). The
+  design note gives each limit before and after. A hostile graph past a new limit is still refused, saying why.
 - `test/gpu-painters.test.js` — the WebGL 2 and WebGPU painters in headless Chrome (editor spec §53,
   scale_gpu_painters). WebGL 2 must paint the overview as the 2D canvas does. WebGPU's shaders must build, and a frame
   must paint with no error.

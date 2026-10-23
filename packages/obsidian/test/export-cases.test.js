@@ -300,10 +300,10 @@ describe('laid out like a drawing, under the same limits', () => {
     });
   });
 
-  // 10,000 lines and 512,000 bytes, the limits on the text of a note's graph blocks, as drawing has them
+  // 20,000 lines and 1,000,000 bytes, the limits on the text of a note's graph blocks, as drawing has them
   for (const [limit, pad, said] of [
-    ['lines', '// padding\n'.repeat(10_000), /hold 10,0\d\d lines, and at most 10,000 are read/],
-    ['bytes', `// ${'x'.repeat(1000)}\n`.repeat(520), /hold 5\d\d(\.\d)? kB of text, and at most 512 kB is read/],
+    ['lines', '// padding\n'.repeat(20_000), /hold 20,0\d\d lines, and at most 20,000 are read/],
+    ['bytes', `// ${'x'.repeat(1000)}\n`.repeat(1100), /hold 1\.1 MB of text, and at most 1 MB is read/],
   ])
     test(`a note over the text limit in ${limit} is refused as too large to read, never “nothing to export”`, async () => {
       await exporting(noteOf(`${things(3)}\n${pad}`), {}, {}, async (env, workers) => {

@@ -92,14 +92,14 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
     });
   });
 
-  // one pattern of 12,000 lines, its ( never closed: one part to the reader. So the code before the limit read it quickly.
+  // one pattern of 24,000 lines, its ( never closed: one part to the reader. So the code before the limit read it quickly.
   // It showed it as text with its problem, not with this banner (the core's tests hold the many-broken-parts cases)
-  test('a block too large to read — 600 kB, one pattern left open — is its text and a banner at once, never read', async () => {
+  test('a block too large to read — 1.2 MB, one pattern left open — is its text and a banner at once, never read', async () => {
     await withPlugin(null, {}, async (env) => {
       const lines = (n) => Array.from({ length: n }, (_, i) => `(n${i}:Thing {name: 'Thing number ${i} of many'},`);
-      const note = fence(`// graph: g\n${lines(12_000).join('\n')}`);
-      // the control: a tenth of it, 1,200 lines, is under the limits and so is read, not refused
-      const tenth = fence(`// graph: g\n${lines(1_200).join('\n')}`);
+      const note = fence(`// graph: g\n${lines(24_000).join('\n')}`);
+      // the control: a tenth of it, 2,400 lines, is under the limits and so is read, not refused
+      const tenth = fence(`// graph: g\n${lines(2_400).join('\n')}`);
       // at once, refusing the whole note costing less than reading a tenth of it, is counted in instructions. The
       // layout_refusals benchmark (scripts/benchmarks/layout-refusals.mjs) counts it, as the core reads a note for the
       // card. That the core never hands a block over the limit to the reader is counted in layout-limits.test.js. A test asserts
@@ -108,7 +108,7 @@ describe('a graph over a size limit is shown as its text, with a banner saying w
       assert.equal(bannerOf(await card(env, tenth)), null, 'the tenth is read, not refused');
       assert.equal(svgOf(el), null);
       assert.match(bannerOf(el).text, /too large to read/i);
-      assert.match(bannerOf(el).text, /at most 512 kB/);
+      assert.match(bannerOf(el).text, /at most 1 MB/);
       assert.ok(bannerOf(el).icon, 'an icon beside the words');
       assert.match(el.querySelector('code').textContent, /Thing number 11999 of many/, 'the text, whole');
     });
@@ -218,10 +218,10 @@ describe('in the pane', () => {
     const env = await open();
     try {
       await until(() => env.el.querySelectorAll('g.node').length === 3);
-      type(env.el, `${READER},\n${'(a:Thing),\n'.repeat(10_000)}(b:Thing)`);
+      type(env.el, `${READER},\n${'(a:Thing),\n'.repeat(20_000)}(b:Thing)`);
       await until(() => /too large to read/i.test(env.el.querySelector('.thoughtknot-banner')?.textContent ?? ''));
       assert.equal(env.el.querySelectorAll('g.node').length, 0, 'the old drawing is gone');
-      assert.match(env.el.querySelector('.thoughtknot-banner').textContent, /at most 10,000/);
+      assert.match(env.el.querySelector('.thoughtknot-banner').textContent, /at most 20,000/);
     } finally {
       env.plugin.onunload();
       env.uninstall();
