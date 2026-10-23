@@ -376,6 +376,7 @@ export const VALUES = [
   'outsideOf',
   'outsidePlugin',
   'outsideProblem',
+  'overviewPicture',
   'paceSaid',
   'pageSvg',
   'parkForLater',
