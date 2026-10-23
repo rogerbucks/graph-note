@@ -590,6 +590,11 @@ These test behaviour across modules, or the repository itself, so they are named
   the name for the original. CONTRIBUTING.md and the pull request template ask for every commit to be signed off
   (editor spec §13, community_files). `SECURITY.md` names the supported versions, a private way to report and a
   reply time (security_policy).
+### Community rules, Apple's terms and the working group
+
+- `test/apple-terms.test.js` — the rules we keep for Apple's developer terms (spec §41, apple_terms;
+  `docs/apple-terms.md`). Nothing people read says Apple checked or endorses ThoughtKnot. `TRADEMARKS.md` names Apple's
+  marks as Apple's. The app id stays under thoughtknot.app, and no workflow holds an App Store key.
 - `test/working-group.test.js` — `docs/agents/ROLES.md` gives Roger, Claude, Antigravity and graph-note their work,
   labels and branches, and repeats the rules each keeps. `AGENTS.md` points to it.
 - `test/device-check-notes.test.js` — the device checklist numbers every item (editor spec §3, tried first in a test
