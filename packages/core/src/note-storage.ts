@@ -3,7 +3,6 @@
 // (storage-contract.ts). Encryption, sync and history plug in as layers. A layer wraps a backend and is a backend
 // itself, so the core never knows which are there.
 import { sha256 } from './ai-digest.ts';
-import { vaultFolder } from './vault-folder.ts';
 
 /** A note as read: its text, byte for byte, and the version a write checks it against. */
 export interface StoredNote {
@@ -66,13 +65,23 @@ export const noteVersion = (text: string): string => `sha-256-64:${sha256(text).
 
 /**
  * A note's path, checked: relative and `/`-separated, ending in `.md`. It never starts with `/` or `~`. No folder starts
- * with a dot, so `..`, `.obsidian` and `.git` are out. Throws for any other.
+ * with a dot, so `..`, `.obsidian` and `.git` are out. No part is empty. None holds a backslash, a colon or a control
+ * character, so no Windows drive or second stream is named. Throws for any other.
+ *
+ * Any other character is kept, such as `?`, `*` or a name ending in dots. A note made on a Mac or by sync can have one,
+ * and it reaches nothing outside the store. So reading it must work. (Export folders are stricter: see `vaultFolder`.)
  */
 export function notePath(path: unknown): string {
-  const kept = typeof path === 'string' ? vaultFolder(path) : null;
-  if (!kept || kept !== path || !/\.md$/i.test(kept) || kept.length < 4)
+  if (typeof path !== 'string' || !isNotePath(path))
     throw new Error(`not a note's path in the store: ${JSON.stringify(path)}`);
-  return kept;
+  return path;
+}
+
+/** Whether `path` is a note's path in the store, by the rules `notePath` gives. */
+function isNotePath(path: string): boolean {
+  if (path.length < 4 || !/\.md$/i.test(path) || path.startsWith('~')) return false;
+  if ([...path].some((c) => c.charCodeAt(0) < 32 || c === '\\' || c === ':' || c === '\u007f')) return false;
+  return path.split('/').every((part) => part !== '' && !part.startsWith('.'));
 }
 
 /**
