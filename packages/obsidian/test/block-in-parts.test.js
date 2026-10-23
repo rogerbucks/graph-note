@@ -38,24 +38,33 @@ test('a block too big to read at once shows its overview from the store, with it
   }
 });
 
-test('a thing found in the overview shows its properties, and a change is written to its line of the note', async () => {
+/**
+ * Draws the huge note's card, under a page of class `page`, then finds Item 7000 in its overview. Gives the plugin's
+ * test host, the note, and the field of the thing's name.
+ */
+async function nameField(page) {
   const source = huge();
   const note = ['# Big', '', '```gql', source, '```', ''].join('\n');
   const env = await load({ files: { [PATH]: note } });
+  const el = env.doc.body.createDiv({ cls: page }).createDiv({ cls: 'block-language-gql' });
+  await env.state.processors.get('gql')(source, el, fakeContext(note, 2));
+  await until(() => !!el.querySelector('.thoughtknot-massive-search'));
+  const input = el.querySelector('.thoughtknot-massive-search');
+  input.value = 'Item 7000';
+  input.dispatch('input');
+  el.querySelector('.thoughtknot-massive-list [role="option"]').click();
+  await until(() => !!el.querySelector('.thoughtknot-stored-thing'));
+  assert.equal(el.querySelector('.thoughtknot-stored-thing h4').textContent, 'Properties of Item 7000');
+  const name = [...el.querySelectorAll('.thoughtknot-stored-thing input')].find(
+    (f) => f.getAttribute('aria-label') === 'Value of name',
+  );
+  assert.equal(name.value, 'Item 7000');
+  return { env, note, name };
+}
+
+test('a thing found in the overview shows its properties, and a change is written to its line of the note', async () => {
+  const { env, note, name } = await nameField('markdown-source-view');
   try {
-    const el = env.doc.body.createDiv({ cls: 'block-language-gql' });
-    await env.state.processors.get('gql')(source, el, fakeContext(note, 2));
-    await until(() => !!el.querySelector('.thoughtknot-massive-search'));
-    const input = el.querySelector('.thoughtknot-massive-search');
-    input.value = 'Item 7000';
-    input.dispatch('input');
-    el.querySelector('.thoughtknot-massive-list [role="option"]').click();
-    await until(() => !!el.querySelector('.thoughtknot-stored-thing'));
-    assert.equal(el.querySelector('.thoughtknot-stored-thing h4').textContent, 'Properties of Item 7000');
-    const name = [...el.querySelectorAll('.thoughtknot-stored-thing input')].find(
-      (i) => i.getAttribute('aria-label') === 'Value of name',
-    );
-    assert.equal(name.value, 'Item 7000');
     name.value = 'Renamed';
     name.dispatch('change');
     await until(() => env.state.files.get(PATH) !== note);
@@ -65,6 +74,32 @@ test('a thing found in the overview shows its properties, and a change is writte
       now.flatMap((l, i) => (l === was[i] ? [] : [l])),
       ["(n7000:Place {name: 'Renamed'}),"],
     );
+  } finally {
+    env.plugin.onunload();
+    env.uninstall();
+  }
+});
+
+test('a note changed since the store read it is left alone, and says why', async () => {
+  const { env, note, name } = await nameField('markdown-source-view');
+  try {
+    const changed = note.replace('# Big', '# Bigger');
+    env.state.files.set(PATH, changed);
+    name.value = 'Renamed';
+    name.dispatch('change');
+    await until(() => env.state.notices.length > 0);
+    assert.match(env.state.notices.at(-1), /changed since it was last read/);
+    assert.equal(env.state.files.get(PATH), changed, 'never written over');
+  } finally {
+    env.plugin.onunload();
+    env.uninstall();
+  }
+});
+
+test('in reading view a thing’s properties are shown, but cannot be changed', async () => {
+  const { env, name } = await nameField('markdown-reading-view');
+  try {
+    assert.equal(name.disabled, true);
   } finally {
     env.plugin.onunload();
     env.uninstall();
