@@ -1,0 +1,6 @@
+{
+  "file": "test/code-scanning-fixes.test.js",
+  "test": "a lens rule whose condition holds a long run of tabs, and one that joins two tests by AND",
+  "seen_failing_first": false,
+  "evidence": "The old split was only reachable on text the arms check already refused, so no input slowed it; the test guards the plain cut CodeQL asked for."
+}
