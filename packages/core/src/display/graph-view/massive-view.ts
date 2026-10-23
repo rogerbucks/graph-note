@@ -15,13 +15,14 @@ import { overviewOf } from '../../overview.ts';
 import type { Palette } from '../../palette.ts';
 import { groupsOf } from '../../scale-groups.ts';
 import { FLY_MS, ThingSearch, flyPath, openGroup, placeOf, viewOnto } from '../../search-fly.ts';
-import type { FlyView, Match } from '../../search-fly.ts';
+import type { FlyView, Match, Rect } from '../../search-fly.ts';
 import { reducedMotion } from './details-nav';
 import { parsedSvg } from './drawing-svg';
 import { webgl2Painter } from './gl-painter.ts';
 import { webgpuPainter } from './gpu-painter.ts';
 import { canvasPainter, paintsOf, pickPainter } from './mark-painter.ts';
 import type { MarkPainter, Paint, PainterKind, Paints } from './mark-painter.ts';
+import { growBar } from './massive-grow.ts';
 import { marksOfSvg } from './svg-marks.ts';
 
 /** What the overview needs from its host. */
@@ -193,33 +194,36 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     el.remove();
   };
 
-  /** Lays out group `group` on its own and puts it in its box; false when it cannot be drawn. */
-  const openUp = async (group: string): Promise<boolean> => {
-    if (opened.has(group)) return true;
-    const drawn = await o.layout(partOf(drawing, keysOf.get(group) ?? []), owner);
+  /**
+   * Lays `part` out on its own and puts it in group `id`'s box, in place of any inside shown there before. With `box`,
+   * that box is made, over the overview, as for a picture grown from a thing. False when it cannot be drawn.
+   */
+  const layIn = async (id: string, part: GraphDrawing, box?: Rect): Promise<boolean> => {
+    const drawn = await o.layout(part, owner);
     if (!open || !drawn || 'reason' in drawn) return false;
     // the SVG is read in the card, so each shape takes the theme's colours, then taken away
     const holder = el.createDiv({ cls: 'thoughtknot-massive-read' });
     const svg = holder.appendChild(parsedSvg(drawn));
     const read = marksOfSvg(svg);
     holder.remove();
-    const marks: DrawMark[] = read.marks.map((m) => ({ ...m, style: `${group}|${m.style}` }));
-    for (const m of read.marks) insidePaints.set(`${group}|${m.style}`, read.paints(m.style));
-    laid = openGroup(laid, group, { space: { width: drawn.width, height: drawn.height }, marks });
+    const marks: DrawMark[] = read.marks.map((m) => ({ ...m, style: `${id}|${m.style}` }));
+    for (const m of read.marks) insidePaints.set(`${id}|${m.style}`, read.paints(m.style));
+    const base = box
+      ? {
+          space: laid.space,
+          marks: [
+            ...laid.marks.filter((m) => m.id !== id),
+            { id, kind: 'group', style: 'overview.grown', z: 2.9, ...box } as const,
+          ],
+        }
+      : laid;
+    laid = openGroup(base, id, { space: { width: drawn.width, height: drawn.height }, marks });
     index = new MarkIndex(laid);
-    opened.add(group);
     return true;
   };
 
-  const flyTo = async (match: Match) => {
-    const group = names.get(match.group) ?? match.group;
-    said.setText(word('massive.opening', { group }));
-    const drawn = await openUp(match.group);
-    if (!open) return;
-    const box = laid.marks.find((m) => m.id === match.group);
-    const place =
-      (drawn ? placeOf(laid, match.key) : null) ?? (box && 'width' in box ? box : { x: 0, y: 0, width: 1, height: 1 });
-    said.setText(word(drawn ? 'massive.at' : 'massive.not-drawn', { name: match.text, group }));
+  /** Flies the view to `place`, or puts it there at once under reduced motion. */
+  const flyOnto = async (place: Rect) => {
     const path = flyPath(camera, viewOnto(place, width, height), width, height, reducedMotion(win));
     const start = win.performance.now(),
       mine = ++flight;
@@ -234,6 +238,22 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
       };
       step(start);
     });
+  };
+
+  const grower = growBar(el, { drawing, layIn, flyOnto, say: (text) => said.setText(text) });
+
+  const flyTo = async (match: Match) => {
+    const group = names.get(match.group) ?? match.group;
+    said.setText(word('massive.opening', { group }));
+    const drawn = opened.has(match.group) || (await layIn(match.group, partOf(drawing, keysOf.get(match.group) ?? [])));
+    if (!open) return;
+    if (drawn) opened.add(match.group);
+    const box = laid.marks.find((m) => m.id === match.group);
+    const thing = drawn ? placeOf(laid, match.key) : null;
+    const place = thing ?? (box && 'width' in box ? box : { x: 0, y: 0, width: 1, height: 1 });
+    said.setText(word(drawn ? 'massive.at' : 'massive.not-drawn', { name: match.text, group }));
+    if (thing) grower.start(match.key, match.text, thing);
+    await flyOnto(place);
   };
 
   // the search box and its list of matches
