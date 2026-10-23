@@ -33,8 +33,9 @@ export interface InParts {
 }
 
 /**
- * Shows a graph refused as too large to read at once as its overview at the end of `card`, read in parts into the
- * store. Nothing is shown for any other refusal, or when the graph could not be read in parts.
+ * Shows a graph refused as too large to read at once as its overview, at the top of `card`, read in parts into the
+ * store. The card's text and why are drawn first, so they show while it is read, and stay if it cannot be. Nothing is
+ * shown for any other refusal.
  */
 export async function overviewInParts(
   plugin: ThoughtKnotPlugin,
@@ -44,8 +45,18 @@ export async function overviewInParts(
 ): Promise<void> {
   const over = 'limit' in why ? why.limit : undefined;
   if (over !== 'text-bytes' && over !== 'text-lines') return;
+  const slot = card.createDiv();
+  card.prepend(slot);
   // Obsidian does its own work between parts, so it keeps answering
   const pause = () => new Promise<void>((done) => window.setTimeout(done, 0));
-  const stored = (await storedGraphs(storeOf(plugin), at.path, at.note ?? fenced(at.source), pause)).get(at.graph);
-  if (stored) showStoredMassive(plugin, card, at.graph, stored);
+  // a block shown on its own is kept apart from its note's other blocks, so they never take each other's place
+  const [note, text] = at.note === undefined ? [`${at.path} · ${at.graph}`, fenced(at.source)] : [at.path, at.note];
+  try {
+    const stored = (await storedGraphs(storeOf(plugin), note, text, pause)).get(at.graph);
+    if (stored) showStoredMassive(plugin, slot, at.graph, stored);
+    else slot.remove();
+  } catch (e) {
+    slot.remove(); // the text and why are still there
+    console.error('ThoughtKnot: a note could not be read in parts', e);
+  }
 }

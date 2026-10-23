@@ -197,8 +197,8 @@ export async function renderBlock(
   if (reading.tooLarge) {
     // too large to read at once (spec §9): its overview, read in parts (§53), above its text and why
     const card = el.createDiv({ cls: 'thoughtknot' });
-    await overviewInParts(plugin, card, { path: target.path, note: info?.text, source, graph }, reading.tooLarge);
     asText(plugin, card, source, reading.tooLarge, [], target, readOnly);
+    await overviewInParts(plugin, card, { path: target.path, note: info?.text, source, graph }, reading.tooLarge);
     return;
   }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
