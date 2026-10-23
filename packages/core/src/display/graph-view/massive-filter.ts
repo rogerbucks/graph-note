@@ -6,8 +6,15 @@ import { formatCount, word } from '@thoughtknot/core';
 import type { Chosen, FacetIndex } from '../../facet-counts.ts';
 import { button } from './view-bar';
 
-/** The Filter button and its lists, at the end of `parent`. `changed` is given what is chosen, each time it changes. */
-export function filterPanel(parent: HTMLElement, index: FacetIndex, changed: (chosen: Chosen) => void): void {
+/**
+ * The Filter button and its lists, at the end of `parent`. `changed` is given what is chosen, each time it changes.
+ * Gives back how to tick the values of an earlier choice again, as when going back along the trail.
+ */
+export function filterPanel(
+  parent: HTMLElement,
+  index: FacetIndex,
+  changed: (chosen: Chosen) => void,
+): { set(chosen: Chosen): void } {
   const panel = parent.createDiv({ cls: 'thoughtknot-massive-filters' });
   panel.hidden = true;
   const toggle = button(
@@ -22,8 +29,9 @@ export function filterPanel(parent: HTMLElement, index: FacetIndex, changed: (ch
   );
   toggle.setAttribute('aria-expanded', 'false');
   parent.insertBefore(toggle, panel);
-  const chosen: Record<string, Set<string>> = {};
+  let chosen: Record<string, Set<string>> = {};
   const counted = new Map<string, HTMLElement>();
+  const boxes = new Map<string, HTMLInputElement>();
 
   const recount = () => {
     for (const [facet, values] of index.counts(chosen))
@@ -35,6 +43,7 @@ export function filterPanel(parent: HTMLElement, index: FacetIndex, changed: (ch
     for (const { value } of values) {
       const label = group.createEl('label');
       const box = label.createEl('input', { type: 'checkbox' });
+      boxes.set(`${facet}\n${value}`, box);
       label.createSpan({ text: value });
       counted.set(`${facet}\n${value}`, label.createSpan({ cls: 'thoughtknot-massive-count' }));
       box.addEventListener('change', () => {
@@ -47,4 +56,14 @@ export function filterPanel(parent: HTMLElement, index: FacetIndex, changed: (ch
     }
   }
   recount();
+  return {
+    set(now) {
+      chosen = Object.fromEntries(Object.entries(now).map(([k, v]) => [k, new Set(v)]));
+      for (const [at, box] of boxes) {
+        const [facet = '', value = ''] = at.split('\n');
+        box.checked = chosen[facet]?.has(value) ?? false;
+      }
+      recount();
+    },
+  };
 }

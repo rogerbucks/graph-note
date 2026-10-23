@@ -19,6 +19,16 @@ export interface GrowHooks {
   /** Flies the view to `place`. */
   flyOnto(place: Rect): Promise<void>;
   say(text: string): void;
+  /** Called once a step out or back is shown, for the trail. */
+  stepped(): void;
+}
+
+/** Where a picture was grown from and how far, so the bar can be put back as it was. */
+export interface GrowState {
+  key: string;
+  name: string;
+  place: Rect;
+  steps: number;
 }
 
 /** The box around `place` that a picture of `count` things is shown in: larger as it holds more. */
@@ -30,7 +40,14 @@ export function grownBox(place: Rect, count: number): Rect {
 }
 
 /** The bar that grows the picture from a thing, at the end of `parent`. Hidden until `start` names a thing. */
-export function growBar(parent: HTMLElement, h: GrowHooks): { start(key: string, name: string, place: Rect): void } {
+export function growBar(
+  parent: HTMLElement,
+  h: GrowHooks,
+): {
+  start(key: string, name: string, place: Rect): void;
+  state(): GrowState | null;
+  restore(s: GrowState | null): void;
+} {
   const bar = parent.createDiv({ cls: 'thoughtknot-massive-grow', attr: { role: 'toolbar' } });
   bar.hidden = true;
   let x: Expansion | null = null,
@@ -44,6 +61,7 @@ export function growBar(parent: HTMLElement, h: GrowHooks): { start(key: string,
     const cut = x.cut.at(-1) ?? 0;
     h.say(word(cut ? 'massive.grown-cut' : 'massive.grown', { name, count: x.keys().length - 1, cut }));
     await h.flyOnto(box);
+    h.stepped();
   };
   button(
     bar,
@@ -74,6 +92,15 @@ export function growBar(parent: HTMLElement, h: GrowHooks): { start(key: string,
       name = called;
       anchor = place;
       bar.hidden = false;
+    },
+    state: () => (x ? { key: x.from, name, place: anchor, steps: x.steps } : null),
+    restore(s) {
+      x = s && new Expansion(h.drawing, s.key);
+      // the rings grow the same way each time, so growing as many steps again gives the same picture
+      for (let i = 0; x && s && i < s.steps; i++) x.grow();
+      name = s?.name ?? '';
+      anchor = s?.place ?? anchor;
+      bar.hidden = !s;
     },
   };
 }

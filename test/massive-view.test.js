@@ -126,6 +126,20 @@ window.grow = async (name) => {
   window.lastView = view.view();
   return card.querySelector('.thoughtknot-massive-said').textContent;
 };
+// presses Back or Forward, and gives what the overview shows then: what was said, the view and the values ticked
+window.trail = async (name) => {
+  card.querySelector('.thoughtknot-massive-tools [aria-label="' + name + '"]').click();
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const at = (n) => card.querySelector('.thoughtknot-massive-tools [aria-label="' + n + '"]').disabled;
+  return {
+    said: card.querySelector('.thoughtknot-massive-said').textContent,
+    view: view.view(),
+    ticked: [...card.querySelectorAll('.thoughtknot-massive-facet input:checked')].map((b) => b.nextSibling.textContent),
+    label: card.querySelector('.thoughtknot-massive-stage').getAttribute('aria-label'),
+    back: !at('Back'),
+    forward: !at('Forward'),
+  };
+};
 window.flyToNeedle = async () => {
   const [match] = view.find('needle');
   await view.flyTo(match);
@@ -253,4 +267,29 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
       assert.equal((await run("view.find('needle')")).length, 1);
     },
   );
+  test('back and forward return to each earlier picture, and a new step drops the steps ahead', options, async () => {
+    const flown = await run('flyToNeedle()');
+    const grown = await run("grow('Show neighbours').then((said) => ({ said, view: view.view() }))");
+    assert.equal(await run("tick('status', 'open')"), '2,000 things kept');
+    await run('scales()');
+    const back = await run("trail('Back')");
+    assert.equal(back.said, grown.said, 'back to the grown picture');
+    assert.deepEqual(back.view, grown.view);
+    assert.deepEqual(back.ticked, [], 'and to its filters: none');
+    assert.match(back.label, /^Overview of Big: 3,000 things/);
+    assert.equal(back.forward, true);
+    const flownAgain = await run("trail('Back')");
+    assert.equal(flownAgain.said, flown.said);
+    assert.deepEqual(flownAgain.view, flown.view);
+    const ahead = await run("trail('Forward').then(() => trail('Forward'))");
+    assert.equal(ahead.said, '2,000 things kept', 'forward to the filter again');
+    assert.deepEqual(ahead.ticked, ['open']);
+    assert.match(ahead.label, /^Overview of Big: 2,000 things/);
+    assert.equal(ahead.forward, false);
+    await run("trail('Back')");
+    await run('flyToNeedle()');
+    const after = await run("trail('Back').then(() => trail('Forward'))");
+    assert.equal(after.forward, false, 'the new step dropped the filter ahead of it');
+    assert.deepEqual(after.ticked, []);
+  });
 });
