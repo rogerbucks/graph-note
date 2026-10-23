@@ -123,7 +123,7 @@ describe('a draft warns of near duplicates', () => {
   test('a kind one or two letters from a kind used more often is warned of, with the fix', () => {
     const text = BLOCK + ",\n(cost:Reasn {title: 'Heavy'})";
     const ds = diagnostics(readNote([text]), 'reader', 0, text, URI);
-    const d = ds.find((x) => x.code === 'near-duplicate');
+    const d = ds.find((x) => x.code === 'GN721');
     assert.equal(d.severity, SEVERITY.Warning);
     assert.equal(d.message, 'The kind Reasn is one letter from Reason, already in the graph.');
     assert.deepEqual(d.range, { start: at(10, 6), end: at(10, 11) });
@@ -135,7 +135,7 @@ describe('a draft warns of near duplicates', () => {
 (k1:Meta:ElementType {name: 'Reason', kind: 'node'}), (k2:Meta:ElementType {name: 'Reasn', kind: 'node'})`;
     const text = BLOCK + ",\n(cost:Reasn {title: 'Heavy'})";
     assert.equal(
-      diagnostics(readNote([text, schema]), 'reader', 0, text, URI).filter((d) => d.code === 'near-duplicate').length,
+      diagnostics(readNote([text, schema]), 'reader', 0, text, URI).filter((d) => d.code === 'GN721').length,
       0,
     );
   });

@@ -71,6 +71,7 @@ export function dataKind(text: string): 'data' | 'schema' | null | Problem {
       severity: 'error',
       line: 1,
       message: word('reading.style-no-graph'),
+      code: 'GN708',
       fix: word('reading.style-no-graph.fix', { graph: own }),
     };
   }
@@ -88,7 +89,7 @@ export function dataKind(text: string): 'data' | 'schema' | null | Problem {
       line: p?.line ?? 1,
       message: said?.message ?? word('reading.graph-line'),
       fix: said?.fix ?? word('reading.graph-line.fix'),
-      ...(p?.code ? { code: p.code } : {}),
+      code: p?.code ?? 'GN707',
     };
   }
 }

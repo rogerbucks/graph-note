@@ -101,12 +101,12 @@ export function addNotes(graphs: Map<string, GraphDrawing>, texts: string[], rea
     if (!text.includes('///') || dataKind(text) !== 'data') return;
     const [graph] = gs.header(text);
     const d = graph === null ? undefined : graphs.get(graph);
-    const say = (line: number, severity: Problem['severity'], message: string, fix: string) =>
-      problems.push({ graph, block, line, severity, message, fix });
+    const say = (line: number, severity: Problem['severity'], code: string, message: string, fix: string) =>
+      problems.push({ graph, block, line, severity, code, message, fix });
     const r = read.get(block),
       applied = notesOf(r?.applied),
       meant = notesOf(r?.named);
-    for (const s of applied?.shared ?? []) say(s.lines[0] ?? s.line, 'warning', shared(), sharedFix());
+    for (const s of applied?.shared ?? []) say(s.lines[0] ?? s.line, 'warning', 'GN718', shared(), sharedFix());
     if (d && r?.applied && applied) attach(d, applied.notes, idsIn(r.applied), block);
     const shown = new Set(applied?.notes.map((n) => n.line));
     if (r && meant) {
@@ -115,12 +115,12 @@ export function addNotes(graphs: Map<string, GraphDrawing>, texts: string[], rea
       for (const n of meant.notes.filter((x) => !shown.has(x.line))) {
         const key = 'thing' in n.element ? id(n.element.thing) : null;
         if (key !== null && d?.boxes.find((b) => b.key === key)?.note)
-          say(n.lines[0] ?? n.line, 'hint', duplicate(key), duplicateFix(key));
-        else say(n.lines[0] ?? n.line, 'warning', lost(), lostFix());
+          say(n.lines[0] ?? n.line, 'hint', 'GN719', duplicate(key), duplicateFix(key));
+        else say(n.lines[0] ?? n.line, 'warning', 'GN720', lost(), lostFix());
       }
     } else if (r) {
       // what was meant cannot be read whole: each note directly above an item the reader left out
-      for (const line of notesAbove(text, r.dropped)) say(line, 'warning', lost(), lostFix());
+      for (const line of notesAbove(text, r.dropped)) say(line, 'warning', 'GN720', lost(), lostFix());
     }
   });
   return problems;

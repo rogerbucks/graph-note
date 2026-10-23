@@ -1,0 +1,77 @@
+{
+  "about": "Editor spec §42, problem_codes: small notes and the code each problem the drawing reader finds in them carries (packages/core/src/drawing-problem-codes.json, and the graph spec reader's own codes). readers says which readers read the case: core reads it with readNote, and with readBlocks where py reads it too; py reads it with read_for_drawing. Where both read a case, both give the same codes in the same order. Read by packages/core/test/note-reading-codes.test.js and python/graph_spec/tests/test_drawing_problem_codes.py.",
+  "cases": [
+    {
+      "name": "a comma with nothing after it",
+      "blocks": ["// graph: g\nINSERT (a:Thing {text: 'A'}),"],
+      "codes": ["GN701"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a comment after code on its line",
+      "blocks": ["// graph: g\nINSERT (a:Thing {text: 'A'}) // the first"],
+      "codes": ["GN103"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a thing with text and no name",
+      "blocks": ["// graph: g\nINSERT (:Thing {text: 'Big idea'})"],
+      "codes": ["GN704"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a style block that names no graph",
+      "blocks": ["// graph: g · STYLE"],
+      "codes": ["GN708"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a value with no closing brace",
+      "blocks": ["// graph: g\nINSERT (a:Thing {text: 'A'}),\n(b:Thing {text: 'B'),\n(c:Thing {text: 'C'})"],
+      "codes": ["GN201"],
+      "readers": ["core", "py"]
+    },
+    {
+      "name": "a comma missing at the end of a line",
+      "blocks": ["// graph: g\nINSERT (a:Thing {text: 'A'})\n(b:Thing {text: 'B'})"],
+      "codes": ["GN702"],
+      "readers": ["core"]
+    },
+    {
+      "name": "a relationship type with no colon",
+      "blocks": [
+        "// graph: g\nINSERT (a:Thing {text: 'A'}),\n(b:Thing {text: 'B'}),\n(a)-[:LINKS]->(b),\n(b)-[LINKS]->(a)"
+      ],
+      "codes": ["GN703"],
+      "readers": ["core"]
+    },
+    {
+      "name": "a thing with a name and no text",
+      "blocks": ["// graph: g\nINSERT (a:Thing)"],
+      "codes": ["GN705"],
+      "readers": ["core"]
+    },
+    {
+      "name": "a path that steps through something not in the graph",
+      "blocks": [
+        "// graph: trip\nINSERT (home:Place {text: 'Home'}),\n(cafe:Place {text: 'Cafe'}),\n(tour:Path {title: 'Walk'}),\n(tour)-[:STEP {seq: 1}]->(home),\n(tour)-[:STEP {seq: 2}]->(zzzzzzz)"
+      ],
+      "codes": ["GN710"],
+      "readers": ["core"]
+    },
+    {
+      "name": "a path with no steps",
+      "blocks": [
+        "// graph: trip\nINSERT (home:Place {text: 'Home'}),\n(cafe:Place {text: 'Cafe'}),\n(tour:Path {title: 'Walk'})"
+      ],
+      "codes": ["GN711"],
+      "readers": ["core"]
+    },
+    {
+      "name": "a note above a line holding two things",
+      "blocks": ["// graph: g\nINSERT\n/// a note\n(a:Thing {text: 'A'}), (b:Thing {text: 'B'})"],
+      "codes": ["GN718"],
+      "readers": ["core"]
+    }
+  ]
+}

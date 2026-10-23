@@ -75,6 +75,7 @@ class DrawnUnderItsSuggestedName(unittest.TestCase):
                     "severity": "warning",
                     "message": "this thing has no name; suggested: large_reader",
                     "fix": "add the name large_reader after the (, or write one of your own",
+                    "code": "GN704",
                     "character": 1,
                     "suggested": "large_reader",
                 }

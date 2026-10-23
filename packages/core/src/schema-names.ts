@@ -31,6 +31,7 @@ export function missingSchemas(world: World, texts: string[]): Problem[] {
       line: 1,
       severity: 'warning',
       message: word('reading.schema.missing', { name, graph }),
+      code: 'GN717',
       fix: others.length
         ? word('reading.schema.missing.version', { versions: others.join(', ') })
         : word('reading.schema.missing.fix', { name }),
