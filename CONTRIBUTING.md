@@ -214,8 +214,10 @@ These test behaviour across modules, or the repository itself, so they are named
   person takes no step (editor spec §31, derivations_need_no_upkeep).
 - `packages/core/test/bidi-labels.test.js` — each element of the display layer that shows the person's own names,
   labels or values is read from its first strong letter. It is set apart from the words around it
-  (`unicode-bidi: plaintext`). Each is an element the layer makes (editor spec §42, bidi_labels; partial until the
-  drawing and the exports join it).
+  (`unicode-bidi: plaintext`). Each is an element the layer makes (editor spec §42, bidi_labels).
+  - In the drawing and every picture of it, a label with a right-to-left letter is wrapped in Unicode's first strong
+    isolate. The Python library does the same to the same cases (`bidi-label-cases.json`).
+  - It stays partial until a real browser checks that each label fits its box.
 - `packages/core/test/words-files.test.js` — the translation files in `packages/core/translations/` (editor spec §42,
   translations_as_files). Each is named by its language tag and holds the source's keys and placeholders. Each is
   listed for the core. The folder's README.md is the translators' guide.

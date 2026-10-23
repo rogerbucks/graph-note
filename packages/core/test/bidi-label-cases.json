@@ -1,0 +1,36 @@
+{
+  "about": "Editor spec §42, bidi_labels: SVG text before and after a drawing's labels are set apart. A label with a right-to-left letter is wrapped in U+2068 and U+2069; any other stays byte for byte. Read by packages/core/test/bidi-labels.test.js and python/graph_spec/tests/test_graph_bidi.py.",
+  "cases": [
+    {
+      "name": "English stays",
+      "svg": "<text x=\"1\">Hello world</text>",
+      "isolated": "<text x=\"1\">Hello world</text>"
+    },
+    {
+      "name": "Arabic",
+      "svg": "<text x=\"1\">مرحبا بالعالم</text>",
+      "isolated": "<text x=\"1\">&#x2068;مرحبا بالعالم&#x2069;</text>"
+    },
+    {
+      "name": "Hebrew, digits and English mixed",
+      "svg": "<text x=\"1\">שלום 2024 ABC</text>",
+      "isolated": "<text x=\"1\">&#x2068;שלום 2024 ABC&#x2069;</text>"
+    },
+    {
+      "name": "English first, with a Hebrew word",
+      "svg": "<text>ABC &amp; שלום</text>",
+      "isolated": "<text>&#x2068;ABC &amp; שלום&#x2069;</text>"
+    },
+    {
+      "name": "each span apart",
+      "svg": "<text><tspan x=\"0\">Place</tspan><tspan x=\"0\" dy=\"9\">مكان</tspan></text>",
+      "isolated": "<text><tspan x=\"0\">Place</tspan><tspan x=\"0\" dy=\"9\">&#x2068;مكان&#x2069;</tspan></text>"
+    },
+    {
+      "name": "set apart once only",
+      "svg": "<text>&#x2068;مكان&#x2069;</text>",
+      "isolated": "<text>&#x2068;مكان&#x2069;</text>"
+    },
+    { "name": "an empty label stays", "svg": "<text x=\"1\"></text>", "isolated": "<text x=\"1\"></text>" }
+  ]
+}

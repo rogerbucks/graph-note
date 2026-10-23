@@ -166,6 +166,8 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 
 #### Colours and tokens
 
+- `bidi.ts` — sets apart a label with a right-to-left letter, in the drawing and every picture of it (editor spec §42,
+  bidi_labels). It is read from its first strong letter. `themed`, the saved picture's frame and the overview use it.
 - `theme.ts` — the drawing's colours and size, from the theme, in the host's palette. `hueColour` is the one blend every
   hue is drawn through, kinds, readings and the style graph's looks alike.
 - `palette.ts` — the one colour mapping (spec §10): how each host writes the style's colours.

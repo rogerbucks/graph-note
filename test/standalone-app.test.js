@@ -98,14 +98,15 @@ describe('the desktop app, run for real: open a folder, draw a note, edit it, of
         const seen = await run(
           "return location.href + ' (' + document.readyState + ', ' + navigator.language + ', tauri ' + typeof window.__TAURI__ + '): ' + (document.body?.innerText ?? '').replace(/\\s+/g, ' ').slice(0, 300)",
         ).catch((e) => `nothing: ${e.message}`);
-        // a module that failed to load or run gives its error again when imported once more
+        // a module that failed to load or run gives its error again when imported once more. Fetched again, it says
+        // what the window was given for it: its status, type, size and first letters.
         const modules = await call('POST', `/session/${session}/execute/async`, {
           script:
-            "const done = arguments[arguments.length - 1]; Promise.all([...document.scripts].map((s) => s.src && import(s.src).then(() => 'ran', (e) => String(e)))).then((r) => done(r.join(', ')))",
+            "const done = arguments[arguments.length - 1]; const given = (s, e) => fetch(s.src).then((r) => r.text().then((t) => `${r.status} ${r.headers.get('content-type')} ${t.length}B '${t.slice(0, 30)}' (${e})`), (f) => `${e}; fetch: ${f}`); Promise.all([...document.scripts].map((s) => s.src && import(s.src).then(() => 'ran', (e) => given(s, e)))).then((r) => done(r.join(', ')))",
           args: [],
         }).catch((e) => `unknown: ${e.message}`);
         // the scripts first: the quiet reporter cuts a message at 200 characters, and the page text is long
-        throw new Error(`the app never showed: ${script}; its scripts: ${modules}; it showed ${seen}`);
+        throw new Error(`the app never showed; its scripts: ${modules}; waited for: ${script}; it showed ${seen}`);
       }
       await pause(250);
     }
