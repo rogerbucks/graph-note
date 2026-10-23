@@ -4,6 +4,7 @@
 //
 // A search box finds any thing by name, in every group. Choosing a match lays its group out on its own, puts it in the
 // group's box (core search-fly.ts) and flies the view there. Under reduced motion the view is there at once.
+// Filtering keeps the groups' order: they glide to their new places (core filter-live.ts), at once under reduced motion.
 // Drag to move, scroll to zoom. The keyboard does the same: arrows move, + and - zoom, Home shows it all again.
 // It only looks: nothing is edited here, and nothing reaches the note.
 import { formatCount, word } from '@thoughtknot/core';
@@ -11,8 +12,10 @@ import type { Drawn, GraphDrawing, Refusal } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import type { LaidMarks } from '../../graphviz-marks.ts';
 import { partOf } from '../../expand-on-demand.ts';
-import { FacetIndex, facetsOf, keptGrouping } from '../../facet-counts.ts';
-import { MarkIndex } from '../../mark-index.ts';
+import { FacetIndex, facetsOf } from '../../facet-counts.ts';
+import type { Chosen } from '../../facet-counts.ts';
+import { GLIDE_MS, LiveFilter, glide } from '../../filter-live.ts';
+import { MarkIndex, visibleOf } from '../../mark-index.ts';
 import { overviewOf } from '../../overview.ts';
 import type { Palette } from '../../palette.ts';
 import { groupsOf } from '../../scale-groups.ts';
@@ -59,12 +62,21 @@ let made = 0;
 /** Shows `drawing`, too large to draw whole, as its overview at the end of `parent`, the card. */
 export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: MassiveOptions): MassiveView {
   const whole = groupsOf(drawing);
+  const live = new LiveFilter(
+    whole,
+    new FacetIndex(
+      drawing.boxes.map((b) => b.key),
+      facetsOf(drawing.boxes, o.props),
+    ),
+  );
   let grouping = whole;
   let search = new ThingSearch(drawing.boxes, grouping);
   let names = new Map(grouping.groups.map((g) => [g.id, g.label]));
   let keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
   const owner = {};
-  let laid: LaidMarks = overviewOf(grouping);
+  let laid: LaidMarks = overviewOf(grouping, live.order);
+  /** The marks while groups glide after a filter, painted without an index; null when still. */
+  let gliding: LaidMarks | null = null;
   let index = new MarkIndex(laid);
   const opened = new Set<string>();
 
@@ -114,7 +126,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     asked = false;
     if (!open) return;
     const view = { x: camera.x, y: camera.y, width: width / camera.scale, height: height / camera.scale };
-    const marks = index.visible(view, camera.scale);
+    const marks = gliding ? visibleOf(gliding.marks, view, camera.scale) : index.visible(view, camera.scale);
     painter?.paint(marks, camera, paints);
     text?.paint(marks, camera, paints);
   };
@@ -123,9 +135,9 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     asked = true;
     win.requestAnimationFrame(paint);
   };
-  const fit = (): FlyView => {
-    const scale = Math.min(width / laid.space.width, height / laid.space.height);
-    return { x: (laid.space.width - width / scale) / 2, y: (laid.space.height - height / scale) / 2, scale };
+  const fit = (space = laid.space): FlyView => {
+    const scale = Math.min(width / space.width, height / space.height);
+    return { x: (space.width - width / scale) / 2, y: (space.height - height / scale) / 2, scale };
   };
   const resize = () => {
     // the card was drawn again or closed, which its size shows: the overview goes with it
@@ -195,6 +207,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     const path = flyPath(camera, viewOnto(place, width, height), width, height, reducedMotion(win));
     const start = win.performance.now(),
       mine = ++flight;
+    gliding = null;
     await new Promise<void>((done) => {
       const step = (now: number) => {
         if (!open || mine !== flight) return done();
@@ -210,33 +223,38 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
 
   const grower = growBar(el, { drawing, layIn, flyOnto, say: (text) => said.setText(text) });
 
-  // the filters: the overview drawn again from the things kept, its groups in the same order
-  const regroup = (kept: string[] | null) => {
-    const keep = kept && new Set(kept);
-    grouping = keep ? keptGrouping(whole, keep) : whole;
-    search = new ThingSearch(keep ? drawing.boxes.filter((b) => keep.has(b.key)) : drawing.boxes, grouping);
+  // the filters: the overview drawn again from the things kept, its groups in the same order, gliding there
+  const regroup = (chosen: Chosen) => {
+    const f = live.filter(chosen);
+    const from = gliding ?? laid;
+    grouping = f.grouping;
+    search = new ThingSearch(f.mask ? drawing.boxes.filter((_, i) => f.mask?.[i]) : drawing.boxes, grouping);
     names = new Map(grouping.groups.map((g) => [g.id, g.label]));
     keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
-    laid = overviewOf(grouping);
+    laid = f.laid;
     index = new MarkIndex(laid);
     opened.clear();
-    insidePaints.clear();
-    flight++;
-    camera = fit();
     stage.setAttribute('aria-label', named());
     said.setText(word('massive.kept', { count: search.size }));
-    again();
+    const at = glide(from, laid),
+      mine = ++flight,
+      start = win.performance.now(),
+      reduced = reducedMotion(win);
+    const step = (now: number) => {
+      if (!open || mine !== flight) return;
+      const t = reduced ? 1 : Math.min(1, (now - start) / GLIDE_MS);
+      gliding = t < 1 ? at(t) : null;
+      camera = fit((gliding ?? laid).space);
+      // the inside of a group opened before shrinks away with it, so its colours go only once it has gone
+      if (!gliding) insidePaints.clear();
+      paint();
+      if (gliding) win.requestAnimationFrame(step);
+    };
+    step(start);
   };
   const tools = el.createDiv({ cls: 'thoughtknot-massive-tools' });
   el.insertBefore(tools, stage);
-  filterPanel(
-    tools,
-    new FacetIndex(
-      drawing.boxes.map((b) => b.key),
-      facetsOf(drawing.boxes, o.props),
-    ),
-    regroup,
-  );
+  filterPanel(tools, live.index, regroup);
 
   const flyTo = async (match: Match) => {
     const group = names.get(match.group) ?? match.group;

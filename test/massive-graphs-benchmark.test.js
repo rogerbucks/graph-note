@@ -57,12 +57,13 @@ test('each step records its outcome, its time and the memory it kept; a step not
   assert.match(table([r]), /\| 2× V-10 .* \| draw \| refused: over the drawing limit/);
 });
 
-test('the real steps on the V-10 graph: read, refused as a drawing, grouped, panned as an overview, and edited', async () => {
+test('the real steps on the V-10 graph: read, refused as a drawing, grouped, panned and filtered as an overview, and edited', async () => {
   const r = await measure(hugeBlock(), 1);
   assert.equal(r.steps.open.outcome, 'done');
   assert.match(r.steps.draw.outcome, /^refused: over the drawing limit on things/);
   assert.match(r.steps.overview.outcome, /^done: \d+ marks/);
   assert.match(r.steps.pan.outcome, /^done: at most \d+ marks a frame/);
+  assert.match(r.steps.filter.outcome, /^done: \d+ things kept/);
   assert.equal(r.steps.edit.outcome, 'done');
   assert.ok(r.things > 2000);
   assert.deepEqual(Object.keys(r.steps), Object.keys(STEPS));
@@ -85,7 +86,7 @@ test('a step over its budget in time or in memory is named, with what was measur
 });
 
 test('every size has a budget for each step that is built', () => {
-  for (const name of ['open', 'group', 'overview', 'pan', 'edit'])
+  for (const name of ['open', 'group', 'overview', 'pan', 'filter', 'edit'])
     for (const s of SIZES) assert.ok(SCALE_BUDGETS[name][s], `${name} at ${s}×`);
   assert.ok(SCALE_BUDGETS.draw[1]);
 });

@@ -3,14 +3,11 @@
 // many things it holds, under the other filters already chosen. Ticking values keeps only those things, and the
 // overview is drawn again from them. The counts are core facet-counts.ts.
 import { formatCount, word } from '@thoughtknot/core';
-import { FacetIndex } from '../../facet-counts.ts';
+import type { Chosen, FacetIndex } from '../../facet-counts.ts';
 import { button } from './view-bar';
 
-/**
- * The Filter button and its lists, at the end of `parent`. `changed` is given the keys kept, in written order, or
- * null when nothing is chosen and every thing is kept.
- */
-export function filterPanel(parent: HTMLElement, index: FacetIndex, changed: (kept: string[] | null) => void): void {
+/** The Filter button and its lists, at the end of `parent`. `changed` is given what is chosen, each time it changes. */
+export function filterPanel(parent: HTMLElement, index: FacetIndex, changed: (chosen: Chosen) => void): void {
   const panel = parent.createDiv({ cls: 'thoughtknot-massive-filters' });
   panel.hidden = true;
   const toggle = button(
@@ -45,8 +42,7 @@ export function filterPanel(parent: HTMLElement, index: FacetIndex, changed: (ke
         if (box.checked) set.add(value);
         else set.delete(value);
         recount();
-        const any = Object.values(chosen).some((v) => v.size);
-        changed(any ? index.kept(chosen) : null);
+        changed(chosen);
       });
     }
   }

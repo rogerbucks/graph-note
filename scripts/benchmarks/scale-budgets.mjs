@@ -21,6 +21,10 @@ export const SCALE_BUDGETS = {
   // the slowest of 61 frames, the first with the whole overview on screen: about 0.3 ms, 1.5 ms and 14 ms. A frame
   // must stay under 16 ms to be smooth; the budget leaves room for a slower runner, and the renderer culls the rest
   pan: { 1: { ms: 10, mb: 5 }, 10: { ms: 16, mb: 5 }, 100: { ms: 50, mb: 20 } },
+  // a filter keeping about 2,000 and then 10,000 things (scale_filter_live). Each is counted, laid out in the whole
+  // order, indexed, and given one frame of the glide. About 4 ms, 22 ms and 106 ms (23 Oct 2026). Roger's aim is under 100 ms for
+  // 10,000 kept things; 10× holds it with room. 100× is past the read limit until way E's steps 6 and 7
+  filter: { 1: { ms: 50, mb: 20 }, 10: { ms: 100, mb: 20 }, 100: { ms: 320, mb: 50 } },
   // 1×: a note set on one thing and the note read again, about 0.7 s. 10× and 100×: refused, after reading the block
   edit: { 1: { ms: 2500, mb: 50 }, 10: { ms: 1200, mb: 20 }, 100: { ms: 12_000, mb: 20 } },
 };
