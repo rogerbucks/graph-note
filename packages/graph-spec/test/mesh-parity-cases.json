@@ -1,0 +1,85 @@
+{
+  "about": "The JavaScript and Python engines give byte-identical answers on the same data (editor spec §27, mesh_engine_parity). Each case is one shared mesh case, from mesh-join-cases.json (joins) or two-times-cases.json (a graph as at a date, and its lens). Its whole answer is written as RFC 8785 text, a date as ISO 8601, and its SHA-256 is here. packages/graph-spec/test/mesh-parity.test.mjs and python/graph_spec/tests/test_mesh_parity.py each hold their library to every hash, so a change to either that alters one byte fails both.",
+  "cases": [
+    {
+      "name": "join: a clash keeps both sides, flags the conflict and overwrites neither",
+      "sha256": "52b0b4510346ea1ead3aa8db2ead9a43af173f4074ade8c0cd5e6197a1e04257"
+    },
+    {
+      "name": "join: overlapping graphs keep both sets and list the contradictions and the gaps",
+      "sha256": "1e53f6ffa7caf580be31e7d23987614a8db934f2150056e60c2f3fad97fdb24c"
+    },
+    {
+      "name": "join: disagreeing claims are both contested, in words, and a certainty typed as a number is flagged",
+      "sha256": "be5c648b0ff638a4779cdd84fcc8b31c45566f2fb0b6aa50ed4bff301b0efc5e"
+    },
+    {
+      "name": "join: a finding settles a dispute: the confirmed side is asserted, the other refuted",
+      "sha256": "295f969765381aa26bc1030e7f08808fb5a891d5a7a5c596323962cd9a0898d8"
+    },
+    {
+      "name": "join: claims rank by a key made from their words, and the shaky ones are found; a sort key in the text is ignored",
+      "sha256": "3cf0487dc86348d118001ccd5cae1c35651f483be979d375ec56d2adcb6d574d"
+    },
+    {
+      "name": "join: a query keeps the claims at least as likely as a word",
+      "sha256": "02137dbd3bb954e9ebd185b8a085f3e10d2218d7220ea91fe1bf6e998f708558"
+    },
+    {
+      "name": "join: contesting one thing in a cluster leaves its neighbours as they were",
+      "sha256": "f351c26bd0bd385cddac5dae87a5c5acc3b5d74dfaf72bfb8e8095ce85f6148a"
+    },
+    {
+      "name": "join: doubt passes across a cluster only when a view asks for it",
+      "sha256": "9bbd8769d81229eb396cfb3f7154faeed6dd8ea61b3c2c84e0fb5c904ce78521"
+    },
+    {
+      "name": "join: a link from a contested thing to a well-supported one is marked, and the well-supported one is unchanged",
+      "sha256": "85b41c6e18e63a506777222a0ac6c306de6c11550668a7644bc42feb463fb521"
+    },
+    {
+      "name": "join: a cluster made by hand starts as asserted",
+      "sha256": "ad3015e463bc1186a8943b1898127088e0bb81700a62565c72bd48a024df1a23"
+    },
+    {
+      "name": "join: a join that leaves a member out of a hand-made cluster makes the cluster contested",
+      "sha256": "3080e713e9ca89e366474d4c41acdc540889204c28b489b0110b1851ecc5c02c"
+    },
+    {
+      "name": "join: a join that disagrees about a hand-made cluster's own values makes it contested",
+      "sha256": "3af995e445a1a43c4210f12919100ad9882a1f2279d171e8c69b9eaf1394c973"
+    },
+    {
+      "name": "join: two machines' Approved states join as a guess",
+      "sha256": "f91ebe5b9b829612027a3794ed0333d277c8aa664778586c7aaf42bb35fe6a0c"
+    },
+    {
+      "name": "join: the match is confirmed once the user says the two are in one domain",
+      "sha256": "11856537ba150511f808d7ad5d126d8d3962b4b43c88764dc228033c1da317db"
+    },
+    {
+      "name": "as at: recorded 2024-06-01",
+      "sha256": "8ffd6a9f7dfbcfa4aca07a699cf525a7f5a0a15786f80b23eef51e804b969927"
+    },
+    {
+      "name": "as at: recorded 2024-10-01",
+      "sha256": "30fbd4593fd4b1eddd88795bf830b24f2c6d6ad81c8455e2116e484cb40b8e31"
+    },
+    {
+      "name": "as at: recorded 2023-12-31",
+      "sha256": "56f72c79164fb559b7f8d76c6e2e6162bbcafce52c9af8849fa9673691641027"
+    },
+    {
+      "name": "as at: real 2024-04-01",
+      "sha256": "30fbd4593fd4b1eddd88795bf830b24f2c6d6ad81c8455e2116e484cb40b8e31"
+    },
+    {
+      "name": "as at: real 2023-07-01",
+      "sha256": "8ffd6a9f7dfbcfa4aca07a699cf525a7f5a0a15786f80b23eef51e804b969927"
+    },
+    {
+      "name": "as at: real 2024-06-01",
+      "sha256": "1b242cb5c5b68325319fb4095d8bba954334fdeb06b114e1d84a393b3fda2442"
+    }
+  ]
+}

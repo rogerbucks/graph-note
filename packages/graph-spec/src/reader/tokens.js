@@ -16,7 +16,10 @@ const EXCERPT = new RegExp(`^${S}*//${S}*excerpt\\b`, 'i'),
   SCHEMA = new RegExp(`·${S}*SCHEMA${S}+${N}+`),
   EXCERPT_OF = new RegExp(`·${S}*excerpt\\b`, 'i'),
   QUERY = new RegExp(`·${S}*QUERY\\b`),
-  CHANGE_SET = new RegExp(`·${S}*CHANGE SET\\b`);
+  CHANGE_SET = new RegExp(`·${S}*CHANGE SET\\b`),
+  FORMAT = new RegExp(`·${S}*format${S}+(\\d+(?:\\.\\d+)?)\\b`);
+// The newest major format this reader reads (§3). A block that names a newer one is refused plainly, its text kept.
+const FORMAT_READ = 1;
 // A block's graph and its kind, 'data', 'schema', 'query', 'changeset' or 'excerpt', read from its first line (§3);
 // an excerpt need name no graph. Throws a ProfileError when the line names no graph, or a graph name that is not one
 // word.
@@ -42,6 +45,15 @@ function header(block) {
       'use letters, digits and underscores only, such as reader_choice, not reader-choice',
       undefined,
       'GN102',
+    );
+  const format = FORMAT.exec(m[2]);
+  if (format && Number(format[1].split('.')[0]) > FORMAT_READ)
+    throw new ProfileError(
+      1,
+      `the block is written in format ${format[1]}, newer than this reader, which reads format ${FORMAT_READ}`,
+      'read it with a newer reader: its text is kept as written',
+      undefined,
+      'GN106',
     );
   return [m[1], kind];
 }

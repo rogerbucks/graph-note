@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/mesh-parity.test.mjs",
+  "test": "mesh_engine_parity > as at: real 2024-06-01",
+  "seen_failing_first": false,
+  "evidence": "A parity check over engines already built and agreeing: its hashes were recorded from them, so it guards against drift and cannot fail first."
+}

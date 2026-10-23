@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/mesh-parity.test.mjs",
+  "test": "mesh_engine_parity > join: overlapping graphs keep both sets and list the contradictions and the gaps",
+  "seen_failing_first": false,
+  "evidence": "A parity check over engines already built and agreeing: its hashes were recorded from them, so it guards against drift and cannot fail first."
+}

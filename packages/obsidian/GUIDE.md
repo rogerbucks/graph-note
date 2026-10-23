@@ -47,6 +47,10 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 
 - `block.ts` — one gql block in a note. It is drawn, or shown as code, never blank. It is shown as text with a banner
   when it is over a size or time limit.
+- `note-store.ts` — a note too big to read at once is read into a store in memory, a part at a time. Its card shows
+  the graph's overview from there, above the text and why (§53, scale_in_parts).
+- `stored-edit.ts` — a thing chosen in that overview, by search or a click, shows its properties. A change is written
+  to the note's text first, on the lines that wrote the thing. Then the store reads the note again.
 - `view-block.ts` — a view (§7): a query block named as a view, drawn as what it picks out of its graph.
   - Outside the view profile it is refused, saying what is allowed.
   - When its note is too large to read, it is shown as its query under the banner.

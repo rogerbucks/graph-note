@@ -85,6 +85,8 @@ const NAMES = [
   'secretsIn',
   'secretsInGraph',
   'shownText',
+  // the same text for every thing of a graph, its schema read once (instructions_naming, 23 Oct 2026)
+  'shownTexts',
   'clipShown',
   // groups found by how things link, for clusters and big-graph groups (wiki/Clusters-design.md)
   'louvain',
@@ -93,6 +95,15 @@ const NAMES = [
   'centroidsOf',
   'clusterCycles',
   'cycleView',
+  // the graph mesh's join: conflicts, gaps, certainty, standing (editor spec §28 and §30)
+  'certaintyOf',
+  'byCertainty',
+  'meshJoin',
+  // a graph as at a date on recorded or real-world time (editor spec §29)
+  'asAt',
+  'lensAsAt',
+  // a text merge checked by the meaning-level join (editor spec §30)
+  'afterTextMerge',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

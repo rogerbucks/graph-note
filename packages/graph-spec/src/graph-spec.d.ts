@@ -114,6 +114,8 @@ declare namespace GraphSpecCheck {
    * when the graph declares no ElementType of its own.
    */
   function shownText(g: Graph, id: string, shared?: Graph): [string, string | null];
+  /** The text each thing of a graph is shown by, as shownText gives it, with the schema read once for them all. */
+  function shownTexts(g: Graph, shared?: Graph): (id: string) => [string, string | null];
   /** Text cut to 80 characters at a word, ending in "…"; shorter text as it is. */
   function clipShown(text: string): string;
   /** The readings guessed for a relationship type with none declared: [forward, reverse]. */
@@ -127,6 +129,8 @@ declare namespace GraphSpecCheck {
   function quote(s: string): string;
   /** A text's tokens: [kind, the text as written, line, the value, column]. Throws ProfileError. */
   function tokens(text: string): [string, string, number, string, number][];
+  /** A value as canonical JSON (RFC 8785), a date or time as its text. */
+  function jcs(value: unknown): string;
   /** The first sixteen hexadecimal digits of the SHA-256 of an object in canonical JSON (RFC 8785). */
   function hash16(value: unknown): string;
   /** A hash written with its algorithm's name: `sha-256-64:` for 16 digits, `sha-256:` for 64 (editor spec §51). */
@@ -280,6 +284,89 @@ declare namespace GraphSpecCheck {
   function clusterCycles(graph: Graph): string[][];
   /** What a view shows with a graph's cycles hidden or highlighted. */
   function cycleView(graph: Graph, how: 'hide' | 'highlight'): { shown: string[]; highlighted: string[] };
+
+  /** A claim as a person ranks it (editor spec §28): its words, never a number typed in. */
+  interface MeshClaim {
+    id: string;
+    likelihood?: unknown;
+    likelihood_to?: unknown;
+    confidence?: unknown;
+    status?: unknown;
+  }
+  /** A claim ranked by certainty: its range in percent and a sort key, both made from its words. */
+  interface RankedClaim {
+    id: string;
+    status: string;
+    likelihood: string;
+    likelihood_to: string;
+    confidence: string;
+    range: [number, number];
+    sort_key: number;
+  }
+  /** A claim's range in percent and its sort key, from its words alone; null without a likelihood word. */
+  function certaintyOf(claim: MeshClaim): { range: [number, number]; sort_key: number } | null;
+  /** Claims ranked likeliest first: only the shaky ones, or only those at least as likely as a word, when asked. */
+  function byCertainty(claims: readonly MeshClaim[], options?: { shaky?: boolean; atLeast?: string }): RankedClaim[];
+  /** What the mesh's join found (editor spec §28 and editor spec §30). */
+  interface MeshJoin {
+    /** Each clash, with each side's value and the documents that state it. */
+    conflicts: { subject: string; about: string; sides: [value: unknown, statedIn: string[]][] }[];
+    /** What some documents state and others holding the same thing do not. */
+    gaps: [
+      kind: 'thing' | 'property' | 'relationship',
+      subject: string,
+      attribute: string,
+      has: string[],
+      lacks: string[],
+    ][];
+    claims: RankedClaim[];
+    /** The ids of the contested and unlikely claims. */
+    shaky: string[];
+    /** Each certainty written as a number. */
+    flags: [kind: 'numeric-certainty', subject: string, property: string, document: string][];
+    /** Each thing's standing: asserted, contested, in doubt from its cluster, or a guessed state match. */
+    standing: Record<string, 'asserted' | 'contested' | 'in-doubt' | 'guess'>;
+    /** Each link, its own standing, and whether it joins a contested thing to one that is not. */
+    links: [link: string, standing: 'asserted' | 'contested', contestedLink: boolean][];
+    /** Each hand-made cluster, its standing and the members a join disagrees about. */
+    clusters: [cluster: string, standing: 'asserted' | 'contested', disputed: string[]][];
+    /** Each state name shared across documents: its things, documents and whether the match is a guess. */
+    states: [name: string, things: string[], documents: string[], match: 'guess' | 'confirmed'][];
+    /** The joined things' asserted values. */
+    nodes: Record<string, Record<string, unknown>>;
+  }
+  /** Graphs joined as the mesh joins them: the §21 join, then what it found. */
+  function meshJoin(q: {
+    docs: string[];
+    config?: object;
+    findings?: { confirms: string; refutes: string[] }[];
+    /** Clusters whose doubt passes to their members. */
+    spread?: string[];
+    /** Pairs of documents the user has said are one domain. */
+    sameDomain?: [string, string][];
+  }): MeshJoin;
+
+  /** A graph as at a date on one kind of time: when it was recorded, or when it held in the world (editor spec §29). */
+  function asAt(graph: Graph, axis: 'recorded' | 'real', date: string): Graph;
+  /** A lens run on a graph as at a date: each thing's bucket as it was then, or null for a rule it cannot run. */
+  function lensAsAt(graph: Graph, rule: string, axis: 'recorded' | 'real', date: string): Record<string, string> | null;
+
+  /** A value a text merge picked where the join left a dispute: for a person to decide (editor spec §30). */
+  interface MergePick {
+    subject: string;
+    about: string;
+    value: unknown;
+    /** The claim the picked value matches, and the claims it passed over. */
+    claim: string;
+    over: string[];
+  }
+  /** Two edits joined over their base, and their text merge read against that join. */
+  function afterTextMerge(q: { base: string; ours: string; theirs: string; merged: string; config?: object }): {
+    contested: string[];
+    picked: MergePick[];
+    /** True only when the join left nothing in dispute. */
+    settled: boolean;
+  };
 
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];

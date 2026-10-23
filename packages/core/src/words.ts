@@ -79,19 +79,45 @@ export function translationProblems(source: Catalogue, translation: Catalogue, t
   return problems;
 }
 
+/** Each language's plural rules, made once: making them is far dearer than asking them. */
+const rules = new Map<string, Intl.PluralRules>();
+function pluralRules(language: string): Intl.PluralRules {
+  let r = rules.get(language);
+  if (!r) rules.set(language, (r = new Intl.PluralRules(language)));
+  return r;
+}
+
 /** `entry` said with `values`, in `language`: its plural form for the count, and each placeholder filled. */
 export function sayWords(entry: Words, values: WordValues = {}, language = SOURCE_LANGUAGE): string {
   let text: string;
   if (typeof entry === 'string') text = entry;
   else {
-    const category = new Intl.PluralRules(language).select(values.count ?? 0);
+    const category = pluralRules(language).select(values.count ?? 0);
     text = entry[category] ?? entry.other;
   }
-  return text.replace(PLACEHOLDER, (whole, name: string) => {
-    const value = values[name];
-    if (value === undefined) return whole;
-    return typeof value === 'number' ? formatCount(value) : value;
-  });
+  // the word split at its placeholders once, then filled by joining: never searched again on every call
+  const parts = partsOf(text);
+  let said = parts[0] ?? '';
+  for (let i = 1; i < parts.length; i += 2) {
+    const name = parts[i] ?? '',
+      value = values[name];
+    said += value === undefined ? `{${name}}` : typeof value === 'number' ? formatCount(value) : value;
+    said += parts[i + 1] ?? '';
+  }
+  return said;
+}
+
+/** Each word's text split at its placeholders: text, a placeholder's name, text, and so on. Made once for each text. */
+const split = new Map<string, string[]>();
+function partsOf(text: string): string[] {
+  let parts = split.get(text);
+  if (!parts) {
+    parts = text.split(/\{([a-z][a-zA-Z0-9]*)\}/);
+    // a text never seen before may be one of many made on the fly: only so many are kept
+    if (split.size >= 2000) split.clear();
+    split.set(text, parts);
+  }
+  return parts;
 }
 
 const translations = new Map<string, Catalogue>();
@@ -145,9 +171,7 @@ export const word = (key: WordKey, values?: WordValues): string =>
 export function sourceWord(key: WordKey, values: WordValues = {}): string {
   const entry: Words = SOURCE_WORDS[key];
   const form =
-    typeof entry === 'string'
-      ? entry
-      : (entry[new Intl.PluralRules(SOURCE_LANGUAGE).select(values.count ?? 0)] ?? entry.other);
+    typeof entry === 'string' ? entry : (entry[pluralRules(SOURCE_LANGUAGE).select(values.count ?? 0)] ?? entry.other);
   return sayWords(form, Object.fromEntries(Object.entries(values).map(([k, v]) => [k, String(v)])));
 }
 

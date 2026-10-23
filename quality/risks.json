@@ -1277,7 +1277,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
+      "status": "done",
+      "done_in": "#1073, #1076",
       "wave": "Wave 9 · Slice 6 the mesh"
     },
     {
@@ -2219,7 +2220,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
+      "status": "done",
+      "done_in": "#1073",
       "wave": "Wave 9 · Slice 6 the mesh"
     },
     {
@@ -3879,7 +3881,8 @@
         "packages/core/src/hits.ts:57",
         "packages/core/src/theme.ts:70",
         "packages/core/src/view-profile.ts:104",
-        "packages/graph-spec/src/rules/lenses.js:11"
+        "packages/graph-spec/src/rules/lenses.js:11",
+        "packages/graph-spec/src/rules/lenses.js:18"
       ],
       "likelihood": "low",
       "impact": "high",

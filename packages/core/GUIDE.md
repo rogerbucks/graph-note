@@ -106,6 +106,30 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - There is none for a text that is not that block as read, so a fix never writes blind.
 - `completeness.ts` — the completeness report behind the problems badge.
 
+#### The local store
+
+- `mesh-index.ts` — the graph mesh's local store (editor spec §27, mesh_index_rebuilds; Q-05). It is derived from the
+  notes' text and can always be built again from it. Its reads are the ones a huge graph is drawn in parts from:
+  `groups`, `inGroups`, `sourceSpan`, `version` and `find`.
+- `mesh-index-rows.ts` — the rows one note gives the store: things, links and groups, each with its note lines.
+- `note-parts.ts` — a note too big to read at once, read in parts (editor spec §53, scale_in_parts). Each part is
+  within a quarter of the read limits, and gives the store the same rows as a whole reading would.
+- `store-drawing.ts` — a too-big note's graphs from the store, as the overview draws them (scale_in_parts). The note is
+  read a part at a time, with the page's own work done between parts. Rows built from older text are never drawn.
+  `editInParts` edits only the lines that wrote a thing, in the note's text. The store then reads the changed note again.
+- `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
+  host hands in (sql.js). No server and no JVM (embedded_backends).
+
+- `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
+  change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
+  source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
+- `rename-across.ts` — a thing renamed in every note that names it (editor spec §27, rename_follows_notes; NEURO-10).
+  `renameAcross` gives each note's new text, as one bundle a person applies. A note it cannot read, or a name already
+  taken, is listed with why. Only the names change.
+- `schema-version-moves.ts` — a graph moved to another version of its shared schema (editor spec §27,
+  schema_version_moves; ARCH-4). `schemaMove` gives the block with its graph line changed, and what the new version adds
+  and drops. A person applies it; reading never moves a graph. `schemaVersions` lists the versions there are.
+
 #### Deferred things
 
 - `deferred.ts` — deferred things (§5, §8).
@@ -131,6 +155,14 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - `readNote` sets `Box.deferred` on each such box. It takes the day as its fifth argument, the current day by
     default.
   - The layout source is untouched, so the host draws the dashing and the later mark on the finished drawing.
+#### Certainty
+
+- `certainty-drawn.ts` — how sure a thing is, drawn (editor spec §36, certainty_drawn).
+  - `certaintyLevel(props)` gives sure, likely, doubtful or contested. It reads a likelihood word, or a status of
+    contested. It gives null when neither is written, so that thing is drawn as before.
+  - `CERTAINTY_LOOKS` gives each level its line weight, its dash and its mark in words. No two levels look alike in
+    black and white. A look is a style token, never a colour.
+  - `readNote` sets `Box.certainty`. The host draws the look on the finished drawing, as it does for a parked thing.
 
 ### Drawing
 

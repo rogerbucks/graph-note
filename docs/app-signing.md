@@ -23,7 +23,8 @@ secret that is only half set never breaks a build: the run builds unsigned and w
 - On a pull request it never gets the secrets. A pull request's code could read them, so it builds unsigned.
 - On a push to main, or when started by hand, it passes the secrets to the build.
 - The installers are kept as downloads of the run. The run's summary says, per system, whether it signed.
-- The release workflow does not ship the desktop installers yet. That is the next step for the desktop app.
+- Each nightly pre-release carries the installers too: the nightly calls this workflow at its commit, with the keys.
+- The stable release workflow does not ship them yet. For now every release is a private nightly (Roger, 23 Oct 2026).
 
 ## Adding a secret
 

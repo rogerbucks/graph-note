@@ -54,6 +54,8 @@ export interface MassiveOptions {
   chosen?: FilterKeep;
   /** Told each filter the user chooses, to save it. Going back or forward is not a choice. */
   chose?: (keep: FilterKeep) => void;
+  /** Told the thing chosen: found by search, even in a group too large to draw, or clicked in an opened group. */
+  picked?: (key: string) => void;
 }
 
 /** The overview on screen: how to close it, its painter, where it looks, and how to find and fly to a thing. */
@@ -339,6 +341,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     const place = thing ?? (box && 'width' in box ? box : { x: 0, y: 0, width: 1, height: 1 });
     said.setText(word(drawn ? 'massive.at' : 'massive.not-drawn', { name: match.text, group }));
     if (thing) grower.start(match.key, match.text, thing);
+    o.picked?.(match.key);
     await flyOnto(place);
     record();
   };
@@ -360,7 +363,15 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     flight++;
     again();
   };
-  moveControls(stage, { zoom, move, home, back: () => go(trail.back()), forward: () => go(trail.forward()) });
+  // the thing under a click, the one drawn on top
+  const pick = (sx: number, sy: number) => {
+    const at = { x: camera.x + sx / camera.scale, y: camera.y + sy / camera.scale, width: 0, height: 0 };
+    const hit = index.inView(at).map((i) => index.marks[i]);
+    const key = hit.filter((m) => m?.kind === 'box' && m.of).pop()?.of;
+    if (key) o.picked?.(key);
+  };
+  const [back, forward] = [() => go(trail.back()), () => go(trail.forward())];
+  moveControls(stage, { zoom, move, home, back, forward, pick });
 
   // a saved filter: the overview starts with it, the first step on the trail
   if (o.chosen && Object.values(o.chosen).some((v) => v.length)) {

@@ -6,6 +6,12 @@
     { "name": "a comment after code", "via": "store", "block": "// graph: g\n(a:T) // a note", "code": "GN103" },
     { "name": "a line that is no GQL", "via": "store", "block": "// graph: g\n(a:T),\n@oops", "code": "GN104" },
     {
+      "name": "a block in a newer major format",
+      "via": "store",
+      "block": "// graph: g · format 2.1\n(a:T)",
+      "code": "GN106"
+    },
+    {
       "name": "an escape GQL does not name",
       "via": "store",
       "block": "// graph: g\n(a:T {v: 'a\\qb'})",

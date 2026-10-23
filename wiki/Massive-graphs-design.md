@@ -178,10 +178,29 @@ These were sent to the thread building the marks, to fold into its format.
 | 4 | The overview: WebGPU and WebGL layers reading marks, Canvas fallback, spatial index, level of detail | M to L |
 | 5 | Opening a group into today's drawing, and laying out neighbours in the background | M |
 | 6 | Raise the read limit, with the benchmark holding each new limit (done 23 October 2026) | S |
-| 7 | Read in parts from the local store (`scale_in_parts`), once Q-05's store is in | L, later |
+| 7 | Read in parts from the local store (`scale_in_parts`). Parts 1 and 2 done 23 October 2026: the store reads a too-big note in parts, and Obsidian opens it as its groups | L |
 
-Steps 1 to 6 do not wait on anything else, except that step 4 reads the marks format. Step 7 waits for the local
-store.
+Steps 1 to 6 do not wait on anything else, except that step 4 reads the marks format. Step 7 waited for the local
+store, which came in on 23 October 2026 (#1071).
+
+### Step 7: reading in parts
+
+Step 7 comes in four parts:
+
+1. **The store reads a note in parts** (`note-parts.ts`). A note past the read limits is cut between its items.
+   Each part is within a quarter of the limits. A part is given a stand-in for each thing it names from an earlier
+   part, so its links are read. The store gets the same rows as a whole reading would give. A 2.1 MB note of 13,330
+   things goes into the store in about 2 seconds.
+2. **A too-big note opens as its groups** (`store-drawing.ts`), in Obsidian first. The card shows the overview from
+   the store, above the note's text and why it was not read whole. The note is read a part at a time, and Obsidian
+   does its own work between parts, so it keeps answering. Drawn again, the note is not read again until its text
+   changes. Its style graph is not read yet, so a filter chosen there is only tried, not saved.
+3. **An edit is written to the note's text first** (`editInParts`, in `store-drawing.ts`). Only the lines that wrote
+   the thing change, so the note is never read whole. Then the store reads that note again. A store read from other
+   text refuses the edit, so it never lands on the wrong lines.
+4. **A thing chosen shows its properties**, in Obsidian first. Find it by search, or click it in an opened group. Its
+   properties show under the overview, and a change to one is written as in part 3. In reading view they are only
+   shown.
 
 ## Decision
 

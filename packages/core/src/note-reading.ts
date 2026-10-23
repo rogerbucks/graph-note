@@ -2,6 +2,7 @@
 // estimates drawn where what was written was a near miss. It gives the problems too, each with its block, its line and
 // its fix.
 import type { World } from '@thoughtknot/graph-spec';
+import type { CertaintyLevel } from './certainty-drawn.ts';
 import type { Estimate } from './estimates.ts';
 import type { InlineProperties } from './inline-properties.ts';
 import type { Refusal } from './layout-limits.ts';
@@ -49,6 +50,11 @@ export interface Box {
    * library's.
    */
   deferred?: { overdue: boolean; what: string };
+  /**
+   * Only for a thing whose certainty is written (editor spec §36, certainty_drawn): how sure it is. The host draws its
+   * line weight, dash and mark (certainty-drawn.ts) on the finished drawing, as it does a deferred thing's.
+   */
+  certainty?: CertaintyLevel;
 }
 
 /** One link to draw, read in its schema's words. */

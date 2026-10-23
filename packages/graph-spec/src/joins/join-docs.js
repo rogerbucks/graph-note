@@ -37,12 +37,11 @@ function configFrom(d) {
   ]); // no engine here: a GQL constraint runs as its named twin
   return config;
 }
-// A join request answered end to end. Each document is read, normalised and validated, then joined, and finished.
-// The join is merge3 of the first two over the base when there is one, union otherwise. The answer's rows, claims,
-// pairs, paradoxes, nodes and relationships are sorted and written as JSON values. That is to compare with the Python
-// library's. Switches turn single steps off ('base-dates', 'validate', 'base'). A union holds to the documents' trust
-// (trust.js).
-function joinDocs(q) {
+// A join request joined: each document read, normalised and validated, then joined, and finished. The join is merge3
+// of the first two over the base when there is one, union otherwise. Switches turn single steps off ('base-dates',
+// 'validate', 'base'). A union holds to the documents' trust (trust.js). Gives the joined result, the rows of reading
+// and the documents the join counted.
+function joinedOf(q) {
   // q: {docs: [block], base: block|null, config, findings, checks, hold, switches}
   const config = configFrom(q.config),
     log = [],
@@ -60,15 +59,26 @@ function joinDocs(q) {
     docs = q.docs.map((b) => one(b, base)),
     checks = q.checks;
   withinJoinItems([base, ...docs].reduce((n, d) => n + (d ? d.nodes.size + d.raw_edges.length : 0), 0));
+  if (base && !sw.has('base'))
+    return {
+      joined: finish(merge3(base, docs[0], docs[1], config, q.hold), config, q.findings || [], checks),
+      log,
+      counted: docs.slice(0, 2),
+      config,
+    };
   // a union counts only own and trusted documents, and flags what only an untrusted one states (req:21.trust-counted)
-  const unioned = () => {
-    const { counted, untrusted } = heldByTrust(docs, config, log);
-    return flagUntrusted(finish(union(counted, config), config, q.findings || [], checks), untrusted);
+  const { counted, untrusted } = heldByTrust(docs, config, log);
+  return {
+    joined: flagUntrusted(finish(union(counted, config), config, q.findings || [], checks), untrusted),
+    log,
+    counted,
+    config,
   };
-  const joined =
-    base && !sw.has('base')
-      ? finish(merge3(base, docs[0], docs[1], config, q.hold), config, q.findings || [], checks)
-      : unioned();
+}
+// A join request answered end to end (joinedOf). The answer's rows, claims, pairs, paradoxes, nodes and relationships
+// are sorted and written as JSON values. That is to compare with the Python library's.
+function joinDocs(q) {
+  const { joined, log } = joinedOf(q);
   const pr = (p) => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, norm(v)]));
   return {
     rows: log
@@ -88,4 +98,4 @@ function joinDocs(q) {
   };
 }
 
-module.exports = { configFrom, joinDocs };
+module.exports = { configFrom, joinedOf, joinDocs };

@@ -242,6 +242,11 @@
   fill: var(--gn-text-error);
   font-weight: var(--gn-font-weight-semibold);
 }
+/* How sure a thing is (spec §36): its line weight and dash are set on the drawing; the mark in words is small. */
+.thoughtknot-svg .thoughtknot-certainty-mark {
+  font-size: 9pt;
+  fill: var(--gn-text-muted);
+}
 /* A look colour's tag (§44, colour_never_alone): the same tag is on each box or link of that colour and in the legend. */
 .thoughtknot-svg .thoughtknot-look-tag {
   font-size: 10px;
@@ -2390,9 +2395,51 @@ pre.thoughtknot-code {
 }
 .thoughtknot-space-said {
   position: absolute;
+  inset-block-start: var(--gn-space-2);
+  inset-inline-end: var(--gn-space-2);
+  max-width: 40%;
+  color: var(--gn-text-normal);
+  font-weight: var(--gn-font-weight-semibold);
+  text-align: end;
+}
+/* the buttons that move the 3D view, down the right side */
+.thoughtknot-space-pad {
+  position: absolute;
+  inset-block-end: var(--gn-space-2);
+  inset-inline-end: var(--gn-space-2);
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: var(--gn-space-half-2);
+  padding: var(--gn-space-half-2);
+  background: var(--gn-bg);
+  border-radius: var(--gn-radius-s);
+  border: 1px solid var(--gn-border-focus);
+}
+/* how to move it, in short steps at the foot, kept clear of the buttons */
+.thoughtknot-space-help {
+  position: absolute;
   inset-block-end: var(--gn-space-2);
   inset-inline-start: var(--gn-space-2);
-  color: var(--gn-text-muted);
+  max-width: calc(100% - 7rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gn-space-half-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+.thoughtknot-space-help[hidden] {
+  display: none;
+}
+.thoughtknot-space-help li {
+  padding: var(--gn-space-half-1) var(--gn-space-2);
+  background: var(--gn-bg);
+  border: 1px solid var(--gn-border-focus);
+  border-radius: var(--gn-radius-s);
+  color: var(--gn-text-normal);
+  font-size: var(--gn-font-size-xs);
 }
 
 /* a graph too large to draw, as its overview (§53, massive-view.ts) */

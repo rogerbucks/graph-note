@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/mesh-parity.test.mjs",
+  "test": "mesh_engine_parity > join: claims rank by a key made from their words, and the shaky ones are found; a sort key in the text is ignored",
+  "seen_failing_first": false,
+  "evidence": "A parity check over engines already built and agreeing: its hashes were recorded from them, so it guards against drift and cannot fail first."
+}

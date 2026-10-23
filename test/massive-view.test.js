@@ -33,6 +33,12 @@ import { readNote } from './packages/core/src/drawing.ts';
 import { DEFAULT_SETTINGS } from './packages/core/src/settings.ts';
 installDomHelpers(window);
 installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
+// a clock that moves 16 ms a frame. A glide or a flight then takes the same number of frames on a busy machine. The
+// frames are counted, never the time
+let clock = performance.now();
+const nextFrame = window.requestAnimationFrame.bind(window);
+performance.now = () => clock;
+window.requestAnimationFrame = (run) => nextFrame(() => run((clock += 16)));
 const boxes = [], links = [];
 for (let i = 0; i < 3000; i++) {
   boxes.push({ key: 't' + i, kind: 'Thing', text: i === 1234 ? 'Needle in the stack' : 'Thing ' + i });
@@ -61,7 +67,10 @@ const props = (key) => ({ status: Number(key.slice(1)) % 3 ? 'open' : 'done' });
 // each filter chosen, as the host is told it to save
 window.chose = [];
 const chose = (keep) => window.chose.push(keep);
-window.view = massiveView(card, drawing, { graph: 'Big', palette: PALETTES.light, layout, props, chose });
+// each thing chosen, as the host is told it to show
+window.picked = [];
+const picked = (key) => window.picked.push(key);
+window.view = massiveView(card, drawing, { graph: 'Big', palette: PALETTES.light, layout, props, chose, picked });
 // a second card, which starts with a saved filter: what it is named and which values are ticked
 window.saved = () => {
   const again = document.body.appendChild(document.createElement('div'));
@@ -98,6 +107,17 @@ window.press = async (key, times) => {
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   return inked();
 };
+// clicks the middle of the overview, the pointer moving that many pixels before it lets go
+window.clickMiddle = (by = 0) => {
+  const stage = card.querySelector('.thoughtknot-massive-stage');
+  const at = stage.getBoundingClientRect(), x = at.left + at.width / 2, y = at.top + at.height / 2;
+  const press = (type, dx) =>
+    stage.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x + dx, clientY: y, bubbles: true }));
+  press('pointerdown', 0);
+  if (by) press('pointermove', by);
+  press('pointerup', by);
+  return window.picked.slice();
+};
 // the ink of the words in the middle of the view, a band 160 by 30 pixels
 window.wordsInMiddle = () => {
   const words = card.querySelectorAll('canvas')[1];
@@ -133,12 +153,22 @@ window.scales = async () => {
   }
   return seen;
 };
+// waits until the view has held still for three frames: a flight or a glide is over
+window.settled = async () => {
+  let last = JSON.stringify(view.view());
+  for (let still = 0, frames = 0; still < 3 && frames < 400; frames++) {
+    await new Promise((r) => requestAnimationFrame(r));
+    const now = JSON.stringify(view.view());
+    still = now === last ? still + 1 : 0;
+    last = now;
+  }
+};
 // presses a button of the grow bar by its name, and gives what was said once the view has flown
 window.grow = async (name) => {
   const button = card.querySelector('.thoughtknot-massive-grow [aria-label="' + name + '"]');
   button.click();
   for (let i = 0; i < 100 && view.view() === window.lastView; i++) await new Promise((r) => setTimeout(r, 20));
-  await new Promise((r) => setTimeout(r, 800));
+  await window.settled();
   window.lastView = view.view();
   return card.querySelector('.thoughtknot-massive-said').textContent;
 };
@@ -273,6 +303,21 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     await run('flyToNeedle()');
     assert.equal((await run('parts')).length, 1, 'a group opened once is not laid out again');
   });
+
+  test(
+    'a thing found, or clicked in its opened group, is the one chosen; a drag chooses nothing',
+    options,
+    async () => {
+      await run('flyToNeedle()');
+      assert.equal((await run('picked')).at(-1), 't1234', 'found by search');
+      const before = (await run('picked')).length;
+      assert.equal((await run('clickMiddle(20)')).length, before, 'a drag is not a click');
+      await run('flyToNeedle()');
+      const clicked = await run('clickMiddle()');
+      assert.equal(clicked.length, before + 2, 'the click chose one');
+      assert.equal(clicked.at(-1), 't1234', 'the thing under the click');
+    },
+  );
 
   test(
     'from the thing flown to, the picture grows one ring of neighbours at a time, and steps back',

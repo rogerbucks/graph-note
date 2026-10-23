@@ -41,7 +41,7 @@ const { check } = require('./rules/check.js');
 const { completeness } = require('./rules/completeness.js');
 const { readings } = require('./rules/readings.js');
 const { guessReadings, reverseReading } = require('./rules/guessed-readings.js');
-const { clipShown, shownText } = require('./rules/shown-text.js');
+const { clipShown, shownText, shownTexts } = require('./rules/shown-text.js');
 const { lint } = require('./changesets/dialect-lint.js');
 const { changesetHeader, checkChangeset } = require('./changesets/changeset.js');
 const { splitChangeset, readChange, changeId } = require('./changesets/changes.js');
@@ -57,6 +57,9 @@ const { louvain } = require('./clusters/louvain.js');
 const { clustersOf } = require('./clusters/clusters.js');
 const { centroidId, centroidsOf } = require('./clusters/centroids.js');
 const { clusterCycles, cycleView } = require('./clusters/cycles.js');
+const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
+const { asAt, lensAsAt } = require('./mesh/as-at.js');
+const { afterTextMerge } = require('./mesh/after-text-merge.js');
 
 // The API, its names in the order they have always had; test/graph-spec-check-api.test.mjs holds the list.
 module.exports = {
@@ -130,6 +133,7 @@ module.exports = {
   secretsIn,
   secretsInGraph,
   shownText,
+  shownTexts,
   clipShown,
   louvain,
   clustersOf,
@@ -137,4 +141,10 @@ module.exports = {
   centroidsOf,
   clusterCycles,
   cycleView,
+  certaintyOf,
+  byCertainty,
+  meshJoin,
+  asAt,
+  lensAsAt,
+  afterTextMerge,
 };

@@ -12,6 +12,7 @@ import { textTooLarge } from './layout-limits.ts';
 import { dataKind, namesSharedSchema } from './blocks.ts';
 import { withStandardSchemas } from './standard-schemas.ts';
 import { parkedIn } from './deferred.ts';
+import { certaintyLevel } from './certainty-drawn.ts';
 import { undeclared, undeclaredUse } from './schema-checks.ts';
 import { missingSchemas } from './schema-names.ts';
 import { suggestedPlaces } from './suggested-names.ts';
@@ -34,20 +35,23 @@ function drawingOf(
   const drawn = new Set(ids);
   // a thing written without a name is drawn under the name suggested for it, and marked so until the name is written (§4)
   const suggested = suggestedPlaces(problems, name);
+  const shown = gs.shownTexts(g, shared);
   return {
     graph: name,
     boxes: ids.map((key) => {
       const place = suggested.get(key),
-        parked = later.get(key);
+        parked = later.get(key),
+        certainty = certaintyLevel(g.p(key));
       return {
         key,
         kind: [...(g.nodes.get(key)?.[0] ?? [])]
           .filter((l) => !hidden.has(l))
           .sort(byCode)
           .join(' · '),
-        text: gs.shownText(g, key, shared)[0],
+        text: shown(key)[0],
         ...(place ? { suggested: place } : {}),
         ...(parked ? { deferred: { overdue: parked.overdue, what: parked.what } } : {}),
+        ...(certainty ? { certainty } : {}),
       };
     }),
     links: g.edges

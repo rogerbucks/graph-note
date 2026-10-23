@@ -84,6 +84,20 @@
       "to": 2376283,
       "reason": "Import's SQLite engine, sql.js 1.14.2 (its WebAssembly is 878 kB inside main.js, so a database file is read on the device and nothing is fetched); chosen by Roger, 20 Oct 2026, over a PostgreSQL client that needed the network",
       "date": "2026-10-20"
+    },
+    {
+      "metric": "instructions_reading_limits",
+      "from": 24966800552,
+      "to": 32552207413,
+      "reason": "way E step 6 (#1061) raised the read limit to 1 MB and 20,000 lines, so the benchmark reads inputs twice as big; every claim still holds. Accepted by Roger, 23 Oct 2026",
+      "date": "2026-10-23"
+    },
+    {
+      "metric": "instructions_layout_refusals",
+      "from": 654100188,
+      "to": 754639279,
+      "reason": "way E step 6 (#1061) raised the read limit to 1 MB and 20,000 lines, so the benchmark reads inputs twice as big; every claim still holds. Accepted by Roger, 23 Oct 2026",
+      "date": "2026-10-23"
     }
   ]
 }
