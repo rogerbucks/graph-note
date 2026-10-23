@@ -351,6 +351,23 @@ declare namespace GraphSpecCheck {
   /** A lens run on a graph as at a date: each thing's bucket as it was then, or null for a rule it cannot run. */
   function lensAsAt(graph: Graph, rule: string, axis: 'recorded' | 'real', date: string): Record<string, string> | null;
 
+  /** A value a text merge picked where the join left a dispute: for a person to decide (editor spec §30). */
+  interface MergePick {
+    subject: string;
+    about: string;
+    value: unknown;
+    /** The claim the picked value matches, and the claims it passed over. */
+    claim: string;
+    over: string[];
+  }
+  /** Two edits joined over their base, and their text merge read against that join. */
+  function afterTextMerge(q: { base: string; ours: string; theirs: string; merged: string; config?: object }): {
+    contested: string[];
+    picked: MergePick[];
+    /** True only when the join left nothing in dispute. */
+    settled: boolean;
+  };
+
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];
 }

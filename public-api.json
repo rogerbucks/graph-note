@@ -3809,6 +3809,7 @@
     "entries": {
       ".": {
         "export =": [
+          "afterTextMerge: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }",
           "asAt: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph",
           "byCertainty: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]",
           "canon: (g: GraphSpecCheck.Graph) => string",
@@ -3860,6 +3861,9 @@
           "tokens: (text: string) => [string, string, number, string, number][]",
           "word: (readings: Map<string, [string | undefined, string | undefined]>, type: string) => string",
           "worldFromStore: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
+        ],
+        "afterTextMerge": [
+          "value: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }"
         ],
         "asAt": [
           "value: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph"
@@ -4021,6 +4025,14 @@
         ],
         "louvain": [
           "value: (n: number, links: readonly (readonly [number, number])[]) => number[]"
+        ],
+        "MergePick": [
+          "interface",
+          "about: string",
+          "claim: string",
+          "over: Array<string>",
+          "subject: string",
+          "value: unknown"
         ],
         "MeshClaim": [
           "interface",

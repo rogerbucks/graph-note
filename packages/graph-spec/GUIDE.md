@@ -90,6 +90,8 @@ and no module requires one that requires it back.
     can be contested, and same-named states match only as a guess (`test/mesh-join-cases.json`).
   - `as-at.js` — a graph as at a date, so a lens answers as it was then (`test/two-times-cases.json`). Recorded time
     is `recorded_at`, and SUPERSEDES. Real-world time runs from `valid_from` up to `valid_to`.
+  - `after-text-merge.js` — two edits joined over their base, and their text merge read against that join. A value
+    the merge picked in a dispute is listed for a person, never taken as the decision (`test/join-every-author-cases.json`).
 
 ## Beside them
 

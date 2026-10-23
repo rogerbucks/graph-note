@@ -415,6 +415,8 @@ These test behaviour across modules, or the repository itself, so they are named
   They refuse a newer major with GN106 (format_version_named; one table, `format-version-cases.json`).
 - `packages/graph-spec/test/mesh-parity.test.mjs` — every shared mesh case, joins included, gives the bytes whose hash
   `mesh-parity-cases.json` holds (mesh_engine_parity).
+- `packages/graph-spec/test/join-every-author.test.mjs` — identical edits from any author join alike. A text merge that
+  picks a value leaves the dispute for a person (same_join_every_author; `join-every-author-cases.json`).
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
 - `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
 
@@ -438,6 +440,8 @@ These test behaviour across modules, or the repository itself, so they are named
   as the JavaScript reader does, and refuses a newer major format with GN106 (format_version_named).
 - `python/graph_spec/tests/test_mesh_parity.py` — every shared mesh case gives the same bytes as the JavaScript
   library, by the hashes of `mesh-parity-cases.json` (mesh_engine_parity).
+- `python/graph_spec/tests/test_join_every_author.py` — the Python library gives the answers of
+  `join-every-author-cases.json`, whoever made the edits (same_join_every_author).
 - `python/graph_spec/tests/test_drawing_problem_codes.py` — each problem the Python drawing reader finds in a note or
   a style graph has a stable code. It comes from `packages/core/src/drawing-problem-codes.json` or the reader's own
   table. The notes of `drawing-problem-cases.json` give the same codes as the core gives them (editor spec §42, problem_codes).
