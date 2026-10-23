@@ -123,12 +123,19 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
   change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
   source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
+#### Renames, schema moves and type suggestions
+
 - `rename-across.ts` — a thing renamed in every note that names it (editor spec §27, rename_follows_notes; NEURO-10).
   `renameAcross` gives each note's new text, as one bundle a person applies. A note it cannot read, or a name already
   taken, is listed with why. Only the names change.
 - `schema-version-moves.ts` — a graph moved to another version of its shared schema (editor spec §27,
   schema_version_moves; ARCH-4). `schemaMove` gives the block with its graph line changed, and what the new version adds
   and drops. A person applies it; reading never moves a graph. `schemaVersions` lists the versions there are.
+- `type-suggestion.ts` — a change to a type that most of its instances suggest (editor spec §27, type_suggestion_bundle).
+  `typeSuggestions` offers it as a labelled proposal, and `withSuggestion` writes it into the note as a change set. A
+  person applies it in one step and undoes it in one step. A type that grants permissions, or is kept as history, is
+  marked for a closer look.
+- `index-mesh.ts` — the mesh's part of the core's entry, kept apart so `index.ts` stays short.
 
 #### Deferred things
 
