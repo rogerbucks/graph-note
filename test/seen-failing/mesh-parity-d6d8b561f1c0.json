@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/mesh-parity.test.mjs",
+  "test": "mesh_engine_parity > join: a clash keeps both sides, flags the conflict and overwrites neither",
+  "seen_failing_first": false,
+  "evidence": "A parity check over engines already built and agreeing: its hashes were recorded from them, so it guards against drift and cannot fail first."
+}
