@@ -37,7 +37,7 @@ Each layer uses only the one below it. So a new host, such as a VS Code extensio
 below the hosts as it is.
 
 ```
-  hosts       packages/obsidian      packages/claude-code  <-  packages/app
+  hosts       packages/obsidian      packages/claude-code  <-  packages/app, packages/vscode
                      \                      /
   core                 packages/core          host-free: reading, drawing, edits, undo
                             |
@@ -59,6 +59,8 @@ below the hosts as it is.
   [packages/claude-code/GUIDE.md](packages/claude-code/GUIDE.md).
 - `packages/app`: the desktop app, for macOS, Windows and Linux. It runs the browser editor in a Tauri window, over a
   plain folder of notes, offline, with no server inside. Guide: [packages/app/GUIDE.md](packages/app/GUIDE.md).
+- `packages/vscode`: the VS Code extension. It runs the browser editor in a VS Code tab beside a Markdown note, over
+  the note's workspace folder. Guide: [packages/vscode/GUIDE.md](packages/vscode/GUIDE.md).
 
 ## Privacy and network use
 

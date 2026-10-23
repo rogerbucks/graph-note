@@ -106,3 +106,7 @@ export function themeCss(): string {
     `@media (prefers-color-scheme: dark){${block(':root', variables(THEME_COLOURS.dark))}}`,
   ].join('\n');
 }
+
+/** One scheme's colours under `selector`, for a host that names its theme on the page, as VS Code's body classes do. */
+export const schemeCss = (selector: string, scheme: 'light' | 'dark'): string =>
+  block(selector, [`color-scheme:${scheme}`, ...variables(THEME_COLOURS[scheme])]);

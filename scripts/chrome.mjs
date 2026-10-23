@@ -65,15 +65,20 @@ export async function portOf(
   throw new Error('Chrome opened no DevTools port');
 }
 
-/** A DevTools session on Chrome's first page: send(method, params) resolves with the result, or throws its error. */
+/**
+ * A DevTools session on Chrome's first page: send(method, params) resolves with the result, or throws its error. on(event,
+ * handler) hands each event of that name to the handler, with its params.
+ */
 async function devtools(port) {
   const page = await firstPage(() => fetch(`http://127.0.0.1:${port}/json/list`).then((r) => r.json()));
   const ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((done, fail) => ((ws.onopen = done), (ws.onerror = fail)));
   let id = 0;
   const waiting = new Map();
+  const handlers = new Map();
   ws.onmessage = (e) => {
     const m = JSON.parse(e.data);
+    if (m.method) for (const handler of handlers.get(m.method) ?? []) handler(m.params);
     if (!waiting.has(m.id)) return;
     const [done, fail] = waiting.get(m.id);
     waiting.delete(m.id);
@@ -85,7 +90,8 @@ async function devtools(port) {
       waiting.set(++id, [done, fail]);
       ws.send(JSON.stringify({ id, method, params }));
     });
-  return { send, close: () => ws.close() };
+  const on = (event, handler) => handlers.set(event, [...(handlers.get(event) ?? []), handler]);
+  return { send, on, close: () => ws.close() };
 }
 
 /** Runs a line of script in the page and gives back its value. */
@@ -123,7 +129,7 @@ export async function startAgainIfStuck(start, attempts = 2) {
 
 /**
  * Starts a headless Chrome on a fresh profile, its page `width` by `height` CSS pixels at `scale`.
- * - send speaks the DevTools protocol.
+ * - send speaks the DevTools protocol, and on hears its events.
  * - run runs a line of script in the page.
  * - resize sets a new width.
  * - stop ends it all.
@@ -158,13 +164,14 @@ async function startOnce({ chrome, width = 1400, height = 1000, scale = 2, flags
     removeProfile(profile);
   };
   try {
-    const { send, close } = await devtools(await portOf(profile));
+    const { send, on, close } = await devtools(await portOf(profile));
     await send('Page.enable');
     const resize = (w, h = height) =>
       send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: scale, mobile: false });
     await resize(width);
     return {
       send,
+      on,
       run: (expression) => run(send, expression),
       resize,
       stop: () => {

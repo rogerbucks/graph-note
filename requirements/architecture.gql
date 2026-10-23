@@ -16,7 +16,7 @@
 (obsidian:Part {name: 'Obsidian plugin', path: 'packages/obsidian', guide: 'packages/obsidian/GUIDE.md'}),
 (claude_code:Part {name: 'Browser editor, from Claude Code', path: 'packages/claude-code', guide: 'packages/claude-code/GUIDE.md'}),
 (standalone:Part {name: 'Standalone app (Tauri)', path: 'packages/app', guide: 'packages/app/GUIDE.md', requirement: 'standalone_app'}),
-(vscode:Part {name: 'VS Code plugin', requirement: 'vscode_plugin'}),
+(vscode:Part {name: 'VS Code plugin', path: 'packages/vscode', guide: 'packages/vscode/GUIDE.md', requirement: 'vscode_plugin'}),
 (built_in_exports:Part {name: 'Built-in data exports', path: 'packages/core/src/export-data.ts', guide: 'packages/core/GUIDE.md'}),
 // ── Interfaces ──
 (host_interface:Interface {name: 'Host interface (DisplayHost)', file: 'packages/core/src/display/host.ts', contract: 'packages/core/src/display/host-contract.ts', page: 'Adding-a-host', requirements: 'host_contract_published hosts_pass_contract'}),
