@@ -13,7 +13,7 @@ import {
   SOURCE_LANGUAGE,
 } from '@thoughtknot/core';
 import type { NoteStorage } from '@thoughtknot/core';
-import type { LinkHost } from './links/link-types.ts';
+import type { LinkHost } from './link-host';
 
 /** A row of a menu the layer asks the host to show. */
 export interface MenuRow {

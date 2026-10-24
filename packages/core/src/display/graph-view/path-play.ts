@@ -10,7 +10,7 @@ import type { NoteReading, PathStep, WalkedPath } from '@thoughtknot/core';
 import { openExportForm, paceOffered } from '../export/export-form';
 import { reducedMotion } from './details-nav';
 import { linkGroups, runnerOn } from './flow-marks';
-import { button } from './view-bar';
+import { button } from '../button';
 import type { ViewOptions } from './view-options';
 
 /** The paths of a graph that can be played, by id and title: those with a step. */

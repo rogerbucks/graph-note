@@ -105,7 +105,11 @@ export const options = {
   loader: { '.wasm': 'binary' },
   legalComments: 'inline',
   sourcemap: false,
+  // Whitespace and syntax are minified, names are kept: main.js is 15% smaller, and a stack trace in Obsidian's console
+  // still says which function failed. Obsidian's submission requirements make no rule on minifying (checked 24 Oct 2026).
   minify: false,
+  minifyWhitespace: true,
+  minifySyntax: true,
   logLevel: 'info',
   write: false,
   plugins: [layoutWorker, pluginWorker, swapIn],

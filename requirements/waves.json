@@ -322,7 +322,8 @@
       "end": "2026-12-04",
       "estimate": true,
       "workstreams": [
-        "RL1"
+        "RL1",
+        "RP1"
       ],
       "milestone": "Rules, intents and smart data"
     },
