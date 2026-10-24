@@ -4,7 +4,16 @@
 // (untangle_data_untouched). So none of it is gated for reading view: it changes the picture, never the data. Only the
 // legend's choices are ever written, by a view's Save as shown (view-strip.ts), which is gated. A view saved so starts
 // with them (untangle_legend).
-import { Untangle, find, kindLegend, neighbourhood, neighbourhoodWords, pathWords, word } from '@thoughtknot/core';
+import {
+  MOST_STEPS,
+  Untangle,
+  find,
+  kindLegend,
+  neighbourhood,
+  neighbourhoodWords,
+  pathWords,
+  word,
+} from '@thoughtknot/core';
 import type { FocusDepth, FocusEdge, Kept, Layers, GraphDrawing, LegendChoice, NoteReading } from '@thoughtknot/core';
 import { Banner } from './untangle-banner';
 import type { BannerRow } from './untangle-banner';
@@ -33,12 +42,20 @@ export interface UntangleHost {
   regroup?: (only: Kept | null) => void;
 }
 
+/** How far the thing shown with its neighbours reaches (`steps`), and a step further (1) or fewer (-1) round it. */
+export interface Reach {
+  steps: number;
+  by: (step: 1 | -1) => void;
+}
+
 /** What the details of a thing offer, which the card gives them. */
 export interface ThingActions {
   /** Shows only a thing and its neighbours; pressed again for the same thing, the whole graph (untangle_toggle). */
   showOnly: (key: string) => void;
   /** The thing the drawing shows only with its neighbours now; null for the whole graph. */
   shownOnly?: () => string | null;
+  /** How many steps out the thing shown with its neighbours reaches, and one step more or fewer; null when none is. */
+  reach?: () => Reach | null;
   routeFrom: (key: string) => void;
   /** A busy hub's links and whether they are folded now (§25, untangle_hubs); null for another thing. */
   hub?: (key: string) => { links: number; folded: boolean } | null;
@@ -129,6 +146,20 @@ export class UntangleView {
     return this.core.only?.key ?? null;
   }
 
+  /** How many steps out the thing shown with its neighbours reaches, and a step more or fewer; null for none. */
+  reach(): Reach | null {
+    const only = this.core.only;
+    return only ? { steps: only.steps, by: (step) => this.reachBy(step) } : null;
+  }
+
+  /** Shows one step more (1) or one fewer (-1) round the thing shown with its neighbours, from one to the most. */
+  reachBy(by: 1 | -1): void {
+    const only = this.core.only;
+    if (!only) return;
+    this.core.showOnly(only.key, only.steps + by);
+    if (this.core.only?.steps !== only.steps) this.changed();
+  }
+
   /** Asks for a second thing, to bring forward the shortest path from this one to it. */
   routeFrom(key: string): void {
     this.core.clearRoute();
@@ -193,8 +224,7 @@ export class UntangleView {
     const rows: BannerRow[] = [],
       only = this.core.only,
       routed = this.core.routed;
-    if (only) {
-      const wider = only.steps === 1;
+    if (only)
       rows.push({
         words: neighbourhoodWords(this.text(only.key), only.steps),
         actions: [
@@ -205,16 +235,14 @@ export class UntangleView {
               this.changed();
             },
           },
-          {
-            label: wider ? word('untangle.widen') : word('untangle.narrow'),
-            run: () => {
-              this.core.showOnly(only.key, wider ? 2 : 1);
-              this.changed();
-            },
-          },
+          ...(only.steps < MOST_STEPS
+            ? [{ label: word('untangle.widen', { count: only.steps + 1 }), run: () => this.reachBy(1) }]
+            : []),
+          ...(only.steps > 1
+            ? [{ label: word('untangle.narrow', { count: only.steps - 1 }), run: () => this.reachBy(-1) }]
+            : []),
         ],
       });
-    }
     if (routed)
       rows.push({
         words: pathWords((k) => this.text(k), routed.from, routed.to, routed.found),

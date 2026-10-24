@@ -17,7 +17,8 @@
 //
 // 2D and 3D are two views of the same graph (Roger, 24 Oct 2026). So a pick here opens the card's details for it, just
 // as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). What is picked becomes the point the view turns
-// round and zooms to. The camera stays where it is and turns to face it (space-controls.ts, orbitAround).
+// round and zooms to. The camera stays where it is and turns to face it (space-controls.ts, orbitAround). What the card
+// hides, fades or brings forward, from its details' controls, the 3D view shows too, as the card marks it (focus_space).
 import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { focusOn, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
@@ -36,6 +37,7 @@ import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { button } from '../button';
 import { marksOfSvg } from './svg-marks.ts';
 import { reducedMotion } from './details-nav';
+import { MARKED } from './focus-marks';
 import type { Target } from './taps';
 
 /** The event a pick in the 3D view sends its card, with the thing or link picked: the card opens its details. */
@@ -77,7 +79,7 @@ export async function openSpaceView(
     already();
     return null;
   }
-  const { marks, paints } = 'marks' in from ? from : marksOfSvg(from);
+  let { marks, paints } = 'marks' in from ? from : marksOfSvg(from);
   const el = root.createDiv({
     cls: 'thoughtknot-space-view',
     attr: { tabindex: '0', role: 'img', 'aria-label': word('space.name', { graph }) },
@@ -97,7 +99,8 @@ export async function openSpaceView(
   const background = win.getComputedStyle(root).backgroundColor;
   const halo = !background || background === 'transparent' || /,\s*0\)$/.test(background) ? 'Canvas' : background;
   // the ways to show it: laid out in space as balls (the first, Roger, 24 Oct 2026), or the drawing lifted as it is
-  const depths: (DepthBy | null)[] = [null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
+  const depthsOf = (): (DepthBy | null)[] => [null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
+  let depths = depthsOf();
   const spaceBy = (by: DepthBy | null): SpaceMarks => (by ? spaceOf(marks, by) : spreadSpace(marks).space);
   // a drawing opens in space; an overview's groups (massive-paints.ts) are no things to lay out, so they are lifted
   let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 1 : 2) : 0;
@@ -146,9 +149,24 @@ export async function openSpaceView(
   const sizer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
   sizer?.observe(el);
 
+  // the card marked its drawing again. The things it shows now are laid out, faded as it fades them. The view is
+  // fitted to them when they are other things than before
+  const marked = () => {
+    if ('marks' in from || !open) return;
+    const was = space.blocks.map((b) => b.of).join();
+    ({ marks, paints } = marksOfSvg(from));
+    depths = depthsOf();
+    space = spaceBy(depths[depth] ?? null);
+    picked = picked && (space.blocks.find((b) => b.of === picked?.of) ?? null);
+    pickedLine = pickedLine && (space.lines.find((l) => l.id === pickedLine?.id) ?? null);
+    if (space.blocks.map((b) => b.of).join() !== was) orbit = orbitFit(space, width / height);
+    again();
+  };
+  if (!('marks' in from)) from.addEventListener(MARKED, marked);
   const close = () => {
     if (!open) return;
     open = false;
+    if (!('marks' in from)) from.removeEventListener(MARKED, marked);
     opened.delete(root);
     sizer?.disconnect();
     painter.destroy();

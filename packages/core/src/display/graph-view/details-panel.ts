@@ -293,6 +293,8 @@ export class DetailsPanel {
     this.retrace(el, { key });
     // what is going on, in a sentence or two, before anything else (details_said)
     el.createEl('p', { cls: 'thoughtknot-details-said', text: thingSaid(this.o.reading, this.o.graph, key) });
+    if (!this.o.diagram?.table)
+      untangleOffers(el, key, this.actions, this.o.readOnly?.() ? undefined : this.onMove, this.o.diagram, d.text);
     this.rich.thing(el, key, d.text); // the note it stands for, and its text rendered by Obsidian (§18)
     const links = (title: string, items: string[]) => {
       if (!items.length) return;
@@ -307,8 +309,6 @@ export class DetailsPanel {
       (n) => linkWords(this.o.reading, this.o.graph, n),
       (s) => this.choose(s),
     );
-    if (!this.o.diagram?.table)
-      untangleOffers(el, key, this.actions, this.o.readOnly?.() ? undefined : this.onMove, this.o.diagram); // read-only: nothing moves
     this.readOnlyProperties(
       el,
       propertiesOf(this.o.reading, this.o.graph, { thing: key }).map((p) => [p.key, p.value]),
