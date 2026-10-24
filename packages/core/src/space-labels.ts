@@ -129,15 +129,18 @@ const ARROW_WIDE = 0.6;
 
 /**
  * The arrowheads of `space` on the screen, far ones first, so near ones are painted over them. Each is a triangle
- * flat to the screen, pointing along its link as the camera sees it, never smaller than ARROW_LEAST.
+ * flat to the screen, pointing along its link as the camera sees it, never smaller than ARROW_LEAST. They are painted
+ * over the balls. So an arrowhead whose tip a nearer ball hides is left out: drawn, it would seem to point at that ball.
  */
 export function arrowsOnScreen(space: SpaceMarks, matrix: Float32Array, width: number, height: number): ScreenArrow[] {
   const out: ScreenArrow[] = [];
+  const balls = space.round ? ballsOnScreen(space, matrix, width, height) : [];
   for (const a of space.arrows) {
     const tip = projectPoint(matrix, a.tip, width, height),
       back = projectPoint(matrix, a.back, width, height);
     if (!tip || !back) continue;
     if (tip.x < -50 || tip.y < -50 || tip.x > width + 50 || tip.y > height + 50) continue;
+    if (balls.some((b) => !touches(b, a.tip) && hides(b, tip))) continue;
     let dx = tip.x - back.x,
       dy = tip.y - back.y;
     const seen = Math.hypot(dx, dy);
@@ -159,4 +162,49 @@ export function arrowsOnScreen(space: SpaceMarks, matrix: Float32Array, width: n
     });
   }
   return out.sort((p, q) => q.far - p.far);
+}
+
+/** A ball on the screen: its middle, its radius in pixels, its middle's distance from the eye, and its radius. */
+interface ScreenBall {
+  at: readonly [number, number, number];
+  x: number;
+  y: number;
+  seen: number;
+  far: number;
+  r: number;
+}
+
+/** The balls of `space` as circles on the screen. */
+function ballsOnScreen(space: SpaceMarks, matrix: Float32Array, width: number, height: number): ScreenBall[] {
+  const out: ScreenBall[] = [];
+  for (const b of space.blocks) {
+    const r = b.width / 2;
+    const c = projectPoint(matrix, [b.x + r, b.y + r, b.floor + r], width, height);
+    if (c)
+      out.push({
+        at: [b.x + r, b.y + r, b.floor + r],
+        x: c.x,
+        y: c.y,
+        seen: (r * height) / 2 / Math.tan(FIELD / 2) / c.far,
+        far: c.far,
+        r,
+      });
+  }
+  return out;
+}
+
+/** Whether `tip` is on ball `b`'s surface: the ball its arrowhead points at, which never hides it. */
+function touches(b: ScreenBall, tip: readonly number[]): boolean {
+  const d = Math.hypot((tip[0] ?? 0) - b.at[0], (tip[1] ?? 0) - b.at[1], (tip[2] ?? 0) - b.at[2]);
+  return Math.abs(d - b.r) <= b.r * 0.05 + 1;
+}
+
+/**
+ * Whether ball `b` hides point `p`: `p` is inside its circle on the screen, and behind its front there.
+ */
+function hides(b: ScreenBall, p: { x: number; y: number; far: number }): boolean {
+  const d = Math.hypot(p.x - b.x, p.y - b.y) / b.seen;
+  if (d >= 1) return false;
+  const front = b.far - b.r * Math.sqrt(1 - d * d);
+  return p.far > front + b.r * 0.1;
 }

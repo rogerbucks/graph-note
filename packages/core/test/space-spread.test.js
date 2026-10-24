@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { radiusOf, spreadSpace } from '../src/space-spread.ts';
 import { arrowsOnScreen, labelsOnScreen } from '../src/space-labels.ts';
 import { blockAt } from '../src/space-pick.ts';
-import { orbitFit, projectPoint, spaceMatrix } from '../src/space-view.ts';
+import { eyeOf, orbitFit, projectPoint, spaceMatrix } from '../src/space-view.ts';
 
 /** A box mark for thing `key`, as svg-marks.ts reads one, with its name's label. */
 const thing = (key) => [
@@ -124,4 +124,30 @@ test('arrowheads on screen point the way their link runs, and a ball is picked i
   const at = projectPoint(m, centreOf(hub), 800, 800);
   assert.equal(blockAt(space, m, 800, 800, at.x, at.y)?.of, 'hub');
   assert.equal(blockAt(space, m, 800, 800, 1, 1), null);
+});
+
+test('an arrowhead whose tip a nearer ball hides is left out, as it would seem to point at that ball', () => {
+  const { space } = spreadSpace(MARKS);
+  const orbit = orbitFit(space, 1);
+  const m = spaceMatrix(orbit, 1, dist(space.least, space.most));
+  const before = arrowsOnScreen(space, m, 800, 800);
+  const hidden = before[0];
+  // a small ball put just in front of that arrowhead's tip, between it and the eye
+  const tip = space.arrows.find((a) => a.id === hidden.id).tip,
+    eye = eyeOf(orbit);
+  const mid = tip.map((v, i) => v + (eye[i] - v) * 0.1),
+    r = 8;
+  const ball = {
+    ...space.blocks[0],
+    of: 'near',
+    x: mid[0] - r,
+    y: mid[1] - r,
+    floor: mid[2] - r,
+    width: 2 * r,
+    depth: 2 * r,
+    tall: 2 * r,
+  };
+  const after = arrowsOnScreen({ ...space, blocks: [...space.blocks, ball] }, m, 800, 800);
+  assert.ok(!after.some((a) => a.id === hidden.id), 'the hidden arrowhead is left out');
+  assert.equal(after.length, before.length - 1, 'the others still show, each at the front of the ball it points at');
 });
