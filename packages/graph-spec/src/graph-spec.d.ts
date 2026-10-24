@@ -332,6 +332,73 @@ declare namespace GraphSpecCheck {
     query?: { topic?: string; like?: string; lens?: string; level?: number; profile?: string },
   ): { id: string; score: number; sort_key: number | null; contested: boolean }[];
 
+  /** The process core's view of a graph (editor spec §34): each thing's kind, what is flagged, and the view settings. */
+  interface CoreOfEight {
+    kinds: string[];
+    kind: Record<string, string>;
+    /** Each flag: its code, the thing and a detail. A ninth kind is flagged, never refused. */
+    flags: [code: string, id: string, detail: string][];
+    view: Record<string, Record<string, unknown>>;
+    core: Record<string, Record<string, unknown>>;
+  }
+  /** A transition: a TRANSITION link, or a Transition thing promoted from one. */
+  interface ProcessTransition {
+    id: string;
+    from: string | null;
+    to: string | null;
+    promoted: boolean;
+    event: unknown;
+    /** What it carries that makes it worth promoting: decision, review, comment or do. */
+    carries: string[];
+  }
+  /** A guard as data: an expression, or a function's name and version. */
+  interface ProcessGuard {
+    id: string;
+    expression?: string;
+    function?: string;
+    version?: string;
+    shown: string;
+    flag?: string;
+  }
+  /** One entry of a run's log. */
+  interface RunEntry {
+    seq: number;
+    did: 'entered' | 'left';
+    state: string;
+    under: string | null;
+    at: string | null;
+  }
+  function coreOfEight(graph: Graph): CoreOfEight;
+  function transitionsOf(graph: Graph): ProcessTransition[];
+  /** A TRANSITION link promoted to a Transition thing: the link to remove and the graph text to add. */
+  function promoteTransition(
+    graph: Graph,
+    from: string,
+    to: string,
+    id: string,
+  ): { remove: [string, string, string]; lines: string[] };
+  /** The shortest path between two things, each transition a step of its own; null when none joins them. */
+  function processPath(graph: Graph, from: string, to: string): string[] | null;
+  function guardOf(graph: Graph, transition: string): ProcessGuard | null;
+  /** Whether a guard holds; a named function runs the version the guard names. */
+  function guardAllows(
+    guard: ProcessGuard,
+    ctx: Record<string, unknown>,
+    functions?: Record<string, Record<string, (ctx: Record<string, unknown>) => unknown>>,
+  ): boolean;
+  function runningRuleOf(
+    graph: Graph,
+    run: string,
+  ): { rule: string | null; from: 'run' | 'process' | 'none'; process_default: string | null };
+  function overrideRunningRule(graph: Graph, run: string, rule: string): Graph;
+  function runLog(graph: Graph, run: string): RunEntry[];
+  function currentOf(graph: Graph, run: string): string[];
+  function enterState(graph: Graph, run: string, state: string, at?: string | null): RunEntry[];
+  function leaveState(graph: Graph, run: string, state: string, at?: string | null): RunEntry[];
+  function moveRun(graph: Graph, run: string, from: string, to: string, at?: string | null): RunEntry[];
+  function withEntries(graph: Graph, run: string, entries: RunEntry[]): Graph;
+  function refreshCurrent(graph: Graph, run: string): Graph;
+
   /** A claim as a person ranks it (editor spec §28): its words, never a number typed in. */
   interface MeshClaim {
     id: string;
@@ -429,6 +496,58 @@ declare namespace GraphSpecCheck {
     unresolved: { graph: string; thing: string; ref: string; in: string }[];
     guesses: { name: string; things: string[] }[];
   };
+  /** A context's kind and whether it shows same-name guesses with other contexts (editor spec §61). */
+  interface ContextInfo {
+    kind: 'client' | 'note' | 'folder' | 'vault';
+    guessesAcross: boolean;
+  }
+  /** A world's contexts, the one each graph belongs to, the vault's name and the graph the contexts are written in. */
+  interface Contexts {
+    contexts: Record<string, ContextInfo>;
+    byGraph: Record<string, string>;
+    vault: string;
+    graph: string;
+  }
+  /** The contexts of a world: each graph in exactly one, its vault when none claims it (context_named). */
+  function contextsOf(
+    world: World,
+    options?: { graph?: string; notes?: Record<string, string>; vault?: string },
+  ): Contexts;
+  /** The same-name guesses to show, across contexts only when turned on, and none from a context the viewer cannot read. */
+  function contextGuesses(
+    world: World,
+    ctx: Contexts,
+    view?: { acrossContexts?: boolean },
+    canRead?: (context: string) => boolean,
+  ): { name: string; things: string[]; across: boolean }[];
+  /** Whether two `graph/key` things may be compared: one context, one shared schema, or a SAME_AS link. */
+  function comparable(world: World, ctx: Contexts, a: string, b: string): boolean;
+  /** A proposed SAME_AS link: written, or waiting for a person when it crosses contexts and no person made it. */
+  function proposeSameAs(
+    ctx: Contexts,
+    from: { graph: string; thing: string },
+    to: { graph: string; thing: string },
+    by: { kind: string; name: string },
+  ):
+    | { status: 'write'; graph: string; text: string; across: boolean }
+    | {
+        status: 'waiting';
+        for: 'person';
+        from: { graph: string; thing: string };
+        to: { graph: string; thing: string };
+        by: { kind: string; name: string };
+      }
+    | { status: 'refused'; why: 'not-a-name' };
+  /** The SAME_AS links crossing into or out of a context, listed on both sides. */
+  function sameAsAcross(
+    world: World,
+    ctx: Contexts,
+    context: string,
+  ): { from: string; to: string; contexts: [string, string] }[];
+  /** The world one context sees: its own graphs only. */
+  function worldIn(world: World, ctx: Contexts, context: string): World;
+  /** The `graph/key` things holding a text, from the contexts the viewer can read only. */
+  function searchContexts(world: World, ctx: Contexts, text: string, canRead?: (context: string) => boolean): string[];
   /** The type a thing is an instance of, through INSTANCE_OF, here or through a Ref; null when it has none. */
   function typeOf(world: World, graph: string, key: string): Placed | null;
   /** The instances of a type, in every graph, sorted by graph, then key. */

@@ -18,6 +18,7 @@ import { chosen, directions } from '../src/render.ts';
 import { setLocale } from '../src/locale-formats.ts';
 import { isPseudoWord } from '../src/pseudo-words.ts';
 import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+import { between, cssRules } from './text-find.js';
 
 afterEach(() => {
   setLanguage(SOURCE_LANGUAGE);
@@ -43,7 +44,7 @@ const tour = pathsOf(reading, 'trip')[0];
 const scope = exportScope(reading, { graph: 'trip' });
 const info = (walk) => ({ note: 'Trips/Trip.md', date: '2026-10-14', theme: 'light', walk });
 const exported = (pace = 1000) => exportSvg(scope, engine, info({ path: tour, pace })).svg;
-const sheetOf = (svg) => /<style>([\s\S]*?)<\/style>/.exec(svg)?.[1] ?? '';
+const sheetOf = (svg) => between(svg, '<style>', '</style>') ?? '';
 const texts = (svg) => [...svg.matchAll(/>([^<>]+)<\/(?:text|tspan)>/g)].map((m) => m[1]);
 
 describe('a played path exported as an animated SVG', () => {
@@ -111,7 +112,9 @@ describe('still under reduced motion, and never told by movement alone', () => {
   test('under reduced motion every animation stops, the dots are hidden, and every step stays outlined', () => {
     const sheet = sheetOf(exported());
     const [moving, still] = sheet.split('@media (prefers-reduced-motion: reduce)');
-    const animated = [...moving.matchAll(/([^{}]+)\{[^}]*animation:[^}]*\}/g)].map((m) => m[1].trim());
+    const animated = cssRules(moving)
+      .filter((r) => r.body.includes('animation:'))
+      .map((r) => r.selector.trim());
     assert.ok(animated.length >= 4, sheet);
     for (const selector of animated) assert.ok(still.includes(selector), `${selector} is still under reduced motion`);
     assert.match(still, /animation: none/);

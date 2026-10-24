@@ -100,6 +100,14 @@ and no module requires one that requires it back.
   - `altitude-index.js` — each thing's topic tags and altitudes. A search finds a tag exactly or by likeness and ranks
     by the certainty sort key, marking contested things (`test/altitude-index-cases.json`).
 
+### The process core
+
+- **`src/process/`** — the process core (editor spec §34). Python's twins give the same answers
+  (`test/process-core-cases.json`).
+  - `core.js` — the eight kinds, with a ninth flagged and view details kept apart. Transitions as links or promoted
+    things, a path that walks them, guards as data and the running rule a run follows.
+  - `runs.js` — a run's log as the truth, its current states made from it, and machines inside states at any depth.
+
 ### The mesh
 
 - **`src/mesh/`** — the graph mesh (editor spec §27 to §30). Python's twins give the same answers.
@@ -116,6 +124,10 @@ and no module requires one that requires it back.
     (`test/same-as-cases.json`).
   - `types-instances.js` — lasting types and their instances. An instance links to its type with INSTANCE_OF, here or
     through a Ref, and has its type's properties unless it sets its own (`test/types-instances-cases.json`).
+  - `contexts.js` — contexts, where links may join (editor spec §61). Each graph is in one context: a client, note,
+    folder or the vault. Guesses across contexts show only when turned on. Things in two contexts are compared only
+    under one shared schema or a SAME_AS link, and across contexts only a person writes one. `canRead` keeps out what a viewer
+    may not read (`test/contexts.test.mjs`).
 
 ## Beside them
 
