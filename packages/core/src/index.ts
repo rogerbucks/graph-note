@@ -368,21 +368,6 @@ export { TextHistory, type Change, type TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';
 export type { Landing, PlacedBox, Side, WrittenNudge } from './box-drag.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
-export { MeshIndex, memoryBackend, noteRows, PAGE_MOST, sqliteBackend } from './mesh-index.ts';
-export { editInParts, storedGraphs, type StoredGraph } from './store-drawing.ts';
-export type {
-  BetweenRow,
-  Found as MeshFound,
-  GroupRow,
-  LinkRow,
-  MeshBackend,
-  NoteRows,
-  Page,
-  Span as SourceSpan,
-  SqlEngine,
-  ThingRow,
-} from './mesh-index.ts';
-export { MeshHistory, type LogEntry, type LogKind } from './mesh-history.ts';
-export { renameAcross, type NotRewritten, type RenameAcross } from './rename-across.ts';
-export { schemaMove, schemaVersions, type SchemaMove } from './schema-version-moves.ts';
+export { editInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
+export * from './index-mesh.ts';
 export * from './index-late.ts';

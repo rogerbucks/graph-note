@@ -3,6 +3,12 @@
 A host puts `src/` on `sys.path` and imports the four entry points by name. Each re-exports every name it has always
 had, from where it lives now; the code is in `src/graphspec/`, one feature to a module.
 
+## A first call
+
+[`examples/python/read_and_check.py`](../../examples/python/read_and_check.py) reads one graph block and checks it.
+Run it with `uv run --project python/graph_spec python examples/python/read_and_check.py`. CI runs it from the release
+archive's layout on every pull request, so it always works with the library as shipped.
+
 ## The entry points, in `src/`
 
 - `gql_profile.py` — reads data blocks in the document profile (§3) into a plain graph, with no database. It also reads
@@ -146,6 +152,8 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
     `cycle-cases.json`).
 - `src/graphspec/engine/lenses/` — editor spec §33, lenses as graph data. `saved_lenses.lenses_of` and `run_lens` are
   the twins of `saved-lenses.js`, held to `saved-lens-cases.json`.
+### The graph mesh and the process engine
+
 - `src/graphspec/engine/mesh/` — editor spec §28 and §30, the graph mesh. `mesh_join.mesh_join` joins graphs as the mesh
   does and says what it found. That is each clash with both sides, the gaps, and each claim's certainty in words. It
   is also each thing's standing, the marker on links to a contested thing, contested hand-made clusters and
@@ -156,6 +164,12 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
 - `src/graphspec/engine/mesh/after_text_merge.py` — editor spec §30. `after_text_merge` joins two edits over their
   base and reads their text merge against it. Each value the merge picked in a dispute is listed for a person. The
   twin of `after-text-merge.js`, held to `join-every-author-cases.json`.
+- `src/graphspec/engine/mesh/same_as.py` — editor spec §27, ARCH-6. `same_as` says which things in different graphs a
+  written SAME_AS link makes one. The same name with no link stays a guess. The twin of `same-as.js`, held to
+  `same-as-cases.json`.
+- `src/graphspec/engine/mesh/types_instances.py` — editor spec §27. `type_of`, `instances_of` and `inherited`: an
+  instance links to its type with INSTANCE_OF and has its type's properties unless it sets its own. The twin of
+  `types-instances.js`, held to `types-instances-cases.json`.
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).

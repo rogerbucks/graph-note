@@ -389,6 +389,31 @@ declare namespace GraphSpecCheck {
     settled: boolean;
   };
 
+  /** A thing named across the world's graphs. */
+  interface Placed {
+    graph: string;
+    key: string;
+  }
+  /**
+   * The things the world's SAME_AS links make one, as sorted `graph/key` names (editor spec §27, ARCH-6). Also the Refs
+   * that name nothing, and the names held in two graphs with no link between them, which stay a guess.
+   */
+  function sameAs(world: World): {
+    ones: string[][];
+    unresolved: { graph: string; thing: string; ref: string; in: string }[];
+    guesses: { name: string; things: string[] }[];
+  };
+  /** The type a thing is an instance of, through INSTANCE_OF, here or through a Ref; null when it has none. */
+  function typeOf(world: World, graph: string, key: string): Placed | null;
+  /** The instances of a type, in every graph, sorted by graph, then key. */
+  function instancesOf(world: World, graph: string, key: string): Placed[];
+  /** A thing's own properties and those it inherits from its types, the nearest winning; `from` says whose each is. */
+  function inherited(
+    world: World,
+    graph: string,
+    key: string,
+  ): { props: Record<string, Value>; from: Record<string, string> };
+
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];
 }

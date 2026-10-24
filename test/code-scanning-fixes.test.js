@@ -9,6 +9,7 @@ import { hitAreas } from '../packages/core/src/hits.ts';
 import { imageLink } from '../packages/core/src/image-links.ts';
 import { parseView } from '../packages/core/src/view-profile.ts';
 import { cutAtFirst, removeAll, trimChars } from '../packages/core/src/text-cuts.ts';
+import { withSuggestion } from '../packages/core/src/type-suggestion.ts';
 import { fromJunit } from '../scripts/tests-first-run.mjs';
 import { jsText } from '../scripts/targets-reflow.mjs';
 
@@ -51,6 +52,18 @@ describe('a pattern that ran slow on text made for it now runs in time with its 
     const g = { labelled: () => Object.keys(props), p: (i) => props[i] };
     const rule = "MATCH (n:T) RETURN n.id AS id, CASE WHEN n.a = 1 AND n.b = 2 THEN 'both' ELSE 'x' END AS grp";
     assert.deepEqual(lensBuckets(g, rule), { k: 'both', m: 'x' });
+  });
+
+  test('a type suggestion written after a note with a long run of newlines', LIMIT, () => {
+    const proposal = {
+      id: 'cs1',
+      graph: 'g',
+      provenance: { by: { name: 'x', kind: 'step' }, at: null, read: [], basis: '0'.repeat(16) },
+      changes: [],
+    };
+    const note = `a${'\n'.repeat(60000)}b`;
+    assert.ok(withSuggestion(note, { proposal }).startsWith(note));
+    assert.ok(withSuggestion('a\n\n\n', { proposal }).startsWith('a\n\n```gql\n'));
   });
 
   test('the cuts that took the place of the slow patterns', LIMIT, () => {

@@ -6,6 +6,12 @@ follows `python/graph_spec` function for function, and the parity tests hold the
 The spec itself is [`requirements/graph-spec.gql`](../../requirements/graph-spec.gql): every section the code cites as
 §3, §24 and so on, with each rule's own words. A citation of the editor's spec says "editor spec" (ARCH-11).
 
+## A first call
+
+[`examples/js/read-and-check.cjs`](../../examples/js/read-and-check.cjs) reads one graph block and checks it, in ten
+lines. Run it with `node examples/js/read-and-check.cjs`. CI runs it from the release archive's layout on every pull
+request, so it always works with the library as shipped.
+
 ## The entry point, and the built file
 
 - **`src/graph-spec-check.js`** is the entry point. It requires the feature modules below and exports the one API
@@ -95,6 +101,11 @@ and no module requires one that requires it back.
     is `recorded_at`, and SUPERSEDES. Real-world time runs from `valid_from` up to `valid_to`.
   - `after-text-merge.js` — two edits joined over their base, and their text merge read against that join. A value
     the merge picked in a dispute is listed for a person, never taken as the decision (`test/join-every-author-cases.json`).
+  - `same-as.js` — which things in different graphs are one (ARCH-6). Inside a graph the name is the id. Across graphs
+    only a written SAME_AS link to a Ref joins two things; the same name with no link stays a guess
+    (`test/same-as-cases.json`).
+  - `types-instances.js` — lasting types and their instances. An instance links to its type with INSTANCE_OF, here or
+    through a Ref, and has its type's properties unless it sets its own (`test/types-instances-cases.json`).
 
 ## Beside them
 

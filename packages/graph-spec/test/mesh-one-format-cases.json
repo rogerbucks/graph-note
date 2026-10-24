@@ -1,0 +1,31 @@
+{
+  "about": "One graph format for data, queries and structure (editor spec §27, mesh_one_format). One GQL block holds a graph's schema and its inserts. It is read once, and one query engine (the lens rules of §15) answers about its things and about its schema, link types included. lensBuckets (packages/graph-spec/src/rules/lenses.js) and lens_buckets (python/graph_spec/src/graphspec/rules/lens.py) give these answers alike.",
+  "block": [
+    "// graph: shop",
+    "(shop_schema:GraphMeta {graph: 'shop'}),",
+    "(kind_product:Meta:ElementType {name: 'Product', kind: 'node', origin: 'source'}),",
+    "(kind_part:Meta:ElementType {name: 'Part', kind: 'node', origin: 'source'}),",
+    "(link_uses:Meta:ElementType {name: 'USES', kind: 'edge', origin: 'source', reading: 'uses', reverse_name: 'is used by'}),",
+    "(shop_schema)-[:DECLARES]->(kind_product),",
+    "(shop_schema)-[:DECLARES]->(kind_part),",
+    "(shop_schema)-[:DECLARES]->(link_uses),",
+    "(widget:Product {name: 'Widget', price: 12}),",
+    "(gadget:Product {name: 'Gadget', price: 4}),",
+    "(bolt:Part {name: 'Bolt'}),",
+    "(widget)-[:USES]->(bolt),",
+    "(gadget)-[:USES]->(bolt)"
+  ],
+  "graph": "shop",
+  "cases": [
+    {
+      "name": "the things the block inserts answer a query",
+      "lens": "MATCH (p:Product) RETURN p.id AS id, CASE WHEN p.price > 10 THEN 'dear' ELSE 'cheap' END AS grp",
+      "buckets": { "widget": "dear", "gadget": "cheap" }
+    },
+    {
+      "name": "the schema in the same block answers the same engine, its link types included",
+      "lens": "MATCH (t:ElementType) RETURN t.id AS id, CASE WHEN t.kind = 'edge' THEN 'link' ELSE 'thing' END AS grp",
+      "buckets": { "kind_product": "thing", "kind_part": "thing", "link_uses": "link" }
+    }
+  ]
+}

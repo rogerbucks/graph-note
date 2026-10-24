@@ -1,7 +1,5 @@
-// The newest names the core's entry exports, from the certainty drawn on (editor spec §28) to the lenses (editor spec
-// §33). Kept apart from index.ts so each file stays short.
-export { CERTAINTY_LEVELS, CERTAINTY_LOOKS, certaintyLevel } from './certainty-drawn.ts';
-export type { CertaintyLevel, CertaintyLook } from './certainty-drawn.ts';
+// The newest names the core's entry exports: the lenses (editor spec §33), and what Wave 10 adds after them. Kept apart
+// from index.ts so each file stays short.
 export {
   acceptLens,
   lensLibrary,

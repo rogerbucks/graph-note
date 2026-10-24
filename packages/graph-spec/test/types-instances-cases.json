@@ -1,0 +1,132 @@
+{
+  "about": "Lasting types and their instances (editor spec §27, type_instance_split and instance_inherits_type). An instance links to its type with INSTANCE_OF, in its own graph or through a Ref to another. It has every property of its type unless it sets its own, the nearest value winning. typeOf, instancesOf and inherited (packages/graph-spec/src/mesh/types-instances.js) and their Python twins (python/graph_spec/src/graphspec/engine/mesh/types_instances.py) give these answers alike.",
+  "blocks": [
+    ["// graph: devices", "(device:Kind {name: 'Device', warranty_years: 1, power: 'mains'})"],
+    [
+      "// graph: models",
+      "(e_reader:Kind {name: 'E-reader', weight: 200, screen: 'e-ink'}),",
+      "(device_kind:Ref {ref: 'device', graph: 'devices'}),",
+      "(e_reader)-[:INSTANCE_OF]->(device_kind)"
+    ],
+    [
+      "// graph: desks",
+      "(anns_reader:Item {serial: 'A1'}),",
+      "(bens_reader:Item {serial: 'B2', weight: 180, power: 'battery'}),",
+      "(cats_lamp:Item {serial: 'C3'}),",
+      "(model:Ref {ref: 'e_reader', graph: 'models'}),",
+      "(anns_reader)-[:INSTANCE_OF]->(model),",
+      "(bens_reader)-[:INSTANCE_OF]->(model)"
+    ]
+  ],
+  "cases": [
+    {
+      "name": "an instance's type, through a Ref",
+      "ask": "typeOf",
+      "graph": "desks",
+      "key": "anns_reader",
+      "answer": {
+        "graph": "models",
+        "key": "e_reader"
+      }
+    },
+    {
+      "name": "a thing with no type has none",
+      "ask": "typeOf",
+      "graph": "desks",
+      "key": "cats_lamp",
+      "answer": null
+    },
+    {
+      "name": "the instances of a type, asked of the type in general",
+      "ask": "instancesOf",
+      "graph": "models",
+      "key": "e_reader",
+      "answer": [
+        {
+          "graph": "desks",
+          "key": "anns_reader"
+        },
+        {
+          "graph": "desks",
+          "key": "bens_reader"
+        }
+      ]
+    },
+    {
+      "name": "an instance has its type's properties, and those of the type above it",
+      "ask": "inherited",
+      "graph": "desks",
+      "key": "anns_reader",
+      "answer": {
+        "props": {
+          "id": "anns_reader",
+          "serial": "A1",
+          "name": "E-reader",
+          "weight": 200,
+          "screen": "e-ink",
+          "warranty_years": 1,
+          "power": "mains"
+        },
+        "from": {
+          "id": "desks/anns_reader",
+          "serial": "desks/anns_reader",
+          "name": "models/e_reader",
+          "weight": "models/e_reader",
+          "screen": "models/e_reader",
+          "warranty_years": "devices/device",
+          "power": "devices/device"
+        }
+      }
+    },
+    {
+      "name": "an instance's own value wins over its type's",
+      "ask": "inherited",
+      "graph": "desks",
+      "key": "bens_reader",
+      "answer": {
+        "props": {
+          "id": "bens_reader",
+          "serial": "B2",
+          "weight": 180,
+          "power": "battery",
+          "name": "E-reader",
+          "screen": "e-ink",
+          "warranty_years": 1
+        },
+        "from": {
+          "id": "desks/bens_reader",
+          "serial": "desks/bens_reader",
+          "weight": "desks/bens_reader",
+          "power": "desks/bens_reader",
+          "name": "models/e_reader",
+          "screen": "models/e_reader",
+          "warranty_years": "devices/device"
+        }
+      }
+    },
+    {
+      "name": "the type keeps its own value, whatever an instance sets",
+      "ask": "inherited",
+      "graph": "models",
+      "key": "e_reader",
+      "answer": {
+        "props": {
+          "id": "e_reader",
+          "name": "E-reader",
+          "weight": 200,
+          "screen": "e-ink",
+          "warranty_years": 1,
+          "power": "mains"
+        },
+        "from": {
+          "id": "models/e_reader",
+          "name": "models/e_reader",
+          "weight": "models/e_reader",
+          "screen": "models/e_reader",
+          "warranty_years": "devices/device",
+          "power": "devices/device"
+        }
+      }
+    }
+  ]
+}

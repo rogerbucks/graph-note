@@ -104,6 +104,11 @@ const NAMES = [
   'lensAsAt',
   // a text merge checked by the meaning-level join (editor spec §30)
   'afterTextMerge',
+  // which things in different graphs are one, and lasting types with their instances (editor spec §27)
+  'sameAs',
+  'typeOf',
+  'instancesOf',
+  'inherited',
   // lenses as graph data: saved queries that answer fresh (editor spec §33)
   'lensesOf',
   'runLens',
