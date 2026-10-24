@@ -1,0 +1,6 @@
+{
+  "file": "test/workflow-writers.test.js",
+  "test": "GitHub Actions writers > only seventeen jobs may write: the release, the nightly, its draft check and its wave-end call, the lock, the stuck pull request flag, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes",
+  "seen_failing_first": false,
+  "evidence": "It lists the writers: the new workflow's own test, test/stuck-prs-workflow.test.js, failed first"
+}

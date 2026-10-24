@@ -758,6 +758,8 @@ These test behaviour across modules, or the repository itself, so they are named
   - `pull-requests: write` is its one write permission. The token is given only to the step that checks it and to the
     action.
   - No checkout keeps credentials, and the review approves, pushes and edits nothing.
+- `test/stuck-prs-workflow.test.js` — the workflow that labels an auto-merge pull request stuck on a conflict with
+  main, and comments once so its owner wakes.
 - `test/working-group-workflow.test.js` — the workflow that lets Sara keep up with the working group discussion.
   - It wakes Claude only when a comment names Sara, at most once a day. Claude writes a draft and has no GitHub tools.
   - Only the post job may write, and only to discussions. It checks out nothing and runs no code of the repository.
