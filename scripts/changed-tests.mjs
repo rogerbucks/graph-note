@@ -31,6 +31,7 @@ const JS_TEST = /\.test\.(js|mjs)$/;
 const PY_TEST = /(^|\/)tests\/test_\w+\.py$/;
 
 const CHEAP = 'test/cheap-checks.test.js';
+const GUIDE = 'test/agents-guide.test.js';
 const CEILING = 'test/run-ceiling.test.js';
 const CONVENTIONS = 'test/conventions.test.js';
 const DEVICE_NOTES = 'test/device-check-notes.test.js';
@@ -44,14 +45,15 @@ const DEVICE_QUOTES = 'test/device-check-quotes.test.js';
  * - test-vault.test.js reads test-vault/ and its reset script;
  * - device-check-notes.test.js reads its Device checks notes and the device checklist;
  * - requirements.test.js reads requirements/ and its check;
- * - cheap-checks.test.js reads AGENTS.md, its handbook, CLAUDE.md, .ignore and its own three tools;
+ * - cheap-checks.test.js reads AGENTS.md, CLAUDE.md, .ignore and its own three tools;
+ * - agents-guide.test.js reads AGENTS.md, its handbook, CLAUDE.md and .ignore;
  * - run-ceiling.test.js reads AGENTS.md and changed-tests.mjs as well as its own runner, and runs quality-suite.mjs.
  */
 const READERS = [
-  [/^(AGENTS\.md|scripts\/changed-tests\.mjs)$/, [CHEAP, CEILING, 'test/community-files.test.js']],
-  [/^docs\/agents\/HANDBOOK\.md$/, [CHEAP, 'test/community-files.test.js', 'test/public-readiness.test.js']],
+  [/^(AGENTS\.md|scripts\/changed-tests\.mjs)$/, [CHEAP, GUIDE, CEILING, 'test/community-files.test.js']],
+  [/^docs\/agents\/HANDBOOK\.md$/, [GUIDE, 'test/community-files.test.js', 'test/public-readiness.test.js']],
   [/^scripts\/import-graph\.mjs$/, [CHEAP, 'test/import-graph.test.js']],
-  [/^(CLAUDE\.md|\.ignore|scripts\/quiet-reporter\.mjs|scripts\/quiet_unittest\.py)$/, [CHEAP]],
+  [/^(CLAUDE\.md|\.ignore|scripts\/quiet-reporter\.mjs|scripts\/quiet_unittest\.py)$/, [CHEAP, GUIDE]],
   [/^(CONTRIBUTING\.md|(packages|python)\/[^/]+\/(GUIDE\.md|guide\/[^/]+\.md))$/, [CONVENTIONS]],
   [/^README\.md$/, [CONVENTIONS, 'test/policy.test.js']],
   [/^(test-vault\/.*|scripts\/reset-test-vault\.mjs)$/, ['test/test-vault.test.js', DEVICE_NOTES, DEVICE_QUOTES]],
