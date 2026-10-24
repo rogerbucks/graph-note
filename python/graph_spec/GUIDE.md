@@ -150,6 +150,16 @@ archive's layout on every pull request, so it always works with the library as s
   - `centroids_of` gives each cluster's centroid (`centroids.js`, `centroid-cases.json`).
   - `cluster_cycles` and `cycle_view` flag the clusters in a cycle, and hide or highlight them (`cycles.js`,
     `cycle-cases.json`).
+  - `cluster_certainty` gives each cluster's cohesion and the certainty its centroid states, with any floor
+    (`cohesion.js`, `cohesion-cases.json`).
+
+- `src/graphspec/engine/altitude/` — editor spec §32, altitude and audience profiles. `altitude.at_altitude`,
+  `profiles_of`, `audience_projection`, `altitudes_in` and `by_axes` are the twins of `altitude.js`, held to
+  `altitude-cases.json`.
+
+- `src/graphspec/engine/lenses/` — editor spec §33, lenses as graph data. `saved_lenses.lenses_of` and `run_lens` are
+  the twins of `saved-lenses.js`, held to `saved-lens-cases.json`.
+
 ### The graph mesh
 
 - `src/graphspec/engine/altitude/` — editor spec §32. `altitude_index.altitude_index` and `search_index` are the twins

@@ -87,5 +87,6 @@ export const VALUES_LATE = [
   'word',
   'workspaceStorage',
   'workstreamsFrom',
+  'writeLens',
   'writeSafely',
 ];

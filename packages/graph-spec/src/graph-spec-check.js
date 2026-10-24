@@ -57,8 +57,11 @@ const { louvain } = require('./clusters/louvain.js');
 const { clustersOf } = require('./clusters/clusters.js');
 const { centroidId, centroidsOf } = require('./clusters/centroids.js');
 const { clusterCycles, cycleView } = require('./clusters/cycles.js');
+const { clusterCertainty } = require('./clusters/cohesion.js');
 const processCore = require('./process/core.js');
 const runs = require('./process/runs.js');
+const altitude = require('./altitude/altitude.js');
+const { lensesOf, runLens } = require('./lenses/saved-lenses.js');
 const { altitudeIndex, searchIndex } = require('./altitude/altitude-index.js');
 const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
 const { asAt, lensAsAt } = require('./mesh/as-at.js');
@@ -165,6 +168,7 @@ module.exports = {
   typeOf,
   instancesOf,
   inherited,
+  clusterCertainty,
   coreOfEight: processCore.coreOfEight,
   transitionsOf: processCore.transitionsOf,
   promoteTransition: processCore.promoteTransition,
@@ -180,6 +184,13 @@ module.exports = {
   moveRun: runs.moveRun,
   withEntries: runs.withEntries,
   refreshCurrent: runs.refreshCurrent,
+  atAltitude: altitude.atAltitude,
+  profilesOf: altitude.profilesOf,
+  audienceProjection: altitude.audienceProjection,
+  altitudesIn: altitude.altitudesIn,
+  byAxes: altitude.byAxes,
+  lensesOf,
+  runLens,
   altitudeIndex,
   searchIndex,
   contextsOf,
