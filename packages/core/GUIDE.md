@@ -8,6 +8,8 @@ later, in VS Code. It is written in erasable TypeScript, so Node runs its tests 
 
 - `src/index.ts` is the package's one entry: everything a host uses is exported from it, and only from it.
   `test/index.test.js` holds its list of names, so a change to it is a decision, not an accident.
+- `src/index-late.ts` holds its newest names, from the certainty drawn on, and `src/index.ts` exports them all. So
+  each file stays short.
 
 ## The source, `src/`
 
@@ -129,6 +131,15 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `schema-version-moves.ts` — a graph moved to another version of its shared schema (editor spec §27,
   schema_version_moves; ARCH-4). `schemaMove` gives the block with its graph line changed, and what the new version adds
   and drops. A person applies it; reading never moves a graph. `schemaVersions` lists the versions there are.
+
+#### Lenses
+
+- `lens-library.ts` — the lenses a person can open (editor spec §33, lens_library). Ready-made ones come first, then the
+  graph's own Lens things, then those written in the session. An AI's lens is a proposal, listed once a person accepts
+  it. `writeLens` gives the line of graph text that saves one.
+- `lens-freshness.ts` — how often and how lately each lens ran (editor spec §33, lens_freshness). One unopened for 90
+  days is dormant, with its certainty untouched. `recentLenses` gives the five most used, worked out when asked.
+- `lens-source-words.ts` — the names of the ready-made lenses.
 
 #### Deferred things
 

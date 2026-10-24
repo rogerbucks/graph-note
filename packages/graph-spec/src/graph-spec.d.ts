@@ -49,6 +49,7 @@ declare namespace GraphSpecCheck {
   type Edge = [string, string, string, Record<string, Value>];
 
   class Graph {
+    constructor(nodes: Map<string, [Set<string>, Record<string, Value>]>, edges: Edge[]);
     /** id -> [labels, properties], in the order the things were written. */
     nodes: Map<string, [Set<string>, Record<string, Value>]>;
     edges: Edge[];
@@ -284,6 +285,26 @@ declare namespace GraphSpecCheck {
   function clusterCycles(graph: Graph): string[][];
   /** What a view shows with a graph's cycles hidden or highlighted. */
   function cycleView(graph: Graph, how: 'hide' | 'highlight'): { shown: string[]; highlighted: string[] };
+  /** A lens as graph data (editor spec §33): a named, saved query with an optional default altitude. */
+  interface SavedLens {
+    id: string;
+    name: unknown;
+    query: unknown;
+    altitude: unknown;
+    schemas: string[];
+    /** The kinds its query touches. */
+    topics: string[];
+    /** Each flag: its code and a detail, such as lens-holds-data or schema-changed. */
+    flags: [code: string, detail: string][];
+  }
+  /** The lens things of a graph. `schemas` gives the version the graph now names for each schema. */
+  function lensesOf(graph: Graph, options?: { schemas?: Record<string, string> }): SavedLens[];
+  /** A lens run on the graph as it is now: the things it finds, its altitude and its flags. */
+  function runLens(
+    graph: Graph,
+    lens: string,
+    options?: { schemas?: Record<string, string> },
+  ): { lens: string; things: string[]; altitude: unknown; flags: [string, string][] };
 
   /** A claim as a person ranks it (editor spec §28): its words, never a number typed in. */
   interface MeshClaim {

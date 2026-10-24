@@ -104,6 +104,9 @@ const NAMES = [
   'lensAsAt',
   // a text merge checked by the meaning-level join (editor spec §30)
   'afterTextMerge',
+  // lenses as graph data: saved queries that answer fresh (editor spec §33)
+  'lensesOf',
+  'runLens',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

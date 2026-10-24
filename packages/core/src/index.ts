@@ -385,5 +385,4 @@ export type {
 export { MeshHistory, type LogEntry, type LogKind } from './mesh-history.ts';
 export { renameAcross, type NotRewritten, type RenameAcross } from './rename-across.ts';
 export { schemaMove, schemaVersions, type SchemaMove } from './schema-version-moves.ts';
-export { CERTAINTY_LEVELS, CERTAINTY_LOOKS, certaintyLevel } from './certainty-drawn.ts';
-export type { CertaintyLevel, CertaintyLook } from './certainty-drawn.ts';
+export * from './index-late.ts';
