@@ -197,8 +197,21 @@ export function sourceContract(s: PluginSource, target: string): StorageCheck[] 
       name: 'it gives back a graph’s text for a place, within the read limits',
       run: async () => heldAs(`${s.scheme}:${target}`, await s.read(target)),
     },
+    ...(s.fetch ? [fetchCheck(s, target)] : []),
     { name: title.name, run: async () => title.run() },
   ];
+}
+
+/** The check of a built-in source's `fetch`: it says what it found, or that nothing is there. */
+function fetchCheck(s: PluginSource, target: string): StorageCheck {
+  return {
+    name: 'it says what it found at a place, or that it is missing, as the person’s own',
+    run: async () => {
+      const got: unknown = await s.fetch?.(target, '');
+      if (!got || typeof got !== 'object' || !('found' in got || 'missing' in got))
+        fail(s.scheme, 'what was found, or missing', got);
+    },
+  };
 }
 
 /** Every check a graph step of the plug-in `pluginId` is held to, tried on the sample graph. */

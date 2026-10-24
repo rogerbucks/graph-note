@@ -136,6 +136,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   problems at their lines there. Or it says why it cannot be drawn, with the block as text, never blank. A source too
   large to read is shown under the banner a note's blocks get. `sourcedView` is the same reading for a view of the
   graph.
+- `host-sources.ts` — a file and a note are the two sources of the built-in plug-in `thoughtknot.obsidian-sources`.
+  `source-read.ts` reads a block's source through its registry.
 - `source-read.ts` — the source found as Obsidian finds a link from the note (else by its path), read through the vault,
   never copied.
   - A .gql file larger than `READ_LIMITS.bytes`, by the size the vault keeps, is never read.

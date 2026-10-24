@@ -1206,6 +1206,8 @@ and is handed the port between them, as for layouts:
   carries its origins. A source's graph starts untrusted; a step's keeps the lowest trust it was given. An unlabelled
   graph counts as the strictest class, and a step's keeps the strictest class it was given. One past the read limits
   is refused. The registry reads them with `readGraph` and `runStep`.
+- `plugin-sources.ts`, built-in sources — a host's own source may also `fetch`: what it found as the person's own,
+  or a missing place (`fetchSource`). Only a registry made `builtIn` accepts one.
 - `plugin-ai.ts` — AI providers (trust_ai_provider_bounded). A provider only shapes the body (`shape`) and reads the
   reply (`read`). It names where the key goes (`key`), and the host puts it there. `aiProvider` gives one with each
   call timed and named; `prepareSend` takes it as `provider` for a model whose `provider` names it.
