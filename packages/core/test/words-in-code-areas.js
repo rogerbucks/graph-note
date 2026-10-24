@@ -204,6 +204,10 @@ export const KEPT = {
     'the whole graph {}',
     '{} thing{} chosen from graph {}: {}',
   ],
+  // the one tool's description, read by the AI model it is offered to, never by a person: it stays in UK English
+  'packages/core/src/ai-query.ts': [
+    'Reads things from a graph the user shares. It only reads. Give a label to match, conditions on properties, and how many to return.',
+  ],
   // the graph spec library's names for the kinds of secret, looked up to say each from the catalogue
   'packages/core/src/ai-ceiling.ts': [
     'a private key',
