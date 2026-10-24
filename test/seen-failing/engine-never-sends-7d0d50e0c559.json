@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/engine-never-sends.test.js",
+  "test": "the engine build has no network-send path and guard functions have no side effects",
+  "seen_failing_first": false,
+  "evidence": "It proves a property the engine already had: it never held a way to send, so no code was needed for it to pass."
+}

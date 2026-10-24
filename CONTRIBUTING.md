@@ -418,6 +418,9 @@ These test behaviour across modules, or the repository itself, so they are named
   `mesh-parity-cases.json` holds (mesh_engine_parity).
 - `packages/graph-spec/test/join-every-author.test.mjs` — identical edits from any author join alike. A text merge that
   picks a value leaves the dispute for a person (same_join_every_author; `join-every-author-cases.json`).
+- `packages/graph-spec/test/process-core.test.mjs` — the process core and its runs, across `src/process/core.js` and
+  `runs.js`. It covers eight kinds, transitions, guards as data, the run log and nested machines (editor spec §34;
+  `process-core-cases.json`).
 - `packages/graph-spec/test/mesh-one-format.test.mjs` — a block of schema and inserts is read once. The lens
   rules answer about its things and its schema alike (mesh_one_format; `mesh-one-format-cases.json`).
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
@@ -445,6 +448,8 @@ These test behaviour across modules, or the repository itself, so they are named
   library, by the hashes of `mesh-parity-cases.json` (mesh_engine_parity).
 - `python/graph_spec/tests/test_join_every_author.py` — the Python library gives the answers of
   `join-every-author-cases.json`, whoever made the edits (same_join_every_author).
+- `python/graph_spec/tests/test_process_core.py` — the Python library's `core` and `runs` give the answers of
+  `process-core-cases.json` (editor spec §34).
 - `python/graph_spec/tests/test_mesh_one_format.py` — the Python library reads the block of `mesh-one-format-cases.json`
   once and its lens rules give the same buckets (mesh_one_format).
 - `python/graph_spec/tests/test_drawing_problem_codes.py` — each problem the Python drawing reader finds in a note or
@@ -580,6 +585,11 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/build-status-workflow.test.js` — the two build status workflows. They are woken only by the checks of a pull
   request, a push to main and a release. The project secret is given only to the script on main. No event text goes in
   a command line, and they hold least privilege.
+
+### The VS Code extension's nightly file
+
+- `test/vscode-release.test.js` — each nightly attaches the VS Code extension as a `.vsix` to install (spec §41,
+  nightly_prerelease). `scripts/vscode-release.mjs` packs it, and the test reads a real one back.
 
 ### The library's release
 
@@ -873,11 +883,16 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/nightly-workflow.test.js` — the nightly pre-release, run each night and by hand. It is built only when main
   moved, and published only after the full suite passes. The one job that writes runs no code of the repository. The
   last seven are kept, with the version `scripts/nightly-version.mjs` gives it.
+### The home page and its live demo
+
 - `test/site.test.js` — the project's home page, made from `site/index.html` and `site/words.json`.
   - Every word is used and none is missing.
   - It has the search and AI basics: title, description, canonical address, structured data, sitemap, robots and
     llms.txt.
   - It meets WCAG 2.2 AA in both schemes, and no side is said by left or right.
+- `test/site-demo.test.js` — the home page's live demo, built by `scripts/site-demo.mjs` and drawn by the plugin.
+  - Its note holds the project's own graph files whole, and its page loads its own files only.
+  - In Chrome it draws every graph, an edit in the pane redraws its card, and no request leaves the page.
 - `test/site-workflow.test.js` — the workflow that publishes the home page. It is woken by a push to main, each morning
   or by hand. The page is made with read access only. The one job that writes to GitHub Pages runs no code of the
   repository.

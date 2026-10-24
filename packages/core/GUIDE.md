@@ -138,6 +138,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   person applies it in one step and undoes it in one step. A type that grants permissions, or is kept as history, is
   marked for a closer look.
 - `index-mesh.ts` — the mesh's part of the core's entry, kept apart so `index.ts` stays short.
+- `index-process.ts` — the process views' part of the core's entry, kept apart for the same reason.
 
 #### Altitude
 
@@ -149,6 +150,16 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   link (editor spec §32, browsing_leaves_no_links).
 - `phase-altitude.ts` — a transition that changes the view's depth, as a part that can be swapped or removed (editor
   spec §32, phase_shifts_altitude).
+
+#### Process views
+
+- `process-core.ts` — one process core under every view (editor spec §34, one_process_core). It is graph-spec's eight
+  kinds with the view settings kept apart. `ProcessViews` works out each view when first asked for and keeps it until
+  the core changes (process_views_cached).
+- `process-views.ts` — the eight process views and what each cannot show: loops, parallel steps or timing (editor spec
+  §34, views_declare_limits). A loop is folded into one node, and the rest is marked where it is.
+- `edits-from-views.ts` — an edit made in any view, planned and then saved into the core (editor spec §34,
+  edits_from_any_view). The plan lists the views it changes, its gaps, what the view hides and the dangling links.
 
 #### Deferred things
 
@@ -1237,6 +1248,20 @@ and is handed the port between them, as for layouts:
   place. On any failure the temporary file is `remove`d and the target is never touched. The result says why in a
   sentence.
 
+#### Exporting to code (spec §38)
+
+- `export-code.ts` — the one way a graph drives a real application: an export an AI writes code from.
+  - `planExport` lists the gaps: contested and doubtful things, and what the boundary rules take out.
+  - `confirmExport` always goes ahead once they are confirmed. Its record is frozen, named by version and snapshot
+    hash, and keeps every thing's id, so it traces back into the graph.
+  - Export is one way. `fromCode` takes back a run log as a log, and changes as a proposal of low certainty.
+  - `checkGenerated` adds what the code does not match to the gaps, blocking nothing. `driftOf` finds drift;
+    `backToExport` proposes setting it back. `exportsLens` lists what was exported.
+- `export-boundary.ts` — a corporate setting's redactions and AI-assisted label, applied to every export by itself.
+- `secrets.ts` — a graph holds secrets only by name (`SecretRef`), their values found at run time. A write holding a
+  password is refused; restricted documentation may hold one other secret, flagged.
+- The engine never sends: `test/engine-never-sends.test.js` finds no network call in the core or the graph library.
+
 ### Proposals (spec §17)
 
 A proposal is changes to a graph that somebody other than the person reading proposes. It may be an AI's answer (§19), a
@@ -1496,6 +1521,21 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
 - `ai-answer.ts` — `proposalFrom`: the changes made into a proposal from the model. It is against the state of the graph
   that was sent, naming the send's record. `noteWithProposal` gives the note with its change set written after the
   graph's last block, the graph untouched.
+
+#### The AI query contract and write scoring (spec §37)
+
+- `ai-query.ts` — how an outside AI, a local one among them, asks the knowledge through the engine.
+  - The contract is one tool (`AI_QUERY_TOOL`) and one schema description (`schemaDescription`): `AI_CONTRACT`.
+  - `checkQuery` checks a query as untrusted data, never text: unknown fields, writes, odd names and values are refused.
+  - `AiQueryEngine` checks the permissions before it reads, answers with each result's source, and logs every query
+    with the AI label, refused ones too.
+- `ai-write-scoring.ts` — the review queue of AI and outside writes.
+  - `scoreWrite` scores a write out of 100 from its size, removals, doubtful and contested things, failed intents and
+    its source's record. The weights are a `ScoringPolicy` thing (`policyOf`).
+  - The score only sorts and groups (`reviewQueue`): every write waits, and outside writes have a group of their own.
+    A permission-bearing or historical change is marked for a closer look.
+  - `acceptWrite` needs a person, and writes one labelled bundle. `rollBack` undoes it in one step; `acceptedLens`
+    lists the bundles.
 
 ### Permissions (spec §39)
 

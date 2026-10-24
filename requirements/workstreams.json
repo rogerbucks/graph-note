@@ -813,7 +813,8 @@
     "title": "Project home page",
     "size": "S",
     "requirements": [
-      "landing_page"
+      "landing_page",
+      "site_demo"
     ]
   },
   "D3": {
