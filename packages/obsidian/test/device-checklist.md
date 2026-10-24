@@ -279,10 +279,14 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
 
 - [ ] **S-06** In a radial drawing, drag a box to just past another one around the centre. The line says "Put … before
       …" or "… after …", never beside, and letting go moves the box round to that place (radial_spoke_order).
-- [ ] **S-07** In a radial drawing, open a box's details and press Put in the centre. The boxes glide to their new
-      rings around it, and the strip says "Centred on …". Back to the usual centre glides them back. Tab to a box and
-      press C: the same. In reading view it is only looked at: "Just looking: not saved." With reduced motion on, the
-      boxes move at once (radial_centre_pick).
+- [ ] **S-07** In a radial drawing, open a box's details and press Centre here. The boxes glide to their new rings
+      around it, and the strip says "Centred on …". Back to the usual centre glides them back. Tab to a box and press
+      C: the same. In reading view it is only looked at: "Just looking: not saved." With reduced motion on, the boxes
+      move at once (radial_centre_pick).
+- [ ] **S-08** In a network, right-click a box: a menu says Centre here. Pick it: the boxes glide out into rings
+      around that box. The strip says "Centred on …" and how to pick another. Select a box, open Diagram type: the tile
+      says "Radial, around …". On a phone, tap a box and press Centre here in its details. In reading view each is
+      only looked at (radial_centre_anywhere, radial_centre_menu, radial_centre_hint).
 
 ## Views — spec §2, §7
 
