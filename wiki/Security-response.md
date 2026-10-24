@@ -93,9 +93,10 @@ Record each run here.
 |---|---|---|
 | _not yet run_ | | |
 
-## 7. For Roger to set up
+## 7. Set up once
 
-- Turn on GitHub's private vulnerability reporting for the repository, so the report form works.
-- Add the optional secret `SECURITY_ALERTS_TOKEN`. Without it the daily scan cannot read Dependabot or secret-scanning
+- Private vulnerability reporting is on (confirmed by Roger, 24 Oct 2026).
+- Add the optional secret `SECURITY_ALERTS_TOKEN`: a fine-grained token on this repository with read-only access to
+  Dependabot, secret scanning and code scanning alerts. Renew it each year. Without it the daily scan cannot read Dependabot or secret-scanning
   alerts.
 - Keep GitHub security emails on, for the quickest sight of an alert.
