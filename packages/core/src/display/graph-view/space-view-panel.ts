@@ -87,7 +87,8 @@ export async function openSpaceView(
   // the ways to show it: laid out in space as balls (the first, Roger, 24 Oct 2026), or the drawing lifted as it is
   const depths: (DepthBy | null)[] = [null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
   const spaceBy = (by: DepthBy | null): SpaceMarks => (by ? spaceOf(marks, by) : spreadSpace(marks).space);
-  let depth = 0;
+  // a drawing opens in space; an overview's groups (massive-paints.ts) are no things to lay out, so they are lifted
+  let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 1 : 2) : 0;
   let space: SpaceMarks = spaceBy(depths[depth] ?? null);
   let width = 1,
     height = 1;
