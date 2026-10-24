@@ -35,3 +35,10 @@ test('an SVG holding data, metadata, a script or a field is said to hold state',
   const held = '<svg><metadata>x</metadata><script>1</script><g data-key="a" data-owner="ann"><input/></g></svg>';
   assert.deepEqual(stateInSvg(held), ['metadata', 'script', 'form field', 'attribute data-owner']);
 });
+
+test('an SVG with code that decides is flagged, and a word inside a comment is not', () => {
+  assert.deepEqual(stateInSvg('<svg><g onclick="go()"><text>A</text></g></svg>'), ['event handler']);
+  assert.deepEqual(stateInSvg('<svg><foreignObject><div/></foreignObject></svg>'), ['foreign object']);
+  assert.deepEqual(stateInSvg('<svg><a href="javascript:go()"><text>A</text></a></svg>'), ['script link']);
+  assert.deepEqual(stateInSvg('<svg><!-- a <script> once --><![CDATA[ <input/> ]]><text>A</text></svg>'), []);
+});
