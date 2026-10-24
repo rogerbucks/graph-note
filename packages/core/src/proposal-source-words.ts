@@ -105,4 +105,6 @@ export const PROPOSAL_SOURCE_WORDS = {
   'proposal.said.add': 'Added: {change}',
   'proposal.said.change': 'Changed: {change}',
   'proposal.said.remove': 'Removed: {change}',
+  // a change to a type that its instances suggest (type-suggestion.ts)
+  'proposal.type-suggestion': 'Type suggestion: {thing}.{key} = {value}, as {count} of {of} instances say',
 } as const;
