@@ -12,7 +12,8 @@
 import gs from '@thoughtknot/graph-spec';
 import { sha256 } from './ai-digest.ts';
 import { gqlBlocks } from './fences.ts';
-import type { Edit } from './inspector.ts';
+import { parseValue, setProperty } from './inspector.ts';
+import type { Edit, PropType } from './inspector.ts';
 import { noteRowsPaced } from './mesh-index-rows.ts';
 import type { MeshIndex } from './mesh-index.ts';
 import type { GraphDrawing, Problem } from './note-reading.ts';
@@ -113,6 +114,25 @@ export function editInParts(
   const done = change(lines.slice(span.line - 1, span.end).join('\n'));
   if (!done.ok) return done;
   return { ok: true, text: [...lines.slice(0, span.line - 1), done.text, ...lines.slice(span.end)].join('\n') };
+}
+
+/**
+ * The note's new text, with property `prop` of thing `key` set to `words`, read as `type`. It is written only on the
+ * lines that wrote the thing (editInParts), and refused, with why, as a property field refuses it.
+ */
+export function setInParts(
+  ix: MeshIndex,
+  at: { note: string; text: string; graph: string },
+  key: string,
+  prop: string,
+  type: PropType,
+  words: string,
+): Edit {
+  const value = parseValue(type, words);
+  if (!value.ok) return { ok: false, reason: value.error };
+  return editInParts(ix, at.note, at.text, at.graph, key, (lines) =>
+    setProperty(lines, at.graph, { thing: key }, prop, value.gql),
+  );
 }
 
 /**
