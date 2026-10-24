@@ -16,15 +16,16 @@
 // What is picked is said aloud, and its name always shows (space-labels.ts).
 //
 // 2D and 3D are two views of the same graph (Roger, 24 Oct 2026). So a pick here opens the card's details for it, just
-// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). What is picked becomes the point the view turns
-// round and zooms to. The camera stays where it is and turns to face it (space-controls.ts, orbitAround). What the card
-// hides, fades or brings forward, from its details' controls, the 3D view shows too, as the card marks it (focus_space).
+// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). The view stays still. Another click on it makes
+// it the point the view turns round and zooms to, the camera turning to face it (space-controls.ts, orbitAround). What
+// the card hides, fades or brings forward, from its details' controls, the 3D view shows too, as the card marks it
+// (focus_space).
 import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
-import { focusOn, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
+import { centredOn, focusOn, middleOf, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
-import { arrowsOnScreen, labelsOnScreen } from '../../space-labels.ts';
+import { arrowsOnScreen, labelsOnScreen, pickedRing } from '../../space-labels.ts';
 import { spreadSpace } from '../../space-spread.ts';
 import { KEY_STEP, ZOOM_STEP, keyMove, orbitAround, panBy, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
@@ -98,6 +99,8 @@ export async function openSpaceView(
   // a card with no background of its own shows the page's: the label halo uses the system's page colour then
   const background = win.getComputedStyle(root).backgroundColor;
   const halo = !background || background === 'transparent' || /,\s*0\)$/.test(background) ? 'Canvas' : background;
+  // the picked thing's ring: the card's text colour, the strongest contrast with its page in either theme
+  const ink = win.getComputedStyle(root).color || 'CanvasText';
   // the ways to show it: laid out in space as balls (the first, Roger, 24 Oct 2026), or the drawing lifted as it is
   const depthsOf = (): (DepthBy | null)[] => [null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
   let depths = depthsOf();
@@ -128,7 +131,8 @@ export async function openSpaceView(
     };
     const named = labelsOnScreen(space, matrix, width, height, chosen);
     const arrows = arrowsOnScreen(space, matrix, width, height);
-    paintSpaceLabels(ctx, named, paints, win.devicePixelRatio || 1, halo, arrows);
+    const ring = picked && pickedRing(space, picked, matrix, width, height);
+    paintSpaceLabels(ctx, named, paints, win.devicePixelRatio || 1, halo, arrows, ring && { ...ring, ink });
   };
   const again = () => {
     if (asked) return;
@@ -160,6 +164,7 @@ export async function openSpaceView(
     picked = picked && (space.blocks.find((b) => b.of === picked?.of) ?? null);
     pickedLine = pickedLine && (space.lines.find((l) => l.id === pickedLine?.id) ?? null);
     if (space.blocks.map((b) => b.of).join() !== was) orbit = orbitFit(space, width / height);
+    orbit = centredOn(orbit, picked);
     again();
   };
   if (!('marks' in from)) from.addEventListener(MARKED, marked);
@@ -218,7 +223,6 @@ export async function openSpaceView(
     };
     win.requestAnimationFrame(step);
   };
-  const middleOf = (b: Block): Vec3 => [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
   /** Flies to `block`: the camera looks at its top from near. */
   const flyTo = (block: Block) => {
     // a ball is looked at from its middle, a block from its top
@@ -238,6 +242,7 @@ export async function openSpaceView(
       depth = (depth + 1) % depths.length;
       space = spaceBy(depths[depth] ?? null);
       picked = picked && (space.blocks.find((b) => b.id === picked?.id) ?? null);
+      orbit = centredOn(orbit, picked);
       const label = depthWords();
       depthButton.setAttribute('aria-label', label);
       depthButton.querySelector<HTMLElement>('.thoughtknot-badge-text')?.setText(label);
@@ -320,14 +325,15 @@ export async function openSpaceView(
       e.timeStamp - lastTap.at < DOUBLE_TAP &&
       Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < TAP_SLOP * 4;
     lastTap = twice ? null : { at: e.timeStamp, x: e.clientX, y: e.clientY };
+    // the first click only picks and shows its details; another on what is picked turns the view to it (Roger, 24 Oct)
     if (twice && hit) flyTo(hit);
     else if (hit) {
+      if (picked?.id === hit.id) return turnTo(middleOf(hit));
       pick(hit);
-      turnTo(middleOf(hit));
       if (hit.of !== undefined) tell({ key: hit.of });
     } else if (link) {
+      if (pickedLine?.id === link.line.id) return turnTo(link.at);
       pickLine(link.line);
-      turnTo(link.at);
       if (link.line.of !== undefined && link.line.of !== '') tell({ link: Number(link.line.of) });
     } else pick(null);
   };

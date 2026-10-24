@@ -13,7 +13,7 @@ from graphspec.style.direct_curve import Curve, Placed
 WORDS_OFF = 0.55
 
 
-def _js_length(text: str) -> int:
+def js_length(text: str) -> int:
     """How long `text` is as JavaScript counts it, in UTF-16 units."""
     return len(text.encode("utf-16-le")) // 2
 
@@ -51,7 +51,7 @@ def word_spots(
         room = []
         for m in rows:
             wide = m.get("maxWidth")
-            half = (_js_length(m["text"]) * m["size"] * 0.5 if wide is None else wide) / 2 + 2
+            half = (js_length(m["text"]) * m["size"] * 0.5 if wide is None else wide) / 2 + 2
             room.append(
                 (
                     m["x"] - mx - half,

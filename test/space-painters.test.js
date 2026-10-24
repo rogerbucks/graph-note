@@ -167,6 +167,57 @@ window.pickInSpace = async (hideBob = false) => {
   root.remove();
   return { ...found, said, keys: [...keys] };
 };
+// the same view: a first click on a thing only picks it, and the view stays still. Another click on it, a moment
+// later, turns the view to face it, so it is then in the middle
+window.clickAgain = async () => {
+  // the view's size, as styles.css sets it, so it holds still while it is looked at
+  const sized = document.head.appendChild(document.createElement('style'));
+  sized.textContent = '.thoughtknot-space-view, .thoughtknot-space-view canvas { position: absolute; inset: 0; }';
+  const root = document.body.appendChild(document.createElement('div'));
+  root.style.cssText = 'position:relative;width:480px;height:360px';
+  const holder = root.appendChild(document.createElement('div'));
+  holder.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><g class="graph">
+    <g class="node" data-key="ada"><polygon fill="rgb(200, 240, 200)" points="20,20 120,20 120,60 20,60"/><text x="70" y="45" font-size="14">Ada</text></g>
+    <g class="node" data-key="bob"><polygon fill="rgb(200, 240, 200)" points="200,140 280,140 280,180 200,180"/><text x="240" y="165" font-size="14">Bob</text></g>
+    <g class="edge" data-link="0"><path fill="none" stroke="rgb(90, 90, 90)" d="M120,60 C150,90 180,120 200,140"/></g>
+  </g></svg>\`;
+  const told = [];
+  root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail.key));
+  const close = await openSpaceView(root, holder.querySelector('svg'), 'Team', () => {});
+  const view = root.querySelector('.thoughtknot-space-view');
+  const frames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  await frames();
+  const at = view.getBoundingClientRect();
+  const click = (x, y) => {
+    const now = view.getBoundingClientRect();
+    for (const type of ['pointerdown', 'pointerup'])
+      view.dispatchEvent(new PointerEvent(type, { clientX: now.left + x, clientY: now.top + y, pointerId: 1, bubbles: true }));
+  };
+  // a click on nothing, far off, between tries: it picks nothing, so no try is the second of a pair
+  const off = () => click(1, 1);
+  const hits = (x, y) => (off(), (told.length = 0), click(x, y), told[0]);
+  let hit = null;
+  for (let y = 4; y < at.height && !hit; y += 4)
+    for (let x = 4; x < at.width && !hit; x += 4) {
+      const key = hits(x, y);
+      if (key) hit = { x, y, key };
+    }
+  const middle = { x: Math.round(at.width / 2), y: Math.round(at.height / 2) };
+  const before = hits(middle.x, middle.y) === hit.key;
+  off();
+  click(hit.x, hit.y);
+  await wait(450);
+  const first = hits(hit.x, hit.y) === hit.key; // still there: the first click left the view where it was
+  click(hit.x, hit.y); // and with it picked, another click turns the view to it
+  await wait(450);
+  await frames();
+  const after = hits(middle.x, middle.y) === hit.key;
+  close?.();
+  root.remove();
+  sized.remove();
+  return { hit, before, first, after };
+};
 window.checkWebgpu = async () => {
   const canvas = document.body.appendChild(document.createElement('canvas'));
   const painter = await webgpuSpacePainter(canvas);
@@ -298,6 +349,16 @@ describe("the 3D view's painters, in a real browser", () => {
     const { ball, link } = JSON.parse(await browser.run('pickInSpace().then(JSON.stringify)'));
     assert.ok(ball && ['ada', 'bob'].includes(ball.key), `a ball opens its thing: ${JSON.stringify(ball)}`);
     assert.deepEqual(link, { link: 0 }, 'a link opens by its number, as a tap reads it');
+  });
+
+  // proves: space_pick_opens
+  test('a first click only picks a thing, and another click on it turns the view to it', options, async () => {
+    // Roger, 24 Oct 2026: "change the properties first, another click changes the current orientation angle"
+    const r = JSON.parse(await browser.run('clickAgain().then(JSON.stringify)'));
+    assert.ok(r.hit, 'a thing found on the screen');
+    assert.equal(r.before, false, 'it is not in the middle at first');
+    assert.equal(r.first, true, 'after the first click it is still where it was');
+    assert.equal(r.after, true, 'after another click on it, it is in the middle');
   });
 
   // proves: focus_space

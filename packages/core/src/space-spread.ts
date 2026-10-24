@@ -132,7 +132,8 @@ export function spreadSpace(marks: readonly DrawMark[], previous?: Spots<3>): { 
     // where the link leaves its first sphere and meets its last: found along the curve, by the spheres' radii
     const ra = radius.get(m.from) ?? 0,
       rb = radius.get(m.to) ?? 0;
-    const head = Math.min(ARROW_MOST, Math.max(ARROW_LEAST, length * ARROW_SHARE));
+    // never bigger than the ball it points to (Roger, 24 Oct 2026)
+    const head = Math.min(ARROW_MOST, rb, Math.max(ARROW_LEAST, length * ARROW_SHARE));
     const t0 = Math.min(0.45, ra / length),
       tTip = Math.max(0.55, 1 - rb / length),
       tEnd = Math.max(0.5, tTip - head / length);
