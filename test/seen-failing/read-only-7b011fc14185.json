@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/read-only.test.js",
+  "test": "a card in reading view shows its details and offers nothing that writes, while its block is edited elsewhere > by keyboard, Enter and Space on a box open its details read-only, and no key pressed in the card writes",
+  "seen_failing_first": false,
+  "evidence": "only adds Centre here to the controls a read-only card is expected to offer, which ce1f32c's code already shows"
+}

@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/types-radial.test.js",
+  "test": "a radial drawing around a chosen centre > is drawn even with a thing joined to nothing, two things, or a group (Roger, 24 Oct 2026)",
+  "seen_failing_first": false,
+  "evidence": "moved from types.test.js, where it was seen failing first in ce1f32c"
+}

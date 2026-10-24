@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/placement-embeds.test.js",
+  "test": "a graph embedded in another note is read-only wherever it is shown > embedded in a note in Live Preview: Source and no Edit, and its details change nothing, while its own block is edited",
+  "seen_failing_first": false,
+  "evidence": "only adds Centre here to the controls a read-only card is expected to offer, which ce1f32c's code already shows"
+}
