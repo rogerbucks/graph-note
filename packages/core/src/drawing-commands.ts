@@ -56,7 +56,8 @@ const ASIDE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>/g;
  * or script links. None for a plain drawing.
  */
 export function stateInSvg(svg: string): string[] {
-  const markup = svg.replace(ASIDE, '');
+  // only what lies between the asides is read; nothing here sanitises, it reports
+  const markup = svg.split(ASIDE).join(' ');
   const out: string[] = HOLDS.filter(([, re]) => re.test(markup)).map(([what]) => what);
   for (const m of markup.matchAll(DATA_ATTRIBUTE)) out.push(`attribute ${m[0].trim().slice(0, -1)}`);
   return out;
