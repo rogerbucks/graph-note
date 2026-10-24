@@ -1,5 +1,5 @@
-// The milestones of the GitHub mirror (spec §41, plan_milestones). requirements/waves.json lists the milestones, each
-// an outcome one step above the waves, and each wave names its own. The mirror makes them, due on the last day of their
+// The milestones of the GitHub mirror (spec §41, plan_milestones). requirements/waves.json makes each wave its own
+// milestone, or lists milestones above the waves, each wave naming one. The mirror makes them, due on the last day of their
 // waves, and files each requirement's issue under its wave's milestone. Every case runs against the in-memory stand-in
 // for gh, so no network is touched. The real plan is read too.
 import { test, describe } from 'node:test';
@@ -10,7 +10,13 @@ import { desiredState, readWorkstreams } from '../scripts/github-project-desired
 import { buildPlan } from '../scripts/github-project-plan.mjs';
 import { executePlan, readRemote } from '../scripts/github-project-gh.mjs';
 import { keepMilestones, planFiling, planMilestones } from '../scripts/github-project-milestones.mjs';
-import { MILESTONE_BANNER, WAVES_FILE, milestoneLines, readWaves } from '../scripts/github-project-waves.mjs';
+import {
+  EACH_WAVE,
+  MILESTONE_BANNER,
+  WAVES_FILE,
+  milestoneLines,
+  readWaves,
+} from '../scripts/github-project-waves.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WAVES, WORKSTREAMS } from './repository/github-project-fixture.js';
 import { read } from './repository/repo.js';
@@ -61,6 +67,21 @@ describe('the milestones of the waves file', () => {
       [(f) => (f.waves[0].milestone = 3), /milestone must be a milestone's title/],
     ];
     for (const [change, why] of cases) assert.throws(() => planOf(changed(change)), why);
+  });
+
+  test('made one for each wave of work, titled as the wave and about its workstreams, with none for a placeholder', () => {
+    const placeholder = { title: 'Later', start: '2026-12-01', end: '2026-12-02', estimate: true, workstreams: [] };
+    const plan = planOf({ ...WAVES, milestones: EACH_WAVE, waves: [...WAVES.waves, placeholder] });
+    assert.deepEqual(plan.milestones, [
+      { title: 'Wave 1 · Focus', about: 'Workstreams: W1 Focus, hover and untangle.' },
+      { title: 'Wave 2 · Slice end', about: 'Workstreams: S3 Slice end.' },
+    ]);
+    assert.deepEqual(
+      plan.waves.map((w) => w.milestone),
+      ['Wave 1 · Focus', 'Wave 2 · Slice end', null],
+    );
+    const named = { ...WAVES, milestones: EACH_WAVE, waves: [{ ...WAVES.waves[0], milestone: 'X' }, WAVES.waves[1]] };
+    assert.throws(() => planOf(named), /names a milestone, but each wave is its own/);
   });
 
   test('a file that lists none may not have a wave that names one, and a placeholder wave of no work needs none', () => {
@@ -199,8 +220,25 @@ describe('the milestones on GitHub', () => {
       return keepMilestones(gh.run, gh.run, REPO, desired, known, plan.milestoneOf, 3);
     };
     apply(gh, desiredState(board, WORKSTREAMS, [3, 4], readWaves(JSON.stringify(WAVES), WORKSTREAMS)));
-    assert.deepEqual(once(), { created: 2, updated: 0, filed: 3, left: 1 });
-    assert.deepEqual(once(), { created: 0, updated: 0, filed: 1, left: 0 });
+    assert.deepEqual(once(), { created: 2, updated: 0, filed: 3, left: 1, retired: 0 });
+    assert.deepEqual(once(), { created: 0, updated: 0, filed: 1, left: 0, retired: 0 });
+  });
+
+  test('one the mirror made that no wave holds any more is closed once its issues have moved, never deleted', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    const each = { ...WAVES, milestones: EACH_WAVE };
+    apply(gh, desiredWith(each));
+    assert.deepEqual(
+      gh.hub.milestones.map((m) => [m.title, m.state]),
+      [
+        ['Focus works', 'closed'],
+        ['Slice 3 done', 'closed'],
+        ['Wave 1 · Focus', 'open'],
+        ['Wave 2 · Slice end', 'open'],
+      ],
+    );
+    assert.equal(issueOf(gh, 'focus_link').milestone.title, 'Wave 1 · Focus');
   });
 
   test('refused by GitHub, they leave the issues and the project mirrored, with a warning', () => {
@@ -231,6 +269,9 @@ describe('the milestones on GitHub', () => {
       plan.update.map((u) => u.number),
       [2],
     );
+    const old = [{ number: 3, title: 'Old', description: `x\n\n${MILESTONE_BANNER}`, state: 'open' }];
+    const mine = [{ number: 4, title: 'Mine', description: 'a person’s', state: 'open' }];
+    assert.deepEqual(planMilestones(wanted, [...have, ...old, ...mine]).retire, [3]);
   });
 
   test('file an issue only where its milestone differs, and leave alone one the plan says nothing of', () => {
@@ -258,9 +299,14 @@ describe('the real plan’s milestones', () => {
   const plan = readWaves(read(WAVES_FILE), workstreams);
   const desired = desiredState(readBoard(read(REQUIREMENTS)), workstreams, [3, 4, 5, 6, 7, 8, 9, 10], plan);
 
-  test('are read without a fault, so every wave of work names one, and a wave added later must too', () => {
-    assert.ok(plan.milestones.length > 0);
-    assert.ok(plan.waves.filter((w) => w.workstreams.length).every((w) => w.milestone));
+  test('are one for each wave of work, so a wave added later gets its own with no hand work (Roger, 24 Oct 2026)', () => {
+    assert.equal(JSON.parse(read(WAVES_FILE)).milestones, EACH_WAVE);
+    const work = plan.waves.filter((w) => w.workstreams.length);
+    assert.deepEqual(
+      plan.milestones.map((m) => m.title),
+      work.map((w) => w.title),
+    );
+    assert.ok(work.every((w) => w.milestone === w.title));
   });
 
   test('give the Obsidian community release (R2) a milestone of its own, and are listed in the order they are due', () => {
