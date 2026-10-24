@@ -64,6 +64,15 @@ const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
 const { asAt, lensAsAt } = require('./mesh/as-at.js');
 const { afterTextMerge } = require('./mesh/after-text-merge.js');
 const { sameAs } = require('./mesh/same-as.js');
+const {
+  contextsOf,
+  contextGuesses,
+  comparable,
+  proposeSameAs,
+  sameAsAcross,
+  worldIn,
+  searchContexts,
+} = require('./mesh/contexts.js');
 const { inherited, instancesOf, typeOf } = require('./mesh/types-instances.js');
 
 // The API, its names in the order they have always had; test/graph-spec-check-api.test.mjs holds the list.
@@ -173,4 +182,11 @@ module.exports = {
   refreshCurrent: runs.refreshCurrent,
   altitudeIndex,
   searchIndex,
+  contextsOf,
+  contextGuesses,
+  comparable,
+  proposeSameAs,
+  sameAsAcross,
+  worldIn,
+  searchContexts,
 };

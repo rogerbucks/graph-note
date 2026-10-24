@@ -773,6 +773,17 @@
         "editInParts": [
           "value: (ix: MeshIndex, note: string, text: string, graph: string, key: string, change: (lines: string) => Edit) => Edit"
         ],
+        "EditPlan": [
+          "interface",
+          "affected: Array<'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule'>",
+          "coreChanged: boolean",
+          "dangling: Array<[string, string, string]>",
+          "gaps: Array<[string, string]>",
+          "graph: Graph",
+          "hidden: Array<[string, string]>",
+          "view: 'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule'",
+          "viewOnly: Array<[string, string]>"
+        ],
         "embeddedMarkdown": [
           "value: (note: string, heading?: string) => string"
         ],
@@ -1160,6 +1171,9 @@
         ],
         "GraphNames": [
           "type = Iterable<string> | ReadonlyMap<string, string>"
+        ],
+        "graphOf": [
+          "value: (nodes: Iterable<[string, Iterable<string>, Record<string, Value>]>, edges: Iterable<[string, string, string, Record<string, Value>?]>) => Graph"
         ],
         "graphOfBlock": [
           "value: (text: string) => string | null"
@@ -1741,6 +1755,9 @@
           "path?: string | undefined",
           "thing?: string | undefined",
           "view?: string | undefined"
+        ],
+        "loopsOf": [
+          "value: (ids: readonly string[], links: readonly [string, string][]) => string[][]"
         ],
         "makeList": [
           "value: (block: string, reading: NoteReading, graph: string, thing: string, key: string | null, shape: ListShape) => ListEdit"
@@ -2354,6 +2371,9 @@
         "placesFor": [
           "value: (dragged: string, boxes: readonly PlacedBox[], written?: readonly WrittenNudge[], centre?: string) => Landing[]"
         ],
+        "planEdit": [
+          "value: (views: ProcessViews, view: ProcessViewKind, edit: ProcessEdit) => EditPlan"
+        ],
         "playRefusal": [
           "value: (start: Start, moving: number) => string | null"
         ],
@@ -2522,6 +2542,62 @@
           "severity: 'error' | 'warning' | 'hint'",
           "span?: { line: number; character: number; end: number; } | undefined",
           "suggested?: string | undefined"
+        ],
+        "PROCESS_VIEW_LIMITS": [
+          "value: Readonly<Record<'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule', ReadonlyArray<ProcessFeature>>>"
+        ],
+        "PROCESS_VIEWS": [
+          "value: readonly ['state-machine', 'workflow', 'pipeline', 'event-flow', 'decision-table', 'petri-net', 'actor-model', 'schedule']"
+        ],
+        "ProcessCore": [
+          "interface",
+          "flags: Array<[string, string, string]>",
+          "graph: Graph",
+          "hash: string",
+          "view: Record<string, Record<string, Value>>"
+        ],
+        "processCoreOf": [
+          "value: (graph: Graph) => ProcessCore"
+        ],
+        "ProcessEdit": [
+          "interface",
+          "add?: Array<{ id: string; kind: string; props?: Record<string, Value>; }> | undefined",
+          "link?: Array<[string, string]> | undefined",
+          "remove?: Array<string> | undefined",
+          "set?: Array<{ id: string; props: Record<string, Value>; }> | undefined"
+        ],
+        "ProcessFeature": [
+          "type = 'parallel' | 'timing' | 'loops'"
+        ],
+        "processView": [
+          "value: (core: ProcessCore, kind: ProcessViewKind) => ProcessView"
+        ],
+        "ProcessView": [
+          "interface",
+          "cannot: ReadonlyArray<ProcessFeature>",
+          "core: string",
+          "incomplete: boolean",
+          "kind: 'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule'",
+          "links: Array<[string, string]>",
+          "nodes: Array<ProcessViewNode>"
+        ],
+        "ProcessViewKind": [
+          "type = 'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule'"
+        ],
+        "ProcessViewNode": [
+          "interface",
+          "hides: Array<string>",
+          "id: string",
+          "kind: string",
+          "marks: Array<string>"
+        ],
+        "ProcessViews": [
+          "class",
+          "static new (graph: Graph): ProcessViews",
+          "builds: number",
+          "core: ProcessCore",
+          "open: (kind: ProcessViewKind) => ProcessView",
+          "update: (graph: Graph) => boolean"
         ],
         "propertiesOf": [
           "value: (reading: NoteReading, graph: string, t: Target) => Property[]"
@@ -2808,6 +2884,9 @@
         ],
         "sampleExports": [
           "value: () => Record<string, ExportedData>"
+        ],
+        "saveEdit": [
+          "value: (views: ProcessViews, plan: EditPlan) => boolean"
         ],
         "sayWords": [
           "value: (entry: Words, values?: WordValues, language?: string) => string"
@@ -3983,7 +4062,10 @@
           "clustersOf: (graph: GraphSpecCheck.Graph, kind?: 'asserted' | 'found') => { clusters: GraphSpecCheck.Cluster[]; memberships: GraphSpecCheck.ClusterMembership[]; }",
           "COMMENT_FIX: string",
           "COMMENT_RULE: string",
+          "comparable: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, a: string, b: string) => boolean",
           "completeness: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }",
+          "contextGuesses: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, view?: { acrossContexts?: boolean; }, canRead?: (context: string) => boolean) => { name: string; things: string[]; across: boolean; }[]",
+          "contextsOf: (world: GraphSpecCheck.World, options?: { graph?: string; notes?: Record<string, string>; vault?: string; }) => GraphSpecCheck.Contexts",
           "coreOfEight: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.CoreOfEight",
           "currentOf: (graph: GraphSpecCheck.Graph, run: string) => string[]",
           "cycleView: (graph: GraphSpecCheck.Graph, how: 'hide' | 'highlight') => { shown: string[]; highlighted: string[]; }",
@@ -4014,6 +4096,7 @@
           "ProfileError: typeof GraphSpecCheck.ProfileError",
           "promoteTransition: (graph: GraphSpecCheck.Graph, from: string, to: string, id: string) => { remove: [string, string, string]; lines: string[]; }",
           "proposerWarnings: (world: GraphSpecCheck.World, judgementGraph: string) => string[]",
+          "proposeSameAs: (ctx: GraphSpecCheck.Contexts, from: { graph: string; thing: string; }, to: { graph: string; thing: string; }, by: { kind: string; name: string; }) => { status: 'write'; graph: string; text: string; across: boolean; } | { status: 'waiting'; for: 'person'; from: { graph: string; thing: string; }; to: { graph: string; thing: string; }; by: { kind: string; name: string; }; } | { status: 'refused'; why: 'not-a-name'; }",
           "quote: (s: string) => string",
           "readChange: (text: string) => GraphSpecCheck.ReadChange",
           "readings: (g: GraphSpecCheck.Graph, shared?: GraphSpecCheck.Graph) => Map<string, [string | undefined, string | undefined]>",
@@ -4022,8 +4105,10 @@
           "runLog: (graph: GraphSpecCheck.Graph, run: string) => GraphSpecCheck.RunEntry[]",
           "runningRuleOf: (graph: GraphSpecCheck.Graph, run: string) => { rule: string | null; from: 'run' | 'process' | 'none'; process_default: string | null; }",
           "sameAs: (world: GraphSpecCheck.World) => { ones: string[][]; unresolved: { graph: string; thing: string; ref: string; in: string; }[]; guesses: { name: string; things: string[]; }[]; }",
+          "sameAsAcross: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, context: string) => { from: string; to: string; contexts: [string, string]; }[]",
           "SCHEMA_LABELS: Array<string>",
           "schemaFor: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]",
+          "searchContexts: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, text: string, canRead?: (context: string) => boolean) => string[]",
           "searchIndex: (index: { entries: GraphSpecCheck.AltitudeEntry[]; hash: string; }, query?: { topic?: string; like?: string; lens?: string; level?: number; profile?: string; }) => { id: string; score: number; sort_key: number | null; contested: boolean; }[]",
           "secretsIn: (text: string) => string[]",
           "secretsInGraph: (g: GraphSpecCheck.Graph) => [string, string][]",
@@ -4037,7 +4122,8 @@
           "typeOf: (world: GraphSpecCheck.World, graph: string, key: string) => GraphSpecCheck.Placed | null",
           "withEntries: (graph: GraphSpecCheck.Graph, run: string, entries: GraphSpecCheck.RunEntry[]) => GraphSpecCheck.Graph",
           "word: (readings: Map<string, [string | undefined, string | undefined]>, type: string) => string",
-          "worldFromStore: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
+          "worldFromStore: (store: GraphSpecCheck.Store) => GraphSpecCheck.World",
+          "worldIn: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, context: string) => GraphSpecCheck.World"
         ],
         "afterTextMerge": [
           "value: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }"
@@ -4141,6 +4227,9 @@
         "COMMENT_RULE": [
           "value: string"
         ],
+        "comparable": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, a: string, b: string) => boolean"
+        ],
         "completeness": [
           "value: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }"
         ],
@@ -4157,16 +4246,34 @@
           "rule: string",
           "says: string"
         ],
+        "contextGuesses": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, view?: { acrossContexts?: boolean; }, canRead?: (context: string) => boolean) => { name: string; things: string[]; across: boolean; }[]"
+        ],
+        "ContextInfo": [
+          "interface",
+          "guessesAcross: boolean",
+          "kind: 'note' | 'client' | 'folder' | 'vault'"
+        ],
+        "Contexts": [
+          "interface",
+          "byGraph: Record<string, string>",
+          "contexts: Record<string, GraphSpecCheck.ContextInfo>",
+          "graph: string",
+          "vault: string"
+        ],
+        "contextsOf": [
+          "value: (world: GraphSpecCheck.World, options?: { graph?: string; notes?: Record<string, string>; vault?: string; }) => GraphSpecCheck.Contexts"
+        ],
         "coreOfEight": [
           "value: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.CoreOfEight"
         ],
         "CoreOfEight": [
           "interface",
-          "core: Record<string, Record<string, unknown>>",
+          "core: Record<string, Record<string, GraphSpecCheck.Value>>",
           "flags: Array<[code: string, id: string, detail: string]>",
           "kind: Record<string, string>",
           "kinds: Array<string>",
-          "view: Record<string, Record<string, unknown>>"
+          "view: Record<string, Record<string, GraphSpecCheck.Value>>"
         ],
         "currentOf": [
           "value: (graph: GraphSpecCheck.Graph, run: string) => string[]"
@@ -4190,7 +4297,7 @@
         ],
         "Graph": [
           "class",
-          "static new (): GraphSpecCheck.Graph",
+          "static new (nodes: Map<string, [Set<string>, Record<string, GraphSpecCheck.Value>]>, edges: GraphSpecCheck.Edge[]): GraphSpecCheck.Graph",
           "edges: Array<GraphSpecCheck.Edge>",
           "has: (id: string, label: string) => boolean",
           "inc: (id: string, type?: string) => GraphSpecCheck.Edge[]",
@@ -4347,6 +4454,9 @@
         "proposerWarnings": [
           "value: (world: GraphSpecCheck.World, judgementGraph: string) => string[]"
         ],
+        "proposeSameAs": [
+          "value: (ctx: GraphSpecCheck.Contexts, from: { graph: string; thing: string; }, to: { graph: string; thing: string; }, by: { kind: string; name: string; }) => { status: 'write'; graph: string; text: string; across: boolean; } | { status: 'waiting'; for: 'person'; from: { graph: string; thing: string; }; to: { graph: string; thing: string; }; by: { kind: string; name: string; }; } | { status: 'refused'; why: 'not-a-name'; }"
+        ],
         "quote": [
           "value: (s: string) => string"
         ],
@@ -4401,11 +4511,17 @@
         "sameAs": [
           "value: (world: GraphSpecCheck.World) => { ones: string[][]; unresolved: { graph: string; thing: string; ref: string; in: string; }[]; guesses: { name: string; things: string[]; }[]; }"
         ],
+        "sameAsAcross": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, context: string) => { from: string; to: string; contexts: [string, string]; }[]"
+        ],
         "SCHEMA_LABELS": [
           "value: Array<string>"
         ],
         "schemaFor": [
           "value: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]"
+        ],
+        "searchContexts": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, text: string, canRead?: (context: string) => boolean) => string[]"
         ],
         "searchIndex": [
           "value: (index: { entries: GraphSpecCheck.AltitudeEntry[]; hash: string; }, query?: { topic?: string; like?: string; lens?: string; level?: number; profile?: string; }) => { id: string; score: number; sort_key: number | null; contested: boolean; }[]"
@@ -4462,6 +4578,9 @@
         ],
         "worldFromStore": [
           "value: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
+        ],
+        "worldIn": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, context: string) => GraphSpecCheck.World"
         ]
       },
       "./src/graph-layout.js": {
