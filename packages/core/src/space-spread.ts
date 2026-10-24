@@ -16,6 +16,8 @@ import type { Block, SpaceArrow, SpaceLabel, SpaceLine, SpaceMarks, Vec3 } from 
 
 /** How many pixels of the space one unit of the layout is: about one link's length. */
 export const SPREAD_UNIT = 120;
+/** How much further apart cards are laid than balls, so a box-sized card leaves its links room to show. */
+const CARD_SPREAD = 2.2;
 /** A sphere's radius with no links, and how much it grows by the square root of its count of links. */
 const RADIUS_LEAST = 12,
   RADIUS_GROWTH = 7,
@@ -50,8 +52,13 @@ export function shapeOfMarks(marks: readonly DrawMark[]): GraphShape {
 /**
  * `marks` laid out in space as spheres and arrows, starting from `previous` spots where a thing has one. It gives
  * back the spots used too, so the next layout can start from them. Each sphere keeps the style of the box it stands for.
+ * With `cards`, each thing is a card the size of its box instead (space-cards.ts), its links running to its middle.
  */
-export function spreadSpace(marks: readonly DrawMark[], previous?: Spots<3>): { space: SpaceMarks; spots: Spots<3> } {
+export function spreadSpace(
+  marks: readonly DrawMark[],
+  previous?: Spots<3>,
+  cards = false,
+): { space: SpaceMarks; spots: Spots<3> } {
   const shape = shapeOfMarks(marks);
   const spots = FORCE_3D.place(shape, previous);
   const count = new Map<string, number>();
@@ -65,9 +72,10 @@ export function spreadSpace(marks: readonly DrawMark[], previous?: Spots<3>): { 
   for (const m of marks) {
     if (m.kind !== 'box' || m.of === undefined || done.has(m.of)) continue;
     done.add(m.of);
-    const [x, y, z] = spots.get(m.of) ?? [0, 0, 0];
-    const c: Vec3 = [x * SPREAD_UNIT, y * SPREAD_UNIT, z * SPREAD_UNIT],
-      r = radiusOf(count.get(m.of) ?? 0);
+    const [x, y, z] = spots.get(m.of) ?? [0, 0, 0],
+      unit = cards ? SPREAD_UNIT * CARD_SPREAD : SPREAD_UNIT;
+    const c: Vec3 = [x * unit, y * unit, z * unit],
+      r = cards ? Math.max(m.width, m.height) / 2 : radiusOf(count.get(m.of) ?? 0);
     centre.set(m.of, c);
     radius.set(m.of, r);
     const block: Block = {
@@ -82,6 +90,7 @@ export function spreadSpace(marks: readonly DrawMark[], previous?: Spots<3>): { 
       tall: 2 * r,
     };
     if (m.name !== undefined) block.name = m.name;
+    if (cards) block.card = { width: m.width, height: m.height };
     blocks.push(block);
   }
   // a thing's name is the words its label mark says, else its own name
@@ -130,10 +139,10 @@ export function spreadSpace(marks: readonly DrawMark[], previous?: Spots<3>): { 
     const curve = (t: number): Vec3 =>
       add(add(scale(a, (1 - t) * (1 - t)), scale(mid, 2 * t * (1 - t))), scale(b, t * t));
     // where the link leaves its first sphere and meets its last: found along the curve, by the spheres' radii
-    const ra = radius.get(m.from) ?? 0,
-      rb = radius.get(m.to) ?? 0;
+    const ra = cards ? 0 : (radius.get(m.from) ?? 0),
+      rb = cards ? 0 : (radius.get(m.to) ?? 0);
     // never bigger than the ball it points to (Roger, 24 Oct 2026)
-    const head = Math.min(ARROW_MOST, rb, Math.max(ARROW_LEAST, length * ARROW_SHARE));
+    const head = Math.min(ARROW_MOST, cards ? ARROW_MOST : rb, Math.max(ARROW_LEAST, length * ARROW_SHARE));
     const t0 = Math.min(0.45, ra / length),
       tTip = Math.max(0.55, 1 - rb / length),
       tEnd = Math.max(0.5, tTip - head / length);
@@ -148,6 +157,7 @@ export function spreadSpace(marks: readonly DrawMark[], previous?: Spots<3>): { 
       labels.push({ id: `${m.id}\nwords`, style: m.style, at: curve(0.5), text: m.name, size: WORDS_SIZE, link: m.id });
   }
   const space: SpaceMarks = { blocks, lines, labels, arrows, round: true, ...boundsOf(blocks, lines, labels) };
+  if (cards) space.cards = true;
   return { space, spots };
 }
 

@@ -30,8 +30,8 @@ export const READABLE_LEAST = 11,
   READABLE_MOST = 22;
 /** The size of the picked thing's name, at least. */
 const PICKED_LEAST = 14;
-/** The longest name painted whole, in letters: a longer one ends in "…". */
-const LETTERS_MOST = 32;
+/** The longest name painted whole, in letters, as the shown-text rule keeps it: a longer one ends in "…". */
+const LETTERS_MOST = 80;
 /** How wide a letter is, about, as a share of its size: enough to keep names apart without measuring them. */
 const LETTER_WIDTH = 0.56;
 /** The space kept around each name, in pixels, so neighbours do not touch. */

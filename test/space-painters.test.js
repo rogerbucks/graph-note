@@ -113,7 +113,7 @@ window.readSvg = (marked = false) => {
     <g class="edge" id="edge1"><title>ada&#45;&gt;bob</title><path fill="none" stroke="rgb(90, 90, 90)" d="M70,60 C100,100 160,140 190,150"/><polygon points="186,144 196,151 185,154"/><text x="130" y="110" font-size="10">KNOWS</text></g>
     <g class="edge" id="edge4"><title>cy&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M255,40 C200,40 150,40 120,40"/><polygon points="252,36 262,40 252,44"/></g>
     <g class="edge" id="edge2"><title>bob:w&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M190,150 C160,140 100,100 70,60"/></g>
-    <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="40" font-size="14" fill="rgb(10, 10, 10)">Cy</text></g>
+    <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="34" font-size="14" fill="rgb(10, 10, 10)">Cy</text><text x="270" y="48" font-size="14" fill="rgb(10, 10, 10)">Young</text></g>
     <g class="edge" id="edge3" data-link="2"><path fill="none" stroke="rgb(90, 90, 90)" d="M232,131 C240,100 260,80 268,52"/></g>
   </g></svg>\`;
   if (marked) {
@@ -336,6 +336,8 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.equal(byId.get('l:bob').size, 14);
     // the plugin's own drawing names a thing by data-key, not by a title, and its links have no title
     assert.equal(byId.get('t:cy')?.name, 'Person: Cy', 'a thing is said aloud as its card says it');
+    // a long name is cut into rows of the same size: the label holds the whole name (Roger, 24 Oct 2026)
+    assert.equal(byId.get('l:cy').text, 'Cy Young');
     const untitled = byId.get('e:edge3');
     assert.deepEqual(
       [untitled.from, untitled.to],
