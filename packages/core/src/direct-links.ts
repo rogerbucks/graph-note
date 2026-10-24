@@ -16,6 +16,8 @@ import { WORDS_OFF, wordSpots } from './direct-words.ts';
 
 /** How much room a link keeps from a box it passes, in pixels. */
 export const CLEARANCE = 10;
+/** The room kept round a line or words at the edge of the drawing, in pixels. */
+const EDGE = 2;
 /** The room kept between two boxes pushed apart, in pixels. */
 const BOX_GAP = 12;
 /** The most rounds of moving boxes off links and apart again. */
@@ -356,13 +358,22 @@ function grown(laid: LaidMarks): LaidMarks {
     y0 = 0,
     x1 = laid.space.width,
     y1 = laid.space.height;
+  const take = (ax: number, ay: number, bx: number, by: number) => {
+    x0 = Math.min(x0, ax);
+    y0 = Math.min(y0, ay);
+    x1 = Math.max(x1, bx);
+    y1 = Math.max(y1, by);
+  };
+  // every part, so a curve bowed past the edge is never cut off (Roger, 24 Oct 2026). A curve lies inside its points
   for (const m of laid.marks) {
     if (m.id === 'background') continue;
-    if (m.kind === 'box' || m.kind === 'group') {
-      x0 = Math.min(x0, m.x);
-      y0 = Math.min(y0, m.y);
-      x1 = Math.max(x1, m.x + m.width);
-      y1 = Math.max(y1, m.y + m.height);
+    if (m.kind === 'box' || m.kind === 'group') take(m.x, m.y, m.x + m.width, m.y + m.height);
+    else if (m.kind === 'link') for (const [x, y] of m.points) take(x - EDGE, y - EDGE, x + EDGE, y + EDGE);
+    else if (m.kind === 'arrowhead') take(m.x - m.size, m.y - m.size, m.x + m.size, m.y + m.size);
+    else if (m.kind === 'label') {
+      const wide = m.maxWidth ?? m.text.length * m.size * 0.5;
+      const left = m.anchor === 'start' ? m.x : m.anchor === 'end' ? m.x - wide : m.x - wide / 2;
+      take(left - EDGE, m.y - m.size, left + wide + EDGE, m.y + m.size * 0.3);
     }
   }
   if (x0 >= 0 && y0 >= 0 && x1 <= laid.space.width && y1 <= laid.space.height) return laid;

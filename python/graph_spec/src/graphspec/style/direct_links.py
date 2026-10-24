@@ -16,10 +16,12 @@ import math
 from typing import Any
 
 from graphspec.style.direct_curve import Curve, Placed, curve_of, hypot
-from graphspec.style.direct_words import WORDS_OFF, word_spots
+from graphspec.style.direct_words import WORDS_OFF, js_length, word_spots
 
 # How much room a link keeps from a box it passes, in pixels.
 CLEARANCE = 10
+# The room kept round a line or words at the edge of the drawing, in pixels.
+EDGE = 2
 # The room kept between two boxes pushed apart, in pixels.
 BOX_GAP = 12
 # The most rounds of moving boxes off links and apart again.
@@ -293,13 +295,37 @@ def _shifted(m: Mark, dx: float, dy: float) -> Mark:
 
 
 def _grown(laid: dict[str, Any]) -> dict[str, Any]:
-    """`laid` with its space grown to hold every mark, should a box have moved past its edge."""
-    x0, y0 = 0, 0
-    x1, y1 = laid["space"]["width"], laid["space"]["height"]
+    """`laid` with its space grown to hold every mark, should one have moved past its edge: every
+    part, so a curve bowed past the edge is never cut off. A curve lies inside its points."""
+    edges = [0.0, 0.0, laid["space"]["width"], laid["space"]["height"]]
+
+    def take(ax: float, ay: float, bx: float, by: float) -> None:
+        edges[:] = [min(edges[0], ax), min(edges[1], ay), max(edges[2], bx), max(edges[3], by)]
+
     for m in laid["marks"]:
-        if m["id"] != "background" and m["kind"] in ("box", "group"):
-            x0, y0 = min(x0, m["x"]), min(y0, m["y"])
-            x1, y1 = max(x1, m["x"] + m["width"]), max(y1, m["y"] + m["height"])
+        kind = m["kind"]
+        if m["id"] == "background":
+            continue
+        if kind in ("box", "group"):
+            take(m["x"], m["y"], m["x"] + m["width"], m["y"] + m["height"])
+        elif kind == "link":
+            for x, y in m["points"]:
+                take(x - EDGE, y - EDGE, x + EDGE, y + EDGE)
+        elif kind == "arrowhead":
+            take(m["x"] - m["size"], m["y"] - m["size"], m["x"] + m["size"], m["y"] + m["size"])
+        elif kind == "label":
+            wide = m.get("maxWidth")
+            wide = js_length(m["text"]) * m["size"] * 0.5 if wide is None else wide
+            anchor = m.get("anchor")
+            left = (
+                m["x"]
+                if anchor == "start"
+                else m["x"] - wide
+                if anchor == "end"
+                else m["x"] - wide / 2
+            )
+            take(left - EDGE, m["y"] - m["size"], left + wide + EDGE, m["y"] + m["size"] * 0.3)
+    x0, y0, x1, y1 = edges
     if x0 >= 0 and y0 >= 0 and x1 <= laid["space"]["width"] and y1 <= laid["space"]["height"]:
         return laid
     space = {"width": x1 - x0, "height": y1 - y0}
