@@ -1,7 +1,7 @@
 // How a card's drawing is worked by pointer, wheel and keyboard (spec §3, §25). Each event is passed to the core's
 // Zoom, which decides. A tap on or near a box or link opens it, and a tap again in the same place the next of them. A
 // tap on empty space clears the selection. A box pressed with a mouse or pen and dragged moves it, and so does M on a
-// box (§6). It also covers the highlight under the pointer and with the keyboard focus. The details sheet is placed
+// box (§6). A right-click on a box, or the menu key on it, opens its menu (§15, radial_centre_menu). It also covers the highlight under the pointer and with the keyboard focus. The details sheet is placed
 // again as the window and the
 // note move. The card (graph-view.ts) binds these once it has built its parts.
 import type { Lifecycle } from '../lifecycle';
@@ -19,7 +19,10 @@ import { onPointer } from './selection-pointer';
 import { onImageControl } from './animated-images';
 import { onMiniMap } from './mini-map';
 import type { QuickInfo } from './quick-info';
-import { foldAt, targetAt, targetOf } from './taps';
+import { boxIn, foldAt, targetAt, targetOf } from './taps';
+import { ThingMenu } from './thing-menu';
+import type { MenuItem } from './thing-menu';
+import { word } from '@thoughtknot/core';
 import type { Taps, Target } from './taps';
 import { SPACE_OPEN } from './space-view-panel';
 
@@ -78,6 +81,19 @@ export function bindViewportEvents(host: ViewportHost): void {
           .find((g) => g.getAttribute('data-key') === key)
           ?.focus({ preventScroll: true });
     };
+  // a thing's menu: what can be done with it from here, opened by a right-click or the menu key (radial_centre_menu)
+  const menu = new ThingMenu(card, host.root);
+  const menuOf = (key: string): MenuItem[] => {
+    const d = host.o?.diagram;
+    return d?.canCentre?.(key) ? [{ text: word('details.centre'), run: () => d.putCentre?.(key) }] : [];
+  };
+  const openMenu = (key: string, at: { x: number; y: number }): boolean => {
+    const box = svg ? boxIn(svg, key) : undefined;
+    host.info.hide();
+    return menu.show(at, host.o?.diagram?.textOf?.(key) ?? key, menuOf(key), (box as HTMLElement | undefined) ?? null);
+  };
+  /** How the last press came: a finger held on a box opens its tooltip and picks it up, never the menu (§24, §6). */
+  let lastPointer = 'mouse';
   let boxDown: { id: number; x: number; y: number; target: Target; touch: boolean } | null = null;
   /** A press on empty space: if it lifts where it came down, it is a tap there, which clears the focus (§25). */
   let emptyDown: { id: number; x: number; y: number } | null = null;
@@ -105,6 +121,8 @@ export function bindViewportEvents(host: ViewportHost): void {
   card.registerDomEvent(vp.doc, 'scroll', () => details.moved(false), { capture: true, passive: true });
   card.registerDomEvent(vp, 'pointerdown', (e: PointerEvent) => {
     if (ownButton(e.target)) return; // the arrow to the selection, an image's control: buttons of their own (§25, §18)
+    lastPointer = e.pointerType || 'mouse';
+    if (e.button === 2) return; // a right-click opens a menu: it neither selects nor pans
     const target = targetAt(e.target),
       p = point(e),
       near = nearTo(p);
@@ -140,7 +158,7 @@ export function bindViewportEvents(host: ViewportHost): void {
     use(e, { kind: 'move', id: e.pointerId, ...point(e) });
   });
   card.registerDomEvent(vp, 'pointerup', (e: PointerEvent) => {
-    if (ownButton(e.target)) return;
+    if (ownButton(e.target) || e.button === 2) return;
     const p = point(e);
     use(e, { kind: 'up', id: e.pointerId, ...p, time: e.timeStamp ?? 0 });
     // a box dragged and let go is moved, never opened as a tap (§6)
@@ -221,6 +239,19 @@ export function bindViewportEvents(host: ViewportHost): void {
     },
     { passive: false },
   );
+  // a right-click on a box opens its menu, in place of the host's, when there is something in it (radial_centre_menu)
+  card.registerDomEvent(vp, 'contextmenu', (e: MouseEvent) => {
+    // the menu key opened it already: some systems send a contextmenu after that key too, which must not open it again
+    if (menu.open) {
+      e.preventDefault();
+      return;
+    }
+    const target = targetAt(e.target);
+    if (lastPointer === 'touch' || !target || !('key' in target)) return;
+    if (!openMenu(target.key, { x: e.clientX, y: e.clientY })) return;
+    e.preventDefault();
+    e.stopPropagation();
+  });
   // a double click on or near a box or link only selects it, as its two clicks did; only empty space zooms (§3)
   card.registerDomEvent(vp, 'dblclick', (e: MouseEvent) => {
     if (ownButton(e.target)) return;
@@ -259,6 +290,13 @@ export function bindViewportEvents(host: ViewportHost): void {
     const c = e.key === 'c' || e.key === 'C';
     if (target && 'key' in target && plain && c && host.o?.diagram?.putCentre?.(target.key)) {
       e.preventDefault();
+      return;
+    }
+    // the menu key, or Shift+F10, on a box opens its menu beside it (radial_centre_menu)
+    const menuKey = e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey && plain);
+    if (target && 'key' in target && menuKey) {
+      const r = (e.target as Element).getBoundingClientRect();
+      if (openMenu(target.key, { x: r.left + r.width / 2, y: r.top + r.height / 2 })) e.preventDefault();
       return;
     }
     // Enter or Space on a fold's stub or box opens it (§25)
