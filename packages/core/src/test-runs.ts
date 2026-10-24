@@ -115,6 +115,8 @@ function plus(base: Graph, nodes: [string, Set<string>, Record<string, Value>][]
 interface Kept {
   entries: RunEntry[];
   overlay: Map<string, string>;
+  /** The inputs as they were, before a stub's result was read into them. */
+  inputs: Record<string, Value>;
   pause: RunPause;
 }
 
@@ -161,7 +163,9 @@ export class TestRun {
     }
     const start = this.#startState(first);
     if (start !== null) this.#entries = gs.enterState(this.#withRun(first), this.id, start);
-    this.#kept = [{ entries: this.#entries, overlay: new Map(), pause: this.#pause(null, [], [], []) }];
+    this.#kept = [
+      { entries: this.#entries, overlay: new Map(), inputs: { ...this.inputs }, pause: this.#pause(null, [], [], []) },
+    ];
   }
 
   /** The Run thing: flagged as a test, with its source and, when it opted in, that it may change certainty. */
@@ -254,17 +258,20 @@ export class TestRun {
     const certainty = this.#certaintyOf(g, t);
     const stubbed = this.#stub(g, t);
     const pause = this.#pause(chosen, tried, certainty, stubbed);
-    this.#kept.push({ entries: this.#entries, overlay: new Map(this.#overlay), pause });
+    this.#kept.push({ entries: this.#entries, overlay: new Map(this.#overlay), inputs: { ...this.inputs }, pause });
     return pause;
   }
 
-  /** Steps back one transition, to the stop before it, undoing any certainty it applied. */
+  /** Steps back one transition, to the stop before it, undoing any certainty it applied and any stub's inputs. */
   back(): RunPause {
     if (this.#ended) this.#ended = null;
     else if (this.#kept.length > 1) this.#kept.pop();
     const k = this.#kept.at(-1) as Kept;
     this.#entries = k.entries;
     this.#overlay = new Map(k.overlay);
+    // the inputs are read-only as a field, so their contents go back as they were
+    for (const key of Object.keys(this.inputs)) delete this.inputs[key];
+    Object.assign(this.inputs, k.inputs);
     return k.pause;
   }
 

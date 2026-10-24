@@ -29,3 +29,17 @@ test('a side effect with no stub given is stubbed with nothing', () => {
   assert.deepEqual(run.step().stubbed, ['send_money']);
   assert.deepEqual(run.inputs, { amount: 50 });
 });
+
+test('a step back undoes what a stub read into the inputs', () => {
+  const g = graphOf(REFUND);
+  const run = new TestRun(() => g, {
+    inputs: { amount: 50 },
+    stubs: { send_money: () => ({ amount: 500, sent: true }) },
+  });
+  run.step();
+  const first = run.step();
+  assert.deepEqual(run.inputs, { amount: 500, sent: true });
+  run.back();
+  assert.deepEqual(run.inputs, { amount: 50 }, 'back to the inputs before the stub ran');
+  assert.deepEqual(run.step().transition, first.transition, 'so the same transition is taken again');
+});
