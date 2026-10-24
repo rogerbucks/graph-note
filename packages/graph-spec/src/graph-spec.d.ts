@@ -284,6 +284,24 @@ declare namespace GraphSpecCheck {
   function clusterCycles(graph: Graph): string[][];
   /** What a view shows with a graph's cycles hidden or highlighted. */
   function cycleView(graph: Graph, how: 'hide' | 'highlight'): { shown: string[]; highlighted: string[] };
+  /** One thing in the altitude and topic index (editor spec §32). */
+  interface AltitudeEntry {
+    id: string;
+    tags: string[];
+    /** Each lens or profile that places it, and the level. */
+    altitudes: [string, number][];
+    profiles: string[];
+    contested: boolean;
+    /** Made from its certainty words; null when it has none. */
+    sort_key: number | null;
+  }
+  /** The index of a graph, derived from it, with the hash of its entries. */
+  function altitudeIndex(graph: Graph): { entries: AltitudeEntry[]; hash: string };
+  /** A search of the index, ranked by certainty sort key, then by how alike, then by id. */
+  function searchIndex(
+    index: { entries: AltitudeEntry[]; hash: string },
+    query?: { topic?: string; like?: string; lens?: string; level?: number; profile?: string },
+  ): { id: string; score: number; sort_key: number | null; contested: boolean }[];
 
   /** A claim as a person ranks it (editor spec §28): its words, never a number typed in. */
   interface MeshClaim {
@@ -367,6 +385,31 @@ declare namespace GraphSpecCheck {
     /** True only when the join left nothing in dispute. */
     settled: boolean;
   };
+
+  /** A thing named across the world's graphs. */
+  interface Placed {
+    graph: string;
+    key: string;
+  }
+  /**
+   * The things the world's SAME_AS links make one, as sorted `graph/key` names (editor spec §27, ARCH-6). Also the Refs
+   * that name nothing, and the names held in two graphs with no link between them, which stay a guess.
+   */
+  function sameAs(world: World): {
+    ones: string[][];
+    unresolved: { graph: string; thing: string; ref: string; in: string }[];
+    guesses: { name: string; things: string[] }[];
+  };
+  /** The type a thing is an instance of, through INSTANCE_OF, here or through a Ref; null when it has none. */
+  function typeOf(world: World, graph: string, key: string): Placed | null;
+  /** The instances of a type, in every graph, sorted by graph, then key. */
+  function instancesOf(world: World, graph: string, key: string): Placed[];
+  /** A thing's own properties and those it inherits from its types, the nearest winning; `from` says whose each is. */
+  function inherited(
+    world: World,
+    graph: string,
+    key: string,
+  ): { props: Record<string, Value>; from: Record<string, string> };
 
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];

@@ -116,20 +116,39 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   within a quarter of the read limits, and gives the store the same rows as a whole reading would.
 - `store-drawing.ts` — a too-big note's graphs from the store, as the overview draws them (scale_in_parts). The note is
   read a part at a time, with the page's own work done between parts. Rows built from older text are never drawn.
-  `editInParts` edits only the lines that wrote a thing, in the note's text. The store then reads the changed note again.
-  `storedStyle` reads the note's style blocks and checks them against the graph in the store.
+  - `editInParts` edits only the lines that wrote a thing, in the note's text. The store then reads the changed note
+    again. `setInParts` sets one property that way, checked as a property field checks it.
+  - `storedStyle` reads the note's style blocks and checks them against the graph in the store.
 - `mesh-index-backends.ts` — where the rows are kept: in memory, or in SQLite inside the process through an engine the
   host hands in (sql.js). No server and no JVM (embedded_backends).
 
 - `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
   change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
   source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
+#### Renames, schema moves and type suggestions
+
 - `rename-across.ts` — a thing renamed in every note that names it (editor spec §27, rename_follows_notes; NEURO-10).
   `renameAcross` gives each note's new text, as one bundle a person applies. A note it cannot read, or a name already
   taken, is listed with why. Only the names change.
 - `schema-version-moves.ts` — a graph moved to another version of its shared schema (editor spec §27,
   schema_version_moves; ARCH-4). `schemaMove` gives the block with its graph line changed, and what the new version adds
   and drops. A person applies it; reading never moves a graph. `schemaVersions` lists the versions there are.
+- `type-suggestion.ts` — a change to a type that most of its instances suggest (editor spec §27, type_suggestion_bundle).
+  `typeSuggestions` offers it as a labelled proposal, and `withSuggestion` writes it into the note as a change set. A
+  person applies it in one step and undoes it in one step. A type that grants permissions, or is kept as history, is
+  marked for a closer look.
+- `index-mesh.ts` — the mesh's part of the core's entry, kept apart so `index.ts` stays short.
+
+#### Altitude
+
+- `altitude-index.ts` — the altitude and topic index of a note's graphs (editor spec §32, altitude_topic_index). It is
+  derived from the text, so it is built again alike, and its searches rank by the certainty sort key.
+- `sibling-drafts.ts` — drafts of a thing at the bands next to its own, from the AI feature, as proposals (editor spec
+  §32, sibling_drafts). An accepted correction joins its band's examples.
+- `browsing.ts` — moves between altitudes, logged as passing and faded. Only a descent with a consequence is kept as a
+  link (editor spec §32, browsing_leaves_no_links).
+- `phase-altitude.ts` — a transition that changes the view's depth, as a part that can be swapped or removed (editor
+  spec §32, phase_shifts_altitude).
 
 #### Deferred things
 
@@ -1491,6 +1510,22 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
 - `ai-answer.ts` — `proposalFrom`: the changes made into a proposal from the model. It is against the state of the graph
   that was sent, naming the send's record. `noteWithProposal` gives the note with its change set written after the
   graph's last block, the graph untouched.
+
+### Permissions (spec §39)
+
+- `permissions.ts` — who may read or write a thing through a surface the engine serves.
+  - The permissions are graph data, kept outside the notes. A role is a `Role`, a person a `Person` linked to it by
+    HAS_ROLE. Each role holds its own `GrantRule`s; roles never inherit.
+  - A rule matches by a tag, a path or folder, a least likelihood, or all of them. One that names none matches nothing.
+  - A `Grant` gives access only while it, its rule and the person's role are asserted. The owner needs none.
+  - An inferred grant is listed (`inferredGrants`) and gives nothing. A contested or withdrawn one stops at once.
+  - `readGuarded` checks before it opens a note, so a refused note is never read. `whoCan` and `disputes` are lenses.
+- `permissions-change.ts` — changing and joining the permissions.
+  - `previewChange` lists what a change would grant or withdraw, changing nothing. `confirmChange` applies it only for
+    the owner, and only while the preview still holds.
+  - A rule never asserts by itself: `proposedGrants` lists its matches as inferred, so certainty never opens anything.
+  - `joinPermissions` marks a grant contested when joined graphs disagree, unless it is the owner's. Only an own graph
+    names the owner, and an untrusted one is left out.
 
 ### Settings (spec §21)
 

@@ -61,10 +61,13 @@ const REGENERATING = [
   'node scripts/fixed-sleeps.mjs --tighten',
 ];
 
-test('AGENTS.md lists the rules for a pull request: merge commits, the regenerating commands, sign-off and approval', () => {
-  const agents = read('AGENTS.md');
+test('AGENTS.md and its handbook list the rules for a pull request: merge commits, the regenerating commands, sign-off and approval', () => {
+  const short = read('AGENTS.md');
+  assert.match(short, /merge commits only, never squash/i);
+  assert.match(short, /sign off as Roger/i);
+  const agents = read('docs/agents/HANDBOOK.md');
   const at = agents.indexOf('\n## Before you open a pull request\n');
-  assert.ok(at !== -1, 'AGENTS.md has a "Before you open a pull request" section');
+  assert.ok(at !== -1, 'the handbook has a "Before you open a pull request" section');
   const list = agents.slice(at, agents.indexOf('\n## ', at + 1));
   assert.match(list, /merge commit/i);
   assert.match(list, /never squash/i);

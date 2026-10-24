@@ -104,6 +104,14 @@ const NAMES = [
   'lensAsAt',
   // a text merge checked by the meaning-level join (editor spec §30)
   'afterTextMerge',
+  // which things in different graphs are one, and lasting types with their instances (editor spec §27)
+  'sameAs',
+  'typeOf',
+  'instancesOf',
+  'inherited',
+  // the altitude and topic index (editor spec §32)
+  'altitudeIndex',
+  'searchIndex',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

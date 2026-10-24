@@ -78,4 +78,7 @@ tab's calls. `test/host-adapters.test.js` runs the host contract in the tab's pa
 `test/ask-ai.test.js` asks a stand-in language model, with the person's answers scripted in turn.
 
 To try it in VS Code itself, build it and open this folder in VS Code. Then run **Debug: Start Debugging** with an
-extension host, or package it with `npx @vscode/vsce package` and install the `.vsix`.
+extension host. Or install a nightly's `.vsix` with **Extensions: Install from VSIX...**.
+
+To make that `.vsix` yourself, run `node scripts/vscode-release.mjs --version 0.7.2 --out .`. It builds the extension
+and packs it with no packaging tool installed. `test/vscode-release.test.js` checks what it holds.

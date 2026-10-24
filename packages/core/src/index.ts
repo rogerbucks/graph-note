@@ -368,22 +368,11 @@ export { TextHistory, type Change, type TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';
 export type { Landing, PlacedBox, Side, WrittenNudge } from './box-drag.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
-export { MeshIndex, memoryBackend, noteRows, PAGE_MOST, sqliteBackend } from './mesh-index.ts';
-export { editInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
-export type {
-  BetweenRow,
-  Found as MeshFound,
-  GroupRow,
-  LinkRow,
-  MeshBackend,
-  NoteRows,
-  Page,
-  Span as SourceSpan,
-  SqlEngine,
-  ThingRow,
-} from './mesh-index.ts';
-export { MeshHistory, type LogEntry, type LogKind } from './mesh-history.ts';
-export { renameAcross, type NotRewritten, type RenameAcross } from './rename-across.ts';
-export { schemaMove, schemaVersions, type SchemaMove } from './schema-version-moves.ts';
-export { CERTAINTY_LEVELS, CERTAINTY_LOOKS, certaintyLevel } from './certainty-drawn.ts';
-export type { CertaintyLevel, CertaintyLook } from './certainty-drawn.ts';
+export { editInParts, setInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
+export * from './index-mesh.ts';
+export { altitudeIndexOf, searchAltitude, type NoteAltitudeIndex } from './altitude-index.ts';
+export { acceptDraft, draftRequests, neighbourBands, siblingDrafts } from './sibling-drafts.ts';
+export type { BandCriteria, DraftProposal, DraftRequest } from './sibling-drafts.ts';
+export { AltitudeTrail, FADE_AFTER, type AltitudeMove, type Consequence, type KeptDescent } from './browsing.ts';
+export { transitionAltitude, walkTransition } from './phase-altitude.ts';
+export type { PhaseAltitudePart, PhaseView, WalkedTransition } from './phase-altitude.ts';
