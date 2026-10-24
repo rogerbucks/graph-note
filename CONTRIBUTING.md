@@ -860,6 +860,12 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/wiki-workflow.test.js` — the workflow that makes the wiki. It is woken by a push to main or a stable release.
   The pages are made with read access only, and the one job that writes runs no code of the repository.
 
+### The wave nightly and the jobs that write
+
+- `test/wave-nightly-workflow.test.js` — the build made when a wave ends. A pull request labelled `wave-done` runs the
+  nightly when it merges. A gate first checks the board: every item of that wave must be Done and proved.
+- `test/workflow-writers.test.js` — which workflow jobs may write to the repository, and what else each may touch.
+
 ### The nightly build, the home page and test files
 
 - `test/nightly-workflow.test.js` — the nightly pre-release, run each night and by hand. It is built only when main
