@@ -8,6 +8,7 @@
 import { textVersion, withoutColorMix, word } from '@thoughtknot/core';
 import type { Drawn, Folding, GraphDrawing } from '@thoughtknot/core';
 import { boxLabel } from './suggested-name';
+import { markCertainty } from './certainty';
 import { markParked } from './parked';
 import { markCallouts } from './note-callouts';
 import { markLinks } from '../links/link-marks';
@@ -136,6 +137,7 @@ function decorate(
   }
   markFolds(svg, plan, textOf);
   markParked(svg, boxes); // things parked for later: dashed, with a later mark (spec §5)
+  markCertainty(svg, boxes); // how sure each thing is: line weight, dash and a mark, never colour alone (§36)
   if (o?.links) markLinks(svg, o.reading, o.graph, o.links); // links shown as links, attachments counted (§18)
   if (o?.callouts && d) markCallouts(svg, drawn, d); // the notes, as callouts, over the finished layout (§24)
 }

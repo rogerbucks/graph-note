@@ -5,7 +5,8 @@
 // What height means is picked by `DepthBy`:
 // - `group`: a group inside another stands one floor higher, and each thing stands on its group, like a building.
 // - `size`: each block is as tall as a number says, such as a group's count of things, like a city seen from the air.
-// Links run between the tops of the blocks they join, rising in an arc. Labels float just above their block.
+// Links run between the tops of the blocks they join, rising in an arc. Labels float just above their block, and
+// space-labels.ts picks which to paint.
 //
 // The orbit camera lives here too, as plain numbers: where it looks, how far away, its turn and its tilt. So the
 // painters (display/graph-view/space-painter.ts) only paint, and every sum can be tested without a screen.
@@ -46,6 +47,8 @@ export interface SpaceLabel {
   at: Vec3;
   text: string;
   size: number;
+  /** The key of the thing it names, when it names one. */
+  of?: string;
 }
 
 /** A drawing lifted into the space, and the box around it all. */
@@ -138,13 +141,15 @@ export function spaceOf(marks: readonly DrawMark[], depth: DepthBy): SpaceMarks 
       lines.push({ id: m.id, style: m.style, points: arcOf(m.points, top(a), top(b)) });
     } else if (m.kind === 'label') {
       const on = (m.of === undefined ? undefined : byKey.get(m.of)) ?? (m.group ? byKey.get(m.group) : undefined);
-      labels.push({
+      const label: SpaceLabel = {
         id: m.id,
         style: m.style,
         at: [m.x, along(m.y), top(on) + m.size / 2],
         text: m.text,
         size: m.size,
-      });
+      };
+      if (m.of !== undefined) label.of = m.of;
+      labels.push(label);
     }
   }
   return { blocks, lines, labels, ...boundsOf(blocks, lines, labels) };
@@ -285,45 +290,19 @@ export function projectPoint(
   return { x: ((cx / w + 1) / 2) * width, y: ((1 - cy / w) / 2) * height, far: w };
 }
 
-/** A label to paint on the screen, at its pixel, and its size in pixels. */
-export interface ScreenLabel {
-  id: string;
-  style: string;
-  text: string;
-  x: number;
-  y: number;
-  size: number;
-}
+/** A block's faces as rings of four corners: its top, then its four sides. Its floor is never seen from above. */
+const FACES = [
+  [4, 5, 6, 7],
+  [0, 1, 5, 4],
+  [1, 2, 6, 5],
+  [2, 3, 7, 6],
+  [3, 0, 4, 7],
+] as const;
 
-/** The most labels painted at once: past this, words in 3D are a crowd. */
-export const LABELS_MOST = 80;
-/** The smallest label painted, in screen pixels, as in the 2D view (mark-index.ts, TEXT_LEAST). */
-const LABEL_LEAST = 6;
-
-/** The labels to paint, nearest first, at most `most`: only those on screen, in front, and big enough to read. */
-export function labelsOnScreen(
-  space: SpaceMarks,
-  matrix: Float32Array,
-  width: number,
-  height: number,
-  most = LABELS_MOST,
-): ScreenLabel[] {
-  const focal = height / 2 / Math.tan(FIELD / 2);
-  const shown: (ScreenLabel & { far: number })[] = [];
-  for (const l of space.labels) {
-    const at = projectPoint(matrix, l.at, width, height);
-    if (!at || at.x < 0 || at.y < 0 || at.x > width || at.y > height) continue;
-    const size = (l.size * focal) / at.far;
-    if (size < LABEL_LEAST) continue;
-    shown.push({ id: l.id, style: l.style, text: l.text, x: at.x, y: at.y, size, far: at.far });
-  }
-  return shown
-    .sort((a, b) => a.far - b.far)
-    .slice(0, most)
-    .map(({ far: _far, ...l }) => l);
-}
-
-/** The nearest block whose top covers screen pixel (`x`, `y`), so a click can pick one. */
+/**
+ * The nearest block with a face, its top or a side, covering screen pixel (`x`, `y`), so a click can pick one. A
+ * tall block is picked by its side as well as its top (Roger, 23 Oct 2026).
+ */
 export function blockAt(
   space: SpaceMarks,
   matrix: Float32Array,
@@ -335,22 +314,25 @@ export function blockAt(
   let best: Block | null = null,
     bestFar = Infinity;
   for (const b of space.blocks) {
-    const z = b.floor + b.tall;
-    const corners = (
-      [
-        [b.x, b.y],
-        [b.x + b.width, b.y],
-        [b.x + b.width, b.y + b.depth],
-        [b.x, b.y + b.depth],
-      ] as const
-    ).map(([cx, cy]) => projectPoint(matrix, [cx, cy, z], width, height));
+    const ring = [
+      [b.x, b.y],
+      [b.x + b.width, b.y],
+      [b.x + b.width, b.y + b.depth],
+      [b.x, b.y + b.depth],
+    ] as const;
+    const corners = [b.floor, b.floor + b.tall].flatMap((z) =>
+      ring.map(([cx, cy]) => projectPoint(matrix, [cx, cy, z], width, height)),
+    );
     if (corners.some((c) => !c)) continue;
-    const quad = corners as { x: number; y: number; far: number }[];
-    if (!inside(quad, x, y)) continue;
-    const far = quad.reduce((n, c) => n + c.far, 0) / 4;
-    if (far < bestFar) {
-      best = b;
-      bestFar = far;
+    const at = corners as { x: number; y: number; far: number }[];
+    for (const face of FACES) {
+      const quad = face.map((k) => at[k] as { x: number; y: number; far: number });
+      if (!inside(quad, x, y)) continue;
+      const far = quad.reduce((n, c) => n + c.far, 0) / 4;
+      if (far < bestFar) {
+        best = b;
+        bestFar = far;
+      }
     }
   }
   return best;

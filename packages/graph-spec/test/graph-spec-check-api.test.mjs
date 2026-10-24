@@ -85,6 +85,8 @@ const NAMES = [
   'secretsIn',
   'secretsInGraph',
   'shownText',
+  // the same text for every thing of a graph, its schema read once (instructions_naming, 23 Oct 2026)
+  'shownTexts',
   'clipShown',
   // groups found by how things link, for clusters and big-graph groups (wiki/Clusters-design.md)
   'louvain',
@@ -93,6 +95,58 @@ const NAMES = [
   'centroidsOf',
   'clusterCycles',
   'cycleView',
+  // the graph mesh's join: conflicts, gaps, certainty, standing (editor spec §28 and §30)
+  'certaintyOf',
+  'byCertainty',
+  'meshJoin',
+  // a graph as at a date on recorded or real-world time (editor spec §29)
+  'asAt',
+  'lensAsAt',
+  // a text merge checked by the meaning-level join (editor spec §30)
+  'afterTextMerge',
+  // which things in different graphs are one, and lasting types with their instances (editor spec §27)
+  'sameAs',
+  'typeOf',
+  'instancesOf',
+  'inherited',
+  // each cluster's cohesion and the certainty its centroid states (editor spec §31)
+  'clusterCertainty',
+  // the process core and its runs (editor spec §34)
+  'coreOfEight',
+  'transitionsOf',
+  'promoteTransition',
+  'processPath',
+  'guardOf',
+  'guardAllows',
+  'runningRuleOf',
+  'overrideRunningRule',
+  'runLog',
+  'currentOf',
+  'enterState',
+  'leaveState',
+  'moveRun',
+  'withEntries',
+  'refreshCurrent',
+  // altitude and audience profiles (editor spec §32)
+  'atAltitude',
+  'profilesOf',
+  'audienceProjection',
+  'altitudesIn',
+  'byAxes',
+  // lenses as graph data: saved queries that answer fresh (editor spec §33)
+  'lensesOf',
+  'runLens',
+  // the altitude and topic index (editor spec §32)
+  'altitudeIndex',
+  'searchIndex',
+  // contexts: where links may join (editor spec §61)
+  'contextsOf',
+  'contextGuesses',
+  'comparable',
+  'proposeSameAs',
+  'sameAsAcross',
+  'worldIn',
+  'searchContexts',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

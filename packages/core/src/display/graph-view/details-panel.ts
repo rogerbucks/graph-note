@@ -11,7 +11,7 @@ import { problemText } from './problems-list';
 import { showSuggested } from './suggested-name';
 import { parkButton, parkedNote } from './parked';
 import { estimateActions } from './estimate-actions';
-import { button } from './view-bar';
+import { button } from '../button';
 import { linkWords, reducedMotion, renderInsOuts, renderTrail, stepName, thingButton } from './details-nav';
 import type { NavActions } from './details-nav';
 import { DetailsSheet } from './details-sheet';

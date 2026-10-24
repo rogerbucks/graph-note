@@ -380,6 +380,6 @@ export const SOURCE_WORDS = {
   ...DRAWING_SOURCE_WORDS,
   // what the plug-ins' calls say when one fails (plugins-source-words.ts)
   ...PLUGINS_SOURCE_WORDS,
-  // the desktop app's own pages: picking a folder and listing its notes (app-source-words.ts)
+  // the apps' own words: the desktop app's pages and the VS Code extension's messages (app-source-words.ts)
   ...APP_SOURCE_WORDS,
 } as const;

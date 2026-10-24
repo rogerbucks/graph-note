@@ -16,7 +16,15 @@ export const S = `[${SPACE}]`,
   N = `[^${SPACE}]`;
 
 /** Whether one character is whitespace. */
-export const isSpace = (c: string): boolean => c !== '' && SPACE.includes(c);
+export const isSpace = (c: string): boolean => {
+  if (c.length !== 1) return false;
+  const code = c.charCodeAt(0);
+  return code < 0x80 ? ASCII_SPACE[code] === 1 : SPACE.includes(c);
+};
+
+/** Which ASCII codes are whitespace, made from CODES: most text is ASCII, answered without searching the whole set. */
+const ASCII_SPACE = new Uint8Array(0x80);
+for (const code of CODES) if (code < 0x80) ASCII_SPACE[code] = 1;
 
 /** The text without the whitespace it starts with. */
 export function trimStart(s: string): string {

@@ -1,0 +1,10 @@
+{
+  "extends": "../claude-code/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["DOM", "ES2022"],
+    "types": ["vscode"],
+    "erasableSyntaxOnly": false
+  },
+  "include": ["src/**/*.ts", "../core/src/display/dom-globals.d.ts"]
+}

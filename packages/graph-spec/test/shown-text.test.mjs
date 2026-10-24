@@ -26,3 +26,21 @@ test('the shared schema a graph names gives shown_by when the graph has no schem
   );
   assert.deepEqual(C.shownText(world.spec, 'req:1', world.shared), ['The first rule', 'statement']);
 });
+
+test('the texts of a whole graph, its schema read once, are the ones shownText gives each thing', () => {
+  for (const c of table.cases) {
+    const g = C.worldFromStore(C.read([c.body.join('\n')]))[c.graph];
+    const shownOf = C.shownTexts(g);
+    for (const [id, shown] of Object.entries(c.shown)) assert.deepEqual(shownOf(id), shown, `${c.name}: ${id}`);
+  }
+});
+
+test('the texts of a whole graph take shown_by from the shared schema it names', () => {
+  const world = C.worldFromStore(
+    C.read([
+      "// graph: shared\n(t:Meta:ElementType {name: 'Requirement', kind: 'node', origin: 'source', shown_by: 'statement'})",
+      "// graph: spec\n(r:Requirement {id: 'req:1', name: 'One', statement: 'The first rule'})",
+    ]),
+  );
+  assert.deepEqual(C.shownTexts(world.spec, world.shared)('req:1'), ['The first rule', 'statement']);
+});

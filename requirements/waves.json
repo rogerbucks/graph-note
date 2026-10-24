@@ -1,5 +1,6 @@
 {
-  "about": "The order the remaining work is planned in, the one place that order lives. Each wave lists its workstreams (ids of requirements/workstreams.json) in order. Its start and end are planned dates; estimate: true marks them as estimates, not commitments. scripts/github-project.mjs derives the project's Wave and Order fields from this file. Re-baselined on 2026-10-19 to the measured rate (50 requirements a week, heavy workstreams counted twice); a re-dated wave keeps its earlier plan in earlier_plan, so slips can be read against the first plan too.",
+  "about": "The order the remaining work is planned in, the one place that order lives. Each wave lists its workstreams (ids of requirements/workstreams.json) in order. Its start and end are planned dates; estimate: true marks them as estimates, not commitments. scripts/github-project.mjs derives the project's Wave and Order fields from this file. Re-baselined on 2026-10-19 to the measured rate (50 requirements a week, heavy workstreams counted twice); a re-dated wave keeps its earlier plan in earlier_plan, so slips can be read against the first plan too. Each wave of work is also a GitHub milestone, titled as the wave and due on its end (milestones: each wave). The mirror files every requirement's issue under its wave's milestone, so a wave added later gets one with no hand work.",
+  "milestones": "each wave",
   "waves": [
     {
       "title": "Wave 1 · Slice 3 finish",
@@ -173,7 +174,8 @@
       "workstreams": [
         "W28",
         "W26",
-        "W27"
+        "W27",
+        "CX1"
       ],
       "earlier_plan": {
         "start": "2027-02-01",
@@ -252,7 +254,8 @@
       "end": "2026-12-04",
       "estimate": true,
       "workstreams": [
-        "RL1"
+        "RL1",
+        "RP1"
       ]
     },
     {

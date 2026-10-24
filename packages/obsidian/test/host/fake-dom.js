@@ -443,8 +443,10 @@ export function fakeDocument(width = 700) {
       (doc.opened ??= []).push({ url, target });
       return null;
     },
-    requestAnimationFrame: (f) => setTimeout(f, 0),
+    requestAnimationFrame: (f) => setTimeout(() => f(performance.now()), 0),
     cancelAnimationFrame: clearTimeout,
+    // the page's clock, for a flight across a drawing too large to draw
+    performance: { now: () => performance.now() },
     // a style sheet made in code, as a page adopts one: it keeps the CSS it was given, to be read back as `text`
     CSSStyleSheet: class {
       text = '';

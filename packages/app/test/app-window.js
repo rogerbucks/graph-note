@@ -74,7 +74,7 @@ export function fakeInvoke(root, picked = null) {
 }
 
 /** What the window has that jsdom lacks: the web's fetch types, a clock for frames, and the tools the page asks for. */
-function furnish(window) {
+export function furnish(window) {
   Object.assign(window, { Response, Request, Headers, ReadableStream, TextEncoder, TextDecoder });
   if (!window.crypto?.subtle) Object.defineProperty(window, 'crypto', { value: globalThis.crypto });
   window.matchMedia = (media) => ({ media, matches: false, addEventListener() {}, removeEventListener() {} });
@@ -91,7 +91,7 @@ function furnish(window) {
 }
 
 /** A built script run in `window` as a plain script: its own scope, its exports dropped. */
-const run = (window, file) =>
+export const runScript = (window, file) =>
   window.eval(`(() => {\n${readFileSync(file, 'utf8').replace(/\nexport \{[^}]*\};?\s*$/, '\n')}\n})();`);
 
 /**
@@ -107,7 +107,7 @@ async function open(page, hash, invoke, scripts, language = 'en-GB') {
   Object.defineProperty(window.navigator, 'language', { value: language });
   window.__TAURI__ = { core: { invoke } };
   const stopWorkers = workerFor(window, join(dir, 'layout-worker.js'));
-  for (const script of scripts) run(window, join(dir, script));
+  for (const script of scripts) runScript(window, join(dir, script));
   return {
     dom,
     window,
@@ -134,11 +134,12 @@ export const openAppStart = (folder, language) =>
 
 /**
  * The editor in the app, on the note at `path` in `folder`. It gives `{ window, doc, field, typed, file, ready, stop }`,
- * as the browser page's live cases do (packages/claude-code/test/editor-page-live.js).
+ * as the browser page's live cases do (packages/claude-code/test/editor-page-live.js). The system speaks `language`,
+ * en-GB when none is given.
  */
-export async function openAppEditor(folder, path) {
+export async function openAppEditor(folder, path, language) {
   const hash = `#token=app&note=${encodeURIComponent(path)}`;
-  const opened = await open('editor.html', hash, fakeInvoke(folder), ['app-editor.js', 'page.js']);
+  const opened = await open('editor.html', hash, fakeInvoke(folder), ['app-editor.js', 'page.js'], language);
   const { window, doc } = opened;
   const button = (label) => [...doc.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === label);
   const page = {

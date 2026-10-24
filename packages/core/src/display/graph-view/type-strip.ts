@@ -21,11 +21,11 @@ import type {
   Diagram,
   StyleGraph,
 } from '@thoughtknot/core';
-import type { LeftAt } from '../links/link-types';
+import type { LeftAt } from '../link-host';
 import { aroundSelected, centreShown, centreStrip } from './radial-centre';
 export { pickedCentre } from './radial-centre';
 import { renderTable, tableSize } from './table-view';
-import { button } from './view-bar';
+import { button } from '../button';
 import { renderTimelineChoice, timelineChange } from './timeline-choice';
 import type { TimelinePick, TimelineShown } from './timeline-choice';
 export { TypePlace, typeLeftAt } from './type-place';

@@ -51,11 +51,12 @@ import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
 import { InlineEditors } from './inline-editors';
 import { followRename, recoverDrafts, RECOVER_COMMAND, withIds } from './drafts';
-import type { KeptDraft } from '@thoughtknot/core/display/editor/editor-note';
 import { convertToStandard } from './convert';
 import { followLinks } from './links/rename-follow';
 import { HOVER_SOURCE } from './links/link-host';
-import { OutsidePlugins, type TurnedOn } from './outside/outside-plugins';
+import { OutsidePlugins } from './outside/outside-plugins';
+import { Profiles } from './profile/profiles';
+import type { Drafts, Saved } from './saved';
 import { noteText, shownNotes } from './storage/plugin-notes';
 
 /** Where Edit was pressed: the note, the line of the block's opening fence (0-based), and the graph it draws. */
@@ -63,20 +64,6 @@ export interface EditTarget {
   path: string;
   line: number;
   graph: string;
-}
-
-/** What was typed in the pane and kept when the note changed under it, by note and graph: never lost (spec §9). */
-export type Drafts = Record<string, KeptDraft>;
-
-interface Saved {
-  drafts?: Drafts;
-  settings?: unknown;
-  /** The record of every send to an AI model (§19, record_every_send): never a key. */
-  aiSends?: SendRecord[];
-  /** The plug-in files from outside the person turned on, each with its SHA-256 then (§54, plugin_outside_file). */
-  outside?: Record<string, TurnedOn>;
-  /** Where a card's details were last put, how big and whether minimised (§25, sheet_layout_kept). */
-  detailsLayout?: unknown;
 }
 
 /** The plugin: draws each graph block, opens the editors, and keeps the drafts and the shared schemas. */
@@ -108,6 +95,10 @@ export default class ThoughtKnotPlugin extends Plugin {
       },
     });
     this.app.workspace.onLayoutReady(() => void this.outside.startAll());
+    this.profiles = new Profiles(this.saved.profile, (profile) =>
+      this.saveData((this.saved = { ...this.saved, profile })),
+    );
+    this.profiles.redraw = () => [...this.settingsWatchers].forEach((changed) => changed());
     this.addSettingTab(new ThoughtKnotSettingTab(this.app, this));
     this.addCommand({
       id: 'convert-to-standard',
@@ -165,6 +156,8 @@ export default class ThoughtKnotPlugin extends Plugin {
   override settings: Settings = settingsFrom(null);
   /** The plug-ins from outside: each file, off until turned on, and those running (§54). */
   outside!: OutsidePlugins;
+  /** The person's own profile and what was learned (§39): kept with the plugin, the session's switch never kept. */
+  profiles!: Profiles;
 
   /** Who to tell when a setting that changes how a graph is read or drawn has changed: each drawing and editor. */
   private readonly settingsWatchers = new Set<() => void>();

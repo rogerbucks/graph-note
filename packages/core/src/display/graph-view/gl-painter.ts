@@ -81,7 +81,7 @@ void main() {
 }`;
 
 /**
- * Reads any colour a theme names as four numbers, through a 2D canvas, which writes each back in one of two plain
+ * Reads any colour a theme names as four numbers, through a 2D canvas, which writes each back in one of three plain
  * forms (colour-numbers.ts). Each colour is read once.
  */
 export function colourReader(): (css: string | undefined) => Rgba {

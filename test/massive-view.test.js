@@ -33,6 +33,12 @@ import { readNote } from './packages/core/src/drawing.ts';
 import { DEFAULT_SETTINGS } from './packages/core/src/settings.ts';
 installDomHelpers(window);
 installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
+// a clock that moves 16 ms a frame. A glide or a flight then takes the same number of frames on a busy machine. The
+// frames are counted, never the time
+let clock = performance.now();
+const nextFrame = window.requestAnimationFrame.bind(window);
+performance.now = () => clock;
+window.requestAnimationFrame = (run) => nextFrame(() => run((clock += 16)));
 const boxes = [], links = [];
 for (let i = 0; i < 3000; i++) {
   boxes.push({ key: 't' + i, kind: 'Thing', text: i === 1234 ? 'Needle in the stack' : 'Thing ' + i });
@@ -61,7 +67,10 @@ const props = (key) => ({ status: Number(key.slice(1)) % 3 ? 'open' : 'done' });
 // each filter chosen, as the host is told it to save
 window.chose = [];
 const chose = (keep) => window.chose.push(keep);
-window.view = massiveView(card, drawing, { graph: 'Big', palette: PALETTES.light, layout, props, chose });
+// each thing chosen, as the host is told it to show
+window.picked = [];
+const picked = (key) => window.picked.push(key);
+window.view = massiveView(card, drawing, { graph: 'Big', palette: PALETTES.light, layout, props, chose, picked });
 // a second card, which starts with a saved filter: what it is named and which values are ticked
 window.saved = () => {
   const again = document.body.appendChild(document.createElement('div'));
@@ -71,6 +80,17 @@ window.saved = () => {
   const label = again.querySelector('.thoughtknot-massive-stage').getAttribute('aria-label');
   again.remove();
   return { label, ticked: ticked.map((b) => b.nextSibling.textContent) };
+};
+// the graph drawn again with one thing renamed, as after an edit, and the view flown to the needle. It gives how many
+// groups have been laid out since the page began
+window.redrawFly = async (edit) => {
+  const edited = { ...drawing, boxes: boxes.map((b) => (b.key === edit ? { ...b, text: b.text + ' renamed' } : b)) };
+  const again = document.body.appendChild(document.createElement('div'));
+  again.style.width = '600px';
+  const next = massiveView(again, edited, { graph: 'Big', palette: PALETTES.light, layout, props });
+  await next.flyTo(next.find('needle')[0]);
+  next.close();
+  return window.parts.length;
 };
 window.stage = () => {
   const stage = card.querySelector('.thoughtknot-massive-stage');
@@ -97,6 +117,17 @@ window.press = async (key, times) => {
   for (let i = 0; i < times; i++) stage.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   return inked();
+};
+// clicks the middle of the overview, the pointer moving that many pixels before it lets go
+window.clickMiddle = (by = 0) => {
+  const stage = card.querySelector('.thoughtknot-massive-stage');
+  const at = stage.getBoundingClientRect(), x = at.left + at.width / 2, y = at.top + at.height / 2;
+  const press = (type, dx) =>
+    stage.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX: x + dx, clientY: y, bubbles: true }));
+  press('pointerdown', 0);
+  if (by) press('pointermove', by);
+  press('pointerup', by);
+  return window.picked.slice();
 };
 // the ink of the words in the middle of the view, a band 160 by 30 pixels
 window.wordsInMiddle = () => {
@@ -133,12 +164,22 @@ window.scales = async () => {
   }
   return seen;
 };
+// waits until the view has held still for three frames: a flight or a glide is over
+window.settled = async () => {
+  let last = JSON.stringify(view.view());
+  for (let still = 0, frames = 0; still < 3 && frames < 400; frames++) {
+    await new Promise((r) => requestAnimationFrame(r));
+    const now = JSON.stringify(view.view());
+    still = now === last ? still + 1 : 0;
+    last = now;
+  }
+};
 // presses a button of the grow bar by its name, and gives what was said once the view has flown
 window.grow = async (name) => {
   const button = card.querySelector('.thoughtknot-massive-grow [aria-label="' + name + '"]');
   button.click();
   for (let i = 0; i < 100 && view.view() === window.lastView; i++) await new Promise((r) => setTimeout(r, 20));
-  await new Promise((r) => setTimeout(r, 800));
+  await window.settled();
   window.lastView = view.view();
   return card.querySelector('.thoughtknot-massive-said').textContent;
 };
@@ -185,6 +226,92 @@ window.pane = async () => {
   const dog = boxes.find((b) => b.nextSibling.textContent === 'Dog');
   dog.checked = true;
   dog.dispatchEvent(new Event('change'));
+  el.remove();
+  return { ...shown, saved };
+};
+// the edit pane's drawing of a block too large to read at once: the banner, then its overview, read in parts
+window.paneInParts = async () => {
+  const lines = ['// graph: huge'];
+  for (let i = 0; i < 12000; i++) lines.push('(n' + i + ":Thing {name: 'Item " + i + "'}),");
+  for (let i = 1; i < 12000; i++) lines.push('(n' + i + ')-[:NEXT]->(n' + (i - 1) + ')' + (i < 11999 ? ',' : ''));
+  const texts = [lines.join('\\n')];
+  const host = { settings: () => DEFAULT_SETTINGS, layout, palette: PALETTES.light };
+  const el = document.body.appendChild(document.createElement('div'));
+  el.style.width = '600px';
+  const replaced = [];
+  const on = { edit() {}, select() {}, replace: (now) => replaced.push(now) > 0 };
+  const reading = readNote(texts);
+  new PaneDrawing(host).redraw(el, reading, { graph: 'huge', text: texts[0] }, () => false, on);
+  for (let i = 0; i < 1000 && !el.querySelector('.thoughtknot-massive-stage'); i++) await new Promise((r) => setTimeout(r, 20));
+  const stage = el.querySelector('.thoughtknot-massive-stage');
+  const shown = {
+    refused: reading.tooLarge?.limit,
+    banner: !!el.querySelector('.thoughtknot-banner'),
+    label: stage && stage.getAttribute('aria-label'),
+  };
+  // Item 7000 found, and renamed in its field
+  const search = el.querySelector('.thoughtknot-massive-search');
+  search.value = 'Item 7000';
+  search.dispatchEvent(new Event('input'));
+  el.querySelector('.thoughtknot-massive-list [role=option]').click();
+  for (let i = 0; i < 200 && !el.querySelector('.thoughtknot-stored-thing'); i++) await new Promise((r) => setTimeout(r, 20));
+  const name = el.querySelector('.thoughtknot-stored-thing input[aria-label="Value of name"]');
+  name.value = 'Renamed';
+  name.dispatchEvent(new Event('change'));
+  for (let i = 0; i < 200 && !replaced.length; i++) await new Promise((r) => setTimeout(r, 20));
+  const was = texts[0].split('\\n'), now = (replaced[0] ?? '').split('\\n');
+  shown.changed = now.filter((l, i) => l !== was[i]);
+  shown.lines = [was.length, now.length];
+  el.remove();
+  return shown;
+};
+// the overview's 3D view: opened from its tools, named for the graph, and gone again on Back to 2D
+window.space3d = async () => {
+  card.querySelector('.thoughtknot-massive-tools button[aria-label="3D view"]').click();
+  const view = () => card.querySelector('.thoughtknot-space-view');
+  const back = () => view()?.querySelector('button[aria-label="Back to 2D"]');
+  for (let i = 0; i < 100 && !back(); i++) await new Promise((r) => setTimeout(r, 20));
+  if (!back()) return { opened: false };
+  const label = view().getAttribute('aria-label');
+  // the height starts by group only when the marks lifted hold the overview's groups
+  const height = view().querySelector('.thoughtknot-space-bar button[aria-label^="Height"]')?.getAttribute('aria-label');
+  // a click in the middle picks the block under it, said aloud by the overview's own name for that cluster
+  const at = view().getBoundingClientRect();
+  const x = at.left + at.width / 2, y = at.top + at.height / 2;
+  for (const type of ['pointerdown', 'pointerup']) view().dispatchEvent(new PointerEvent(type, { clientX: x, clientY: y, pointerId: 1, bubbles: true }));
+  const said = view().querySelector('.thoughtknot-space-said')?.textContent;
+  back().click();
+  return { opened: true, label, height, said, closed: !view() };
+};
+// a block too large to read at once, in the pane, with a style block after it in the note. The overview starts with
+// its saved filter and says the kind misspelt there. A filter chosen is given to the host to save
+window.paneInPartsSaved = async () => {
+  const lines = ['// graph: huge'];
+  for (let i = 0; i < 12000; i++) lines.push('(n' + i + ':' + (i % 2 ? 'Place' : 'Person') + " {name: 'Item " + i + "'}),");
+  for (let i = 1; i < 12000; i++) lines.push('(n' + i + ')-[:NEAR]->(n' + (i - 1) + ')' + (i < 11999 ? ',' : ''));
+  const style = "// graph: huge_style · STYLE huge\\n(filter_1:Filter {keep: 'Kind: Place, Plaec'})";
+  const texts = [lines.join('\\n')];
+  const saved = [];
+  const host = {
+    settings: () => DEFAULT_SETTINGS,
+    layout,
+    palette: PALETTES.light,
+    noteText: () => '\x60\x60\x60gql\\n' + texts[0] + '\\n\x60\x60\x60\\n\\n\x60\x60\x60gql\\n' + style + '\\n\x60\x60\x60\\n',
+    saveFilter: (graph, keep) => saved.push([graph, keep]),
+  };
+  const el = document.body.appendChild(document.createElement('div'));
+  el.style.width = '600px';
+  const on = { edit() {}, select() {}, replace: () => false };
+  new PaneDrawing(host).redraw(el, readNote(texts), { graph: 'huge', text: texts[0] }, () => false, on);
+  for (let i = 0; i < 1000 && !el.querySelector('.thoughtknot-massive-facet'); i++) await new Promise((r) => setTimeout(r, 20));
+  const boxes = [...el.querySelectorAll('.thoughtknot-massive-facet input')];
+  const shown = {
+    ticked: boxes.filter((b) => b.checked).map((b) => b.nextSibling.textContent),
+    problems: [...el.querySelectorAll('.thoughtknot-style-problem')].map((p) => p.textContent),
+  };
+  const person = boxes.find((b) => b.nextSibling.textContent === 'Person');
+  person.checked = true;
+  person.dispatchEvent(new Event('change'));
   el.remove();
   return { ...shown, saved };
 };
@@ -262,17 +389,38 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
   test('choosing a match lays out only its group, and flies the view to the thing', options, async () => {
     const { match, view, said } = await run('flyToNeedle()');
     const parts = await run('parts');
-    assert.equal(parts.length, 1, 'one group is laid out');
-    assert.ok(parts[0].includes('t1234'), 'the one the thing is in');
-    assert.ok(parts[0].length < 3000, 'never the whole graph');
+    // the groups near it on screen may be opened a moment later, so the first one laid out is the thing's
+    assert.ok(parts.length >= 1 && parts.length < 150, 'only groups near it are laid out');
+    assert.ok(parts[0].includes('t1234'), 'the first is the one the thing is in');
+    assert.ok(
+      parts.every((p) => p.length < 3000),
+      'never the whole graph',
+    );
     assert.match(said, /^Needle in the stack, in .+/, 'where it went is said aloud');
     assert.equal(match.key, 't1234');
     // the thing's name is now painted in the middle of the view, big enough to read
     assert.ok(view.scale > 0.05, `zoomed in: ${view.scale}`);
     assert.ok((await run('wordsInMiddle()')) > 50, 'its name is in the middle');
+    const withThing = async () => (await run('parts')).filter((p) => p.includes('t1234')).length;
+    const laid = await withThing();
     await run('flyToNeedle()');
-    assert.equal((await run('parts')).length, 1, 'a group opened once is not laid out again');
+    assert.equal(await withThing(), laid, 'a group opened once is not laid out again');
   });
+
+  test(
+    'a thing found, or clicked in its opened group, is the one chosen; a drag chooses nothing',
+    options,
+    async () => {
+      await run('flyToNeedle()');
+      assert.equal((await run('picked')).at(-1), 't1234', 'found by search');
+      const before = (await run('picked')).length;
+      assert.equal((await run('clickMiddle(20)')).length, before, 'a drag is not a click');
+      await run('flyToNeedle()');
+      const clicked = await run('clickMiddle()');
+      assert.equal(clicked.length, before + 2, 'the click chose one');
+      assert.equal(clicked.at(-1), 't1234', 'the thing under the click');
+    },
+  );
 
   test(
     'from the thing flown to, the picture grows one ring of neighbours at a time, and steps back',
@@ -280,14 +428,15 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     async () => {
       // in its chain of 20, t1234 links to t1233 and t1235 only
       assert.equal(await run("grow('Show neighbours')"), 'Needle in the stack and the 2 things near it');
-      const parts = await run('parts');
+      // groups near it on screen may be opened after it, so the last part with the thing in is the grown picture
+      const grownPart = async () => (await run('parts')).filter((p) => p.includes('t1234')).at(-1);
       assert.deepEqual(
-        [...parts.at(-1)].sort(),
+        [...(await grownPart())].sort(),
         ['t1233', 't1234', 't1235'],
         'only it and its neighbours are laid out',
       );
       assert.equal(await run("grow('Show neighbours')"), 'Needle in the stack and the 4 things near it');
-      assert.deepEqual([...(await run('parts')).at(-1)].sort(), ['t1232', 't1233', 't1234', 't1235', 't1236']);
+      assert.deepEqual([...(await grownPart())].sort(), ['t1232', 't1233', 't1234', 't1235', 't1236']);
       assert.equal(await run("grow('One step back')"), 'Needle in the stack and the 2 things near it');
       assert.ok((await run('wordsInMiddle()')) > 50, 'the grown picture is painted where the view looks');
     },
@@ -355,9 +504,85 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     },
   );
   // proves: scale_filter_live
+  test(
+    'a block too large to read at once is shown in the pane as its overview, and a thing chosen is edited in its text',
+    options,
+    async () => {
+      const shown = await run('paneInParts()');
+      assert.equal(shown.refused, 'text-lines', 'too large to read whole');
+      assert.ok(shown.banner, 'why, still said');
+      assert.match(shown.label ?? '', /^Overview of huge: 12,000 things in \d+ groups/);
+      assert.deepEqual(
+        shown.changed,
+        ["(n7000:Thing {name: 'Renamed'}),"],
+        'a thing chosen and renamed: its line alone',
+      );
+      assert.equal(shown.lines[0], shown.lines[1], 'the block keeps its lines');
+    },
+  );
+
+  // proves: scale_space_view
+  test('the overview opens as a 3D view from its tools, and goes back to 2D', options, async () => {
+    const { opened, label, height, said, closed } = await run('space3d()');
+    assert.ok(opened, 'the 3D view opens, with its Back to 2D button');
+    assert.match(label ?? '', /^3D view of Big\./, 'the 3D view of the overview, named for its graph');
+    assert.equal(height, 'Height: groups', "the overview's groups are lifted as blocks");
+    assert.match(said ?? '', /^Around Thing \d+, \d+ things$/, 'a click picks a block, said as one of its clusters');
+    assert.ok(closed, 'Back to 2D closes it');
+  });
+
+  // proves: scale_filter_live
+  test(
+    'a block too large to read at once starts in the pane with its saved filter, and saves a filter chosen',
+    options,
+    async () => {
+      const { ticked, problems, saved } = await run('paneInPartsSaved()');
+      assert.deepEqual(ticked, ['Place'], 'the saved filter, read from the style block after it');
+      assert.deepEqual(problems, ['In the style graph: Plaec is not a kind in graph huge']);
+      assert.deepEqual(saved, [['huge', { Kind: ['Place', 'Person'] }]], 'the host is asked to save the new one');
+    },
+  );
+
   test('a card drawn with a saved filter starts with it ticked, keeping only its things', options, async () => {
     const { label, ticked } = await run('saved()');
     assert.match(label, /^Overview of Big: 1,000 things in \d+ groups\./);
     assert.deepEqual(ticked, ['done']);
+  });
+  test(
+    'once the view is still, the groups on screen worth reading are filled in, and zoomed out none is',
+    options,
+    async () => {
+      const still = () => new Promise((r) => setTimeout(r, 700));
+      await run("press('Home', 1)");
+      const laid = (await run('parts')).length;
+      await still();
+      assert.equal((await run('parts')).length, laid, 'far out, every group stays one box');
+      await run("press('+', 24)");
+      await still();
+      const parts = await run('parts');
+      assert.ok(parts.length > laid, 'zoomed in, a group on screen was laid out with nobody asking');
+      assert.ok(
+        parts.slice(laid).every((p) => p.length <= 500),
+        'one group at a time, never the whole graph',
+      );
+      await still();
+      const again = (await run('parts')).length;
+      await still();
+      assert.equal((await run('parts')).length, again, 'a group opened is not laid out again');
+    },
+  );
+  test('drawn again after an edit, only the group the edit touched is laid out again', options, async () => {
+    await run('flyToNeedle()');
+    const before = (await run('parts')).length;
+    assert.equal(
+      await run("redrawFly('t5')"),
+      before,
+      'a thing renamed in another group: the needle’s group is found saved',
+    );
+    assert.equal(
+      await run("redrawFly('t1234')"),
+      before + 1,
+      'a thing renamed in the needle’s own group: that group only',
+    );
   });
 });

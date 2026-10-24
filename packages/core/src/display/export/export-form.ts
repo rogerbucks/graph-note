@@ -7,7 +7,7 @@
 // is for its data alone (`dataExportBar`).
 import { DEFAULT_PACE, PATH_PACES, isDataFormat, word } from '@thoughtknot/core';
 import type { DataFormat, ExportFormat, ExportTheme, ViewSpec } from '@thoughtknot/core';
-import { button } from '../graph-view/view-bar';
+import { button } from '../button';
 import { waitShown } from '../progress';
 import type { ExportAsk, ExportOutcome } from './export-types';
 // (ExportOutcome's share holds the tap's own action: see export.ts)

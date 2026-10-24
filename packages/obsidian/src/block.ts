@@ -46,10 +46,10 @@ import { renderProblems } from '@thoughtknot/core/display/graph-view/problems-li
 import { refusalBanner } from '@thoughtknot/core/display/refusal-banner';
 import { dataExportBar } from '@thoughtknot/core/display/export/export-form';
 import { showMassive } from './massive-card';
+import { overviewInParts } from './note-store';
 import type { ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
-
 /**
  * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
  * editor open in place keeps its place in the card, so the text can still be made small enough to draw.
@@ -194,8 +194,10 @@ export async function renderBlock(
   const reading = { ...read, problems: underStrictness(read.problems, plugin.settings) };
   const target = { path: ctx.sourcePath, line: info?.lineStart ?? 0, graph };
   if (reading.tooLarge) {
-    // too large to read (spec §9): nothing was read, so the text is shown, and why
-    asText(plugin, el.createDiv({ cls: 'thoughtknot' }), source, reading.tooLarge, [], target, readOnly);
+    // too large to read at once (spec §9): its overview, read in parts (§53), above its text and why
+    const card = el.createDiv({ cls: 'thoughtknot' });
+    asText(plugin, card, source, reading.tooLarge, [], target, readOnly);
+    await overviewInParts(plugin, card, { path: target.path, note: info?.text, source, graph }, reading.tooLarge);
     return;
   }
   // a problem's line in the note: the block's fence line, plus its line in the block (1 = the line after the fence)
@@ -352,6 +354,7 @@ export async function renderBlock(
       indent: plugin.settings.indent,
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
+      profile: plugin.profiles.shown(), // the person's own profile, for this card alone (§39)
       aids: aidsOf(plugin.settings),
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {

@@ -207,9 +207,25 @@ of Obsidian's rules, sentence case in the interface among them. These are the gu
 
 These test behaviour across modules, or the repository itself, so they are named after their subject.
 
+### The core: test runs
+
+- `packages/core/test/test-run-source.test.js` — what a test run reads: live, a snapshot or a copy (editor spec §35).
+- `packages/core/test/test-run-certainty.test.js` — a test run leaves certainty as it is, unless it opted in (§35).
+- `packages/core/test/side-effects-stubbed.test.js` — a test run stubs each side effect and reaches nothing outside
+  (§35).
+- `packages/core/test/saved-scenarios.test.js` — a scenario saved from a test run is never rerun, faded or enforced
+  (editor spec §35). It spans `scenarios.ts`, `test-runs.ts` and `process-core.ts`.
+
 ### The core
 
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
+- `packages/core/test/progressive-draw.test.js` — a massive graph is drawn in steps. The overview comes first. Then
+  come the chosen group and those nearest the middle, each added to the picture (editor spec §53, scale_progressive).
+- `packages/core/test/level-of-detail.test.js` — a massive graph opens as one box for each group. A group shows its
+  things only when zoomed in on. The screen is never given more than it holds (scale_level_of_detail).
+- `packages/core/test/mesh-work-in-engine.test.js` — pathfinding, centroids, altitude and transitions are the engine's.
+- `packages/core/test/mesh-surfaces.test.js` — Obsidian, VS Code and the web view read the same notes, so an edit shows in all three.
+  No host computes them itself (editor spec §27, mesh_work_in_engine).
 - `packages/core/test/no-upkeep.test.js` — an edit refreshes a note's clusters, centroids, groups and lens lists. The
   person takes no step (editor spec §31, derivations_need_no_upkeep).
 - `packages/core/test/bidi-labels.test.js` — each element of the display layer that shows the person's own names,
@@ -387,6 +403,20 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/obsidian/test/views-over-one-graph.test.js` — two views of one graph, stacked, each drawn as its own type.
   An edit to the graph shows in both. A type chosen in one is saved for it alone (editor spec §36, views_over_one_graph).
 
+### The Obsidian plugin: the process debugger
+
+- `packages/obsidian/test/process-debugger.test.js` — the process debugger in a drawing's walk strip (editor spec
+  §35). It spans `process-debug.ts` and the core's `test-runs.ts`.
+- `packages/obsidian/test/playback-controller.test.js` — the player under the debugger, autoplay or by hand (§35). It
+  spans `process-debug.ts` and the core's `playback.ts`.
+
+### The Obsidian plugin: personal profiles
+
+- `packages/obsidian/test/pacing.test.js` — a path's pace worked out from the session, shown with its reason and kept
+  as usual in one tap. The profile itself changes only on approval (editor spec §39, pacing_automatic).
+- `packages/obsidian/test/adapted-view.test.js` — a shared view adapted for its viewer alone, its label, and show as
+  shared for the session (editor spec §39, adapted_for_viewer).
+
 ### The graph format library
 
 - `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.
@@ -409,6 +439,17 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/graph-spec/test/problem-codes.test.mjs` — every problem the JavaScript reader raises passes a stable code
   from `src/reader/problem-codes.json`, with that code's message and fix. The blocks of `problem-code-cases.json` are
   refused with their codes (editor spec §42, problem_codes).
+- `packages/graph-spec/test/format-version.test.mjs` — both readers read a block in their own format or none named.
+  They refuse a newer major with GN106 (format_version_named; one table, `format-version-cases.json`).
+- `packages/graph-spec/test/mesh-parity.test.mjs` — every shared mesh case, joins included, gives the bytes whose hash
+  `mesh-parity-cases.json` holds (mesh_engine_parity).
+- `packages/graph-spec/test/join-every-author.test.mjs` — identical edits from any author join alike. A text merge that
+  picks a value leaves the dispute for a person (same_join_every_author; `join-every-author-cases.json`).
+- `packages/graph-spec/test/process-core.test.mjs` — the process core and its runs, across `src/process/core.js` and
+  `runs.js`. It covers eight kinds, transitions, guards as data, the run log and nested machines (editor spec §34;
+  `process-core-cases.json`).
+- `packages/graph-spec/test/mesh-one-format.test.mjs` — a block of schema and inserts is read once. The lens
+  rules answer about its things and its schema alike (mesh_one_format; `mesh-one-format-cases.json`).
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
 - `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
 
@@ -428,6 +469,16 @@ These test behaviour across modules, or the repository itself, so they are named
 - `python/graph_spec/tests/test_problem_codes.py` — every problem the Python reader raises passes the stable code
   `problem-codes.json` gives it, the same as the JavaScript reader's. The blocks of `problem-code-cases.json` are
   refused with the same codes (editor spec §42, problem_codes).
+- `python/graph_spec/tests/test_format_version.py` — the Python reader reads the cases of `format-version-cases.json`
+  as the JavaScript reader does, and refuses a newer major format with GN106 (format_version_named).
+- `python/graph_spec/tests/test_mesh_parity.py` — every shared mesh case gives the same bytes as the JavaScript
+  library, by the hashes of `mesh-parity-cases.json` (mesh_engine_parity).
+- `python/graph_spec/tests/test_join_every_author.py` — the Python library gives the answers of
+  `join-every-author-cases.json`, whoever made the edits (same_join_every_author).
+- `python/graph_spec/tests/test_process_core.py` — the Python library's `core` and `runs` give the answers of
+  `process-core-cases.json` (editor spec §34).
+- `python/graph_spec/tests/test_mesh_one_format.py` — the Python library reads the block of `mesh-one-format-cases.json`
+  once and its lens rules give the same buckets (mesh_one_format).
 - `python/graph_spec/tests/test_drawing_problem_codes.py` — each problem the Python drawing reader finds in a note or
   a style graph has a stable code. It comes from `packages/core/src/drawing-problem-codes.json` or the reader's own
   table. The notes of `drawing-problem-cases.json` give the same codes as the core gives them (editor spec §42, problem_codes).
@@ -454,6 +505,11 @@ These test behaviour across modules, or the repository itself, so they are named
   things the core returns (editor spec §7, views_agree_with_grafeo). It is given a fixed list of GQL's and Cypher's
   words. It refuses as a name and as a kind exactly the words the core keeps from them.
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
+
+### The libraries' examples
+
+- `test/library-examples.test.js` — the libraries' runnable examples, `examples/js` and `examples/python`, read and
+  check a block with every rule passing (API-12). CI's `examples` job runs each one from the release archive's layout.
 
 ### Colours and direction
 
@@ -506,14 +562,20 @@ These test behaviour across modules, or the repository itself, so they are named
   are aside, as they scale with its zoom. No line height is fixed, and no box that holds text has a fixed height. The
   browser page's theme sizes its text in rem.
 
+### The architecture's layers and areas
+
+- `test/layers.test.js` — each layer imports only the layers below it, as `requirements/architecture.gql` says. It
+  reads every import of the shipped code (editor spec §43, layers_checked; `node scripts/layers.mjs`).
+- `test/code-structure.test.js` — each shipped file of a part with areas sits in one area of `requirements/architecture.gql`.
+  No area is over its ceiling, and the Architecture page draws the areas (editor spec §43, structure_checked).
+
 ### Test tooling and the build status's parts
 
 - `test/import-graph.test.js` — the import graph, and the tests that reach a changed file through it. It covers imports
   by path and by package name, and a file or folder a test names to build or walk. It also covers how
   `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
-- `test/layers.test.js` — each layer imports only the layers below it, as `requirements/architecture.gql` says. It
-  reads every import of the shipped code (editor spec §43, layers_checked; `node scripts/layers.mjs`).
-- `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
+- `test/cheap-checks.test.js` — the quiet test run, running only a change's tests and the search ignore file.
+- `test/agents-guide.test.js` — the short AI guide, AGENTS.md, stays slim, and its handbook holds the detail.
 - `test/build-status.test.js` — the build status's pure part. It covers the requirements a pull request moves, found
   from the tests it newly marks written. It also covers the stage an event gives, which value may replace which, and the
   comment and the annotations.
@@ -555,6 +617,11 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/build-status-workflow.test.js` — the two build status workflows. They are woken only by the checks of a pull
   request, a push to main and a release. The project secret is given only to the script on main. No event text goes in
   a command line, and they hold least privilege.
+
+### The VS Code extension's nightly file
+
+- `test/vscode-release.test.js` — each nightly attaches the VS Code extension as a `.vsix` to install (spec §41,
+  nightly_prerelease). `scripts/vscode-release.mjs` packs it, and the test reads a real one back.
 
 ### The library's release
 
@@ -705,6 +772,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/github-project-blocks.test.js` — that mirror's blocked-by links. Each open question's issue blocks the issues
   of the requirements it blocks, made once. A link the requirements dropped is removed, and a person's is kept. A
   refusal by GitHub is a warning, with the issues and project still mirrored.
+- `test/github-project-milestones.test.js` — that mirror's milestones, read from the waves file. Each wave names one,
+  and each requirement's issue is filed under its wave's. A milestone is due on its last wave's end, and closes once
+  its issues are all closed. A person's milestone is kept, and a refusal by GitHub is a warning.
 - `test/github-project-plan.test.js` — that mirror's plan: what differs between the desired state and what GitHub holds, for the issues, the labels and the project.
 
 ### Benchmarks, licences, network and policy
@@ -730,6 +800,9 @@ These test behaviour across modules, or the repository itself, so they are named
   reaches no other origin, and calls only the app's seven folder commands (spec §41, standalone_app).
 - `test/standalone-app.test.js` — the built desktop app, driven through tauri-driver. It lists, draws and writes
   notes. Its window refuses any other address (spec §41, standalone_app).
+- `test/vscode-plugin.test.js` — the built VS Code extension, against a stand-in for VS Code. Its tab draws a note
+  and writes an edit to it in a real browser. It reaches the folder only through checked calls, and loads only its own
+  files (spec §41, vscode_plugin).
 - `test/releasing.test.js` — RELEASING.md lists the steps of a release in order and how to go back. It names every
   secret a workflow uses (editor spec §13, release_steps_written).
 - `test/release-prepare.test.js` — one command bumps every file that carries the version, both lockfiles included
@@ -751,8 +824,10 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `test/fresh-clone.test.js` — when a pull request runs the fresh clone. It runs only for a change that can alter what
   the README's steps do. That is the steps, the npm scripts, the hook or the git settings (spec §13, Delivery).
-- `test/ci-plan.test.js` — what CI runs for a change. A draft runs only the tests its change reaches. Anything else runs
-  everything, and a failed plan runs everything too (spec §13, touched_tests_only).
+- `test/merge-queue.test.js` — the workflows behind the required checks also run in GitHub's merge queue.
+- `test/ci-plan.test.js` — what CI runs for a change. A pull request, draft or ready, runs only the tests its change
+  reaches. The label `ci:full` runs everything from the next push. Main, the nightly and a release run everything, and a
+  failed plan runs everything too (spec §13, touched_tests_only).
 
 ### The quality ratchet and the test runner
 
@@ -833,16 +908,27 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/wiki-workflow.test.js` — the workflow that makes the wiki. It is woken by a push to main or a stable release.
   The pages are made with read access only, and the one job that writes runs no code of the repository.
 
+### The wave nightly and the jobs that write
+
+- `test/wave-nightly-workflow.test.js` — the build made when a wave ends. A pull request labelled `wave-done` runs the
+  nightly when it merges. A gate first checks the board: every item of that wave must be Done and proved.
+- `test/workflow-writers.test.js` — which workflow jobs may write to the repository, and what else each may touch.
+
 ### The nightly build, the home page and test files
 
 - `test/nightly-workflow.test.js` — the nightly pre-release, run each night and by hand. It is built only when main
   moved, and published only after the full suite passes. The one job that writes runs no code of the repository. The
   last seven are kept, with the version `scripts/nightly-version.mjs` gives it.
+### The home page and its live demo
+
 - `test/site.test.js` — the project's home page, made from `site/index.html` and `site/words.json`.
   - Every word is used and none is missing.
   - It has the search and AI basics: title, description, canonical address, structured data, sitemap, robots and
     llms.txt.
   - It meets WCAG 2.2 AA in both schemes, and no side is said by left or right.
+- `test/site-demo.test.js` — the home page's live demo, built by `scripts/site-demo.mjs` and drawn by the plugin.
+  - Its note holds the project's own graph files whole, and its page loads its own files only.
+  - In Chrome it draws every graph, an edit in the pane redraws its card, and no request leaves the page.
 - `test/site-workflow.test.js` — the workflow that publishes the home page. It is woken by a push to main, each morning
   or by hand. The page is made with read access only. The one job that writes to GitHub Pages runs no code of the
   repository.

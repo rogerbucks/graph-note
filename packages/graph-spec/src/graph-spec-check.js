@@ -41,7 +41,7 @@ const { check } = require('./rules/check.js');
 const { completeness } = require('./rules/completeness.js');
 const { readings } = require('./rules/readings.js');
 const { guessReadings, reverseReading } = require('./rules/guessed-readings.js');
-const { clipShown, shownText } = require('./rules/shown-text.js');
+const { clipShown, shownText, shownTexts } = require('./rules/shown-text.js');
 const { lint } = require('./changesets/dialect-lint.js');
 const { changesetHeader, checkChangeset } = require('./changesets/changeset.js');
 const { splitChangeset, readChange, changeId } = require('./changesets/changes.js');
@@ -57,6 +57,26 @@ const { louvain } = require('./clusters/louvain.js');
 const { clustersOf } = require('./clusters/clusters.js');
 const { centroidId, centroidsOf } = require('./clusters/centroids.js');
 const { clusterCycles, cycleView } = require('./clusters/cycles.js');
+const { clusterCertainty } = require('./clusters/cohesion.js');
+const processCore = require('./process/core.js');
+const runs = require('./process/runs.js');
+const altitude = require('./altitude/altitude.js');
+const { lensesOf, runLens } = require('./lenses/saved-lenses.js');
+const { altitudeIndex, searchIndex } = require('./altitude/altitude-index.js');
+const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
+const { asAt, lensAsAt } = require('./mesh/as-at.js');
+const { afterTextMerge } = require('./mesh/after-text-merge.js');
+const { sameAs } = require('./mesh/same-as.js');
+const {
+  contextsOf,
+  contextGuesses,
+  comparable,
+  proposeSameAs,
+  sameAsAcross,
+  worldIn,
+  searchContexts,
+} = require('./mesh/contexts.js');
+const { inherited, instancesOf, typeOf } = require('./mesh/types-instances.js');
 
 // The API, its names in the order they have always had; test/graph-spec-check-api.test.mjs holds the list.
 module.exports = {
@@ -130,6 +150,7 @@ module.exports = {
   secretsIn,
   secretsInGraph,
   shownText,
+  shownTexts,
   clipShown,
   louvain,
   clustersOf,
@@ -137,4 +158,46 @@ module.exports = {
   centroidsOf,
   clusterCycles,
   cycleView,
+  certaintyOf,
+  byCertainty,
+  meshJoin,
+  asAt,
+  lensAsAt,
+  afterTextMerge,
+  sameAs,
+  typeOf,
+  instancesOf,
+  inherited,
+  clusterCertainty,
+  coreOfEight: processCore.coreOfEight,
+  transitionsOf: processCore.transitionsOf,
+  promoteTransition: processCore.promoteTransition,
+  processPath: processCore.processPath,
+  guardOf: processCore.guardOf,
+  guardAllows: processCore.guardAllows,
+  runningRuleOf: processCore.runningRuleOf,
+  overrideRunningRule: processCore.overrideRunningRule,
+  runLog: runs.runLog,
+  currentOf: runs.currentOf,
+  enterState: runs.enterState,
+  leaveState: runs.leaveState,
+  moveRun: runs.moveRun,
+  withEntries: runs.withEntries,
+  refreshCurrent: runs.refreshCurrent,
+  atAltitude: altitude.atAltitude,
+  profilesOf: altitude.profilesOf,
+  audienceProjection: altitude.audienceProjection,
+  altitudesIn: altitude.altitudesIn,
+  byAxes: altitude.byAxes,
+  lensesOf,
+  runLens,
+  altitudeIndex,
+  searchIndex,
+  contextsOf,
+  contextGuesses,
+  comparable,
+  proposeSameAs,
+  sameAsAcross,
+  worldIn,
+  searchContexts,
 };

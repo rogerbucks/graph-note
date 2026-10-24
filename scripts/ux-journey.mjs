@@ -18,6 +18,7 @@ export const HOSTS = {
   obsidian: { steps: 'journey_steps_obsidian', interactions: 'journey_interactions_obsidian' },
   'claude-code': { steps: 'journey_steps_claude_code', interactions: 'journey_interactions_claude_code' },
   app: { steps: 'journey_steps_app', interactions: 'journey_interactions_app' },
+  vscode: { steps: 'journey_steps_vscode', interactions: 'journey_interactions_vscode' },
 };
 
 /** The accessible name of `el`: its label, or the text of what labels it, or its own text. */

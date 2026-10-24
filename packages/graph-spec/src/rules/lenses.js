@@ -15,7 +15,8 @@ function lensBuckets(g, rule) {
       .map((a) => (a ? [a[1], a[2]] : ['', '']));
   if (arms.map(([c, b]) => `WHEN ${c} THEN '${b}'`).join(' ') !== whens.trim().replace(/\s+/g, ' ')) return null;
   const test = (cond, p) => {
-    for (const part of cond.split(/\s+AND\s+/)) {
+    // cut at each AND by plain text, never a pattern of spaces on both sides that can backtrack on a long run of them
+    for (const part of cond.replace(/\s+/g, ' ').split(' AND ')) {
       const t = new RegExp(`^${v}\\.(\\w+)\\s*(<=|>=|<>|=|<|>)\\s*('([^']*)'|-?\\d+(?:\\.\\d+)?)$`).exec(part.trim());
       if (!t) throw new Error('needs an engine');
       const a = p[t[1]],

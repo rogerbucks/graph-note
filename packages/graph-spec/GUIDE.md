@@ -6,6 +6,12 @@ follows `python/graph_spec` function for function, and the parity tests hold the
 The spec itself is [`requirements/graph-spec.gql`](../../requirements/graph-spec.gql): every section the code cites as
 §3, §24 and so on, with each rule's own words. A citation of the editor's spec says "editor spec" (ARCH-11).
 
+## A first call
+
+[`examples/js/read-and-check.cjs`](../../examples/js/read-and-check.cjs) reads one graph block and checks it, in ten
+lines. Run it with `node examples/js/read-and-check.cjs`. CI runs it from the release archive's layout on every pull
+request, so it always works with the library as shipped.
+
 ## The entry point, and the built file
 
 - **`src/graph-spec-check.js`** is the entry point. It requires the feature modules below and exports the one API
@@ -72,6 +78,9 @@ and no module requires one that requires it back.
   (req:21.trust-counted, req:21.prefix-owner).
 - **`src/views/`** — `mermaid.js` (relationships, legend and paths as Mermaid text) and `views.js` (every view of a
   graph at once).
+
+### Clusters
+
 - **`src/clusters/`** — clusters (editor spec §31) and the groups a massive graph opens as (editor spec §53). Python's
   twins give the same answers. Its files:
   - `louvain.js` — the one method that finds groups by how things link (`test/louvain-cases.json`).
@@ -81,6 +90,54 @@ and no module requires one that requires it back.
     worked out again only when their members change. One still moving is flagged unsettled (`test/centroid-cases.json`).
   - `cycles.js` — clusters inside each other in a cycle. A cycle is flagged, never refused, and a view hides or
     highlights it (`test/cycle-cases.json`).
+  - `cohesion.js` — how tightly each cluster holds together: links between its members and how many are contested. A
+    loose, disputed cluster states less certainty than a tight one. A cluster may opt in to a floor, so it is never
+    more certain than its least certain member (`test/cohesion-cases.json`).
+
+### Altitude
+
+- **`src/altitude/`** — altitude, audience profiles and the topic index (editor spec §32). Python's twins give the same
+  answers.
+  - `altitude.js` — altitude as a query parameter: parts over the level open, those at or under it show as one thing,
+    and links are bundled. It also has audience profiles by three criteria and projections per domain. A thing's level
+    in each lens is a link, and the two axes filter apart or together (`test/altitude-cases.json`).
+  - `altitude-index.js` — each thing's topic tags and altitudes. A search finds a tag exactly or by likeness and ranks
+    by the certainty sort key, marking contested things (`test/altitude-index-cases.json`).
+
+### Lenses
+
+- **`src/lenses/`** — lenses as graph data (editor spec §33). Python's twin gives the same answers.
+  - `saved-lenses.js` — a lens is a Lens thing: a name, a saved query and a default altitude. It answers fresh each
+    time, joins like any claim, holds no data and is flagged when a schema it uses changes (`test/saved-lens-cases.json`).
+
+### The process core
+
+- **`src/process/`** — the process core (editor spec §34). Python's twins give the same answers
+  (`test/process-core-cases.json`).
+  - `core.js` — the eight kinds, with a ninth flagged and view details kept apart. Transitions as links or promoted
+    things, a path that walks them, guards as data and the running rule a run follows.
+  - `runs.js` — a run's log as the truth, its current states made from it, and machines inside states at any depth.
+
+### The mesh
+
+- **`src/mesh/`** — the graph mesh (editor spec §27 to §30). Python's twins give the same answers.
+  - `mesh-join.js` — graphs from many notes joined, built on `src/joins/`, with what the join found. Each clash keeps
+    both sides, and the gaps are listed. Each claim has its certainty in words, ranked by a key made from them, never
+    typed. A dispute lowers only the thing disputed, and a link to a contested thing is marked. A hand-made cluster
+    can be contested, and same-named states match only as a guess (`test/mesh-join-cases.json`).
+  - `as-at.js` — a graph as at a date, so a lens answers as it was then (`test/two-times-cases.json`). Recorded time
+    is `recorded_at`, and SUPERSEDES. Real-world time runs from `valid_from` up to `valid_to`.
+  - `after-text-merge.js` — two edits joined over their base, and their text merge read against that join. A value
+    the merge picked in a dispute is listed for a person, never taken as the decision (`test/join-every-author-cases.json`).
+  - `same-as.js` — which things in different graphs are one (ARCH-6). Inside a graph the name is the id. Across graphs
+    only a written SAME_AS link to a Ref joins two things; the same name with no link stays a guess
+    (`test/same-as-cases.json`).
+  - `types-instances.js` — lasting types and their instances. An instance links to its type with INSTANCE_OF, here or
+    through a Ref, and has its type's properties unless it sets its own (`test/types-instances-cases.json`).
+  - `contexts.js` — contexts, where links may join (editor spec §61). Each graph is in one context: a client, note,
+    folder or the vault. Guesses across contexts show only when turned on. Things in two contexts are compared only
+    under one shared schema or a SAME_AS link, and across contexts only a person writes one. `canRead` keeps out what a viewer
+    may not read (`test/contexts.test.mjs`).
 
 ## Beside them
 

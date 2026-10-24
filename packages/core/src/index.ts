@@ -364,8 +364,18 @@ export {
   withMeant,
 } from './links.ts';
 export type { Attachment, BrokenLink, EmbedPart, FoundLink, LinkKind, LinkVault, PlacedLink } from './links.ts';
-export { TextHistory } from './history.ts';
-export type { Change, TextState } from './history.ts';
+export { TextHistory, type Change, type TextState } from './history.ts';
 export type { Bounds, HitAreas, Shape } from './hits.ts';
 export type { Landing, PlacedBox, Side, WrittenNudge } from './box-drag.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
+export { editInParts, setInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
+export * from './index-mesh.ts';
+export * from './index-late.ts';
+export { altitudeIndexOf, searchAltitude, type NoteAltitudeIndex } from './altitude-index.ts';
+export { acceptDraft, draftRequests, neighbourBands, siblingDrafts } from './sibling-drafts.ts';
+export type { BandCriteria, DraftProposal, DraftRequest } from './sibling-drafts.ts';
+export { AltitudeTrail, FADE_AFTER, type AltitudeMove, type Consequence, type KeptDescent } from './browsing.ts';
+export { transitionAltitude, walkTransition } from './phase-altitude.ts';
+export type { PhaseAltitudePart, PhaseView, WalkedTransition } from './phase-altitude.ts';
+export * from './index-process.ts';
+export * from './index-profiles.ts';

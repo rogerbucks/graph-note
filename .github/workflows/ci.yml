@@ -4,8 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
-    # marking a draft ready for review runs everything, as the plan below says
     types: [opened, synchronize, reopened, ready_for_review]
+  # GitHub's merge queue, when Roger turns it on: the queued change runs everything, as main does
+  merge_group:
 
 permissions:
   contents: read
@@ -17,8 +18,9 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # What runs: a draft pull request runs only the tests its change reaches; anything else runs everything
-  # (scripts/ci-plan.mjs). The safety checks below never wait on it. A job that waits on it still runs when it fails.
+  # What runs: a pull request runs only the tests its change reaches, unless labelled ci:full; a push to main runs
+  # everything (scripts/ci-plan.mjs). The safety checks below never wait on it. A job that waits on it still runs when
+  # it fails.
   plan:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -40,8 +42,8 @@ jobs:
       - id: plan
         env:
           EVENT: ${{ github.event_name }}
-          DRAFT: ${{ github.event.pull_request.draft }}
-          BASE: ${{ github.event.pull_request.base.sha || github.sha }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
         run: node scripts/ci-plan.mjs --base "$BASE"
 
   # The suite, its test files split over six machines that run at once, so a run takes about a minute, not five. Each
@@ -71,7 +73,8 @@ jobs:
         run: npm ci
       # six files at once on the runner's four cores, as the files mostly wait on the processes they start
       # A shard that draws in the browser for three files at once peaked at 4.2 GB here (19 Oct 2026), over the
-      # default 4 GB ceiling. 6 GB keeps a runaway stopped well inside the runner's 16 GB.
+      # default 4 GB ceiling, so it got 6 GB. A shard drawing in the browser for four files at once then reached 6.3 GB
+      # (23 Oct 2026). 8 GB keeps a runaway stopped inside the runner's 16 GB.
       # A partial run gives the shards only its own test files, through the environment, never spliced into the command.
       # Each name is checked to hold only letters, digits and `_ . / @ -`, so the shell splits them and nothing more.
       - if: needs.plan.outputs.tier != 'subset' || matrix.shard <= fromJSON(needs.plan.outputs.shards)
@@ -79,7 +82,7 @@ jobs:
           SHARD: ${{ matrix.shard }}
           SHARDS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.shards || 6 }}
           TESTS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.tests || '' }}
-          THOUGHTKNOT_TEST_MEMORY_MB: 6144
+          THOUGHTKNOT_TEST_MEMORY_MB: 8192
         run: npm test -- --test-concurrency=6 --test-shard="$SHARD/$SHARDS" --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt $TESTS
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -102,7 +105,7 @@ jobs:
           RESULT: ${{ needs.suite.result }}
         run: |
           if [ "$PLAN" != success ]; then echo "::warning::The CI plan failed, so the whole suite ran. Fix scripts/ci-plan.mjs."; fi
-          if [ "$TIER" = subset ]; then echo "::notice::A partial run, as this is a draft. Marking it ready for review runs everything."; fi
+          if [ "$TIER" = subset ]; then echo "::notice::A partial run: only what the change reaches. The label ci:full runs everything; main always does."; fi
           test "$RESULT" = success
 
   # The quick checks: format, lint, content, quality baseline, types, the requirements' flips and the build.
@@ -129,13 +132,13 @@ jobs:
       - run: npm run bench:scale
       # a baseline committed worse than the base's needs a reason in quality/accepted.json, as a measured run does
       - env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
         run: node scripts/quality-check.mjs --baseline-since "$BASE"
       - run: npm run typecheck
       # the requirements graph is edited here, but a pull request never moves a test back or removes a proved one
-      - if: github.event_name == 'pull_request'
+      - if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         # against the merge base, so a change main gained after the branch point is not read as a hand revert
         run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE"
       - run: npm run build
@@ -144,7 +147,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: plan
-    # skipped only when a draft's plan says nothing the Python tests read changed; runs when the plan failed
+    # skipped only when a pull request's plan says nothing the Python tests read changed; runs when the plan failed
     if: ${{ !cancelled() && needs.plan.outputs.python != 'false' }}
     defaults:
       run:
@@ -177,7 +180,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: plan
-    # skipped only when a draft's plan says nothing the Python tests read changed; runs when the plan failed
+    # skipped only when a pull request's plan says nothing the Python tests read changed; runs when the plan failed
     if: ${{ !cancelled() && needs.plan.outputs.python != 'false' }}
     defaults:
       run:
@@ -200,6 +203,34 @@ jobs:
       - name: Grafeo is not installed
         run: "! uv run --locked --no-default-groups python -c 'import grafeo'"
       - run: node ../../scripts/run-ceiling.mjs uv run --locked --no-default-groups python -m unittest discover -s tests
+
+  # The libraries' runnable examples (risk API-12), run as a reader runs them: from the release archive's layout, where
+  # the JavaScript entry point is the built file. Each one reads a block, checks it and exits non-zero on a failed rule.
+  # Every file in examples/js and examples/python is run (test/library-examples.test.js holds this list to the folders).
+  examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build --workspace packages/graph-spec
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - name: Lay out the libraries as the release archive does, with the examples beside them
+        run: |
+          git archive --format=tar --prefix=packages/graph-spec/src/ --add-file=packages/graph-spec/dist/graph-spec-check.js --prefix= HEAD LICENSE packages/graph-spec/package.json packages/graph-spec/src ':(exclude)packages/graph-spec/src/graph-spec-check.js' packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src examples/js examples/python | tar -x -C "$RUNNER_TEMP"
+      - name: Run each example
+        working-directory: ${{ runner.temp }}
+        run: |
+          node examples/js/read-and-check.cjs
+          uv run --locked --no-default-groups --project python/graph_spec python examples/python/read_and_check.py
 
   # Every test is seen to fail before its code (spec §12): each new commit is replayed, its tests run against its
   # parent's code, and a new test that passes there fails the build unless its reason is kept in test/seen-failing/.
@@ -224,8 +255,8 @@ jobs:
         working-directory: python/graph_spec
       - name: Replay each new commit's tests against its parent's code
         env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}
         run: |
           commits=$(git rev-list --no-merges "$BASE..$HEAD")
           if [ -n "$commits" ]; then node scripts/tests-first.mjs --check $commits; fi
@@ -265,9 +296,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # The fresh clone's `npm test` runs the whole suite at once, browser drawing included. That passed the default 4 GB
-    # ceiling (4.2 GB, 21 Oct 2026), as the shards above did, so it gets their 6 GB too.
+    # ceiling (4.2 GB, 21 Oct 2026), as the shards above did, so it gets their ceiling too: 8 GB.
     env:
-      THOUGHTKNOT_TEST_MEMORY_MB: 6144
+      THOUGHTKNOT_TEST_MEMORY_MB: 8192
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -280,11 +311,15 @@ jobs:
         with:
           version: 0.12.17
           enable-cache: false
-      # The fresh clone runs the same tests, lint and build as the jobs above, so a pull request runs it only when it
-      # changes a setup input (the README's steps, the npm scripts they run, the hook); main and the release always do.
-      - if: github.event_name == 'pull_request'
+      # The fresh clone runs the same tests, lint and build as the jobs above, which took 14 minutes on every push to main
+      # (24 Oct 2026). So it runs only when a setup input changed (the README's steps, the npm scripts they run, the
+      # hook): a pull request or a queued change since its base, main since the push before. The nightly and the release
+      # run it whole, so a break in the steps is found within a day.
+      - if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         run: node scripts/public-readiness.mjs --history --setup-since "$BASE"
-      - if: github.event_name != 'pull_request'
-        run: node scripts/public-readiness.mjs --history --setup
+      - if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: node scripts/public-readiness.mjs --history --setup-since "$BEFORE"

@@ -347,6 +347,10 @@
       "instance_inherits_type",
       "type_suggestion_bundle",
       "mesh_one_format",
+      "format_version_named",
+      "schema_version_moves",
+      "rename_follows_notes",
+      "same_as_across_graphs",
       "mesh_text_canonical",
       "mesh_index_rebuilds",
       "mesh_work_in_engine",
@@ -656,7 +660,8 @@
       "developer_wiki",
       "plan_vs_actual",
       "plain_docs_auto",
-      "waves_on_time"
+      "waves_on_time",
+      "plan_milestones"
     ]
   },
   "G1": {
@@ -809,7 +814,8 @@
     "title": "Project home page",
     "size": "S",
     "requirements": [
-      "landing_page"
+      "landing_page",
+      "site_demo"
     ]
   },
   "D3": {
@@ -1079,6 +1085,35 @@
       "discover_compare_sets",
       "discover_group_names",
       "discover_watch_rule"
+    ]
+  },
+  "CX1": {
+    "title": "Contexts: where links may join",
+    "size": "S",
+    "requirements": [
+      "context_named",
+      "context_guess_default",
+      "context_guess_filter",
+      "context_names_apart",
+      "context_same_as_confirmed",
+      "context_no_leak"
+    ]
+  },
+  "RP1": {
+    "title": "A picture for readers without ThoughtKnot",
+    "size": "M",
+    "requirements": [
+      "picture_for_readers",
+      "picture_opt_in",
+      "picture_hidden_when_drawn",
+      "picture_kept_in_step",
+      "picture_same_everywhere",
+      "picture_never_read",
+      "picture_self_explaining",
+      "picture_where",
+      "picture_big_graph",
+      "picture_classified",
+      "picture_outside_tools"
     ]
   }
 }

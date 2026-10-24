@@ -10,7 +10,7 @@
 // the difference. The requirements file stays the only source. Every issue and project item made from it is a
 // derivative, regenerated and never edited by hand.
 import { REQUIREMENTS } from './check-requirements.mjs';
-import { iterationsOf, wavesOf } from './github-project-waves.mjs';
+import { iterationsOf, milestonesOf, wavesOf } from './github-project-waves.mjs';
 
 /** The command that makes the mirror, named in each issue so a reader knows where it came from. */
 export const SCRIPT = 'scripts/github-project.mjs';
@@ -273,7 +273,9 @@ const questionBodyOf = (q, workstream) =>
  * Each issue is {id, title, body, labels (sorted), state ('open' or 'closed'), slice, workstream, status, buildStatus,
  * progress}. The last five are the options its project item takes. The Build status, and the built-in Status as
  * `progress`, are only the seed of an item that has none, or has Todo (see withSeed). The requirements' issues come
- * first. Then comes one for each open question of the chosen slices, always open, its Proof `open`.
+ * first. Then comes one for each open question of the chosen slices, always open, its Proof `open`. Where the plan
+ * has milestones, each requirement's issue has its wave's `milestone`, or null in no wave. The state then has the
+ * `milestones` to keep (milestonesOf). A question's milestone is left as it is.
  *
  * `fields` maps each project field to its options. `known` lists every requirement and question id the copy holds, in
  * any slice. So an issue whose requirement or question is only outside the chosen slices is told from one whose
@@ -285,8 +287,10 @@ export function desiredState(board, workstreams, slices, plan = null) {
   const placed = assignWorkstreams(requirements, workstreams);
   const option = (id) => `${id}: ${workstreams[id].title}`;
   const inWaves = plan ? wavesOf(requirements, placed, workstreams, plan) : null;
-  // without a plan, Wave and Order are left as they are; with one, a requirement in no wave has neither
-  const planned = (id) => (plan ? { wave: null, order: null, ...inWaves.get(id) } : {});
+  // without a plan, Wave and Order are left as they are; with one, a requirement in no wave has neither. Nor has it a
+  // milestone, where the plan has milestones; without them its milestone is left as it is
+  const none = plan?.milestones ? { wave: null, order: null, milestone: null } : { wave: null, order: null };
+  const planned = (id) => (plan ? { ...none, ...inWaves.get(id) } : {});
   const issues = requirements.map((r) => {
     const workstream = placed.get(r.id);
     return {
@@ -325,6 +329,7 @@ export function desiredState(board, workstreams, slices, plan = null) {
   }
   return {
     issues,
+    ...(plan?.milestones ? { milestones: milestonesOf(plan, issues) } : {}),
     fields: {
       Slice: chosen.map((s) => `Slice ${s}`),
       Workstream: Object.keys(workstreams).map(option),

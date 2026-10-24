@@ -3,6 +3,9 @@
 // the order of the work lives. From it the mirror derives two fields for each requirement:
 // - Wave: the project's iteration field, one iteration for each wave, with its dates;
 // - Order: a number, from the wave's position, then the workstream's, then the requirement's.
+// Each wave is also a milestone, where the file says `"milestones": "each wave"`. Or the file lists milestones, and each
+// wave names one of them. The mirror files each requirement's issue under its wave's milestone
+// (github-project-milestones.mjs).
 // Pure: text and values in, values out. The fields are set by github-project-gh.mjs.
 
 /** The plan, beside the workstreams file. */
@@ -43,6 +46,70 @@ function readEarlierPlan(wave) {
   return { start: earlier.start, end: earlier.end, replaced: earlier.replaced, why: earlier.why };
 }
 
+/** The value of `milestones` that makes each wave of work its own milestone (Roger, 24 Oct 2026). */
+export const EACH_WAVE = 'each wave';
+
+/**
+ * Each wave of work as its own milestone: titled as the wave, about its workstreams. The wave names it. A wave that
+ * names another is refused, and a placeholder wave of no work has none.
+ */
+function eachWave(waves, workstreams) {
+  const named = waves.find((w) => w.milestone !== null);
+  if (named) throw new Error(`wave "${named.title}" names a milestone, but each wave is its own`);
+  const milestones = [];
+  for (const w of waves.filter((x) => x.workstreams.length)) {
+    w.milestone = w.title;
+    const titles = w.workstreams.map((id) => `${id} ${workstreams[id].title}`);
+    milestones.push({ title: w.title, about: `Workstreams: ${titles.join('; ')}.` });
+  }
+  return milestones;
+}
+
+/** The milestones the file lists, [{title, about}], or null where it lists none. */
+function readMilestones(file) {
+  if (file.milestones === undefined) return null;
+  if (!Array.isArray(file.milestones) || !file.milestones.length)
+    throw new Error(`milestones must be a list of {title, about}, with at least one, or "${EACH_WAVE}"`);
+  const titles = new Set();
+  return file.milestones.map((m) => {
+    if (m === null || typeof m !== 'object' || typeof m.title !== 'string' || !m.title.trim())
+      throw new Error('every milestone needs a title, as text');
+    if (titles.has(m.title)) throw new Error(`two milestones are titled "${m.title}"`);
+    titles.add(m.title);
+    if (typeof m.about !== 'string' || !m.about.trim())
+      throw new Error(`milestone "${m.title}" needs an about, as text, saying what is true once it is reached`);
+    return { title: m.title, about: m.about };
+  });
+}
+
+/**
+ * Throws unless the waves and milestones fit. With milestones, every wave holding workstreams names one of them, and
+ * every milestone holds a wave. Without, no wave names one.
+ */
+function checkMilestones(waves, milestones) {
+  if (!milestones) {
+    const named = waves.find((w) => w.milestone !== null);
+    if (named) throw new Error(`wave "${named.title}" names a milestone, but the waves file lists none`);
+    return;
+  }
+  const titles = new Set(milestones.map((m) => m.title));
+  for (const w of waves) {
+    if (w.milestone === null && w.workstreams.length)
+      throw new Error(`wave "${w.title}" names no milestone; give it one of the file's milestones`);
+    if (w.milestone !== null && !titles.has(w.milestone))
+      throw new Error(`wave "${w.title}": ${w.milestone} is not a milestone of the waves file`);
+  }
+  for (const m of milestones)
+    if (!waves.some((w) => w.milestone === m.title)) throw new Error(`milestone "${m.title}" holds no wave`);
+}
+
+function readMilestoneName(wave) {
+  if (wave.milestone === undefined) return null;
+  if (typeof wave.milestone !== 'string' || !wave.milestone.trim())
+    throw new Error(`wave "${wave.title}": milestone must be a milestone's title, as text`);
+  return wave.milestone;
+}
+
 function readWave(wave, workstreams, seen) {
   if (wave === null || typeof wave !== 'object' || typeof wave.title !== 'string' || !wave.title.trim())
     throw new Error('every wave needs a title, as text');
@@ -67,6 +134,7 @@ function readWave(wave, workstreams, seen) {
     estimate: wave.estimate,
     workstreams: [...wave.workstreams],
     earlierPlan: readEarlierPlan(wave),
+    milestone: readMilestoneName(wave),
     from: start,
     to: end,
   };
@@ -74,14 +142,16 @@ function readWave(wave, workstreams, seen) {
 
 /**
  * Reads the waves file against the workstreams (as readWorkstreams gives them): {waves: [{title, start, end, estimate,
- * earlierPlan,
- * workstreams}]}, in order. Throws, naming what is wrong, for anything else:
+ * earlierPlan, milestone, workstreams}]}, in order, and {milestones: [{title, about}]} where the file lists them or
+ * makes each wave one (EACH_WAVE).
+ * Throws, naming what is wrong, for anything else:
  * - no waves;
  * - a wave with no title, or a title two waves share;
  * - a date that is not a day, or an end before its start;
  * - an estimate mark that is not true or false;
  * - a workstream the file does not hold, or one in two waves;
- * - a wave that starts before the one before it ends.
+ * - a wave that starts before the one before it ends;
+ * - with milestones, a wave of workstreams that names none, a name that is not one, or a milestone with no wave.
  */
 export function readWaves(text, workstreams) {
   let file;
@@ -98,7 +168,9 @@ export function readWaves(text, workstreams) {
   for (let i = 1; i < waves.length; i += 1)
     if (waves[i].from <= waves[i - 1].to)
       throw new Error(`wave "${waves[i].title}" starts before "${waves[i - 1].title}" ends`);
-  return { waves: waves.map(({ from: _from, to: _to, ...wave }) => wave) };
+  const milestones = file.milestones === EACH_WAVE ? eachWave(waves, workstreams) : readMilestones(file);
+  checkMilestones(waves, milestones);
+  return { waves: waves.map(({ from: _from, to: _to, ...wave }) => wave), ...(milestones ? { milestones } : {}) };
 }
 
 /** A wave's title on the board, its iteration's and its items' Wave: marked “· est.” while its dates are estimates. */
@@ -114,8 +186,8 @@ export function iterationsOf(plan) {
 }
 
 /**
- * The wave and order of each requirement, as a Map from its id to {wave (the wave's title), order}. `requirements` are
- * in the copy's order, `placed` maps each to its workstream (assignWorkstreams), and `workstreams` is the workstreams
+ * The wave and order of each requirement, as a Map from its id to {wave (the wave's title), order}. Where the plan has
+ * milestones, each also has its wave's `milestone`. `requirements` are in the copy's order, `placed` maps each to its workstream (assignWorkstreams), and `workstreams` is the workstreams
  * file. Within a workstream the requirements it lists come first, in its order, then those it holds by default, in the
  * copy's. A requirement whose workstream is in no wave is not in the Map. Throws when a wave has 100 workstreams or a
  * workstream 100 requirements, which Order cannot tell apart.
@@ -130,7 +202,11 @@ export function wavesOf(requirements, placed, workstreams, plan) {
       if (s + 1 >= STEP || members.length >= STEP)
         throw new Error(`wave "${wave.title}" or its workstream ${ws} is too large for Order to number`);
       members.forEach((id, r) =>
-        found.set(id, { wave: iterationTitle(wave), order: (w + 1) * WAVE_STEP + (s + 1) * STEP + r + 1 }),
+        found.set(id, {
+          wave: iterationTitle(wave),
+          order: (w + 1) * WAVE_STEP + (s + 1) * STEP + r + 1,
+          ...(plan.milestones ? { milestone: wave.milestone } : {}),
+        }),
       );
     });
   });
@@ -165,4 +241,45 @@ export function waveLines(desired) {
   if (none.length) lines.push(`in no wave: ${none.length} requirements, ${flagged.length} of them not proved`);
   for (const i of flagged) lines.push(`warning: requirement ${i.id} (${i.status}) is in no wave`);
   return lines;
+}
+
+/** The line every milestone's description ends with, so a reader knows where it came from. */
+export const MILESTONE_BANNER =
+  'Generated by scripts/github-project.mjs from requirements/waves.json; an edit here is overwritten.';
+
+const waveNumber = (title) => /^Wave (\d+)\b/.exec(title)?.[1] ?? title;
+
+/**
+ * The milestones the mirror keeps, from a plan with milestones and the desired issues (each with its `milestone`):
+ * [{title, description, dueOn, state, waves}]. A milestone is due on the last end of its waves. Its description is its
+ * about, the waves it holds and the banner. It is closed once it holds issues and all of them are closed, else open.
+ * None for a plan without milestones.
+ */
+export function milestonesOf(plan, issues) {
+  if (!plan?.milestones) return [];
+  return plan.milestones.map((m) => {
+    const waves = plan.waves.filter((w) => w.milestone === m.title);
+    const mine = issues.filter((i) => i.milestone === m.title);
+    const dueOn = waves
+      .map((w) => w.end)
+      .sort()
+      .at(-1);
+    const numbers = waves.map((w) => waveNumber(w.title));
+    const held = `${numbers.length === 1 ? 'Wave' : 'Waves'} ${numbers.join(', ')}.`;
+    return {
+      title: m.title,
+      description: `${m.about} ${held}\n\n${MILESTONE_BANNER}`,
+      dueOn,
+      state: mine.length && mine.every((i) => i.state === 'closed') ? 'closed' : 'open',
+      waves: waves.map((w) => w.title),
+    };
+  });
+}
+
+/** The lines the mirror prints of the milestones: each with its due day, state and the count of its requirements. */
+export function milestoneLines(desired) {
+  return (desired.milestones ?? []).map((m) => {
+    const mine = desired.issues.filter((i) => i.milestone === m.title);
+    return `milestone ${m.title} (due ${m.dueOn}, ${m.state}): ${m.waves.length} wave${m.waves.length === 1 ? '' : 's'} · ${mine.length} requirements · ${proofs(mine)}`;
+  });
 }

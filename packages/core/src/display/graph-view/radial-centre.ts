@@ -9,7 +9,7 @@ import { chosenDiagram, diagramOffer, word } from '@thoughtknot/core';
 import type { DiagramOffer, DiagramWrite, GraphDrawing, NoteReading, StyleGraph } from '@thoughtknot/core';
 import { boxPlaces } from './regroup';
 import type { DiagramShown, Trying, TypeLeftAt } from './type-strip';
-import { button } from './view-bar';
+import { button } from '../button';
 
 /** The centre `style` picks for a radial drawing in `view`, the view's own over the whole graph's; none if not picked. */
 export function pickedCentre(style: Pick<StyleGraph, 'diagrams'>, view?: string): string | undefined {

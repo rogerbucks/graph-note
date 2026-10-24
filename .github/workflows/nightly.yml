@@ -4,19 +4,32 @@ name: Nightly
 # newest work; everyone else stays on the stable releases release.yml makes from a bare version tag. It runs at 16:00 UTC
 # (2 am in Brisbane), and by hand. A night on which main has not moved since the last nightly publishes nothing.
 #
-# Five jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
+# Six jobs, so no code runs beside the write. `check` asks GitHub, read only, whether main moved since the last
 # nightly. `security` stops the night on an open high or critical security alert. `build` checks out main, installs and runs main's own code with read access only: the full suite, the content
 # check and the build, so a nightly is published only when every test passes. It uploads the same assets a release
-# carries, with the nightly version (scripts/nightly-version.mjs) in their manifest. `publish` may write the
+# carries, with the nightly version (scripts/nightly-version.mjs) in their manifest. `desktop` builds the desktop app's
+# installers at the same commit, by the Desktop app workflow: a .dmg, an NSIS .exe and a .deb. Each is signed where
+# its keys are set, and unsigned where they are not (Roger, 23 Oct 2026: private nightlies only, unsigned if there is
+# no signature). A night the installers fail still publishes the plugin, without them. `publish` may write the
 # repository's contents, which a release needs, and so runs no code of the repository at all: no checkout, no install,
 # no Node. It creates the pre-release with gh alone, and keeps the last seven nightlies. A pre-release never counts as a
 # release: the build status and the wiki are woken only by a stable one (types: [released]) and leave pre-releases out.
 # `drafts` runs every night, moved or not, and fails while a stable release has waited as a draft for over a day, so its
 # owner hears of it (risk OPS-3; RELEASING.md, "Cutting a release").
+#
+# A wave's end also builds one (Roger, 23 Oct 2026), through wave-nightly.yml, which calls this file. That run always
+# builds, as one by hand does. A second build on the same day takes the next letter, as the version script says.
 on:
   schedule:
     - cron: '0 16 * * *'
   workflow_dispatch:
+  # Called by wave-nightly.yml when a pull request labelled wave-done merges, so a wave can be tested the day it ends.
+  workflow_call:
+    inputs:
+      wave:
+        description: True when a wave's end made this run, which leaves the draft check to the night
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -73,6 +86,30 @@ jobs:
           SECURITY_ALERTS_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
         run: node scripts/security-alerts.mjs --nightly
 
+  # A stranger's fresh clone sets up from the README's steps (spec §13). CI runs this only when a setup input changed;
+  # the nightly runs it whole each night main has moved, as the release does, so a broken step is found within a day.
+  public-readiness:
+    needs: check
+    if: needs.check.outputs.moved == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      THOUGHTKNOT_TEST_MEMORY_MB: 6144
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - run: node scripts/public-readiness.mjs --history --setup
+
   build:
     needs: [check, security]
     if: needs.check.outputs.moved == 'true'
@@ -94,9 +131,9 @@ jobs:
       - run: npm ci
       - run: npm audit signatures
       - run: node scripts/check-classification.mjs --all
-      # the whole suite at once peaked over the default 4 GB ceiling (22 Oct 2026); CI's runs get 6 GB, and so does this
+      # the whole suite at once peaked over the default 4 GB ceiling (22 Oct 2026); CI's runs get 8 GB, and so does this
       - env:
-          THOUGHTKNOT_TEST_MEMORY_MB: 6144
+          THOUGHTKNOT_TEST_MEMORY_MB: 8192
         run: npm test
       - run: npm run build
       - name: The nightly version, written into the manifest the build carries
@@ -117,10 +154,15 @@ jobs:
       # The JavaScript library as two packages, at the nightly version the manifest now carries; never to npm (Q-02)
       - name: Build the library's packages, the reader, checker and layout, and the core
         run: node scripts/library-release.mjs --out .
+      # The VS Code extension as one file to install, at the nightly version; never to the Marketplace
+      - name: Build the VS Code extension as a .vsix
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: node scripts/vscode-release.mjs --version "$VERSION" --out .
       - name: Checksums for every asset
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" > SHA256SUMS
+        run: sha256sum main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" "thoughtknot-vscode-$VERSION.vsix" > SHA256SUMS
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: nightly
@@ -131,12 +173,33 @@ jobs:
             THIRD_PARTY_NOTICES.md
             graph-spec-libraries-*.tar.gz
             thoughtknot-*.tgz
+            thoughtknot-vscode-*.vsix
             SHA256SUMS
           if-no-files-found: error
           retention-days: 1
 
-  publish:
+  # The installers, by the Desktop app workflow at the built commit, read only. The time limit is that workflow's own.
+  desktop:
     needs: build
+    permissions:
+      contents: read
+    uses: ./.github/workflows/desktop-app.yml
+    with:
+      ref: ${{ needs.build.outputs.sha }}
+    secrets:
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+      LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+      LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+
+  publish:
+    needs: [build, desktop]
+    # the plugin is published when it built, with the installers when they built too
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -146,6 +209,24 @@ jobs:
         with:
           name: nightly
           path: nightly
+      - if: needs.desktop.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: thoughtknot-app-*
+          path: app
+      - name: Name each installer by the nightly, and add it to the checksums
+        if: needs.desktop.result == 'success'
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        # ThoughtKnot_0.7.1_aarch64.dmg becomes thoughtknot-app-0.7.2-nightly.20261023-aarch64.dmg
+        run: |
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}(\.[b-z])?$ ]] || { echo "::error::$VERSION is not a nightly version"; exit 1; }
+          # each artifact may keep its bundle folder (dmg/, nsis/, deb/), so every file is found at any depth
+          find app -type f -print0 | while IFS= read -r -d '' f; do
+            rest="$(basename "$f")"; rest="${rest#*_}"; rest="${rest#*_}"
+            mv "$f" "nightly/thoughtknot-app-$VERSION-$rest"
+          done
+          (cd nightly && sha256sum thoughtknot-app-* >> SHA256SUMS)
       - name: Publish the pre-release, and keep the last seven nightlies
         env:
           GH_TOKEN: ${{ github.token }}
@@ -155,13 +236,19 @@ jobs:
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}(\.[b-z])?$ ]] || { echo "::error::$VERSION is not a nightly version"; exit 1; }
           [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::$SHA is not a commit"; exit 1; }
           cd nightly
-          gh release create "$VERSION" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" SHA256SUMS --repo "$GITHUB_REPOSITORY" --prerelease --target "$SHA" --title "Nightly $VERSION" --notes "A nightly build of main at $SHA. Every test passed on it, but it has not been through a stable release's checks. For the newest work only; most people should use the latest stable release."
+          shopt -s nullglob
+          installers=(thoughtknot-app-*)
+          app=""
+          if (( ${#installers[@]} )); then app=" The desktop app's installers (thoughtknot-app-*) are signed only where signing keys are set, so the system may warn before it opens one."; fi
+          gh release create "$VERSION" main.js manifest.json styles.css THIRD_PARTY_NOTICES.md "graph-spec-libraries-$VERSION.tar.gz" "thoughtknot-graph-spec-$VERSION.tgz" "thoughtknot-core-$VERSION.tgz" "thoughtknot-vscode-$VERSION.vsix" "${installers[@]}" SHA256SUMS --repo "$GITHUB_REPOSITORY" --prerelease --target "$SHA" --title "Nightly $VERSION" --notes "A nightly build of main at $SHA. Every test passed on it, but it has not been through a stable release's checks. To try the VS Code extension, download thoughtknot-vscode-$VERSION.vsix and run Extensions: Install from VSIX... in VS Code. For the newest work only; most people should use the latest stable release.$app"
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isPrerelease,createdAt --jq '[.[] | select(.isPrerelease and (.tagName | test("-nightly\\.")))] | sort_by(.createdAt) | reverse | .[7:] | .[].tagName' |
             while read -r old; do gh release delete "$old" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes; done
 
   # GitHub lists draft releases only to a token that may write contents, so this job has that and nothing else. Like
   # publish, it runs no code of the repository: no checkout, no install, no Node, only gh.
   drafts:
+    # the nightly's own check; a wave-end build leaves it to the night
+    if: ${{ !inputs.wave }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

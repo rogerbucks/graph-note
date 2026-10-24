@@ -34,6 +34,16 @@ export const CORE_KEPT = {
   'packages/core/src/plugin-outside.ts': '*',
   // what the worker that serves a plug-in answers over its port: a fault of the plug-in's code, for its developer
   'packages/core/src/plugin-serve.ts': '*',
+  // the WCAG constraints as graph text: a note's bytes, never said to a person (editor spec §36)
+  'packages/core/src/accessibility-lens.ts': '*',
+  // what an SVG holds beyond a picture, named for a developer's test (editor spec §36, drawing_holds_no_state)
+  'packages/core/src/drawing-commands.ts': ['form field', 'foreign object', 'event handler', 'script link'],
+  // why a test run of a process is refused: a fault of the caller's code, for its developer (editor spec §35)
+  'packages/core/src/test-runs.ts': '*',
+  // why a theme chain is refused: a fault of the theme graph, for its author's developer (editor spec §36)
+  'packages/core/src/theme-graph.ts': '*',
+  // why a profile is refused to anyone but its owner: a fault of the caller's code, for its developer (editor spec §39)
+  'packages/core/src/profiles.ts': ['refused: a profile is read only by its owner'],
   // why a translation is not added, told to its translator, never to a person using the app
   'packages/core/src/words.ts': '*',
   // why a plug-in is not installed, told to its developer as the registry refuses it
@@ -135,4 +145,11 @@ export const CORE_KEPT = {
   // the standard schema, written into a note as GQL, and the words GQL keeps for itself
   'packages/core/src/standard-schemas.ts': '*',
   'packages/core/src/name-suggestions.ts': '*',
+  // a CSS media query asking whether the screen is touched, never shown to a person
+  'packages/core/src/display/graph-view/space-view-panel.ts': ['(pointer: coarse)'],
+  // the ready-made lenses' saved queries and the Lens line written into a note: graph text, never translated. Also
+  // the refusals a host's developer meets when a lens cannot be saved
+  'packages/core/src/lens-library.ts': '*',
+  // why a phase part refuses a transition that starts elsewhere: a developer's contract error
+  'packages/core/src/phase-altitude.ts': '*',
 };

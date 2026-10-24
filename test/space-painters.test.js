@@ -1,7 +1,8 @@
 // The 3D view's painters, in a real browser (editor spec §53, scale_space_view).
 // - WebGL 2 paints the overview as a city with no error. Its blocks cover the same parts of the picture as the 2D
 //   canvas painter's do: their shading differs, so only where they paint is compared.
-// - The drawing on screen is read as marks (svg-marks.ts): boxes, groups and links, with the theme's colours.
+// - The drawing on screen is read as marks (svg-marks.ts): boxes, groups and links, with the theme's colours. A
+//   thing's label is its name, the largest words in its box, not the kind written small above it.
 // - WebGPU builds its shaders with no error, and a frame paints with no error. Its picture is not read back here, as
 //   in gpu-painters.test.js: in software, Chrome reads a WebGPU canvas back blank.
 //
@@ -88,9 +89,11 @@ window.readSvg = () => {
   holder.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><g class="graph">
     <g class="cluster" id="clust1"><title>cluster_team</title><polygon fill="rgb(220, 230, 250)" stroke="rgb(40, 60, 120)" points="10,10 150,10 150,120 10,120"/></g>
     <g class="node" id="node1"><title>ada</title><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="20,20 120,20 120,60 20,60"/><text x="70" y="45" font-size="14" fill="rgb(10, 10, 10)">Ada</text></g>
-    <g class="node" id="node2"><title>bob</title><ellipse fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" cx="230" cy="150" rx="40" ry="20"/><text x="230" y="155" font-size="14" fill="rgb(10, 10, 10)">Bob</text></g>
+    <g class="node" id="node2"><title>bob</title><ellipse fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" cx="230" cy="150" rx="40" ry="20"/><text x="230" y="140" font-size="9" fill="rgb(10, 10, 10)">PERSON</text><text x="230" y="155" font-size="14" fill="rgb(10, 10, 10)">Bob</text></g>
     <g class="edge" id="edge1"><title>ada&#45;&gt;bob</title><path fill="none" stroke="rgb(90, 90, 90)" d="M70,60 C100,100 160,140 190,150"/></g>
     <g class="edge" id="edge2"><title>bob:w&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M190,150 C160,140 100,100 70,60"/></g>
+    <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="40" font-size="14" fill="rgb(10, 10, 10)">Cy</text></g>
+    <g class="edge" id="edge3" data-link="2"><path fill="none" stroke="rgb(90, 90, 90)" d="M232,131 C240,100 260,80 268,52"/></g>
   </g></svg>\`;
   const { marks, paints } = marksOfSvg(holder.querySelector('svg'));
   holder.remove();
@@ -192,6 +195,17 @@ describe("the 3D view's painters, in a real browser", () => {
     assert.ok(link.points.length > 2);
     assert.deepEqual(ada.paint, { fill: 'rgb(200, 240, 200)', line: 'rgb(0, 100, 0)', text: 'rgb(10, 10, 10)' });
     assert.equal(byId.get('l:ada').text, 'Ada');
+    // a thing drawn with its kind above its name, in smaller letters, is labelled by its name (Roger, 23 Oct 2026)
+    assert.equal(byId.get('l:bob').text, 'Bob');
+    assert.equal(byId.get('l:bob').size, 14);
+    // the plugin's own drawing names a thing by data-key, not by a title, and its links have no title
+    assert.equal(byId.get('t:cy')?.name, 'Person: Cy', 'a thing is said aloud as its card says it');
+    const untitled = byId.get('e:edge3');
+    assert.deepEqual(
+      [untitled.from, untitled.to],
+      ['bob', 'cy'],
+      'a link with no title is joined to the things at its ends',
+    );
   });
 
   test('WebGPU builds its shaders and paints the city with no error', options, async (t) => {

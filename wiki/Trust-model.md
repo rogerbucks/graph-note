@@ -178,7 +178,8 @@ Wave 6.
 - **Code:** the workflows that hold a secret other than their own token: `.github/workflows/build-status.yml`,
   `.github/workflows/claude-review.yml`, `.github/workflows/desktop-app.yml`, `.github/workflows/nightly.yml`, `.github/workflows/project-mirror.yml`,
   `.github/workflows/release-check.yml`, `.github/workflows/release.yml`, `.github/workflows/risk-panel.yml`,
-  `.github/workflows/security.yml` and `.github/workflows/working-group.yml`.
+  `.github/workflows/security.yml`, `.github/workflows/wave-nightly.yml` and `.github/workflows/working-group.yml`.
+  The wave one reads the project board with the project token, then calls the nightly.
 - **Gaps:**
   - The stable release builds and publishes in one job that holds the signing permissions (TRUST-3).
   - Any commenter could wake the working-group agent, which could write the script that checks it. Fixed in #836

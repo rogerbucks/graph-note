@@ -3,6 +3,12 @@
 A host puts `src/` on `sys.path` and imports the four entry points by name. Each re-exports every name it has always
 had, from where it lives now; the code is in `src/graphspec/`, one feature to a module.
 
+## A first call
+
+[`examples/python/read_and_check.py`](../../examples/python/read_and_check.py) reads one graph block and checks it.
+Run it with `uv run --project python/graph_spec python examples/python/read_and_check.py`. CI runs it from the release
+archive's layout on every pull request, so it always works with the library as shipped.
+
 ## The entry points, in `src/`
 
 - `gql_profile.py` — reads data blocks in the document profile (§3) into a plain graph, with no database. It also reads
@@ -144,7 +150,45 @@ had, from where it lives now; the code is in `src/graphspec/`, one feature to a 
   - `centroids_of` gives each cluster's centroid (`centroids.js`, `centroid-cases.json`).
   - `cluster_cycles` and `cycle_view` flag the clusters in a cycle, and hide or highlight them (`cycles.js`,
     `cycle-cases.json`).
+  - `cluster_certainty` gives each cluster's cohesion and the certainty its centroid states, with any floor
+    (`cohesion.js`, `cohesion-cases.json`).
+
+- `src/graphspec/engine/altitude/` — editor spec §32, altitude and audience profiles. `altitude.at_altitude`,
+  `profiles_of`, `audience_projection`, `altitudes_in` and `by_axes` are the twins of `altitude.js`, held to
+  `altitude-cases.json`.
+
+- `src/graphspec/engine/lenses/` — editor spec §33, lenses as graph data. `saved_lenses.lenses_of` and `run_lens` are
+  the twins of `saved-lenses.js`, held to `saved-lens-cases.json`.
+
+### The graph mesh
+
+- `src/graphspec/engine/altitude/` — editor spec §32. `altitude_index.altitude_index` and `search_index` are the twins
+  of `altitude-index.js`, held to `altitude-index-cases.json`.
+- `src/graphspec/engine/mesh/` — editor spec §28 and §30, the graph mesh. `mesh_join.mesh_join` joins graphs as the mesh
+  does and says what it found. That is each clash with both sides, the gaps, and each claim's certainty in words. It
+  is also each thing's standing, the marker on links to a contested thing, contested hand-made clusters and
+  same-named states held as a guess. `by_certainty` ranks claims by a key made from their words. The twin of `mesh-join.js`, held to
+  `mesh-join-cases.json`.
+- `src/graphspec/engine/mesh/as_at.py` — editor spec §29. `as_at` gives a graph as at a date on recorded or
+  real-world time, and `lens_as_at` runs a lens on it. The twin of `as-at.js`, held to `two-times-cases.json`.
+- `src/graphspec/engine/mesh/after_text_merge.py` — editor spec §30. `after_text_merge` joins two edits over their
+  base and reads their text merge against it. Each value the merge picked in a dispute is listed for a person. The
+  twin of `after-text-merge.js`, held to `join-every-author-cases.json`.
+- `src/graphspec/engine/mesh/same_as.py` — editor spec §27, ARCH-6. `same_as` says which things in different graphs a
+  written SAME_AS link makes one. The same name with no link stays a guess. The twin of `same-as.js`, held to
+  `same-as-cases.json`.
+- `src/graphspec/engine/mesh/types_instances.py` — editor spec §27. `type_of`, `instances_of` and `inherited`: an
+  instance links to its type with INSTANCE_OF and has its type's properties unless it sets its own. The twin of
+  `types-instances.js`, held to `types-instances-cases.json`.
+- `src/graphspec/engine/mesh/contexts.py` — editor spec §61. `contexts_of`, `context_guesses`, `comparable`,
+  `propose_same_as`, `same_as_across`, `world_in` and `search_contexts`: where links may join. The twin of
+  `contexts.js`, held to the same worlds by `tests/test_contexts.py`.
+
+### The process engine and the rest
+
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
+  - `core` and `runs` are the process core of editor spec §34. They hold eight kinds, transitions, guards as data,
+    the run log and nested machines (`core.js`, `runs.js`, `process-core-cases.json`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).
   - A transition's note is found by the order the block writes it in, never the order a source gives its rows in.

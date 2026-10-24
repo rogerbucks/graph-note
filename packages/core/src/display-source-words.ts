@@ -89,8 +89,25 @@ export const DISPLAY_SOURCE_WORDS = {
   'proposal.marked': '{mark} by the proposal',
   // the 3D view (§53, space-view-panel.ts)
   'space.name':
-    '3D view of {graph}. Drag to turn, scroll to zoom, double-click a thing to fly to it. Escape goes back.',
+    '3D view of {graph}. Drag to turn, Shift-drag to move, scroll to zoom. Click a thing to name it, double-click to fly to it. Question mark shows how to move. Escape goes back.',
   'space.flatten': 'Back to 2D',
+  'space.moves': 'Move the 3D view',
+  'space.zoom-in': 'Zoom in',
+  'space.zoom-out': 'Zoom out',
+  'space.turn-left': 'Turn left',
+  'space.turn-right': 'Turn right',
+  'space.tilt-up': 'Tilt up',
+  'space.tilt-down': 'Tilt down',
+  'space.reset': 'Reset view',
+  'space.help': 'How to move',
+  'space.help-drag': 'Drag: turn',
+  'space.help-move': 'Shift-drag or right-drag: move',
+  'space.help-zoom': 'Scroll or pinch: zoom',
+  'space.help-pick': 'Click: name it. Double-click: fly to it',
+  'space.help-keys': 'Keys: arrows, Shift + arrows, + and -, Home, Esc',
+  'space.help-finger': 'One finger: turn',
+  'space.help-fingers': 'Two fingers: move, and pinch to zoom',
+  'space.help-tap': 'Tap: name it. Double-tap: fly to it',
   'space.height-groups': 'Height: groups',
   'space.height-links': 'Height: links',
   // a graph too large to draw, as its overview (§53, massive-view.ts)
@@ -118,4 +135,8 @@ export const DISPLAY_SOURCE_WORDS = {
   'massive.forward': 'Forward',
   'massive.kept': { one: '{count} thing kept', other: '{count} things kept' },
   'massive.filter-saved': 'Saved the filter in the style graph. The overview starts with it next time.',
+  // a thing chosen in the overview of a note too big to read at once (§53, scale_in_parts)
+  'massive.thing': 'Properties of {name}',
+  'massive.style-problem': 'In the style graph: {why}',
+  'massive.read-only': 'Switch to edit mode to change these.',
 } as const;

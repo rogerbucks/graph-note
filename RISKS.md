@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (93)
+## Open (89)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -41,9 +41,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-1 | Host contract covers display only; files and settings copied per host | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 | ARCH-2 | Storage interface exists only as EditorNote, with no contract suite | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 | ARCH-3 | Layering is not held across packages; hosts reach into core internals | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| ARCH-4 | The note format carries no version and has no migration story | ●●○ | ●●● | fix-later (Wave 9 · Slice 6 the mesh) | days |
 | ARCH-5 | Two hand-kept parsers, no grammar; drift caught only on listed cases | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| ARCH-6 | Identity is the visible name; no stable id survives a rename | ●●○ | ●●● | fix-later (Wave 9 · Slice 6 the mesh) | weeks |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | ARCH-9 | The JavaScript library is private TypeScript sources in an archive | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
@@ -64,7 +62,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | NEURO-7 | Drawing redraws 250 ms after typing; picture may jump | ●●○ | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
 | NEURO-8 | No two-minute first success: no insert-example command | ●●● | ●●○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | NEURO-9 | No reading options: letter spacing, line height or font | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | days |
-| NEURO-10 | Renaming a thing does not follow to other notes | ●●○ | ●●○ | fix-later (Wave 9 · Slice 6 the mesh) | days |
 | NEURO-11 | No recently edited or recently visited list | ●●○ | ●○○ | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
 | FLOW-4 | A one-line fix pays eleven gates and may touch four records | ●●● | ●●○ | fix-later (Wave 5 · Automated quality and releases) | days |
 | FLOW-5 | A requirement's text can be rewritten to fit the code | ●●○ | ●●○ | fix-later (Wave 5 · Automated quality and releases) | hours |
@@ -81,7 +78,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-8 | graph-spec is CommonJS-only with a partial d.ts and mixed errors | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
-| API-12 | No runnable examples for either library, none in CI | ●●● | ●○○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
 | AI-2 | Classification gate guards the pane only, not Claude's own reads | ●●● | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | AI-4 | Answers are free text parsed by brace slicing, not structured output | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | AI-5 | No cost ceiling, token cap, usage record or prompt caching | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -329,7 +325,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Who found it:** Senior coder and QA / test engineer. **Where:** `packages/obsidian/test/**`, `packages/core/test/layout-worker.test.js`, `test/fixed-sleeps.json`.
 
-**Risk:** The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite is never skipped before a merge, so a release waits on a rerun.
+**Risk:** The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite runs on main after every merge and before a release, so a release waits on a rerun.
 
 **Fix:** Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each.
 
@@ -425,16 +421,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/layers.test.js in the suite, built on scripts/import-graph.mjs, failing any ../core/src or ../graph-spec/src import from a host package.
 
-### ARCH-4 The note format carries no version and has no migration story
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/graph-spec/src/reader/**`, `python/graph_spec/src/graphspec/reader/**`, `requirements/editor-requirements.gql`.
-
-**Risk:** A block is identified only by '// graph: name' with no profile version. Waves 9 to 13 add type, time, provenance and CRDT-merged text. Then an older app cannot tell a newer block from a broken one. Two peers on different versions silently disagree.
-
-**Fix:** Before Wave 9, add an optional profile version to the graph line or GraphMeta. Add a rule that a reader refuses a newer major plainly and keeps the bytes. Write one requirement for how a schema moves from decision@1 to decision@2.
-
-**Check:** A shared case table (reader-cases.json) with a newer-version block that both readers refuse with the same GN code; problem-codes.test.mjs holds the code.
-
 ### ARCH-5 Two hand-kept parsers, no grammar; drift caught only on listed cases
 
 **Who found it:** Enterprise, solution and data architect. **Where:** `packages/graph-spec/src/reader/**`, `python/graph_spec/src/graphspec/reader/**`, `python/graph_spec/tests/test_parity.py`, `.github/workflows/nightly.yml`.
@@ -444,16 +430,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add a nightly differential test that generates random statements from one small grammar description. It compares both readers' canonical output. So a divergence is found without a hand-written case.
 
 **Check:** nightly.yml runs the differential test; a failure writes its failing block to the case table.
-
-### ARCH-6 Identity is the visible name; no stable id survives a rename
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/graph-spec/src/reader/store.js`, `packages/graph-spec/src/joins/**`, `packages/core/src/link-renames.ts`, `requirements/editor-requirements.gql`.
-
-**Risk:** The id is the variable name, cannot be SET, and is what change sets, views across notes and the mesh join will key on. Renaming a thing in one note makes a new thing everywhere else. Two notes using the same name for different things merge as one until the planned 'contested claims' exist.
-
-**Fix:** Decide before W16 and W19 (Wave 9) whether identity stays the name per note, with an explicit 'same as' link across notes. The other choice is a hidden stable key. Write it as a requirement with the rename and the two-notes case as tests.
-
-**Check:** A written requirement proved by a cross-note rename test and a same-name-two-things join test in the shared case tables.
 
 ### ARCH-7 Whole-note text is the only store; nothing indexes across notes
 
@@ -655,16 +631,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/theme-tokens or wcag test asserts the two tokens exist and the setting changes the computed style.
 
-### NEURO-10 Renaming a thing does not follow to other notes
-
-**Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/core/src/link-renames.ts`, `packages/core/src/note-edit.ts`, `packages/obsidian/src/links/**`.
-
-**Risk:** A rename in the editor rewrites the style graph and views in the same note. A file rename updates links. But a thing named in another note's block of the same graph is not shown to follow. Years on, two notes disagree about a name and the reader cannot tell which is right.
-
-**Fix:** When a rename is accepted, list the other notes that name the thing and offer to rewrite them as one reviewed change set.
-
-**Check:** A test in packages/core/test renames a thing drawn from two notes. It asserts both notes are rewritten, or the second is listed as needing it.
-
 ### NEURO-11 No recently edited or recently visited list
 
 **Who found it:** Senior UI designer, neurodiversity and personal data management. **Where:** `packages/core/src/display/graph-view/details-summary.ts`, `packages/obsidian/src/main.ts`.
@@ -824,16 +790,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Document in the schema section that @N is part of the name and that a vault's block shadows a standard one. Also document that a shadowing block differing from the standard text gets an info-level note.
 
 **Check:** manual
-
-### API-12 No runnable examples for either library, none in CI
-
-**Who found it:** API design expert. **Where:** `packages/graph-spec/GUIDE.md`, `python/graph_spec/GUIDE.md`, `.github/workflows/ci.yml`.
-
-**Risk:** There is no examples folder, no doctest and no CI step that runs a usage sample. The only end-to-end sample is the Node stdin adapter's comment. A reader of the GUIDEs copies module descriptions, not a working call. A doc that drifts from the API is never caught.
-
-**Fix:** Add examples/js/read-and-check.cjs and examples/python/read_and_check.py, each ten lines. Add a CI step that runs both against the built archive layout.
-
-**Check:** ci.yml job 'examples' runs each file and fails on a non-zero exit.
 
 ### AI-2 Classification gate guards the pane only, not Claude's own reads
 
@@ -1035,7 +991,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (36)
+## Done or accepted (41)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1044,11 +1000,14 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-2 | A tag on any commit becomes a stable release | done | #614 |
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
+| ARCH-4 | The note format carries no version and has no migration story | done | #1073, #1076 |
+| ARCH-6 | Identity is the visible name; no stable id survives a rename | done | #1084 |
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
 | UX-6 | The site points to issues that outside users cannot open | done | #615 |
 | NEURO-4 | Error text cites spec sections and is shown twice at once | done | #619 |
+| NEURO-10 | Renaming a thing does not follow to other notes | done | #1073 |
 | FLOW-1 | Docs invite outside pull requests; the settings forbid them | done | #615 |
 | FLOW-2 | DCO sign-off is asked for, never checked, and signed by an AI | done | #621 |
 | FLOW-3 | Waves 1 to 3 are past, mostly unproved, and never replanned | done | #616 |
@@ -1057,6 +1016,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-3 | Host contract version is a hand-typed number | done | #614 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |
 | API-10 | Plug-in API version is one string, no host loads third parties | done | #908 |
+| API-12 | No runnable examples for either library, none in CI | done | #1083 |
 | AI-1 | In Claude Code the proposal route is optional, not mandatory | done | #618 |
 | AI-3 | Note text enters prompts with no data boundary or injection test | done | #618 |
 | AI-11 | Consent is per send, but residency and retention are unsaid | done | #618 |
@@ -1075,3 +1035,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | LEGAL-1 | The iPhone app names install ways Apple keeps for testers, not the public | done | #1057 |
 | LEGAL-2 | No privacy page the apps and the App Store can link to | done | #1062 |
 | LEGAL-4 | Notarising signs in with Roger's Apple Account, not a key of its own | done | #1054; kept out by `test/desktop-build.test.js` |
+| SEC-18 | Tests that read a drawing with patterns that run slow | done | #1110; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |

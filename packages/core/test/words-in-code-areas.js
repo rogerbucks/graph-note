@@ -97,6 +97,8 @@ export const KEPT = {
   // the contract suites a host or a plug-in's developer runs: their test cases and what each says it wanted
   'packages/core/src/display/host-contract.ts': '*',
   'packages/core/src/display/panel-contract.ts': '*',
+  // the SQL the local store runs, read by SQLite and never by a person (mesh-index-backends.ts)
+  'packages/core/src/mesh-index-backends.ts': '*',
   // said to a developer who forgot to install a host, never to a person using the app
   'packages/core/src/display/host.ts': ['The display layer has no host: install one with installHost before drawing.'],
   // a reason kept to compare with, never shown: each host says a deleted note in its own words (kept-draft.ts)
@@ -202,6 +204,10 @@ export const KEPT = {
     'the whole graph {}',
     '{} thing{} chosen from graph {}: {}',
   ],
+  // the one tool's description, read by the AI model it is offered to, never by a person: it stays in UK English
+  'packages/core/src/ai-query.ts': [
+    'Reads things from a graph the user shares. It only reads. Give a label to match, conditions on properties, and how many to return.',
+  ],
   // the graph spec library's names for the kinds of secret, looked up to say each from the catalogue
   'packages/core/src/ai-ceiling.ts': [
     'a private key',
@@ -210,6 +216,8 @@ export const KEPT = {
     'a password or secret',
     'a card number',
   ],
+  // the graph spec library's name for a password, compared with to refuse its write, never shown
+  'packages/core/src/secrets.ts': ['a password or secret'],
   // the purposes as the spec names them: what a person types for a model, and what the send dialog compares it with
   'packages/core/src/ai-choice.ts': ['Research questions', 'Proposing changes', 'Restricted processing'],
   // what an edit writes into the note, which is its bytes, never translated: comments, and GQL as Lock writes it

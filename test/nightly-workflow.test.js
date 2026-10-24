@@ -3,6 +3,7 @@
 // - It builds only when main moved, and publishes only after the full suite passes.
 // - The one job that may write runs no code of the repository, only gh.
 // - The version it carries.
+// - The desktop app's installers, built by the Desktop app workflow at the same commit, signed only where keys are set.
 // Read as text, by indentation, as policy.test.js reads the others.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -46,12 +47,23 @@ describe('the nightly workflow', () => {
     const on = block(lines, 'on', 0).join('\n');
     assert.match(on, /schedule:\s*\n\s*- cron: '0 16 \* \* \*'/);
     assert.match(on, /workflow_dispatch:/);
+    // wave-nightly.yml calls it when a wave ends (test/wave-nightly-workflow.test.js)
+    assert.match(on, /workflow_call:/);
     assert.doesNotMatch(on, /pull_request|push:|workflow_run/);
   });
 
   test('reads only, but for the publish job and the draft check, which may write contents alone', () => {
     assert.deepEqual(permissionValues(block(lines, 'permissions', 0)), ['read']);
-    assert.deepEqual(Object.keys(jobs(text)), ['check', 'security', 'build', 'publish', 'drafts']);
+    assert.deepEqual(Object.keys(jobs(text)), [
+      'check',
+      'security',
+      'public-readiness',
+      'build',
+      'desktop',
+      'publish',
+      'drafts',
+    ]);
+    assert.equal(block(jobs(text)['public-readiness'], 'permissions', 4), null);
     assert.equal(block(jobs(text).check, 'permissions', 4), null);
     assert.equal(block(jobs(text).build, 'permissions', 4), null);
     assert.deepEqual(given('publish'), ['contents: write']);
@@ -87,7 +99,11 @@ describe('the nightly workflow', () => {
       false,
       'never npm install',
     );
-    assert.match(jobs(text).publish.join('\n'), /needs: build\n/);
+    // after the build, and only when it passed, whatever became of the installers
+    assert.match(
+      jobs(text).publish.join('\n'),
+      /needs: \[build, desktop\]\n\s*if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' \}\}\n/,
+    );
   });
 
   // The whole suite at once, browser drawing included, peaked over the default 4 GB ceiling (22 Oct 2026). CI's shards
@@ -143,12 +159,56 @@ describe('the nightly workflow', () => {
 
   test('runs no code of the repository in the job that writes: no checkout, no install, no Node', () => {
     const publish = jobs(text).publish.join('\n');
-    assert.deepEqual(
-      usesRefs(publish).map((r) => r.split('@')[0]),
-      ['actions/download-artifact'],
-    );
+    assert.deepEqual([...new Set(usesRefs(publish).map((r) => r.split('@')[0]))], ['actions/download-artifact']);
     const runs = jobs(text).publish.map(stripComment).join('\n');
     assert.doesNotMatch(runs, /\b(node|npm|npx)\b|scripts\/|actions\/checkout|\.\/\S+\.sh/);
+  });
+
+  // Roger, 23 Oct 2026: releases stay private for now, as nightlies, unsigned where there is no signature.
+  test('builds the app’s installers by the Desktop app workflow, at the built commit, reading only', () => {
+    const desktop = jobs(text).desktop.join('\n');
+    assert.match(desktop, /^ {4}needs: build$/m);
+    assert.match(desktop, /^ {4}uses: \.\/\.github\/workflows\/desktop-app\.yml$/m);
+    assert.match(desktop, /^ {6}ref: \$\{\{ needs\.build\.outputs\.sha \}\}$/m);
+    assert.deepEqual(given('desktop'), ['contents: read']);
+    const called = read('.github/workflows/desktop-app.yml');
+    assert.match(block(called.split('\n'), 'on', 0).join('\n'), /workflow_call:\s*\n\s*inputs:\s*\n\s*ref:/);
+    assert.match(jobs(called).build.join('\n'), /ref: \$\{\{ inputs\.ref \}\}/);
+  });
+
+  test('hands the app build only its signing keys, each under its own name, never all of them', () => {
+    const desktop = jobs(text).desktop.join('\n');
+    assert.doesNotMatch(desktop, /secrets: inherit/);
+    const named = [...desktop.matchAll(/^ {6}([A-Z_]+): \$\{\{ secrets\.([A-Z_]+) \}\}$/gm)];
+    for (const [, a, b] of named) assert.equal(a, b, 'each key under its own name');
+    const declared = block(read('.github/workflows/desktop-app.yml').split('\n'), 'on', 0)
+      .join('\n')
+      .split(/\n {4}secrets:\n/)[1]
+      .match(/^ {6}([A-Z_]+):$/gm)
+      .map((l) => l.trim().slice(0, -1));
+    assert.deepEqual(named.map(([, a]) => a).sort(), declared.sort());
+    assert.ok(named.length >= 8, `${named.length} keys`);
+  });
+
+  test('carries the installers, named by the nightly, in its checksums; a night they fail still publishes the plugin', () => {
+    const publish = jobs(text).publish.join('\n');
+    assert.match(publish, /^ {4}needs: \[build, desktop\]$/m);
+    assert.match(publish, /^ {4}if: \$\{\{ !cancelled\(\) && needs\.build\.result == 'success' \}\}$/m);
+    assert.match(publish, /pattern: thoughtknot-app-\*/);
+    const runs = runCommands(publish).join('\n');
+    assert.match(runs, /mv "\$f" "nightly\/thoughtknot-app-\$VERSION-\$rest"/);
+    // an artifact may keep its bundle folder, so each file is found at any depth, never a folder by a glob
+    assert.match(runs, /find app -type f -print0/);
+    assert.doesNotMatch(runs, /for f in app\//);
+    assert.match(runs, /sha256sum thoughtknot-app-\* >> SHA256SUMS/);
+    const create = runCommands(publish).find((r) => /gh release create/.test(r));
+    assert.match(create, /"\$\{installers\[@\]\}" SHA256SUMS/);
+    // the notes speak of installers only on a night that carries them
+    assert.match(
+      runs,
+      /if \(\( \$\{#installers\[@\]\} \)\); then app=" The desktop app's installers .*signed only where signing keys are set/,
+    );
+    assert.match(create, /latest stable release\.\$app"/);
   });
 
   // Risk OPS-3: a draft release tells no one it waits. GitHub lists drafts only to a token that may write contents.
