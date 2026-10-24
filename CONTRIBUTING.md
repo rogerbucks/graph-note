@@ -581,6 +581,11 @@ These test behaviour across modules, or the repository itself, so they are named
   request, a push to main and a release. The project secret is given only to the script on main. No event text goes in
   a command line, and they hold least privilege.
 
+### The VS Code extension's nightly file
+
+- `test/vscode-release.test.js` — each nightly attaches the VS Code extension as a `.vsix` to install (spec §41,
+  nightly_prerelease). `scripts/vscode-release.mjs` packs it, and the test reads a real one back.
+
 ### The library's release
 
 - `test/lib-release.test.js` — each release publishes the library on GitHub, never on npm (spec §41, lib_github_release).
