@@ -6,7 +6,7 @@ import { test, describe, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { Worker } from 'node:worker_threads';
 import { readNote } from '../src/drawing.ts';
-import { chosen, directions, draw } from '../src/render.ts';
+import { chosen, directions, draw, svgOf } from '../src/render.ts';
 import { PALETTES } from '../src/palette.ts';
 import { loadEngine } from '../src/engine.ts';
 import { drawingSource } from '../src/layout.ts';
@@ -342,7 +342,7 @@ describe('a normal graph', () => {
     for (const theme of ['light', 'dark']) {
       const want = chosen(
         laid,
-        laid.map((x) => engine.render(x.dot)),
+        laid.map((x) => svgOf(engine, x.dot, d.routing)),
         PALETTES[theme],
       );
       assert.deepEqual(await r.draw(d, undefined, theme), want, `${theme} in a thread`);
