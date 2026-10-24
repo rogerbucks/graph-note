@@ -1,6 +1,6 @@
 name: Claude review
 
-# Claude reads every pull request and leaves a review: a summary comment, and inline comments on the lines it questions.
+# Claude reads each pull request once and leaves a review: a summary comment, and inline comments on the lines it questions.
 # It is advice, never a gate: the job is not a required check, approves nothing and changes no code. The owner is the
 # only maintainer, and GitHub lets no one approve their own pull request, so this is the review a second person would give.
 #
@@ -8,9 +8,13 @@ name: Claude review
 # forks, drafts and Dependabot, whose runs are given none of the repository's secrets anyway. The token is
 # CLAUDE_CODE_OAUTH_TOKEN (made by `claude setup-token`); until it is set, the job says so in a notice and passes. The
 # workflow's own token, with pull-requests: write as its one write permission, posts the comments.
+#
+# It reviews once: when a pull request opens ready, or when a draft is marked ready. A later push gets no new review,
+# as each review costs the owner's Claude use (64 reviews in 7 hours on 24 Oct 2026, one per push). It runs on Sonnet
+# with a cap on its turns, for the same reason.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, ready_for_review]
 
 permissions:
   contents: read
@@ -66,4 +70,5 @@ jobs:
             comment on the pull request: the findings by severity, or that you found none. Never approve, request
             changes, push or edit files.
           claude_args: |
+            --model claude-sonnet-5-5 --max-turns 15
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"

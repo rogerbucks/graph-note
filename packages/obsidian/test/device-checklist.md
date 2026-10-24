@@ -279,10 +279,14 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
 
 - [ ] **S-06** In a radial drawing, drag a box to just past another one around the centre. The line says "Put … before
       …" or "… after …", never beside, and letting go moves the box round to that place (radial_spoke_order).
-- [ ] **S-07** In a radial drawing, open a box's details and press Put in the centre. The boxes glide to their new
-      rings around it, and the strip says "Centred on …". Back to the usual centre glides them back. Tab to a box and
-      press C: the same. In reading view it is only looked at: "Just looking: not saved." With reduced motion on, the
-      boxes move at once (radial_centre_pick).
+- [ ] **S-07** In a radial drawing, open a box's details and press Centre here. The boxes glide to their new rings
+      around it, and the strip says "Centred on …". Back to the usual centre glides them back. Tab to a box and press
+      C: the same. In reading view it is only looked at: "Just looking: not saved." With reduced motion on, the boxes
+      move at once (radial_centre_pick).
+- [ ] **S-08** In a network, right-click a box: a menu says Centre here. Pick it: the boxes glide out into rings
+      around that box. The strip says "Centred on …" and how to pick another. Select a box, open Diagram type: the tile
+      says "Radial, around …". On a phone, tap a box and press Centre here in its details. In reading view each is
+      only looked at (radial_centre_anywhere, radial_centre_menu, radial_centre_hint).
 
 ## Views — spec §2, §7
 
@@ -403,9 +407,9 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
 - [ ] **F-04** Without a pointer: on the phone, a tap that selects a box gives it the same glow and underline. They stay
       until something else is chosen. On a keyboard, Tab to a box or a link gives them too (slice 3, hover_not_alone).
 - [ ] **F-05** Zoom in, open a box's details and press Show only this and its neighbours. The rest disappears, and
-      those left glide together. A banner names the box and the steps; the button says Show the whole graph. Widen to
-      two steps and Narrow to one step change it. Press the button again: all comes back as drawn, at your zoom (slice
-      3, untangle_neighbourhood, untangle_toggle, untangle_regroup).
+      those left glide together. A banner names the box and the steps; the button says Show the whole graph. The − and
+      + under it change the steps, up to 3. Press the button again: all comes back as drawn, at your zoom (slice 3,
+      untangle_neighbourhood, untangle_toggle, untangle_regroup, thing_controls).
 ### Filter, shortest path, find and the arrow keys
 
 - [ ] **F-06** Press Filter by kind or link: each kind and relationship type is a button with its count. Choose one: it comes

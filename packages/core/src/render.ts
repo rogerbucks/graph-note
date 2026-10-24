@@ -14,6 +14,8 @@ import { foldedSource, routedSource } from './fold-source.ts';
 import { flowSource } from './link-flow.ts';
 import { pictureSource } from './picture.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
+import { layoutSvg } from './graphviz-svg.ts';
+import { directLinks } from './direct-links.ts';
 
 /** Graphviz: layout source in, SVG text out. Throws when it cannot lay the source out. */
 export interface Engine {
@@ -31,6 +33,8 @@ export interface Drawn {
   height: number;
   /** Shown right to left: laid out across and mirrored after, for a right-to-left language (drawing-direction.ts). */
   mirrored?: boolean;
+  /** Drawn with straight links for now: its curves are laid out next, every box where it is (curves_after_drawing). */
+  curvesToCome?: boolean;
 }
 
 /** One direction to lay a drawing out in: the source handed to Graphviz, and the kinds and readings to theme it by. */
@@ -38,6 +42,10 @@ export interface Direction {
   rankdir: string;
   dot: string;
   src: LayoutSource;
+  /** Laid out with straight links, for its curves to come after (curves_after_drawing). */
+  straight?: boolean;
+  /** For one laid out straight: the source its curves are laid out from next (curves_after_drawing, curves_saved). */
+  curved?: string;
 }
 
 /**
@@ -58,10 +66,17 @@ export const QUICK_LAYOUT = 300;
  */
 const QUICK_SETTINGS = '  graph [nslimit=0.5, mclimit=0.05];';
 
+/**
+ * The quick settings with straight links, for a drawing shown first and curved after (§11, curves_after_drawing).
+ * Graphviz puts every box in the same place either way: only the links differ. So the curves can follow without a box
+ * moving. Routing the curves is about two fifths of laying out 500 things, and three tenths of 2,000.
+ */
+const STRAIGHT_FIRST = '  graph [splines=line, nslimit=0.5, mclimit=0.05];';
+
 /** The source with the quick settings added after its first line, as `routedSource` adds its own. */
-function quickSource(dot: string): string {
+function quickSource(dot: string, settings = QUICK_SETTINGS): string {
   const lines = dot.split('\n');
-  lines.splice(1, 0, QUICK_SETTINGS);
+  lines.splice(1, 0, settings);
   return lines.join('\n');
 }
 
@@ -76,6 +91,8 @@ export function directions(drawing: GraphDrawing): Direction[] {
   const only = own ?? (drawing.diagram ? GraphLayout.typeDirection(drawing.diagram) : undefined);
   const keys = drawing.boxes.map((b) => b.key);
   const quick = drawing.boxes.length > QUICK_LAYOUT;
+  // straight first only where the links would be curved: a routing a person chose is drawn as chosen at once
+  const straight = quick && !!drawing.straightFirst && (!drawing.routing || drawing.routing === 'curved');
   const ways = only ? [only] : quick ? STYLE.directions.slice(0, 1) : STYLE.directions;
   return ways.map((rankdir) => {
     const src = layoutSource(drawing, rankdir as 'LR' | 'TB');
@@ -107,6 +124,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
       ),
       drawing.routing,
     );
+    if (straight) return { rankdir, dot: quickSource(dot, STRAIGHT_FIRST), src, straight, curved: quickSource(dot) };
     return { rankdir, dot: quick ? quickSource(dot) : dot, src };
   });
 }
@@ -126,6 +144,7 @@ export function chosen(laidOut: Direction[], svgs: string[], palette?: Palette):
     rankdir: best.rankdir,
     width: best.width,
     height: best.height,
+    ...(laidOut.some((d) => d.straight) ? { curvesToCome: true } : {}),
   };
 }
 
@@ -138,8 +157,20 @@ export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
   const laid = directions(drawing);
   return chosen(
     laid,
-    laid.map((d) => engine.render(d.dot)),
+    laid.map((d) => svgOf(engine, d.dot, drawing.routing)),
   );
+}
+
+/**
+ * The SVG Graphviz draws from `dot`. Direct links are the default. With them (§25, untangle_direct) it is drawn from
+ * Graphviz's layout as marks, its links made direct and its boxes moved aside (direct-links.ts). It is Graphviz's own
+ * where the marks cannot give the drawing back exactly, or the engine gives no marks.
+ */
+export function svgOf(engine: Engine, dot: string, routing?: string): string {
+  // direct is the default: a routing chosen as anything else is Graphviz's own (Roger, 24 Oct 2026)
+  if ((routing !== undefined && routing !== 'direct') || !engine.marks) return engine.render(dot);
+  const laid = engine.marks(dot);
+  return laid.layout?.lost ? engine.render(dot) : layoutSvg(directLinks(laid));
 }
 
 /** One link in or out of a box, as its details list it. */

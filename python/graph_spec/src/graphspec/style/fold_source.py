@@ -179,11 +179,12 @@ def routed_source(dot: str, routing: str | None) -> str:
     """The source `dot` with its links routed (untangle_routing), as the core's routedSource
     does: straight lines, or right angles, whose readings are set beside them (xlabel); the curves
     a radial drawing asks for (typed_source) give way to them. Curved, or None, is how Graphviz
-    draws them: `dot` unchanged."""
-    if routing not in ("straight", "right-angled"):
+    draws them: `dot` unchanged. Direct links are laid out straight, as the core lays them out
+    before it draws them again as curves (direct-links.ts)."""
+    if routing not in ("straight", "right-angled", "direct"):
         return dot
     lines = [_TYPE_CURVES.sub(r"\1];", line) for line in dot.split("\n")]
     if routing == "right-angled":
         lines = [_LINK_LABEL.sub(r"\1xlabel=", line, count=1) for line in lines]
-    lines.insert(1, f"  graph [splines={'line' if routing == 'straight' else 'ortho'}];")
+    lines.insert(1, f"  graph [splines={'ortho' if routing == 'right-angled' else 'line'}];")
     return "\n".join(lines)

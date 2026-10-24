@@ -264,7 +264,9 @@ export async function renderViewBlock(
   // Styled as this view (§7, §14, §15). That is its nudges, and the properties, arrowheads, type and moving links
   // chosen for it or the whole graph. Folded as its View menu says (§25).
   const styled = styledDrawing(drawing, looked.style, g, v.name);
-  const laidOut = (by?: object) => plugin.layout(state.folded(styled, by), by);
+  // straight links first past 300 things, then the curves (§11, curves_after_drawing)
+  const laidOut = (by?: object, curved = false) =>
+    plugin.layout({ ...state.folded(styled, by), straightFirst: !curved }, by);
   try {
     drawn = diagram.table
       ? tableDrawn(diagram.table)
@@ -309,12 +311,15 @@ export async function renderViewBlock(
       mode: 'note',
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
+      profile: plugin.profiles.shown(), // the person's own profile, for this card alone (§39)
       aids: aidsOf(plugin.settings),
       lineOf: (at) => (from ? lineInSource(from, at) : (blocks[at.block]?.line ?? 0) + at.line),
       onEdit: () => changeView(plugin, ctx.sourcePath, line),
       view,
       diagram,
-      ...(diagram.table || diagram.picture ? {} : { switches: { state, relayout: (by: object) => laidOut(by) } }),
+      ...(diagram.table || diagram.picture
+        ? {}
+        : { switches: { state, relayout: (by: object) => laidOut(by), curved: (by: object) => laidOut(by, true) } }),
       motion: { flow: styled.flow ?? [], reversed: reversedLinks(styled, drawn.rankdir) },
       // its links shown and followed as the graph's are (§18); a broken one is reported on the graph's own card
       links: { ...linkHost(plugin, ctx.sourcePath, v.graph), broken: [] },

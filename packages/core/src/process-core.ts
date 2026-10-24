@@ -6,6 +6,7 @@
 // setting alone, such as where a thing sits, rebuilds nothing (process_views_cached).
 import type { Graph, Value } from '@thoughtknot/graph-spec';
 import gs from '@thoughtknot/graph-spec';
+import { IntentWatch } from './intent-checks.ts';
 import { processView, type ProcessView, type ProcessViewKind } from './process-views.ts';
 
 /** A graph read as a process core: the core alone, the view settings kept apart, and the core's hash. */
@@ -49,9 +50,12 @@ export class ProcessViews {
   #kept = new Map<ProcessViewKind, ProcessView>();
   /** How many times a view has been worked out, for a test or a host's own measure. */
   builds = 0;
+  /** The process's intents, checked on their own each time the core changes (editor spec §35, intent_checks). */
+  readonly intents: IntentWatch;
 
   constructor(graph: Graph) {
     this.#core = processCoreOf(graph);
+    this.intents = new IntentWatch(graph);
   }
 
   /** The core every view reads. */
@@ -69,12 +73,18 @@ export class ProcessViews {
     return view;
   }
 
-  /** The graph after an edit. Kept views stay while the core is the same, so a view setting alone rebuilds nothing. */
+  /**
+   * The graph after an edit. Kept views stay while the core is the same, so a view setting alone rebuilds nothing. A
+   * change to the core checks the intents at once.
+   */
   update(graph: Graph): boolean {
     const next = processCoreOf(graph);
     const changed = next.hash !== this.#core.hash;
     this.#core = next;
-    if (changed) this.#kept.clear();
+    if (changed) {
+      this.#kept.clear();
+      this.intents.update(graph);
+    }
     return changed;
   }
 }

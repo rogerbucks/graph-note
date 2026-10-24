@@ -1,12 +1,54 @@
-// The last part of the values src/index.ts exports, from schemaMove on, sorted: test support only, nothing here ships.
-// It is kept apart from index-names.js, which joins it to the values before it, so neither file passes the test file
-// size.
+// The last part of the values src/index.ts exports, from processCoreOf on, sorted: test support only, nothing here
+// ships. It is kept apart from index-names.js, which joins it to the values before it, so neither file passes the test
+// file size.
 // TIMELINE_ORDERS, TIMELINE_SHOWS and chosenDiagram, listed in index-names.js, came on 22 Oct 2026 (timeline_order,
-// timeline_show, timeline_choice_card). CORE_AI and CORE_AI_PROVIDER (plugin_interface) came on 24 Oct 2026; index-names.js
-// sorts the whole list.
+// timeline_show, timeline_choice_card). CORE_AI and CORE_AI_PROVIDER (plugin_interface) came on 24 Oct 2026;
+// index-names.js sorts the whole list.
 export const VALUES_LATE = [
   'CORE_AI',
   'CORE_AI_PROVIDER',
+  'processCoreOf',
+  'processFacts',
+  'processView',
+  'profileOf',
+  'propertiesOf',
+  'propertyNames',
+  'proposeLens',
+  'provenanceLines',
+  'providerContract',
+  'pseudoWords',
+  'purposeWords',
+  'readBack',
+  'readNote',
+  'readSource',
+  'readStyle',
+  'readingOf',
+  'readyLenses',
+  'recentLenses',
+  'reducedWords',
+  'refusal',
+  'refusedWords',
+  'remindersFor',
+  'remoteImagesIn',
+  'removeFromList',
+  'renameAcross',
+  'renameProperty',
+  'renamedLinks',
+  'replaceBlock',
+  'replayScenario',
+  'reverseGuess',
+  'reversedLinks',
+  'reviewLevels',
+  'runPluginStep',
+  'runStep',
+  'safeMarkdown',
+  'saidDate',
+  'sampleExports',
+  'saveEdit',
+  'sayWords',
+  'scaledMarks',
+  'scenarioText',
+  'scenariosOf',
   'schemaMove',
   'schemaPicture',
   'schemaVersions',

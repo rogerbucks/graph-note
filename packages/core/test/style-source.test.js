@@ -85,7 +85,7 @@ describe('each nudge', () => {
   });
 
   // proves: untangle_routing
-  test('the drawing is routed as its Links says, a view’s own over the whole graph’s; curved is as it was', () => {
+  test('the drawing is routed as its Links says, a view’s own over the whole graph’s; said nowhere, it is left to the default', () => {
     const { drawing, style } = styled(
       "(r1:Links {routing: 'straight'}),",
       "(r2:Links {view: 'near', routing: 'right-angled'}),",
@@ -93,7 +93,7 @@ describe('each nudge', () => {
     );
     assert.equal(styledDrawing(drawing, style).routing, 'straight');
     assert.equal(styledDrawing(drawing, style, undefined, 'near').routing, 'right-angled');
-    assert.equal('routing' in styledDrawing(drawing, style, undefined, 'round'), false);
+    assert.equal(styledDrawing(drawing, style, undefined, 'round').routing, 'curved');
     assert.equal('routing' in styledDrawing(drawing, styled().style), false);
   });
 

@@ -124,8 +124,12 @@ export function styledDrawing(whole: GraphDrawing, style: StyleGraph, g?: Graph,
     ...(inline && (inline.boxes.length || inline.links.length) ? { inline } : {}),
     ...(plan ? { diagram: plan } : {}),
     ...(flow.length ? { flow } : {}),
-    // the links straight or right-angled, as its Links says (§25); curved is how Graphviz draws them already
-    ...(routing === 'curved' ? {} : { routing }),
+    // the links as its Links says (§25); said nowhere, they are direct, the default
+    ...(routed(style, view) ? { routing } : {}),
     ...(pictures.length ? { pictures } : {}),
   };
 }
+
+/** Whether the style graph chooses a routing for `view`, or for the whole graph. */
+const routed = (style: StyleGraph, view?: string) =>
+  style.links.some((l) => l.routing !== undefined && (l.view === undefined || l.view === view));

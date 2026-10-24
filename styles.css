@@ -161,6 +161,7 @@
   .thoughtknot-proposal.is-sheet,
   .thoughtknot-details.is-sheet,
   .thoughtknot-viewport > .thoughtknot-pointer,
+  .thoughtknot-view:has(> .thoughtknot-space-view) > .thoughtknot-details:not([hidden], .thoughtknot-sheet),
   .thoughtknot-sheet {
     border: 1px solid CanvasText;
   }
@@ -334,11 +335,75 @@
   min-width: 44px;
   min-height: 44px;
 }
+/* What can be done with the selected thing: one rail of icons and words, a line each, the same in 2D and in 3D. It sits
+   just under what the thing is, in a quiet frame, so it reads as the thing's controls. */
 .thoughtknot-untangle-offers {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--gn-space-2);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gn-space-half-2);
   margin-block: var(--gn-space-2);
+  padding: var(--gn-space-half-2);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg-alt);
+}
+.thoughtknot-untangle-offers button.clickable-icon {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-2);
+  margin: 0;
+  border: 0;
+  border-radius: var(--gn-radius-s);
+  box-shadow: none;
+  background: transparent;
+  color: var(--gn-text-normal);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-untangle-offers > button.clickable-icon {
+  justify-content: flex-start;
+  width: 100%;
+  padding-inline: var(--gn-space-2);
+  text-align: start;
+}
+.thoughtknot-untangle-offers button.clickable-icon:hover:not(:disabled) {
+  background: var(--gn-bg-hover);
+}
+.thoughtknot-untangle-offers button.clickable-icon:disabled {
+  color: var(--gn-text-faint);
+}
+.thoughtknot-untangle-offers button.clickable-icon .thoughtknot-badge-text {
+  font-size: inherit;
+}
+/* one step fewer or more round the thing shown alone, under its Show only, set in by the width of an icon */
+.thoughtknot-untangle-reach {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-inline-start: calc(2 * var(--gn-space-2) + 16px);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+}
+/* the thing shown alone: its Show only is pressed, so where the drawing stands is seen in the rail */
+.thoughtknot-untangle-offers > button.clickable-icon[aria-pressed='true'] {
+  background: var(--gn-bg-hover);
+  box-shadow: inset 3px 0 0 var(--gn-accent);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-untangle-reach[hidden] {
+  display: none;
+}
+.thoughtknot-untangle-reach button.clickable-icon {
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+.thoughtknot-untangle-steps {
+  padding-inline: var(--gn-space-2);
+  text-align: center;
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
 }
 .thoughtknot-find input {
   width: 100%;
@@ -590,6 +655,52 @@
   color: var(--gn-text-muted);
   font-size: var(--gn-font-size-s);
 }
+/* A radial drawing's centre, and how to pick another (radial_centre_hint): one line under the strip, its way back a
+   44-point target. */
+.thoughtknot-type-centre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gn-space-2);
+  padding: var(--gn-space-1) var(--gn-space-2);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-type-centre button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.thoughtknot-type-centre-how {
+  color: var(--gn-text-muted);
+}
+/* A thing's menu, opened by a right-click beside the pointer (radial_centre_menu). Each item is a 44-point target, and
+   the one with the focus is ringed, never shown by colour alone. */
+.thoughtknot-thing-menu {
+  position: fixed;
+  left: var(--thoughtknot-menu-x, 0);
+  top: var(--thoughtknot-menu-y, 0);
+  z-index: var(--gn-layer-popover);
+  display: flex;
+  flex-direction: column;
+  min-width: 10rem;
+  padding: var(--gn-space-1);
+  background: var(--gn-bg-alt);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  box-shadow: var(--gn-shadow-l);
+}
+.thoughtknot-thing-menu button {
+  justify-content: flex-start;
+  min-height: 44px;
+  background: none;
+  box-shadow: none;
+}
+.thoughtknot-thing-menu button:hover {
+  background: var(--gn-bg-hover);
+}
+.thoughtknot-thing-menu button:focus-visible {
+  outline: 2px solid var(--gn-border-focus);
+  outline-offset: -2px;
+}
 .thoughtknot-type-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 12em), 1fr));
@@ -813,6 +924,17 @@ details.thoughtknot-style > summary {
 .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
   stroke-width: 4;
 }
+/* A guard that failed in a test run (spec §35): a heavy dashed outline, never colour alone. */
+.thoughtknot-svg g.thoughtknot-guard-failed > :is(path, polygon) {
+  stroke-width: 3;
+  stroke-dasharray: 3 3;
+}
+.thoughtknot-debug {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  font-size: var(--gn-font-size-s);
+}
 .thoughtknot-svg .thoughtknot-step-number {
   font-size: 10pt;
   font-weight: var(--gn-font-weight-bold);
@@ -974,6 +1096,42 @@ details.thoughtknot-style > summary {
 }
 .thoughtknot-walk select {
   min-height: 44px;
+}
+/* A personal profile (editor spec §39): the label that the card is adapted, the things due and the pace worked out.
+   Density sets the room around the drawing; cues keep words, icons or both on the boxes. None changes the graph. */
+.thoughtknot-adapted,
+.thoughtknot-pacing {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-due {
+  padding: var(--gn-space-1) var(--gn-space-2);
+  border-inline-start: 2px solid var(--gn-border);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-due ul {
+  margin: 0;
+  padding-inline-start: var(--gn-space-3);
+}
+.thoughtknot-due-firm {
+  border-inline-start: 4px solid var(--gn-text-warning);
+  color: var(--gn-text-normal);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-density-compact .thoughtknot-viewport {
+  padding: 0;
+}
+.thoughtknot-density-roomy .thoughtknot-viewport {
+  padding: var(--gn-space-4);
+}
+.thoughtknot-cues-words .thoughtknot-picture {
+  display: none;
+}
+.thoughtknot-cues-icons g.node text {
+  font-size: var(--gn-font-size-xs);
 }
 .thoughtknot-park {
   display: flex;
@@ -2415,6 +2573,26 @@ pre.thoughtknot-code {
   background: var(--gn-bg);
   border-radius: var(--gn-radius-s);
   border: 1px solid var(--gn-border-focus);
+}
+/* a thing or link picked in the 3D view opens its details down the right, over the view, as in 2D (Roger, 24 Oct
+   2026). In view mode the details are a sheet at the foot, which already sits over the card. The view's buttons and
+   the picked name move left to stay clear of it. */
+.thoughtknot-view:has(> .thoughtknot-space-view) > .thoughtknot-details:not([hidden], .thoughtknot-sheet) {
+  position: absolute;
+  z-index: 4;
+  inset-block: var(--gn-space-2);
+  inset-inline-end: var(--gn-space-2);
+  /* as wide as its words need, up to its share of the view, so a longer language wraps */
+  max-width: var(--thoughtknot-space-details, min(340px, 45%));
+  box-sizing: border-box;
+  margin: 0;
+  overflow: auto;
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+}
+.thoughtknot-view:has(> .thoughtknot-details:not([hidden], .thoughtknot-sheet))
+  :is(.thoughtknot-space-pad, .thoughtknot-space-said) {
+  inset-inline-end: calc(var(--thoughtknot-space-details, min(340px, 45%)) + 2 * var(--gn-space-2));
 }
 /* how to move it, in short steps at the foot, kept clear of the buttons */
 .thoughtknot-space-help {
