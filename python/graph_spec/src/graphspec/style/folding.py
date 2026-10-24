@@ -15,7 +15,7 @@ from typing import Any
 BUSY_HUB = 12
 
 # The switches as the plugin's settings start every graph (view_switch_defaults).
-DEFAULT_SWITCHES = {"labels": True, "hubs": True, "groups": False, "merge": False}
+DEFAULT_SWITCHES = {"labels": True, "hubs": False, "groups": False, "merge": False}
 
 
 def _links_by_thing(edges: Sequence[tuple[str, str]]) -> dict[str, list[int]]:

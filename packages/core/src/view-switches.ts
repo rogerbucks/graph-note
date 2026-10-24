@@ -110,6 +110,8 @@ export class ViewState {
   /** The plan the drawing was last folded by, if it was folded. */
   plan: Folding | undefined;
   private readonly openedHubs = new Set<string>();
+  /** The hubs the user folded one by one, with busy hubs not folded as a whole: all start open (Roger, 24 Oct 2026). */
+  private readonly foldedHubs = new Set<string>();
   private readonly openedGroups = new Set<string>();
   /** What each card is regrouped to, by the card: laid out alone, the rest left out (untangle_regroup). */
   private readonly only = new WeakMap<object, Kept>();
@@ -126,21 +128,28 @@ export class ViewState {
   turn(s: ViewSwitch, on: boolean): boolean {
     if (this.switches[s] === on) return false;
     this.switches[s] = on;
-    if (on && s === 'hubs') this.openedHubs.clear();
+    if (s === 'hubs') {
+      this.openedHubs.clear();
+      this.foldedHubs.clear();
+    }
     if (on && s === 'groups') this.openedGroups.clear();
     return s !== 'labels';
   }
 
   /** Opens a hub's or a group's fold: its links, or its things, drawn again. */
   open(fold: Fold): void {
-    if ('hub' in fold) this.openedHubs.add(fold.hub);
-    else this.openedGroups.add(fold.group);
+    if ('hub' in fold) {
+      this.openedHubs.add(fold.hub);
+      this.foldedHubs.delete(fold.hub);
+    } else this.openedGroups.add(fold.group);
   }
 
   /** Folds a hub or a group opened before. */
   fold(fold: Fold): void {
-    if ('hub' in fold) this.openedHubs.delete(fold.hub);
-    else this.openedGroups.delete(fold.group);
+    if ('hub' in fold) {
+      this.openedHubs.delete(fold.hub);
+      if (!this.switches.hubs) this.foldedHubs.add(fold.hub);
+    } else this.openedGroups.delete(fold.group);
   }
 
   /**
@@ -160,11 +169,12 @@ export class ViewState {
   folded(d: GraphDrawing, card?: object): GraphDrawing {
     const keys = d.boxes.map((b) => b.key),
       edges = edgesOf(d);
-    this.plan = foldPlan(keys, edges, drawnGroups(d.nudges ?? [], keys, d.diagram), {
-      hubs: this.switches.hubs,
+    const groups = drawnGroups(d.nudges ?? [], keys, d.diagram);
+    this.plan = foldPlan(keys, edges, groups, {
+      hubs: this.switches.hubs || this.foldedHubs.size > 0,
       groups: this.switches.groups,
       merge: this.switches.merge,
-      opened: { hubs: [...this.openedHubs], groups: [...this.openedGroups] },
+      opened: { hubs: this.openHubs(keys, edges, groups), groups: [...this.openedGroups] },
     });
     const only = card ? this.only.get(card) : undefined;
     const plan = only ? regrouped(this.plan, keys, edges, only) : this.plan;
@@ -178,15 +188,33 @@ export class ViewState {
    * folded. Null too for a hub drawn inside a folded group's box.
    */
   hub(d: GraphDrawing, key: string): { links: number; folded: boolean } | null {
-    if (!this.switches.hubs) return null;
-    const keys = d.boxes.map((b) => b.key);
-    const opened = [...this.openedHubs].filter((k) => k !== key);
-    const plan = foldPlan(keys, edgesOf(d), drawnGroups(d.nudges ?? [], keys, d.diagram), {
+    const keys = d.boxes.map((b) => b.key),
+      edges = edgesOf(d),
+      groups = drawnGroups(d.nudges ?? [], keys, d.diagram);
+    const opened = this.openHubs(keys, edges, groups).filter((k) => k !== key);
+    const plan = foldPlan(keys, edges, groups, {
       ...this.switches,
+      hubs: true,
       opened: { hubs: opened, groups: [...this.openedGroups] },
     });
     const stub = plan?.hubs.find(([k]) => k === key);
-    return stub ? { links: stub[1], folded: !this.openedHubs.has(key) } : null;
+    const folded = this.switches.hubs ? !this.openedHubs.has(key) : this.foldedHubs.has(key);
+    return stub ? { links: stub[1], folded } : null;
+  }
+
+  /**
+   * The busy hubs drawn open. With busy hubs folded as a whole, those opened since. Without, every one but those the
+   * user folded one by one.
+   */
+  private openHubs(keys: readonly string[], edges: readonly FocusEdge[], groups: ReturnType<typeof drawnGroups>) {
+    if (this.switches.hubs) return [...this.openedHubs];
+    const every = foldPlan(keys, edges, groups, {
+      hubs: true,
+      groups: false,
+      merge: false,
+      opened: { hubs: [], groups: [] },
+    });
+    return (every?.hubs ?? []).map(([k]) => k).filter((k) => !this.foldedHubs.has(k));
   }
 
   /** The switches as a view saved as shown writes them (§7). */

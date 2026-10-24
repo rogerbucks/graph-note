@@ -97,7 +97,7 @@ export const DEFAULT_SETTINGS: Settings = {
   direction: 'best',
   focusDepth: 'one',
   labelsByZoom: 'on',
-  foldHubs: 'on',
+  foldHubs: 'off',
   foldGroups: 'off',
   mergeLinks: 'off',
   noteCallouts: 'off',

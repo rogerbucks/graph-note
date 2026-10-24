@@ -2,7 +2,7 @@
   "about": "Graphs folded, merged and routed as a graph's View menu and style graph say (editor spec §25: untangle_hubs, untangle_groups, untangle_merge, untangle_routing, view_switch_defaults), drawn the same by the plugin's core and by graph_svg.py. Each case is a note's gql blocks, each block a list of lines; the view it is drawn in, if any (its name only: the whole graph is drawn, styled and switched as that view is); the switches, when the case has a View menu (none: drawn as an export and the Claude Code pane draw it, with nothing folded or merged), turned from where they start (hubs, groups and merge, each true or false; {} turns none; a switch not given starts as the plugin's settings hold it by default, as the style graph merges links, or as the view was saved as shown); and the busy hubs and groups opened again. For every case both give the same problems reading each style and, for every graph drawn, the same Graphviz source in each direction laid out, byte for byte. The expected answers are the core's, run live: packages/core/test/layout-parity.test.js holds graph_svg.py to the core on these cases, and tests/test_graph_svg_folds.py does the same from the Python side.",
   "cases": [
     {
-      "name": "a busy hub folded, as the settings fold one until the View menu says otherwise",
+      "name": "a busy hub folded, with busy hubs folded on until the View menu says otherwise",
       "blocks": [
         [
           "// graph: kit",
@@ -18,7 +18,9 @@
           "(t1)-[:KEPT_IN]->(shed), (box)-[:KEPT_IN]->(shed)"
         ]
       ],
-      "switches": {}
+      "switches": {
+        "hubs": true
+      }
     },
     {
       "name": "no switches given: drawn as an export draws it, with nothing folded or merged",
@@ -61,8 +63,14 @@
           "(box)-[:HOLDS]->(t11), (box)-[:HOLDS]->(t12), (box)-[:HOLDS]->(t13)"
         ]
       ],
-      "switches": {},
-      "opened": { "hubs": ["box"] }
+      "switches": {
+        "hubs": true
+      },
+      "opened": {
+        "hubs": [
+          "box"
+        ]
+      }
     },
     {
       "name": "the hubs switch off: a busy hub drawn with every link",
@@ -79,7 +87,9 @@
           "(box)-[:HOLDS]->(t11), (box)-[:HOLDS]->(t12), (box)-[:HOLDS]->(t13)"
         ]
       ],
-      "switches": { "hubs": false }
+      "switches": {
+        "hubs": false
+      }
     },
     {
       "name": "groups folded into boxes, their links drawn to the boxes, a link inside one left out",
@@ -100,7 +110,9 @@
           "(n5:Nudge {word: 'beside', thing: 'ann', other: 'eve'})"
         ]
       ],
-      "switches": { "groups": true }
+      "switches": {
+        "groups": true
+      }
     },
     {
       "name": "one group opened again, the other still folded",
@@ -121,8 +133,14 @@
           "(n5:Nudge {word: 'before', thing: 'bob', other: 'eve'})"
         ]
       ],
-      "switches": { "groups": true },
-      "opened": { "groups": ["Red team"] }
+      "switches": {
+        "groups": true
+      },
+      "opened": {
+        "groups": [
+          "Red team"
+        ]
+      }
     },
     {
       "name": "links between two groups merged into a trunk, as the style graph merges them",
@@ -166,7 +184,9 @@
           "(s1:Show {property: 'since', kind: 'Tag'})"
         ]
       ],
-      "switches": { "merge": true }
+      "switches": {
+        "merge": true
+      }
     },
     {
       "name": "busy hub, folded group and trunk together, links routed straight",
@@ -194,7 +214,10 @@
           "(r1:Links {routing: 'straight', merge: 'on'})"
         ]
       ],
-      "switches": { "groups": false }
+      "switches": {
+        "groups": false,
+        "hubs": true
+      }
     },
     {
       "name": "a view routed at right angles and saved as shown with its switches",
@@ -287,7 +310,10 @@
           "(p2:Picture {property: 'photo', kind: 'Box'})"
         ]
       ],
-      "switches": { "groups": true }
+      "switches": {
+        "groups": true,
+        "hubs": true
+      }
     }
   ]
 }
