@@ -44,6 +44,8 @@ export interface Direction {
   src: LayoutSource;
   /** Laid out with straight links, for its curves to come after (curves_after_drawing). */
   straight?: boolean;
+  /** For one laid out straight: the source its curves are laid out from next (curves_after_drawing, curves_saved). */
+  curved?: string;
 }
 
 /**
@@ -122,7 +124,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
       ),
       drawing.routing,
     );
-    if (straight) return { rankdir, dot: quickSource(dot, STRAIGHT_FIRST), src, straight };
+    if (straight) return { rankdir, dot: quickSource(dot, STRAIGHT_FIRST), src, straight, curved: quickSource(dot) };
     return { rankdir, dot: quick ? quickSource(dot) : dot, src };
   });
 }
