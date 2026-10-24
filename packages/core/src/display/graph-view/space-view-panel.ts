@@ -25,7 +25,7 @@ import type { DrawMark } from '../../drawing-marks.ts';
 import { centredOn, focusOn, middleOf, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
 import { blockAt, lineAt } from '../../space-pick.ts';
-import { arrowsOnScreen, labelsOnScreen, pickedRing } from '../../space-labels.ts';
+import { cardAt, cardsOnScreen, frameOf } from '../../space-cards.ts';
 import { spreadSpace } from '../../space-spread.ts';
 import { KEY_STEP, ZOOM_STEP, keyMove, orbitAround, panBy, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
@@ -54,6 +54,9 @@ const opened = new WeakMap<HTMLElement, () => void>();
 const TAP_SLOP = 6;
 /** How soon a second click or tap must follow the first to fly, in milliseconds. */
 const DOUBLE_TAP = 350;
+
+/** A way to show the view: as cards or balls in space (null), or lifted, with height by what DepthBy says. */
+type Depth = DepthBy | 'cards' | null;
 
 /** Each thing's count of links, by its key: what height means when it means links. */
 function linkCounts(marks: readonly DrawMark[]): Map<string, number> {
@@ -101,12 +104,13 @@ export async function openSpaceView(
   const halo = !background || background === 'transparent' || /,\s*0\)$/.test(background) ? 'Canvas' : background;
   // the picked thing's ring: the card's text colour, the strongest contrast with its page in either theme
   const ink = win.getComputedStyle(root).color || 'CanvasText';
-  // the ways to show it: laid out in space as balls (the first, Roger, 24 Oct 2026), or the drawing lifted as it is
-  const depthsOf = (): (DepthBy | null)[] => [null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
+  // the ways to show it: in space as cards (the first, Roger, 24 Oct 2026) or balls, or the drawing lifted as it is
+  const depthsOf = (): Depth[] => ['cards', null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
   let depths = depthsOf();
-  const spaceBy = (by: DepthBy | null): SpaceMarks => (by ? spaceOf(marks, by) : spreadSpace(marks).space);
+  const spaceBy = (by: Depth): SpaceMarks =>
+    by === 'cards' ? spreadSpace(marks, undefined, true).space : by ? spaceOf(marks, by) : spreadSpace(marks).space;
   // a drawing opens in space; an overview's groups (massive-paints.ts) are no things to lay out, so they are lifted
-  let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 1 : 2) : 0;
+  let depth = 'marks' in from ? (marks.some((m) => m.kind === 'group') ? 2 : 3) : 0;
   let space: SpaceMarks = spaceBy(depths[depth] ?? null);
   let width = 1,
     height = 1;
@@ -124,15 +128,9 @@ export async function openSpaceView(
     asked = false;
     if (!open) return;
     const matrix = matrixNow();
-    painter.paint(space, matrix, paints);
-    const chosen = {
-      ...(picked?.of === undefined ? {} : { picked: picked.of }),
-      ...(pickedLine ? { pickedLink: pickedLine.id } : {}),
-    };
-    const named = labelsOnScreen(space, matrix, width, height, chosen);
-    const arrows = arrowsOnScreen(space, matrix, width, height);
-    const ring = picked && pickedRing(space, picked, matrix, width, height);
-    paintSpaceLabels(ctx, named, paints, win.devicePixelRatio || 1, halo, arrows, ring && { ...ring, ink });
+    const frame = frameOf(space, matrix, width, height, picked, pickedLine?.id);
+    painter.paint(frame.shapes, matrix, paints);
+    paintSpaceLabels(ctx, frame, paints, win.devicePixelRatio || 1, halo, ink);
   };
   const again = () => {
     if (asked) return;
@@ -318,7 +316,9 @@ export async function openSpaceView(
     const at = el.getBoundingClientRect();
     const x = e.clientX - at.left,
       y = e.clientY - at.top;
-    const hit = blockAt(space, matrixNow(), width, height, x, y);
+    const hit = space.cards
+      ? (cardAt(cardsOnScreen(space, matrixNow(), width, height), x, y)?.block ?? null)
+      : blockAt(space, matrixNow(), width, height, x, y);
     const link = hit ? null : lineAt(space, matrixNow(), width, height, x, y);
     const twice =
       lastTap &&
@@ -373,7 +373,7 @@ export async function openSpaceView(
 }
 
 /** What the button that changes how it is shown says, for each way. */
-const DEPTH_WORDS = ['space.spread', 'space.height-groups', 'space.height-links'] as const;
+const DEPTH_WORDS = ['space.cards', 'space.spread', 'space.height-groups', 'space.height-links'] as const;
 
 /** The help line's steps, with a mouse or trackpad. */
 const MOUSE_HELP = [

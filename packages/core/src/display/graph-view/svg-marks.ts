@@ -101,7 +101,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
         of: key,
         x: x + width / 2,
         y: y + height / 2,
-        text: text.textContent,
+        text: wholeName(g, text),
         size,
         anchor: 'middle',
       });
@@ -204,6 +204,21 @@ function nameOf(g: Element): Element | null {
   for (const t of Array.from(g.querySelectorAll('text')))
     if (t.textContent?.trim() && (!best || sizeOf(t) > sizeOf(best))) best = t;
   return best;
+}
+
+/**
+ * The whole of a thing's name, from `first`, its first row. A long name is cut into rows of the same size, one under
+ * another, and each row after it is joined on. Roger, 24 Oct 2026: a name in 3D was cut after its first row.
+ */
+function wholeName(g: Element, first: Element): string {
+  const texts = Array.from(g.querySelectorAll<Element>('text')),
+    rows: string[] = [];
+  for (const t of texts.slice(texts.indexOf(first))) {
+    if (sizeOf(t) !== sizeOf(first)) break;
+    const row = t.textContent?.trim();
+    if (row) rows.push(row);
+  }
+  return rows.join(' ');
 }
 
 /**

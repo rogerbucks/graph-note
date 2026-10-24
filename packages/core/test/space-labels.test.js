@@ -74,7 +74,8 @@ test('the picked thing always has its name shown, first and at least a set size'
   assert.ok(!shown.slice(1).some((l) => l.picked));
 });
 
-test('a long name ends in "…"', () => {
+test('a name is painted whole, up to the shown-text rule\'s 80 letters; a longer one ends in "…"', () => {
+  // Roger, 24 Oct 2026: cutting a name short in 3D "doesn't make much sense"
   const marks = [
     { id: 't:a', kind: 'box', style: 'thing', of: 'a', x: 0, y: 0, width: 90, height: 40 },
     {
@@ -84,12 +85,14 @@ test('a long name ends in "…"', () => {
       of: 'a',
       x: 45,
       y: 20,
-      text: 'x'.repeat(80),
+      text: 'x'.repeat(90),
       size: 9,
       anchor: 'middle',
     },
   ];
   const [l] = shownOf(spaceOf(marks, { by: 'group' }), 800, 600);
-  assert.equal(l.text.length, 32);
+  assert.equal(l.text.length, 80);
   assert.ok(l.text.endsWith('…'));
+  const whole = marks.map((m) => (m.kind === 'label' ? { ...m, text: 'x'.repeat(60) } : m));
+  assert.equal(shownOf(spaceOf(whole, { by: 'group' }), 800, 600)[0].text, 'x'.repeat(60));
 });

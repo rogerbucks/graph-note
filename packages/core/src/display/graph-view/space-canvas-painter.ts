@@ -2,7 +2,7 @@
 // WebGL 2. And the 3D view's text, which the 2D canvas always paints, on a canvas laid over the shapes. Which names
 // are painted, and how big, space-labels.ts picks.
 import type { Block, SpaceMarks, Vec3 } from '../../space-view.ts';
-import type { ScreenArrow, ScreenLabel } from '../../space-labels.ts';
+import type { ScreenCard, SpaceFrame } from '../../space-cards.ts';
 import { FIELD, projectPoint } from '../../space-view.ts';
 import { BALL_LIGHT } from '../../palette.ts';
 import type { Paints } from './mark-painter.ts';
@@ -107,22 +107,24 @@ export function canvasSpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
 }
 
 /**
- * Paints `arrows`, then `labels`, on `ctx`, already at their pixels. Arrowheads are in their link's colour, edged with
- * the page colour so they read where links meet. Labels have a halo of the page colour so they read over blocks.
+ * Paints `frame`'s cards, its arrowheads, then its labels, on `ctx`, already at their pixels (space-cards.ts). Arrowheads
+ * are in their link's colour, edged with the page colour so they read where links meet. Labels have a halo of the page
+ * colour so they read over blocks. The picked thing's ring, or its card's edge, is in `ink`.
  */
 export function paintSpaceLabels(
   ctx: CanvasRenderingContext2D,
-  labels: readonly ScreenLabel[],
+  frame: Pick<SpaceFrame, 'cards' | 'arrows' | 'labels' | 'ring'>,
   paints: Paints,
   ratio: number,
   halo: string,
-  arrows: readonly ScreenArrow[] = [],
-  ring: { x: number; y: number; r: number; ink: string } | null = null,
+  ink: string,
 ) {
+  const { labels, arrows, ring } = frame;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.lineJoin = 'round';
+  paintCards(ctx, frame.cards, paints, halo, ink);
   ctx.lineWidth = 1;
   for (const a of arrows) {
     const line = paints(a.style).line;
@@ -144,7 +146,7 @@ export function paintSpaceLabels(
     ctx.strokeStyle = halo;
     ctx.lineWidth = 7;
     ctx.stroke();
-    ctx.strokeStyle = ring.ink;
+    ctx.strokeStyle = ink;
     ctx.lineWidth = 3;
     ctx.stroke();
   }
@@ -230,4 +232,46 @@ function paintBalls(
   }
   items.sort((p, q) => q.far - p.far);
   for (const item of items) item.paint();
+}
+
+/** How round a card's corners are, in pixels. */
+const CARD_CORNER = 6;
+
+/**
+ * Paints `cards`, far ones first, each filled and edged as its box is in 2D, with its words in rows inside. The picked
+ * card is edged in `ink`, with the page colour both sides, so it shows in either theme.
+ */
+function paintCards(
+  ctx: CanvasRenderingContext2D,
+  cards: readonly ScreenCard[],
+  paints: Paints,
+  halo: string,
+  ink: string,
+) {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const c of cards) {
+    const paint = paints(c.block.style);
+    ctx.beginPath();
+    ctx.roundRect(c.x - c.width / 2, c.y - c.height / 2, c.width, c.height, Math.min(CARD_CORNER, c.height / 4));
+    ctx.fillStyle = paint.fill ?? halo;
+    ctx.fill();
+    if (c.picked) {
+      ctx.strokeStyle = halo;
+      ctx.lineWidth = 7;
+      ctx.stroke();
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = 3;
+    } else {
+      ctx.strokeStyle = paint.line ?? ink;
+      ctx.lineWidth = 1;
+    }
+    ctx.stroke();
+    if (!c.rows.length) continue;
+    ctx.font = `${c.picked ? 'bold ' : ''}${c.size}px sans-serif`;
+    ctx.fillStyle = paint.text ?? ink;
+    const row = c.size * 1.25,
+      top = c.y - ((c.rows.length - 1) * row) / 2;
+    c.rows.forEach((r, i) => ctx.fillText(r, c.x, top + i * row));
+  }
 }

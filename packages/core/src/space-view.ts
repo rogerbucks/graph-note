@@ -31,6 +31,8 @@ export interface Block {
   depth: number;
   floor: number;
   tall: number;
+  /** Painted as a card flat to the screen (space-cards.ts): its size when one pixel of the space is one of the screen. */
+  card?: { width: number; height: number };
 }
 
 /** A line through the space, painted in the colour of its style. */
@@ -77,6 +79,8 @@ export interface SpaceMarks {
   arrows: SpaceArrow[];
   /** Whether each block is painted as the ball inside it, rather than as a box (space-spread.ts). */
   round?: boolean;
+  /** Whether each block is painted as a card flat to the screen, with its name inside (space-cards.ts). */
+  cards?: boolean;
   least: Vec3;
   most: Vec3;
 }
