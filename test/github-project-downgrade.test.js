@@ -236,8 +236,8 @@ describe('issues the bot makes that GitHub is slow to list', () => {
   });
 
   test('a list with no pull requests in it is whole when it gives every issue, however many numbers they took', () => {
-    // 24 Oct 2026: the workflow's token is given no pull request, so 621 issues of #1 to #1026 read as short, and the
-    // board stopped following main for every run that had an issue to make
+    // 24 Oct 2026: the workflow's token is given no pull request. So 621 issues of #1 to #1026 read as short. The board
+    // then stopped following main for every run that had an issue to make.
     const issuesOnly = [page(1026, 1001), page(600, 1)];
     assert.doesNotThrow(() => createGuard(listing(626, issuesOnly), REPO, making).before());
     assert.equal(readsWhole(626, 626), true);

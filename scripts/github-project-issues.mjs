@@ -94,8 +94,8 @@ export function issueCount(run, repo) {
 /**
  * Whether a read of the issues list came back whole: it gave at least as many issues as GitHub counts. On 22 Oct 2026
  * a read came back short, the old issues missing. The mirror took their requirements for new and made 40 issues again
- * (#961 to #1016). The numbers alone cannot tell: the workflow's token, with no pull request permission, is given no
- * pull request in the list, so every pull request's number is a gap (621 issues of #1 to #1026, 24 Oct 2026).
+ * (#961 to #1016). The numbers alone cannot tell. The workflow's token is given no pull request in the list. So every
+ * pull request's number looks like a gap: 621 issues of #1 to #1026 on 24 Oct 2026.
  */
 export const readsWhole = (listed, total) => listed >= total;
 
