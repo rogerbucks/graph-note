@@ -43,6 +43,8 @@ export interface SpaceLine {
   to?: string;
   /** What the link says, such as its relationship. */
   words?: string;
+  /** The link's own key in the drawing, such as its number, when it has one. */
+  of?: string;
 }
 
 /** An arrowhead: its tip, a point back along its link where it is widest, and its length, in pixels of the space. */
@@ -164,6 +166,7 @@ export function spaceOf(marks: readonly DrawMark[], depth: DepthBy): SpaceMarks 
       const line: SpaceLine = { id: m.id, style: m.style, points: arcOf(m.points, top(a), top(b)) };
       if (m.from !== undefined && m.to !== undefined) [line.from, line.to] = [m.from, m.to];
       if (m.name) line.words = m.name;
+      if (m.of !== undefined) line.of = m.of;
       lines.push(line);
       // an arrowhead where the link comes down onto the thing it points to, and its words at the top of its arc
       const tip = line.points[line.points.length - 1],

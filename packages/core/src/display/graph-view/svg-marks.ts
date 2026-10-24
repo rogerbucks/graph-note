@@ -125,6 +125,8 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
       points,
       ...ends,
       ...(words ? { name: words } : {}),
+      // the plugin's own drawing numbers each link, as a tap reads it (taps.ts), so a pick can open its details
+      ...(g.getAttribute('data-link') !== null ? { of: g.getAttribute('data-link') ?? '' } : {}),
     });
   }
   return { marks, paints: (style) => table.get(style) ?? {} };
