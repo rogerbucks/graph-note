@@ -12,7 +12,7 @@ import { readBoard } from '../scripts/slice-board.mjs';
 import { desiredState, idOfBody } from '../scripts/github-project-desired.mjs';
 import { buildPlan, planProject } from '../scripts/github-project-plan.mjs';
 import { executePlan, readAdoptable, readRemote } from '../scripts/github-project-gh.mjs';
-import { GAPS_ALLOWED, createGuard, readsWhole } from '../scripts/github-project-issues.mjs';
+import { createGuard, readsWhole } from '../scripts/github-project-issues.mjs';
 import { fakeGithub } from './repository/github-project-fake.js';
 import { FIXTURE, WORKSTREAMS } from './repository/github-project-fixture.js';
 
@@ -212,31 +212,35 @@ describe('issues the bot makes that GitHub is slow to list', () => {
     assert.deepEqual(waits, [1, 2]);
   });
 
-  test('creating stops when the issues list comes back short, so the old issues are never made again', () => {
-    const plan = { creator: BOT, adopters: ['rogerbucks', BOT], issues: { create: [{ id: 'mini_map' }] } };
-    const user = { login: 'rogerbucks' };
-    const page = (from, to) =>
-      Array.from({ length: from - to + 1 }, (_, k) => ({
-        number: from - k,
-        title: 't',
-        body: '',
-        state: 'open',
-        user,
-      }));
-    const short = () => JSON.stringify([page(100, 61)]);
+  /** A gh that counts `total` issues and lists `pages`, newest first, as GitHub does to the workflow's token. */
+  const listing = (total, pages) => (args, input) =>
+    args[1] === 'graphql' && /issues \{ totalCount \}/.test(JSON.parse(input).query)
+      ? JSON.stringify({ data: { repository: { issues: { totalCount: total } } } })
+      : JSON.stringify(pages);
+  const page = (from, to) =>
+    Array.from({ length: from - to + 1 }, (_, k) => ({
+      number: from - k,
+      title: 't',
+      body: '',
+      state: 'open',
+      user: { login: 'rogerbucks' },
+    }));
+  const making = { creator: BOT, adopters: ['rogerbucks', BOT], issues: { create: [{ id: 'mini_map' }] } };
+
+  test('creating stops when the issues list gives fewer issues than GitHub counts, so old ones are never made again', () => {
     assert.throws(
-      () => createGuard(short, REPO, plan).before(),
-      /issues list came back short \(40 of #1 to #100\); creating stopped to avoid duplicates/,
+      () => createGuard(listing(100, [page(100, 61)]), REPO, making).before(),
+      /issues list came back short \(40 of 100 issues\); creating stopped to avoid duplicates/,
     );
-    const gaps = () => JSON.stringify([page(100, 31), page(25, 1)]);
-    assert.doesNotThrow(() => createGuard(gaps, REPO, plan).before());
+    assert.doesNotThrow(() => createGuard(listing(100, [page(100, 1)]), REPO, making).before());
   });
 
-  test('a read is whole when it lacks at most a few numbers from #1 to the newest, for deleted or moved issues', () => {
-    const upTo = (n) => Array.from({ length: n }, (_, k) => k + 1);
-    assert.equal(readsWhole([]), true);
-    assert.equal(readsWhole(upTo(100)), true);
-    assert.equal(readsWhole(upTo(100).slice(GAPS_ALLOWED)), true);
-    assert.equal(readsWhole(upTo(100).slice(GAPS_ALLOWED + 1)), false);
+  test('a list with no pull requests in it is whole when it gives every issue, however many numbers they took', () => {
+    // 24 Oct 2026: the workflow's token is given no pull request, so 621 issues of #1 to #1026 read as short, and the
+    // board stopped following main for every run that had an issue to make
+    const issuesOnly = [page(1026, 1001), page(600, 1)];
+    assert.doesNotThrow(() => createGuard(listing(626, issuesOnly), REPO, making).before());
+    assert.equal(readsWhole(626, 626), true);
+    assert.equal(readsWhole(625, 626), false);
   });
 });
