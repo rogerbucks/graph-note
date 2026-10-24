@@ -27,6 +27,19 @@
 (problem_shapes:Interface {name: 'Problems and fixes (Language Server Protocol shapes)', file: 'packages/graph-spec/src/reader/problem-codes.json', page: 'Developer-reference', requirements: 'lsp_shapes problem_codes'}),
 // ── Areas: how each part's code is structured (scripts/code-structure.mjs checks them) ──
 // The core, by the spec section each area serves. A file is named once; a glob stands for a prefix no other area uses.
+// the graph format library in JavaScript, cut by its folders. Clusters, altitude, lenses and the process core
+// came in Wave 10; the Python twins sit in the same folders under python/graph_spec
+(lib_entry:Area {name: 'The library\'s entry point', section: '51', does: 'The one API every caller requires, the command-line checker and its build.', files: 'packages/graph-spec/src/graph-spec-check.js packages/graph-spec/bin/** packages/graph-spec/esbuild.check.mjs'}),
+(lib_reading:Area {name: 'Reading a graph', section: '51', does: 'Reads a note\'s graph text into a store and a plain graph, with its values, times and hashes.', files: 'packages/graph-spec/src/reader/** packages/graph-spec/src/graph/** packages/graph-spec/src/values/** packages/graph-spec/src/hashing/**'}),
+(lib_rules:Area {name: 'The rules', section: '51', does: 'The spec\'s rules run on a graph: types, readings, paths, certainty, provenance, judgements and completeness.', files: 'packages/graph-spec/src/rules/**'}),
+(lib_joins:Area {name: 'Joins and change sets', section: '51', does: 'Graphs joined by claim with trust and a three-way merge, and change sets checked before they apply.', files: 'packages/graph-spec/src/joins/** packages/graph-spec/src/changesets/**'}),
+(lib_views:Area {name: 'Views as text', section: '7', does: 'Every view of a graph, and relationships, legends and paths written as Mermaid text.', files: 'packages/graph-spec/src/views/**'}),
+(lib_layout:Area {name: 'The layout source', section: '9', does: 'The Graphviz layout source the core hands to its worker, the same byte for byte as the Python one.', files: 'packages/graph-spec/src/graph-layout.js'}),
+(lib_mesh:Area {name: 'The mesh', section: '27', does: 'Graphs joined into one mesh: certainty, time, text merges, same-as links, types and contexts.', files: 'packages/graph-spec/src/mesh/**'}),
+(lib_clusters:Area {name: 'Clusters', section: '31', does: 'Clusters and their centroids, cycles, groups for a huge graph, and how tightly each cluster holds.', files: 'packages/graph-spec/src/clusters/**'}),
+(lib_altitude:Area {name: 'Altitude', section: '32', does: 'Altitude as a query parameter, audience profiles, and the altitude and topic index.', files: 'packages/graph-spec/src/altitude/**'}),
+(lib_lenses:Area {name: 'Lenses', section: '33', does: 'A lens as graph data: a saved query that answers fresh and is flagged when a schema it uses changes.', files: 'packages/graph-spec/src/lenses/**'}),
+(lib_process:Area {name: 'The process core', section: '34', does: 'The eight kinds every process view reads, transitions and guards, and a run\'s log with its current states.', files: 'packages/graph-spec/src/process/**'}),
 (core_entry:Area {name: 'The entry point', section: '10', does: 'The core\'s entry point, what every host imports, and the small helpers shared by all of it.', files: 'packages/core/src/index.ts packages/core/src/index-late.ts packages/core/src/palette.ts packages/core/src/text-cuts.ts packages/core/src/thresholds.ts'}),
 (core_reading:Area {name: 'Reading and drawing a note', section: '3', does: 'Reads a note\'s graph blocks and works out the boxes, links, colours and zoom to draw.', files: 'packages/core/src/note-reading.ts packages/core/src/partial-read.ts packages/core/src/blocks.ts packages/core/src/block-items.ts packages/core/src/fences.ts packages/core/src/whitespace.ts packages/core/src/drawing.ts packages/core/src/render.ts packages/core/src/hits.ts packages/core/src/zoom.ts packages/core/src/zoom-fit.ts packages/core/src/zoom-across.ts packages/core/src/theme.ts packages/core/src/schema-picture.ts packages/core/src/schema-names.ts packages/core/src/schema-version-moves.ts packages/core/src/standard-schemas.ts packages/core/src/estimates.ts packages/core/src/arrows.ts packages/core/src/certainty-drawn.ts'}),
 (core_problems:Area {name: 'Problems and fixes', section: '8', does: 'Finds what is wrong or missing in a graph and offers each fix, in Language Server Protocol shapes.', files: 'packages/core/src/help.ts packages/core/src/completeness.ts packages/core/src/lock.ts packages/core/src/deferred.ts packages/core/src/schema-checks.ts packages/core/src/estimate-fix.ts packages/core/src/estimate-places.ts'}),
@@ -71,6 +84,17 @@
 (display_images:Area {name: 'Images', section: '18', does: 'Image sources and still frames.', files: 'packages/core/src/display/images/**'}),
 (display_proposals:Area {name: 'Proposal strip', section: '17', does: 'Proposals marked on the drawing and the strip that reviews them.', files: 'packages/core/src/display/proposals/**'}),
 // ── Areas in their parts ──
+(lib_entry)-[:PART_OF]->(graph_spec_js),
+(lib_reading)-[:PART_OF]->(graph_spec_js),
+(lib_rules)-[:PART_OF]->(graph_spec_js),
+(lib_joins)-[:PART_OF]->(graph_spec_js),
+(lib_views)-[:PART_OF]->(graph_spec_js),
+(lib_layout)-[:PART_OF]->(graph_spec_js),
+(lib_mesh)-[:PART_OF]->(graph_spec_js),
+(lib_clusters)-[:PART_OF]->(graph_spec_js),
+(lib_altitude)-[:PART_OF]->(graph_spec_js),
+(lib_lenses)-[:PART_OF]->(graph_spec_js),
+(lib_process)-[:PART_OF]->(graph_spec_js),
 (core_entry)-[:PART_OF]->(core_part),
 (core_reading)-[:PART_OF]->(core_part),
 (core_problems)-[:PART_OF]->(core_part),
