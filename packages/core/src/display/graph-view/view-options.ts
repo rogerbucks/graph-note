@@ -69,6 +69,11 @@ export type Chosen = { thing: string } | { link: number } | { estimate: number }
 export interface SwitchesShown {
   state: ViewState;
   relayout: (owner: object) => Promise<Drawn | Refusal | null>;
+  /**
+   * The same layout with its links curved, for a drawing shown with straight links first (§11, curves_after_drawing).
+   * Without it, a drawing shown straight stays so.
+   */
+  curved?: (owner: object) => Promise<Drawn | Refusal | null>;
 }
 
 /** What a drawing needs: the reading, the graph, its drawn SVG and problems, where it is shown, and what its buttons do. */

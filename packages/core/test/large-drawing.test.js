@@ -78,3 +78,27 @@ describe('a large graph', () => {
     assert.equal(drawn.svg.match(/class="node"/g).length, QUICK_LAYOUT + 1);
   });
 });
+
+describe('a large graph drawn straight first', () => {
+  // proves: curves_after_drawing
+  test('past 300 things, has straight links and says its curves are to come, every box placed as when curved', async () => {
+    const g = chain(QUICK_LAYOUT + 1);
+    const [first] = directions({ ...g, straightFirst: true });
+    assert.match(first.dot, /^ {2}graph \[splines=line, nslimit=0\.5, mclimit=0\.05\];$/m);
+    const engine = await loadEngine();
+    const straight = draw({ ...g, straightFirst: true }, engine),
+      curved = draw(g, engine);
+    assert.equal(straight.curvesToCome, true);
+    assert.equal(curved.curvesToCome, undefined);
+    const nodes = (svg) => svg.match(/<g id="node\d+"[\s\S]*?<\/g>/g)?.join('');
+    assert.equal(nodes(straight.svg), nodes(curved.svg), 'Graphviz puts every box in the same place either way');
+  });
+
+  // proves: curves_after_drawing
+  test('of 300 things or fewer, or routed as a person chose, is drawn as before, at once', () => {
+    assert.deepEqual(directions({ ...chain(QUICK_LAYOUT), straightFirst: true }), directions(chain(QUICK_LAYOUT)));
+    const big = chain(QUICK_LAYOUT + 1);
+    for (const routing of ['straight', 'right-angled'])
+      assert.deepEqual(directions({ ...big, routing, straightFirst: true }), directions({ ...big, routing }), routing);
+  });
+});
