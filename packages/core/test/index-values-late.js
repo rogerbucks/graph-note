@@ -2,8 +2,11 @@
 // It is kept apart from index-names.js, which joins it to the values before it, so neither file passes the test file
 // size.
 // TIMELINE_ORDERS, TIMELINE_SHOWS and chosenDiagram, listed in index-names.js, came on 22 Oct 2026 (timeline_order,
-// timeline_show, timeline_choice_card).
+// timeline_show, timeline_choice_card). CORE_AI and CORE_AI_PROVIDER (plugin_interface) came on 24 Oct 2026; index-names.js
+// sorts the whole list.
 export const VALUES_LATE = [
+  'CORE_AI',
+  'CORE_AI_PROVIDER',
   'schemaMove',
   'schemaPicture',
   'schemaVersions',

@@ -85,8 +85,6 @@ export const VALUES = [
   'CHANGE_LOOKS',
   'CHANGE_WAITS',
   'CLAUDE',
-  'CORE_AI',
-  'CORE_AI_PROVIDER',
   'CORE_DIAGRAMS_ID',
   'CORE_EXPORTS',
   'CORE_STORAGE',
@@ -468,7 +466,7 @@ export const VALUES = [
   'sayWords',
   'scaledMarks',
   ...VALUES_LATE,
-];
+].sort();
 
 /** The types src/index.ts exports, sorted. */
 export const TYPES = [
