@@ -183,7 +183,12 @@ class Folds(unittest.TestCase):
             ]
         )
         self.assertEqual(routed_source(radial, None), radial)
-        for routing, splines in (("straight", "line"), ("right-angled", "ortho")):
+        # direct is laid out straight, the quickest; its links are drawn again (direct-links.ts)
+        for routing, splines in (
+            ("straight", "line"),
+            ("right-angled", "ortho"),
+            ("direct", "line"),
+        ):
             routed = routed_source(radial, routing)
             self.assertEqual(re.findall(r"splines=(\w+)", routed), [splines], routing)
             self.assertIn('  graph [layout=twopi, root="a", overlap=scale];', routed, routing)

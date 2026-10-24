@@ -6,7 +6,7 @@
 // layout_byte_identical).
 import type { GraphDrawing } from './note-reading.ts';
 import { PALETTES } from './palette.ts';
-import { chosen, directions, QUICK_LAYOUT } from './render.ts';
+import { chosen, directions, QUICK_LAYOUT, svgOf } from './render.ts';
 import { CurvesSaved } from './curves-saved.ts';
 import type { Drawn, Engine } from './render.ts';
 import { counted, LAYOUT_LIMITS, measured, PAGE_LIMITS } from './layout-limits.ts';
@@ -94,8 +94,10 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
       const laid = asked.map((d) =>
         d.curved !== undefined && saved.get(d.curved) !== undefined ? { ...d, dot: d.curved, straight: false } : d,
       );
+      // direct links are drawn again from Graphviz's marks (untangle_direct); any other routing is Graphviz's own
+      const own = (dot: string): string => svgOf(e, dot, drawing.routing);
       const svgs = laid.map((d) =>
-        !large || d.straight ? e.render(d.dot) : (saved.get(d.dot) ?? saved.keep(d.dot, e.render(d.dot))),
+        !large || d.straight ? own(d.dot) : (saved.get(d.dot) ?? saved.keep(d.dot, own(d.dot))),
       );
       return { id, drawn: chosen(laid, svgs, theme && PALETTES[theme]) };
     };
