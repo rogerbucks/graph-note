@@ -232,3 +232,41 @@ test('a drawing with direct links keeps every part of the SVG Graphviz writes, i
   assert.equal(svgOf(engine, dot, 'curved'), own, 'any other routing is Graphviz own');
   assert.match(dot, /splines=line/, 'laid out straight, the quickest, before the links are drawn again');
 });
+
+test('every line, arrowhead and word lies inside the drawing, so no curve is cut off at its edge', () => {
+  // Roger, 24 Oct 2026: "some curves seem to get clipped on the edges of the image"
+  const edgy = dotOf(
+    [
+      ['a', 'Team'],
+      ['b', 'Team'],
+      ['c', 'Task'],
+      ['d', 'Task'],
+    ],
+    [
+      ['a', 'HELPS', 'b'],
+      ['b', 'HELPS', 'a'],
+      ['a', 'OWNS', 'c'],
+      ['b', 'OWNS', 'd'],
+      ['c', 'NEEDS', 'd'],
+      ['d', 'NEEDS', 'c'],
+    ],
+  ).dot;
+  for (const dot of [SKIPS, edgy]) {
+    const { marks, space } = directLinks(engine.marks(dot));
+    const outside = [];
+    const inside = (x, y, what) => {
+      if (x < 0 || y < 0 || x > space.width || y > space.height)
+        outside.push(`${what} at ${x.toFixed(1)},${y.toFixed(1)}`);
+    };
+    for (const m of marks) {
+      if (m.kind === 'link') for (const [x, y] of along(m)) inside(x, y, m.id);
+      if (m.kind === 'arrowhead') inside(m.x, m.y, m.id);
+      if (m.kind === 'label' && !marks.some((b) => b.kind === 'box' && b.of === m.of)) {
+        const r = wordsBox(m);
+        inside(r.x0, r.y0, m.text);
+        inside(r.x1, r.y1, m.text);
+      }
+    }
+    assert.deepEqual(outside, [], `inside a drawing ${space.width.toFixed(0)} by ${space.height.toFixed(0)}`);
+  }
+});
