@@ -9,26 +9,26 @@
       <text x="329.59" y="-35.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> PLACE
       <text x="321.48" y="-15.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> The park
     <g id="p4">
-      <path d="M241.64,-63.22C257.47,-57.86 276.42,-51.45 293.76,-45.58" paint="stroke:rgb(177, 138, 9)">
-      <polygon points="294.32,-47.98 300.17,-43.42 292.75,-43.34 294.32,-47.98" paint="fill:rgb(177, 138, 9);stroke:rgb(177, 138, 9)">
-      <text x="271.69" y="-59.06" text-anchor="middle" paint="fill:rgb(129, 103, 17)"> near
+      <path d="M241.18,-56.46C261.68,-45.77 279.72,-39.14 295.29,-36.58" paint="stroke:rgb(177, 138, 9)">
+      <polygon points="294.89,-34.16 302.2,-35.44 295.69,-39 294.89,-34.16" paint="fill:rgb(177, 138, 9);stroke:rgb(177, 138, 9)">
+      <text x="273.64" y="-48.67" text-anchor="middle" paint="fill:rgb(129, 103, 17)"> near
     <g id="p5">
       <path d="M504.07,-56.4C504.07,-56.4 463.1,-56.4 463.1,-56.4 457.1,-56.4 451.1,-50.4 451.1,-44.4 451.1,-44.4 451.1,-12 451.1,-12 451.1,-6 457.1,0 463.1,0 463.1,0 504.07,0 504.07,0 510.07,0 516.07,-6 516.07,-12 516.07,-12 516.07,-44.4 516.07,-44.4 516.07,-50.4 510.07,-56.4 504.07,-56.4" paint="fill:rgba(8, 109, 221, 0.16);stroke:rgb(15, 90, 174)">
       <text x="470.14" y="-35.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> CAFE
       <text x="470.38" y="-15.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Cafe
     <g id="p6">
-      <path d="M390.37,-28.2C407.12,-28.2 426.17,-28.2 442.59,-28.2" paint="stroke:rgb(177, 138, 9)">
-      <polygon points="442.4,-30.65 449.4,-28.2 442.4,-25.75 442.4,-30.65" paint="fill:rgb(177, 138, 9);stroke:rgb(177, 138, 9)">
-      <text x="420.6" y="-31.35" text-anchor="middle" paint="fill:rgb(129, 103, 17)"> near
+      <path d="M390.09,-35.23C406.61,-37.87 424.64,-37.63 444.19,-34.5" paint="stroke:rgb(177, 138, 9)">
+      <polygon points="443.8,-32.08 451.1,-33.4 444.57,-36.92 443.8,-32.08" paint="fill:rgb(177, 138, 9);stroke:rgb(177, 138, 9)">
+      <text x="417.73" y="-42.53" text-anchor="middle" paint="fill:rgb(129, 103, 17)"> near
     <g id="p7">
       <path d="M97.43,-56.4C97.43,-56.4 12,-56.4 12,-56.4 6,-56.4 0,-50.4 0,-44.4 0,-44.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 97.43,0 97.43,0 103.43,0 109.43,-6 109.43,-12 109.43,-12 109.43,-44.4 109.43,-44.4 109.43,-50.4 103.43,-56.4 97.43,-56.4" paint="fill:rgba(120, 82, 238, 0.16);stroke:rgb(99, 70, 187)">
       <text x="41.28" y="-35.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> PATH
       <text x="19.28" y="-15.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Sunday walk
     <g id="p8">
-      <path d="M109.75,-45.3C126.72,-50.67 145.21,-56.52 161.29,-61.61" paint="stroke:rgb(99, 70, 187)">
-      <polygon points="160.12,-63.81 167.54,-63.59 161.6,-59.14 160.12,-63.81" paint="fill:rgb(99, 70, 187);stroke:rgb(99, 70, 187)">
-      <text x="139.36" y="-60.44" text-anchor="middle" paint="fill:rgb(77, 58, 136)"> step
+      <path d="M109.43,-36.13C125.63,-38.48 143.49,-44.51 163.01,-54.21" paint="stroke:rgb(99, 70, 187)">
+      <polygon points="164.1,-52.01 169.28,-57.33 161.91,-56.41 164.1,-52.01" paint="fill:rgb(99, 70, 187);stroke:rgb(99, 70, 187)">
+      <text x="134.82" y="-48.71" text-anchor="middle" paint="fill:rgb(77, 58, 136)"> step
     <g id="p9">
-      <path d="M109.93,-21.53C128.7,-19.52 149.88,-17.59 169.28,-16.6 201.2,-14.97 209.28,-14.83 241.18,-16.6 258.32,-17.55 276.98,-19.38 293.7,-21.31" paint="stroke:rgb(99, 70, 187)">
-      <polygon points="292.99,-23.7 300.23,-22.09 293.57,-18.83 292.99,-23.7" paint="fill:rgb(99, 70, 187);stroke:rgb(99, 70, 187)">
-      <text x="205.23" y="-19.75" text-anchor="middle" paint="fill:rgb(77, 58, 136)"> step
+      <path d="M109.43,-36.95C170.1,-46.66 232.05,-46.46 295.29,-36.34" paint="stroke:rgb(99, 70, 187)">
+      <polygon points="294.9,-33.92 302.2,-35.23 295.68,-38.76 294.9,-33.92" paint="fill:rgb(99, 70, 187);stroke:rgb(99, 70, 187)">
+      <text x="203.12" y="-38.03" text-anchor="middle" paint="fill:rgb(77, 58, 136)"> step

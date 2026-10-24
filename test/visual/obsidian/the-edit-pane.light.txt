@@ -9,14 +9,14 @@
       <text x="244.54" y="-35.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> OPTION
       <text x="228.16" y="-15.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Large reader
     <g id="p4">
-      <path d="M319.48,-28.2C341.22,-28.2 366.46,-28.2 389.35,-28.2" paint="stroke:rgb(9, 152, 150)">
-      <polygon points="389.15,-30.65 396.15,-28.2 389.15,-25.75 389.15,-30.65" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150)">
-      <text x="358.57" y="-31.35" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers
+      <path d="M319.02,-19.39C347,-14.91 371.07,-14.28 391.21,-17.51" paint="stroke:rgb(9, 152, 150)">
+      <polygon points="391.59,-15.09 398.12,-18.61 390.82,-19.93 391.59,-15.09" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150)">
+      <text x="359.78" y="-21.61" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers
     <g id="p5">
       <path d="M122.45,-56.4C122.45,-56.4 12,-56.4 12,-56.4 6,-56.4 0,-50.4 0,-44.4 0,-44.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 122.45,0 122.45,0 128.45,0 134.45,-6 134.45,-12 134.45,-12 134.45,-44.4 134.45,-44.4 134.45,-50.4 128.45,-56.4 122.45,-56.4" paint="fill:rgba(8, 109, 221, 0.16);stroke:rgb(15, 90, 174)">
       <text x="46.06" y="-35.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> REASON
       <text x="19.28" y="-15.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Easy on the eyes
     <g id="p6">
-      <path d="M134.97,-28.2C156.06,-28.2 179.29,-28.2 200.1,-28.2" paint="stroke:rgb(15, 147, 67)">
-      <polygon points="200.04,-30.65 207.04,-28.2 200.04,-25.75 200.04,-30.65" paint="fill:rgb(15, 147, 67);stroke:rgb(15, 147, 67)">
-      <text x="171.67" y="-31.35" text-anchor="middle" paint="fill:rgb(21, 110, 56)"> favours
+      <path d="M134.45,-17.44C155.21,-14.12 177.71,-14.4 201.97,-18.28" paint="stroke:rgb(15, 147, 67)">
+      <polygon points="202.35,-15.86 208.88,-19.39 201.58,-20.7 202.35,-15.86" paint="fill:rgb(15, 147, 67);stroke:rgb(15, 147, 67)">
+      <text x="168.63" y="-21.21" text-anchor="middle" paint="fill:rgb(21, 110, 56)"> favours
