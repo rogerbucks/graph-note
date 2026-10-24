@@ -31,6 +31,20 @@ const REPOSITORY_TEST = /^test\/[^/]+\.test\.(js|mjs)$/;
 export const SHARDS = 6;
 const FILES_PER_SHARD = 25;
 
+/**
+ * The guards that read the whole repository, so no import reaches them. They catch a new file in no area of
+ * requirements/architecture.gql, a new export of the core, a colour the plugin names. A partial run with any
+ * JavaScript test runs them too. They take seconds, and a merge no longer turns main red on them.
+ */
+export const GUARDS = [
+  'packages/core/test/index.test.js',
+  'packages/obsidian/test/accessibility.test.js',
+  'test/code-structure.test.js',
+  'test/plain-docs.test.js',
+  'test/policy.test.js',
+  'test/wiki-developers.test.js',
+];
+
 /** The label that asks for the whole suite on a pull request. */
 export const FULL_LABEL = 'ci:full';
 
@@ -75,6 +89,7 @@ export function ciPlan({ event, labels = [], changed, tracked, reach, read }) {
     if (plan.all) return whole(`whole suite: ${plan.reason}`);
     plan.files.forEach((f) => files.add(f));
   }
+  if ([...files].some((f) => JS_TEST.test(f))) GUARDS.filter((f) => tracked.includes(f)).forEach((f) => files.add(f));
   const js = [...files].filter((f) => JS_TEST.test(f)).sort();
   const unsafe = js.find((f) => !SAFE_NAME.test(f));
   if (unsafe)
