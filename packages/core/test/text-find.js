@@ -50,26 +50,30 @@ export function cssRules(sheet) {
 
 /** The style sheet without each block that starts with `at` (as `@keyframes`), its nested braces and all. */
 export function withoutBlocks(sheet, at) {
-  let out = sheet;
-  for (let start = out.indexOf(at); start >= 0; start = out.indexOf(at, start)) {
-    let i = out.indexOf('{', start);
+  const kept = [];
+  let from = 0;
+  for (let start = sheet.indexOf(at); start >= 0; start = sheet.indexOf(at, from)) {
+    let i = sheet.indexOf('{', start);
     if (i < 0) break;
-    for (let depth = 0; i < out.length; i++) {
-      if (out[i] === '{') depth++;
-      else if (out[i] === '}' && --depth === 0) break;
+    for (let depth = 0; i < sheet.length; i++) {
+      if (sheet[i] === '{') depth++;
+      else if (sheet[i] === '}' && --depth === 0) break;
     }
-    out = out.slice(0, start) + out.slice(i + 1);
+    kept.push(sheet.slice(from, start));
+    from = i + 1;
   }
-  return out;
+  return kept.join('') + sheet.slice(from);
 }
 
 /** The style sheet without each opening of a block that starts with `at` (as `@media`), its rules kept. */
 export function withoutOpenings(sheet, at) {
-  let out = sheet;
-  for (let start = out.indexOf(at); start >= 0; start = out.indexOf(at, start)) {
-    const open = out.indexOf('{', start);
+  const kept = [];
+  let from = 0;
+  for (let start = sheet.indexOf(at); start >= 0; start = sheet.indexOf(at, from)) {
+    const open = sheet.indexOf('{', start);
     if (open < 0) break;
-    out = out.slice(0, start) + out.slice(open + 1);
+    kept.push(sheet.slice(from, start));
+    from = open + 1;
   }
-  return out;
+  return kept.join('') + sheet.slice(from);
 }

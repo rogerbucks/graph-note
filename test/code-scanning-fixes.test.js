@@ -152,7 +152,8 @@ describe('the tests read a drawing by plain search, as their patterns did (js/po
     assert.deepEqual(pieces(many('<rect class="s"'), '<rect class="s"', '>'), []);
     assert.equal(inOrder(many('Dup'), 'Dup', 'more than once'), false);
     assert.deepEqual(cssRules(many('z')), []);
-    assert.equal(withoutBlocks(many('@keyframes'), '@keyframes').length, 600000);
-    assert.equal(withoutOpenings(many('@media'), '@media').length, 360000);
+    assert.equal(cssRules(many('a{b}')).length, 60000);
+    assert.equal(withoutBlocks(many('@keyframes{a{}}x'), '@keyframes'), 'x'.repeat(60000));
+    assert.equal(withoutOpenings(many('@media{'), '@media'), '');
   });
 });
