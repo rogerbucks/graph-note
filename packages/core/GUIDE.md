@@ -240,6 +240,23 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - A layout may ask for a fixed theme (`light` or `dark`), which the worker themes it in. That is how an export is laid
     out, in the same worker and under the same limits.
 
+#### Trust in the drawing, and the theme graph (editor spec §36)
+
+- `drawing-runs.ts` — `RunAnimation`: each frame of a run is asked of the live graph's log, never canned.
+  `at(seq)` scrubs back through the same log (drawing_follows_engine).
+- `drawing-commands.ts` — an event on the drawing becomes a graph command for the engine (`commandOf`, `routeEvent`).
+  `stateInSvg` lists anything an SVG holds beyond a picture (drawing_holds_no_state).
+- `accessibility-lens.ts` — WCAG constraints as WcagConstraint things (`WCAG_CONSTRAINTS`). `accessibilityLens` flags
+  each drawn element that fails one; `uncheckable` lists any constraint no lens checks (accessibility_queryable,
+  accessibility_lenses_run).
+- `render-cascade.ts` — a thing's look from central defaults, then the view's, then the graph's own (`cascadeLook`).
+  `splitLooks` keeps looks out of the structure (render_cascade).
+- `theme-graph.ts` — themes in a graph of their own: Theme and ThemeRule things, EXTENDS cascading like CSS
+  (`themeRules`, `drawWith`). `knowledgeOf` leaves theme graphs out of the knowledge. `themeFor` picks the theme by
+  scope; `themeRuleProblems` flags a rule with no part (theme_graph, theme_links_meaningful).
+- `drawing-history.ts` — `DrawingHistory`: a redraw replaces the drawing and keeps the one before. `drawingDiff` says
+  the difference in things, links and theme rules, never pixels (drawing_history_diffs).
+
 #### Colours and tokens
 
 - `bidi.ts` — sets apart a label with a right-to-left letter, in the drawing and every picture of it (editor spec §42,
