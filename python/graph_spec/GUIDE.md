@@ -153,6 +153,10 @@ archive's layout on every pull request, so it always works with the library as s
   - `cluster_certainty` gives each cluster's cohesion and the certainty its centroid states, with any floor
     (`cohesion.js`, `cohesion-cases.json`).
 
+- `src/graphspec/engine/altitude/` — editor spec §32, altitude and audience profiles. `altitude.at_altitude`,
+  `profiles_of`, `audience_projection`, `altitudes_in` and `by_axes` are the twins of `altitude.js`, held to
+  `altitude-cases.json`.
+
 ### The graph mesh
 
 - `src/graphspec/engine/altitude/` — editor spec §32. `altitude_index.altitude_index` and `search_index` are the twins

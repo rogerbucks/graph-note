@@ -314,6 +314,32 @@ declare namespace GraphSpecCheck {
     graph: Graph,
     options?: { floor?: string[]; passes?: number; threshold?: number; budget?: number; clock?: () => number },
   ): { clusters: ClusterCertainty[]; settled: boolean };
+  /** What a query shows at an altitude (editor spec §32): each thing as its highest part at or under it, links bundled. */
+  function atAltitude(
+    graph: Graph,
+    level: number,
+  ): { level: number; things: string[]; links: [string, string, string, number][]; shown_as: Record<string, string> };
+  /** An audience profile: its name, domain and three criteria, and any it lacks. */
+  interface AudienceProfile {
+    id: string;
+    name: string;
+    domain: string | null;
+    criteria: Record<string, Value>;
+    missing: string[];
+  }
+  function profilesOf(graph: Graph): AudienceProfile[];
+  /** Each thing as the profiles passed read it, one projection per domain. */
+  function audienceProjection(
+    graph: Graph,
+    profiles: string[],
+  ): Record<string, Record<string, { profile: string; text: Value | null }>>;
+  /** The level a lens or profile shows each thing at, and the things that hold their audience altitude themselves. */
+  function altitudesIn(
+    graph: Graph,
+    lens: string,
+  ): { lens: string; levels: Record<string, number>; flags: [string, string, string][] };
+  /** The things on the composition axis, the audience axis, or both. */
+  function byAxes(graph: Graph, query?: { composition?: Value; audience?: string }): string[];
   /** One thing in the altitude and topic index (editor spec §32). */
   interface AltitudeEntry {
     id: string;

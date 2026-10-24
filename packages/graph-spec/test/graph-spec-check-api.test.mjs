@@ -127,6 +127,12 @@ const NAMES = [
   'moveRun',
   'withEntries',
   'refreshCurrent',
+  // altitude and audience profiles (editor spec §32)
+  'atAltitude',
+  'profilesOf',
+  'audienceProjection',
+  'altitudesIn',
+  'byAxes',
   // the altitude and topic index (editor spec §32)
   'altitudeIndex',
   'searchIndex',

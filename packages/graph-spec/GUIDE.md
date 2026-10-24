@@ -96,7 +96,11 @@ and no module requires one that requires it back.
 
 ### Altitude
 
-- **`src/altitude/`** — the altitude and topic index (editor spec §32). Python's twin gives the same answers.
+- **`src/altitude/`** — altitude, audience profiles and the topic index (editor spec §32). Python's twins give the same
+  answers.
+  - `altitude.js` — altitude as a query parameter: parts over the level open, those at or under it show as one thing,
+    and links are bundled. It also has audience profiles by three criteria and projections per domain. A thing's level
+    in each lens is a link, and the two axes filter apart or together (`test/altitude-cases.json`).
   - `altitude-index.js` — each thing's topic tags and altitudes. A search finds a tag exactly or by likeness and ranks
     by the certainty sort key, marking contested things (`test/altitude-index-cases.json`).
 
