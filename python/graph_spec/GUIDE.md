@@ -157,6 +157,9 @@ archive's layout on every pull request, so it always works with the library as s
   `profiles_of`, `audience_projection`, `altitudes_in` and `by_axes` are the twins of `altitude.js`, held to
   `altitude-cases.json`.
 
+- `src/graphspec/engine/lenses/` — editor spec §33, lenses as graph data. `saved_lenses.lenses_of` and `run_lens` are
+  the twins of `saved-lenses.js`, held to `saved-lens-cases.json`.
+
 ### The graph mesh
 
 - `src/graphspec/engine/altitude/` — editor spec §32. `altitude_index.altitude_index` and `search_index` are the twins

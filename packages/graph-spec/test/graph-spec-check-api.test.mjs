@@ -133,6 +133,9 @@ const NAMES = [
   'audienceProjection',
   'altitudesIn',
   'byAxes',
+  // lenses as graph data: saved queries that answer fresh (editor spec §33)
+  'lensesOf',
+  'runLens',
   // the altitude and topic index (editor spec §32)
   'altitudeIndex',
   'searchIndex',

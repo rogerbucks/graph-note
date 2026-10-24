@@ -104,6 +104,12 @@ and no module requires one that requires it back.
   - `altitude-index.js` — each thing's topic tags and altitudes. A search finds a tag exactly or by likeness and ranks
     by the certainty sort key, marking contested things (`test/altitude-index-cases.json`).
 
+### Lenses
+
+- **`src/lenses/`** — lenses as graph data (editor spec §33). Python's twin gives the same answers.
+  - `saved-lenses.js` — a lens is a Lens thing: a name, a saved query and a default altitude. It answers fresh each
+    time, joins like any claim, holds no data and is flagged when a schema it uses changes (`test/saved-lens-cases.json`).
+
 ### The process core
 
 - **`src/process/`** — the process core (editor spec §34). Python's twins give the same answers

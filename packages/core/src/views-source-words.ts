@@ -1,10 +1,13 @@
 // The words of the core's views, in UK English (editor spec §42, words_catalogue). They name the five kinds of view and
 // say a view in plain language. They say why a view query is refused, and why a view matches nothing. They also say why
 // a view cannot be written into a note. GQL and names stay inside the sentence as written. The block a view is written
-// as is never here: it is the note's bytes. source-words.ts keeps these with every other word.
+// as is never here: it is the note's bytes. source-words.ts keeps these with every other word. The names of the
+// ready-made lenses come with them (lens-source-words.ts).
+import { LENS_SOURCE_WORDS } from './lens-source-words.ts';
 
 /** The words of the core's views, by key, in UK English. */
 export const VIEWS_SOURCE_WORDS = {
+  ...LENS_SOURCE_WORDS,
   // each of the five kinds of view, as a refusal names it (view-profile.ts)
   'views.kind.picked': 'a hand-picked set of things',
   'views.kind.near': 'everything near a thing',

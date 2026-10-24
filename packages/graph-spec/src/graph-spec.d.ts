@@ -340,6 +340,26 @@ declare namespace GraphSpecCheck {
   ): { lens: string; levels: Record<string, number>; flags: [string, string, string][] };
   /** The things on the composition axis, the audience axis, or both. */
   function byAxes(graph: Graph, query?: { composition?: Value; audience?: string }): string[];
+  /** A lens as graph data (editor spec §33): a named, saved query with an optional default altitude. */
+  interface SavedLens {
+    id: string;
+    name: unknown;
+    query: unknown;
+    altitude: unknown;
+    schemas: string[];
+    /** The kinds its query touches. */
+    topics: string[];
+    /** Each flag: its code and a detail, such as lens-holds-data or schema-changed. */
+    flags: [code: string, detail: string][];
+  }
+  /** The lens things of a graph. `schemas` gives the version the graph now names for each schema. */
+  function lensesOf(graph: Graph, options?: { schemas?: Record<string, string> }): SavedLens[];
+  /** A lens run on the graph as it is now: the things it finds, its altitude and its flags. */
+  function runLens(
+    graph: Graph,
+    lens: string,
+    options?: { schemas?: Record<string, string> },
+  ): { lens: string; things: string[]; altitude: unknown; flags: [string, string][] };
   /** One thing in the altitude and topic index (editor spec §32). */
   interface AltitudeEntry {
     id: string;
