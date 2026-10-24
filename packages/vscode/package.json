@@ -107,6 +107,6 @@
     "@thoughtknot/core": "0.7.1"
   },
   "devDependencies": {
-    "@types/vscode": "1.95.0"
+    "@types/vscode": "1.140.0"
   }
 }
