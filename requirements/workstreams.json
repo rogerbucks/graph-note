@@ -1163,5 +1163,16 @@
       "axioms_before_sync",
       "axioms_consistent"
     ]
+  },
+  "SR1": {
+    "title": "Security response protocol",
+    "size": "S",
+    "requirements": [
+      "soc_detection_sources",
+      "soc_severity_targets",
+      "soc_response_steps",
+      "soc_report_routes",
+      "soc_practice_run"
+    ]
   }
 }
