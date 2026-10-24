@@ -90,6 +90,8 @@ export class ViewSwitching {
   private readonly owner: object;
   /** The switches and the plan the drawing shows now, to tell whether another card changed them. */
   private drawnAs = '';
+  /** How many drawings were put in: curves are put only in the drawing they were asked for. */
+  private laid = 0;
 
   /** Builds the menu in `root`, for the card `owner`, whose layouts replace one another. */
   constructor(root: HTMLElement, o: SwitchesShown, host: SwitchingHost, owner: object) {
@@ -191,6 +193,23 @@ export class ViewSwitching {
     this.drawnAs = this.now();
     this.menu.say('');
     this.host.relaid(next);
+    this.curveLater(next);
     then?.();
+  }
+
+  /**
+   * Asks for the curves of a drawing shown with straight links first (§11, curves_after_drawing). The card puts them in
+   * as soon as they are laid out. Every box stays where it is, and the view, the selection and the zoom are kept.
+   * Curves asked for a drawing laid out again since are dropped: that drawing asks for its own.
+   */
+  curveLater(drawn: Drawn): void {
+    const asked = ++this.laid;
+    if (!drawn.curvesToCome || !this.o.curved) return;
+    this.o.curved(this.owner).then(
+      (d) => {
+        if (d && !('reason' in d) && asked === this.laid) this.host.relaid(d);
+      },
+      () => undefined, // curves that could not be laid out leave the straight links shown
+    );
   }
 }
