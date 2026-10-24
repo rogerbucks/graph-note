@@ -23,6 +23,7 @@ import { LayoutRunner, inThreadPort, serveLayouts } from '../src/layout-worker.t
 import { PALETTES } from '../src/palette.ts';
 import { readStyle } from '../src/style.ts';
 import { hueColour } from '../src/theme.ts';
+import { pieces } from './text-find.js';
 
 const TEAM = `// graph: team · SOURCE
 (alice:Person {name: 'Alice'}),
@@ -106,11 +107,11 @@ describe('the image of the whole diagram', () => {
   test('draws each kind’s swatch in the colour the drawing gives that kind', () => {
     const hues = GraphLayout.pick(['Person', 'Team'], STYLE.kind_hues, STYLE.kind_colours);
     const p = PALETTES.light;
-    const swatches = [...exportSvg(scope, engine, INFO).svg.matchAll(/<rect class="legend-swatch"[^>]*>/g)];
+    const swatches = pieces(exportSvg(scope, engine, INFO).svg, '<rect class="legend-swatch"', '>');
     assert.equal(swatches.length, 2);
-    assert.ok(swatches[0][0].includes(`fill="${hueColour(hues.Person, 'fill', p)}"`));
-    assert.ok(swatches[0][0].includes(`stroke="${hueColour(hues.Person, 'line', p)}"`));
-    assert.ok(swatches[1][0].includes(`fill="${hueColour(hues.Team, 'fill', p)}"`));
+    assert.ok(swatches[0].includes(`fill="${hueColour(hues.Person, 'fill', p)}"`));
+    assert.ok(swatches[0].includes(`stroke="${hueColour(hues.Person, 'line', p)}"`));
+    assert.ok(swatches[1].includes(`fill="${hueColour(hues.Team, 'fill', p)}"`));
     // the same colour is on the boxes drawn
     assert.ok(exportSvg(scope, engine, INFO).svg.includes(hueColour(hues.Person, 'fill', p)));
   });
@@ -206,7 +207,7 @@ describe('the image of a view', () => {
     const { svg } = exportSvg(only, engine, INFO);
     const said = texts(svg);
     assert.ok(said.includes('① the owner') && said.includes('② where they sit'), 'each with its tag');
-    const swatches = [...svg.matchAll(/<rect class="legend-swatch"[^>]*>/g)].map((m) => m[0]);
+    const swatches = pieces(svg, '<rect class="legend-swatch"', '>');
     assert.equal(swatches.length, 4, 'two kinds and two looks');
     for (const hue of ['green', 'purple'])
       assert.ok(
@@ -214,7 +215,7 @@ describe('the image of a view', () => {
         hue,
       );
     // Alice (the first box) is drawn dashed in the green look
-    const alice = /<g id="node1" class="node">[\s\S]*?<\/g>/.exec(svg)[0];
+    const alice = pieces(svg, '<g id="node1" class="node">', '</g>')[0];
     assert.ok(alice.includes(`stroke:${hueColour('green', 'line', p)}`));
     assert.match(alice, /stroke-dasharray:6 4/);
   });

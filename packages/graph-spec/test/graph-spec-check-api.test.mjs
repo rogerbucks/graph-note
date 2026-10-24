@@ -109,12 +109,44 @@ const NAMES = [
   'typeOf',
   'instancesOf',
   'inherited',
+  // each cluster's cohesion and the certainty its centroid states (editor spec §31)
+  'clusterCertainty',
+  // the process core and its runs (editor spec §34)
+  'coreOfEight',
+  'transitionsOf',
+  'promoteTransition',
+  'processPath',
+  'guardOf',
+  'guardAllows',
+  'runningRuleOf',
+  'overrideRunningRule',
+  'runLog',
+  'currentOf',
+  'enterState',
+  'leaveState',
+  'moveRun',
+  'withEntries',
+  'refreshCurrent',
+  // altitude and audience profiles (editor spec §32)
+  'atAltitude',
+  'profilesOf',
+  'audienceProjection',
+  'altitudesIn',
+  'byAxes',
   // lenses as graph data: saved queries that answer fresh (editor spec §33)
   'lensesOf',
   'runLens',
   // the altitude and topic index (editor spec §32)
   'altitudeIndex',
   'searchIndex',
+  // contexts: where links may join (editor spec §61)
+  'contextsOf',
+  'contextGuesses',
+  'comparable',
+  'proposeSameAs',
+  'sameAsAcross',
+  'worldIn',
+  'searchContexts',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

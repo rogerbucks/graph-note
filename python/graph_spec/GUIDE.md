@@ -150,9 +150,17 @@ archive's layout on every pull request, so it always works with the library as s
   - `centroids_of` gives each cluster's centroid (`centroids.js`, `centroid-cases.json`).
   - `cluster_cycles` and `cycle_view` flag the clusters in a cycle, and hide or highlight them (`cycles.js`,
     `cycle-cases.json`).
+  - `cluster_certainty` gives each cluster's cohesion and the certainty its centroid states, with any floor
+    (`cohesion.js`, `cohesion-cases.json`).
+
+- `src/graphspec/engine/altitude/` — editor spec §32, altitude and audience profiles. `altitude.at_altitude`,
+  `profiles_of`, `audience_projection`, `altitudes_in` and `by_axes` are the twins of `altitude.js`, held to
+  `altitude-cases.json`.
+
 - `src/graphspec/engine/lenses/` — editor spec §33, lenses as graph data. `saved_lenses.lenses_of` and `run_lens` are
   the twins of `saved-lenses.js`, held to `saved-lens-cases.json`.
-### The graph mesh and the process engine
+
+### The graph mesh
 
 - `src/graphspec/engine/altitude/` — editor spec §32. `altitude_index.altitude_index` and `search_index` are the twins
   of `altitude-index.js`, held to `altitude-index-cases.json`.
@@ -172,7 +180,15 @@ archive's layout on every pull request, so it always works with the library as s
 - `src/graphspec/engine/mesh/types_instances.py` — editor spec §27. `type_of`, `instances_of` and `inherited`: an
   instance links to its type with INSTANCE_OF and has its type's properties unless it sets its own. The twin of
   `types-instances.js`, held to `types-instances-cases.json`.
+- `src/graphspec/engine/mesh/contexts.py` — editor spec §61. `contexts_of`, `context_guesses`, `comparable`,
+  `propose_same_as`, `same_as_across`, `world_in` and `search_contexts`: where links may join. The twin of
+  `contexts.js`, held to the same worlds by `tests/test_contexts.py`.
+
+### The process engine and the rest
+
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
+  - `core` and `runs` are the process core of editor spec §34. They hold eight kinds, transitions, guards as data,
+    the run log and nested machines (`core.js`, `runs.js`, `process-core-cases.json`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).
   - A transition's note is found by the order the block writes it in, never the order a source gives its rows in.

@@ -90,14 +90,34 @@ and no module requires one that requires it back.
     worked out again only when their members change. One still moving is flagged unsettled (`test/centroid-cases.json`).
   - `cycles.js` — clusters inside each other in a cycle. A cycle is flagged, never refused, and a view hides or
     highlights it (`test/cycle-cases.json`).
-### Lenses and altitude
+  - `cohesion.js` — how tightly each cluster holds together: links between its members and how many are contested. A
+    loose, disputed cluster states less certainty than a tight one. A cluster may opt in to a floor, so it is never
+    more certain than its least certain member (`test/cohesion-cases.json`).
+
+### Altitude
+
+- **`src/altitude/`** — altitude, audience profiles and the topic index (editor spec §32). Python's twins give the same
+  answers.
+  - `altitude.js` — altitude as a query parameter: parts over the level open, those at or under it show as one thing,
+    and links are bundled. It also has audience profiles by three criteria and projections per domain. A thing's level
+    in each lens is a link, and the two axes filter apart or together (`test/altitude-cases.json`).
+  - `altitude-index.js` — each thing's topic tags and altitudes. A search finds a tag exactly or by likeness and ranks
+    by the certainty sort key, marking contested things (`test/altitude-index-cases.json`).
+
+### Lenses
 
 - **`src/lenses/`** — lenses as graph data (editor spec §33). Python's twin gives the same answers.
   - `saved-lenses.js` — a lens is a Lens thing: a name, a saved query and a default altitude. It answers fresh each
     time, joins like any claim, holds no data and is flagged when a schema it uses changes (`test/saved-lens-cases.json`).
-- **`src/altitude/`** — the altitude and topic index (editor spec §32). Python's twin gives the same answers.
-  - `altitude-index.js` — each thing's topic tags and altitudes. A search finds a tag exactly or by likeness and ranks
-    by the certainty sort key, marking contested things (`test/altitude-index-cases.json`).
+
+### The process core
+
+- **`src/process/`** — the process core (editor spec §34). Python's twins give the same answers
+  (`test/process-core-cases.json`).
+  - `core.js` — the eight kinds, with a ninth flagged and view details kept apart. Transitions as links or promoted
+    things, a path that walks them, guards as data and the running rule a run follows.
+  - `runs.js` — a run's log as the truth, its current states made from it, and machines inside states at any depth.
+
 ### The mesh
 
 - **`src/mesh/`** — the graph mesh (editor spec §27 to §30). Python's twins give the same answers.
@@ -114,6 +134,10 @@ and no module requires one that requires it back.
     (`test/same-as-cases.json`).
   - `types-instances.js` — lasting types and their instances. An instance links to its type with INSTANCE_OF, here or
     through a Ref, and has its type's properties unless it sets its own (`test/types-instances-cases.json`).
+  - `contexts.js` — contexts, where links may join (editor spec §61). Each graph is in one context: a client, note,
+    folder or the vault. Guesses across contexts show only when turned on. Things in two contexts are compared only
+    under one shared schema or a SAME_AS link, and across contexts only a person writes one. `canRead` keeps out what a viewer
+    may not read (`test/contexts.test.mjs`).
 
 ## Beside them
 

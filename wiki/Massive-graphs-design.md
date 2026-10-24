@@ -132,6 +132,7 @@ flowchart LR
    has none that fit, the Louvain method finds them, in well under a second.
 2. **Overview.** Past 2,000 things, the drawing opens as one dot or card per group, sized by how many things it holds.
    It is laid out in a fraction of a second. Lines between groups show how many links cross.
+   Its 3D view button lifts each group into a block, as a card's 3D view does (`massive-paints.ts`).
 3. **Detail on demand.** Zooming in on a group, or opening it, lays out its inside with Graphviz's quick settings. It
    is drawn as today's drawing, with taps, details, editing and every diagram type. Nearby groups lay out in the
    background, in the worker, so panning finds them ready.
@@ -195,7 +196,8 @@ Step 7 comes in four parts:
    the store, above the note's text and why it was not read whole. The note is read a part at a time, and Obsidian
    does its own work between parts, so it keeps answering. Drawn again, it is only read again once its text changes.
    - It starts with the filter saved in its style block. In edit mode, a filter chosen is saved there.
-   - The edit pane does the same for a block too large to read: in the desktop app, the editor page and Obsidian.
+   - The edit pane does the same for a block too large to read: in the desktop app, VS Code and the editor page. Its
+     saved filter is read from the note's whole text, as the style block may come after it.
      A thing chosen there is changed in the pane's text, on its own lines (part 4).
 3. **An edit is written to the note's text first** (`editInParts`, in `store-drawing.ts`). Only the lines that wrote
    the thing change, so the note is never read whole. Then the store reads that note again. A store read from other
