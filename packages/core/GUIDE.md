@@ -1478,6 +1478,21 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
   that was sent, naming the send's record. `noteWithProposal` gives the note with its change set written after the
   graph's last block, the graph untouched.
 
+#### The AI query contract and write scoring (spec §37)
+
+- `ai-query.ts` — how an outside AI, a local one among them, asks the knowledge through the engine.
+  - The contract is one tool (`AI_QUERY_TOOL`) and one schema description (`schemaDescription`): `AI_CONTRACT`.
+  - `checkQuery` checks a query as untrusted data, never text: unknown fields, writes, odd names and values are refused.
+  - `AiQueryEngine` checks the permissions before it reads, answers with each result's source, and logs every query
+    with the AI label, refused ones too.
+- `ai-write-scoring.ts` — the review queue of AI and outside writes.
+  - `scoreWrite` scores a write out of 100 from its size, removals, doubtful and contested things, failed intents and
+    its source's record. The weights are a `ScoringPolicy` thing (`policyOf`).
+  - The score only sorts and groups (`reviewQueue`): every write waits, and outside writes have a group of their own.
+    A permission-bearing or historical change is marked for a closer look.
+  - `acceptWrite` needs a person, and writes one labelled bundle. `rollBack` undoes it in one step; `acceptedLens`
+    lists the bundles.
+
 ### Permissions (spec §39)
 
 - `permissions.ts` — who may read or write a thing through a surface the engine serves.
