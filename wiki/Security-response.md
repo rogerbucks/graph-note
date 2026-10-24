@@ -97,6 +97,6 @@ Record each run here.
 
 - Private vulnerability reporting is on (confirmed by Roger, 24 Oct 2026).
 - Add the optional secret `SECURITY_ALERTS_TOKEN`: a fine-grained token on this repository with read-only access to
-  Dependabot, secret scanning and code scanning alerts. Renew it each year. Without it the daily scan cannot read Dependabot or secret-scanning
+  Dependabot, secret scanning and code scanning alerts. It stops working on 24 October 2027, so renew it by 17 October 2027. Without it the daily scan cannot read Dependabot or secret-scanning
   alerts.
 - Keep GitHub security emails on, for the quickest sight of an alert.
