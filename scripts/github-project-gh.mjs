@@ -39,7 +39,7 @@ import {
   readProjects,
   whole,
 } from './github-project-read.mjs';
-import { BudgetSpent, RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
+import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
 // the project is read by github-project-read.mjs, the issues by github-project-issues.mjs; these stay importable from here
 export { ISSUE_CAP, PROJECT_CAP, adoptersOf, authorOf, findProject, readAdoptable, readIssues, readProject };
@@ -292,9 +292,10 @@ function doFields(act, project, remote, fieldPlans) {
  * again up to three times after `delays`. A create that may have half happened is looked for first, so it is never
  * made twice. `opts` may give another `sleep` (milliseconds, blocking), `pauseMs`, `retryMs` and `delays`.
  *
- * Throws, with gh's words, at the first call that fails for good. The exceptions are the blocked-by links
- * (github-project-blocks.mjs) and the milestones (github-project-milestones.mjs, where the plan has them). They are
- * set after the issues, and their failure is only a warning. Gives {warnings}.
+ * Throws, with gh's words, at the first call that fails for good. Two parts are exceptions, whose failure is only a
+ * warning. The blocked-by links (github-project-blocks.mjs) are set after the issues. The milestones
+ * (github-project-milestones.mjs, where the plan has them) are kept last of all, after the project, even past a spent
+ * budget. Gives {warnings}.
  */
 export function executePlan(run, repo, plan, opts = {}) {
   const owner = ownerOf(repo);
@@ -321,15 +322,19 @@ export function executePlan(run, repo, plan, opts = {}) {
   } catch (e) {
     warnings.push(`the blocked-by links were not set: ${e.message}`);
   }
-  if (plan.desired.milestones?.length)
+  // the milestones come last, after the board's values, and take whatever time is left. A failure among them is only
+  // a warning, a rate limit or the budget spent too
+  const milestones = () => {
+    if (!plan.desired.milestones?.length) return { warnings };
     try {
       const { left } = keepMilestones(act, read, repo, plan.desired, known, plan.milestoneOf ?? new Map());
       if (left) warnings.push(`${left} issues are left for the next push to file under their milestones`);
     } catch (e) {
-      if (e instanceof BudgetSpent) throw e;
       warnings.push(`the milestones were not kept: ${e.message}`);
     }
-  if (plan.project.unread) return { warnings };
+    return { warnings };
+  };
+  if (plan.project.unread) return milestones();
   const idByNumber = new Map(Object.entries(known).map(([id, i]) => [i.number, id]));
   // an issue closed, reopened or made just now has its Closed on only once GitHub holds it
   const { create, close, reopen } = plan.issues;
@@ -368,5 +373,5 @@ export function executePlan(run, repo, plan, opts = {}) {
     const { query, variables } = itemValueMutation(ref.id, itemIds.get(set.id), set.field, field, set.to);
     graphql(act, query, variables);
   }
-  return { warnings };
+  return milestones();
 }

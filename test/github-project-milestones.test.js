@@ -176,6 +176,20 @@ describe('the milestones on GitHub', () => {
     });
   });
 
+  test('are kept after the board’s values, so a slow or refused milestone never holds back Proof, and without the project too', () => {
+    const gh = fakeGithub();
+    apply(gh);
+    const calls = gh.hub.mutations;
+    const lastBoard = calls.findLastIndex((m) => m.includes('graphql'));
+    const firstMilestone = calls.findIndex((m) => m.includes('/milestones'));
+    assert.ok(firstMilestone > lastBoard, 'every project value is set before the first milestone');
+    const alone = fakeGithub();
+    executePlan(alone.run, REPO, buildPlan(desiredWith(), readRemote(alone.run, REPO, { project: false })), {
+      sleep: () => {},
+    });
+    assert.equal(alone.hub.milestones.length, 2);
+  });
+
   test('a run files at most its cap of issues, and the next run files the rest', () => {
     const gh = fakeGithub();
     const desired = desiredWith();
