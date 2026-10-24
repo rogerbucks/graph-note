@@ -3,6 +3,9 @@
     "version": "0.7.1",
     "entries": {
       ".": {
+        "acceptDraft": [
+          "value: (bands: readonly BandCriteria[], proposal: DraftProposal, corrected?: string) => { line: string; bands: BandCriteria[]; }"
+        ],
         "acceptNameFirst": [
           "value: (reading: SuggestedReading, graph: string, keys: readonly string[]) => string | null"
         ],
@@ -80,6 +83,24 @@
         "AiUse": [
           "type = 'off' | 'on'"
         ],
+        "altitudeIndexOf": [
+          "value: (blocks: readonly string[]) => NoteAltitudeIndex"
+        ],
+        "AltitudeMove": [
+          "interface",
+          "at: number",
+          "from: string",
+          "kind: 'descend' | 'ascend' | 'sideways'",
+          "to: string"
+        ],
+        "AltitudeTrail": [
+          "class",
+          "static new (): AltitudeTrail",
+          "consequence: (because: Consequence) => KeptDescent | null",
+          "links: () => KeptDescent[]",
+          "log: (now: number) => AltitudeMove[]",
+          "move: (m: AltitudeMove) => void"
+        ],
         "ANIMATION_LIMITS": [
           "value: Record<Device, { steps: number; bytes: number; }>"
         ],
@@ -128,6 +149,12 @@
         ],
         "attachmentType": [
           "value: (target: string) => string | null"
+        ],
+        "BandCriteria": [
+          "interface",
+          "band: string",
+          "criteria: Readonly<Record<string, string>>",
+          "examples: ReadonlyArray<{ draft: string; corrected: string; }>"
         ],
         "basisOf": [
           "value: (note: string, graph: string, shared?: string[]) => string"
@@ -252,7 +279,7 @@
           "details: Array<string>",
           "id: string",
           "mark: MarkKind",
-          "on: 'thing' | 'link'",
+          "on: 'link' | 'thing'",
           "said: string"
         ],
         "ChangeLog": [
@@ -424,6 +451,9 @@
         ],
         "confirmSend": [
           "value: (p: PreparedSend) => Confirmation"
+        ],
+        "Consequence": [
+          "type = 'note' | 'link' | 'query' | 'reference'"
         ],
         "Converted": [
           "type = { ok: true; note: string; changed: number; } | { ok: false; reason: string; }"
@@ -672,6 +702,27 @@
         "distance": [
           "value: (a: string, b: string) => number"
         ],
+        "DraftProposal": [
+          "interface",
+          "band: string",
+          "by: 'ai'",
+          "draft: true",
+          "text: string",
+          "thing: string"
+        ],
+        "DraftRequest": [
+          "interface",
+          "criteria: Readonly<Record<string, string>>",
+          "examples: ReadonlyArray<{ draft: string; corrected: string; }>",
+          "from: string",
+          "task: 'sibling-draft'",
+          "text: string",
+          "thing: string",
+          "to: string"
+        ],
+        "draftRequests": [
+          "value: (thing: string, band: string, text: string, order: readonly string[], bands: readonly BandCriteria[]) => DraftRequest[]"
+        ],
         "draw": [
           "value: (drawing: GraphDrawing, engine: Engine) => Drawn"
         ],
@@ -697,7 +748,7 @@
           "type = 'link' | 'box' | 'label' | 'arrowhead' | 'group' | 'item' | 'fold'"
         ],
         "DrawMarkRole": [
-          "type = 'thing' | 'link' | 'group' | 'picture'"
+          "type = 'link' | 'thing' | 'group' | 'picture'"
         ],
         "drawMarksOf": [
           "value: (raw: unknown, space: DiagramSpace) => DrawMark[] | string"
@@ -897,6 +948,9 @@
         ],
         "FADE": [
           "value: { readonly fill: 0; readonly width: 1; readonly text: 0.95; }"
+        ],
+        "FADE_AFTER": [
+          "value: number"
         ],
         "FileLines": [
           "interface",
@@ -1338,6 +1392,13 @@
         ],
         "KEPT": [
           "value: { readonly width: 2; }"
+        ],
+        "KeptDescent": [
+          "interface",
+          "because: Consequence",
+          "from: string",
+          "label: 'consequence-bearing'",
+          "to: string"
         ],
         "KIND": [
           "value: { readonly Variable: 6; readonly Class: 7; readonly Interface: 8; }"
@@ -1885,6 +1946,9 @@
         "nearestType": [
           "value: (type: DiagramType, fits: readonly Pick<TypeFit, 'type' | 'fits'>[]) => DiagramType"
         ],
+        "neighbourBands": [
+          "value: (order: readonly string[], band: string) => string[]"
+        ],
         "neighbourhood": [
           "value: (edges: readonly FocusEdge[], key: string, steps: FocusDepth) => Kept"
         ],
@@ -1908,6 +1972,11 @@
         ],
         "noChanges": [
           "value: () => string"
+        ],
+        "NoteAltitudeIndex": [
+          "interface",
+          "entries: Array<AltitudeEntry & { graph: string; }>",
+          "hash: string"
         ],
         "noteClassification": [
           "value: (text: string) => string | null"
@@ -2220,6 +2289,15 @@
         "Person": [
           "interface",
           "name: string"
+        ],
+        "PhaseAltitudePart": [
+          "interface",
+          "levelFor: (transition: WalkedTransition, level: number) => number | null"
+        ],
+        "PhaseView": [
+          "interface",
+          "level: number",
+          "state: string"
         ],
         "Picture": [
           "interface",
@@ -2777,6 +2855,9 @@
         "sealOutside": [
           "value: (scope: PluginScope & object) => (plugin: unknown) => void"
         ],
+        "searchAltitude": [
+          "value: (index: NoteAltitudeIndex, query?: Parameters<typeof searchIndex>[1]) => Array<{ id: string; score: number; sort_key: number | null; contested: boolean; }>"
+        ],
         "SendAsk": [
           "interface",
           "choice: ScopeChoice",
@@ -2971,6 +3052,9 @@
           "thing?: string | undefined",
           "type?: string | undefined",
           "view?: string | undefined"
+        ],
+        "siblingDrafts": [
+          "value: (requests: readonly DraftRequest[], ask: (request: DraftRequest) => Promise<string>) => Promise<DraftProposal[]>"
         ],
         "Side": [
           "type = 'beside' | 'before' | 'after'"
@@ -3460,6 +3544,9 @@
         "TrailStep": [
           "type = { key: string; } | { link: number; }"
         ],
+        "transitionAltitude": [
+          "value: PhaseAltitudePart"
+        ],
         "translationProblems": [
           "value: (source: Catalogue, translation: Catalogue, tag: string) => string[]"
         ],
@@ -3624,6 +3711,15 @@
           "id: string",
           "steps: Array<PathStep>",
           "title: string"
+        ],
+        "WalkedTransition": [
+          "interface",
+          "from: string",
+          "props: Readonly<Record<string, unknown>>",
+          "to: string"
+        ],
+        "walkTransition": [
+          "value: (view: PhaseView, transition: WalkedTransition, part?: PhaseAltitudePart | null) => PhaseView"
         ],
         "wayIn": [
           "value: (things: number) => { count: number; say: string; } | null"
@@ -3870,6 +3966,7 @@
       ".": {
         "export =": [
           "afterTextMerge: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }",
+          "altitudeIndex: (graph: GraphSpecCheck.Graph) => { entries: GraphSpecCheck.AltitudeEntry[]; hash: string; }",
           "asAt: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph",
           "byCertainty: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]",
           "canon: (g: GraphSpecCheck.Graph) => string",
@@ -3914,6 +4011,7 @@
           "sameAs: (world: GraphSpecCheck.World) => { ones: string[][]; unresolved: { graph: string; thing: string; ref: string; in: string; }[]; guesses: { name: string; things: string[]; }[]; }",
           "SCHEMA_LABELS: Array<string>",
           "schemaFor: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]",
+          "searchIndex: (index: { entries: GraphSpecCheck.AltitudeEntry[]; hash: string; }, query?: { topic?: string; like?: string; lens?: string; level?: number; profile?: string; }) => { id: string; score: number; sort_key: number | null; contested: boolean; }[]",
           "secretsIn: (text: string) => string[]",
           "secretsInGraph: (g: GraphSpecCheck.Graph) => [string, string][]",
           "shownText: (g: GraphSpecCheck.Graph, id: string, shared?: GraphSpecCheck.Graph) => [string, string | null]",
@@ -3929,11 +4027,23 @@
         "afterTextMerge": [
           "value: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }"
         ],
+        "AltitudeEntry": [
+          "interface",
+          "altitudes: Array<[string, number]>",
+          "contested: boolean",
+          "id: string",
+          "profiles: Array<string>",
+          "sort_key: number | null",
+          "tags: Array<string>"
+        ],
+        "altitudeIndex": [
+          "value: (graph: GraphSpecCheck.Graph) => { entries: GraphSpecCheck.AltitudeEntry[]; hash: string; }"
+        ],
         "asAt": [
           "value: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph"
         ],
         "BlockKind": [
-          "type = 'data' | 'schema' | 'query' | 'excerpt' | 'changeset'"
+          "type = 'query' | 'data' | 'schema' | 'excerpt' | 'changeset'"
         ],
         "byCertainty": [
           "value: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]"
@@ -4186,7 +4296,7 @@
           "interface",
           "ends?: Array<Array<string>> | undefined",
           "from?: string | undefined",
-          "kind: 'thing' | 'link'",
+          "kind: 'link' | 'thing'",
           "labels?: Array<string> | undefined",
           "op: 'delete-thing' | 'detach-delete-thing' | 'delete-link' | 'set-thing' | 'set-link'",
           "set?: Record<string, GraphSpecCheck.Value> | undefined",
@@ -4208,6 +4318,9 @@
         ],
         "schemaFor": [
           "value: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]"
+        ],
+        "searchIndex": [
+          "value: (index: { entries: GraphSpecCheck.AltitudeEntry[]; hash: string; }, query?: { topic?: string; like?: string; lens?: string; level?: number; profile?: string; }) => { id: string; score: number; sort_key: number | null; contested: boolean; }[]"
         ],
         "secretsIn": [
           "value: (text: string) => string[]"

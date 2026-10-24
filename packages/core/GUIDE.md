@@ -139,6 +139,17 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   marked for a closer look.
 - `index-mesh.ts` — the mesh's part of the core's entry, kept apart so `index.ts` stays short.
 
+#### Altitude
+
+- `altitude-index.ts` — the altitude and topic index of a note's graphs (editor spec §32, altitude_topic_index). It is
+  derived from the text, so it is built again alike, and its searches rank by the certainty sort key.
+- `sibling-drafts.ts` — drafts of a thing at the bands next to its own, from the AI feature, as proposals (editor spec
+  §32, sibling_drafts). An accepted correction joins its band's examples.
+- `browsing.ts` — moves between altitudes, logged as passing and faded. Only a descent with a consequence is kept as a
+  link (editor spec §32, browsing_leaves_no_links).
+- `phase-altitude.ts` — a transition that changes the view's depth, as a part that can be swapped or removed (editor
+  spec §32, phase_shifts_altitude).
+
 #### Deferred things
 
 - `deferred.ts` — deferred things (§5, §8).
