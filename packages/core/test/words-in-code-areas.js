@@ -75,6 +75,7 @@ export const REST_AREA = [
   'packages/core/src/plugin-ai.ts',
   'packages/core/src/plugin-isolated.ts',
   'packages/core/src/core-storage.ts',
+  'packages/core/src/core-ai.ts',
 ];
 
 /**
