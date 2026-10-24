@@ -1486,6 +1486,22 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
   that was sent, naming the send's record. `noteWithProposal` gives the note with its change set written after the
   graph's last block, the graph untouched.
 
+### Permissions (spec §39)
+
+- `permissions.ts` — who may read or write a thing through a surface the engine serves.
+  - The permissions are graph data, kept outside the notes. A role is a `Role`, a person a `Person` linked to it by
+    HAS_ROLE. Each role holds its own `GrantRule`s; roles never inherit.
+  - A rule matches by a tag, a path or folder, a least likelihood, or all of them. One that names none matches nothing.
+  - A `Grant` gives access only while it, its rule and the person's role are asserted. The owner needs none.
+  - An inferred grant is listed (`inferredGrants`) and gives nothing. A contested or withdrawn one stops at once.
+  - `readGuarded` checks before it opens a note, so a refused note is never read. `whoCan` and `disputes` are lenses.
+- `permissions-change.ts` — changing and joining the permissions.
+  - `previewChange` lists what a change would grant or withdraw, changing nothing. `confirmChange` applies it only for
+    the owner, and only while the preview still holds.
+  - A rule never asserts by itself: `proposedGrants` lists its matches as inferred, so certainty never opens anything.
+  - `joinPermissions` marks a grant contested when joined graphs disagree, unless it is the owner's. Only an own graph
+    names the owner, and an untrusted one is left out.
+
 ### Settings (spec §21)
 
 - `strictness.ts` — the three departures from standard GQL the reader reads as meant. Each problem says which, in
