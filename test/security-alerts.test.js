@@ -138,16 +138,22 @@ describe('reading the lists', () => {
     assert.match(got.unread, /^403/);
   });
 
-  test('every page of a long list is read', async () => {
-    let pages = 0;
+  test('every page of a long list is read by its next link, never by a page number', async () => {
+    const asked = [];
     const fake = async (url) => {
-      pages++;
-      const page = Number(new URL(url).searchParams.get('page'));
-      return json(page === 1 ? Array.from({ length: 100 }, (_, i) => ({ number: i })) : [{ number: 100 }]);
+      asked.push(url);
+      const first = !new URL(url).searchParams.has('after');
+      const res = json(first ? Array.from({ length: 100 }, (_, i) => ({ number: i })) : [{ number: 100 }]);
+      res.headers = { get: (name) => (first && name === 'link' ? `<${url}&after=abc>; rel="next"` : null) };
+      return res;
     };
-    const { alerts } = await githubList('/repos/o/r/code-scanning/alerts?state=open', 't', { fetch: fake });
+    const { alerts } = await githubList('/repos/o/r/dependabot/alerts?state=open', 't', { fetch: fake });
     assert.equal(alerts.length, 101);
-    assert.equal(pages, 2);
+    assert.equal(asked.length, 2);
+    assert.ok(
+      asked.every((u) => !new URL(u).searchParams.has('page')),
+      'the Dependabot list refuses a page number',
+    );
   });
 
   test('the read-only alerts token reads Dependabot and secret scanning; the workflow token reads code scanning', async () => {
