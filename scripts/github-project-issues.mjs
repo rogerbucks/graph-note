@@ -42,6 +42,7 @@ const issueOf = (i) => ({
   author: authorOf(i.user),
   url: i.html_url,
   closedAt: i.closed_at ?? null,
+  milestone: i.milestone?.title ?? null,
 });
 
 /**
@@ -50,7 +51,7 @@ const issueOf = (i) => ({
  * read from the REST list endpoint by `creator`, paged through. They are not read by `gh issue list`, which may use the
  * search. The search is capped at 1,000 and behind its index, so a create tried again could be made twice. A pull
  * request, which that endpoint lists too, is left out. Each is {number, title, body, state ('OPEN' or 'CLOSED'), labels
- * (names), author, url, closedAt}.
+ * (names), author, url, closedAt, milestone (its title, or null)}.
  */
 export function readIssues(run, repo, author) {
   const creator = author ? `&creator=${encodeURIComponent(author)}` : '';

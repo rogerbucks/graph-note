@@ -17,6 +17,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { REQUIREMENTS } from './check-requirements.mjs';
 import { linkBlocks } from './github-project-blocks.mjs';
+import { keepMilestones, readMilestones } from './github-project-milestones.mjs';
 import { itemValueMutation, typedMutation, withClosedOn } from './github-project-fields.mjs';
 import {
   BUILD_STATUS_FIELD,
@@ -38,7 +39,7 @@ import {
   readProjects,
   whole,
 } from './github-project-read.mjs';
-import { RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
+import { BudgetSpent, RETRY_DELAYS_MS, paced, retrying, waitFor } from './github-project-retry.mjs';
 
 // the project is read by github-project-read.mjs, the issues by github-project-issues.mjs; these stay importable from here
 export { ISSUE_CAP, PROJECT_CAP, adoptersOf, authorOf, findProject, readAdoptable, readIssues, readProject };
@@ -203,6 +204,12 @@ function lookup(args, input, read, owner, adopters) {
       const made = readProjects(read, owner).find((p) => p.title === title);
       return made && { value: JSON.stringify({ data: { createProjectV2: { projectV2: made } } }) };
     };
+  if (group === 'api' && /^repos\/[^/]+\/[^/]+\/milestones$/.test(verb) && args.includes('POST'))
+    return () => {
+      const title = JSON.parse(input).title;
+      const made = readMilestones(read, verb.split('/').slice(1, 3).join('/')).find((m) => m.title === title);
+      return made && { value: JSON.stringify(made) };
+    };
   const once = (group === 'issue' && verb === 'comment') || (group === 'api' && /createProjectV2Field/.test(input));
   return once ? null : () => undefined;
 }
@@ -285,8 +292,9 @@ function doFields(act, project, remote, fieldPlans) {
  * again up to three times after `delays`. A create that may have half happened is looked for first, so it is never
  * made twice. `opts` may give another `sleep` (milliseconds, blocking), `pauseMs`, `retryMs` and `delays`.
  *
- * Throws, with gh's words, at the first call that fails for good. The exception is the blocked-by links
- * (github-project-blocks.mjs). They are set after the issues, and their failure is only a warning. Gives {warnings}.
+ * Throws, with gh's words, at the first call that fails for good. The exceptions are the blocked-by links
+ * (github-project-blocks.mjs) and the milestones (github-project-milestones.mjs, where the plan has them). They are
+ * set after the issues, and their failure is only a warning. Gives {warnings}.
  */
 export function executePlan(run, repo, plan, opts = {}) {
   const owner = ownerOf(repo);
@@ -313,6 +321,14 @@ export function executePlan(run, repo, plan, opts = {}) {
   } catch (e) {
     warnings.push(`the blocked-by links were not set: ${e.message}`);
   }
+  if (plan.desired.milestones?.length)
+    try {
+      const { left } = keepMilestones(act, read, repo, plan.desired, known, plan.milestoneOf ?? new Map());
+      if (left) warnings.push(`${left} issues are left for the next push to file under their milestones`);
+    } catch (e) {
+      if (e instanceof BudgetSpent) throw e;
+      warnings.push(`the milestones were not kept: ${e.message}`);
+    }
   if (plan.project.unread) return { warnings };
   const idByNumber = new Map(Object.entries(known).map(([id, i]) => [i.number, id]));
   // an issue closed, reopened or made just now has its Closed on only once GitHub holds it

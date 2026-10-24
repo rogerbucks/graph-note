@@ -745,6 +745,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/github-project-blocks.test.js` — that mirror's blocked-by links. Each open question's issue blocks the issues
   of the requirements it blocks, made once. A link the requirements dropped is removed, and a person's is kept. A
   refusal by GitHub is a warning, with the issues and project still mirrored.
+- `test/github-project-milestones.test.js` — that mirror's milestones, read from the waves file. Each wave names one,
+  and each requirement's issue is filed under its wave's. A milestone is due on its last wave's end, and closes once
+  its issues are all closed. A person's milestone is kept, and a refusal by GitHub is a warning.
 - `test/github-project-plan.test.js` — that mirror's plan: what differs between the desired state and what GitHub holds, for the issues, the labels and the project.
 
 ### Benchmarks, licences, network and policy
