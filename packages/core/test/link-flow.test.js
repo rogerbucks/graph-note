@@ -18,6 +18,7 @@ import { directions, draw } from '../src/render.ts';
 import { readStyle } from '../src/style.ts';
 import { styledDrawing } from '../src/style-source.ts';
 import { unscoped } from './sheet-scope.js';
+import { between, cssRules } from './text-find.js';
 
 const engine = await loadEngine();
 
@@ -316,11 +317,13 @@ describe('an exported SVG moves its links, and is still under reduced motion', (
   // proves: links_show_flow, motion_reduced_respected
   test('its style sheet runs the dashes and the dots, and stops every one of them under reduced motion', () => {
     const svg = exported(true, ...LINES);
-    const sheet = /<style>([\s\S]*?)<\/style>/.exec(svg)?.[1] ?? '';
+    const sheet = between(svg, '<style>', '</style>') ?? '';
     assert.match(sheet, /@keyframes thoughtknot-flow-dashes/);
     assert.match(sheet, /@keyframes thoughtknot-flow-dot/);
     const [moving, still] = sheet.split('@media (prefers-reduced-motion: reduce)');
-    const animated = [...moving.matchAll(/([^{}]+)\{[^}]*animation:[^}]*\}/g)].map((m) => m[1].trim());
+    const animated = cssRules(moving)
+      .filter((r) => r.body.includes('animation:'))
+      .map((r) => r.selector.trim());
     assert.ok(animated.length >= 2, sheet);
     for (const selector of animated) assert.ok(still.includes(selector), `${selector} is still under reduced motion`);
     assert.match(still, /animation: none/);
@@ -333,7 +336,7 @@ describe('an exported SVG moves its links, and is still under reduced motion', (
   test('its style sheet reaches only into the image: every rule under the class the image carries', () => {
     const svg = exported(true, ...LINES);
     assert.match(svg, /^<svg [^>]*class="thoughtknot-image"/);
-    assert.deepEqual(unscoped(/<style>([\s\S]*?)<\/style>/.exec(svg)?.[1] ?? ''), []);
+    assert.deepEqual(unscoped(between(svg, '<style>', '</style>') ?? ''), []);
   });
 
   // proves: motion_not_alone

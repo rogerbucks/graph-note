@@ -991,7 +991,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (40)
+## Done or accepted (41)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1035,3 +1035,4 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | LEGAL-1 | The iPhone app names install ways Apple keeps for testers, not the public | done | #1057 |
 | LEGAL-2 | No privacy page the apps and the App Store can link to | done | #1062 |
 | LEGAL-4 | Notarising signs in with Roger's Apple Account, not a key of its own | done | #1054; kept out by `test/desktop-build.test.js` |
+| SEC-18 | Tests that read a drawing with patterns that run slow | done | #TBD; kept out by `test/code-scanning-fixes.test.js`, `test/code-scan.test.js`, `scripts/code-scan.mjs` |
