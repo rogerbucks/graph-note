@@ -100,8 +100,8 @@ same dry, kind voice as Sara. Claude plays all nine when the panel runs.
 - **The risks themselves stay plain.** The risks table and the JSON for `quality/risks.json` carry no jokes.
 - **The rules for the fun above apply**, including plain speech and "plain mode".
 
-**A second opinion from other models.** Claude marking its own work is one view. So Roger can run
-`npm run second-opinion -- --pr 1245` on his Mac before a pull request merges. It hands the diff to Gemini (the
+**A second opinion from other models.** Claude marking its own work is one view. So Claude runs
+`npm run second-opinion -- --pr N` on Roger's Mac before a pull request merges. It hands the diff to Gemini (the
 Antigravity CLI, `agy`, in read-only plan mode). Add `--models agy,grok` to ask Grok (Grok Build, `grok`) too: its plan
 has less use in it.
 
