@@ -530,15 +530,18 @@ These test behaviour across modules, or the repository itself, so they are named
   are aside, as they scale with its zoom. No line height is fixed, and no box that holds text has a fixed height. The
   browser page's theme sizes its text in rem.
 
+### The architecture's layers and areas
+
+- `test/layers.test.js` — each layer imports only the layers below it, as `requirements/architecture.gql` says. It
+  reads every import of the shipped code (editor spec §43, layers_checked; `node scripts/layers.mjs`).
+- `test/code-structure.test.js` — each shipped file of a part with areas sits in one area of `requirements/architecture.gql`.
+  No area is over its ceiling, and the Architecture page draws the areas (editor spec §43, structure_checked).
+
 ### Test tooling and the build status's parts
 
 - `test/import-graph.test.js` — the import graph, and the tests that reach a changed file through it. It covers imports
   by path and by package name, and a file or folder a test names to build or walk. It also covers how
   `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
-- `test/layers.test.js` — each layer imports only the layers below it, as `requirements/architecture.gql` says. It
-  reads every import of the shipped code (editor spec §43, layers_checked; `node scripts/layers.mjs`).
-- `test/code-structure.test.js` — each shipped file of a part with areas sits in one area of `requirements/architecture.gql`.
-  No area is over its ceiling, and the Architecture page draws the areas (editor spec §43, structure_checked).
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests and the search ignore file.
 - `test/agents-guide.test.js` — the short AI guide, AGENTS.md, stays slim, and its handbook holds the detail.
 - `test/build-status.test.js` — the build status's pure part. It covers the requirements a pull request moves, found
