@@ -80,6 +80,33 @@ export function cubePoints(): Float32Array {
   return new Float32Array(out);
 }
 
+/**
+ * The points of a ball's triangles, each as where it is inside the unit cube, and its outward line. So a block's
+ * corner and size place a ball as they place a cube. `around` pieces round its middle, half as many from top to bottom.
+ */
+export function ballPoints(around = 24): Float32Array {
+  const rows = around / 2;
+  const at = (i: number, j: number): Vec3 => {
+    const up = (Math.PI * j) / rows,
+      turn = (2 * Math.PI * i) / around;
+    return [Math.sin(up) * Math.cos(turn), Math.sin(up) * Math.sin(turn), Math.cos(up)];
+  };
+  const out: number[] = [];
+  const put = (n: Vec3) => out.push(0.5 + n[0] / 2, 0.5 + n[1] / 2, 0.5 + n[2] / 2, ...n);
+  for (let j = 0; j < rows; j++)
+    for (let i = 0; i < around; i++) {
+      const a = at(i, j),
+        b = at(i + 1, j),
+        c = at(i + 1, j + 1),
+        d = at(i, j + 1);
+      for (const n of [a, d, c, a, c, b]) put(n);
+    }
+  return new Float32Array(out);
+}
+
+/** Numbers in each point of a ball's or a cube's shape: where it is (3) and its outward line (3). */
+export const SHAPE_POINT_NUMBERS = 6;
+
 /** Numbers in each block: its corner and floor (3), its width, depth and height (3), its fill (4) and outline (4). */
 export const BLOCK_NUMBERS = 14;
 /** Numbers in each point of a line: where it is (3) and its tint (4). */
@@ -131,15 +158,18 @@ in vec3 local;
 in vec3 vFacing;
 in vec4 vFill;
 in vec4 vLine;
-uniform vec3 light;
+uniform vec4 light;
 out vec4 colour;
 void main() {
   vec3 near = min(local, 1.0 - local) / max(fwidth(local), vec3(1e-5));
   float least = min(near.x, min(near.y, near.z));
   float most = max(near.x, max(near.y, near.z));
   float edge = near.x + near.y + near.z - least - most;
-  float shade = 0.62 + 0.38 * max(dot(vFacing, light), 0.0);
+  vec3 facing = normalize(vFacing);
+  float shade = 0.62 + 0.38 * max(dot(facing, light.xyz), 0.0);
   vec3 c = edge < 1.0 ? vLine.rgb : vFill.rgb * shade;
+  // a ball (light.w is 1) has no edges: it is lit smoothly, with a shine where the light meets it
+  if (light.w > 0.5) c = vFill.rgb * (0.55 + 0.45 * max(dot(facing, light.xyz), 0.0)) + vec3(0.25) * pow(max(dot(facing, light.xyz), 0.0), 24.0);
   colour = vec4(c, 1.0);
 }`;
 
@@ -211,16 +241,12 @@ export function webgl2SpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
   };
   const blockVao = gl.createVertexArray(),
     lineVao = gl.createVertexArray();
+  const shapeNames: [string, number][] = [
+    ['corner', 3],
+    ['facing', 3],
+  ];
   gl.bindVertexArray(blockVao);
-  attach(
-    blocks,
-    cubePoints(),
-    [
-      ['corner', 3],
-      ['facing', 3],
-    ],
-    false,
-  );
+  let shapeBuffer = attach(blocks, cubePoints(), shapeNames, false);
   const blockNames: [string, number][] = [
     ['place', 3],
     ['size', 3],
@@ -235,14 +261,16 @@ export function webgl2SpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
   ];
   let lineBuffer = attach(lines, new Float32Array(SPACE_POINT_NUMBERS), lineNames, false);
   gl.bindVertexArray(null);
-  let sent: { space: SpaceMarks; paints: Paints; blocks: number; points: number } | null = null;
+  let sent: { space: SpaceMarks; paints: Paints; blocks: number; points: number; corners: number } | null = null;
 
   /** Sends `space`'s numbers to the graphics chip, only when the drawing or its colours change. */
   const send = (space: SpaceMarks, paints: Paints) => {
     if (sent && sent.space === space && sent.paints === paints) return sent;
     const numbers = spaceNumbers(space, paints);
-    for (const b of [blockBuffer, lineBuffer]) gl.deleteBuffer(b);
+    const shape = space.round ? ballPoints() : cubePoints();
+    for (const b of [shapeBuffer, blockBuffer, lineBuffer]) gl.deleteBuffer(b);
     gl.bindVertexArray(blockVao);
+    shapeBuffer = attach(blocks, shape, shapeNames, false);
     blockBuffer = attach(blocks, numbers.blocks, blockNames, true);
     gl.bindVertexArray(lineVao);
     lineBuffer = attach(lines, numbers.lines, lineNames, false);
@@ -252,6 +280,7 @@ export function webgl2SpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
       paints,
       blocks: space.blocks.length,
       points: numbers.lines.length / SPACE_POINT_NUMBERS,
+      corners: shape.length / SHAPE_POINT_NUMBERS,
     };
     return sent;
   };
@@ -272,9 +301,9 @@ export function webgl2SpacePainter(canvas: HTMLCanvasElement): SpacePainter | nu
       gl.disable(gl.BLEND);
       gl.useProgram(blocks);
       gl.uniformMatrix4fv(gl.getUniformLocation(blocks, 'matrix'), false, matrix);
-      gl.uniform3f(gl.getUniformLocation(blocks, 'light'), ...LIGHT);
+      gl.uniform4f(gl.getUniformLocation(blocks, 'light'), ...LIGHT, space.round ? 1 : 0);
       gl.bindVertexArray(blockVao);
-      if (counts.blocks) gl.drawArraysInstanced(gl.TRIANGLES, 0, 36, counts.blocks);
+      if (counts.blocks) gl.drawArraysInstanced(gl.TRIANGLES, 0, counts.corners, counts.blocks);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.useProgram(lines);

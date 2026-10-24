@@ -108,10 +108,38 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     });
     const title = endsOf(titleOf(g), keys);
     // a link with no title is joined to the things its two ends touch
-    const ends = title.from !== undefined ? title : touching(points, boxes);
-    marks.push({ id: `e:${g.id || marks.length}`, kind: 'link', style: styled(path, null), points, ...ends });
+    let ends = title.from !== undefined ? title : touching(points, boxes);
+    // the arrowhead shows which way it points: a link drawn backwards (dir=back) has it at its first point
+    if (ends.from !== undefined && ends.to !== undefined && headFirst(g, points)) {
+      ends = { from: ends.to, to: ends.from };
+      points.reverse();
+    }
+    const words = Array.from(g.querySelectorAll(':scope > text, :scope > a text, :scope > g text'))
+      .map((t) => t.textContent?.trim() ?? '')
+      .filter((t) => t)
+      .join(' ');
+    marks.push({
+      id: `e:${g.id || marks.length}`,
+      kind: 'link',
+      style: styled(path, null),
+      points,
+      ...ends,
+      ...(words ? { name: words } : {}),
+    });
   }
   return { marks, paints: (style) => table.get(style) ?? {} };
+}
+
+/** Whether the arrowhead of the link drawn in `g` sits nearer its first point than its last. */
+function headFirst(g: Element, points: readonly (readonly [number, number])[]): boolean {
+  const head = g.querySelector(':scope > polygon, :scope > a polygon');
+  const first = points[0],
+    last = points[points.length - 1];
+  if (!head || !first || !last || typeof (head as SVGGraphicsElement).getBBox !== 'function') return false;
+  const box = (head as SVGGraphicsElement).getBBox();
+  const x = box.x + box.width / 2,
+    y = box.y + box.height / 2;
+  return Math.hypot(x - first[0], y - first[1]) < Math.hypot(x - last[0], y - last[1]);
 }
 
 /** A thing's box on the page, by its key. */
