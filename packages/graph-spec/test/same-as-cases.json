@@ -1,0 +1,65 @@
+{
+  "about": "Which things in different graphs are one (editor spec §27, same_as_across_graphs; risk ARCH-6, decided by Roger on 23 Oct 2026). Inside a graph a thing's name is its id; across graphs only a written SAME_AS link to a Ref joins two things. The same name in two graphs with no link stays two, listed as a guess. sameAs (packages/graph-spec/src/mesh/same-as.js) and same_as (python/graph_spec/src/graphspec/engine/mesh/same_as.py) give these answers alike.",
+  "cases": [
+    {
+      "name": "a SAME_AS link to a Ref makes two things in two graphs one",
+      "blocks": [
+        ["// graph: catalog", "(widget_12:Product {name: 'Widget', price: 10})"],
+        [
+          "// graph: shop",
+          "(widget:Product {name: 'Widget'}),",
+          "(catalog_widget:Ref {ref: 'widget_12', graph: 'catalog'}),",
+          "(widget)-[:SAME_AS]->(catalog_widget)"
+        ]
+      ],
+      "answer": { "ones": [["catalog/widget_12", "shop/widget"]], "unresolved": [], "guesses": [] }
+    },
+    {
+      "name": "the same name in two graphs with no link stays two, listed as a guess",
+      "blocks": [
+        ["// graph: catalog", "(bolt:Part {name: 'Bolt', size: 'M6'})"],
+        ["// graph: garden", "(bolt:Tool {name: 'Bolt cutter'})"]
+      ],
+      "answer": {
+        "ones": [],
+        "unresolved": [],
+        "guesses": [{ "name": "bolt", "things": ["catalog/bolt", "garden/bolt"] }]
+      }
+    },
+    {
+      "name": "a same name joined by a link is no longer a guess, and links chain across three graphs",
+      "blocks": [
+        ["// graph: catalog", "(bolt:Part {name: 'Bolt'})"],
+        [
+          "// graph: shop",
+          "(bolt:Part {name: 'Bolt'}),",
+          "(to_catalog:Ref {ref: 'bolt', graph: 'catalog'}),",
+          "(bolt)-[:SAME_AS]->(to_catalog)"
+        ],
+        [
+          "// graph: stock",
+          "(m6:Part {name: 'Bolt M6'}),",
+          "(to_shop:Ref {ref: 'bolt', graph: 'shop'}),",
+          "(m6)-[:SAME_AS]->(to_shop)"
+        ]
+      ],
+      "answer": { "ones": [["catalog/bolt", "shop/bolt", "stock/m6"]], "unresolved": [], "guesses": [] }
+    },
+    {
+      "name": "a Ref that names nothing is listed, never joined",
+      "blocks": [
+        [
+          "// graph: shop",
+          "(widget:Product {name: 'Widget'}),",
+          "(gone:Ref {ref: 'widget_99', graph: 'catalog'}),",
+          "(widget)-[:SAME_AS]->(gone)"
+        ]
+      ],
+      "answer": {
+        "ones": [],
+        "unresolved": [{ "graph": "shop", "thing": "widget", "ref": "widget_99", "in": "catalog" }],
+        "guesses": []
+      }
+    }
+  ]
+}

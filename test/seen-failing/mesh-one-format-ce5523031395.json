@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/mesh-one-format.test.mjs",
+  "test": "mesh_one_format > the block is read once, into one graph holding its schema and its data",
+  "seen_failing_first": false,
+  "evidence": "a check over the reader and lens rules already built: one block of schema and inserts reads and answers today, so it passes on the code before it"
+}

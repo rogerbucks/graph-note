@@ -98,6 +98,11 @@ and no module requires one that requires it back.
     is `recorded_at`, and SUPERSEDES. Real-world time runs from `valid_from` up to `valid_to`.
   - `after-text-merge.js` — two edits joined over their base, and their text merge read against that join. A value
     the merge picked in a dispute is listed for a person, never taken as the decision (`test/join-every-author-cases.json`).
+  - `same-as.js` — which things in different graphs are one (ARCH-6). Inside a graph the name is the id. Across graphs
+    only a written SAME_AS link to a Ref joins two things; the same name with no link stays a guess
+    (`test/same-as-cases.json`).
+  - `types-instances.js` — lasting types and their instances. An instance links to its type with INSTANCE_OF, here or
+    through a Ref, and has its type's properties unless it sets its own (`test/types-instances-cases.json`).
 
 ## Beside them
 
