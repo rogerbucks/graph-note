@@ -44,4 +44,6 @@ export const PLUGINS_SOURCE_WORDS = {
   'plugins.isolated.worker-failed': 'its worker failed: {why}',
   // the core's own storage, by its title (core-storage.ts)
   'plugins.storage.memory': 'In memory',
+  // the core's own AI provider, by its title (core-ai.ts)
+  'plugins.ai.chat-completions': 'Chat completions',
 } as const;

@@ -14,7 +14,8 @@ import { aiReady, endpointProblem } from './ai-choice.ts';
 import { hostAiModel } from './ai-host.ts';
 import type { HostModel } from './ai-host.ts';
 import { sha256, utf8Size } from './ai-digest.ts';
-import { INSTRUCTIONS, askedText, changesIn, readReply, requestBody } from './ai-request.ts';
+import { INSTRUCTIONS, askedText, changesIn } from './ai-request.ts';
+import { coreAiProvider } from './core-ai.ts';
 import { keyHeader } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import type { MatrixRow } from './ai-matrix.ts';
@@ -160,9 +161,7 @@ export function prepareSend(ask: SendAsk): PreparedSend | SendRefused {
   let body: string;
   try {
     const asked = askedText(scope, ask.question);
-    body = provider
-      ? provider.shape({ model: model.model, instructions: INSTRUCTIONS, asked })
-      : requestBody(model, scope, ask.question);
+    body = (provider ?? coreAiProvider()).shape({ model: model.model, instructions: INSTRUCTIONS, asked });
   } catch (e) {
     return { refused: e instanceof Error ? e.message : String(e) };
   }
@@ -269,9 +268,7 @@ export async function sendPrepared(
   }
   let read;
   try {
-    read = p.provider
-      ? p.provider.read({ status: reply.status, text: hide(reply.text) })
-      : readReply(reply.status, hide(reply.text));
+    read = (p.provider ?? coreAiProvider()).read({ status: reply.status, text: hide(reply.text) });
   } catch (e) {
     return failed(hide(e instanceof Error ? e.message : String(e)));
   }

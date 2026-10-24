@@ -9,10 +9,12 @@ import { pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS } from '../src/export-data.ts';
 import { memoryStorage } from '../src/note-storage.ts';
 import { CORE_STORAGE } from '../src/core-storage.ts';
+import { CORE_AI, CORE_AI_PROVIDER } from '../src/core-ai.ts';
 
 const registry = pluginRegistry();
 registry.register(CORE_EXPORTS);
 registry.register(CORE_STORAGE);
+registry.register(CORE_AI);
 
 /** The names of the checks `e` fails, with their messages. */
 const failures = (e) =>
@@ -152,6 +154,18 @@ describe('the AI provider contract', () => {
 
   test('a provider that keeps its promises passes every check', () => {
     assert.deepEqual(names(echo), []);
+  });
+
+  for (const p of registry.aiProviders())
+    test(`the built-in ${p.title} provider passes every check`, () => {
+      assert.deepEqual(names(p), []);
+    });
+
+  test('the core’s own wire format is a provider of the registry, which a model with no provider named is sent through', () => {
+    assert.deepEqual(
+      registry.aiProviders().map((p) => p.name),
+      [CORE_AI_PROVIDER],
+    );
   });
 
   test('one that drops the asked text, or throws on a reply, fails the check that holds it', () => {

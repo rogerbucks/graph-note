@@ -6,6 +6,7 @@ export { replaceBlock, insertBlockAfter, History } from './store.ts';
 export type { BlockRef, WriteResult } from './store.ts';
 export { changeNote, historyLayer, layered, memoryStorage } from './note-storage.ts';
 export { CORE_STORAGE } from './core-storage.ts';
+export { CORE_AI, CORE_AI_PROVIDER } from './core-ai.ts';
 export { CHANGE_WAITS, gatedFiles } from './plugin-files.ts';
 export type { FilesOffer, ProposedNoteChange } from './plugin-files.ts';
 export { notePath, noteVersion, refusal, REFUSED } from './note-storage.ts';
