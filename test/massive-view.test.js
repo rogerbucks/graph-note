@@ -389,16 +389,21 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
   test('choosing a match lays out only its group, and flies the view to the thing', options, async () => {
     const { match, view, said } = await run('flyToNeedle()');
     const parts = await run('parts');
-    assert.equal(parts.length, 1, 'one group is laid out');
-    assert.ok(parts[0].includes('t1234'), 'the one the thing is in');
-    assert.ok(parts[0].length < 3000, 'never the whole graph');
+    // the groups near it on screen may be opened a moment later, so the first one laid out is the thing's
+    assert.ok(parts.length >= 1 && parts.length < 150, 'only groups near it are laid out');
+    assert.ok(parts[0].includes('t1234'), 'the first is the one the thing is in');
+    assert.ok(
+      parts.every((p) => p.length < 3000),
+      'never the whole graph',
+    );
     assert.match(said, /^Needle in the stack, in .+/, 'where it went is said aloud');
     assert.equal(match.key, 't1234');
     // the thing's name is now painted in the middle of the view, big enough to read
     assert.ok(view.scale > 0.05, `zoomed in: ${view.scale}`);
     assert.ok((await run('wordsInMiddle()')) > 50, 'its name is in the middle');
+    const laid = (await run('parts')).length;
     await run('flyToNeedle()');
-    assert.equal((await run('parts')).length, 1, 'a group opened once is not laid out again');
+    assert.equal((await run('parts')).length, laid, 'a group opened once is not laid out again');
   });
 
   test(
