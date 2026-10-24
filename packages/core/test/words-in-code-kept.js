@@ -34,8 +34,14 @@ export const CORE_KEPT = {
   'packages/core/src/plugin-outside.ts': '*',
   // what the worker that serves a plug-in answers over its port: a fault of the plug-in's code, for its developer
   'packages/core/src/plugin-serve.ts': '*',
+  // the WCAG constraints as graph text: a note's bytes, never said to a person (editor spec §36)
+  'packages/core/src/accessibility-lens.ts': '*',
+  // what an SVG holds beyond a picture, named for a developer's test (editor spec §36, drawing_holds_no_state)
+  'packages/core/src/drawing-commands.ts': ['form field'],
   // why a test run of a process is refused: a fault of the caller's code, for its developer (editor spec §35)
   'packages/core/src/test-runs.ts': '*',
+  // why a theme chain is refused: a fault of the theme graph, for its author's developer (editor spec §36)
+  'packages/core/src/theme-graph.ts': '*',
   // why a translation is not added, told to its translator, never to a person using the app
   'packages/core/src/words.ts': '*',
   // why a plug-in is not installed, told to its developer as the registry refuses it
