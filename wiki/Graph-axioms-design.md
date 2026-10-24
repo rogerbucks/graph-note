@@ -1,7 +1,7 @@
 # Graph axioms design
 
 Roger asked on 24 October 2026 for a job on axioms for the graph and the graph spec. This page is the design. The
-requirements are editor spec section 63, workstream GS8.
+requirements are editor spec section 64, workstream GS8.
 
 ## The short answer
 
@@ -48,6 +48,9 @@ The list is a draft. GS8 settles it with Roger before it goes into the graph spe
 Wave 13 brings the CRDT transport (`crdt_transport`). A CRDT is correct only if its merge is order-free, idempotent and
 loses nothing. That is axiom A6, with A5 for identity across devices. Today the join is tested on fixed cases. Checking
 A5 and A6 on generated graphs first means sync is built on a proved merge, not a hopeful one.
+
+The connectors planned for the same wave (CN1 and CN3: one graph from many sources, updates through the CRDT) rest on
+the same two axioms.
 
 ## What it does not do
 
