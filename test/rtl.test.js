@@ -20,6 +20,7 @@ const PLACED = {
       'the bar on the side of a sheet the plugin placed on the right as seen',
     '.thoughtknot-viewport > .thoughtknot-pointer': 'set at the point the pointer is',
     '.thoughtknot-quick-info': 'set beside the thing pointed at, measured on the screen',
+    '.thoughtknot-thing-menu': 'opened at the point right-clicked, measured on the screen',
   },
   'packages/claude-code/page/page.css': {},
 };

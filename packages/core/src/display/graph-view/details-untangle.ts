@@ -7,8 +7,8 @@ import type { ThingActions } from './untangle';
 
 /**
  * The offers for `key` in `el`, as buttons, if there is anything to offer them to (`on`). Move is offered too when the
- * card is given a way to (`move`). It picks the box up, to move it from the keyboard (§6, move_box_keyboard). In a
- * radial drawing (`diagram`), Put in the centre is offered too.
+ * card is given a way to (`move`). It picks the box up, to move it from the keyboard (§6, move_box_keyboard). Where a
+ * radial drawing fits (`diagram`), Centre here is offered too.
  */
 export function untangleOffers(
   el: HTMLElement,
@@ -19,8 +19,8 @@ export function untangleOffers(
 ): void {
   if (!on) return;
   const row = el.createDiv({ cls: 'thoughtknot-untangle-offers' });
-  // a radial drawing laid out again around this thing, if it is not the centre already (§15, radial_centre_pick)
-  if (diagram?.putCentre && diagram.centre && diagram.centre.key !== key)
+  // drawn radial around this thing, from any type, if it is not the centre already (§15, radial_centre_anywhere)
+  if (diagram?.putCentre && diagram.canCentre?.(key))
     row
       .createEl('button', { text: word('details.centre'), attr: { type: 'button' } })
       .addEventListener('click', () => diagram.putCentre?.(key));
