@@ -132,6 +132,7 @@ flowchart LR
    has none that fit, the Louvain method finds them, in well under a second.
 2. **Overview.** Past 2,000 things, the drawing opens as one dot or card per group, sized by how many things it holds.
    It is laid out in a fraction of a second. Lines between groups show how many links cross.
+   Its 3D view button lifts each group into a block, as a card's 3D view does (`massive-paints.ts`).
 3. **Detail on demand.** Zooming in on a group, or opening it, lays out its inside with Graphviz's quick settings. It
    is drawn as today's drawing, with taps, details, editing and every diagram type. Nearby groups lay out in the
    background, in the worker, so panning finds them ready.
