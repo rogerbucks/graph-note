@@ -6,6 +6,7 @@ import { replaceBlock, withExample, word } from '@thoughtknot/core';
 import { cardInUse } from '@thoughtknot/core/display/graph-view/card-in-use';
 import { whenPlaced } from '@thoughtknot/core/display/graph-view/placement';
 import type ThoughtKnotPlugin from './main';
+import type { HostCommand } from './host-commands';
 import type { EditTarget } from './main';
 import { changeVaultNote } from './storage/plugin-notes';
 
@@ -63,16 +64,7 @@ export function renderEmpty(
   });
 }
 
-/** Adds the command Show the tour, offered while a drawing has been used. */
-export function addTourCommand(plugin: ThoughtKnotPlugin): void {
-  plugin.addCommand({
-    id: 'tour',
-    name: word('tour.command'),
-    checkCallback: (checking: boolean) => {
-      const card = cardInUse();
-      if (!card) return false;
-      if (!checking) card.tour();
-      return true;
-    },
-  });
+/** The command Show the tour, offered while a drawing has been used. */
+export function tourCommand(): HostCommand {
+  return { id: 'tour', title: word('tour.command'), available: () => !!cardInUse(), run: () => cardInUse()?.tour() };
 }

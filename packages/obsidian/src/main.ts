@@ -50,7 +50,7 @@ import { addForYou } from './editor';
 import type { BlockEditor } from './block-editor/block-editor';
 import { graphBlocks } from './live-preview';
 import { InlineEditors } from './inline-editors';
-import { followRename, recoverDrafts, RECOVER_COMMAND, withIds } from './drafts';
+import { followRename, withIds } from './drafts';
 import type { KeptDraft } from '@thoughtknot/core/display/editor/editor-note';
 import { convertToStandard } from './convert';
 import { followLinks } from './links/rename-follow';
@@ -109,18 +109,12 @@ export default class ThoughtKnotPlugin extends Plugin {
     });
     this.app.workspace.onLayoutReady(() => void this.outside.startAll());
     this.addSettingTab(new ThoughtKnotSettingTab(this.app, this));
-    this.addCommand({
-      id: 'convert-to-standard',
-      name: word('host.command.convert'),
-      callback: () => this.convertToStandard(),
-    });
     // the drafts kept follow their note when it is renamed or moved, edited or not, and can all be recovered (spec §9)
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followRename(this, f.path, old)));
     // a renamed note or file is followed by every link to it in graph blocks; Page preview previews the cards' links (§18)
     this.registerEvent(this.app.vault.on('rename', (f, old) => void followLinks(this, f, old)));
     this.registerHoverLinkSource(HOVER_SOURCE, { display: 'ThoughtKnot', defaultMod: true });
-    this.addCommand({ ...RECOVER_COMMAND, callback: () => recoverDrafts(this) });
-    addCommands(this); // the shortcuts' (§44); nothing is sent to an AI or read from a database until Send or Import
+    addCommands(this); // all of them, through the plug-in interface; nothing is sent to an AI or read from a database until Send or Import
     this.registerView(PANE, (leaf) => new GraphPane(leaf, this));
     this.registerView(DETAILS_PANE, (leaf) => new DetailsPaneView(leaf)); // a card's details, beside (§25)
     this.registerEditorExtension(addForYou);

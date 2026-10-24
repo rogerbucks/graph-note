@@ -105,6 +105,46 @@ describe('the plug-in interface', () => {
     assert.deepEqual(ran, ['sync']);
   });
 
+  test('a command offered only while something is open says so by available, and one whose check fails is not offered', () => {
+    const registry = pluginRegistry();
+    let open = false;
+    registry.register({
+      id: 'acme.view',
+      version: '1.0.0',
+      api: PLUGIN_API,
+      uses: ['commands'],
+      register: (points) => {
+        points.commands.add({ id: 'acme.view.always', title: 'Always', run: () => {} });
+        points.commands.add({ id: 'acme.view.zoom', title: 'Zoom', run: () => {}, available: () => open });
+        points.commands.add({
+          id: 'acme.view.broken',
+          title: 'Broken',
+          run: () => {},
+          available: () => {
+            throw new Error('no view');
+          },
+        });
+      },
+    });
+    assert.equal(registry.commandOffered('acme.view.always'), true);
+    assert.equal(registry.commandOffered('acme.view.zoom'), false);
+    open = true;
+    assert.equal(registry.commandOffered('acme.view.zoom'), true);
+    assert.equal(registry.commandOffered('acme.view.broken'), false);
+    assert.equal(registry.commandOffered('acme.view.nothing'), false);
+    assert.throws(
+      () =>
+        pluginRegistry().register({
+          id: 'acme.bad',
+          version: '1.0.0',
+          api: PLUGIN_API,
+          uses: ['commands'],
+          register: (points) => points.commands.add({ id: 'acme.bad.x', title: 'X', run: () => {}, available: true }),
+        }),
+      /available that is not a function/,
+    );
+  });
+
   test('the built-in data exports are added through it, as any plug-in’s are', () => {
     const registry = pluginRegistry();
     registry.register(CORE_EXPORTS);

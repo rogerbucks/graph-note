@@ -12,6 +12,7 @@ and edits through the shared display layer, and nothing is ported. It works offl
 ```
 VS Code (Node)
   extension.ts               Open in ThoughtKnot, one tab per note
+    host-commands.ts         its commands, added through the plug-in interface
     folder-calls.ts          answers the page's folder calls, each checked by place.ts
       vscodeDisk             VS Code's file system, or the open text editor's copy of the note
 tab (webview)
@@ -23,6 +24,7 @@ tab (webview)
 
 ## The source, `src/`
 
+- `host-commands.ts`: the commands are those of the built-in plug-in `thoughtknot.vscode`, given to VS Code under the ids `package.json` names. One that fails is said in an error message.
 - `extension.ts`: `activate` adds the commands: Open in ThoughtKnot here, and Ask AI (below). A tab is opened for the note in the active editor, or the one clicked.
   - The folder is the note's workspace folder, or the note's own folder outside one. A note's id is its path there.
   - A note in a hidden folder, such as `.git`, is never opened.

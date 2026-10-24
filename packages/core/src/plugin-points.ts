@@ -36,8 +36,13 @@ export interface PluginCommand {
   id: string;
   /** What it is called where it is offered, in the host's language. */
   title: string;
-  /** Does what the command does. */
-  run: () => void;
+  /**
+   * Does what the command does, given what the host chose it on, if anything: a file in a menu, say. It may take time,
+   * and a host that waits for it runs it with `runCommandAsync`.
+   */
+  run: (given?: unknown) => void | Promise<void>;
+  /** Whether it is offered now, such as while a drawing is open; a host offers it only when this says so. Always, when not given. */
+  available?: () => boolean;
 }
 
 /**
@@ -131,6 +136,8 @@ export function commandProblem(c: PluginCommand, pluginId: string, taken: Map<st
   if (taken.has(c.id)) return `the command "${c.id}" is added already`;
   if (!c.title.trim()) return `the command "${c.id}" has no title`;
   if (typeof c.run !== 'function') return `the command "${c.id}" does nothing`;
+  if (c.available !== undefined && typeof c.available !== 'function')
+    return `the command "${c.id}" has an available that is not a function`;
   return null;
 }
 

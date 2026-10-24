@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 import { setLanguage, word } from '../../core/src/words.ts';
 import { askAi } from './ask-ai.ts';
 import { folderCalls, isFolderCall } from './folder-calls.ts';
+import { addCommands } from './host-commands.ts';
 import { placeProblem } from './place.ts';
 import { webviewHtml } from './webview-html.ts';
 import { noteOf, placeOf, vscodeDisk } from './vscode-disk.ts';
@@ -63,8 +64,10 @@ async function openGraph(context: vscode.ExtensionContext, given?: unknown): Pro
 /** Called by VS Code the first time one of the extension's commands is chosen. */
 export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
-    vscode.commands.registerCommand('thoughtknot.openGraph', (given?: unknown) => openGraph(context, given)),
-    vscode.commands.registerCommand('thoughtknot.askAi', (given?: unknown) => askAi(context, given)),
+    ...addCommands({
+      'open-graph': { title: word('vscode.command.open-graph'), run: (given) => openGraph(context, given) },
+      'ask-ai': { title: word('vscode.command.ask-ai'), run: (given) => askAi(context, given) },
+    }),
   );
 }
 

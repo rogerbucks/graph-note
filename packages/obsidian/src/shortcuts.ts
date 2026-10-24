@@ -9,7 +9,7 @@ import type { WordKey } from '@thoughtknot/core';
 import { cardInUse } from '@thoughtknot/core/display/graph-view/card-in-use';
 import type { CardActions } from '@thoughtknot/core/display/graph-view/card-in-use';
 import { listShortcuts } from '@thoughtknot/core/display/shortcuts-list';
-import type ThoughtKnotPlugin from './main';
+import type { HostCommand } from './host-commands';
 
 /** What each of the drawing's commands does to the drawing last used, by the shortcut's id. */
 const ACTIONS: Record<string, keyof Omit<CardActions, 'shortcuts'>> = {
@@ -35,25 +35,22 @@ class ShortcutsDialog extends Modal {
   }
 }
 
-/** Adds the command that lists every keyboard shortcut, and the drawing's commands a person can give keys to. */
-export function addShortcutCommands(plugin: ThoughtKnotPlugin): void {
-  for (const s of SHORTCUTS) {
+/** The command that lists every keyboard shortcut, and the drawing's commands a person can give keys to. */
+export function shortcutCommands(app: App): HostCommand[] {
+  const drawing = SHORTCUTS.flatMap((s): HostCommand[] => {
     const action = ACTIONS[s.id];
-    if (!s.command || !action) continue;
-    plugin.addCommand({
-      id: s.id,
-      name: word(`shortcut.${s.id}` as WordKey),
-      checkCallback: (checking: boolean) => {
-        const card = cardInUse();
-        if (!card) return false;
-        if (!checking) card[action]();
-        return true;
+    if (!s.command || !action) return [];
+    return [
+      {
+        id: s.id,
+        title: word(`shortcut.${s.id}` as WordKey),
+        available: () => !!cardInUse(),
+        run: () => cardInUse()?.[action](),
       },
-    });
-  }
-  plugin.addCommand({
-    id: 'shortcuts',
-    name: word('shortcut.shortcuts'),
-    callback: () => new ShortcutsDialog(plugin.app).open(),
+    ];
   });
+  return [
+    ...drawing,
+    { id: 'shortcuts', title: word('shortcut.shortcuts'), run: () => new ShortcutsDialog(app).open() },
+  ];
 }

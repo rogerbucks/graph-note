@@ -121,6 +121,7 @@ export function fakeVscode({
       activeTextEditor: undefined,
       showInformationMessage: message,
       showWarningMessage: message,
+      showErrorMessage: message,
       showQuickPick: async (items, options) => asked('pick', await items, options),
       showInputBox: async (options) => asked('input', [], options),
       showTextDocument: async (document, options) => (document.beside = options),

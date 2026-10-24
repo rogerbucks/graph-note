@@ -17,7 +17,7 @@ import type { DataExporter, PluginSource, PluginStep, HostAbilities, HostAbility
 import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './plugin-points.ts';
 import { heldGraph, stepInputs } from './plugin-sources.ts';
 import type { JoinedGraph } from './plugin-sources.ts';
-import { pluginCalls } from './plugin-calls.ts';
+import { commandCalls, pluginCalls } from './plugin-calls.ts';
 import { guardedProvider, providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import { diagramDrawing, diagramProblem } from './plugin-diagrams.ts';
@@ -150,8 +150,10 @@ export interface PluginRegistry {
   openStorage: (name: string) => PluginResult<NoteStorage>;
   /** Every command added, in the order added. */
   commands: () => PluginCommand[];
-  /** Runs the command `id`, or says what went wrong and whose plug-in it was. */
-  runCommand: (id: string) => PluginResult<undefined>;
+  commandOffered: (id: string) => boolean;
+  /** Runs the command `id` on what the host chose it on, if anything; the async one waits for a command that takes time. */
+  runCommand: (id: string, given?: unknown) => PluginResult<undefined>;
+  runCommandAsync: (id: string, given?: unknown) => Promise<PluginResult<undefined>>;
   /** Every panel added, in the order added. */
   panels: () => PluginPanel[];
   /** Draws the panel `id` into `el`, or says what went wrong and whose plug-in it was. */
@@ -212,7 +214,8 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const steps = shelf<PluginStep>('id');
   const providers = shelf<AiProvider>('name');
   const diagrams = shelf<PluginDiagram>('type');
-  const { guarded, awaited, stopped } = pluginCalls(now, timeLimit);
+  const calls = pluginCalls(now, timeLimit);
+  const { guarded, awaited, stopped } = calls;
   const core = Object.freeze(Object.keys(THEME_TOKENS));
   /** The abilities `named` from the host's offer, frozen, or why one cannot be given. */
   const granted = (named: HostAbility[], pluginId: string): Partial<HostAbilities> | string => {
@@ -343,12 +346,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       return guarded(backends.owner.get(name) ?? '', word('plugins.what.storage', { title: b.title }), () => b.open());
     },
     commands: () => commands.items.map((c) => ({ ...c })),
-    runCommand(id) {
-      const c = commands.items.find((x) => x.id === id);
-      if (!c) return { ok: false, plugin: '', message: word('plugins.none.command', { name: id }) };
-      const what = word('plugins.what.command', { title: c.title });
-      return guarded(commands.owner.get(id) ?? '', what, () => void c.run());
-    },
+    ...commandCalls(calls, commands.items, commands.owner),
     panels: () => panels.items.map((c) => ({ ...c })),
     showPanel(id, el) {
       const c = panels.items.find((x) => x.id === id);
