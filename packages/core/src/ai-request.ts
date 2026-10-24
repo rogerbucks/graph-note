@@ -41,20 +41,24 @@ export function askedText(scope: AiScope, question: string): string {
   return `${fence}graph-data\n${data}\n${fence}\n\nQuestion: ${question.trim()}`;
 }
 
-/** The body of the request, as the exact text sent: the model, the instructions, and what was chosen with the question. */
-export function requestBody(model: AiModel, scope: AiScope, question: string): string {
-  const asked = askedText(scope, question);
+/** The body of the one wire format, as the exact text sent: the model, the instructions, and the asked text. */
+export function chatBody(model: string, instructions: string, asked: string): string {
   return JSON.stringify(
     {
-      model: model.model,
+      model,
       messages: [
-        { role: 'system', content: INSTRUCTIONS },
+        { role: 'system', content: instructions },
         { role: 'user', content: asked },
       ],
     },
     null,
     2,
   );
+}
+
+/** The body of the request, as the exact text sent: the model, the instructions, and what was chosen with the question. */
+export function requestBody(model: AiModel, scope: AiScope, question: string): string {
+  return chatBody(model.model, INSTRUCTIONS, askedText(scope, question));
 }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);

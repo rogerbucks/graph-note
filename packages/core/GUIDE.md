@@ -1244,6 +1244,7 @@ and is handed the port between them, as for layouts:
 - `plugin-files.ts` — the files ability through the note gate (TRUST-16). `gatedFiles` lists and reads only notes at
   or below the ceiling the person set for the plug-in. A change it makes waits as a proposal (`CHANGE_WAITS`).
 - `core-storage.ts` — `CORE_STORAGE`, the core's memory storage as a plug-in.
+- `core-ai.ts` — `CORE_AI`, the core's own AI wire format as a built-in provider plug-in (`CORE_AI_PROVIDER`).
 - `plugin-calls.ts` — every call into a plug-in, timed, caught and named. `awaited` times a call whose answer comes
   later, until it comes.
 - `plugin-sources.ts` — what a graph source or step gives back, held as a `JoinedGraph` (trust_source_joined). It
