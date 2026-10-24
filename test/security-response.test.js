@@ -40,7 +40,18 @@ describe('security response protocol (spec §66)', () => {
   test('soc_report_routes: a public post about a problem is moved to the private form', () => {
     assert.match(section('3\\. Who does what'), /public issue[^\n]*discussion[^\n]*log/);
     assert.match(page, /hide it, ask the reporter to use the private form/);
-    assert.match(read('SECURITY.md'), /wiki\/Security-response/, 'SECURITY.md points to the protocol');
+    assert.match(
+      read('SECURITY.md'),
+      /\]\(https:\/\/github\.com\/rogerbucks\/thoughtknot\/wiki\/Security-response\)/,
+      'SECURITY.md links to the protocol',
+    );
+  });
+
+  test('soc_response_steps: the hard rule on the release gate matches the gate in scripts/security-alerts.mjs', async () => {
+    const { GATES } = await import('../scripts/security-alerts.mjs');
+    assert.deepEqual(GATES.release, [], 'a stable release lets no alert through');
+    assert.deepEqual(GATES.nightly, ['medium', 'low'], 'a nightly stops on high and critical only');
+    assert.match(section('3\\. Who does what'), /Stable: any alert\. Nightly: high or critical\./);
   });
 
   test('soc_practice_run: the page keeps a log of practice runs', () => {
