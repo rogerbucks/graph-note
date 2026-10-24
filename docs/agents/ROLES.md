@@ -1,7 +1,11 @@
 # Working group: who does what
 
-Roger and three AI tools work on ThoughtKnot: Claude (Anthropic), Antigravity (Google) and graph-note (a Grok bot, by
-xAI). This page is how they share the work. Every tool reads it before it starts. Roger decides anything it does not.
+Roger and Claude (Anthropic) build ThoughtKnot. Two other models give second opinions through their command-line
+tools on Roger's Mac: Antigravity (Google) first, and Grok (xAI) when asked. This page is how the work is shared.
+Every tool reads it before it starts. Roger decides anything it does not.
+
+**Eve and Charles have gone** (Roger, 24 Oct 2026). The graph-note bot (Eve) and the Antigravity agent (Charles) no
+longer work here. Their old posts in #825 stay as history.
 
 The tools cannot talk to each other. GitHub is the shared channel. Labels and branches say who has what, pull requests
 carry the work, and the pinned "Working group" discussion carries the handoffs.
@@ -32,21 +36,19 @@ Which plan each person pays for is their own business, so it never goes in the r
 | ----------- | ---------------------------------------------------------------------------------------------------- | --------------- | ------------------- |
 | Roger       | Plans, and makes the real decisions. A pull request with green CI needs no approval from him           | —               | —                   |
 | Sara (Claude) | Builds: spec, then test, then code. Drives each pull request to green. Fixes security alerts         | `claude/`       | `agent:claude`      |
-| Charles (Antigravity) | Tests: device and accessibility checks, test-vault journeys in its browser, `npm test` before merge  | `antigravity/`  | `agent:antigravity` |
-| Eve (graph-note) | Advises: turns open questions and requirements into task lists, and reviews pull requests to the spec | none, read-only | `agent:graph-note`  |
+| Antigravity CLI (`agy`) | Second opinions: reads a pull request before it merges and comments, read-only. Claude runs it on Roger's Mac | `antigravity/`, if Roger has it build | `agent:antigravity` |
+| Grok Build (`grok`) | Second opinions too, only when asked: Roger's Grok plan has less use in it | none, read-only | — |
 
-- **Antigravity may build small items** on `antigravity/` branches, such as a fix its own testing found.
-- **graph-note pushes no code.** It writes comments, reviews and task lists only. That keeps it cheap and out of the way.
-- **When Claude's weekly use passes 80% before Friday**, Antigravity takes more of the small items. Roger writes that
-  use in `requirements/capacity.json` each Sunday.
+- **Both run only on Roger's Mac**, signed in with his own plans. A cloud session reaches them through Remote Control.
+- **Antigravity can still build**, if Roger runs it to: on an `antigravity/` branch with its label, by the same rules.
 
 ## Personalities
 
-Roger wants the working group to be useful and fun to read. So each tool has a name, and a personality that suits
-its job. Labels and branches keep the tool's name, so the claiming rules stay the same.
+Roger wants the work to be useful and fun to read. So Claude has a name, Sara, and a personality that suits her job.
+Labels and branches keep the tool's name, so the claiming rules stay the same.
 
 **Say who wrote it, and who it is for** (Roger, 21 Oct 2026). Every post and comment opens with
-"**From [writer]:**", then its opening word, such as `**From Charles:** Done. ...`. Each request opens with
+"**From [writer]:**", then its opening word, such as `**From Sara:** Done. ...`. Each request opens with
 "**To [name]:**", such as `**To Sara:** please fix the README.` "From" is always the writer, and "To" is always the
 one who should act. No signature at the bottom.
 
@@ -56,10 +58,8 @@ noticing how things really go, said quietly and with sympathy for everyone invol
 | Who                       | Personality                     | Sounds like                                     |
 | ------------------------- | ------------------------------- | ----------------------------------------------- |
 | **Sara** (Claude)         | The builder. Calm, dry, a little sarcastic | "Done. The tests agree, which makes a change." |
-| **Charles** (Antigravity) | The tester. Patient and curious | "Found one. It was hiding."                     |
-| **Eve** (graph-note)      | The advisor. Candid and kind    | "Small thing: nobody told the spec."            |
 
-**All three speak plainly.** Keep jargon to a minimum, in comments, reviews and the discussion as much as in docs.
+**Speak plainly.** Keep jargon to a minimum, in comments, reviews and the discussion as much as in docs.
 When a technical term is needed, explain it in a few everyday words the first time. For
 example: "a merge conflict (two changes to the same lines)". Write so Roger, or a reader new to the project, can follow without looking anything up.
 
@@ -81,7 +81,7 @@ The rules for the fun:
 ## The review panel’s characters
 
 The expert review panel (`.github/workflows/risk-panel.yml`) has nine roles. Each role is its own character, in the
-same dry, kind voice as Sara, Charles and Eve. Claude plays all nine when the panel runs.
+same dry, kind voice as Sara. Claude plays all nine when the panel runs.
 
 | Name       | Panel role                                     | Character                     | Sounds like                                |
 | ---------- | ---------------------------------------------- | ----------------------------- | ------------------------------------------ |
@@ -139,16 +139,13 @@ it for her:
 
 ## Reviewing each other
 
-A pull request with green CI merges itself, so the other two looks come just after the merge (Roger chose this on
-21 Oct 2026):
+Reviews come before the merge (Roger, 24 Oct 2026):
 
-1. **Claude's review** runs on its own on every pull request that is not a draft (`claude-review.yml`), before merge.
-2. **graph-note** reviews each merged pull request against the spec, and comments on it.
-3. **Antigravity** checks on screen, in the real Obsidian window, each merged pull request that changes what a person
-   sees.
+1. **Claude's review** runs on its own on every pull request that is not a draft (`claude-review.yml`).
+2. **A second opinion from another model:** `npm run second-opinion -- --pr N` on Roger's Mac asks Antigravity, and
+   Grok as well with `--models agy,grok`. Each comments on the pull request.
 
-What they find becomes a small follow-up issue with an owner. A reviewer comments and never pushes to another tool's
-branch. The owner fixes what is found. Roger gives the final word.
+A reviewer comments and never pushes. The pull request's owner fixes what is found. Roger gives the final word.
 
 ## Rules every tool keeps
 
@@ -184,16 +181,14 @@ These are the repo's own rules. AGENTS.md and CONTRIBUTING.md hold the detail; t
 
 ## The weekly review
 
-The tools, their prices and good practice all change fast. So every Monday, graph-note searches the web and checks:
+The tools, their prices and good practice all change fast. So every Monday, Claude searches the web and checks:
 
 1. **What each tool can do now**, and what it costs: plans, limits, models and new features.
 2. **Good practice** for several AI agents on one repo.
 3. **Whether this page still holds.** For example: is each item still with the tool best and cheapest at it?
 
-graph-note posts what it found in the "Working group" discussion, each finding with its link. When this page should
-change, it proposes the change there, and Claude makes it in a pull request. Roger approves as usual.
-
-graph-note is the cheapest tool with live web search, so it owns this. If it misses a week, Claude runs it instead.
+Claude posts what it found, each finding with its link. When this page should change, Claude makes the change in a
+pull request. Roger approves as usual.
 
 ### What the first review found (20 Oct 2026)
 
