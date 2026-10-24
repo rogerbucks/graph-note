@@ -109,6 +109,9 @@ const NAMES = [
   'typeOf',
   'instancesOf',
   'inherited',
+  // the altitude and topic index (editor spec §32)
+  'altitudeIndex',
+  'searchIndex',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

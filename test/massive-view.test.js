@@ -263,6 +263,38 @@ window.space3d = async () => {
   back().click();
   return { label, closed: !card.querySelector('.thoughtknot-space-view') };
 };
+// a block too large to read at once, in the pane, with a style block after it in the note. The overview starts with
+// its saved filter and says the kind misspelt there. A filter chosen is given to the host to save
+window.paneInPartsSaved = async () => {
+  const lines = ['// graph: huge'];
+  for (let i = 0; i < 12000; i++) lines.push('(n' + i + ':' + (i % 2 ? 'Place' : 'Person') + " {name: 'Item " + i + "'}),");
+  for (let i = 1; i < 12000; i++) lines.push('(n' + i + ')-[:NEAR]->(n' + (i - 1) + ')' + (i < 11999 ? ',' : ''));
+  const style = "// graph: huge_style · STYLE huge\\n(filter_1:Filter {keep: 'Kind: Place, Plaec'})";
+  const texts = [lines.join('\\n')];
+  const saved = [];
+  const host = {
+    settings: () => DEFAULT_SETTINGS,
+    layout,
+    palette: PALETTES.light,
+    noteText: () => '\x60\x60\x60gql\\n' + texts[0] + '\\n\x60\x60\x60\\n\\n\x60\x60\x60gql\\n' + style + '\\n\x60\x60\x60\\n',
+    saveFilter: (graph, keep) => saved.push([graph, keep]),
+  };
+  const el = document.body.appendChild(document.createElement('div'));
+  el.style.width = '600px';
+  const on = { edit() {}, select() {}, replace: () => false };
+  new PaneDrawing(host).redraw(el, readNote(texts), { graph: 'huge', text: texts[0] }, () => false, on);
+  for (let i = 0; i < 1000 && !el.querySelector('.thoughtknot-massive-facet'); i++) await new Promise((r) => setTimeout(r, 20));
+  const boxes = [...el.querySelectorAll('.thoughtknot-massive-facet input')];
+  const shown = {
+    ticked: boxes.filter((b) => b.checked).map((b) => b.nextSibling.textContent),
+    problems: [...el.querySelectorAll('.thoughtknot-style-problem')].map((p) => p.textContent),
+  };
+  const person = boxes.find((b) => b.nextSibling.textContent === 'Person');
+  person.checked = true;
+  person.dispatchEvent(new Event('change'));
+  el.remove();
+  return { ...shown, saved };
+};
 window.flyToNeedle = async () => {
   const [match] = view.find('needle');
   await view.flyTo(match);
@@ -468,6 +500,18 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     assert.match(label ?? '', /^3D view of Big\./, 'the 3D view of the overview, named for its graph');
     assert.ok(closed, 'Back to 2D closes it');
   });
+
+  // proves: scale_filter_live
+  test(
+    'a block too large to read at once starts in the pane with its saved filter, and saves a filter chosen',
+    options,
+    async () => {
+      const { ticked, problems, saved } = await run('paneInPartsSaved()');
+      assert.deepEqual(ticked, ['Place'], 'the saved filter, read from the style block after it');
+      assert.deepEqual(problems, ['In the style graph: Plaec is not a kind in graph huge']);
+      assert.deepEqual(saved, [['huge', { Kind: ['Place', 'Person'] }]], 'the host is asked to save the new one');
+    },
+  );
 
   test('a card drawn with a saved filter starts with it ticked, keeping only its things', options, async () => {
     const { label, ticked } = await run('saved()');

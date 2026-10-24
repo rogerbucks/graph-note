@@ -22,6 +22,7 @@ import { gif, png } from './image-bytes.js';
 import { animationSaid } from '../src/export-pictures.ts';
 import { isPseudoWord } from '../src/pseudo-words.ts';
 import { setLanguage, SOURCE_LANGUAGE } from '../src/words.ts';
+import { between } from './text-find.js';
 
 afterEach(() => setLanguage(SOURCE_LANGUAGE));
 
@@ -110,7 +111,7 @@ describe('an exported SVG', () => {
     const { svg } = await exported('svg');
     assert.match(svg, /<image class="thoughtknot-picture-moving"/);
     assert.match(svg, /<image class="thoughtknot-picture-still"[^>]*href="data:image\/png;base64,/);
-    const css = /<style>([\s\S]*?)<\/style>/.exec(svg)[1];
+    const css = between(svg, '<style>', '</style>');
     assert.match(css, new RegExp(`\\.${IMAGE_CLASS} \\.thoughtknot-picture-still \\{ display: none; \\}`));
     assert.match(
       css,

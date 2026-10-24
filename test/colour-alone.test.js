@@ -14,6 +14,7 @@ import { fence } from '../packages/obsidian/test/host/notes.js';
 import { READER, open, type } from '../packages/obsidian/test/host/pane-notes.js';
 import { show } from '../packages/obsidian/test/host/view-notes.js';
 import { rulesOf, valueOf } from './repository/sheet-rules.js';
+import { pieces } from '../packages/core/test/text-find.js';
 
 // a warning on its own line (a name not in the graph), then an error on its own (a value left out)
 const WARNING_LINE = '(eyes)-[:FAVOURS]->(larg)';
@@ -147,8 +148,9 @@ describe('a look’s colour is told by a tag as well', () => {
     const { svg } = exportSvg(scope, engine, { note: 'Trip.md', date: '2026-10-20', theme: 'light', style });
     // the group of the box whose name is drawn as `name`
     const group = (name) =>
-      [...svg.matchAll(/<g id="node\d+"[\s\S]*?<\/g>/g)].map((m) => m[0]).find((g) => g.includes(`>${name}</text>`)) ??
-      '';
+      pieces(svg, '<g id="node', '</g>')
+        .filter((g) => /^<g id="node\d+"/.test(g))
+        .find((g) => g.includes(`>${name}</text>`)) ?? '';
     assert.match(group('The park'), />①<\/text>/);
     assert.match(group('The lake'), />②<\/text>/);
     assert.doesNotMatch(group('Cafe'), /[①②]/);

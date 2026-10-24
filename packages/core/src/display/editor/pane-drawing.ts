@@ -4,7 +4,8 @@
 // is (spec §9). A graph typed or pasted past a limit is not drawn, and a banner beside its text says why. A graph too
 // large to lay out is shown as its overview under the banner, where the host gives its colours (§53, scale_massive_card).
 // A block too large to read at once is read into a store in memory, a part at a time. It is shown as its overview
-// from there, under the banner (§53, scale_in_parts).
+// from there, under the banner (§53, scale_in_parts). It starts with the filter saved in the note's style block, and a
+// filter chosen is saved there, as for any overview (scale_filter_live).
 import {
   depthOf,
   MeshIndex,
@@ -14,6 +15,7 @@ import {
   setInParts,
   startingSwitches,
   storedGraphs,
+  storedStyle,
   ViewState,
   word,
 } from '@thoughtknot/core';
@@ -47,6 +49,8 @@ export interface PaneHost {
   palette?: Palette;
   /** Saves a filter chosen on the overview in the graph's style block (scale_filter_live). Not set: only tried. */
   saveFilter?: (graph: string, keep: FilterKeep) => void;
+  /** The note's whole text, for the style block of a block too large to read at once. Not set: its filter is not read. */
+  noteText?: () => string;
 }
 
 /** A drawing given the direction set on the settings page, unless its own style sets one (§6, §15, §21); else the best fit. */
@@ -169,13 +173,24 @@ export class PaneDrawing extends Lifecycle {
       const stored = graphs.get(s.graph);
       if (!stored || stale()) return;
       const slot = host.createDiv();
+      const { noteText, saveFilter } = this.host;
+      // the style block is read from the whole note, as it may come after the block
+      const read = noteText && storedStyle(noteText(), stored);
+      const saved = read?.style.filters.find((f) => f.view === undefined)?.keep;
       massiveView(slot, stored.drawing, {
         graph: s.graph,
         palette,
         layout: (part, by) => this.host.layout(part, by),
         props: stored.props,
+        ...(saved ? { chosen: saved } : {}),
+        ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(s.graph, keep) } : {}),
         picked: (key) => massiveThing(slot, { key, props: stored.props(key), readOnly: false, change: change(key) }),
       });
+      for (const p of read?.problems ?? [])
+        slot.createEl('p', {
+          cls: 'thoughtknot-hint thoughtknot-style-problem',
+          text: word('massive.style-problem', { why: p.message }),
+        });
     });
   }
 
