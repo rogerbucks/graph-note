@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ProfileLearning } from '../src/learning.ts';
-import { SHARED_SETTINGS } from '../src/profiles.ts';
+import { SHARED_SETTINGS, composeProfiles } from '../src/profiles.ts';
 
 function learned() {
   const l = new ProfileLearning();
@@ -40,4 +40,15 @@ test('a suggestion turned down never applies', () => {
   l.decline('brisk');
   assert.deepEqual(l.waiting, []);
   assert.deepEqual(l.review(), []);
+});
+
+test('a kept item out of range sets nothing when applied', () => {
+  const learning = new ProfileLearning({
+    waiting: [],
+    applied: [
+      { id: 'a', setting: 'pacing', value: 'x', why: 'edited by hand' },
+      { id: 'b', setting: 'chunk', value: 0, why: 'edited by hand' },
+    ],
+  });
+  assert.deepEqual(learning.applyTo(composeProfiles()), composeProfiles());
 });
