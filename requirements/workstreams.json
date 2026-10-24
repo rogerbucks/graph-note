@@ -1115,5 +1115,39 @@
       "picture_classified",
       "picture_outside_tools"
     ]
+  },
+  "CN1": {
+    "title": "Connectors: one graph from many GQL sources",
+    "size": "M",
+    "requirements": [
+      "connector_many_sources",
+      "connector_joined_by_mesh",
+      "connector_order_free",
+      "connector_cites_source",
+      "connector_source_missing",
+      "connector_contract"
+    ]
+  },
+  "CN2": {
+    "title": "Connectors for text, CSV, Excel and SQLite files",
+    "size": "M",
+    "requirements": [
+      "connector_files_to_gql",
+      "connector_mapping_written",
+      "connector_derived_kept_apart",
+      "connector_text_proposed",
+      "connector_files_on_device"
+    ]
+  },
+  "CN3": {
+    "title": "Updates across connectors through the CRDT",
+    "size": "L",
+    "requirements": [
+      "connector_sync_written_only",
+      "connector_edit_goes_home",
+      "connector_overlay_for_readonly",
+      "connector_refresh_rejoins",
+      "connector_devices_agree"
+    ]
   }
 }

@@ -208,7 +208,9 @@
       "estimate": true,
       "workstreams": [
         "W30",
-        "W31"
+        "W31",
+        "CN1",
+        "CN3"
       ],
       "earlier_plan": {
         "start": "2027-03-01",
@@ -484,7 +486,8 @@
       "end": "2027-01-14",
       "estimate": true,
       "workstreams": [
-        "E1"
+        "E1",
+        "CN2"
       ],
       "earlier_plan": {
         "start": "2027-09-27",
