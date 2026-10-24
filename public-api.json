@@ -3984,9 +3984,14 @@
           "COMMENT_FIX: string",
           "COMMENT_RULE: string",
           "completeness: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }",
+          "coreOfEight: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.CoreOfEight",
+          "currentOf: (graph: GraphSpecCheck.Graph, run: string) => string[]",
           "cycleView: (graph: GraphSpecCheck.Graph, how: 'hide' | 'highlight') => { shown: string[]; highlighted: string[]; }",
+          "enterState: (graph: GraphSpecCheck.Graph, run: string, state: string, at?: string | null) => GraphSpecCheck.RunEntry[]",
           "Graph: typeof GraphSpecCheck.Graph",
           "GTime: typeof GraphSpecCheck.GTime",
+          "guardAllows: (guard: GraphSpecCheck.ProcessGuard, ctx: Record<string, unknown>, functions?: Record<string, Record<string, (ctx: Record<string, unknown>) => unknown>>) => boolean",
+          "guardOf: (graph: GraphSpecCheck.Graph, transition: string) => GraphSpecCheck.ProcessGuard | null",
           "guessReadings: (type: string) => [string, string]",
           "hash16: (value: unknown) => string",
           "header: (block: string) => [string | null, GraphSpecCheck.BlockKind]",
@@ -3994,20 +3999,28 @@
           "instancesOf: (world: GraphSpecCheck.World, graph: string, key: string) => GraphSpecCheck.Placed[]",
           "isNamed: (value: unknown) => boolean",
           "jcs: (value: unknown) => string",
+          "leaveState: (graph: GraphSpecCheck.Graph, run: string, state: string, at?: string | null) => GraphSpecCheck.RunEntry[]",
           "lensAsAt: (graph: GraphSpecCheck.Graph, rule: string, axis: 'recorded' | 'real', date: string) => Record<string, string> | null",
           "LIMITS: { readonly block_chars: number; readonly items: number; readonly nesting: number; readonly join_documents: number; readonly join_items: number; }",
           "lint: (text: string) => { trap: string; line: number; }[]",
           "louvain: (n: number, links: readonly (readonly [number, number])[]) => number[]",
           "meshJoin: (q: { docs: string[]; config?: object; findings?: { confirms: string; refutes: string[]; }[]; spread?: string[]; sameDomain?: [string, string][]; }) => GraphSpecCheck.MeshJoin",
+          "moveRun: (graph: GraphSpecCheck.Graph, run: string, from: string, to: string, at?: string | null) => GraphSpecCheck.RunEntry[]",
           "named: (digits: string) => string",
           "notes: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }",
+          "overrideRunningRule: (graph: GraphSpecCheck.Graph, run: string, rule: string) => GraphSpecCheck.Graph",
           "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
+          "processPath: (graph: GraphSpecCheck.Graph, from: string, to: string) => string[] | null",
           "ProfileError: typeof GraphSpecCheck.ProfileError",
+          "promoteTransition: (graph: GraphSpecCheck.Graph, from: string, to: string, id: string) => { remove: [string, string, string]; lines: string[]; }",
           "proposerWarnings: (world: GraphSpecCheck.World, judgementGraph: string) => string[]",
           "quote: (s: string) => string",
           "readChange: (text: string) => GraphSpecCheck.ReadChange",
           "readings: (g: GraphSpecCheck.Graph, shared?: GraphSpecCheck.Graph) => Map<string, [string | undefined, string | undefined]>",
+          "refreshCurrent: (graph: GraphSpecCheck.Graph, run: string) => GraphSpecCheck.Graph",
           "reverseReading: (reading: string) => string",
+          "runLog: (graph: GraphSpecCheck.Graph, run: string) => GraphSpecCheck.RunEntry[]",
+          "runningRuleOf: (graph: GraphSpecCheck.Graph, run: string) => { rule: string | null; from: 'run' | 'process' | 'none'; process_default: string | null; }",
           "sameAs: (world: GraphSpecCheck.World) => { ones: string[][]; unresolved: { graph: string; thing: string; ref: string; in: string; }[]; guesses: { name: string; things: string[]; }[]; }",
           "SCHEMA_LABELS: Array<string>",
           "schemaFor: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]",
@@ -4020,7 +4033,9 @@
           "splitChangeset: (block: string) => { additions: string; changes: { line: number; lines: number[]; text: string; reason: string | null; }[]; basisOk: boolean; }",
           "Store: typeof GraphSpecCheck.Store",
           "tokens: (text: string) => [string, string, number, string, number][]",
+          "transitionsOf: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.ProcessTransition[]",
           "typeOf: (world: GraphSpecCheck.World, graph: string, key: string) => GraphSpecCheck.Placed | null",
+          "withEntries: (graph: GraphSpecCheck.Graph, run: string, entries: GraphSpecCheck.RunEntry[]) => GraphSpecCheck.Graph",
           "word: (readings: Map<string, [string | undefined, string | undefined]>, type: string) => string",
           "worldFromStore: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
         ],
@@ -4142,6 +4157,20 @@
           "rule: string",
           "says: string"
         ],
+        "coreOfEight": [
+          "value: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.CoreOfEight"
+        ],
+        "CoreOfEight": [
+          "interface",
+          "core: Record<string, Record<string, unknown>>",
+          "flags: Array<[code: string, id: string, detail: string]>",
+          "kind: Record<string, string>",
+          "kinds: Array<string>",
+          "view: Record<string, Record<string, unknown>>"
+        ],
+        "currentOf": [
+          "value: (graph: GraphSpecCheck.Graph, run: string) => string[]"
+        ],
         "cycleView": [
           "value: (graph: GraphSpecCheck.Graph, how: 'hide' | 'highlight') => { shown: string[]; highlighted: string[]; }"
         ],
@@ -4155,6 +4184,9 @@
           "lines: Array<number>",
           "summary: string",
           "text: string"
+        ],
+        "enterState": [
+          "value: (graph: GraphSpecCheck.Graph, run: string, state: string, at?: string | null) => GraphSpecCheck.RunEntry[]"
         ],
         "Graph": [
           "class",
@@ -4172,6 +4204,12 @@
           "static new (kind: 'date' | 'datetime', s: string): GraphSpecCheck.GTime",
           "kind: 'date' | 'datetime'",
           "s: string"
+        ],
+        "guardAllows": [
+          "value: (guard: GraphSpecCheck.ProcessGuard, ctx: Record<string, unknown>, functions?: Record<string, Record<string, (ctx: Record<string, unknown>) => unknown>>) => boolean"
+        ],
+        "guardOf": [
+          "value: (graph: GraphSpecCheck.Graph, transition: string) => GraphSpecCheck.ProcessGuard | null"
         ],
         "guessReadings": [
           "value: (type: string) => [string, string]"
@@ -4193,6 +4231,9 @@
         ],
         "jcs": [
           "value: (value: unknown) => string"
+        ],
+        "leaveState": [
+          "value: (graph: GraphSpecCheck.Graph, run: string, state: string, at?: string | null) => GraphSpecCheck.RunEntry[]"
         ],
         "lensAsAt": [
           "value: (graph: GraphSpecCheck.Graph, rule: string, axis: 'recorded' | 'real', date: string) => Record<string, string> | null"
@@ -4238,11 +4279,17 @@
           "standing: Record<string, 'contested' | 'asserted' | 'in-doubt' | 'guess'>",
           "states: Array<[name: string, things: Array<string>, documents: Array<string>, match: 'guess' | 'confirmed']>"
         ],
+        "moveRun": [
+          "value: (graph: GraphSpecCheck.Graph, run: string, from: string, to: string, at?: string | null) => GraphSpecCheck.RunEntry[]"
+        ],
         "named": [
           "value: (digits: string) => string"
         ],
         "notes": [
           "value: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }"
+        ],
+        "overrideRunningRule": [
+          "value: (graph: GraphSpecCheck.Graph, run: string, rule: string) => GraphSpecCheck.Graph"
         ],
         "OwnedComment": [
           "interface",
@@ -4260,6 +4307,27 @@
           "graph: string",
           "key: string"
         ],
+        "ProcessGuard": [
+          "interface",
+          "expression?: string | undefined",
+          "flag?: string | undefined",
+          "function?: string | undefined",
+          "id: string",
+          "shown: string",
+          "version?: string | undefined"
+        ],
+        "processPath": [
+          "value: (graph: GraphSpecCheck.Graph, from: string, to: string) => string[] | null"
+        ],
+        "ProcessTransition": [
+          "interface",
+          "carries: Array<string>",
+          "event: unknown",
+          "from: string | null",
+          "id: string",
+          "promoted: boolean",
+          "to: string | null"
+        ],
         "ProfileError": [
           "class",
           "static new (line: number, message: string, fix: string, at?: number, code?: string): GraphSpecCheck.ProfileError",
@@ -4272,6 +4340,9 @@
           "msg: string",
           "name: string",
           "stack?: string | undefined"
+        ],
+        "promoteTransition": [
+          "value: (graph: GraphSpecCheck.Graph, from: string, to: string, id: string) => { remove: [string, string, string]; lines: string[]; }"
         ],
         "proposerWarnings": [
           "value: (world: GraphSpecCheck.World, judgementGraph: string) => string[]"
@@ -4307,8 +4378,25 @@
         "readings": [
           "value: (g: GraphSpecCheck.Graph, shared?: GraphSpecCheck.Graph) => Map<string, [string | undefined, string | undefined]>"
         ],
+        "refreshCurrent": [
+          "value: (graph: GraphSpecCheck.Graph, run: string) => GraphSpecCheck.Graph"
+        ],
         "reverseReading": [
           "value: (reading: string) => string"
+        ],
+        "RunEntry": [
+          "interface",
+          "at: string | null",
+          "did: 'entered' | 'left'",
+          "seq: number",
+          "state: string",
+          "under: string | null"
+        ],
+        "runLog": [
+          "value: (graph: GraphSpecCheck.Graph, run: string) => GraphSpecCheck.RunEntry[]"
+        ],
+        "runningRuleOf": [
+          "value: (graph: GraphSpecCheck.Graph, run: string) => { rule: string | null; from: 'run' | 'process' | 'none'; process_default: string | null; }"
         ],
         "sameAs": [
           "value: (world: GraphSpecCheck.World) => { ones: string[][]; unresolved: { graph: string; thing: string; ref: string; in: string; }[]; guesses: { name: string; things: string[]; }[]; }"
@@ -4354,11 +4442,17 @@
         "tokens": [
           "value: (text: string) => [string, string, number, string, number][]"
         ],
+        "transitionsOf": [
+          "value: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.ProcessTransition[]"
+        ],
         "typeOf": [
           "value: (world: GraphSpecCheck.World, graph: string, key: string) => GraphSpecCheck.Placed | null"
         ],
         "Value": [
           "type = string | number | boolean | GraphSpecCheck.GTime | Array<GraphSpecCheck.Value> | null"
+        ],
+        "withEntries": [
+          "value: (graph: GraphSpecCheck.Graph, run: string, entries: GraphSpecCheck.RunEntry[]) => GraphSpecCheck.Graph"
         ],
         "word": [
           "value: (readings: Map<string, [string | undefined, string | undefined]>, type: string) => string"
