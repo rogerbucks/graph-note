@@ -376,3 +376,4 @@ export type { BandCriteria, DraftProposal, DraftRequest } from './sibling-drafts
 export { AltitudeTrail, FADE_AFTER, type AltitudeMove, type Consequence, type KeptDescent } from './browsing.ts';
 export { transitionAltitude, walkTransition } from './phase-altitude.ts';
 export type { PhaseAltitudePart, PhaseView, WalkedTransition } from './phase-altitude.ts';
+export * from './index-process.ts';

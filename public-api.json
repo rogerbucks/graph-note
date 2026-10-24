@@ -773,6 +773,17 @@
         "editInParts": [
           "value: (ix: MeshIndex, note: string, text: string, graph: string, key: string, change: (lines: string) => Edit) => Edit"
         ],
+        "EditPlan": [
+          "interface",
+          "affected: Array<'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule'>",
+          "coreChanged: boolean",
+          "dangling: Array<[string, string, string]>",
+          "gaps: Array<[string, string]>",
+          "graph: Graph",
+          "hidden: Array<[string, string]>",
+          "view: 'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule'",
+          "viewOnly: Array<[string, string]>"
+        ],
         "embeddedMarkdown": [
           "value: (note: string, heading?: string) => string"
         ],
@@ -1160,6 +1171,9 @@
         ],
         "GraphNames": [
           "type = Iterable<string> | ReadonlyMap<string, string>"
+        ],
+        "graphOf": [
+          "value: (nodes: Iterable<[string, Iterable<string>, Record<string, Value>]>, edges: Iterable<[string, string, string, Record<string, Value>?]>) => Graph"
         ],
         "graphOfBlock": [
           "value: (text: string) => string | null"
@@ -1741,6 +1755,9 @@
           "path?: string | undefined",
           "thing?: string | undefined",
           "view?: string | undefined"
+        ],
+        "loopsOf": [
+          "value: (ids: readonly string[], links: readonly [string, string][]) => string[][]"
         ],
         "makeList": [
           "value: (block: string, reading: NoteReading, graph: string, thing: string, key: string | null, shape: ListShape) => ListEdit"
@@ -2354,6 +2371,9 @@
         "placesFor": [
           "value: (dragged: string, boxes: readonly PlacedBox[], written?: readonly WrittenNudge[], centre?: string) => Landing[]"
         ],
+        "planEdit": [
+          "value: (views: ProcessViews, view: ProcessViewKind, edit: ProcessEdit) => EditPlan"
+        ],
         "playRefusal": [
           "value: (start: Start, moving: number) => string | null"
         ],
@@ -2522,6 +2542,62 @@
           "severity: 'error' | 'warning' | 'hint'",
           "span?: { line: number; character: number; end: number; } | undefined",
           "suggested?: string | undefined"
+        ],
+        "PROCESS_VIEW_LIMITS": [
+          "value: Readonly<Record<'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule', ReadonlyArray<ProcessFeature>>>"
+        ],
+        "PROCESS_VIEWS": [
+          "value: readonly ['state-machine', 'workflow', 'pipeline', 'event-flow', 'decision-table', 'petri-net', 'actor-model', 'schedule']"
+        ],
+        "ProcessCore": [
+          "interface",
+          "flags: Array<[string, string, string]>",
+          "graph: Graph",
+          "hash: string",
+          "view: Record<string, Record<string, Value>>"
+        ],
+        "processCoreOf": [
+          "value: (graph: Graph) => ProcessCore"
+        ],
+        "ProcessEdit": [
+          "interface",
+          "add?: Array<{ id: string; kind: string; props?: Record<string, Value>; }> | undefined",
+          "link?: Array<[string, string]> | undefined",
+          "remove?: Array<string> | undefined",
+          "set?: Array<{ id: string; props: Record<string, Value>; }> | undefined"
+        ],
+        "ProcessFeature": [
+          "type = 'parallel' | 'timing' | 'loops'"
+        ],
+        "processView": [
+          "value: (core: ProcessCore, kind: ProcessViewKind) => ProcessView"
+        ],
+        "ProcessView": [
+          "interface",
+          "cannot: ReadonlyArray<ProcessFeature>",
+          "core: string",
+          "incomplete: boolean",
+          "kind: 'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule'",
+          "links: Array<[string, string]>",
+          "nodes: Array<ProcessViewNode>"
+        ],
+        "ProcessViewKind": [
+          "type = 'state-machine' | 'workflow' | 'pipeline' | 'event-flow' | 'decision-table' | 'petri-net' | 'actor-model' | 'schedule'"
+        ],
+        "ProcessViewNode": [
+          "interface",
+          "hides: Array<string>",
+          "id: string",
+          "kind: string",
+          "marks: Array<string>"
+        ],
+        "ProcessViews": [
+          "class",
+          "static new (graph: Graph): ProcessViews",
+          "builds: number",
+          "core: ProcessCore",
+          "open: (kind: ProcessViewKind) => ProcessView",
+          "update: (graph: Graph) => boolean"
         ],
         "propertiesOf": [
           "value: (reading: NoteReading, graph: string, t: Target) => Property[]"
@@ -2808,6 +2884,9 @@
         ],
         "sampleExports": [
           "value: () => Record<string, ExportedData>"
+        ],
+        "saveEdit": [
+          "value: (views: ProcessViews, plan: EditPlan) => boolean"
         ],
         "sayWords": [
           "value: (entry: Words, values?: WordValues, language?: string) => string"
@@ -4190,11 +4269,11 @@
         ],
         "CoreOfEight": [
           "interface",
-          "core: Record<string, Record<string, unknown>>",
+          "core: Record<string, Record<string, GraphSpecCheck.Value>>",
           "flags: Array<[code: string, id: string, detail: string]>",
           "kind: Record<string, string>",
           "kinds: Array<string>",
-          "view: Record<string, Record<string, unknown>>"
+          "view: Record<string, Record<string, GraphSpecCheck.Value>>"
         ],
         "currentOf": [
           "value: (graph: GraphSpecCheck.Graph, run: string) => string[]"
@@ -4218,7 +4297,7 @@
         ],
         "Graph": [
           "class",
-          "static new (): GraphSpecCheck.Graph",
+          "static new (nodes: Map<string, [Set<string>, Record<string, GraphSpecCheck.Value>]>, edges: GraphSpecCheck.Edge[]): GraphSpecCheck.Graph",
           "edges: Array<GraphSpecCheck.Edge>",
           "has: (id: string, label: string) => boolean",
           "inc: (id: string, type?: string) => GraphSpecCheck.Edge[]",

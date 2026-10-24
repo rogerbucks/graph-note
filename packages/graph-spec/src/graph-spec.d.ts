@@ -49,6 +49,7 @@ declare namespace GraphSpecCheck {
   type Edge = [string, string, string, Record<string, Value>];
 
   class Graph {
+    constructor(nodes: Map<string, [Set<string>, Record<string, Value>]>, edges: Edge[]);
     /** id -> [labels, properties], in the order the things were written. */
     nodes: Map<string, [Set<string>, Record<string, Value>]>;
     edges: Edge[];
@@ -309,8 +310,8 @@ declare namespace GraphSpecCheck {
     kind: Record<string, string>;
     /** Each flag: its code, the thing and a detail. A ninth kind is flagged, never refused. */
     flags: [code: string, id: string, detail: string][];
-    view: Record<string, Record<string, unknown>>;
-    core: Record<string, Record<string, unknown>>;
+    view: Record<string, Record<string, Value>>;
+    core: Record<string, Record<string, Value>>;
   }
   /** A transition: a TRANSITION link, or a Transition thing promoted from one. */
   interface ProcessTransition {
