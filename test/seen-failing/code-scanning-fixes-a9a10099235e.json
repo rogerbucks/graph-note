@@ -1,0 +1,6 @@
+{
+  "file": "test/code-scanning-fixes.test.js",
+  "test": "the tests read a drawing by plain search, as their patterns did (js/polynomial-redos) > each search keeps its time on text made to slow a pattern",
+  "seen_failing_first": false,
+  "evidence": "The searches are test support, not product code: they are new with this commit, so nothing older could fail them. The fixed tests beside them changed no product code either."
+}

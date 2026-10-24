@@ -232,3 +232,9 @@ h3 {
   border-block-start: 1px solid var(--line);
   font-size: 0.95rem;
 }
+
+/* The live demo (site_demo): wide enough for the note and the edit pane side by side. */
+.demo-page .top,
+main.demo {
+  max-inline-size: 110rem;
+}

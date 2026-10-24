@@ -109,6 +109,25 @@ const NAMES = [
   'typeOf',
   'instancesOf',
   'inherited',
+  // the process core and its runs (editor spec §34)
+  'coreOfEight',
+  'transitionsOf',
+  'promoteTransition',
+  'processPath',
+  'guardOf',
+  'guardAllows',
+  'runningRuleOf',
+  'overrideRunningRule',
+  'runLog',
+  'currentOf',
+  'enterState',
+  'leaveState',
+  'moveRun',
+  'withEntries',
+  'refreshCurrent',
+  // the altitude and topic index (editor spec §32)
+  'altitudeIndex',
+  'searchIndex',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {
