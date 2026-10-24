@@ -13,6 +13,7 @@ export const PLUGINS_SOURCE_WORDS = {
   'plugins.none.source': 'No plug-in adds the source "{name}".',
   'plugins.none.step': 'No plug-in adds the step "{name}".',
   'plugins.none.diagram': 'No plug-in adds the diagram type "{name}".',
+  'plugins.none.provider': 'No plug-in adds the AI provider "{name}".',
   // what was called, by its title, as the sentences below name it
   'plugins.what.export': 'The export {title}',
   'plugins.what.storage': 'The storage {title}',

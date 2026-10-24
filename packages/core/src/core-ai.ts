@@ -42,6 +42,6 @@ export function coreAiProvider(): AiProvider {
     held.register(CORE_AI);
   }
   const provider = held.aiProvider(CORE_AI_PROVIDER);
-  if (!provider) throw new Error('the core’s own AI provider is not added');
+  if (!provider) throw new Error(word('plugins.none.provider', { name: CORE_AI_PROVIDER }));
   return provider;
 }
