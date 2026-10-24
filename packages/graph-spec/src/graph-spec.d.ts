@@ -284,6 +284,91 @@ declare namespace GraphSpecCheck {
   function clusterCycles(graph: Graph): string[][];
   /** What a view shows with a graph's cycles hidden or highlighted. */
   function cycleView(graph: Graph, how: 'hide' | 'highlight'): { shown: string[]; highlighted: string[] };
+  /** One thing in the altitude and topic index (editor spec §32). */
+  interface AltitudeEntry {
+    id: string;
+    tags: string[];
+    /** Each lens or profile that places it, and the level. */
+    altitudes: [string, number][];
+    profiles: string[];
+    contested: boolean;
+    /** Made from its certainty words; null when it has none. */
+    sort_key: number | null;
+  }
+  /** The index of a graph, derived from it, with the hash of its entries. */
+  function altitudeIndex(graph: Graph): { entries: AltitudeEntry[]; hash: string };
+  /** A search of the index, ranked by certainty sort key, then by how alike, then by id. */
+  function searchIndex(
+    index: { entries: AltitudeEntry[]; hash: string },
+    query?: { topic?: string; like?: string; lens?: string; level?: number; profile?: string },
+  ): { id: string; score: number; sort_key: number | null; contested: boolean }[];
+
+  /** The process core's view of a graph (editor spec §34): each thing's kind, what is flagged, and the view settings. */
+  interface CoreOfEight {
+    kinds: string[];
+    kind: Record<string, string>;
+    /** Each flag: its code, the thing and a detail. A ninth kind is flagged, never refused. */
+    flags: [code: string, id: string, detail: string][];
+    view: Record<string, Record<string, unknown>>;
+    core: Record<string, Record<string, unknown>>;
+  }
+  /** A transition: a TRANSITION link, or a Transition thing promoted from one. */
+  interface ProcessTransition {
+    id: string;
+    from: string | null;
+    to: string | null;
+    promoted: boolean;
+    event: unknown;
+    /** What it carries that makes it worth promoting: decision, review, comment or do. */
+    carries: string[];
+  }
+  /** A guard as data: an expression, or a function's name and version. */
+  interface ProcessGuard {
+    id: string;
+    expression?: string;
+    function?: string;
+    version?: string;
+    shown: string;
+    flag?: string;
+  }
+  /** One entry of a run's log. */
+  interface RunEntry {
+    seq: number;
+    did: 'entered' | 'left';
+    state: string;
+    under: string | null;
+    at: string | null;
+  }
+  function coreOfEight(graph: Graph): CoreOfEight;
+  function transitionsOf(graph: Graph): ProcessTransition[];
+  /** A TRANSITION link promoted to a Transition thing: the link to remove and the graph text to add. */
+  function promoteTransition(
+    graph: Graph,
+    from: string,
+    to: string,
+    id: string,
+  ): { remove: [string, string, string]; lines: string[] };
+  /** The shortest path between two things, each transition a step of its own; null when none joins them. */
+  function processPath(graph: Graph, from: string, to: string): string[] | null;
+  function guardOf(graph: Graph, transition: string): ProcessGuard | null;
+  /** Whether a guard holds; a named function runs the version the guard names. */
+  function guardAllows(
+    guard: ProcessGuard,
+    ctx: Record<string, unknown>,
+    functions?: Record<string, Record<string, (ctx: Record<string, unknown>) => unknown>>,
+  ): boolean;
+  function runningRuleOf(
+    graph: Graph,
+    run: string,
+  ): { rule: string | null; from: 'run' | 'process' | 'none'; process_default: string | null };
+  function overrideRunningRule(graph: Graph, run: string, rule: string): Graph;
+  function runLog(graph: Graph, run: string): RunEntry[];
+  function currentOf(graph: Graph, run: string): string[];
+  function enterState(graph: Graph, run: string, state: string, at?: string | null): RunEntry[];
+  function leaveState(graph: Graph, run: string, state: string, at?: string | null): RunEntry[];
+  function moveRun(graph: Graph, run: string, from: string, to: string, at?: string | null): RunEntry[];
+  function withEntries(graph: Graph, run: string, entries: RunEntry[]): Graph;
+  function refreshCurrent(graph: Graph, run: string): Graph;
 
   /** A claim as a person ranks it (editor spec §28): its words, never a number typed in. */
   interface MeshClaim {
@@ -367,6 +452,31 @@ declare namespace GraphSpecCheck {
     /** True only when the join left nothing in dispute. */
     settled: boolean;
   };
+
+  /** A thing named across the world's graphs. */
+  interface Placed {
+    graph: string;
+    key: string;
+  }
+  /**
+   * The things the world's SAME_AS links make one, as sorted `graph/key` names (editor spec §27, ARCH-6). Also the Refs
+   * that name nothing, and the names held in two graphs with no link between them, which stay a guess.
+   */
+  function sameAs(world: World): {
+    ones: string[][];
+    unresolved: { graph: string; thing: string; ref: string; in: string }[];
+    guesses: { name: string; things: string[] }[];
+  };
+  /** The type a thing is an instance of, through INSTANCE_OF, here or through a Ref; null when it has none. */
+  function typeOf(world: World, graph: string, key: string): Placed | null;
+  /** The instances of a type, in every graph, sorted by graph, then key. */
+  function instancesOf(world: World, graph: string, key: string): Placed[];
+  /** A thing's own properties and those it inherits from its types, the nearest winning; `from` says whose each is. */
+  function inherited(
+    world: World,
+    graph: string,
+    key: string,
+  ): { props: Record<string, Value>; from: Record<string, string> };
 
   /** The dialect linter: traps in a GQL text, each with its line. */
   function lint(text: string): { trap: string; line: number }[];

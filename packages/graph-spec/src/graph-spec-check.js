@@ -57,9 +57,14 @@ const { louvain } = require('./clusters/louvain.js');
 const { clustersOf } = require('./clusters/clusters.js');
 const { centroidId, centroidsOf } = require('./clusters/centroids.js');
 const { clusterCycles, cycleView } = require('./clusters/cycles.js');
+const processCore = require('./process/core.js');
+const runs = require('./process/runs.js');
+const { altitudeIndex, searchIndex } = require('./altitude/altitude-index.js');
 const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
 const { asAt, lensAsAt } = require('./mesh/as-at.js');
 const { afterTextMerge } = require('./mesh/after-text-merge.js');
+const { sameAs } = require('./mesh/same-as.js');
+const { inherited, instancesOf, typeOf } = require('./mesh/types-instances.js');
 
 // The API, its names in the order they have always had; test/graph-spec-check-api.test.mjs holds the list.
 module.exports = {
@@ -147,4 +152,25 @@ module.exports = {
   asAt,
   lensAsAt,
   afterTextMerge,
+  sameAs,
+  typeOf,
+  instancesOf,
+  inherited,
+  coreOfEight: processCore.coreOfEight,
+  transitionsOf: processCore.transitionsOf,
+  promoteTransition: processCore.promoteTransition,
+  processPath: processCore.processPath,
+  guardOf: processCore.guardOf,
+  guardAllows: processCore.guardAllows,
+  runningRuleOf: processCore.runningRuleOf,
+  overrideRunningRule: processCore.overrideRunningRule,
+  runLog: runs.runLog,
+  currentOf: runs.currentOf,
+  enterState: runs.enterState,
+  leaveState: runs.leaveState,
+  moveRun: runs.moveRun,
+  withEntries: runs.withEntries,
+  refreshCurrent: runs.refreshCurrent,
+  altitudeIndex,
+  searchIndex,
 };

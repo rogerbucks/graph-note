@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     # The quality metrics run the whole suite at once, twice, as the fresh clone does. That passed the default 4 GB
-    # ceiling (4.2 GB, 22 Oct 2026), so it gets CI's 6 GB too.
+    # ceiling (4.2 GB, 22 Oct 2026), so it gets CI's ceiling too.
     env:
-      THOUGHTKNOT_TEST_MEMORY_MB: 6144
+      THOUGHTKNOT_TEST_MEMORY_MB: 8192
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
