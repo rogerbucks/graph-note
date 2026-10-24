@@ -163,7 +163,10 @@ describe('a baseline committed worse than its parent’s', () => {
 
   test('CI runs it against the base of the change, and the release against the commit before', () => {
     const ci = read('.github/workflows/ci.yml');
-    assert.match(ci, /BASE: \$\{\{ github\.event\.pull_request\.base\.sha \|\| github\.event\.before \}\}/);
+    assert.match(
+      ci,
+      /BASE: \$\{\{ github\.event\.pull_request\.base\.sha \|\| github\.event\.merge_group\.base_sha \|\| github\.event\.before \}\}/,
+    );
     assert.ok(runCommands(ci).includes('node scripts/quality-check.mjs --baseline-since "$BASE"'));
     const quality = jobs(read('.github/workflows/release.yml')).quality.join('\n');
     assert.ok(runCommands(quality).includes('node scripts/quality-check.mjs --baseline-since HEAD~1'));
