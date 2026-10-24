@@ -299,6 +299,9 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
 - `../host-commands.ts` — every command of the plugin is a command of the built-in plug-in `thoughtknot.obsidian`.
   `addCommands` adds them to the registry, and `offerCommands` gives each to Obsidian under the id it always had, so
   hotkeys last. A command with a check (`available`) is offered only while it holds.
+- `../host-panels.ts` — the edit pane and the details pane are the two panels of the built-in plug-in
+  `thoughtknot.obsidian-panels`. Obsidian still owns each view and its state. `showPane` draws what a view gave into its
+  element through the registry's panel.
 - `../commands.ts` — `addAskCommands` adds the commands that reach outside the vault: Ask an AI model, Clear the record
   of sends, and Import from a database. `addCommands` adds them and the keyboard shortcuts' commands.
 - `../shortcuts.ts` — `addShortcutCommands` adds Show the keyboard shortcuts, and the drawing's own commands: Zoom in,

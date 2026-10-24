@@ -25,6 +25,7 @@ tab (webview)
 ## The source, `src/`
 
 - `host-commands.ts`: the commands are those of the built-in plug-in `thoughtknot.vscode`, given to VS Code under the ids `package.json` names. One that fails is said in an error message.
+- The tab is a web view of the browser editor's page, which has no element of ours to draw a panel into. So it adds no panel of the plug-in interface.
 - `extension.ts`: `activate` adds the commands: Open in ThoughtKnot here, and Ask AI (below). A tab is opened for the note in the active editor, or the one clicked.
   - The folder is the note's workspace folder, or the note's own folder outside one. A note's id is its path there.
   - A note in a hidden folder, such as `.git`, is never opened.
