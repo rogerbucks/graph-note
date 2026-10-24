@@ -28,6 +28,7 @@ import type { ViewShown } from './view-strip';
 import type { ProposalCard } from '../proposals/proposal-strip';
 import type { DiagramShown } from './type-strip';
 import type { BoxMoving } from './box-drag-view';
+import type { ProfileShown } from './profile-shown';
 import type { Exporting } from '../export/export-form';
 import type { LinkHost } from '../link-host';
 import type { CardImages } from './animated-images';
@@ -112,6 +113,8 @@ export interface ViewOptions {
   exporting?: Exporting;
   /** How its links move, as its style graph says (§7); none, every link still. */
   motion?: LinkMotion;
+  /** The viewer's personal profile (§39): how this card is shown to them alone; none, as everyone sees it. */
+  profile?: ProfileShown;
   /** Its links followed through Obsidian, and those that name nothing (§18); none, links shown as plain text. */
   links?: LinkHost;
   /** The images its things name, found in the vault, and the boxes a Picture draws one on (§18); none, no image shown. */

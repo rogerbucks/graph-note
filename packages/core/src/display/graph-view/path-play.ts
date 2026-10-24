@@ -11,6 +11,7 @@ import { openExportForm, paceOffered } from '../export/export-form';
 import { reducedMotion } from './details-nav';
 import { linkGroups, runnerOn } from './flow-marks';
 import { button } from '../button';
+import { pacingIndicator, startPace } from './profile-shown';
 import type { ViewOptions } from './view-options';
 
 /** The paths of a graph that can be played, by id and title: those with a step. */
@@ -51,10 +52,12 @@ export class PathPlay {
       this.update();
     });
     this.back = button(controls, word('path.previous'), 'chevron-left', () => {
+      paced('stepped-back');
       this.auto.previous();
       this.update();
     });
     this.on = button(controls, word('path.next'), 'chevron-right', () => {
+      if (this.auto.playing) paced('skipped-ahead');
       this.auto.next();
       this.update();
     });
@@ -63,8 +66,14 @@ export class PathPlay {
       .createEl('label', { cls: 'thoughtknot-walk-pace', text: word('export.pace') })
       .createEl('select', { attr: { 'aria-label': word('export.pace') } });
     for (const ms of PATH_PACES) pace.createEl('option', { text: paceOffered(ms), attr: { value: String(ms) } });
-    pace.value = String(DEFAULT_PACE);
+    pace.value = String(startPace(o, DEFAULT_PACE));
+    this.auto.setPace(Number(pace.value));
     pace.addEventListener('change', () => this.auto.setPace(Number(pace.value)));
+    // the pace this session shows, with its reason, and one tap back to the usual (§39, pacing_automatic)
+    const paced = pacingIndicator(controls, o, (ms) => {
+      pace.value = String(ms);
+      this.auto.setPace(ms);
+    });
     const exporting = o.exporting;
     if (exporting)
       // always opens the form on this path, in place of one already open, never closing it

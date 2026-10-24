@@ -50,7 +50,6 @@ import { overviewInParts } from './note-store';
 import type { ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
-
 /**
  * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
  * editor open in place keeps its place in the card, so the text can still be made small enough to draw.
@@ -355,6 +354,7 @@ export async function renderBlock(
       indent: plugin.settings.indent,
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
+      profile: plugin.profiles.shown(), // the person's own profile, for this card alone (§39)
       aids: aidsOf(plugin.settings),
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
