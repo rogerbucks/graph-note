@@ -138,6 +138,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   person applies it in one step and undoes it in one step. A type that grants permissions, or is kept as history, is
   marked for a closer look.
 - `index-mesh.ts` — the mesh's part of the core's entry, kept apart so `index.ts` stays short.
+- `index-process.ts` — the process views' part of the core's entry, kept apart for the same reason.
 
 #### Altitude
 
@@ -149,6 +150,16 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   link (editor spec §32, browsing_leaves_no_links).
 - `phase-altitude.ts` — a transition that changes the view's depth, as a part that can be swapped or removed (editor
   spec §32, phase_shifts_altitude).
+
+#### Process views
+
+- `process-core.ts` — one process core under every view (editor spec §34, one_process_core). It is graph-spec's eight
+  kinds with the view settings kept apart. `ProcessViews` works out each view when first asked for and keeps it until
+  the core changes (process_views_cached).
+- `process-views.ts` — the eight process views and what each cannot show: loops, parallel steps or timing (editor spec
+  §34, views_declare_limits). A loop is folded into one node, and the rest is marked where it is.
+- `edits-from-views.ts` — an edit made in any view, planned and then saved into the core (editor spec §34,
+  edits_from_any_view). The plan lists the views it changes, its gaps, what the view hides and the dangling links.
 
 #### Deferred things
 

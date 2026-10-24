@@ -118,6 +118,10 @@ and no module requires one that requires it back.
     (`test/same-as-cases.json`).
   - `types-instances.js` — lasting types and their instances. An instance links to its type with INSTANCE_OF, here or
     through a Ref, and has its type's properties unless it sets its own (`test/types-instances-cases.json`).
+  - `contexts.js` — contexts, where links may join (editor spec §61). Each graph is in one context: a client, note,
+    folder or the vault. Guesses across contexts show only when turned on. Things in two contexts are compared only
+    under one shared schema or a SAME_AS link, and across contexts only a person writes one. `canRead` keeps out what a viewer
+    may not read (`test/contexts.test.mjs`).
 
 ## Beside them
 
