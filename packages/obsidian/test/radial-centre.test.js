@@ -139,6 +139,27 @@ describe('where the note is edited', () => {
     }
   });
 
+  // proves: radial_centre_anywhere
+  test('Radial can be chosen around a thing selected even where radial does not fit, and is drawn around it', async () => {
+    // pluto is joined to nothing, so a radial drawing does not fit with no centre picked
+    const apart = noteOf(`${SKY},\n(pluto:Planet {name: 'Pluto'})`);
+    const { env } = await loaded(apart);
+    try {
+      const { el } = await show(env, apart, 0);
+      labelled(el, 'Diagram type').click();
+      assert.equal(saying(el, 'Radial').disabled, true, 'nothing selected: radial does not fit');
+      labelled(el, 'Diagram type').click();
+      select(el, 'mars');
+      labelled(el, 'Diagram type').click();
+      const tile = saying(el, 'Radial, around Mars');
+      assert.equal(tile.disabled, false, 'with a thing selected, Radial can be chosen');
+      tile.click();
+      await until(() => /type: 'radial', centre: 'mars'/.test(env.state.files.get(PATH)));
+    } finally {
+      env.uninstall();
+    }
+  });
+
   // proves: radial_centre_menu
   test('a right-click on a thing opens a menu with Centre here; Escape closes it', async () => {
     const { env } = await loaded(NETWORK);
@@ -181,9 +202,9 @@ describe('where the note is edited', () => {
       const right = box(el, 'sun').dispatch('contextmenu', { clientX: 40, clientY: 30 });
       assert.equal(menu(el), null, 'already the centre');
       assert.equal(right.defaultPrevented, false, 'the host’s own menu stays');
-      // two things: a radial drawing needs three, so there is nothing to offer
-      const pair = noteOf(`// graph: pair\n(a:Thing {name: 'A'}),\n(b:Thing {name: 'B'}),\n(a)-[:KNOWS]->(b)`);
-      const other = await show(env, pair, 0);
+      // one thing alone: there is nothing to draw around it, so nothing to offer
+      const lone = noteOf(`// graph: lone\n(a:Thing {name: 'A'})`);
+      const other = await show(env, lone, 0);
       const none = box(other.el, 'a').dispatch('contextmenu', { clientX: 40, clientY: 30 });
       assert.equal(menu(other.el), null, 'radial does not fit');
       assert.equal(none.defaultPrevented, false, 'the host’s own menu stays there too');

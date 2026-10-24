@@ -1,6 +1,7 @@
 // A radial drawing around a chosen centre (editor spec §15, radial_centre_chosen). The style graph's Diagram may name
 // the thing at the middle of a radial drawing. The others sit in rings by how many links away they are. With none named,
-// or the one named not in the drawing, the centre is the thing with the most links. Spans types.ts and the style checks.
+// or the one named not in the drawing, the centre is the thing with the most links. Around a thing picked it is always
+// drawn (radial_centre_anywhere). Spans types.ts and the style checks.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
@@ -8,7 +9,7 @@ import { directions, draw } from '../src/render.ts';
 import { loadEngine } from '../src/engine.ts';
 import { readStyle } from '../src/style.ts';
 import { styledDrawing } from '../src/style-source.ts';
-import { diagramFor, diagramOffer } from '../src/types.ts';
+import { diagramFor } from '../src/types.ts';
 
 const LONE = `// graph: lone
 (a:Thing {name: 'A'}),
@@ -59,11 +60,18 @@ describe('a radial drawing around a chosen centre', () => {
     }
   });
 
-  // proves: radial_centre_chosen
-  test('says the chosen centre when a thing is not joined to it', () => {
-    const { plain, style, g } = shown(LONE, "(d1:Diagram {type: 'radial', centre: 'c'})");
-    const radial = diagramOffer(plain, style, g).fits.find((f) => f.type === 'radial');
-    assert.equal(radial.why, 'a radial drawing needs every thing joined to the centre, C, and A is not');
+  // proves: radial_centre_anywhere
+  test('is drawn even with a thing joined to nothing, two things, or a group (Roger, 24 Oct 2026)', async () => {
+    const engine = await loadEngine();
+    const around = (data, centre, ...more) => {
+      const { plain, style, g } = shown(data, `(d1:Diagram {type: 'radial', centre: '${centre}'})`, ...more);
+      const drawing = styledDrawing(plain, style, g);
+      const boxes = draw(drawing, engine).svg.match(/class="node"/g) ?? [];
+      assert.deepEqual([drawing.diagram?.type, boxes.length], ['radial', drawing.boxes.length], centre);
+    };
+    around(LONE, 'c');
+    around(`// graph: pair\n(a:Thing {name: 'A'}),\n(b:Thing {name: 'B'})`, 'b');
+    around(SKY, 'moon', "(n1:Nudge {word: 'group', thing: 'mars', group: 'Red'})");
   });
 
   // proves: radial_centre_chosen

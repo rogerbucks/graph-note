@@ -1,6 +1,6 @@
 // The centre of a radial drawing, picked on its card (spec §15, radial_centre_pick). A thing's details offer Centre
 // here, and so do C on its box and a right-click on it (radial_centre_menu). The drawing is laid out again around it,
-// and each box glides from where it was. A card drawn as another type is drawn radial around it, where radial fits
+// and each box glides from where it was. A card drawn as any other type is drawn radial around it, fitting or not
 // (radial_centre_anywhere). Where the note is edited, the centre is saved in the style graph. In reading view it is only
 // looked at, never saved, as a diagram type is (type_try_reading). A radial drawing's strip says its centre and how to
 // pick another (radial_centre_hint). While a centre is picked, it gives the way back to the usual centre: the thing
@@ -18,7 +18,8 @@ export function pickedCentre(style: Pick<StyleGraph, 'diagrams'>, view?: string)
 
 /**
  * What a card is given to put a thing in the centre, for `drawing` in `view` as `offer` has it. When drawn radial, it
- * gets its centre. Wherever a radial drawing fits, from any type, it gets the way to put a thing there. That is saved by
+ * gets its centre. With two things or more, from any type, it gets the way to put a thing there: radial always fits
+ * around a thing picked. That is saved by
  * `write`, or only looked at by `trying` (radial_centre_anywhere).
  */
 export function centreShown(
@@ -32,7 +33,7 @@ export function centreShown(
 ): Partial<DiagramShown> {
   const plan = offer.choice.plan,
     centre = plan?.type === 'radial' ? plan.centre : undefined;
-  if (centre === undefined && !offer.fits.some((f) => f.type === 'radial' && f.fits)) return {};
+  if (centre === undefined && drawing.boxes.length < 2) return {};
   const text = (key: string) => drawing.boxes.find((b) => b.key === key)?.text ?? key;
   const radial = (key: string | null): DiagramWrite => ({
     type: 'radial',
@@ -69,8 +70,9 @@ export function aroundSelected(
   toggle: HTMLElement,
   d: DiagramShown,
   where?: () => TypeLeftAt,
-): { tile: (b: HTMLElement) => void; put: () => boolean } {
-  let tile: HTMLElement | null = null;
+): { tile: (b: HTMLButtonElement, fits: boolean) => void; put: () => boolean } {
+  let tile: HTMLButtonElement | null = null,
+    fits = true;
   const around = (): string | undefined => {
     const key = where?.().selected;
     return key && d.canCentre?.(key) ? key : undefined;
@@ -78,9 +80,14 @@ export function aroundSelected(
   toggle.addEventListener('click', () => {
     const key = around();
     tile?.setText(key ? word('type.radial-around', { thing: d.textOf?.(key) ?? key }) : word('type.radial'));
+    // around a thing selected, radial can always be chosen, whether or not it fits with no centre picked
+    if (tile) tile.disabled = !fits && !key;
   });
   return {
-    tile: (b) => (tile = b),
+    tile: (b, fit) => {
+      tile = b;
+      fits = fit;
+    },
     put: () => {
       const key = around();
       return !!key && !!d.putCentre?.(key);
