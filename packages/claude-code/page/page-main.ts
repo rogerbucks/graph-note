@@ -12,7 +12,7 @@
 import { installDomHelpers } from '@thoughtknot/core/display/dom-helpers';
 import { installHost, notice, readInHostDirection } from '@thoughtknot/core/display/host';
 import { toggleExportForm } from '@thoughtknot/core/display/export/export-form';
-import { button } from '@thoughtknot/core/display/graph-view/view-bar';
+import { button } from '@thoughtknot/core/display/button';
 import { gqlBlocks } from '../../core/src/blocks.ts';
 import { word } from '../../core/src/words.ts';
 import { readNote } from '../../core/src/drawing.ts';

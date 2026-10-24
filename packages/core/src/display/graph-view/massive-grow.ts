@@ -6,7 +6,7 @@ import { word } from '@thoughtknot/core';
 import type { GraphDrawing } from '@thoughtknot/core';
 import { Expansion } from '../../expand-on-demand.ts';
 import type { Rect } from '../../search-fly.ts';
-import { button } from './view-bar';
+import { button } from '../button';
 
 /** The id of the box the grown picture is shown in. */
 export const GROWN = 'grown';

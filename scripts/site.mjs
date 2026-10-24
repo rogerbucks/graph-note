@@ -6,14 +6,17 @@
 //
 // Usage:
 //   node scripts/site.mjs --out DIR [--sha SHA] [--date YYYY-MM-DD] [--releases FILE] [--images DIR] [--url URL]
+//     [--no-demo]
 //
 // --releases is `gh release list --json tagName,publishedAt,isPrerelease` saved to a file; without it the version is
 // the manifest's. --images is the folder scripts/wiki-screens.mjs wrote: its card.png is shown when it is there. --url
-// is the page's address, for another domain; the project's own, thoughtknot.app, is the default.
+// is the page's address, for another domain; the project's own, thoughtknot.app, is the default. The live demo
+// (scripts/site-demo.mjs) is built into demo/ unless --no-demo is given.
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SHOTS } from './wiki-screens.mjs';
+import { buildDemo } from './site-demo.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = 'https://github.com/rogerbucks/thoughtknot';
@@ -22,6 +25,24 @@ const LICENCE = 'https://www.mozilla.org/en-US/MPL/2.0/';
 
 /** The page's address, the project's own domain served by GitHub Pages, used when no other is given. */
 export const SITE_URL = 'https://thoughtknot.app/';
+
+/**
+ * What the demo page may load and run (site_demo): its own files only. Its scripts may compile WebAssembly, the layout
+ * engine and Import's SQLite, and start workers from their own text. It sends nothing anywhere, so a fetch, a form or a
+ * frame from elsewhere is refused by the browser as well as by the code.
+ */
+export const DEMO_POLICY = [
+  "default-src 'none'",
+  "script-src 'self' 'wasm-unsafe-eval'",
+  "worker-src 'self' blob:",
+  "style-src 'self'",
+  "style-src-attr 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self'",
+  "connect-src 'self' data: blob:",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join('; ');
 
 /** The languages written right to left, by their primary code. */
 const RIGHT_TO_LEFT = new Set(['ar', 'dv', 'fa', 'he', 'ps', 'ur', 'yi']);
@@ -120,6 +141,7 @@ function llmsText({ words, url }) {
     '## Optional',
     '',
     `- [Home page](${url}): this page for people`,
+    `- [Live demo](${url}demo.html): ThoughtKnot in the browser, drawing the project's own graphs`,
     `- [Privacy](${url}privacy.html): what ThoughtKnot keeps, where, and how to delete it`,
     `- [Licence](${LICENCE}): Mozilla Public License 2.0`,
     '',
@@ -127,12 +149,12 @@ function llmsText({ words, url }) {
 }
 
 /**
- * Every file of the site but the ones copied as they are, by name. These are the home page, the privacy page,
+ * Every file of the site but the ones copied as they are, by name. These are the home page, the privacy page, the demo,
  * robots.txt, sitemap.xml and llms.txt. The last is .nojekyll, which tells GitHub Pages to publish the folder as it is.
- * `template` is site/index.html and `privacy` site/privacy.html; `catalogue` is site/words.json; `image` is
- * {file, alt, width, height} or null.
+ * `template` is site/index.html, `privacy` site/privacy.html and `demo` site/demo.html. `catalogue` is site/words.json;
+ * `image` is {file, alt, width, height} or null.
  */
-export function renderSite({ template, privacy, catalogue, version, sha, today, url = SITE_URL, image = null }) {
+export function renderSite({ template, privacy, demo, catalogue, version, sha, today, url = SITE_URL, image = null }) {
   const lang = catalogue.language;
   const words = Object.fromEntries(
     Object.entries(catalogue.words).map(([k, w]) => [k, withPlaceholders(w, { version, sha, date: today })]),
@@ -144,6 +166,7 @@ export function renderSite({ template, privacy, catalogue, version, sha, today, 
     locale: escapeHtml(lang.replace('-', '_')),
     url: escapeHtml(url),
     repo: REPO,
+    'demo-policy': DEMO_POLICY,
     wiki: WIKI,
     'structured-data': scriptJson(structuredData({ description, url, version, image })),
     'image-meta': image
@@ -154,12 +177,12 @@ export function renderSite({ template, privacy, catalogue, version, sha, today, 
       : '',
   };
   return {
-    ...fillPages({ 'index.html': template, 'privacy.html': privacy }, words, values),
+    ...fillPages({ 'index.html': template, 'privacy.html': privacy, 'demo.html': demo }, words, values),
     'robots.txt': `User-agent: *\nAllow: /\n\nSitemap: ${url}sitemap.xml\n`,
     'sitemap.xml': [
       '<?xml version="1.0" encoding="UTF-8"?>',
       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-      ...[url, `${url}privacy.html`].map(
+      ...[url, `${url}privacy.html`, `${url}demo.html`].map(
         (loc) => `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`,
       ),
       '</urlset>',
@@ -188,6 +211,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const files = renderSite({
     template: readFileSync(join(ROOT, 'site/index.html'), 'utf8'),
     privacy: readFileSync(join(ROOT, 'site/privacy.html'), 'utf8'),
+    demo: readFileSync(join(ROOT, 'site/demo.html'), 'utf8'),
     catalogue: json('site/words.json'),
     version: latestVersion(releases, json('manifest.json').version),
     sha: (flag(args, '--sha') ?? 'main').slice(0, 7),
@@ -201,4 +225,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   for (const [name, text] of Object.entries(files)) writeFileSync(join(out, name), text);
   for (const name of ['site.css', 'icon.svg']) copyFileSync(join(ROOT, 'site', name), join(out, name));
   if (shown) copyFileSync(picture, join(out, `${PICTURE}.png`));
+  if (!args.includes('--no-demo')) await buildDemo(join(out, 'demo'));
 }

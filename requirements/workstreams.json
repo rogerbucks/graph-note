@@ -350,6 +350,7 @@
       "format_version_named",
       "schema_version_moves",
       "rename_follows_notes",
+      "same_as_across_graphs",
       "mesh_text_canonical",
       "mesh_index_rebuilds",
       "mesh_work_in_engine",
@@ -812,7 +813,8 @@
     "title": "Project home page",
     "size": "S",
     "requirements": [
-      "landing_page"
+      "landing_page",
+      "site_demo"
     ]
   },
   "D3": {
@@ -1082,6 +1084,18 @@
       "discover_compare_sets",
       "discover_group_names",
       "discover_watch_rule"
+    ]
+  },
+  "CX1": {
+    "title": "Contexts: where links may join",
+    "size": "S",
+    "requirements": [
+      "context_named",
+      "context_guess_default",
+      "context_guess_filter",
+      "context_names_apart",
+      "context_same_as_confirmed",
+      "context_no_leak"
     ]
   }
 }

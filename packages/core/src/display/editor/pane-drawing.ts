@@ -3,11 +3,36 @@
 // the editor has none: the card's own drawing is its drawing. It is laid out apart from the interface, as every drawing
 // is (spec §9). A graph typed or pasted past a limit is not drawn, and a banner beside its text says why. A graph too
 // large to lay out is shown as its overview under the banner, where the host gives its colours (§53, scale_massive_card).
-import { depthOf, parked, readStyle, startingSwitches, ViewState, word } from '@thoughtknot/core';
-import type { Drawn, FocusDepth, GraphDrawing, NoteReading, PaneSession, Refusal, Settings } from '@thoughtknot/core';
+// A block too large to read at once is read into a store in memory, a part at a time. It is shown as its overview
+// from there, under the banner (§53, scale_in_parts). It starts with the filter saved in the note's style block, and a
+// filter chosen is saved there, as for any overview (scale_filter_live).
+import {
+  depthOf,
+  MeshIndex,
+  memoryBackend,
+  parked,
+  readStyle,
+  setInParts,
+  startingSwitches,
+  storedGraphs,
+  storedStyle,
+  ViewState,
+  word,
+} from '@thoughtknot/core';
+import type {
+  Drawn,
+  FocusDepth,
+  GraphDrawing,
+  NoteReading,
+  PaneSession,
+  PropType,
+  Refusal,
+  Settings,
+} from '@thoughtknot/core';
 import type { FilterKeep } from '../../filter-saved.ts';
 import type { Palette } from '../../palette.ts';
 import { massiveView } from '../graph-view/massive-view';
+import { massiveThing } from '../graph-view/massive-thing';
 import { Lifecycle } from '../lifecycle';
 import { refusalBanner } from '../refusal-banner';
 import { GraphView } from '../graph-view/graph-view';
@@ -24,6 +49,8 @@ export interface PaneHost {
   palette?: Palette;
   /** Saves a filter chosen on the overview in the graph's style block (scale_filter_live). Not set: only tried. */
   saveFilter?: (graph: string, keep: FilterKeep) => void;
+  /** The note's whole text, for the style block of a block too large to read at once. Not set: its filter is not read. */
+  noteText?: () => string;
 }
 
 /** A drawing given the direction set on the settings page, unless its own style sets one (§6, §15, §21); else the best fit. */
@@ -100,6 +127,8 @@ export class PaneDrawing extends Lifecycle {
   private readonly host: PaneHost;
   /** The pane's View menu (§25): started from the settings, kept while the pane redraws what is typed. */
   private state: ViewState | null = null;
+  /** The store a block too large to read at once is read into, made when first needed. */
+  private store: MeshIndex | null = null;
 
   constructor(host: PaneHost) {
     super();
@@ -118,6 +147,50 @@ export class PaneDrawing extends Lifecycle {
       props: (key) => reading.world[d.graph]?.p(key) ?? {},
       chosen: style.filters.find((f) => f.view === undefined)?.keep,
       ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(d.graph, keep) } : {}),
+    });
+  }
+
+  /**
+   * Shows the session's block, too large to read at once, as its overview under the banner. It is read into the store a
+   * part at a time, with the page's own work done between parts. Nothing is shown for any other refusal.
+   */
+  private inParts(host: HTMLElement, s: PaneSession, why: Refusal, stale: () => boolean, on: Choosing): void {
+    const { palette } = this.host;
+    const over = 'limit' in why ? why.limit : undefined;
+    if (!palette || (over !== 'text-bytes' && over !== 'text-lines')) return;
+    const ix = (this.store ??= new MeshIndex(memoryBackend()));
+    const pause = () => new Promise<void>((done) => host.win.setTimeout(done, 0));
+    const was = s.text,
+      text = `\`\`\`gql\n${was}\n\`\`\`\n`;
+    // a change to a thing chosen: made on its lines in the block, then put in the pane's text, as a quick fix is
+    const change = (key: string) => (prop: string, type: PropType, words: string) => {
+      const edit = setInParts(ix, { note: 'pane', text, graph: s.graph }, key, prop, type, words);
+      return Promise.resolve(
+        edit.ok ? fixInPane(s, on, was, edit.text.split('\n').slice(1, -2).join('\n')) : edit.reason,
+      );
+    };
+    void storedGraphs(ix, 'pane', text, pause).then((graphs) => {
+      const stored = graphs.get(s.graph);
+      if (!stored || stale()) return;
+      const slot = host.createDiv();
+      const { noteText, saveFilter } = this.host;
+      // the style block is read from the whole note, as it may come after the block
+      const read = noteText && storedStyle(noteText(), stored);
+      const saved = read?.style.filters.find((f) => f.view === undefined)?.keep;
+      massiveView(slot, stored.drawing, {
+        graph: s.graph,
+        palette,
+        layout: (part, by) => this.host.layout(part, by),
+        props: stored.props,
+        ...(saved ? { chosen: saved } : {}),
+        ...(saveFilter ? { chose: (keep: FilterKeep) => saveFilter(s.graph, keep) } : {}),
+        picked: (key) => massiveThing(slot, { key, props: stored.props(key), readOnly: false, change: change(key) }),
+      });
+      for (const p of read?.problems ?? [])
+        slot.createEl('p', {
+          cls: 'thoughtknot-hint thoughtknot-style-problem',
+          text: word('massive.style-problem', { why: p.message }),
+        });
     });
   }
 
@@ -156,6 +229,7 @@ export class PaneDrawing extends Lifecycle {
         );
         if (!view) {
           if (d && drawn && 'reason' in drawn && drawn.reason === 'too-large') this.overview(host, d, reading);
+          if (reading.tooLarge) this.inParts(host, s, reading.tooLarge, stale, on);
           return;
         }
         this.view = view;

@@ -916,7 +916,7 @@
       "role": "Senior coder and QA / test engineer",
       "area": "test",
       "title": "77 fixed sleeps remain in 26 plugin test files",
-      "risk": "The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite is never skipped before a merge, so a release waits on a rerun.",
+      "risk": "The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite runs on main after every merge and before a release, so a release waits on a rerun.",
       "evidence": [
         "test/fixed-sleeps.json:2",
         "test/fixed-sleeps.json:25",
@@ -1349,7 +1349,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
+      "status": "done",
+      "done_in": "#1084",
       "wave": "Wave 9 · Slice 6 the mesh"
     },
     {
@@ -3883,7 +3884,8 @@
         "packages/core/src/theme.ts:70",
         "packages/core/src/view-profile.ts:104",
         "packages/graph-spec/src/rules/lenses.js:11",
-        "packages/graph-spec/src/rules/lenses.js:18"
+        "packages/graph-spec/src/rules/lenses.js:18",
+        "packages/core/src/type-suggestion.ts:128"
       ],
       "likelihood": "low",
       "impact": "high",
@@ -4222,6 +4224,48 @@
       },
       "status": "open",
       "wave": "Wave 7 · Language, theming, the standalone app and massive graphs"
+    },
+    {
+      "id": "SEC-18",
+      "role": "Code scanning (CodeQL)",
+      "area": "security",
+      "title": "Tests that read a drawing with patterns that run slow",
+      "risk": "Fifteen patterns in the tests read the drawings and notes the code makes. Their time grew with the square of the text's length, so the code scan counted each as high. Main's code scan stopped the nightly.",
+      "evidence": [
+        "packages/core/test/export.test.js",
+        "packages/core/test/link-flow.test.js",
+        "packages/core/test/sheet-scope.js",
+        "test/colour-alone.test.js"
+      ],
+      "likelihood": "low",
+      "impact": "low",
+      "decision": "fix-now",
+      "fix": "Read each by plain search with the helpers in packages/core/test/text-find.js.",
+      "check": "test/code-scanning-fixes.test.js holds each helper to its pattern's result, under a time limit. CI's code-scan job fails on any such pattern.",
+      "paths": [
+        "packages/core/test/text-find.js",
+        "packages/core/test/ai-matrix.test.js",
+        "packages/core/test/export-pictures.test.js",
+        "packages/core/test/export.test.js",
+        "packages/core/test/link-flow.test.js",
+        "packages/core/test/path-animation.test.js",
+        "packages/core/test/proposals-fixtures.js",
+        "packages/core/test/sheet-scope.js",
+        "test/colour-alone.test.js"
+      ],
+      "effort": "hours",
+      "raised": "2026-10-24",
+      "reviewed": {
+        "date": "2026-10-24",
+        "commit": "2540699ea52a34cc93db6f593b6643f9dc21bd2e"
+      },
+      "status": "done",
+      "done_in": "#1110",
+      "prevented_by": [
+        "test/code-scanning-fixes.test.js",
+        "test/code-scan.test.js",
+        "scripts/code-scan.mjs"
+      ]
     }
   ]
 }

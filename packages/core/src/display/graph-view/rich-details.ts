@@ -10,9 +10,9 @@ import { Lifecycle } from '../lifecycle';
 import { attachmentsOf, linksHeld, noteOf, withMeant, word } from '@thoughtknot/core';
 import type { Target, View } from '@thoughtknot/core';
 import { noteControls } from './note-controls';
-import { button } from './view-bar';
+import { button } from '../button';
 import { linkAnchor, renderLinks } from '../links/links-list';
-import type { LeftAt } from '../links/link-types';
+import type { LeftAt } from '../link-host';
 import type { ViewOptions } from './view-options';
 
 /** A text that holds Markdown, so is worth Obsidian's renderer: any of its marks, a link's among them. */

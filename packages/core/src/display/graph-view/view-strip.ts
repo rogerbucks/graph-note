@@ -5,7 +5,7 @@
 // style's own blend of its hue (styled_paths_and_views).
 import { hueColour, lookTags, word } from '@thoughtknot/core';
 import type { LegendChoice, LegendEntry, Outside, ThingLook, View } from '@thoughtknot/core';
-import { button } from './view-bar';
+import { button } from '../button';
 
 /** What a drawing shown as a view is given, beyond a plain drawing's options. */
 export interface ViewShown {

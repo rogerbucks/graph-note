@@ -137,4 +137,9 @@ export const CORE_KEPT = {
   'packages/core/src/name-suggestions.ts': '*',
   // a CSS media query asking whether the screen is touched, never shown to a person
   'packages/core/src/display/graph-view/space-view-panel.ts': ['(pointer: coarse)'],
+  // the ready-made lenses' saved queries and the Lens line written into a note: graph text, never translated. Also
+  // the refusals a host's developer meets when a lens cannot be saved
+  'packages/core/src/lens-library.ts': '*',
+  // why a phase part refuses a transition that starts elsewhere: a developer's contract error
+  'packages/core/src/phase-altitude.ts': '*',
 };

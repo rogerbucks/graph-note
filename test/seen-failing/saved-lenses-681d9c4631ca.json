@@ -1,0 +1,6 @@
+{
+  "file": "packages/graph-spec/test/saved-lenses.test.mjs",
+  "test": "lens_is_saved_query > a lens joins and can be contested like any claim",
+  "seen_failing_first": false,
+  "evidence": "It checks a lens through the mesh join, which already worked: a lens is plain graph data, so nothing new was needed"
+}
