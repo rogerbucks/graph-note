@@ -10,6 +10,8 @@ export const EDITING_SOURCE_WORDS = {
   'editing.not-in-block': '{thing} is not written in this block: edit it where it is written, in graph {graph}',
   'editing.no-link-number': 'this block has no link number {number}',
   'editing.name-taken': '{name} is already a name in graph {graph}: choose another',
+  'editing.password-refused':
+    'A password is never written into a graph. Name it with a SecretRef, and keep its value in the environment or your secret store.',
   // a nudge, a look or a view's setting written to the style graph (style-edit.ts)
   'editing.style.direction': 'a direction nudge names one of {among}',
   'editing.style.look-place': 'a look is for one view or one path',

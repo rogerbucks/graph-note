@@ -2,7 +2,7 @@
 // Redacted things are left out and listed in the gap summary, AI-assisted content is labelled, and nothing is blocked.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { confirmExport, planExport } from '../src/export-code.ts';
+import { backToExport, confirmExport, driftOf, planExport } from '../src/export-code.ts';
 import { CONFIRM, graphOf } from './export-code-fixtures.js';
 
 const WORK = `// graph: work
@@ -38,4 +38,11 @@ test('with no corporate setting nothing is redacted or labelled', () => {
   const record = confirmExport(planExport('work', g), g, CONFIRM);
   assert.deepEqual(Object.keys(record.things), ['plan', 'salary', 'draft', 'memo']);
   assert.deepEqual(record.aiAssisted, []);
+});
+
+test('an export made under a corporate setting shows no drift from its own redactions and labels', () => {
+  const g = graphOf(WORK);
+  const record = confirmExport(planExport('work', g, SETTING), g, CONFIRM, SETTING);
+  assert.deepEqual(driftOf(record, g), []);
+  assert.deepEqual(backToExport(record, driftOf(record, g)), []);
 });

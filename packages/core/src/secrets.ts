@@ -5,6 +5,7 @@
 //   is the one deliberate exception to "flag, don't block".
 // - Restricted documentation may hold one other secret, such as a key, flagged so a person sees it. A second is
 //   refused, and so is any password.
+// - The pane's write refuses a password typed into a block (`writesPassword`, pane.ts), keeping what was typed.
 import gs from '@thoughtknot/graph-spec';
 import type { Graph } from '@thoughtknot/graph-spec';
 
@@ -25,8 +26,16 @@ export function checkSecretWrite(text: string, options: { restricted?: boolean }
   if (kinds.includes(PASSWORD)) return { ok: false, why: 'password', kinds };
   if (!options.restricted) return { ok: false, why: 'secret', kinds };
   const lines = text.split('\n').filter((l) => gs.secretsIn(l).length > 0);
-  if (lines.length > 1) return { ok: false, why: 'more-than-one', kinds };
+  if (lines.length > 1 || kinds.length > 1) return { ok: false, why: 'more-than-one', kinds };
   return { ok: true, flagged: kinds };
+}
+
+/** How many lines of `text` hold a password. */
+const passwordLines = (text: string) => text.split('\n').filter((l) => gs.secretsIn(l).includes(PASSWORD)).length;
+
+/** Whether an edit from `before` to `after` writes a password the text did not hold. Every write is checked by this. */
+export function writesPassword(before: string, after: string): boolean {
+  return passwordLines(after) > passwordLines(before);
 }
 
 /** A secret named in a graph: its name, and where its value comes from. */

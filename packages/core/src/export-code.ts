@@ -45,6 +45,8 @@ export interface ExportRecord {
   gaps: readonly Gap[];
   /** The things marked as AI-assisted, by the corporate boundary rules. */
   aiAssisted: readonly string[];
+  /** The corporate setting it was made under, so drift is found against the live graph under the same rules. */
+  boundary?: CorporateSetting;
 }
 
 /** What an export would hold, shown before it is made: the gap summary to confirm. */
@@ -118,6 +120,7 @@ export function confirmExport(
     links: shown.edges.map(([a, t, b]) => [a, t, b] as const),
     gaps: plan.gaps.map((gap) => ({ ...gap })),
     aiAssisted: bounded?.aiAssisted ?? [],
+    ...(setting ? { boundary: setting } : {}),
   });
 }
 
@@ -180,9 +183,14 @@ export interface Drift {
   keys: string[];
 }
 
-/** The drift between an export and the live graph, each thing traced by its id. */
-export function driftOf(record: ExportRecord, live: Pick<Graph, 'nodes'>): Drift[] {
+/**
+ * The drift between an export and the live graph, each thing traced by its id. An export made under a corporate
+ * setting is compared with the live graph under the same setting.
+ */
+export function driftOf(record: ExportRecord, live: Pick<Graph, 'nodes' | 'edges'>): Drift[] {
   const out: Drift[] = [];
+  // a bounded export is held against the live graph under its own rules: a redaction or a label is not drift
+  if (record.boundary) live = applyBoundary(live, record.boundary).graph;
   for (const [id, thing] of Object.entries(record.things)) {
     const now = live.nodes.get(id);
     if (!now) {
