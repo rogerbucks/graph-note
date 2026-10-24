@@ -57,7 +57,7 @@ jobs:
         run: |
           tag=$(jq -r '[.[] | select(.tagName | test("-") | not)][0].tagName // empty' "$RUNNER_TEMP/releases.json")
           if [ -n "$tag" ]; then
-            git fetch --depth=1 --no-tags origin "refs/tags/$tag"
+            git fetch --no-tags origin "refs/tags/$tag"
             # the note since 19 Oct 2026, and the graph file it replaced in a release from before then
             git show FETCH_HEAD:requirements/editor-requirements.md > "$RUNNER_TEMP/released.gql" ||
               git show FETCH_HEAD:requirements/editor-requirements.gql > "$RUNNER_TEMP/released.gql"
