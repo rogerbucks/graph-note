@@ -1237,6 +1237,20 @@ and is handed the port between them, as for layouts:
   place. On any failure the temporary file is `remove`d and the target is never touched. The result says why in a
   sentence.
 
+#### Exporting to code (spec §38)
+
+- `export-code.ts` — the one way a graph drives a real application: an export an AI writes code from.
+  - `planExport` lists the gaps: contested and doubtful things, and what the boundary rules take out.
+  - `confirmExport` always goes ahead once they are confirmed. Its record is frozen, named by version and snapshot
+    hash, and keeps every thing's id, so it traces back into the graph.
+  - Export is one way. `fromCode` takes back a run log as a log, and changes as a proposal of low certainty.
+  - `checkGenerated` adds what the code does not match to the gaps, blocking nothing. `driftOf` finds drift;
+    `backToExport` proposes setting it back. `exportsLens` lists what was exported.
+- `export-boundary.ts` — a corporate setting's redactions and AI-assisted label, applied to every export by itself.
+- `secrets.ts` — a graph holds secrets only by name (`SecretRef`), their values found at run time. A write holding a
+  password is refused; restricted documentation may hold one other secret, flagged.
+- The engine never sends: `test/engine-never-sends.test.js` finds no network call in the core or the graph library.
+
 ### Proposals (spec §17)
 
 A proposal is changes to a graph that somebody other than the person reading proposes. It may be an AI's answer (§19), a
