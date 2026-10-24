@@ -370,6 +370,7 @@ export type { Landing, PlacedBox, Side, WrittenNudge } from './box-drag.ts';
 export type { PropType, Property, Target, Edit, Parsed } from './inspector.ts';
 export { editInParts, setInParts, storedGraphs, storedStyle, type StoredGraph } from './store-drawing.ts';
 export * from './index-mesh.ts';
+export * from './index-late.ts';
 export { altitudeIndexOf, searchAltitude, type NoteAltitudeIndex } from './altitude-index.ts';
 export { acceptDraft, draftRequests, neighbourBands, siblingDrafts } from './sibling-drafts.ts';
 export type { BandCriteria, DraftProposal, DraftRequest } from './sibling-drafts.ts';

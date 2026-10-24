@@ -8,6 +8,8 @@ later, in VS Code. It is written in erasable TypeScript, so Node runs its tests 
 
 - `src/index.ts` is the package's one entry: everything a host uses is exported from it, and only from it.
   `test/index.test.js` holds its list of names, so a change to it is a decision, not an accident.
+- `src/index-late.ts` holds its newest names, from the lenses on, and `src/index.ts` exports them all. So each file
+  stays short.
 
 ## The source, `src/`
 
@@ -125,6 +127,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
   change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
   source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
+
 #### Renames, schema moves and type suggestions
 
 - `rename-across.ts` — a thing renamed in every note that names it (editor spec §27, rename_follows_notes; NEURO-10).
@@ -139,6 +142,15 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   marked for a closer look.
 - `index-mesh.ts` — the mesh's part of the core's entry, kept apart so `index.ts` stays short.
 - `index-process.ts` — the process views' part of the core's entry, kept apart for the same reason.
+
+#### Lenses
+
+- `lens-library.ts` — the lenses a person can open (editor spec §33, lens_library). Ready-made ones come first, then the
+  graph's own Lens things, then those written in the session. An AI's lens is a proposal, listed once a person accepts
+  it. `writeLens` gives the line of graph text that saves one.
+- `lens-freshness.ts` — how often and how lately each lens ran (editor spec §33, lens_freshness). One unopened for 90
+  days is dormant, with its certainty untouched. `recentLenses` gives the five most used, worked out when asked.
+- `lens-source-words.ts` — the names of the ready-made lenses.
 
 #### Altitude
 
@@ -186,6 +198,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - `readNote` sets `Box.deferred` on each such box. It takes the day as its fifth argument, the current day by
     default.
   - The layout source is untouched, so the host draws the dashing and the later mark on the finished drawing.
+
 #### Certainty
 
 - `certainty-drawn.ts` — how sure a thing is, drawn (editor spec §36, certainty_drawn).
@@ -961,6 +974,7 @@ data of the note it is written in.
   used twice is the same thing.
   - It is bounded by `MOST_MATCHES` and `MOST_TRIES` (every thing and link looked at, fitting or not). Past them it stops
     and says so (spec §9).
+
 #### What a step is given
 
 - `steps-input.ts` — what is given at a point: a graph of the note, whole, or a view of one (a queried path among them).
@@ -1477,6 +1491,7 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
   - `matrixRowsFrom` checks rows handed over as data. It takes none at all if anything in them is not a row.
 - `settings-matrix.ts` — the two options of the matrix, the note that holds it and the table of class names
   (`MATRIX_OPTIONS`).
+
 #### Databases
 
 - `db-import.ts` — importing from a database (spec §20, §21). The database is a SQLite file in the vault.
@@ -1614,6 +1629,7 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
   - They run against a fresh host and the `HostProbe` through which it shows what it drew.
   - `HOST_CONTRACT_VERSION` is the last entry of `HOST_CONTRACT_VERSIONS`. Each entry pairs a version with a digest
     of how `public-api.json` declares `host.ts`. A change to `DisplayHost` fails a test until a new version is added.
+
 ### Banners and waits
 
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.

@@ -109,6 +109,8 @@ const NAMES = [
   'typeOf',
   'instancesOf',
   'inherited',
+  // each cluster's cohesion and the certainty its centroid states (editor spec §31)
+  'clusterCertainty',
   // the process core and its runs (editor spec §34)
   'coreOfEight',
   'transitionsOf',
@@ -125,6 +127,15 @@ const NAMES = [
   'moveRun',
   'withEntries',
   'refreshCurrent',
+  // altitude and audience profiles (editor spec §32)
+  'atAltitude',
+  'profilesOf',
+  'audienceProjection',
+  'altitudesIn',
+  'byAxes',
+  // lenses as graph data: saved queries that answer fresh (editor spec §33)
+  'lensesOf',
+  'runLens',
   // the altitude and topic index (editor spec §32)
   'altitudeIndex',
   'searchIndex',

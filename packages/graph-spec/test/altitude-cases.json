@@ -1,0 +1,1721 @@
+{
+  "about": "Shared cases for altitude and audience profiles (editor spec §32). Each case calls one function of packages/graph-spec/src/altitude/altitude.js on its graph with its args, and the Python twin graphspec/engine/altitude/altitude.py must give the same answer. Made once by the JavaScript library.",
+  "cases": [
+    {
+      "requirement": "altitude_query_parameter",
+      "name": "at high altitude only the top part shows",
+      "graph": {
+        "nodes": [
+          ["request", ["Event"], {}],
+          ["offer", ["Event"], {}],
+          ["drawdown", ["Event"], {}],
+          ["missed", ["Event"], {}],
+          ["grace", ["Event"], {}],
+          ["payout", ["Event"], {}],
+          [
+            "life",
+            ["Path"],
+            {
+              "altitude": 3
+            }
+          ],
+          [
+            "orig",
+            ["Path"],
+            {
+              "altitude": 2
+            }
+          ],
+          [
+            "serv",
+            ["Path"],
+            {
+              "altitude": 2
+            }
+          ],
+          [
+            "arr",
+            ["Path"],
+            {
+              "altitude": 1
+            }
+          ],
+          ["arrears", ["Concept"], {}]
+        ],
+        "edges": [
+          [
+            "life",
+            "STEP",
+            "orig",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "life",
+            "STEP",
+            "serv",
+            {
+              "seq": 2
+            }
+          ],
+          [
+            "orig",
+            "STEP",
+            "request",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "orig",
+            "STEP",
+            "offer",
+            {
+              "seq": 2
+            }
+          ],
+          [
+            "serv",
+            "STEP",
+            "drawdown",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "serv",
+            "STEP",
+            "arr",
+            {
+              "seq": 2
+            }
+          ],
+          [
+            "serv",
+            "STEP",
+            "payout",
+            {
+              "seq": 3
+            }
+          ],
+          [
+            "arr",
+            "STEP",
+            "missed",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "arr",
+            "STEP",
+            "grace",
+            {
+              "seq": 2
+            }
+          ],
+          ["offer", "LEADS_TO", "drawdown"],
+          ["missed", "LEADS_TO", "grace"],
+          ["grace", "LEADS_TO", "payout"],
+          ["missed", "ABOUT", "arrears"],
+          ["request", "LEADS_TO", "offer"]
+        ]
+      },
+      "call": "atAltitude",
+      "args": [3],
+      "expected": {
+        "level": 3,
+        "things": ["life", "arrears"],
+        "links": [["life", "ABOUT", "arrears", 1]],
+        "shown_as": {
+          "arr": "life",
+          "drawdown": "life",
+          "grace": "life",
+          "missed": "life",
+          "offer": "life",
+          "orig": "life",
+          "payout": "life",
+          "request": "life",
+          "serv": "life"
+        }
+      }
+    },
+    {
+      "requirement": "altitude_query_parameter",
+      "name": "at a working altitude each part at that level shows, with bundled links",
+      "graph": {
+        "nodes": [
+          ["request", ["Event"], {}],
+          ["offer", ["Event"], {}],
+          ["drawdown", ["Event"], {}],
+          ["missed", ["Event"], {}],
+          ["grace", ["Event"], {}],
+          ["payout", ["Event"], {}],
+          [
+            "life",
+            ["Path"],
+            {
+              "altitude": 3
+            }
+          ],
+          [
+            "orig",
+            ["Path"],
+            {
+              "altitude": 2
+            }
+          ],
+          [
+            "serv",
+            ["Path"],
+            {
+              "altitude": 2
+            }
+          ],
+          [
+            "arr",
+            ["Path"],
+            {
+              "altitude": 1
+            }
+          ],
+          ["arrears", ["Concept"], {}]
+        ],
+        "edges": [
+          [
+            "life",
+            "STEP",
+            "orig",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "life",
+            "STEP",
+            "serv",
+            {
+              "seq": 2
+            }
+          ],
+          [
+            "orig",
+            "STEP",
+            "request",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "orig",
+            "STEP",
+            "offer",
+            {
+              "seq": 2
+            }
+          ],
+          [
+            "serv",
+            "STEP",
+            "drawdown",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "serv",
+            "STEP",
+            "arr",
+            {
+              "seq": 2
+            }
+          ],
+          [
+            "serv",
+            "STEP",
+            "payout",
+            {
+              "seq": 3
+            }
+          ],
+          [
+            "arr",
+            "STEP",
+            "missed",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "arr",
+            "STEP",
+            "grace",
+            {
+              "seq": 2
+            }
+          ],
+          ["offer", "LEADS_TO", "drawdown"],
+          ["missed", "LEADS_TO", "grace"],
+          ["grace", "LEADS_TO", "payout"],
+          ["missed", "ABOUT", "arrears"],
+          ["request", "LEADS_TO", "offer"]
+        ]
+      },
+      "call": "atAltitude",
+      "args": [2],
+      "expected": {
+        "level": 2,
+        "things": ["orig", "serv", "arrears"],
+        "links": [
+          ["orig", "LEADS_TO", "serv", 1],
+          ["serv", "ABOUT", "arrears", 1]
+        ],
+        "shown_as": {
+          "arr": "serv",
+          "drawdown": "serv",
+          "grace": "serv",
+          "missed": "serv",
+          "offer": "orig",
+          "payout": "serv",
+          "request": "orig"
+        }
+      }
+    },
+    {
+      "requirement": "altitude_query_parameter",
+      "name": "at altitude 0 every thing shows",
+      "graph": {
+        "nodes": [
+          ["request", ["Event"], {}],
+          ["offer", ["Event"], {}],
+          ["drawdown", ["Event"], {}],
+          ["missed", ["Event"], {}],
+          ["grace", ["Event"], {}],
+          ["payout", ["Event"], {}],
+          [
+            "life",
+            ["Path"],
+            {
+              "altitude": 3
+            }
+          ],
+          [
+            "orig",
+            ["Path"],
+            {
+              "altitude": 2
+            }
+          ],
+          [
+            "serv",
+            ["Path"],
+            {
+              "altitude": 2
+            }
+          ],
+          [
+            "arr",
+            ["Path"],
+            {
+              "altitude": 1
+            }
+          ],
+          ["arrears", ["Concept"], {}]
+        ],
+        "edges": [
+          [
+            "life",
+            "STEP",
+            "orig",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "life",
+            "STEP",
+            "serv",
+            {
+              "seq": 2
+            }
+          ],
+          [
+            "orig",
+            "STEP",
+            "request",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "orig",
+            "STEP",
+            "offer",
+            {
+              "seq": 2
+            }
+          ],
+          [
+            "serv",
+            "STEP",
+            "drawdown",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "serv",
+            "STEP",
+            "arr",
+            {
+              "seq": 2
+            }
+          ],
+          [
+            "serv",
+            "STEP",
+            "payout",
+            {
+              "seq": 3
+            }
+          ],
+          [
+            "arr",
+            "STEP",
+            "missed",
+            {
+              "seq": 1
+            }
+          ],
+          [
+            "arr",
+            "STEP",
+            "grace",
+            {
+              "seq": 2
+            }
+          ],
+          ["offer", "LEADS_TO", "drawdown"],
+          ["missed", "LEADS_TO", "grace"],
+          ["grace", "LEADS_TO", "payout"],
+          ["missed", "ABOUT", "arrears"],
+          ["request", "LEADS_TO", "offer"]
+        ]
+      },
+      "call": "atAltitude",
+      "args": [0],
+      "expected": {
+        "level": 0,
+        "things": ["request", "offer", "drawdown", "missed", "grace", "payout", "arrears"],
+        "links": [
+          ["grace", "LEADS_TO", "payout", 1],
+          ["missed", "ABOUT", "arrears", 1],
+          ["missed", "LEADS_TO", "grace", 1],
+          ["offer", "LEADS_TO", "drawdown", 1],
+          ["request", "LEADS_TO", "offer", 1]
+        ],
+        "shown_as": {}
+      }
+    },
+    {
+      "requirement": "altitude_query_parameter",
+      "name": "clusters collapse to their centroids",
+      "graph": {
+        "nodes": [
+          ["atoms", ["Cluster"], {}],
+          ["molecule", ["Cluster"], {}],
+          ["h", ["Atom"], {}],
+          ["o", ["Atom"], {}],
+          ["c", ["Atom"], {}],
+          ["wall", ["Part"], {}]
+        ],
+        "edges": [
+          ["h", "MEMBER_OF", "atoms"],
+          ["o", "MEMBER_OF", "atoms"],
+          ["atoms", "MEMBER_OF", "molecule"],
+          ["c", "MEMBER_OF", "molecule"],
+          ["h", "BONDS", "o"],
+          ["o", "BONDS", "c"],
+          ["c", "TOUCHES", "wall"]
+        ]
+      },
+      "call": "atAltitude",
+      "args": [1],
+      "expected": {
+        "level": 1,
+        "things": ["sha-256:4e93fc15e4a7d67c71fdc9e1d6c89eb969b7313e93989af13ef3f72562de61c1", "c", "wall"],
+        "links": [
+          ["c", "TOUCHES", "wall", 1],
+          ["sha-256:4e93fc15e4a7d67c71fdc9e1d6c89eb969b7313e93989af13ef3f72562de61c1", "BONDS", "c", 1]
+        ],
+        "shown_as": {
+          "atoms": "sha-256:4e93fc15e4a7d67c71fdc9e1d6c89eb969b7313e93989af13ef3f72562de61c1",
+          "h": "sha-256:4e93fc15e4a7d67c71fdc9e1d6c89eb969b7313e93989af13ef3f72562de61c1",
+          "o": "sha-256:4e93fc15e4a7d67c71fdc9e1d6c89eb969b7313e93989af13ef3f72562de61c1"
+        }
+      }
+    },
+    {
+      "requirement": "altitude_query_parameter",
+      "name": "nested clusters collapse to the outer centroid",
+      "graph": {
+        "nodes": [
+          ["atoms", ["Cluster"], {}],
+          ["molecule", ["Cluster"], {}],
+          ["h", ["Atom"], {}],
+          ["o", ["Atom"], {}],
+          ["c", ["Atom"], {}],
+          ["wall", ["Part"], {}]
+        ],
+        "edges": [
+          ["h", "MEMBER_OF", "atoms"],
+          ["o", "MEMBER_OF", "atoms"],
+          ["atoms", "MEMBER_OF", "molecule"],
+          ["c", "MEMBER_OF", "molecule"],
+          ["h", "BONDS", "o"],
+          ["o", "BONDS", "c"],
+          ["c", "TOUCHES", "wall"]
+        ]
+      },
+      "call": "atAltitude",
+      "args": [2],
+      "expected": {
+        "level": 2,
+        "things": ["sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd", "wall"],
+        "links": [["sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd", "TOUCHES", "wall", 1]],
+        "shown_as": {
+          "atoms": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd",
+          "c": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd",
+          "h": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd",
+          "molecule": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd",
+          "o": "sha-256:054d45750db4375d563533624ac7624c8bfa9387406a496f44d5846843dd12dd"
+        }
+      }
+    },
+    {
+      "requirement": "one_profile_mechanism",
+      "name": "business and teaching profiles use the same three criteria",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board",
+              "domain": "business",
+              "vocabulary_depth": "plain",
+              "prerequisite_knowledge": "none",
+              "metaphor_to_mechanism": "mostly metaphor"
+            }
+          ],
+          [
+            "risk",
+            ["Profile"],
+            {
+              "name": "risk",
+              "domain": "business",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "risk frameworks",
+              "metaphor_to_mechanism": "mostly mechanism"
+            }
+          ],
+          [
+            "university",
+            ["Profile"],
+            {
+              "name": "university",
+              "domain": "teaching",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "first-year maths",
+              "metaphor_to_mechanism": "balanced"
+            }
+          ],
+          [
+            "vague",
+            ["Profile"],
+            {
+              "name": "vague",
+              "vocabulary_depth": "plain"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*",
+              "altitude": 3
+            }
+          ],
+          [
+            "deep",
+            ["Lens"],
+            {
+              "name": "Deep",
+              "query": "*",
+              "altitude": 0
+            }
+          ],
+          [
+            "loan",
+            ["Concept"],
+            {
+              "composition": "cell"
+            }
+          ],
+          [
+            "rate",
+            ["Concept"],
+            {
+              "composition": "atom"
+            }
+          ],
+          [
+            "fee",
+            ["Concept"],
+            {
+              "band": "board"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "Money we lend"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "Credit exposure with collateral"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "university",
+            {
+              "text": "A contract with repayments"
+            }
+          ],
+          [
+            "rate",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "The price of the risk"
+            }
+          ],
+          [
+            "loan",
+            "AT_ALTITUDE",
+            "deep",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "rate",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ]
+        ]
+      },
+      "call": "profilesOf",
+      "args": [],
+      "expected": [
+        {
+          "id": "board",
+          "name": "board",
+          "domain": "business",
+          "criteria": {
+            "vocabulary_depth": "plain",
+            "prerequisite_knowledge": "none",
+            "metaphor_to_mechanism": "mostly metaphor"
+          },
+          "missing": []
+        },
+        {
+          "id": "risk",
+          "name": "risk",
+          "domain": "business",
+          "criteria": {
+            "vocabulary_depth": "technical",
+            "prerequisite_knowledge": "risk frameworks",
+            "metaphor_to_mechanism": "mostly mechanism"
+          },
+          "missing": []
+        },
+        {
+          "id": "university",
+          "name": "university",
+          "domain": "teaching",
+          "criteria": {
+            "vocabulary_depth": "technical",
+            "prerequisite_knowledge": "first-year maths",
+            "metaphor_to_mechanism": "balanced"
+          },
+          "missing": []
+        },
+        {
+          "id": "vague",
+          "name": "vague",
+          "domain": null,
+          "criteria": {
+            "vocabulary_depth": "plain"
+          },
+          "missing": ["prerequisite_knowledge", "metaphor_to_mechanism"]
+        }
+      ]
+    },
+    {
+      "requirement": "audience_profiles_named",
+      "name": "a thing shows the projection of each profile passed",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board",
+              "domain": "business",
+              "vocabulary_depth": "plain",
+              "prerequisite_knowledge": "none",
+              "metaphor_to_mechanism": "mostly metaphor"
+            }
+          ],
+          [
+            "risk",
+            ["Profile"],
+            {
+              "name": "risk",
+              "domain": "business",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "risk frameworks",
+              "metaphor_to_mechanism": "mostly mechanism"
+            }
+          ],
+          [
+            "university",
+            ["Profile"],
+            {
+              "name": "university",
+              "domain": "teaching",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "first-year maths",
+              "metaphor_to_mechanism": "balanced"
+            }
+          ],
+          [
+            "vague",
+            ["Profile"],
+            {
+              "name": "vague",
+              "vocabulary_depth": "plain"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*",
+              "altitude": 3
+            }
+          ],
+          [
+            "deep",
+            ["Lens"],
+            {
+              "name": "Deep",
+              "query": "*",
+              "altitude": 0
+            }
+          ],
+          [
+            "loan",
+            ["Concept"],
+            {
+              "composition": "cell"
+            }
+          ],
+          [
+            "rate",
+            ["Concept"],
+            {
+              "composition": "atom"
+            }
+          ],
+          [
+            "fee",
+            ["Concept"],
+            {
+              "band": "board"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "Money we lend"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "Credit exposure with collateral"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "university",
+            {
+              "text": "A contract with repayments"
+            }
+          ],
+          [
+            "rate",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "The price of the risk"
+            }
+          ],
+          [
+            "loan",
+            "AT_ALTITUDE",
+            "deep",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "rate",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ]
+        ]
+      },
+      "call": "audienceProjection",
+      "args": [["board", "university"]],
+      "expected": {
+        "loan": {
+          "business": {
+            "profile": "board",
+            "text": "Money we lend"
+          },
+          "teaching": {
+            "profile": "university",
+            "text": "A contract with repayments"
+          }
+        }
+      }
+    },
+    {
+      "requirement": "audience_profiles_named",
+      "name": "two profiles of one domain combine, the first passed winning",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board",
+              "domain": "business",
+              "vocabulary_depth": "plain",
+              "prerequisite_knowledge": "none",
+              "metaphor_to_mechanism": "mostly metaphor"
+            }
+          ],
+          [
+            "risk",
+            ["Profile"],
+            {
+              "name": "risk",
+              "domain": "business",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "risk frameworks",
+              "metaphor_to_mechanism": "mostly mechanism"
+            }
+          ],
+          [
+            "university",
+            ["Profile"],
+            {
+              "name": "university",
+              "domain": "teaching",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "first-year maths",
+              "metaphor_to_mechanism": "balanced"
+            }
+          ],
+          [
+            "vague",
+            ["Profile"],
+            {
+              "name": "vague",
+              "vocabulary_depth": "plain"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*",
+              "altitude": 3
+            }
+          ],
+          [
+            "deep",
+            ["Lens"],
+            {
+              "name": "Deep",
+              "query": "*",
+              "altitude": 0
+            }
+          ],
+          [
+            "loan",
+            ["Concept"],
+            {
+              "composition": "cell"
+            }
+          ],
+          [
+            "rate",
+            ["Concept"],
+            {
+              "composition": "atom"
+            }
+          ],
+          [
+            "fee",
+            ["Concept"],
+            {
+              "band": "board"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "Money we lend"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "Credit exposure with collateral"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "university",
+            {
+              "text": "A contract with repayments"
+            }
+          ],
+          [
+            "rate",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "The price of the risk"
+            }
+          ],
+          [
+            "loan",
+            "AT_ALTITUDE",
+            "deep",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "rate",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ]
+        ]
+      },
+      "call": "audienceProjection",
+      "args": [["risk", "board"]],
+      "expected": {
+        "loan": {
+          "business": {
+            "profile": "risk",
+            "text": "Credit exposure with collateral"
+          }
+        },
+        "rate": {
+          "business": {
+            "profile": "risk",
+            "text": "The price of the risk"
+          }
+        }
+      }
+    },
+    {
+      "requirement": "altitude_relative_to_lens",
+      "name": "a lens places each thing by its link, else its own altitude",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board",
+              "domain": "business",
+              "vocabulary_depth": "plain",
+              "prerequisite_knowledge": "none",
+              "metaphor_to_mechanism": "mostly metaphor"
+            }
+          ],
+          [
+            "risk",
+            ["Profile"],
+            {
+              "name": "risk",
+              "domain": "business",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "risk frameworks",
+              "metaphor_to_mechanism": "mostly mechanism"
+            }
+          ],
+          [
+            "university",
+            ["Profile"],
+            {
+              "name": "university",
+              "domain": "teaching",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "first-year maths",
+              "metaphor_to_mechanism": "balanced"
+            }
+          ],
+          [
+            "vague",
+            ["Profile"],
+            {
+              "name": "vague",
+              "vocabulary_depth": "plain"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*",
+              "altitude": 3
+            }
+          ],
+          [
+            "deep",
+            ["Lens"],
+            {
+              "name": "Deep",
+              "query": "*",
+              "altitude": 0
+            }
+          ],
+          [
+            "loan",
+            ["Concept"],
+            {
+              "composition": "cell"
+            }
+          ],
+          [
+            "rate",
+            ["Concept"],
+            {
+              "composition": "atom"
+            }
+          ],
+          [
+            "fee",
+            ["Concept"],
+            {
+              "band": "board"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "Money we lend"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "Credit exposure with collateral"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "university",
+            {
+              "text": "A contract with repayments"
+            }
+          ],
+          [
+            "rate",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "The price of the risk"
+            }
+          ],
+          [
+            "loan",
+            "AT_ALTITUDE",
+            "deep",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "rate",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ]
+        ]
+      },
+      "call": "altitudesIn",
+      "args": ["overview"],
+      "expected": {
+        "lens": "overview",
+        "levels": {
+          "loan": 3,
+          "rate": 1,
+          "fee": 3
+        },
+        "flags": [["altitude-on-thing", "fee", "band"]]
+      }
+    },
+    {
+      "requirement": "altitude_relative_to_lens",
+      "name": "another lens places the same things otherwise",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board",
+              "domain": "business",
+              "vocabulary_depth": "plain",
+              "prerequisite_knowledge": "none",
+              "metaphor_to_mechanism": "mostly metaphor"
+            }
+          ],
+          [
+            "risk",
+            ["Profile"],
+            {
+              "name": "risk",
+              "domain": "business",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "risk frameworks",
+              "metaphor_to_mechanism": "mostly mechanism"
+            }
+          ],
+          [
+            "university",
+            ["Profile"],
+            {
+              "name": "university",
+              "domain": "teaching",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "first-year maths",
+              "metaphor_to_mechanism": "balanced"
+            }
+          ],
+          [
+            "vague",
+            ["Profile"],
+            {
+              "name": "vague",
+              "vocabulary_depth": "plain"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*",
+              "altitude": 3
+            }
+          ],
+          [
+            "deep",
+            ["Lens"],
+            {
+              "name": "Deep",
+              "query": "*",
+              "altitude": 0
+            }
+          ],
+          [
+            "loan",
+            ["Concept"],
+            {
+              "composition": "cell"
+            }
+          ],
+          [
+            "rate",
+            ["Concept"],
+            {
+              "composition": "atom"
+            }
+          ],
+          [
+            "fee",
+            ["Concept"],
+            {
+              "band": "board"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "Money we lend"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "Credit exposure with collateral"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "university",
+            {
+              "text": "A contract with repayments"
+            }
+          ],
+          [
+            "rate",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "The price of the risk"
+            }
+          ],
+          [
+            "loan",
+            "AT_ALTITUDE",
+            "deep",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "rate",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ]
+        ]
+      },
+      "call": "altitudesIn",
+      "args": ["deep"],
+      "expected": {
+        "lens": "deep",
+        "levels": {
+          "loan": 2,
+          "rate": 0,
+          "fee": 0
+        },
+        "flags": [["altitude-on-thing", "fee", "band"]]
+      }
+    },
+    {
+      "requirement": "altitude_composition_apart",
+      "name": "a filter on composition alone",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board",
+              "domain": "business",
+              "vocabulary_depth": "plain",
+              "prerequisite_knowledge": "none",
+              "metaphor_to_mechanism": "mostly metaphor"
+            }
+          ],
+          [
+            "risk",
+            ["Profile"],
+            {
+              "name": "risk",
+              "domain": "business",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "risk frameworks",
+              "metaphor_to_mechanism": "mostly mechanism"
+            }
+          ],
+          [
+            "university",
+            ["Profile"],
+            {
+              "name": "university",
+              "domain": "teaching",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "first-year maths",
+              "metaphor_to_mechanism": "balanced"
+            }
+          ],
+          [
+            "vague",
+            ["Profile"],
+            {
+              "name": "vague",
+              "vocabulary_depth": "plain"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*",
+              "altitude": 3
+            }
+          ],
+          [
+            "deep",
+            ["Lens"],
+            {
+              "name": "Deep",
+              "query": "*",
+              "altitude": 0
+            }
+          ],
+          [
+            "loan",
+            ["Concept"],
+            {
+              "composition": "cell"
+            }
+          ],
+          [
+            "rate",
+            ["Concept"],
+            {
+              "composition": "atom"
+            }
+          ],
+          [
+            "fee",
+            ["Concept"],
+            {
+              "band": "board"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "Money we lend"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "Credit exposure with collateral"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "university",
+            {
+              "text": "A contract with repayments"
+            }
+          ],
+          [
+            "rate",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "The price of the risk"
+            }
+          ],
+          [
+            "loan",
+            "AT_ALTITUDE",
+            "deep",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "rate",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ]
+        ]
+      },
+      "call": "byAxes",
+      "args": [
+        {
+          "composition": "cell"
+        }
+      ],
+      "expected": ["loan"]
+    },
+    {
+      "requirement": "altitude_composition_apart",
+      "name": "a filter on audience alone",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board",
+              "domain": "business",
+              "vocabulary_depth": "plain",
+              "prerequisite_knowledge": "none",
+              "metaphor_to_mechanism": "mostly metaphor"
+            }
+          ],
+          [
+            "risk",
+            ["Profile"],
+            {
+              "name": "risk",
+              "domain": "business",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "risk frameworks",
+              "metaphor_to_mechanism": "mostly mechanism"
+            }
+          ],
+          [
+            "university",
+            ["Profile"],
+            {
+              "name": "university",
+              "domain": "teaching",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "first-year maths",
+              "metaphor_to_mechanism": "balanced"
+            }
+          ],
+          [
+            "vague",
+            ["Profile"],
+            {
+              "name": "vague",
+              "vocabulary_depth": "plain"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*",
+              "altitude": 3
+            }
+          ],
+          [
+            "deep",
+            ["Lens"],
+            {
+              "name": "Deep",
+              "query": "*",
+              "altitude": 0
+            }
+          ],
+          [
+            "loan",
+            ["Concept"],
+            {
+              "composition": "cell"
+            }
+          ],
+          [
+            "rate",
+            ["Concept"],
+            {
+              "composition": "atom"
+            }
+          ],
+          [
+            "fee",
+            ["Concept"],
+            {
+              "band": "board"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "Money we lend"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "Credit exposure with collateral"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "university",
+            {
+              "text": "A contract with repayments"
+            }
+          ],
+          [
+            "rate",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "The price of the risk"
+            }
+          ],
+          [
+            "loan",
+            "AT_ALTITUDE",
+            "deep",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "rate",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ]
+        ]
+      },
+      "call": "byAxes",
+      "args": [
+        {
+          "audience": "board"
+        }
+      ],
+      "expected": ["loan"]
+    },
+    {
+      "requirement": "altitude_composition_apart",
+      "name": "a filter on both axes",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board",
+              "domain": "business",
+              "vocabulary_depth": "plain",
+              "prerequisite_knowledge": "none",
+              "metaphor_to_mechanism": "mostly metaphor"
+            }
+          ],
+          [
+            "risk",
+            ["Profile"],
+            {
+              "name": "risk",
+              "domain": "business",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "risk frameworks",
+              "metaphor_to_mechanism": "mostly mechanism"
+            }
+          ],
+          [
+            "university",
+            ["Profile"],
+            {
+              "name": "university",
+              "domain": "teaching",
+              "vocabulary_depth": "technical",
+              "prerequisite_knowledge": "first-year maths",
+              "metaphor_to_mechanism": "balanced"
+            }
+          ],
+          [
+            "vague",
+            ["Profile"],
+            {
+              "name": "vague",
+              "vocabulary_depth": "plain"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*",
+              "altitude": 3
+            }
+          ],
+          [
+            "deep",
+            ["Lens"],
+            {
+              "name": "Deep",
+              "query": "*",
+              "altitude": 0
+            }
+          ],
+          [
+            "loan",
+            ["Concept"],
+            {
+              "composition": "cell"
+            }
+          ],
+          [
+            "rate",
+            ["Concept"],
+            {
+              "composition": "atom"
+            }
+          ],
+          [
+            "fee",
+            ["Concept"],
+            {
+              "band": "board"
+            }
+          ]
+        ],
+        "edges": [
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "Money we lend"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "Credit exposure with collateral"
+            }
+          ],
+          [
+            "loan",
+            "PROJECTED_FOR",
+            "university",
+            {
+              "text": "A contract with repayments"
+            }
+          ],
+          [
+            "rate",
+            "PROJECTED_FOR",
+            "risk",
+            {
+              "text": "The price of the risk"
+            }
+          ],
+          [
+            "loan",
+            "AT_ALTITUDE",
+            "deep",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "rate",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ]
+        ]
+      },
+      "call": "byAxes",
+      "args": [
+        {
+          "composition": "atom",
+          "audience": "risk"
+        }
+      ],
+      "expected": ["rate"]
+    }
+  ]
+}

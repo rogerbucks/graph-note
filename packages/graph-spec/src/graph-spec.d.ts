@@ -285,6 +285,81 @@ declare namespace GraphSpecCheck {
   function clusterCycles(graph: Graph): string[][];
   /** What a view shows with a graph's cycles hidden or highlighted. */
   function cycleView(graph: Graph, how: 'hide' | 'highlight'): { shown: string[]; highlighted: string[] };
+  /** How tightly a cluster holds together: links between its members, and how many are contested. */
+  interface Cohesion {
+    members: number;
+    links: number;
+    /** The share of the members' pairs a link joins. */
+    density: number;
+    contested: string[];
+    /** The share of members not contested; a member cluster counts its own score. */
+    support: number;
+    /** The mean of density and support. */
+    score: number;
+  }
+  /** A cluster's certainty as its centroid states it, after cohesion and any floor (editor spec §31). */
+  interface ClusterCertainty {
+    cluster: string;
+    centroid: string;
+    certainty: { low: number; high: number } | null;
+    cohesion: Cohesion;
+    stated: { low: number; high: number } | null;
+    /** Whether the cluster opted in to a floor. */
+    floor: boolean;
+    /** The least certain member that lowered the stated certainty, or null. */
+    floored_by: string | null;
+  }
+  /** Each cluster's cohesion and stated certainty. `floor` names the clusters that opt in to a floor. */
+  function clusterCertainty(
+    graph: Graph,
+    options?: { floor?: string[]; passes?: number; threshold?: number; budget?: number; clock?: () => number },
+  ): { clusters: ClusterCertainty[]; settled: boolean };
+  /** What a query shows at an altitude (editor spec §32): each thing as its highest part at or under it, links bundled. */
+  function atAltitude(
+    graph: Graph,
+    level: number,
+  ): { level: number; things: string[]; links: [string, string, string, number][]; shown_as: Record<string, string> };
+  /** An audience profile: its name, domain and three criteria, and any it lacks. */
+  interface AudienceProfile {
+    id: string;
+    name: string;
+    domain: string | null;
+    criteria: Record<string, Value>;
+    missing: string[];
+  }
+  function profilesOf(graph: Graph): AudienceProfile[];
+  /** Each thing as the profiles passed read it, one projection per domain. */
+  function audienceProjection(
+    graph: Graph,
+    profiles: string[],
+  ): Record<string, Record<string, { profile: string; text: Value | null }>>;
+  /** The level a lens or profile shows each thing at, and the things that hold their audience altitude themselves. */
+  function altitudesIn(
+    graph: Graph,
+    lens: string,
+  ): { lens: string; levels: Record<string, number>; flags: [string, string, string][] };
+  /** The things on the composition axis, the audience axis, or both. */
+  function byAxes(graph: Graph, query?: { composition?: Value; audience?: string }): string[];
+  /** A lens as graph data (editor spec §33): a named, saved query with an optional default altitude. */
+  interface SavedLens {
+    id: string;
+    name: unknown;
+    query: unknown;
+    altitude: unknown;
+    schemas: string[];
+    /** The kinds its query touches. */
+    topics: string[];
+    /** Each flag: its code and a detail, such as lens-holds-data or schema-changed. */
+    flags: [code: string, detail: string][];
+  }
+  /** The lens things of a graph. `schemas` gives the version the graph now names for each schema. */
+  function lensesOf(graph: Graph, options?: { schemas?: Record<string, string> }): SavedLens[];
+  /** A lens run on the graph as it is now: the things it finds, its altitude and its flags. */
+  function runLens(
+    graph: Graph,
+    lens: string,
+    options?: { schemas?: Record<string, string> },
+  ): { lens: string; things: string[]; altitude: unknown; flags: [string, string][] };
   /** One thing in the altitude and topic index (editor spec §32). */
   interface AltitudeEntry {
     id: string;

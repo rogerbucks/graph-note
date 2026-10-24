@@ -27,7 +27,7 @@
 (problem_shapes:Interface {name: 'Problems and fixes (Language Server Protocol shapes)', file: 'packages/graph-spec/src/reader/problem-codes.json', page: 'Developer-reference', requirements: 'lsp_shapes problem_codes'}),
 // ── Areas: how each part's code is structured (scripts/code-structure.mjs checks them) ──
 // The core, by the spec section each area serves. A file is named once; a glob stands for a prefix no other area uses.
-(core_entry:Area {name: 'The entry point', section: '10', does: 'The core\'s entry point, what every host imports, and the small helpers shared by all of it.', files: 'packages/core/src/index.ts packages/core/src/palette.ts packages/core/src/text-cuts.ts packages/core/src/thresholds.ts'}),
+(core_entry:Area {name: 'The entry point', section: '10', does: 'The core\'s entry point, what every host imports, and the small helpers shared by all of it.', files: 'packages/core/src/index.ts packages/core/src/index-late.ts packages/core/src/palette.ts packages/core/src/text-cuts.ts packages/core/src/thresholds.ts'}),
 (core_reading:Area {name: 'Reading and drawing a note', section: '3', does: 'Reads a note\'s graph blocks and works out the boxes, links, colours and zoom to draw.', files: 'packages/core/src/note-reading.ts packages/core/src/partial-read.ts packages/core/src/blocks.ts packages/core/src/block-items.ts packages/core/src/fences.ts packages/core/src/whitespace.ts packages/core/src/drawing.ts packages/core/src/render.ts packages/core/src/hits.ts packages/core/src/zoom.ts packages/core/src/zoom-fit.ts packages/core/src/zoom-across.ts packages/core/src/theme.ts packages/core/src/schema-picture.ts packages/core/src/schema-names.ts packages/core/src/schema-version-moves.ts packages/core/src/standard-schemas.ts packages/core/src/estimates.ts packages/core/src/arrows.ts packages/core/src/certainty-drawn.ts'}),
 (core_problems:Area {name: 'Problems and fixes', section: '8', does: 'Finds what is wrong or missing in a graph and offers each fix, in Language Server Protocol shapes.', files: 'packages/core/src/help.ts packages/core/src/completeness.ts packages/core/src/lock.ts packages/core/src/deferred.ts packages/core/src/schema-checks.ts packages/core/src/estimate-fix.ts packages/core/src/estimate-places.ts'}),
 (core_layout:Area {name: 'Layout', section: '9', does: 'Hands the drawing to Graphviz in a worker, within its limits, and reads the marks back.', files: 'packages/core/src/layout.ts packages/core/src/layout-limits.ts packages/core/src/layout-worker.ts packages/core/src/layout-cache.ts packages/core/src/graphviz-json.ts packages/core/src/graphviz-marks.ts packages/core/src/graphviz-svg.ts packages/core/src/drawing-marks.ts packages/core/src/block-follow.ts packages/core/src/engine.ts'}),
@@ -55,6 +55,7 @@
 (core_ai_systems:Area {name: 'AI systems', section: '37', does: 'An outside AI system querying the knowledge under its permissions, and the scoring of the writes it proposes.', files: 'packages/core/src/ai-query.ts packages/core/src/ai-write-scoring.ts'}),
 (core_altitude:Area {name: 'Altitude', section: '32', does: 'The altitude and topic index of a note, moving between altitudes, drafts at the bands next to a thing, and a transition that changes depth.', files: 'packages/core/src/altitude-index.ts packages/core/src/browsing.ts packages/core/src/phase-altitude.ts packages/core/src/sibling-drafts.ts'}),
 (core_process:Area {name: 'Process core and views', section: '34', does: 'One process core under every process view, what each view cannot show, and edits from any view written into the core.', files: 'packages/core/src/process-core.ts packages/core/src/process-views.ts packages/core/src/edits-from-views.ts'}),
+(core_lenses:Area {name: 'Lenses', section: '33', does: 'The lenses a person can open: the ready-made ones, the saved ones, and how often and how lately each is run.', files: 'packages/core/src/lens-library.ts packages/core/src/lens-freshness.ts'}),
 (core_claude_gate:Area {name: 'What Claude may see', section: '26', does: 'What the browser editor may show Claude, and never a credential.', files: 'packages/core/src/claude-gate.ts'}),
 (core_tools:Area {name: 'Build and command line', section: '9', does: 'The build of the layout worker, and the layout source written from the command line.', files: 'packages/core/bin/** packages/core/esbuild.layout.mjs'}),
 (core_hosts:Area {name: 'Host helpers', section: '10', does: 'Small helpers the hosts share: the matrix table, refusal words, the vault folder.', files: 'packages/core/src/hosts/**'}),
@@ -98,6 +99,7 @@
 (core_ai_systems)-[:PART_OF]->(core_part),
 (core_altitude)-[:PART_OF]->(core_part),
 (core_process)-[:PART_OF]->(core_part),
+(core_lenses)-[:PART_OF]->(core_part),
 (core_claude_gate)-[:PART_OF]->(core_part),
 (core_tools)-[:PART_OF]->(core_part),
 (core_hosts)-[:PART_OF]->(core_part),
