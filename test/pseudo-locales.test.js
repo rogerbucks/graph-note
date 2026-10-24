@@ -8,8 +8,8 @@
 // longer word is held in the style sheets. No box that holds words has a fixed width. None clips or keeps a line from
 // wrapping unless listed here with why.
 //
-// The hosts: Obsidian, the browser editor's page, the VS Code tab (with VS Code's display language set to each) and
-// the desktop app (its first page and its editor, with the system's language set to each).
+// The hosts: Obsidian, the browser editor's page, the VS Code tab and the desktop app. VS Code's display language is
+// set to each test language, and so is the system's for the app. The app is run on its first page and its editor.
 //
 // Not done here, because jsdom has no layout: whether a longer word is cut off or drawn over another as laid out.
 // test/pseudo-layout.test.js checks that in a real browser, in every view of both hosts.

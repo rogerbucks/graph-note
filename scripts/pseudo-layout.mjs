@@ -154,13 +154,10 @@ export async function checkHarness(built, { chrome, views = SHOTS, languages } =
   }
 }
 
-/** The app's first page, as the app's window shows it: `notes` is what the folder holds, none: no folder is picked yet. */
-const appStartStub = (notes) =>
-  `window.__TAURI__ = { core: { invoke: async (command) => ${
-    notes
-      ? `command === 'read_dir' ? ${JSON.stringify(notes.map((n) => [n, false]))} : null`
-      : `Promise.reject('no folder is open')`
-  } } };`;
+/** The app's first page when no folder is picked yet: what Tauri's invoke says to every command. */
+const NO_FOLDER = `window.__TAURI__ = { core: { invoke: async () => Promise.reject('no folder is open') } };`;
+/** The app's first page on a folder of two notes, one with a rather long name. */
+const TWO_NOTES = `window.__TAURI__ = { core: { invoke: async (command) => command === 'read_dir' ? [['Reader.md', false], ['A note with a rather long name.md', false]] : null } };`;
 
 /**
  * The desktop app's first page, built into `built`, served here, in each of its two states: no folder picked, and a
@@ -171,16 +168,16 @@ export async function checkAppStart(built, { chrome, languages } = {}) {
   const url = `http://127.0.0.1:${server.address().port}/index.html`;
   const found = [];
   try {
-    for (const [name, notes] of [
-      ['the app’s first page, no folder', null],
-      ['the app’s first page, a folder of notes', ['Reader.md', 'A note with a rather long name.md']],
+    for (const [name, stub] of [
+      ['the app’s first page, no folder', NO_FOLDER],
+      ['the app’s first page, a folder of notes', TWO_NOTES],
     ])
       found.push(
         ...(await checkViews([{ name, steps: [] }], {
           chrome,
           languages,
           open: async (browser) => {
-            await browser.send('Page.addScriptToEvaluateOnNewDocument', { source: appStartStub(notes) });
+            await browser.send('Page.addScriptToEvaluateOnNewDocument', { source: stub });
             await browser.send('Page.navigate', { url });
             await pause(1000);
           },
