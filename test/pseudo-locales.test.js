@@ -8,6 +8,8 @@
 // longer word is held in the style sheets. No box that holds words has a fixed width. None clips or keeps a line from
 // wrapping unless listed here with why.
 //
+// The hosts: Obsidian, the browser editor's page, and the VS Code tab (with VS Code's display language set to each).
+//
 // Not done here, because jsdom has no layout: whether a longer word is cut off or drawn over another as laid out.
 // test/pseudo-layout.test.js checks that in a real browser, in every view of both hosts.
 import { test, describe, before, after } from 'node:test';
@@ -20,6 +22,10 @@ import { openEditorPage } from './repository/wcag-page.js';
 import { OBSIDIAN } from './repository/views-obsidian.js';
 import { pageStates } from './repository/views-page.js';
 import { SHEETS, rulesOf, valueOf } from './repository/sheet-rules.js';
+import { cleanUpVscode, emptyFolder, openVscodeTab } from '../packages/vscode/test/vscode-window.js';
+import { NOTE } from './repository/journey-note.js';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const LANGUAGES = Object.entries(PSEUDO_LANGUAGES);
 
@@ -27,7 +33,7 @@ const LANGUAGES = Object.entries(PSEUDO_LANGUAGES);
 const DRAWN_BY_OBSIDIAN = ['the settings page'];
 
 /** The words the code still says itself in each host's views, not yet from the catalogue: lowered as each moves there. */
-const STILL_SAID_BY_CODE = { obsidian: 39, page: 13 };
+const STILL_SAID_BY_CODE = { obsidian: 39, page: 13, vscode: 5 };
 
 /** The parts set at a point measured on the screen, by class: these keep a physical side (as in test/rtl.test.js). */
 const PLACED = [
@@ -248,6 +254,42 @@ const HOLDS_NO_WORDS = {
 
 /** A length that does not grow with the words: pixels, points, em or characters. */
 const FIXED = /(?<![\w.-])\d*\.?\d+(?:px|pt|r?em|ch)\b/;
+
+describe('the VS Code tab: the note drawn and edited, in each test language', () => {
+  const still = new Set();
+  after(async () => {
+    setLanguage(SOURCE_LANGUAGE);
+    cleanUpVscode();
+  });
+
+  for (const [tag, direction] of LANGUAGES)
+    test(`the tab and the extension's own words, with VS Code in ${tag}`, async () => {
+      const folder = emptyFolder();
+      writeFileSync(join(folder, 'Reader.md'), NOTE);
+      // VS Code's display language is the test language: the tab's page and the extension follow it
+      const tab = await openVscodeTab(folder, 'Reader.md', { language: tag });
+      try {
+        await tab.ready();
+        setLanguage(tag);
+        const { document } = tab.window;
+        assert.ok(isPseudoWord(tab.vs.tabs[0].title.replace('Reader.md', '').trim()), tab.vs.tabs[0].title);
+        assert.equal(document.documentElement.dir, direction, 'the page reads in the language’s direction');
+        assert.deepEqual(leftInSource(document), [], 'a catalogue word left in UK English');
+        assert.deepEqual(physicalSides(document), [], 'set it by inset-inline-start or margin-inline-end');
+        for (const w of saidByCode(document)) still.add(w);
+      } finally {
+        await tab.stop();
+      }
+    });
+
+  test('the words the code still says itself are no more than before', () => {
+    assert.ok(
+      still.size <= STILL_SAID_BY_CODE.vscode,
+      `${still.size} words, the most is ${STILL_SAID_BY_CODE.vscode}: say each new one by a key of source-words.ts\n${[...still].sort().join('\n')}`,
+    );
+    assert.equal(still.size, STILL_SAID_BY_CODE.vscode, 'fewer words than before: lower STILL_SAID_BY_CODE to match');
+  });
+});
 
 describe('a longer language fits every box', () => {
   for (const sheet of SHEETS) {

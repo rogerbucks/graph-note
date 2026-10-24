@@ -5,7 +5,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
 import { MeshIndex, memoryBackend, sqliteBackend } from '../src/mesh-index.ts';
-import { storedGraphs } from '../src/store-drawing.ts';
+import { storedGraphs, storedStyle } from '../src/store-drawing.ts';
+import { savedFilterFor } from '../src/filter-saved.ts';
 import { sqlEngine } from './mesh-test-sql.js';
 
 const now = () => Promise.resolve();
@@ -75,4 +76,23 @@ test('the same text is not read again: the store keeps a note until its text cha
   assert.equal(put, 0, 'not read again');
   await storedGraphs(ix, 'shop.md', SHOP.replace("'Bolt'", "'Bolt and nut'"), now);
   assert.equal(put, 1, 'read again once changed');
+});
+
+test('a huge note’s saved filter is read from its style block, checked against the graph in the store', async () => {
+  const style = [
+    '```gql',
+    '// graph: shop_style · STYLE shop',
+    "(f1:Filter {keep: 'Kind: Part, Prt'})",
+    '```',
+    '',
+  ].join('\n');
+  const text = SHOP + style;
+  const shop = (await storedGraphs(new MeshIndex(memoryBackend()), 'shop.md', text, now)).get('shop');
+  const read = storedStyle(text, shop);
+  assert.deepEqual(savedFilterFor(read.style.filters), { Kind: ['Part'] });
+  assert.deepEqual(
+    read.problems.map((p) => p.message),
+    ['Prt is not a kind in graph shop'],
+    'a kind the graph lacks, found from the store',
+  );
 });

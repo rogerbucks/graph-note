@@ -421,6 +421,8 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/graph-spec/test/process-core.test.mjs` — the process core and its runs, across `src/process/core.js` and
   `runs.js`. It covers eight kinds, transitions, guards as data, the run log and nested machines (editor spec §34;
   `process-core-cases.json`).
+- `packages/graph-spec/test/mesh-one-format.test.mjs` — a block of schema and inserts is read once. The lens
+  rules answer about its things and its schema alike (mesh_one_format; `mesh-one-format-cases.json`).
 - `packages/graph-spec/test/layout.test.mjs` — the layout source is byte-identical to the Python library's.
 - `packages/graph-spec/test/lint-parity.test.mjs` — the JavaScript dialect linter matches the Python one.
 
@@ -448,6 +450,8 @@ These test behaviour across modules, or the repository itself, so they are named
   `join-every-author-cases.json`, whoever made the edits (same_join_every_author).
 - `python/graph_spec/tests/test_process_core.py` — the Python library's `core` and `runs` give the answers of
   `process-core-cases.json` (editor spec §34).
+- `python/graph_spec/tests/test_mesh_one_format.py` — the Python library reads the block of `mesh-one-format-cases.json`
+  once and its lens rules give the same buckets (mesh_one_format).
 - `python/graph_spec/tests/test_drawing_problem_codes.py` — each problem the Python drawing reader finds in a note or
   a style graph has a stable code. It comes from `packages/core/src/drawing-problem-codes.json` or the reader's own
   table. The notes of `drawing-problem-cases.json` give the same codes as the core gives them (editor spec §42, problem_codes).
@@ -474,6 +478,11 @@ These test behaviour across modules, or the repository itself, so they are named
   things the core returns (editor spec §7, views_agree_with_grafeo). It is given a fixed list of GQL's and Cypher's
   words. It refuses as a name and as a kind exactly the words the core keeps from them.
 - `python/graph_spec/tests/test_settings.py` — what a host sets after importing the library.
+
+### The libraries' examples
+
+- `test/library-examples.test.js` — the libraries' runnable examples, `examples/js` and `examples/python`, read and
+  check a block with every rule passing (API-12). CI's `examples` job runs each one from the release archive's layout.
 
 ### Colours and direction
 
