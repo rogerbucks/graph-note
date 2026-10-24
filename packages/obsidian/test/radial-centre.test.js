@@ -152,8 +152,19 @@ describe('where the note is edited', () => {
       assert.equal(env.doc.activeElement, item(el, 'Centre here'), 'its first item has the focus');
       shown.dispatch('keydown', { key: 'Escape' });
       assert.equal(menu(el), null, 'Escape closes it');
-      // the menu key on a box opens it from the keyboard
+      // the menu key on a box opens it from the keyboard; a contextmenu some systems send after it opens no second one
       box(el, 'mars').dispatch('keydown', { key: 'ContextMenu' });
+      const after = box(el, 'mars').dispatch('contextmenu', { clientX: 0, clientY: 0 });
+      assert.equal(el.querySelectorAll('.thoughtknot-thing-menu').length, 1, 'one menu');
+      assert.ok(after.defaultPrevented, 'and no host menu over it');
+      // the arrow keys keep the focus on its items (one item: it stays there)
+      menu(el).dispatch('keydown', { key: 'ArrowDown' });
+      assert.equal(env.doc.activeElement, item(el, 'Centre here'));
+      // a press outside closes it
+      env.doc.body.dispatch('pointerdown', { target: env.doc.body });
+      assert.equal(menu(el), null, 'a press outside closes it');
+      // Shift+F10 opens it too
+      box(el, 'mars').dispatch('keydown', { key: 'F10', shiftKey: true });
       item(el, 'Centre here').click();
       assert.equal(menu(el), null, 'an item closes the menu');
       await until(() => /type: 'radial', centre: 'mars'/.test(env.state.files.get(PATH)));

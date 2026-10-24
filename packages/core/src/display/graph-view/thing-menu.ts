@@ -29,6 +29,11 @@ export class ThingMenu {
     card.registerDomEvent(root.doc, 'pointerdown', outside, { capture: true });
   }
 
+  /** Whether the menu is open now. */
+  get open(): boolean {
+    return !!this.el;
+  }
+
   /**
    * Opens the menu of thing `thing` at `at`, on the page, with `items`. The focus goes back to `from` as it closes.
    * Returns whether it opened: never with nothing to offer.

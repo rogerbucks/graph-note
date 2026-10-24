@@ -238,6 +238,11 @@ export function bindViewportEvents(host: ViewportHost): void {
   );
   // a right-click on a box opens its menu, in place of the host's, when there is something in it (radial_centre_menu)
   card.registerDomEvent(vp, 'contextmenu', (e: MouseEvent) => {
+    // the menu key opened it already: some systems send a contextmenu after that key too, which must not open it again
+    if (menu.open) {
+      e.preventDefault();
+      return;
+    }
     const target = targetAt(e.target);
     if (lastPointer === 'touch' || !target || !('key' in target)) return;
     if (!openMenu(target.key, { x: e.clientX, y: e.clientY })) return;
