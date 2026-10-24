@@ -154,6 +154,44 @@ export async function checkHarness(built, { chrome, views = SHOTS, languages } =
   }
 }
 
+/** The app's first page, as the app's window shows it: `notes` is what the folder holds, none: no folder is picked yet. */
+const appStartStub = (notes) =>
+  `window.__TAURI__ = { core: { invoke: async (command) => ${
+    notes
+      ? `command === 'read_dir' ? ${JSON.stringify(notes.map((n) => [n, false]))} : null`
+      : `Promise.reject('no folder is open')`
+  } } };`;
+
+/**
+ * The desktop app's first page, built into `built`, served here, in each of its two states: no folder picked, and a
+ * folder of notes. (The app's editor is the Claude Code host's page, so checkEditorPage holds it.)
+ */
+export async function checkAppStart(built, { chrome, languages } = {}) {
+  const server = await serve(built);
+  const url = `http://127.0.0.1:${server.address().port}/index.html`;
+  const found = [];
+  try {
+    for (const [name, notes] of [
+      ['the app’s first page, no folder', null],
+      ['the app’s first page, a folder of notes', ['Reader.md', 'A note with a rather long name.md']],
+    ])
+      found.push(
+        ...(await checkViews([{ name, steps: [] }], {
+          chrome,
+          languages,
+          open: async (browser) => {
+            await browser.send('Page.addScriptToEvaluateOnNewDocument', { source: appStartStub(notes) });
+            await browser.send('Page.navigate', { url });
+            await pause(1000);
+          },
+        })),
+      );
+  } finally {
+    server.close();
+  }
+  return found;
+}
+
 /** The Claude Code host: its page at `link`, served by a running editor server, in each of its views. */
 export function checkEditorPage(link, { chrome, views = PAGE_VIEWS, languages } = {}) {
   return checkViews(views, { chrome, languages, open: (browser) => openPage(browser, link) });

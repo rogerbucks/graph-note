@@ -134,11 +134,12 @@ export const openAppStart = (folder, language) =>
 
 /**
  * The editor in the app, on the note at `path` in `folder`. It gives `{ window, doc, field, typed, file, ready, stop }`,
- * as the browser page's live cases do (packages/claude-code/test/editor-page-live.js).
+ * as the browser page's live cases do (packages/claude-code/test/editor-page-live.js). The system speaks `language`,
+ * en-GB when none is given.
  */
-export async function openAppEditor(folder, path) {
+export async function openAppEditor(folder, path, language) {
   const hash = `#token=app&note=${encodeURIComponent(path)}`;
-  const opened = await open('editor.html', hash, fakeInvoke(folder), ['app-editor.js', 'page.js']);
+  const opened = await open('editor.html', hash, fakeInvoke(folder), ['app-editor.js', 'page.js'], language);
   const { window, doc } = opened;
   const button = (label) => [...doc.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === label);
   const page = {
