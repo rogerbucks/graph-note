@@ -9,55 +9,74 @@ import type { MarkPoint } from './plugin-diagrams.ts';
 export const WORDS_OFF = 0.55;
 
 /**
- * Where each link's words go. They sit at the middle of the curve if they cover no box, no earlier words and no other
- * line. Else they take the first clear spot along it, either side, a little further off if need be. With no clear spot,
- * they take the one that covers least.
+ * Where each link's words go, by the id of each of its labels. A link's labels move as one block, its rows kept as
+ * Graphviz set them. The block sits at the middle of the curve if it covers no box, no earlier words and no other line.
+ * Else it takes the first clear spot along it, either side, a little further off if need be. With no clear spot, it
+ * takes the one that covers least.
  */
 export function wordSpots(
   marks: readonly DrawMark[],
   boxes: ReadonlyMap<string, Placed>,
   curves: ReadonlyMap<string, Curve>,
 ): Map<string, MarkPoint> {
-  const taken = [...boxes.values()].map((b) => ({ x0: b.x - b.hw, y0: b.y - b.hh, x1: b.x + b.hw, y1: b.y + b.hh }));
+  type Rect = { x0: number; y0: number; x1: number; y1: number };
+  const taken: Rect[] = [...boxes.values()].map((b) => ({
+    x0: b.x - b.hw,
+    y0: b.y - b.hh,
+    x1: b.x + b.hw,
+    y1: b.y + b.hh,
+  }));
   const spots = new Map<string, MarkPoint>();
   // points along every line, so words can keep off the lines they do not name
   const lines = [...curves].map(([of, c]) => ({
     of,
     points: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9].map((t) => c.at(t)),
   }));
-  for (const m of marks) {
-    if (m.kind !== 'label' || m.of === undefined || boxes.has(m.of)) continue;
-    const c = curves.get(m.of);
-    if (!c) continue;
-    const half = (m.maxWidth ?? m.text.length * m.size * 0.5) / 2 + 2,
-      tall = m.size * 0.6;
-    const boxAt = ([x, y]: MarkPoint) => ({ x0: x - half, y0: y - tall * 1.4, x1: x + half, y1: y + tall * 0.4 });
-    // how much words at `p` cover: the area of boxes and words under them, and a share for each line crossed
+  const words = new Map<string, (DrawMark & { kind: 'label' })[]>();
+  for (const m of marks)
+    if (m.kind === 'label' && m.of !== undefined && !boxes.has(m.of) && curves.has(m.of))
+      words.set(m.of, [...(words.get(m.of) ?? []), m]);
+  for (const [of, rows] of words) {
+    const c = curves.get(of) as Curve;
+    // the block's middle, and each row's room from it
+    const mx = rows.reduce((n, m) => n + m.x, 0) / rows.length,
+      my = rows.reduce((n, m) => n + m.y, 0) / rows.length;
+    const size = Math.max(...rows.map((m) => m.size));
+    const room = rows.map((m) => {
+      const half = (m.maxWidth ?? m.text.length * m.size * 0.5) / 2 + 2;
+      return { x0: m.x - mx - half, y0: m.y - my - m.size * 0.84, x1: m.x - mx + half, y1: m.y - my + m.size * 0.24 };
+    });
+    const tall = Math.max(...room.map((r) => r.y1)) - Math.min(...room.map((r) => r.y0));
+    const placed = ([x, y]: MarkPoint): Rect[] =>
+      room.map((r) => ({ x0: x + r.x0, y0: y + r.y0, x1: x + r.x1, y1: y + r.y1 }));
+    // how much the block at `p` covers: the area of boxes and words under it, and a share for each line crossed
     const cover = (p: MarkPoint) => {
-      const r = boxAt(p);
       let n = 0;
-      for (const o of taken)
-        n +=
-          Math.max(0, Math.min(r.x1, o.x1) - Math.max(r.x0, o.x0)) *
-          Math.max(0, Math.min(r.y1, o.y1) - Math.max(r.y0, o.y0));
-      for (const l of lines)
-        if (l.of !== m.of)
-          for (const [x, y] of l.points) if (x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1) n += tall * tall;
+      for (const r of placed(p)) {
+        for (const o of taken)
+          n +=
+            Math.max(0, Math.min(r.x1, o.x1) - Math.max(r.x0, o.x0)) *
+            Math.max(0, Math.min(r.y1, o.y1) - Math.max(r.y0, o.y0));
+        for (const l of lines)
+          if (l.of !== of)
+            for (const [x, y] of l.points) if (x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1) n += size * size * 0.36;
+      }
       return n;
     };
-    let best: MarkPoint = c.wordsAt(0.5, m.size * WORDS_OFF),
+    // off the line by half the block's height: one row sits as far off as WORDS_OFF says
+    const off = Math.max(size * WORDS_OFF, tall / 2);
+    let best: MarkPoint = c.wordsAt(0.5, off),
       least = Infinity;
-    search: for (const off of [WORDS_OFF, WORDS_OFF * 2.2])
+    search: for (const far of [off, off * 2.2])
       for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.25, 0.75])
         for (const side of [1, -1]) {
-          const p = c.wordsAt(t, side * m.size * off);
+          const p = c.wordsAt(t, side * far);
           const n = cover(p);
           if (n < least) [best, least] = [p, n];
           if (!n) break search;
         }
-    const at = best;
-    spots.set(m.id, at);
-    taken.push(boxAt(at));
+    for (const m of rows) spots.set(m.id, [best[0] + m.x - mx, best[1] + m.y - my]);
+    taken.push(...placed(best));
   }
   return spots;
 }
