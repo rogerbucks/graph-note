@@ -180,6 +180,9 @@ describe('the browser editor’s page: every state, in both themes', () => {
   for (const [name, state] of Object.entries(STATES))
     for (const theme of THEMES)
       test(`${name} meets WCAG 2.2 AA in the ${theme} theme`, async () => {
+        // each state can open more than one page; stopped here, not at the end, so their windows and threads are freed
+        const first = opened.length;
+        after(() => Promise.all(opened.splice(first).map((o) => o.stop())));
         const page = await state();
         const result = await auditPage(dir, page, theme);
         assert.ok(result.rules >= 5, 'the check ran its rules');

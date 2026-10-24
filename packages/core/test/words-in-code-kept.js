@@ -140,4 +140,6 @@ export const CORE_KEPT = {
   // the ready-made lenses' saved queries and the Lens line written into a note: graph text, never translated. Also
   // the refusals a host's developer meets when a lens cannot be saved
   'packages/core/src/lens-library.ts': '*',
+  // why a phase part refuses a transition that starts elsewhere: a developer's contract error
+  'packages/core/src/phase-altitude.ts': '*',
 };

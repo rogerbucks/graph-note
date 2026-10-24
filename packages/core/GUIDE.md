@@ -127,6 +127,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `mesh-history.ts` — the mesh's history and its log (editor spec §29). Each note's text is kept as it was after each
   change, so the mesh can be joined as it was at any time. Every change, AI query, bundle and join is logged with its
   source and time. It is a `ChangeLog`, so the storage's history layer feeds it.
+
 #### Renames, schema moves and type suggestions
 
 - `rename-across.ts` — a thing renamed in every note that names it (editor spec §27, rename_follows_notes; NEURO-10).
@@ -149,6 +150,17 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `lens-freshness.ts` — how often and how lately each lens ran (editor spec §33, lens_freshness). One unopened for 90
   days is dormant, with its certainty untouched. `recentLenses` gives the five most used, worked out when asked.
 - `lens-source-words.ts` — the names of the ready-made lenses.
+
+#### Altitude
+
+- `altitude-index.ts` — the altitude and topic index of a note's graphs (editor spec §32, altitude_topic_index). It is
+  derived from the text, so it is built again alike, and its searches rank by the certainty sort key.
+- `sibling-drafts.ts` — drafts of a thing at the bands next to its own, from the AI feature, as proposals (editor spec
+  §32, sibling_drafts). An accepted correction joins its band's examples.
+- `browsing.ts` — moves between altitudes, logged as passing and faded. Only a descent with a consequence is kept as a
+  link (editor spec §32, browsing_leaves_no_links).
+- `phase-altitude.ts` — a transition that changes the view's depth, as a part that can be swapped or removed (editor
+  spec §32, phase_shifts_altitude).
 
 #### Deferred things
 
@@ -175,6 +187,7 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - `readNote` sets `Box.deferred` on each such box. It takes the day as its fifth argument, the current day by
     default.
   - The layout source is untouched, so the host draws the dashing and the later mark on the finished drawing.
+
 #### Certainty
 
 - `certainty-drawn.ts` — how sure a thing is, drawn (editor spec §36, certainty_drawn).
@@ -950,6 +963,7 @@ data of the note it is written in.
   used twice is the same thing.
   - It is bounded by `MOST_MATCHES` and `MOST_TRIES` (every thing and link looked at, fitting or not). Past them it stops
     and says so (spec §9).
+
 #### What a step is given
 
 - `steps-input.ts` — what is given at a point: a graph of the note, whole, or a view of one (a queried path among them).
@@ -1452,6 +1466,7 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
   - `matrixRowsFrom` checks rows handed over as data. It takes none at all if anything in them is not a row.
 - `settings-matrix.ts` — the two options of the matrix, the note that holds it and the table of class names
   (`MATRIX_OPTIONS`).
+
 #### Databases
 
 - `db-import.ts` — importing from a database (spec §20, §21). The database is a SQLite file in the vault.
@@ -1496,6 +1511,22 @@ seen exactly what goes and said yes to it. Its answer comes back as a proposal (
 - `ai-answer.ts` — `proposalFrom`: the changes made into a proposal from the model. It is against the state of the graph
   that was sent, naming the send's record. `noteWithProposal` gives the note with its change set written after the
   graph's last block, the graph untouched.
+
+### Permissions (spec §39)
+
+- `permissions.ts` — who may read or write a thing through a surface the engine serves.
+  - The permissions are graph data, kept outside the notes. A role is a `Role`, a person a `Person` linked to it by
+    HAS_ROLE. Each role holds its own `GrantRule`s; roles never inherit.
+  - A rule matches by a tag, a path or folder, a least likelihood, or all of them. One that names none matches nothing.
+  - A `Grant` gives access only while it, its rule and the person's role are asserted. The owner needs none.
+  - An inferred grant is listed (`inferredGrants`) and gives nothing. A contested or withdrawn one stops at once.
+  - `readGuarded` checks before it opens a note, so a refused note is never read. `whoCan` and `disputes` are lenses.
+- `permissions-change.ts` — changing and joining the permissions.
+  - `previewChange` lists what a change would grant or withdraw, changing nothing. `confirmChange` applies it only for
+    the owner, and only while the preview still holds.
+  - A rule never asserts by itself: `proposedGrants` lists its matches as inferred, so certainty never opens anything.
+  - `joinPermissions` marks a grant contested when joined graphs disagree, unless it is the owner's. Only an own graph
+    names the owner, and an untrusted one is left out.
 
 ### Settings (spec §21)
 
@@ -1558,6 +1589,7 @@ browser editor's page. It holds the drawn card (`src/display/graph-view/`), the 
   - They run against a fresh host and the `HostProbe` through which it shows what it drew.
   - `HOST_CONTRACT_VERSION` is the last entry of `HOST_CONTRACT_VERSIONS`. Each entry pairs a version with a digest
     of how `public-api.json` declares `host.ts`. A change to `DisplayHost` fails a test until a new version is added.
+
 ### Banners and waits
 
 - `refusal-banner.ts` — why a graph is shown as text instead of drawn, in the core's words, with an icon.

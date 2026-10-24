@@ -112,6 +112,9 @@ const NAMES = [
   // lenses as graph data: saved queries that answer fresh (editor spec §33)
   'lensesOf',
   'runLens',
+  // the altitude and topic index (editor spec §32)
+  'altitudeIndex',
+  'searchIndex',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {
