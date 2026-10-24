@@ -856,6 +856,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/nightly-workflow.test.js` — the nightly pre-release, run each night and by hand. It is built only when main
   moved, and published only after the full suite passes. The one job that writes runs no code of the repository. The
   last seven are kept, with the version `scripts/nightly-version.mjs` gives it.
+- `test/wave-nightly-workflow.test.js` — the build made when a wave ends. A merged pull request labelled `wave-done`
+  runs the nightly, after a gate has checked that every item of that wave is Done and proved on the board.
+- `test/workflow-writers.test.js` — which workflow jobs may write to the repository, and what else each may touch.
 - `test/site.test.js` — the project's home page, made from `site/index.html` and `site/words.json`.
   - Every word is used and none is missing.
   - It has the search and AI basics: title, description, canonical address, structured data, sitemap, robots and
