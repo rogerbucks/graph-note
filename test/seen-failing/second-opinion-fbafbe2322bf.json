@@ -1,6 +1,0 @@
-{
-  "file": "test/second-opinion.test.js",
-  "test": "the second opinion from other models > ends with an error when the tools it needs are missing",
-  "seen_failing_first": false,
-  "evidence": "Pins the exit code the script already had: Antigravity's review asked for a test of existing behaviour, not new code."
-}
