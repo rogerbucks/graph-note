@@ -16,6 +16,17 @@ box is planned.
 
 <!-- wiki:layers -->
 
+## How the code is structured
+
+Each part is cut into areas. An area is a set of files with one job and the spec section it serves. The graph note
+names every area and its files. So a new file has to be placed in one. An area that grows past its ceiling has to be
+split, or its ceiling raised on purpose.
+
+An arrow says how many files of one area import the other. Two areas that import each other are listed under the
+table: a split would have to untangle them first.
+
+<!-- wiki:structure -->
+
 ## The interfaces
 
 Every interface between layers has a contract: a set of checks that any app or plug-in runs against itself. If it

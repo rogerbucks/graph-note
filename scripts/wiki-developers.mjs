@@ -10,6 +10,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readBoard } from './slice-board.mjs';
 import { architectureChart, architectureProblems, label, readArchitecture } from './wiki-architecture.mjs';
+import { readStructure, repoFiles, structureFacts, structureProblems, structureSection } from './code-structure.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO = 'https://github.com/rogerbucks/thoughtknot';
@@ -190,6 +191,7 @@ export function developerFills(dev, board, states, latest) {
     architecture: architectureChart(arch),
     layers: layersTable(arch, states),
     interfaces: interfacesTable(arch, states),
+    structure: structureSection(dev.structure),
     section: (num) => sectionView(num, board, states),
     'plugin-api': `\`${dev.pluginApi}\``,
     'plugin-points': pointsTable(dev.points),
@@ -279,8 +281,14 @@ export async function developerFacts() {
     (rel) => existsSync(join(ROOT, rel)),
   );
   if (faults.length) throw new Error(`requirements/architecture.gql:\n${faults.join('\n')}`);
+  // the areas of each part, checked the same way: a file in no area or a crowded area stops the wiki
+  const structure = readStructure(architectureText);
+  const files = repoFiles();
+  const misplaced = structureProblems(structure, files);
+  if (misplaced.length) throw new Error(`requirements/architecture.gql:\n${misplaced.join('\n')}`);
   return {
     architectureText,
+    structure: structureFacts(structure, files, text),
     points: [...EXTENSION_POINTS],
     pluginApi: PLUGIN_API,
     exporterChecks: exporterContract(exporter).map((c) => c.name),
