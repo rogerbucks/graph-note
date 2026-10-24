@@ -335,11 +335,75 @@
   min-width: 44px;
   min-height: 44px;
 }
+/* What can be done with the selected thing: one rail of icons and words, a line each, the same in 2D and in 3D. It sits
+   just under what the thing is, in a quiet frame, so it reads as the thing's controls. */
 .thoughtknot-untangle-offers {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--gn-space-2);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gn-space-half-2);
   margin-block: var(--gn-space-2);
+  padding: var(--gn-space-half-2);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-m);
+  background: var(--gn-bg-alt);
+}
+.thoughtknot-untangle-offers button.clickable-icon {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-2);
+  margin: 0;
+  border: 0;
+  border-radius: var(--gn-radius-s);
+  box-shadow: none;
+  background: transparent;
+  color: var(--gn-text-normal);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-untangle-offers > button.clickable-icon {
+  justify-content: flex-start;
+  width: 100%;
+  padding-inline: var(--gn-space-2);
+  text-align: start;
+}
+.thoughtknot-untangle-offers button.clickable-icon:hover:not(:disabled) {
+  background: var(--gn-bg-hover);
+}
+.thoughtknot-untangle-offers button.clickable-icon:disabled {
+  color: var(--gn-text-faint);
+}
+.thoughtknot-untangle-offers button.clickable-icon .thoughtknot-badge-text {
+  font-size: inherit;
+}
+/* one step fewer or more round the thing shown alone, under its Show only, set in by the width of an icon */
+.thoughtknot-untangle-reach {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-inline-start: calc(2 * var(--gn-space-2) + 16px);
+  border: 1px solid var(--gn-border);
+  border-radius: var(--gn-radius-s);
+  background: var(--gn-bg);
+}
+/* the thing shown alone: its Show only is pressed, so where the drawing stands is seen in the rail */
+.thoughtknot-untangle-offers > button.clickable-icon[aria-pressed='true'] {
+  background: var(--gn-bg-hover);
+  box-shadow: inset 3px 0 0 var(--gn-accent);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-untangle-reach[hidden] {
+  display: none;
+}
+.thoughtknot-untangle-reach button.clickable-icon {
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+.thoughtknot-untangle-steps {
+  padding-inline: var(--gn-space-2);
+  text-align: center;
+  font-size: var(--gn-font-size-s);
+  color: var(--gn-text-muted);
 }
 .thoughtknot-find input {
   width: 100%;

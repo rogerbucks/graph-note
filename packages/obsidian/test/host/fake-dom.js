@@ -227,6 +227,11 @@ export class FakeElement {
     if (ev.target.isConnected) for (const fn of doc.listeners?.get(type) ?? []) fn.call(doc, ev);
     return ev;
   }
+  // an event made by new Event or new CustomEvent, sent as dispatch sends one
+  dispatchEvent(ev) {
+    this.dispatch(ev.type, ev.detail === undefined ? {} : { detail: ev.detail });
+    return true;
+  }
   click() {
     return this.dispatch('click');
   }

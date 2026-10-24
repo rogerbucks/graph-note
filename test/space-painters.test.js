@@ -41,6 +41,7 @@ import { spreadSpace } from './packages/core/src/space-spread.ts';
 import { installDomHelpers } from './packages/core/src/display/dom-helpers.ts';
 import { installHost } from './packages/core/src/display/host.ts';
 import { SPACE_OPEN, openSpaceView } from './packages/core/src/display/graph-view/space-view-panel.ts';
+import { MARKED } from './packages/core/src/display/graph-view/focus-marks.ts';
 installDomHelpers(window);
 installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
 import { PALETTES } from './packages/core/src/palette.ts';
@@ -101,8 +102,9 @@ window.paintCity = async (count) => {
   }
   return out;
 };
-// a drawing as Graphviz writes it: a group holding one of two things, and a link between them
-window.readSvg = () => {
+// a drawing as Graphviz writes it: a group holding one of two things, and a link between them. With \`marked\`, the
+// card's focus has faded Ada and hidden Bob, with the link that names him
+window.readSvg = (marked = false) => {
   const holder = document.body.appendChild(document.createElement('div'));
   holder.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><g class="graph">
     <g class="cluster" id="clust1"><title>cluster_team</title><polygon fill="rgb(220, 230, 250)" stroke="rgb(40, 60, 120)" points="10,10 150,10 150,120 10,120"/></g>
@@ -114,12 +116,17 @@ window.readSvg = () => {
     <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="40" font-size="14" fill="rgb(10, 10, 10)">Cy</text></g>
     <g class="edge" id="edge3" data-link="2"><path fill="none" stroke="rgb(90, 90, 90)" d="M232,131 C240,100 260,80 268,52"/></g>
   </g></svg>\`;
+  if (marked) {
+    holder.querySelector('#node1').classList.add('thoughtknot-dim');
+    for (const id of ['#node2', '#edge1']) holder.querySelector(id).classList.add('thoughtknot-hidden');
+  }
   const { marks, paints } = marksOfSvg(holder.querySelector('svg'));
   holder.remove();
   return marks.map((m) => ({ ...m, paint: paints(m.style) }));
 };
-// the 3D view of a drawing as the plugin draws it. A click on a ball, then on a link, tells the card to open it
-window.pickInSpace = async () => {
+// the 3D view of a drawing as the plugin draws it. A click on a ball, then on a link, tells the card to open it. With
+// \`hideBob\`, the card hides Bob and the link once the view is open, and marks its drawing again
+window.pickInSpace = async (hideBob = false) => {
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
   const holder = root.appendChild(document.createElement('div'));
@@ -132,6 +139,11 @@ window.pickInSpace = async () => {
   root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
   const close = await openSpaceView(root, holder.querySelector('svg'), 'Team', () => {});
   const view = root.querySelector('.thoughtknot-space-view');
+  if (hideBob) {
+    const svg = holder.querySelector('svg');
+    for (const g of svg.querySelectorAll('[data-key="bob"], [data-link]')) g.classList.add('thoughtknot-hidden');
+    svg.dispatchEvent(new Event(MARKED));
+  }
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   const at = view.getBoundingClientRect();
   const click = (x, y) => {
@@ -140,10 +152,12 @@ window.pickInSpace = async () => {
   };
   // find where Ada's ball and the link fall on the screen by trying a grid of points: the view's sums are its own
   const found = { ball: null, link: null };
+  const keys = new Set();
   for (let y = 4; y < at.height && !(found.ball && found.link); y += 4)
     for (let x = 4; x < at.width; x += 4) {
       click(x, y);
       const last = told.at(-1);
+      if (last && 'key' in last) keys.add(last.key);
       if (last && 'key' in last && !found.ball) found.ball = last;
       if (last && 'link' in last && !found.link) found.link = last;
       if (found.ball && found.link) break;
@@ -151,7 +165,7 @@ window.pickInSpace = async () => {
   const said = view.querySelector('.thoughtknot-space-said')?.textContent;
   close?.();
   root.remove();
-  return { ...found, said };
+  return { ...found, said, keys: [...keys] };
 };
 window.checkWebgpu = async () => {
   const canvas = document.body.appendChild(document.createElement('canvas'));
@@ -284,6 +298,31 @@ describe("the 3D view's painters, in a real browser", () => {
     const { ball, link } = JSON.parse(await browser.run('pickInSpace().then(JSON.stringify)'));
     assert.ok(ball && ['ada', 'bob'].includes(ball.key), `a ball opens its thing: ${JSON.stringify(ball)}`);
     assert.deepEqual(link, { link: 0 }, 'a link opens by its number, as a tap reads it');
+  });
+
+  // proves: focus_space
+  test('what the card hides is gone from the 3D view too, once it marks its drawing again', options, async () => {
+    const { keys, link } = JSON.parse(await browser.run('pickInSpace(true).then(JSON.stringify)'));
+    assert.deepEqual(keys, ['ada'], 'only Ada is left to pick');
+    assert.equal(link, null, 'the hidden link is not drawn');
+  });
+
+  // proves: focus_space
+  test('what the focus fades is read see-through, and what it hides is not read at all', options, async () => {
+    const marks = JSON.parse(await browser.run('JSON.stringify(readSvg(true))'));
+    const ids = new Set(marks.map((m) => m.id));
+    assert.ok(!ids.has('t:bob') && !ids.has('e:edge1'), 'Bob and the link to him are hidden');
+    const ada = marks.find((m) => m.id === 't:ada');
+    assert.deepEqual(ada.paint, {
+      fill: 'rgb(200 240 200 / 0.3)',
+      line: 'rgb(0 100 0 / 0.3)',
+      text: 'rgb(10 10 10 / 0.3)',
+    });
+    assert.deepEqual(
+      marks.find((m) => m.id === 't:cy').paint.fill,
+      'rgb(200, 240, 200)',
+      'a thing the focus keeps is as it was',
+    );
   });
 
   test('WebGPU builds its shaders and paints the city with no error', options, async (t) => {

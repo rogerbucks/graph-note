@@ -65,9 +65,9 @@ describe('a graph embedded in another note is read-only wherever it is shown', (
           'Move details',
           'Minimise details',
           'Close details',
+          ...UNTANGLING,
           'Which device?',
           'Link: Large reader answers Which device?',
-          ...UNTANGLING,
         ]),
         ['Close details', ...UNTANGLING],
       );

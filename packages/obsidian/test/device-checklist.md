@@ -407,9 +407,9 @@ Each item after Before has a note in `test-vault/Device checks/` that shows the 
 - [ ] **F-04** Without a pointer: on the phone, a tap that selects a box gives it the same glow and underline. They stay
       until something else is chosen. On a keyboard, Tab to a box or a link gives them too (slice 3, hover_not_alone).
 - [ ] **F-05** Zoom in, open a box's details and press Show only this and its neighbours. The rest disappears, and
-      those left glide together. A banner names the box and the steps; the button says Show the whole graph. Widen to
-      two steps and Narrow to one step change it. Press the button again: all comes back as drawn, at your zoom (slice
-      3, untangle_neighbourhood, untangle_toggle, untangle_regroup).
+      those left glide together. A banner names the box and the steps; the button says Show the whole graph. The − and
+      + under it change the steps, up to 3. Press the button again: all comes back as drawn, at your zoom (slice 3,
+      untangle_neighbourhood, untangle_toggle, untangle_regroup, thing_controls).
 ### Filter, shortest path, find and the arrow keys
 
 - [ ] **F-06** Press Filter by kind or link: each kind and relationship type is a button with its count. Choose one: it comes
