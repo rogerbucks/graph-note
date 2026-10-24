@@ -3883,7 +3883,10 @@
           "clustersOf: (graph: GraphSpecCheck.Graph, kind?: 'asserted' | 'found') => { clusters: GraphSpecCheck.Cluster[]; memberships: GraphSpecCheck.ClusterMembership[]; }",
           "COMMENT_FIX: string",
           "COMMENT_RULE: string",
+          "comparable: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, a: string, b: string) => boolean",
           "completeness: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }",
+          "contextGuesses: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, view?: { acrossContexts?: boolean; }, canRead?: (context: string) => boolean) => { name: string; things: string[]; across: boolean; }[]",
+          "contextsOf: (world: GraphSpecCheck.World, options?: { graph?: string; notes?: Record<string, string>; vault?: string; }) => GraphSpecCheck.Contexts",
           "cycleView: (graph: GraphSpecCheck.Graph, how: 'hide' | 'highlight') => { shown: string[]; highlighted: string[]; }",
           "Graph: typeof GraphSpecCheck.Graph",
           "GTime: typeof GraphSpecCheck.GTime",
@@ -3904,13 +3907,16 @@
           "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
           "ProfileError: typeof GraphSpecCheck.ProfileError",
           "proposerWarnings: (world: GraphSpecCheck.World, judgementGraph: string) => string[]",
+          "proposeSameAs: (ctx: GraphSpecCheck.Contexts, from: { graph: string; thing: string; }, to: { graph: string; thing: string; }, by: { kind: string; name: string; }) => { status: 'write'; graph: string; text: string; across: boolean; } | { status: 'waiting'; for: 'person'; from: { graph: string; thing: string; }; to: { graph: string; thing: string; }; by: { kind: string; name: string; }; } | { status: 'refused'; why: 'not-a-name'; }",
           "quote: (s: string) => string",
           "readChange: (text: string) => GraphSpecCheck.ReadChange",
           "readings: (g: GraphSpecCheck.Graph, shared?: GraphSpecCheck.Graph) => Map<string, [string | undefined, string | undefined]>",
           "reverseReading: (reading: string) => string",
           "sameAs: (world: GraphSpecCheck.World) => { ones: string[][]; unresolved: { graph: string; thing: string; ref: string; in: string; }[]; guesses: { name: string; things: string[]; }[]; }",
+          "sameAsAcross: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, context: string) => { from: string; to: string; contexts: [string, string]; }[]",
           "SCHEMA_LABELS: Array<string>",
           "schemaFor: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]",
+          "searchContexts: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, text: string, canRead?: (context: string) => boolean) => string[]",
           "secretsIn: (text: string) => string[]",
           "secretsInGraph: (g: GraphSpecCheck.Graph) => [string, string][]",
           "shownText: (g: GraphSpecCheck.Graph, id: string, shared?: GraphSpecCheck.Graph) => [string, string | null]",
@@ -3921,7 +3927,8 @@
           "tokens: (text: string) => [string, string, number, string, number][]",
           "typeOf: (world: GraphSpecCheck.World, graph: string, key: string) => GraphSpecCheck.Placed | null",
           "word: (readings: Map<string, [string | undefined, string | undefined]>, type: string) => string",
-          "worldFromStore: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
+          "worldFromStore: (store: GraphSpecCheck.Store) => GraphSpecCheck.World",
+          "worldIn: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, context: string) => GraphSpecCheck.World"
         ],
         "afterTextMerge": [
           "value: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }"
@@ -4013,6 +4020,9 @@
         "COMMENT_RULE": [
           "value: string"
         ],
+        "comparable": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, a: string, b: string) => boolean"
+        ],
         "completeness": [
           "value: (g: GraphSpecCheck.Graph, today: string) => { rules: GraphSpecCheck.CompletenessRule[]; deferred_malformed: { at: string; fix: string; }[]; }"
         ],
@@ -4028,6 +4038,24 @@
           "overdue: Array<string>",
           "rule: string",
           "says: string"
+        ],
+        "contextGuesses": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, view?: { acrossContexts?: boolean; }, canRead?: (context: string) => boolean) => { name: string; things: string[]; across: boolean; }[]"
+        ],
+        "ContextInfo": [
+          "interface",
+          "guessesAcross: boolean",
+          "kind: 'note' | 'client' | 'folder' | 'vault'"
+        ],
+        "Contexts": [
+          "interface",
+          "byGraph: Record<string, string>",
+          "contexts: Record<string, GraphSpecCheck.ContextInfo>",
+          "graph: string",
+          "vault: string"
+        ],
+        "contextsOf": [
+          "value: (world: GraphSpecCheck.World, options?: { graph?: string; notes?: Record<string, string>; vault?: string; }) => GraphSpecCheck.Contexts"
         ],
         "cycleView": [
           "value: (graph: GraphSpecCheck.Graph, how: 'hide' | 'highlight') => { shown: string[]; highlighted: string[]; }"
@@ -4163,6 +4191,9 @@
         "proposerWarnings": [
           "value: (world: GraphSpecCheck.World, judgementGraph: string) => string[]"
         ],
+        "proposeSameAs": [
+          "value: (ctx: GraphSpecCheck.Contexts, from: { graph: string; thing: string; }, to: { graph: string; thing: string; }, by: { kind: string; name: string; }) => { status: 'write'; graph: string; text: string; across: boolean; } | { status: 'waiting'; for: 'person'; from: { graph: string; thing: string; }; to: { graph: string; thing: string; }; by: { kind: string; name: string; }; } | { status: 'refused'; why: 'not-a-name'; }"
+        ],
         "quote": [
           "value: (s: string) => string"
         ],
@@ -4200,11 +4231,17 @@
         "sameAs": [
           "value: (world: GraphSpecCheck.World) => { ones: string[][]; unresolved: { graph: string; thing: string; ref: string; in: string; }[]; guesses: { name: string; things: string[]; }[]; }"
         ],
+        "sameAsAcross": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, context: string) => { from: string; to: string; contexts: [string, string]; }[]"
+        ],
         "SCHEMA_LABELS": [
           "value: Array<string>"
         ],
         "schemaFor": [
           "value: (world: GraphSpecCheck.World, graph: string) => [string | undefined, GraphSpecCheck.Graph | undefined]"
+        ],
+        "searchContexts": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, text: string, canRead?: (context: string) => boolean) => string[]"
         ],
         "secretsIn": [
           "value: (text: string) => string[]"
@@ -4252,6 +4289,9 @@
         ],
         "worldFromStore": [
           "value: (store: GraphSpecCheck.Store) => GraphSpecCheck.World"
+        ],
+        "worldIn": [
+          "value: (world: GraphSpecCheck.World, ctx: GraphSpecCheck.Contexts, context: string) => GraphSpecCheck.World"
         ]
       },
       "./src/graph-layout.js": {

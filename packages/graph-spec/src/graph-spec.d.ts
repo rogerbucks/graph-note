@@ -382,6 +382,58 @@ declare namespace GraphSpecCheck {
     unresolved: { graph: string; thing: string; ref: string; in: string }[];
     guesses: { name: string; things: string[] }[];
   };
+  /** A context's kind and whether it shows same-name guesses with other contexts (editor spec §61). */
+  interface ContextInfo {
+    kind: 'client' | 'note' | 'folder' | 'vault';
+    guessesAcross: boolean;
+  }
+  /** A world's contexts, the one each graph belongs to, the vault's name and the graph the contexts are written in. */
+  interface Contexts {
+    contexts: Record<string, ContextInfo>;
+    byGraph: Record<string, string>;
+    vault: string;
+    graph: string;
+  }
+  /** The contexts of a world: each graph in exactly one, its vault when none claims it (context_named). */
+  function contextsOf(
+    world: World,
+    options?: { graph?: string; notes?: Record<string, string>; vault?: string },
+  ): Contexts;
+  /** The same-name guesses to show, across contexts only when turned on, and none from a context the viewer cannot read. */
+  function contextGuesses(
+    world: World,
+    ctx: Contexts,
+    view?: { acrossContexts?: boolean },
+    canRead?: (context: string) => boolean,
+  ): { name: string; things: string[]; across: boolean }[];
+  /** Whether two `graph/key` things may be compared: one context, one shared schema, or a SAME_AS link. */
+  function comparable(world: World, ctx: Contexts, a: string, b: string): boolean;
+  /** A proposed SAME_AS link: written, or waiting for a person when it crosses contexts and no person made it. */
+  function proposeSameAs(
+    ctx: Contexts,
+    from: { graph: string; thing: string },
+    to: { graph: string; thing: string },
+    by: { kind: string; name: string },
+  ):
+    | { status: 'write'; graph: string; text: string; across: boolean }
+    | {
+        status: 'waiting';
+        for: 'person';
+        from: { graph: string; thing: string };
+        to: { graph: string; thing: string };
+        by: { kind: string; name: string };
+      }
+    | { status: 'refused'; why: 'not-a-name' };
+  /** The SAME_AS links crossing into or out of a context, listed on both sides. */
+  function sameAsAcross(
+    world: World,
+    ctx: Contexts,
+    context: string,
+  ): { from: string; to: string; contexts: [string, string] }[];
+  /** The world one context sees: its own graphs only. */
+  function worldIn(world: World, ctx: Contexts, context: string): World;
+  /** The `graph/key` things holding a text, from the contexts the viewer can read only. */
+  function searchContexts(world: World, ctx: Contexts, text: string, canRead?: (context: string) => boolean): string[];
   /** The type a thing is an instance of, through INSTANCE_OF, here or through a Ref; null when it has none. */
   function typeOf(world: World, graph: string, key: string): Placed | null;
   /** The instances of a type, in every graph, sorted by graph, then key. */

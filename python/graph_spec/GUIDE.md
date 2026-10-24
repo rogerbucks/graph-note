@@ -168,6 +168,9 @@ archive's layout on every pull request, so it always works with the library as s
 - `src/graphspec/engine/mesh/types_instances.py` — editor spec §27. `type_of`, `instances_of` and `inherited`: an
   instance links to its type with INSTANCE_OF and has its type's properties unless it sets its own. The twin of
   `types-instances.js`, held to `types-instances-cases.json`.
+- `src/graphspec/engine/mesh/contexts.py` — editor spec §61. `contexts_of`, `context_guesses`, `comparable`,
+  `propose_same_as`, `same_as_across`, `world_in` and `search_contexts`: where links may join. The twin of
+  `contexts.js`, held to the same worlds by `tests/test_contexts.py`.
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).

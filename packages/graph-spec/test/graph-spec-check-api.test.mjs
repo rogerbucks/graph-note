@@ -109,6 +109,14 @@ const NAMES = [
   'typeOf',
   'instancesOf',
   'inherited',
+  // contexts: where links may join (editor spec §61)
+  'contextsOf',
+  'contextGuesses',
+  'comparable',
+  'proposeSameAs',
+  'sameAsAcross',
+  'worldIn',
+  'searchContexts',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {
