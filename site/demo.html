@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="{{@lang}}" dir="{{@dir}}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content="{{@demo-policy}}" />
+    <title>{{demo.title}}</title>
+    <meta name="description" content="{{demo.description}}" />
+    <link rel="canonical" href="{{@url}}demo.html" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="site.css" />
+    <link rel="stylesheet" href="demo/harness.css" />
+    <link rel="stylesheet" href="demo/styles.css" />
+    <link rel="stylesheet" href="demo/icons.css" />
+    <meta name="color-scheme" content="light dark" />
+  </head>
+  <body class="demo-page">
+    <a class="skip" href="#content">{{page.skip}}</a>
+    <header class="top">
+      <a class="brand" href="{{@url}}"><img src="icon.svg" alt="" width="28" height="28" />ThoughtKnot</a>
+      <nav aria-label="{{nav.label}}">
+        <ul>
+          <li><a href="{{@url}}">{{demo.back}}</a></li>
+          <li><a href="{{@wiki}}/How-to-use-ThoughtKnot">{{nav.guide}}</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="content" class="demo">
+      <h1>{{demo.heading}}</h1>
+      <p class="lede">{{demo.lede}}</p>
+      <p class="note">{{demo.private}}</p>
+      <div id="page">
+        <div id="note"><p>{{demo.loading}}</p></div>
+        <div id="pane"></div>
+      </div>
+      <noscript><p>{{demo.noscript}}</p></noscript>
+    </main>
+    <script type="module" src="demo/demo.js"></script>
+  </body>
+</html>

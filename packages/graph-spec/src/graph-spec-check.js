@@ -57,6 +57,7 @@ const { louvain } = require('./clusters/louvain.js');
 const { clustersOf } = require('./clusters/clusters.js');
 const { centroidId, centroidsOf } = require('./clusters/centroids.js');
 const { clusterCycles, cycleView } = require('./clusters/cycles.js');
+const { altitudeIndex, searchIndex } = require('./altitude/altitude-index.js');
 const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
 const { asAt, lensAsAt } = require('./mesh/as-at.js');
 const { afterTextMerge } = require('./mesh/after-text-merge.js');
@@ -162,6 +163,8 @@ module.exports = {
   typeOf,
   instancesOf,
   inherited,
+  altitudeIndex,
+  searchIndex,
   contextsOf,
   contextGuesses,
   comparable,

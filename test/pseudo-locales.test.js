@@ -196,6 +196,9 @@ describe('the browser editor’s page: every state, in each test language', () =
     });
     for (const [name, state] of Object.entries(STATES))
       test(`${name}, in ${tag}`, async () => {
+        // each state can open more than one page; stopped here, not at the end, so their windows and threads are freed
+        const first = opened.length;
+        after(() => Promise.all(opened.splice(first).map((o) => o.stop())));
         setLanguage(tag);
         const page = await state();
         const { document } = page.window;

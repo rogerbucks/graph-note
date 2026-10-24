@@ -109,6 +109,9 @@ const NAMES = [
   'typeOf',
   'instancesOf',
   'inherited',
+  // the altitude and topic index (editor spec §32)
+  'altitudeIndex',
+  'searchIndex',
   // contexts: where links may join (editor spec §61)
   'contextsOf',
   'contextGuesses',

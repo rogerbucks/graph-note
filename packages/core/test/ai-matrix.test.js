@@ -18,6 +18,7 @@ import {
   unmatchedClasses,
 } from '../src/ai-matrix.ts';
 import { DEFAULT_SETTINGS, OPTIONS, aiModel, settingsFrom } from '../src/settings.ts';
+import { inOrder } from './text-find.js';
 
 const LEVELS = ['Public', 'Internal', 'Confidential', 'Restricted'];
 const cell = (name, mark, condition) => ({ class: name, mark, ...(condition ? { condition } : {}) });
@@ -297,7 +298,7 @@ describe('a duplicate never fails open: the first match does not win', () => {
       ask(model('B', { matrixRow: 'DUP' }), 'Public', { rows: dupRows, classMap: {} }).refused,
       /more than once/,
     );
-    assert.ok(matrixProblems(dupRows, LEVELS, {}).some((p) => /Dup.*more than once/.test(p)));
+    assert.ok(matrixProblems(dupRows, LEVELS, {}).some((p) => inOrder(p, 'Dup', 'more than once')));
     assert.deepEqual(matrixProblems(ROWS, LEVELS, {}), []);
   });
 
@@ -359,7 +360,7 @@ describe('matching is exact about what a name is', () => {
     const split = { Open: 'Public', open: 'Internal' };
     assert.equal(matchClass('Open', LEVELS, split), null);
     assert.equal(matchClass('OPEN', LEVELS, split), null);
-    assert.ok(classMapProblems(LEVELS, split).some((p) => /Open.*open/.test(p)));
+    assert.ok(classMapProblems(LEVELS, split).some((p) => inOrder(p, 'Open', 'open')));
     const agree = { Open: 'Public', open: 'public' };
     assert.equal(matchClass('Open', LEVELS, agree), 'Public');
     assert.equal(classMapProblems(LEVELS, agree).length, 1);
@@ -369,7 +370,7 @@ describe('matching is exact about what a name is', () => {
   test('a table entry that conflicts with a name match is flagged, and the name is not used', () => {
     const clash = { Public: 'Internal' };
     assert.equal(matchClass('Public', LEVELS, clash), null);
-    assert.ok(classMapProblems(LEVELS, clash).some((p) => /Public.*Internal/.test(p)));
+    assert.ok(classMapProblems(LEVELS, clash).some((p) => inOrder(p, 'Public', 'Internal')));
     assert.equal(matchClass('Public', LEVELS, { Public: 'public' }), 'Public');
   });
 });
