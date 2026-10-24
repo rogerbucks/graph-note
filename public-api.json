@@ -3621,10 +3621,10 @@
           "value: number"
         ],
         "ThresholdName": [
-          "type = 'busy_hub' | 'path_pace' | 'reread_budget' | 'diff_limit'"
+          "type = 'busy_hub' | 'path_pace' | 'reread_budget' | 'diff_limit' | 'instance_share' | 'instance_fewest' | 'cycle_passes' | 'cycle_threshold'"
         ],
         "THRESHOLDS": [
-          "value: { busy_hub: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; path_pace: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; reread_budget: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; diff_limit: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; }"
+          "value: { busy_hub: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; path_pace: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; reread_budget: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; diff_limit: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; instance_share: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; instance_fewest: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; cycle_passes: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; cycle_threshold: { value: number; least: number; most: number; unit: string; said: string; requirement: string; }; }"
         ],
         "thresholdValue": [
           "value: (name: ThresholdName, given?: unknown) => number"

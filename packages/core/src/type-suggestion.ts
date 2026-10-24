@@ -12,6 +12,7 @@ import { readNote } from './drawing.ts';
 import { withProposer } from './proposals-author.ts';
 import { basisOf } from './proposals-basis.ts';
 import { makeProposal } from './proposals.ts';
+import { thresholdValue } from './thresholds.ts';
 import type { Proposal, Proposer } from './proposals.ts';
 import { changeSetText } from './proposals-text.ts';
 import { word } from './words.ts';
@@ -51,10 +52,13 @@ function gqlOf(v: Value): string | null {
 
 /**
  * The changes to the types of `graph` that their instances suggest, strongest first. A type needs `fewest` instances
- * (3 by default). At least a share `least` of them (three in four by default) must set one value it lacks.
+ * (3 by default). At least a share `least` of them (three in four by default) must set one value it lacks. Both are
+ * named settings (thresholds.ts) and are taken only inside their range.
  */
 export function typeSuggestions(note: string, graph: string, limits: SuggestionLimits = {}): TypeSuggestion[] {
-  const { least = 0.75, fewest = 3, at } = limits;
+  const { at } = limits;
+  const least = thresholdValue('instance_share', limits.least);
+  const fewest = thresholdValue('instance_fewest', limits.fewest);
   const world = readNote(gqlSpans(note).map((s) => s.text)).world;
   const g = world[graph];
   if (!g) return [];
