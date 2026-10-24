@@ -2,7 +2,8 @@
 // "at a pace the user sets", or leave a limit to the build. Then the number is named here once, with its default, the
 // least and most it may be, its unit and what it governs. The requirement it serves is named too. Code reads the
 // default from here. A value handed in from a setting or a caller is taken only inside its range, else the default
-// stands. Rules of later slices add their own entries as they are built (type_suggestion_bundle, centroid_cycle_guard).
+// stands. Rules of later slices add their own entries as they are built. The type suggestion's two numbers and the cycle
+// guard's two are here, and the graph spec's own defaults (centroids.js, centroids.py) must match them.
 
 /** One open number: its default, the least and most it may be, its unit, what it governs, and the rule that leaves it open. */
 export interface Threshold {
@@ -47,6 +48,38 @@ export const THRESHOLDS = {
     unit: 'lines',
     said: 'The most lines added and removed that a review compares line by line.',
     requirement: 'github_review_items',
+  },
+  instance_share: {
+    value: 0.75,
+    least: 0.5,
+    most: 1,
+    unit: 'share of instances',
+    said: 'How big a share of a type’s instances must agree on one value before the type is suggested to take it.',
+    requirement: 'type_suggestion_bundle',
+  },
+  instance_fewest: {
+    value: 3,
+    least: 2,
+    most: 1000,
+    unit: 'instances',
+    said: 'How few instances a type may have and still have a change suggested from them.',
+    requirement: 'type_suggestion_bundle',
+  },
+  cycle_passes: {
+    value: 50,
+    least: 1,
+    most: 1000,
+    unit: 'passes',
+    said: 'The most passes the cycle guard makes over clusters that sit inside each other before it flags them unsettled.',
+    requirement: 'centroid_cycle_guard',
+  },
+  cycle_threshold: {
+    value: 1e-9,
+    least: 1e-12,
+    most: 1e-3,
+    unit: 'certainty points',
+    said: 'How little a centroid may move in a pass and still count as settled.',
+    requirement: 'centroid_cycle_guard',
   },
 } satisfies Record<string, Threshold>;
 
