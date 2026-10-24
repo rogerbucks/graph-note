@@ -537,7 +537,8 @@ These test behaviour across modules, or the repository itself, so they are named
   `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
 - `test/layers.test.js` — each layer imports only the layers below it, as `requirements/architecture.gql` says. It
   reads every import of the shipped code (editor spec §43, layers_checked; `node scripts/layers.mjs`).
-- `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
+- `test/cheap-checks.test.js` — the quiet test run, running only a change's tests and the search ignore file.
+- `test/agents-guide.test.js` — the short AI guide, AGENTS.md, stays slim, and its handbook holds the detail.
 - `test/build-status.test.js` — the build status's pure part. It covers the requirements a pull request moves, found
   from the tests it newly marks written. It also covers the stage an event gives, which value may replace which, and the
   comment and the annotations.
@@ -778,8 +779,9 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `test/fresh-clone.test.js` — when a pull request runs the fresh clone. It runs only for a change that can alter what
   the README's steps do. That is the steps, the npm scripts, the hook or the git settings (spec §13, Delivery).
-- `test/ci-plan.test.js` — what CI runs for a change. A draft runs only the tests its change reaches. Anything else runs
-  everything, and a failed plan runs everything too (spec §13, touched_tests_only).
+- `test/ci-plan.test.js` — what CI runs for a change. A pull request, draft or ready, runs only the tests its change
+  reaches. The label `ci:full` runs everything from the next push. Main, the nightly and a release run everything, and a
+  failed plan runs everything too (spec §13, touched_tests_only).
 
 ### The quality ratchet and the test runner
 

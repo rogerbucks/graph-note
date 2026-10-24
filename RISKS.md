@@ -325,7 +325,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Who found it:** Senior coder and QA / test engineer. **Where:** `packages/obsidian/test/**`, `packages/core/test/layout-worker.test.js`, `test/fixed-sleeps.json`.
 
-**Risk:** The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite is never skipped before a merge, so a release waits on a rerun.
+**Risk:** The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite runs on main after every merge and before a release, so a release waits on a rerun.
 
 **Fix:** Replace each sleep with the test support's `until` on the state asserted, one file per pull request, and run --tighten after each.
 

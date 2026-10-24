@@ -916,7 +916,7 @@
       "role": "Senior coder and QA / test engineer",
       "area": "test",
       "title": "77 fixed sleeps remain in 26 plugin test files",
-      "risk": "The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite is never skipped before a merge, so a release waits on a rerun.",
+      "risk": "The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite runs on main after every merge and before a release, so a release waits on a rerun.",
       "evidence": [
         "test/fixed-sleeps.json:2",
         "test/fixed-sleeps.json:25",
