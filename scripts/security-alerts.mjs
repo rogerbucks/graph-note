@@ -121,21 +121,24 @@ export const fromOsv = (pkg, v) =>
     UV_LOCK,
   );
 
-/** GET every page of a GitHub list. Returns { alerts } or, when the token may not read it, { unread: reason }. */
+/**
+ * GET every page of a GitHub list. Returns { alerts } or, when the token may not read it, { unread: reason }. Pages are
+ * followed by the `next` link GitHub sends: the Dependabot list refuses a `page` number and only takes a cursor.
+ */
 export async function githubList(path, token, { fetch: get = fetch } = {}) {
   if (!token) return { unread: 'no token' };
   const items = [];
-  for (let page = 1; page <= 20; page++) {
-    const res = await get(`${API}${path}${path.includes('?') ? '&' : '?'}per_page=100&page=${page}`, {
+  let url = `${API}${path}${path.includes('?') ? '&' : '?'}per_page=100`;
+  for (let page = 1; url && page <= 20; page++) {
+    const res = await get(url, {
       headers: { authorization: `Bearer ${token}`, accept: 'application/vnd.github+json' },
     });
     if (!res.ok) {
       const body = await res.text().catch(() => '');
       return { unread: `${res.status}${body ? `: ${body.slice(0, 160)}` : ''}` };
     }
-    const batch = await res.json();
-    items.push(...batch);
-    if (batch.length < 100) break;
+    items.push(...(await res.json()));
+    url = /<([^>]+)>;\s*rel="next"/.exec(res.headers?.get?.('link') ?? '')?.[1];
   }
   return { alerts: items };
 }
