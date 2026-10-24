@@ -117,6 +117,7 @@ export function paintSpaceLabels(
   ratio: number,
   halo: string,
   arrows: readonly ScreenArrow[] = [],
+  ring: { x: number; y: number; r: number; ink: string } | null = null,
 ) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -134,6 +135,17 @@ export function paintSpaceLabels(
     ctx.fillStyle = line;
     ctx.fill();
     ctx.strokeStyle = halo;
+    ctx.stroke();
+  }
+  // the picked thing's ring: its ink edged both sides in the page colour, so it shows in either theme
+  if (ring) {
+    ctx.beginPath();
+    ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2);
+    ctx.strokeStyle = halo;
+    ctx.lineWidth = 7;
+    ctx.stroke();
+    ctx.strokeStyle = ring.ink;
+    ctx.lineWidth = 3;
     ctx.stroke();
   }
   ctx.textAlign = 'center';

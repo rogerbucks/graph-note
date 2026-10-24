@@ -2,9 +2,20 @@
 // and heights. Links rise in arcs between the blocks they join. The camera shows the drawing the way up it reads.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FLOOR_GAP, orbitBy, orbitFit, projectPoint, spaceMatrix, spaceOf, zoomBy } from '../src/space-view.ts';
+import {
+  FLOOR_GAP,
+  centredOn,
+  middleOf,
+  orbitBy,
+  orbitFit,
+  projectPoint,
+  spaceMatrix,
+  spaceOf,
+  zoomBy,
+} from '../src/space-view.ts';
 import { blockAt } from '../src/space-pick.ts';
 import { overviewOf } from '../src/overview.ts';
+import { arrowsOnScreen, pickedRing } from '../src/space-labels.ts';
 
 /** Two groups, one inside the other, with a thing in each and a link between the things. */
 const NESTED = [
@@ -100,13 +111,24 @@ test('a point behind the camera has no place on the screen', () => {
   assert.equal(projectPoint(m, [1000, 0, 600], 400, 400), null);
 });
 
-test('a drag turns and tilts the camera, never under the floor; zooming never passes the target', () => {
+test('a drag turns and tilts the camera right round, with no way locked; zooming never passes the target', () => {
+  // Roger, 24 Oct 2026: "if I want to rotate right around, I should be able to"
   const orbit = { target: [0, 0, 0], distance: 100, turn: 0, tilt: 0.5 };
   const turned = orbitBy(orbit, 100, 0);
   assert.notEqual(turned.turn, orbit.turn);
   assert.equal(turned.tilt, orbit.tilt);
-  assert.ok(orbitBy(orbit, 0, -100000).tilt > 0, 'never under the floor');
-  assert.ok(orbitBy(orbit, 0, 100000).tilt < Math.PI / 2, 'never straight down');
+  assert.ok(orbitBy(orbit, 0, -400).tilt < 0, 'under the floor');
+  const over = orbitBy(orbit, 0, 400);
+  assert.ok(over.tilt > Math.PI / 2, 'over the top');
+  // a point above the target stays above it on the screen all the way over the top: the view never flips
+  let last = null;
+  for (let tilt = 0.2; tilt < Math.PI - 0.2; tilt += 0.05) {
+    const m = spaceMatrix({ ...orbit, tilt }, 1, 100);
+    assert.ok(m.every(Number.isFinite), `a camera at tilt ${tilt.toFixed(2)} sees`);
+    const p = projectPoint(m, [10, 0, 0], 400, 400);
+    if (last) assert.ok(Math.hypot(p.x - last.x, p.y - last.y) < 40, `no jump at tilt ${tilt.toFixed(2)}`);
+    last = p;
+  }
   assert.equal(zoomBy(orbit, 2).distance, 50);
   assert.ok(zoomBy(orbit, 1e9).distance >= 1);
 });
@@ -132,4 +154,66 @@ test('a click on the side of a tall block picks it too, not only its top', () =>
   const top = projectPoint(m, [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall], 500, 500);
   assert.ok(Math.abs(side.y - top.y) > 20, 'the side is well below the top on screen');
   assert.equal(blockAt(space, m, 500, 500, side.x, side.y)?.id, 't:tower');
+});
+
+test('an arrowhead is never bigger than the block it points to, however long its link', () => {
+  // Roger, 24 Oct 2026: block diagrams in 3D had arrowheads far bigger than their blocks
+  const far = [
+    { id: 't:a', kind: 'box', style: 'thing', of: 'a', x: 0, y: 0, width: 60, height: 40 },
+    { id: 't:b', kind: 'box', style: 'thing', of: 'b', x: 1400, y: 0, width: 24, height: 16 },
+    {
+      id: 'e:ab',
+      kind: 'link',
+      style: 'link',
+      from: 'a',
+      to: 'b',
+      points: [
+        [60, 20],
+        [1400, 8],
+      ],
+    },
+  ];
+  const space = spaceOf(far, { by: 'group' });
+  const b = block(space, 't:b');
+  const [arrow] = space.arrows;
+  assert.ok(arrow.size <= Math.min(b.width, b.depth) / 2, `${arrow.size} long, on a block ${b.width} by ${b.depth}`);
+  const orbit = orbitFit(space);
+  const m = spaceMatrix(orbit, 1, 4000);
+  const [shown] = arrowsOnScreen(space, m, 800, 800);
+  const mid = { x: (shown.left.x + shown.right.x) / 2, y: (shown.left.y + shown.right.y) / 2 };
+  const long = Math.hypot(shown.tip.x - mid.x, shown.tip.y - mid.y);
+  const corner = (x, y) => projectPoint(m, [x, y, b.floor + b.tall], 800, 800);
+  const p = corner(b.x, b.y),
+    q = corner(b.x + b.width, b.y);
+  const across = Math.max(9, Math.hypot(p.x - q.x, p.y - q.y));
+  assert.ok(long <= across + 0.5, `the head is ${long.toFixed(1)} pixels on a block ${across.toFixed(1)} across`);
+});
+
+test('the thing picked has a ring round all of it, seen from any side, over the top too', () => {
+  // Roger, 24 Oct 2026: "the selected item in the 3d view should be clearly selected"
+  const space = spaceOf(NESTED, { by: 'group' });
+  const b = block(space, 't:b');
+  const fit = orbitFit(space);
+  for (const turn of [0, 1, 2.5, 4])
+    for (const tilt of [-0.6, 0.3, 1.2, 2.2]) {
+      const m = spaceMatrix({ ...fit, turn, tilt }, 1, 4000);
+      const ring = pickedRing(space, b, m, 600, 600);
+      assert.ok(ring, `a ring at turn ${turn}, tilt ${tilt}`);
+      for (const [i, j, k] of [0, 1].flatMap((i) => [0, 1].flatMap((j) => [0, 1].map((k) => [i, j, k])))) {
+        const c = projectPoint(m, [b.x + i * b.width, b.y + j * b.depth, b.floor + k * b.tall], 600, 600);
+        assert.ok(Math.hypot(c.x - ring.x, c.y - ring.y) < ring.r, `corner ${i}${j}${k} inside the ring`);
+      }
+    }
+});
+
+test('after a redraw the camera centres on the thing picked again, keeping its turn, tilt and distance', () => {
+  // Roger, 24 Oct 2026: the 3D view should keep its centre on the selected item even after a redraw
+  const orbit = { target: [0, 0, 0], distance: 300, turn: 1, tilt: 0.7 };
+  const moved = spaceOf(
+    NESTED.map((m) => (m.id === 't:b' ? { ...m, x: 120, y: 90 } : m)),
+    { by: 'group' },
+  );
+  const b = block(moved, 't:b');
+  assert.deepEqual(centredOn(orbit, b), { ...orbit, target: middleOf(b) });
+  assert.deepEqual(centredOn(orbit, null), orbit, 'nothing picked: the camera stays');
 });

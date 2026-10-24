@@ -8,7 +8,7 @@
 // - a name that would cover one already placed is left out, so names never pile up.
 // At most LABELS_MOST are painted. Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
-import type { SpaceMarks } from './space-view.ts';
+import type { Block, SpaceMarks } from './space-view.ts';
 
 /** A label to paint on the screen, at its pixel, and its size in pixels. `picked` marks the picked thing's name. */
 export interface ScreenLabel {
@@ -136,8 +136,13 @@ export function arrowsOnScreen(space: SpaceMarks, matrix: Float32Array, width: n
   const out: ScreenArrow[] = [];
   const balls = space.round ? ballsOnScreen(space, matrix, width, height) : [];
   for (const a of space.arrows) {
+    // its back is its size from its tip, toward the point it was given, so a long piece of line draws no big head
+    const along = [0, 1, 2].map((k) => (a.tip[k] ?? 0) - (a.back[k] ?? 0)),
+      span = Math.hypot(...along);
+    const backAt =
+      span > a.size ? (a.tip.map((v, k) => v - ((along[k] ?? 0) * a.size) / span) as typeof a.tip) : a.back;
     const tip = projectPoint(matrix, a.tip, width, height),
-      back = projectPoint(matrix, a.back, width, height);
+      back = projectPoint(matrix, backAt, width, height);
     if (!tip || !back) continue;
     if (tip.x < -50 || tip.y < -50 || tip.x > width + 50 || tip.y > height + 50) continue;
     if (balls.some((b) => !touches(b, a.tip) && hides(b, tip))) continue;
@@ -207,4 +212,45 @@ function hides(b: ScreenBall, p: { x: number; y: number; far: number }): boolean
   if (d >= 1) return false;
   const front = b.far - b.r * Math.sqrt(1 - d * d);
   return p.far > front + b.r * 0.1;
+}
+
+/** How far the ring round a picked thing sits off it, in screen pixels. */
+const RING_GAP = 5;
+
+/**
+ * Where the ring round `picked` goes on the screen. It circles its ball, or the box its block fills, a few pixels off
+ * it. It is flat to the screen, so it shows from any angle (Roger, 24 Oct 2026). Null when off the screen.
+ */
+export function pickedRing(
+  space: SpaceMarks,
+  picked: Block,
+  matrix: Float32Array,
+  width: number,
+  height: number,
+): { x: number; y: number; r: number } | null {
+  if (space.round) {
+    const r = picked.width / 2;
+    const c = projectPoint(matrix, [picked.x + r, picked.y + r, picked.floor + r], width, height);
+    if (!c) return null;
+    const seen = (r * (height / 2 / Math.tan(FIELD / 2))) / c.far;
+    return { x: c.x, y: c.y, r: seen + RING_GAP };
+  }
+  // a block: round the corners it shows, from its middle
+  const corners = [0, 1].flatMap((i) =>
+    [0, 1].flatMap((j) =>
+      [0, 1].map((k) =>
+        projectPoint(
+          matrix,
+          [picked.x + i * picked.width, picked.y + j * picked.depth, picked.floor + k * picked.tall],
+          width,
+          height,
+        ),
+      ),
+    ),
+  );
+  const seen = corners.filter((c) => c !== null);
+  if (seen.length < corners.length) return null;
+  const x = seen.reduce((n, c) => n + c.x, 0) / seen.length,
+    y = seen.reduce((n, c) => n + c.y, 0) / seen.length;
+  return { x, y, r: Math.max(...seen.map((c) => Math.hypot(c.x - x, c.y - y))) + RING_GAP };
 }

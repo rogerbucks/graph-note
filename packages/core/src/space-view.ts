@@ -171,7 +171,15 @@ export function spaceOf(marks: readonly DrawMark[], depth: DepthBy): SpaceMarks 
       // an arrowhead where the link comes down onto the thing it points to, and its words at the top of its arc
       const tip = line.points[line.points.length - 1],
         back = line.points[line.points.length - 2];
-      if (b && tip && back) arrows.push({ id: `${m.id}\narrow`, style: m.style, tip, back, size: ARROW });
+      // never bigger than the block it points to (Roger, 24 Oct 2026)
+      if (b && tip && back)
+        arrows.push({
+          id: `${m.id}\narrow`,
+          style: m.style,
+          tip,
+          back,
+          size: Math.min(ARROW, b.width / 2, b.depth / 2),
+        });
       const middle = line.points[Math.floor(line.points.length / 2)];
       if (m.name && middle)
         labels.push({ id: `${m.id}\nwords`, style: m.style, at: middle, text: m.name, size: WORDS, link: m.id });
@@ -247,10 +255,6 @@ export interface Orbit {
 
 /** How wide the camera sees, top to bottom, in radians. */
 export const FIELD = Math.PI / 4;
-/** The lowest and highest tilt: never under the floor, and never straight down, where turning would spin. */
-const TILT_LEAST = 0.08,
-  TILT_MOST = Math.PI / 2 - 0.02;
-
 /** The camera that shows all of `space`, from the front and above, as the drawing reads on the page. */
 export function orbitFit(space: SpaceMarks, aspect = 1): Orbit {
   const { least, most } = space;
@@ -260,10 +264,18 @@ export function orbitFit(space: SpaceMarks, aspect = 1): Orbit {
   return { target, distance: (reach / fit) * 1.05, turn: -Math.PI / 2, tilt: 0.9 };
 }
 
-/** `orbit` turned and tilted by a drag of `dx` and `dy` screen pixels. */
+/**
+ * `orbit` turned and tilted by a drag of `dx` and `dy` screen pixels. It turns right round any way, with no way locked,
+ * over the top and under the floor too (Roger, 24 Oct 2026). The camera's up turns with it (`upOf`).
+ */
 export function orbitBy(orbit: Orbit, dx: number, dy: number): Orbit {
-  const tilt = Math.min(TILT_MOST, Math.max(TILT_LEAST, orbit.tilt + dy * 0.008));
-  return { ...orbit, turn: orbit.turn - dx * 0.008, tilt };
+  return { ...orbit, turn: orbit.turn - dx * 0.008, tilt: orbit.tilt + dy * 0.008 };
+}
+
+/** The camera's up: square to the way it looks, turning with its tilt, so going over the top never flips the view. */
+export function upOf(orbit: Orbit): Vec3 {
+  const { turn, tilt } = orbit;
+  return [-Math.cos(turn) * Math.sin(tilt), -Math.sin(turn) * Math.sin(tilt), Math.cos(tilt)];
 }
 
 /** `orbit` moved nearer by `times`, or further away below 1, never through what it looks at. */
@@ -290,7 +302,7 @@ export function eyeOf(orbit: Orbit): Vec3 {
 export function spaceMatrix(orbit: Orbit, aspect: number, reach: number): Float32Array {
   const eye = eyeOf(orbit);
   const f = norm(sub(orbit.target, eye)),
-    r = norm(cross(f, [0, 0, 1])),
+    r = norm(cross(f, upOf(orbit))),
     u = cross(r, f);
   const near = Math.max(0.5, orbit.distance - reach) / 4,
     far = orbit.distance + reach * 2 + 1;
@@ -337,3 +349,13 @@ const norm = (a: Vec3): Vec3 => {
   const n = Math.hypot(a[0], a[1], a[2]) || 1;
   return [a[0] / n, a[1] / n, a[2] / n];
 };
+
+/** The middle of `block`, where the view turns round it. */
+export const middleOf = (b: Block): Vec3 => [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
+
+/**
+ * `orbit` centred again on `picked`, as found in the space laid out again, or as it was with nothing picked. The camera
+ * keeps its turn, tilt and distance, so a redraw never loses what the person was looking at (Roger, 24 Oct 2026).
+ */
+export const centredOn = (orbit: Orbit, picked: Block | null): Orbit =>
+  picked ? { ...orbit, target: middleOf(picked) } : orbit;

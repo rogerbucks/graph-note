@@ -26,7 +26,7 @@ export function panBy(orbit: Orbit, dx: number, dy: number, height: number): Orb
   // how far one pixel is, in the space, at the point the camera looks at
   const unit = (2 * orbit.distance * Math.tan(FIELD / 2)) / Math.max(1, height);
   // seen from above, a pixel down the screen is one pixel along the floor; seen low, it is many more
-  const along = unit / Math.max(0.25, Math.sin(orbit.tilt));
+  const along = unit / Math.max(0.25, Math.abs(Math.sin(orbit.tilt)));
   const c = Math.cos(orbit.turn),
     s = Math.sin(orbit.turn);
   // the camera's right on the floor is (-s, c), and its forward, away from the eye, is (-c, -s)
@@ -87,10 +87,6 @@ export function twoFingers(
   return { dx: x1 - x0, dy: y1 - y0, zoom: before > 0 ? apart(now) / before : 1 };
 }
 
-/** The lowest and highest tilt the camera may have, as space-view.ts keeps it: never under the floor, never straight down. */
-const TILT_LEAST = 0.08,
-  TILT_MOST = Math.PI / 2 - 0.02;
-
 /**
  * `orbit` turned to look at `point`, which it then turns round and zooms to. The camera stays where it is, so what it
  * sees turns to face the point rather than leaping to it. Called with `share` under 1, it looks only that share of the
@@ -104,7 +100,11 @@ export function orbitAround(orbit: Orbit, point: Vec3, share = 1): Orbit {
   ) as Vec3;
   const v: Vec3 = [eye[0] - target[0], eye[1] - target[1], eye[2] - target[2]];
   const distance = Math.max(1, Math.hypot(...v));
-  const tilt = Math.min(TILT_MOST, Math.max(TILT_LEAST, Math.asin(Math.max(-1, Math.min(1, v[2] / distance)))));
-  const turn = Math.hypot(v[0], v[1]) > 1e-9 ? Math.atan2(v[1], v[0]) : orbit.turn;
-  return { target, distance, turn, tilt };
+  // turned over the top, the camera stays so: its tilt past straight up, its turn the other way round
+  const over = Math.cos(orbit.tilt) < 0;
+  const rise = Math.asin(Math.max(-1, Math.min(1, v[2] / distance)));
+  const flat = Math.hypot(v[0], v[1]) > 1e-9 ? Math.atan2(v[1], v[0]) : orbit.turn + (over ? Math.PI : 0);
+  return over
+    ? { target, distance, turn: flat + Math.PI, tilt: Math.PI - rise }
+    : { target, distance, turn: flat, tilt: rise };
 }
