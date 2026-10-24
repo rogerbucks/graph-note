@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/host-commands.test.js",
+  "test": "Obsidian’s commands > each keeps the word it always had, with the drawing’s commands and the tour offered only while a drawing is in use",
+  "seen_failing_first": false,
+  "evidence": "It pins the ids and checks that stay as they were, so hotkeys last. Moving the commands must not change them, so it passes before."
+}

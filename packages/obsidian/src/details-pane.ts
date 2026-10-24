@@ -3,10 +3,11 @@
 // time. They follow what is chosen in that card, and are the inspector while the block is edited. Closing the pane
 // sends them back to their card, closed. The pane can be dragged anywhere Obsidian lets a view go: a sidebar, a split,
 // a tab or a window of its own.
-import { ItemView } from 'obsidian';
+import { ItemView, Notice } from 'obsidian';
 import type { Plugin, WorkspaceLeaf } from 'obsidian';
 import type { SidePane } from '@thoughtknot/core/display/host';
 import { word } from '@thoughtknot/core';
+import { showPane } from './host-panels';
 
 /** The details pane's view type. */
 export const DETAILS_PANE = 'thoughtknot-details';
@@ -37,8 +38,11 @@ export class DetailsPaneView extends ItemView {
   }
 
   override async onOpen(): Promise<void> {
-    this.contentEl.addClass('thoughtknot', 'thoughtknot-details-pane');
-    this.empty();
+    const bad = showPane('details', this.contentEl, (el) => {
+      el.addClass('thoughtknot', 'thoughtknot-details-pane');
+      this.empty();
+    });
+    if (bad) new Notice(bad);
     await Promise.resolve();
   }
 

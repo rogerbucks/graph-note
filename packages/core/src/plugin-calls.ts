@@ -3,6 +3,7 @@
 // dropped. Its plug-in is stopped, so nothing of it is called again. A call whose answer comes later is timed until it
 // comes. One that never answers is not stopped here. A plug-in run apart, in a worker, is stopped by the host's clock
 // (plugin-isolated.ts).
+import type { PluginCommand } from './plugin-points.ts';
 import { word } from './words.ts';
 
 /** The answer of a call into a plug-in: its value, or what went wrong and whose it was, in the reader's language. */
@@ -60,5 +61,34 @@ export function pluginCalls(now: () => number, timeLimit: number): PluginCalls {
       }
     },
     stopped,
+  };
+}
+
+/** The calls a registry makes into the commands on its shelf: `owner` says whose each is. */
+export function commandCalls(calls: PluginCalls, items: PluginCommand[], owner: Map<string, string>) {
+  const found = (id: string) => {
+    const c = items.find((x) => x.id === id);
+    return c && { c, who: owner.get(id) ?? '', what: word('plugins.what.command', { title: c.title }) };
+  };
+  const none = (id: string): PluginResult<never> => ({
+    ok: false,
+    plugin: '',
+    message: word('plugins.none.command', { name: id }),
+  });
+  return {
+    commandOffered(id: string): boolean {
+      const f = found(id);
+      if (!f?.c.available) return !!f;
+      const r = calls.guarded(f.who, f.what, () => f.c.available?.());
+      return r.ok && r.value === true;
+    },
+    runCommand(id: string, given?: unknown): PluginResult<undefined> {
+      const f = found(id);
+      return f ? calls.guarded(f.who, f.what, () => void f.c.run(given)) : none(id);
+    },
+    async runCommandAsync(id: string, given?: unknown): Promise<PluginResult<undefined>> {
+      const f = found(id);
+      return f ? calls.awaited(f.who, f.what, async () => void (await f.c.run(given))) : none(id);
+    },
   };
 }

@@ -1,11 +1,12 @@
 // The edit pane (spec §4, §9): a view beside the note, on one graph block. It holds the block editor, with its own
 // drawing, and a picker of the note's graph blocks. On a phone, Drawing and Text are two tabs.
-import { ItemView } from 'obsidian';
+import { ItemView, Notice } from 'obsidian';
 import type { ViewStateResult, WorkspaceLeaf } from 'obsidian';
 import type ThoughtKnotPlugin from './main';
 import type { EditTarget } from './main';
 import { BlockEditor } from './block-editor/block-editor';
 import { word } from '@thoughtknot/core';
+import { showPane } from './host-panels';
 
 /** The edit pane's view type. */
 export const PANE = 'thoughtknot-pane';
@@ -42,7 +43,8 @@ export class GraphPane extends ItemView {
   override async setState(state: unknown, result: ViewStateResult): Promise<void> {
     const t = state as Partial<EditTarget>;
     if (typeof t.path === 'string') {
-      this.editor.mount(this.contentEl);
+      const bad = showPane('edit', this.contentEl, (el) => this.editor.mount(el));
+      if (bad) new Notice(bad);
       await this.editor.open(t.path, t.line ?? 0);
     }
     await super.setState(state, result);

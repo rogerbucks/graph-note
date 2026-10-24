@@ -135,6 +135,8 @@ export function commandContract(c: PluginCommand, pluginId: string): PluginCheck
       name: 'it can be run',
       run: () => {
         if (typeof c.run !== 'function') fail(c.id, 'a run', typeof c.run);
+        if (c.available !== undefined && typeof c.available !== 'function')
+          fail(c.id, 'an available that is a function, or none', typeof c.available);
       },
     },
     readsInHostDirection(c.id, c.title),
