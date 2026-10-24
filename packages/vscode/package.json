@@ -23,6 +23,12 @@
         "title": "Open in ThoughtKnot",
         "category": "ThoughtKnot",
         "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "thoughtknot.askAi",
+        "title": "Ask AI about this note",
+        "category": "ThoughtKnot",
+        "icon": "$(sparkle)"
       }
     ],
     "menus": {
@@ -37,14 +43,59 @@
         {
           "command": "thoughtknot.openGraph",
           "when": "resourceLangId == markdown"
+        },
+        {
+          "command": "thoughtknot.askAi",
+          "when": "resourceLangId == markdown"
         }
       ],
       "commandPalette": [
         {
           "command": "thoughtknot.openGraph",
           "when": "editorLangId == markdown"
+        },
+        {
+          "command": "thoughtknot.askAi",
+          "when": "editorLangId == markdown"
         }
       ]
+    },
+    "configuration": {
+      "title": "ThoughtKnot",
+      "properties": {
+        "thoughtknot.ai.use": {
+          "type": "string",
+          "enum": [
+            "off",
+            "on"
+          ],
+          "default": "off",
+          "markdownDescription": "Whether ThoughtKnot may send anything to an AI model. It is off until you turn it on."
+        },
+        "thoughtknot.ai.ceiling": {
+          "type": "string",
+          "default": "Public",
+          "markdownDescription": "The highest classification a note may have and still go to one of VS Code's models. Use one of the classifications below."
+        },
+        "thoughtknot.classifications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "Public",
+            "Internal",
+            "Confidential",
+            "Restricted"
+          ],
+          "markdownDescription": "The classifications a note may carry, lowest first."
+        },
+        "thoughtknot.ai.unlabelled": {
+          "type": "string",
+          "default": "Restricted",
+          "markdownDescription": "The classification a note with none counts as. Use one of the classifications above."
+        }
+      }
     }
   },
   "scripts": {

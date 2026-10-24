@@ -1,0 +1,6 @@
+{
+  "file": "python/graph_spec/tests/test_mesh_one_format.py",
+  "test": "MeshOneFormat.test_each_case",
+  "seen_failing_first": false,
+  "evidence": "a check over the reader and lens rules already built: one block of schema and inserts reads and answers today, so it passes on the code before it"
+}

@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (91)
+## Open (89)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -42,7 +42,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | ARCH-2 | Storage interface exists only as EditorNote, with no contract suite | ●●● | ●●● | fix-later (Wave 6 · Host, storage and plug-in contracts) | weeks |
 | ARCH-3 | Layering is not held across packages; hosts reach into core internals | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | ARCH-5 | Two hand-kept parsers, no grammar; drift caught only on listed cases | ●●○ | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
-| ARCH-6 | Identity is the visible name; no stable id survives a rename | ●●○ | ●●● | fix-later (Wave 9 · Slice 6 the mesh) | weeks |
 | ARCH-7 | Whole-note text is the only store; nothing indexes across notes | ●●○ | ●●○ | fix-later (Wave 13 · Slice 9 store, sync and network) | weeks |
 | ARCH-8 | Exports read back only by test helpers; no product import | ●●○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | ARCH-9 | The JavaScript library is private TypeScript sources in an archive | ●●● | ●●○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
@@ -79,7 +78,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-8 | graph-spec is CommonJS-only with a partial d.ts and mixed errors | ●●○ | ●○○ | fix-later (Wave 6 · Host, storage and plug-in contracts) | days |
 | API-9 | AI transport is hard-wired to the OpenAI chat shape | ●●● | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | API-11 | Schema @1 is a name suffix, not a version negotiation | ●○○ | ●○○ | fix-later (Roger’s held changes, after all waves) | hours |
-| API-12 | No runnable examples for either library, none in CI | ●●● | ●○○ | fix-later (Wave 8 · Clusters, new views and the VS Code plugin) | hours |
 | AI-2 | Classification gate guards the pane only, not Claude's own reads | ●●● | ●●● | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | AI-4 | Answers are free text parsed by brace slicing, not structured output | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
 | AI-5 | No cost ceiling, token cap, usage record or prompt caching | ●●○ | ●●○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | days |
@@ -432,16 +430,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Add a nightly differential test that generates random statements from one small grammar description. It compares both readers' canonical output. So a divergence is found without a hand-written case.
 
 **Check:** nightly.yml runs the differential test; a failure writes its failing block to the case table.
-
-### ARCH-6 Identity is the visible name; no stable id survives a rename
-
-**Who found it:** Enterprise, solution and data architect. **Where:** `packages/graph-spec/src/reader/store.js`, `packages/graph-spec/src/joins/**`, `packages/core/src/link-renames.ts`, `requirements/editor-requirements.gql`.
-
-**Risk:** The id is the variable name, cannot be SET, and is what change sets, views across notes and the mesh join will key on. Renaming a thing in one note makes a new thing everywhere else. Two notes using the same name for different things merge as one until the planned 'contested claims' exist.
-
-**Fix:** Decide before W16 and W19 (Wave 9) whether identity stays the name per note, with an explicit 'same as' link across notes. The other choice is a hidden stable key. Write it as a requirement with the rename and the two-notes case as tests.
-
-**Check:** A written requirement proved by a cross-note rename test and a same-name-two-things join test in the shared case tables.
 
 ### ARCH-7 Whole-note text is the only store; nothing indexes across notes
 
@@ -803,16 +791,6 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** manual
 
-### API-12 No runnable examples for either library, none in CI
-
-**Who found it:** API design expert. **Where:** `packages/graph-spec/GUIDE.md`, `python/graph_spec/GUIDE.md`, `.github/workflows/ci.yml`.
-
-**Risk:** There is no examples folder, no doctest and no CI step that runs a usage sample. The only end-to-end sample is the Node stdin adapter's comment. A reader of the GUIDEs copies module descriptions, not a working call. A doc that drifts from the API is never caught.
-
-**Fix:** Add examples/js/read-and-check.cjs and examples/python/read_and_check.py, each ten lines. Add a CI step that runs both against the built archive layout.
-
-**Check:** ci.yml job 'examples' runs each file and fails on a non-zero exit.
-
 ### AI-2 Classification gate guards the pane only, not Claude's own reads
 
 **Who found it:** AI product and engineering expert. **Where:** `packages/claude-code/mod/hooks/register.tsx`, `packages/claude-code/src/**`, `README.md`.
@@ -1013,7 +991,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
 
-## Done or accepted (38)
+## Done or accepted (40)
 
 | Id | Risk | Decision | Closed by |
 | --- | --- | --- | --- |
@@ -1023,6 +1001,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | OPS-3 | No written release steps, draft publishing or rollback | done | #614 |
 | OPS-4 | Every job without a time limit can hold a runner six hours | done | #614, #620 |
 | ARCH-4 | The note format carries no version and has no migration story | done | #1073, #1076 |
+| ARCH-6 | Identity is the visible name; no stable id survives a rename | done | #1084 |
 | ARCH-11 | The graph spec the code cites is not in the repo | done | #619 |
 | ARCH-12 | Plug-in API is one version string for all future extension points | done | #885; kept out by `packages/core/test/plugin-versions.test.js` |
 | UX-1 | The 21-item accessibility walk-through has never been recorded or gated | done | #619 |
@@ -1037,6 +1016,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | API-3 | Host contract version is a hand-typed number | done | #614 |
 | API-5 | Version promise and API changes are never told to users | done | #615 |
 | API-10 | Plug-in API version is one string, no host loads third parties | done | #908 |
+| API-12 | No runnable examples for either library, none in CI | done | #1083 |
 | AI-1 | In Claude Code the proposal route is optional, not mandatory | done | #618 |
 | AI-3 | Note text enters prompts with no data boundary or injection test | done | #618 |
 | AI-11 | Consent is per send, but residency and retention are unsaid | done | #618 |
