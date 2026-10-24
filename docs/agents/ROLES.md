@@ -40,6 +40,7 @@ Which plan each person pays for is their own business, so it never goes in the r
 | Grok Build (`grok`) | Second opinions too, only when asked: Roger's Grok plan has less use in it | none, read-only | — |
 
 - **Both run only on Roger's Mac**, signed in with his own plans. A cloud session reaches them through Remote Control.
+- **Roger writes Claude's weekly use** in `requirements/capacity.json` each Sunday.
 - **Antigravity can still build**, if Roger runs it to: on an `antigravity/` branch with its label, by the same rules.
 
 ## Personalities
