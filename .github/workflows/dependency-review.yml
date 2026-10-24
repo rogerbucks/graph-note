@@ -6,6 +6,8 @@ name: Dependency review
 # until the repository is public; a skipped required check does not hold up a merge.
 on:
   pull_request:
+  # GitHub's merge queue, when Roger turns it on: the same review, of the queued change against its base
+  merge_group:
 
 permissions:
   contents: read
@@ -26,3 +28,6 @@ jobs:
           # Tauri pins it through GTK 3. Remove this line when Tauri supports GTK 4 and glib can be bumped.
           allow-ghsas: GHSA-wrw7-89jp-8q8g
           comment-summary-in-pr: never
+          # a queued change names its two commits itself; on a pull request the action finds them
+          base-ref: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          head-ref: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}

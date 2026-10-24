@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  # GitHub's merge queue, when Roger turns it on: the queued change runs everything, as main does
+  merge_group:
 
 permissions:
   contents: read
@@ -41,7 +43,7 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-          BASE: ${{ github.event.pull_request.base.sha || github.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.sha }}
         run: node scripts/ci-plan.mjs --base "$BASE"
 
   # The suite, its test files split over six machines that run at once, so a run takes about a minute, not five. Each
@@ -130,13 +132,13 @@ jobs:
       - run: npm run bench:scale
       # a baseline committed worse than the base's needs a reason in quality/accepted.json, as a measured run does
       - env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
         run: node scripts/quality-check.mjs --baseline-since "$BASE"
       - run: npm run typecheck
       # the requirements graph is edited here, but a pull request never moves a test back or removes a proved one
-      - if: github.event_name == 'pull_request'
+      - if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         # against the merge base, so a change main gained after the branch point is not read as a hand revert
         run: node scripts/check-requirements-flips.mjs --merge-base-of "$BASE"
       - run: npm run build
@@ -253,8 +255,8 @@ jobs:
         working-directory: python/graph_spec
       - name: Replay each new commit's tests against its parent's code
         env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }}
         run: |
           commits=$(git rev-list --no-merges "$BASE..$HEAD")
           if [ -n "$commits" ]; then node scripts/tests-first.mjs --check $commits; fi
@@ -310,14 +312,14 @@ jobs:
           version: 0.12.17
           enable-cache: false
       # The fresh clone runs the same tests, lint and build as the jobs above, which took 14 minutes on every push to main
-      # (24 Oct 2026). So a pull request and a push to main run it only when a setup input changed (the README's steps, the
-      # npm scripts they run, the hook): a pull request since its base, main since the push before. The nightly and the
-      # release run it whole, so a break in the steps is found within a day.
-      - if: github.event_name == 'pull_request'
+      # (24 Oct 2026). So it runs only when a setup input changed (the README's steps, the npm scripts they run, the
+      # hook): a pull request or a queued change since its base, main since the push before. The nightly and the release
+      # run it whole, so a break in the steps is found within a day.
+      - if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         run: node scripts/public-readiness.mjs --history --setup-since "$BASE"
-      - if: github.event_name != 'pull_request'
+      - if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
         env:
           BEFORE: ${{ github.event.before }}
         run: node scripts/public-readiness.mjs --history --setup-since "$BEFORE"
