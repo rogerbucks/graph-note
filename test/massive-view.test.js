@@ -254,6 +254,15 @@ window.paneInParts = async () => {
   el.remove();
   return shown;
 };
+// the overview's 3D view: opened from its tools, named for the graph, and gone again on Back to 2D
+window.space3d = async () => {
+  card.querySelector('.thoughtknot-massive-tools button[aria-label="3D view"]').click();
+  const back = () => card.querySelector('.thoughtknot-space-view button[aria-label="Back to 2D"]');
+  for (let i = 0; i < 100 && !back(); i++) await new Promise((r) => setTimeout(r, 20));
+  const label = card.querySelector('.thoughtknot-space-view')?.getAttribute('aria-label');
+  back().click();
+  return { label, closed: !card.querySelector('.thoughtknot-space-view') };
+};
 window.flyToNeedle = async () => {
   const [match] = view.find('needle');
   await view.flyTo(match);
@@ -452,6 +461,13 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
       assert.equal(shown.lines[0], shown.lines[1], 'the block keeps its lines');
     },
   );
+
+  // proves: scale_space_view
+  test('the overview opens as a 3D view from its tools, and goes back to 2D', options, async () => {
+    const { label, closed } = await run('space3d()');
+    assert.match(label ?? '', /^3D view of Big\./, 'the 3D view of the overview, named for its graph');
+    assert.ok(closed, 'Back to 2D closes it');
+  });
 
   test('a card drawn with a saved filter starts with it ticked, keeping only its things', options, async () => {
     const { label, ticked } = await run('saved()');
