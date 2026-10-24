@@ -218,6 +218,7 @@ function refuseMissingSeeds(desired, remote) {
  * - the plan of the project;
  * - the warnings;
  * - the logins whose issues are adopted;
+ * - the milestone each issue GitHub holds is under now, by number (`milestoneOf`);
  * - and what the executor needs of the project that exists.
  *
  * Closed on is derived here from the issues GitHub holds (withClosedOn). A project that is undefined was not read, and
@@ -241,6 +242,7 @@ export function buildPlan(desired, remote) {
     adopters,
     creator: remote.login,
     dated,
+    milestoneOf: new Map(remote.issues.map((i) => [i.number, i.milestone ?? null])),
     warnings: [...issues.warnings, ...(remote.warnings ?? [])],
   };
 }

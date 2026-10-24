@@ -51,7 +51,7 @@ import { executePlan, ghRunner, pinRepo, readRemote, repoOfRemote } from './gith
 import { retrying } from './github-project-retry.mjs';
 import { runInWorkflow } from './github-project-run.mjs';
 import { createsHeld } from './github-project-issues.mjs';
-import { WAVES_FILE, readWaves, waveLines } from './github-project-waves.mjs';
+import { WAVES_FILE, milestoneLines, readWaves, waveLines } from './github-project-waves.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const WORKSTREAMS = 'requirements/workstreams.json';
@@ -88,11 +88,8 @@ function parseOptions(args) {
   return options;
 }
 
-/** The tally of the waves plan and its warnings, a line each, or nothing without a plan. */
-const wavesText = (desired) =>
-  waveLines(desired)
-    .map((line) => `${line}\n`)
-    .join('');
+/** The tally of the waves plan and its warnings, then of its milestones, a line each, or nothing without a plan. */
+const wavesText = (desired) => [...waveLines(desired), ...milestoneLines(desired)].map((line) => `${line}\n`).join('');
 
 const countLine = (issues, slices) => {
   const asked = issues.filter((i) => i.labels.includes(QUESTION_LABEL)).length;

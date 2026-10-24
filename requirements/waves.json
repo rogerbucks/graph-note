@@ -1,5 +1,59 @@
 {
-  "about": "The order the remaining work is planned in, the one place that order lives. Each wave lists its workstreams (ids of requirements/workstreams.json) in order. Its start and end are planned dates; estimate: true marks them as estimates, not commitments. scripts/github-project.mjs derives the project's Wave and Order fields from this file. Re-baselined on 2026-10-19 to the measured rate (50 requirements a week, heavy workstreams counted twice); a re-dated wave keeps its earlier plan in earlier_plan, so slips can be read against the first plan too.",
+  "about": "The order the remaining work is planned in, the one place that order lives. Each wave lists its workstreams (ids of requirements/workstreams.json) in order. Its start and end are planned dates; estimate: true marks them as estimates, not commitments. scripts/github-project.mjs derives the project's Wave and Order fields from this file. Re-baselined on 2026-10-19 to the measured rate (50 requirements a week, heavy workstreams counted twice); a re-dated wave keeps its earlier plan in earlier_plan, so slips can be read against the first plan too. Each wave names its milestone, one of the milestones listed here: an outcome one step above the waves. The mirror files every requirement's issue under its wave's milestone, due on the last day of its last wave, so a wave added later must name one.",
+  "milestones": [
+    {
+      "title": "Editor and notes",
+      "about": "The editor works on notes: proposals, AI help, links, sources and its own secure server."
+    },
+    {
+      "title": "Quality, releases and contracts",
+      "about": "Quality checks and releases run by themselves, and hosts, storage and plug-ins have published contracts."
+    },
+    {
+      "title": "Desktop, VS Code and big graphs",
+      "about": "ThoughtKnot runs as a desktop app and in VS Code, in any language and theme, and handles massive graphs."
+    },
+    {
+      "title": "The mesh",
+      "about": "Notes join into one mesh: types, certainty, time, clusters, lenses and process views."
+    },
+    {
+      "title": "Permissions, AI and trust",
+      "about": "Who may see and change what, a safe AI query contract, export without secrets, runs and personal profiles."
+    },
+    {
+      "title": "Sync, web and iOS",
+      "about": "An encrypted local store syncs across devices peer to peer, with a web layer and an iOS app."
+    },
+    {
+      "title": "R2 Obsidian community release",
+      "about": "The plugin is listed in Obsidian's community plugins."
+    },
+    {
+      "title": "Rules, intents and smart data",
+      "about": "Rules and looks, calculated values and tables, intents, AI suggestions, and discovery in large graphs."
+    },
+    {
+      "title": "Whiteboard",
+      "about": "A whiteboard that turns into a graph, for brainstorming and working together."
+    },
+    {
+      "title": "Public sites",
+      "about": "A project home page and a developer site."
+    },
+    {
+      "title": "Graphs in AI and dev tools",
+      "about": "Graphs in Copilot Cowork, Claude Code, Claude chat and GitHub repositories, and text turned into graphs with AI."
+    },
+    {
+      "title": "Graph spec for other programs",
+      "about": "The graph spec is versioned, written down, easy to read and complete enough for other programs."
+    },
+    {
+      "title": "Big data and your storage",
+      "about": "Data tables and cubes, massive graphs read in parts, and storage of your choice."
+    }
+  ],
   "waves": [
     {
       "title": "Wave 1 · Slice 3 finish",
@@ -9,7 +63,8 @@
       "workstreams": [
         "W8",
         "W9"
-      ]
+      ],
+      "milestone": "Editor and notes"
     },
     {
       "title": "Wave 2 · Slice 4 notes in the editor",
@@ -18,7 +73,8 @@
       "estimate": true,
       "workstreams": [
         "W14"
-      ]
+      ],
+      "milestone": "Editor and notes"
     },
     {
       "title": "Wave 3 · Slice 4 viewer aids",
@@ -27,7 +83,8 @@
       "estimate": true,
       "workstreams": [
         "W15"
-      ]
+      ],
+      "milestone": "Editor and notes"
     },
     {
       "title": "Wave 4 · Slice 4 finish and slice 5",
@@ -54,7 +111,8 @@
         "end": "2026-10-29",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Editor and notes"
     },
     {
       "title": "Wave 5 · Automated quality and releases",
@@ -73,7 +131,8 @@
         "end": "2026-11-12",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Quality, releases and contracts"
     },
     {
       "title": "Wave 6 · Host, storage and plug-in contracts",
@@ -92,7 +151,8 @@
         "end": "2026-11-26",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Quality, releases and contracts"
     },
     {
       "title": "Wave 7 · Language, theming, the standalone app and massive graphs",
@@ -110,7 +170,8 @@
         "end": "2026-12-10",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Desktop, VS Code and big graphs"
     },
     {
       "title": "Wave 8 · Clusters, new views and the VS Code plugin",
@@ -127,7 +188,8 @@
         "end": "2026-12-24",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Desktop, VS Code and big graphs"
     },
     {
       "title": "Wave 9 · Slice 6 the mesh",
@@ -145,7 +207,8 @@
         "end": "2027-01-17",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "The mesh"
     },
     {
       "title": "Wave 10 · Slice 7 clusters, lenses and process",
@@ -163,7 +226,8 @@
         "end": "2027-01-31",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "The mesh"
     },
     {
       "title": "Wave 11 · Slice 8 permissions, AI and export",
@@ -181,7 +245,8 @@
         "end": "2027-02-14",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Permissions, AI and trust"
     },
     {
       "title": "Wave 12 · Slice 8 runs, drawing and profiles",
@@ -198,7 +263,8 @@
         "end": "2027-02-28",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Permissions, AI and trust"
     },
     {
       "title": "Wave 13 · Slice 9 store, sync and network",
@@ -214,7 +280,8 @@
         "end": "2027-03-14",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Sync, web and iOS"
     },
     {
       "title": "Wave 14 · Slice 9 web, corporate and iOS",
@@ -230,7 +297,8 @@
         "end": "2027-03-28",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Sync, web and iOS"
     },
     {
       "title": "Wave 15 · Obsidian community release",
@@ -245,7 +313,8 @@
         "end": "2027-04-11",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "R2 Obsidian community release"
     },
     {
       "title": "Wave 16 · Held: rules and looks",
@@ -255,7 +324,8 @@
       "workstreams": [
         "RL1",
         "RP1"
-      ]
+      ],
+      "milestone": "Rules, intents and smart data"
     },
     {
       "title": "Wave 17 · Held: calculated values and the table view",
@@ -264,7 +334,8 @@
       "estimate": true,
       "workstreams": [
         "CV1"
-      ]
+      ],
+      "milestone": "Rules, intents and smart data"
     },
     {
       "title": "Wave 18 · Held: intents and the pole view",
@@ -273,7 +344,8 @@
       "estimate": true,
       "workstreams": [
         "IN1"
-      ]
+      ],
+      "milestone": "Rules, intents and smart data"
     },
     {
       "title": "Wave 19 · Held: AI suggestions for categories and intents",
@@ -282,7 +354,8 @@
       "estimate": true,
       "workstreams": [
         "AS1"
-      ]
+      ],
+      "milestone": "Rules, intents and smart data"
     },
     {
       "title": "Wave 20 · Held: discovery in large graphs",
@@ -291,7 +364,8 @@
       "estimate": true,
       "workstreams": [
         "DX1"
-      ]
+      ],
+      "milestone": "Rules, intents and smart data"
     },
     {
       "title": "Wave 21 · Held: whiteboard board and graph",
@@ -307,7 +381,8 @@
         "end": "2027-04-25",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Whiteboard"
     },
     {
       "title": "Wave 22 · Held: whiteboard brainstorming and working together",
@@ -323,7 +398,8 @@
         "end": "2027-05-09",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Whiteboard"
     },
     {
       "title": "Wave 23 · Held: Copilot Cowork skill",
@@ -338,7 +414,8 @@
         "end": "2027-05-23",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Graphs in AI and dev tools"
     },
     {
       "title": "Wave 24 · Held: text to graph with AI",
@@ -353,7 +430,8 @@
         "end": "2027-06-06",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Graphs in AI and dev tools"
     },
     {
       "title": "Wave 25 · Held: project home page",
@@ -368,7 +446,8 @@
         "end": "2027-06-20",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Public sites"
     },
     {
       "title": "Wave 26 · Held: developer site",
@@ -383,7 +462,8 @@
         "end": "2027-07-04",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Public sites"
     },
     {
       "title": "Wave 27 · Held: graphs in a GitHub repository",
@@ -398,7 +478,8 @@
         "end": "2027-07-18",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Graphs in AI and dev tools"
     },
     {
       "title": "Wave 28 · Held: Claude presents and decides in Claude Code",
@@ -413,7 +494,8 @@
         "end": "2027-08-01",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Graphs in AI and dev tools"
     },
     {
       "title": "Wave 29 · Held: graphs and decisions in Claude chat",
@@ -428,7 +510,8 @@
         "end": "2027-08-15",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Graphs in AI and dev tools"
     },
     {
       "title": "Wave 30 · Held: the graph spec versioned and written down for other programs",
@@ -444,7 +527,8 @@
         "end": "2027-08-29",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Graph spec for other programs"
     },
     {
       "title": "Wave 31 · Held: AI rules in the graph spec that agree",
@@ -459,7 +543,8 @@
         "end": "2027-09-12",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Graph spec for other programs"
     },
     {
       "title": "Wave 32 · Held: a graph spec that reads easily, and its smaller gaps",
@@ -475,7 +560,8 @@
         "end": "2027-09-26",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Graph spec for other programs"
     },
     {
       "title": "Wave 33 · Held: data tables and cubes",
@@ -490,7 +576,8 @@
         "end": "2027-10-10",
         "replaced": "2026-10-19",
         "why": "re-baselined to the measured rate"
-      }
+      },
+      "milestone": "Big data and your storage"
     },
     {
       "title": "Wave 34 · Held: massive graphs read in parts",
@@ -505,7 +592,8 @@
         "end": "2027-01-08",
         "replaced": "2026-10-23",
         "why": "five new waves planned after R2 (Roger, 23 Oct 2026)"
-      }
+      },
+      "milestone": "Big data and your storage"
     },
     {
       "title": "Wave 35 · Held: storage of your choice",
@@ -520,7 +608,8 @@
         "end": "2027-01-12",
         "replaced": "2026-10-23",
         "why": "five new waves planned after R2 (Roger, 23 Oct 2026)"
-      }
+      },
+      "milestone": "Big data and your storage"
     },
     {
       "title": "Roger’s held changes, after all waves",
