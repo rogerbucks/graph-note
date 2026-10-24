@@ -52,9 +52,10 @@ describe('the four switches', () => {
     );
   });
 
-  test('start from the settings: labels by zoom on, busy hubs folded on, groups folded off, links merged off', () => {
-    assert.deepEqual(startingSwitches(DEFAULT_SETTINGS), { labels: true, hubs: true, groups: false, merge: false });
-    const changed = { ...DEFAULT_SETTINGS, labelsByZoom: 'off', foldGroups: 'on' };
+  test('start from the settings: labels by zoom on, busy hubs folded off, groups folded off, links merged off', () => {
+    // every thing starts open, its links drawn; the person folds what they want (Roger, 24 Oct 2026)
+    assert.deepEqual(startingSwitches(DEFAULT_SETTINGS), { labels: true, hubs: false, groups: false, merge: false });
+    const changed = { ...DEFAULT_SETTINGS, labelsByZoom: 'off', foldGroups: 'on', foldHubs: 'on' };
     assert.deepEqual(startingSwitches(changed), { labels: false, hubs: true, groups: true, merge: false });
     assert.deepEqual(SWITCH_SETTINGS, {
       labels: 'labelsByZoom',
@@ -71,13 +72,13 @@ describe('the four switches', () => {
     );
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS, style), {
       labels: true,
-      hubs: true,
+      hubs: false,
       groups: false,
       merge: true,
     });
     assert.deepEqual(startingSwitches(DEFAULT_SETTINGS, style, 'near'), {
       labels: false,
-      hubs: true,
+      hubs: false,
       groups: true,
       merge: false,
     });
@@ -101,8 +102,8 @@ describe('a card’s state of the switches', () => {
     assert.equal(state.turn('labels', false), false);
     assert.equal(state.turn('groups', true), true);
     assert.equal(state.turn('groups', true), false, 'turned to what it was: nothing to do');
-    assert.deepEqual(state.switches, { labels: false, hubs: true, groups: true, merge: false });
-    assert.deepEqual(state.saved(), { labels: 'off', hubs: 'on', groups: 'on', merge: 'off' });
+    assert.deepEqual(state.switches, { labels: false, hubs: false, groups: true, merge: false });
+    assert.deepEqual(state.saved(), { labels: 'off', hubs: 'off', groups: 'on', merge: 'off' });
   });
 
   test('folds the drawing as its switches say, and opens a hub or a group again, and folds it again', () => {
@@ -136,12 +137,35 @@ describe('a card’s state of the switches', () => {
     assert.deepEqual(state.hub(drawing, 'hub'), { links: 14, folded: true });
     assert.deepEqual(state.hub(drawing, 'hub2'), { links: 12, folded: true }, 'the links actually in its stub');
     state.turn('hubs', false);
-    assert.equal(state.hub(drawing, 'hub'), null, 'hubs not folded: nothing to open or fold');
+    assert.deepEqual(state.hub(drawing, 'hub'), { links: 14, folded: false }, 'hubs not folded: open, offered to fold');
     const boxed = styledOf(star(13), `${GROUPED},\n(n3:Nudge {word: 'group', thing: 'hub', group: 'Centre'})`).drawing;
     const grouped = new ViewState({ labels: true, hubs: true, groups: true, merge: false });
     assert.equal(grouped.hub(boxed, 'hub'), null, 'a hub inside a folded box is drawn as the box');
     grouped.open({ group: 'Centre' });
     assert.deepEqual(grouped.hub(boxed, 'hub'), { links: 13, folded: true });
+  });
+
+  test('with busy hubs not folded, every hub starts open, and the person folds one and opens it again', () => {
+    const two = [
+      star(13),
+      ...Array.from({ length: 13 }, (_, i) => `(m${i}:Leaf {name: 'More ${i}'})`),
+      "(hub2:Hub {name: 'Second hub'})",
+      ...Array.from({ length: 13 }, (_, i) => `(hub2)-[:HAS]->(m${i})`),
+    ].join(',\n');
+    const { drawing } = styledOf(two);
+    const state = new ViewState({ labels: true, hubs: false, groups: false, merge: false });
+    assert.equal(state.folded(drawing).folding, undefined, 'nothing folded to start');
+    assert.deepEqual(state.hub(drawing, 'hub2'), { links: 13, folded: false });
+    state.fold({ hub: 'hub2' });
+    assert.deepEqual(state.folded(drawing).folding.hubs, [['hub2', 13]], 'only the hub folded');
+    assert.deepEqual(state.hub(drawing, 'hub2'), { links: 13, folded: true });
+    assert.deepEqual(state.hub(drawing, 'hub'), { links: 13, folded: false });
+    state.open({ hub: 'hub2' });
+    assert.equal(state.folded(drawing).folding, undefined, 'open again');
+    state.fold({ hub: 'hub' });
+    state.turn('hubs', true);
+    state.turn('hubs', false);
+    assert.equal(state.folded(drawing).folding, undefined, 'turning the switch starts every hub open again');
   });
 
   test('turning a switch on again folds what was opened again', () => {

@@ -49,8 +49,8 @@ const turn = (el, name) =>
   el.querySelectorAll('.thoughtknot-view-menu button').find((b) => b.textContent.startsWith(name));
 const legend = (el) => el.querySelector('.thoughtknot-flow-legend');
 
-async function card(note) {
-  const env = await load({ files: { [PATH]: note } });
+async function card(note, settings = {}) {
+  const env = await load({ files: { [PATH]: note }, data: { settings } });
   const { el } = await show(env, note);
   return { env, el };
 }
@@ -114,7 +114,8 @@ describe('a path played along a link merged into a trunk', () => {
 
 describe('the legend of moving links', () => {
   test('leaves out the links folded into a stub, and says them again once they are drawn', async () => {
-    const { env, el } = await card(noteOf(KIT, KIT_FLOW));
+    // busy hubs folded on: by default every thing starts open (view_switch_defaults)
+    const { env, el } = await card(noteOf(KIT, KIT_FLOW), { foldHubs: 'on' });
     try {
       assert.ok(el.querySelector('#fold_hub_1'), 'the box’s links folded');
       assert.equal(legend(el), null, 'no moving link is drawn, so nothing to say');

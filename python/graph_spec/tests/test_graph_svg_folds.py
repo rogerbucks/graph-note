@@ -199,9 +199,10 @@ class Folds(unittest.TestCase):
     def test_render_draws_the_folded_routed_source(self):
         # what graph_svg.render hands Graphviz is drawn_source's, for each direction
         texts = texts_of(CASES[0])
-        args = graph_svg.render_args(texts, "kit", None, {})
+        args = graph_svg.render_args(texts, "kit", None, {"hubs": True})
         self.assertEqual(args["folding"]["hubs"], [["box", 14]])
-        self.assertIsNone(graph_svg.render_args(texts, "kit", None, {"hubs": False})["folding"])
+        # every thing starts open, as the plugin's settings start it (Roger, 24 Oct 2026)
+        self.assertIsNone(graph_svg.render_args(texts, "kit", None, {})["folding"])
         self.assertIsNone(args["routing"])
 
     def test_with_no_switches_nothing_is_folded_or_merged(self):

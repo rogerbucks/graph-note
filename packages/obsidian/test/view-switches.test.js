@@ -73,6 +73,9 @@ const tap = (el, g) => {
 const offers = (el, text) =>
   el.querySelectorAll('.thoughtknot-details button').find((b) => b.textContent.includes(text));
 
+/** The settings with busy hubs folded, for the tests of folding them: every thing starts open by default. */
+const FOLDED = { data: { settings: { foldHubs: 'on' } } };
+
 async function card(note = NOTE, options = {}) {
   const env = await load({ files: { [PATH]: note }, ...options });
   const { el } = await show(env, note);
@@ -90,7 +93,7 @@ describe('the View menu', () => {
       assert.equal(labelled(el, 'View').getAttribute('aria-expanded'), 'true');
       assert.deepEqual(switches(el), [
         ['Labels by zoom', 'switch', 'true'],
-        ['Busy hubs folded', 'switch', 'true'],
+        ['Busy hubs folded', 'switch', 'false'],
         ['Groups folded', 'switch', 'false'],
         ['Parallel links merged', 'switch', 'false'],
       ]);
@@ -119,7 +122,7 @@ describe('the View menu', () => {
   });
 
   test('the edit pane’s drawing has it too, its busy hub folded as the settings start it', async () => {
-    const env = await open({ note: NOTE, line: 2 });
+    const env = await open({ note: NOTE, line: 2, ...FOLDED });
     try {
       await until(() => !!env.el.querySelector('.thoughtknot-viewport svg'));
       assert.ok(labelled(env.el, 'View'));
@@ -155,7 +158,7 @@ describe('the View menu', () => {
 
 describe('busy hubs folded', () => {
   test('a busy hub is drawn with its links folded into one stub marked with their count, a button to open them', async () => {
-    const { env, el } = await card();
+    const { env, el } = await card(NOTE, FOLDED);
     try {
       const stub = node(el, 'fold_hub_1');
       assert.ok(stub, 'the stub');
@@ -170,7 +173,7 @@ describe('busy hubs folded', () => {
   });
 
   test('tapping the stub opens them, and the hub’s details fold them again', async () => {
-    const { env, el } = await card();
+    const { env, el } = await card(NOTE, FOLDED);
     try {
       tap(el, node(el, 'fold_hub_1'));
       await until(() => !!thing(el, 't2'));
@@ -188,8 +191,25 @@ describe('busy hubs folded', () => {
     }
   });
 
-  test('switched off, every link is drawn; on again, the hub is folded', async () => {
+  test('by default every link is drawn, and the hub’s details fold it alone, then open it again', async () => {
     const { env, el } = await card();
+    try {
+      assert.ok(!node(el, 'fold_hub_1') && thing(el, 't2'), 'nothing folded to start');
+      tap(el, thing(el, 'box'));
+      offers(el, 'Fold its 14 links').click();
+      await until(() => !!node(el, 'fold_hub_1'));
+      assert.ok(!thing(el, 't2'));
+      assert.equal(turn(el, 'Busy hubs folded').getAttribute('aria-checked'), 'false', 'the switch stays off');
+      tap(el, thing(el, 'box'));
+      offers(el, 'Open its 14 links').click();
+      await until(() => !!thing(el, 't2'));
+    } finally {
+      env.uninstall();
+    }
+  });
+
+  test('switched off, every link is drawn; on again, the hub is folded', async () => {
+    const { env, el } = await card(NOTE, FOLDED);
     try {
       turn(el, 'Busy hubs folded').click();
       await until(() => !node(el, 'fold_hub_1'));
@@ -259,7 +279,7 @@ describe('groups folded and links merged', () => {
   });
 
   test('Enter on a busy hub’s stub opens it and takes the keyboard to the hub', async () => {
-    const { env, el } = await card();
+    const { env, el } = await card(NOTE, FOLDED);
     try {
       const stub = node(el, 'fold_hub_1');
       stub.focus();
@@ -399,7 +419,7 @@ describe('a switch turned', () => {
   });
 
   test('changes only the drawing: nothing is written, in editing view or reading view', async () => {
-    const env = await load({ files: { [PATH]: NOTE } });
+    const env = await load({ files: { [PATH]: NOTE }, ...FOLDED });
     try {
       const live = await showIn(env, 'live', { note: NOTE });
       turn(live, 'Groups folded').click();
@@ -422,7 +442,7 @@ describe('a switch turned', () => {
 
   test('is saved with a view only when the view is saved as shown, and the view opens so again', async () => {
     const note = noteOf(KIT, GROUPS, VIEW);
-    const env = await load({ files: { [PATH]: note } });
+    const env = await load({ files: { [PATH]: note }, ...FOLDED });
     let saved;
     try {
       const { el } = await show(env, note, 2);
