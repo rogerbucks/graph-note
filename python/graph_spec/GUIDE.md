@@ -112,6 +112,13 @@ archive's layout on every pull request, so it always works with the library as s
 - `marks_json` holds the style token for each stand-in colour, and reads an arrowhead (the core's `graphviz-json.ts`).
   `marks_links` reads each link and the order Graphviz writes it in.
 - Each mark is a dict with the core's own keys, such as `maxWidth`, so the two can be compared as they are.
+- `marks_svg` writes marks as the SVG Graphviz writes (the core's `graphviz-svg.ts`). Its numbers are written as
+  JavaScript writes them.
+- `direct_links` draws each link as one curve from box to box and moves boxes off the links (untangle_direct), and
+  `direct_words` places each link's words. `direct_curve` holds the curve. They are the core's `direct-links.ts` and
+  `direct-words.ts`. `hypot` works out a length as V8 does, to the last bit, so both move the boxes alike.
+- `drawn_svg` is the core's `svgOf`. Links are direct unless the style graph chooses a routing, as in the plugin. Any
+  other routing is Graphviz's own, and so is a layout its marks cannot give back.
 
 ### Rules and the engine
 
@@ -271,3 +278,7 @@ had (`entry_points.json`) and to importing with only `src/` on the path.
 `test_marks.py` proves the marks, and the core's `graphviz-marks-parity.test.js` holds them to the core's. Each case in
 `tests/marks_cases.json` is laid out once, and both libraries read that one layout. They give the same marks, parts and
 order, numbers to a billionth.
+
+`test_direct_links.py` proves direct links, and the core's `direct-links-parity.test.js` holds them to the core's. Each
+case in `tests/direct_cases.json` and `tests/marks_cases.json` is laid out once. Both libraries write the same SVG from
+it, byte for byte, drawn direct and as laid out. Tests that stand in for Graphviz answer through `tests/fake_dot.py`.

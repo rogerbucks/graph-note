@@ -41,7 +41,7 @@ import json
 import os
 import re
 import shutil
-import subprocess
+import subprocess  # noqa: F401 — Graphviz runs through it (graphspec.style.drawn_svg)
 import textwrap
 import zlib
 from collections.abc import Collection, Mapping, Sequence
@@ -53,6 +53,7 @@ from collections.abc import Collection, Mapping, Sequence
 from graph_bidi import isolate_labels
 from graphspec.style.arrows import arrowless_source
 from graphspec.style.diagram_types import typed_source
+from graphspec.style.drawn_svg import drawn_svg
 from graphspec.style.drawn import render_args  # noqa: F401 — re-exported: render(**render_args(…))
 from graphspec.style.flow import flow_source
 from graphspec.style.fold_source import folded_source, routed_source
@@ -309,11 +310,9 @@ def _themed(svg, kinds, readings=()):
 
 def _layout(nodes, edges, rankdir, **drawn):
     src, kinds, readings = drawn_source(nodes, edges, rankdir, **drawn)
-    r = subprocess.run([DOT, "-Tsvg"], input=src, capture_output=True, text=True, timeout=60)
-    if r.returncode:
-        raise RuntimeError(f"Graphviz failed: {r.stderr.strip()[:300]}")
-    m = re.search(r'<svg width="([\d.]+)pt" height="([\d.]+)pt"', r.stdout)
-    return r.stdout, kinds, readings, float(m.group(1)) * 4 / 3, float(m.group(2)) * 4 / 3
+    svg = drawn_svg(DOT, src, drawn.get("routing"))
+    m = re.search(r'<svg width="([\d.]+)pt" height="([\d.]+)pt"', svg)
+    return svg, kinds, readings, float(m.group(1)) * 4 / 3, float(m.group(2)) * 4 / 3
 
 
 def render(
