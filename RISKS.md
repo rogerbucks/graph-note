@@ -996,9 +996,9 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 
 **Who found it:** Senior security engineer. **Where:** `packages/graph-spec/src/mesh/as-at.js`, `packages/core/src/index-mesh.ts`.
 
-**Risk:** The history views (as-at, change log), clock use in sync and peer-to-peer, replayed edits, keys and permissions that change over time, and expiry of links and caches have had no review of their own. An erased thing could still show at an earlier moment, a wrong device clock could win a merge, an old signed edit could be sent again, and a permission could be checked once and used later. Sync (Wave 13) would make each of these reachable.
+**Risk:** Nobody has reviewed how time can undo our safeguards. History views (as-at, change log) could show erased data. A wrong device clock could win a merge. An old signed edit could be sent again. A permission could be checked once and used later. Links and caches may not expire. Sync in Wave 13 makes each of these reachable.
 
-**Fix:** Review the five areas and write what each must do as the tests of section 65 (workstream TS1), before the CRDT transport (W30) and the peer network (W31) ship.
+**Fix:** Review the five areas and write what each must do as the tests of section 65 (workstream TS1). Do this before the CRDT transport (W30) and the peer network (W31) ship.
 
 **Check:** The tests of section 65 in packages/core/test/temporal-security.test.js, and the wave gate for Wave 13.
 

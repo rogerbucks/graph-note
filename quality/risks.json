@@ -4272,7 +4272,7 @@
       "role": "Senior security engineer",
       "area": "security",
       "title": "Time-related attacks on history, sync and shared links are not yet reviewed",
-      "risk": "The history views (as-at, change log), clock use in sync and peer-to-peer, replayed edits, keys and permissions that change over time, and expiry of links and caches have had no review of their own. An erased thing could still show at an earlier moment, a wrong device clock could win a merge, an old signed edit could be sent again, and a permission could be checked once and used later. Sync (Wave 13) would make each of these reachable.",
+      "risk": "Nobody has reviewed how time can undo our safeguards. History views (as-at, change log) could show erased data. A wrong device clock could win a merge. An old signed edit could be sent again. A permission could be checked once and used later. Links and caches may not expire. Sync in Wave 13 makes each of these reachable.",
       "evidence": [
         "packages/graph-spec/src/mesh/as-at.js",
         "packages/core/test/mesh-history.test.js",
@@ -4282,7 +4282,7 @@
       "likelihood": "medium",
       "impact": "high",
       "decision": "fix-later",
-      "fix": "Review the five areas and write what each must do as the tests of section 65 (workstream TS1), before the CRDT transport (W30) and the peer network (W31) ship.",
+      "fix": "Review the five areas and write what each must do as the tests of section 65 (workstream TS1). Do this before the CRDT transport (W30) and the peer network (W31) ship.",
       "check": "The tests of section 65 in packages/core/test/temporal-security.test.js, and the wave gate for Wave 13.",
       "paths": [
         "packages/graph-spec/src/mesh/as-at.js",
