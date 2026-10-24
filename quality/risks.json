@@ -1349,7 +1349,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
+      "status": "done",
+      "done_in": "#1084",
       "wave": "Wave 9 · Slice 6 the mesh"
     },
     {
@@ -3058,7 +3059,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
+      "status": "done",
+      "done_in": "#1083",
       "wave": "Wave 8 · Clusters, new views and the VS Code plugin"
     },
     {
@@ -3882,7 +3884,8 @@
         "packages/core/src/theme.ts:70",
         "packages/core/src/view-profile.ts:104",
         "packages/graph-spec/src/rules/lenses.js:11",
-        "packages/graph-spec/src/rules/lenses.js:18"
+        "packages/graph-spec/src/rules/lenses.js:18",
+        "packages/core/src/type-suggestion.ts:128"
       ],
       "likelihood": "low",
       "impact": "high",

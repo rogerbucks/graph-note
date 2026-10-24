@@ -71,7 +71,8 @@ jobs:
         run: npm ci
       # six files at once on the runner's four cores, as the files mostly wait on the processes they start
       # A shard that draws in the browser for three files at once peaked at 4.2 GB here (19 Oct 2026), over the
-      # default 4 GB ceiling. 6 GB keeps a runaway stopped well inside the runner's 16 GB.
+      # default 4 GB ceiling, so it got 6 GB. A shard drawing in the browser for four files at once then reached 6.3 GB
+      # (23 Oct 2026). 8 GB keeps a runaway stopped inside the runner's 16 GB.
       # A partial run gives the shards only its own test files, through the environment, never spliced into the command.
       # Each name is checked to hold only letters, digits and `_ . / @ -`, so the shell splits them and nothing more.
       - if: needs.plan.outputs.tier != 'subset' || matrix.shard <= fromJSON(needs.plan.outputs.shards)
@@ -79,7 +80,7 @@ jobs:
           SHARD: ${{ matrix.shard }}
           SHARDS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.shards || 6 }}
           TESTS: ${{ needs.plan.outputs.tier == 'subset' && needs.plan.outputs.tests || '' }}
-          THOUGHTKNOT_TEST_MEMORY_MB: 6144
+          THOUGHTKNOT_TEST_MEMORY_MB: 8192
         run: npm test -- --test-concurrency=6 --test-shard="$SHARD/$SHARDS" --test-reporter=./scripts/quiet-reporter.mjs --test-reporter-destination=stdout --test-reporter=spec --test-reporter-destination=test-report.txt $TESTS
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -201,6 +202,34 @@ jobs:
         run: "! uv run --locked --no-default-groups python -c 'import grafeo'"
       - run: node ../../scripts/run-ceiling.mjs uv run --locked --no-default-groups python -m unittest discover -s tests
 
+  # The libraries' runnable examples (risk API-12), run as a reader runs them: from the release archive's layout, where
+  # the JavaScript entry point is the built file. Each one reads a block, checks it and exits non-zero on a failed rule.
+  # Every file in examples/js and examples/python is run (test/library-examples.test.js holds this list to the folders).
+  examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build --workspace packages/graph-spec
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - name: Lay out the libraries as the release archive does, with the examples beside them
+        run: |
+          git archive --format=tar --prefix=packages/graph-spec/src/ --add-file=packages/graph-spec/dist/graph-spec-check.js --prefix= HEAD LICENSE packages/graph-spec/package.json packages/graph-spec/src ':(exclude)packages/graph-spec/src/graph-spec-check.js' packages/graph-spec/bin python/graph_spec/pyproject.toml python/graph_spec/uv.lock python/graph_spec/src examples/js examples/python | tar -x -C "$RUNNER_TEMP"
+      - name: Run each example
+        working-directory: ${{ runner.temp }}
+        run: |
+          node examples/js/read-and-check.cjs
+          uv run --locked --no-default-groups --project python/graph_spec python examples/python/read_and_check.py
+
   # Every test is seen to fail before its code (spec §12): each new commit is replayed, its tests run against its
   # parent's code, and a new test that passes there fails the build unless its reason is kept in test/seen-failing/.
   # It reads only that folder, never the record in test/tests-first/, so the record cannot weaken it.
@@ -265,9 +294,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # The fresh clone's `npm test` runs the whole suite at once, browser drawing included. That passed the default 4 GB
-    # ceiling (4.2 GB, 21 Oct 2026), as the shards above did, so it gets their 6 GB too.
+    # ceiling (4.2 GB, 21 Oct 2026), as the shards above did, so it gets their ceiling too: 8 GB.
     env:
-      THOUGHTKNOT_TEST_MEMORY_MB: 6144
+      THOUGHTKNOT_TEST_MEMORY_MB: 8192
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
