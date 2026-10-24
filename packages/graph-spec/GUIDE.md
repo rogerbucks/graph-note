@@ -78,7 +78,8 @@ and no module requires one that requires it back.
   (req:21.trust-counted, req:21.prefix-owner).
 - **`src/views/`** — `mermaid.js` (relationships, legend and paths as Mermaid text) and `views.js` (every view of a
   graph at once).
-### Clusters and the mesh
+
+### Clusters
 
 - **`src/clusters/`** — clusters (editor spec §31) and the groups a massive graph opens as (editor spec §53). Python's
   twins give the same answers. Its files:
@@ -92,6 +93,15 @@ and no module requires one that requires it back.
   - `cohesion.js` — how tightly each cluster holds together: links between its members and how many are contested. A
     loose, disputed cluster states less certainty than a tight one. A cluster may opt in to a floor, so it is never
     more certain than its least certain member (`test/cohesion-cases.json`).
+
+### Altitude
+
+- **`src/altitude/`** — the altitude and topic index (editor spec §32). Python's twin gives the same answers.
+  - `altitude-index.js` — each thing's topic tags and altitudes. A search finds a tag exactly or by likeness and ranks
+    by the certainty sort key, marking contested things (`test/altitude-index-cases.json`).
+
+### The mesh
+
 - **`src/mesh/`** — the graph mesh (editor spec §27 to §30). Python's twins give the same answers.
   - `mesh-join.js` — graphs from many notes joined, built on `src/joins/`, with what the join found. Each clash keeps
     both sides, and the gaps are listed. Each claim has its certainty in words, ranked by a key made from them, never

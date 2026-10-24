@@ -313,6 +313,24 @@ declare namespace GraphSpecCheck {
     graph: Graph,
     options?: { floor?: string[]; passes?: number; threshold?: number; budget?: number; clock?: () => number },
   ): { clusters: ClusterCertainty[]; settled: boolean };
+  /** One thing in the altitude and topic index (editor spec §32). */
+  interface AltitudeEntry {
+    id: string;
+    tags: string[];
+    /** Each lens or profile that places it, and the level. */
+    altitudes: [string, number][];
+    profiles: string[];
+    contested: boolean;
+    /** Made from its certainty words; null when it has none. */
+    sort_key: number | null;
+  }
+  /** The index of a graph, derived from it, with the hash of its entries. */
+  function altitudeIndex(graph: Graph): { entries: AltitudeEntry[]; hash: string };
+  /** A search of the index, ranked by certainty sort key, then by how alike, then by id. */
+  function searchIndex(
+    index: { entries: AltitudeEntry[]; hash: string },
+    query?: { topic?: string; like?: string; lens?: string; level?: number; profile?: string },
+  ): { id: string; score: number; sort_key: number | null; contested: boolean }[];
 
   /** A claim as a person ranks it (editor spec §28): its words, never a number typed in. */
   interface MeshClaim {

@@ -58,6 +58,7 @@ const { clustersOf } = require('./clusters/clusters.js');
 const { centroidId, centroidsOf } = require('./clusters/centroids.js');
 const { clusterCycles, cycleView } = require('./clusters/cycles.js');
 const { clusterCertainty } = require('./clusters/cohesion.js');
+const { altitudeIndex, searchIndex } = require('./altitude/altitude-index.js');
 const { certaintyOf, byCertainty, meshJoin } = require('./mesh/mesh-join.js');
 const { asAt, lensAsAt } = require('./mesh/as-at.js');
 const { afterTextMerge } = require('./mesh/after-text-merge.js');
@@ -155,4 +156,6 @@ module.exports = {
   instancesOf,
   inherited,
   clusterCertainty,
+  altitudeIndex,
+  searchIndex,
 };

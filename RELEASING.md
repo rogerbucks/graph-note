@@ -13,6 +13,17 @@ run by hand, if main moved since the last one. It runs the full suite and publis
 publishes a GitHub pre-release named for the next patch and the day (`0.6.1-nightly.20261018`, from
 `scripts/nightly-version.mjs`), keeping the last seven.
 
+**Wave nightly**: `.github/workflows/wave-nightly.yml` builds a nightly the day a wave ends, so you can test without
+waiting for 16:00 UTC (Roger, 23 Oct 2026). To trigger it, the pull request that finishes a wave gets the label
+`wave-done` and a line of its own in its body, `Wave: 9`.
+
+When it merges to main, a gate (`scripts/wave-gate.mjs`) reads the board "ThoughtKnot requirements". Every item of that
+wave must be Done and proved, or nothing is built. The run fails and lists the open items in its log and summary. The
+board lags a merge by minutes, so the gate waits up to 15.
+
+If all is done it calls the nightly above. A second build the same day takes the next letter (`…20261023.b`), so BRAT
+sees it as an update. It needs the secret `PROJECT_TOKEN`, as the project mirror does.
+
 Each nightly also carries the desktop app's installers: a `.dmg`, an NSIS `.exe` and a `.deb`, named
 `thoughtknot-app-<version>-<system>`. The Desktop app workflow builds them at the same commit. Each is signed where its
 keys are set and unsigned where not, so a system may warn before it opens one. A night they fail still publishes the

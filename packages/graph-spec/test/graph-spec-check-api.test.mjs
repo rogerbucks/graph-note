@@ -111,6 +111,9 @@ const NAMES = [
   'inherited',
   // each cluster's cohesion and the certainty its centroid states (editor spec §31)
   'clusterCertainty',
+  // the altitude and topic index (editor spec §32)
+  'altitudeIndex',
+  'searchIndex',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

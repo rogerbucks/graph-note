@@ -154,6 +154,8 @@ archive's layout on every pull request, so it always works with the library as s
     (`cohesion.js`, `cohesion-cases.json`).
 ### The graph mesh and the process engine
 
+- `src/graphspec/engine/altitude/` — editor spec §32. `altitude_index.altitude_index` and `search_index` are the twins
+  of `altitude-index.js`, held to `altitude-index-cases.json`.
 - `src/graphspec/engine/mesh/` — editor spec §28 and §30, the graph mesh. `mesh_join.mesh_join` joins graphs as the mesh
   does and says what it found. That is each clash with both sides, the gaps, and each claim's certainty in words. It
   is also each thing's standing, the marker on links to a contested thing, contested hand-made clusters and

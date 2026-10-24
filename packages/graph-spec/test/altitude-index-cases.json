@@ -1,0 +1,510 @@
+{
+  "about": "Shared cases for the altitude and topic index (editor spec §32, altitude_topic_index). A case with no query expects the index of its graph; one with a query expects that search of it. packages/graph-spec/src/altitude/altitude-index.js and graphspec/engine/altitude/altitude_index.py must both give each answer. Made once by the JavaScript library.",
+  "cases": [
+    {
+      "name": "the index lists each tagged or placed thing with its sort key",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*"
+            }
+          ],
+          [
+            "interest",
+            ["Claim"],
+            {
+              "topics": "interest rates, lending",
+              "likelihood": "likely",
+              "confidence": "high"
+            }
+          ],
+          [
+            "inflation",
+            ["Claim"],
+            {
+              "topic": "interest rate",
+              "likelihood": "very-likely",
+              "status": "contested"
+            }
+          ],
+          [
+            "fees",
+            ["Claim"],
+            {
+              "topics": "fees, lending",
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "branches",
+            ["Fact"],
+            {
+              "topic": "branches"
+            }
+          ],
+          ["plain", ["Fact"], {}]
+        ],
+        "edges": [
+          [
+            "interest",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "fees",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ],
+          [
+            "interest",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "what borrowing costs"
+            }
+          ]
+        ]
+      },
+      "query": null,
+      "expected": {
+        "entries": [
+          {
+            "id": "interest",
+            "tags": ["interest rates", "lending"],
+            "altitudes": [["overview", 2]],
+            "profiles": ["board"],
+            "contested": false,
+            "sort_key": 272
+          },
+          {
+            "id": "inflation",
+            "tags": ["interest rate"],
+            "altitudes": [],
+            "profiles": [],
+            "contested": true,
+            "sort_key": 350
+          },
+          {
+            "id": "fees",
+            "tags": ["fees", "lending"],
+            "altitudes": [["overview", 1]],
+            "profiles": [],
+            "contested": false,
+            "sort_key": 130
+          },
+          {
+            "id": "branches",
+            "tags": ["branches"],
+            "altitudes": [],
+            "profiles": [],
+            "contested": false,
+            "sort_key": null
+          }
+        ],
+        "hash": "sha-256:b3504b279e9398c59ac53bc2cae31785037253cf5dd863921a9004c2a81ad2cf"
+      }
+    },
+    {
+      "name": "an exact search finds a tag, ranked by certainty",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*"
+            }
+          ],
+          [
+            "interest",
+            ["Claim"],
+            {
+              "topics": "interest rates, lending",
+              "likelihood": "likely",
+              "confidence": "high"
+            }
+          ],
+          [
+            "inflation",
+            ["Claim"],
+            {
+              "topic": "interest rate",
+              "likelihood": "very-likely",
+              "status": "contested"
+            }
+          ],
+          [
+            "fees",
+            ["Claim"],
+            {
+              "topics": "fees, lending",
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "branches",
+            ["Fact"],
+            {
+              "topic": "branches"
+            }
+          ],
+          ["plain", ["Fact"], {}]
+        ],
+        "edges": [
+          [
+            "interest",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "fees",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ],
+          [
+            "interest",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "what borrowing costs"
+            }
+          ]
+        ]
+      },
+      "query": {
+        "topic": "lending"
+      },
+      "expected": [
+        {
+          "id": "interest",
+          "score": 1,
+          "sort_key": 272,
+          "contested": false
+        },
+        {
+          "id": "fees",
+          "score": 1,
+          "sort_key": 130,
+          "contested": false
+        }
+      ]
+    },
+    {
+      "name": "a search by likeness finds near spellings, ranked by certainty, contested marked",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*"
+            }
+          ],
+          [
+            "interest",
+            ["Claim"],
+            {
+              "topics": "interest rates, lending",
+              "likelihood": "likely",
+              "confidence": "high"
+            }
+          ],
+          [
+            "inflation",
+            ["Claim"],
+            {
+              "topic": "interest rate",
+              "likelihood": "very-likely",
+              "status": "contested"
+            }
+          ],
+          [
+            "fees",
+            ["Claim"],
+            {
+              "topics": "fees, lending",
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "branches",
+            ["Fact"],
+            {
+              "topic": "branches"
+            }
+          ],
+          ["plain", ["Fact"], {}]
+        ],
+        "edges": [
+          [
+            "interest",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "fees",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ],
+          [
+            "interest",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "what borrowing costs"
+            }
+          ]
+        ]
+      },
+      "query": {
+        "like": "interest rates"
+      },
+      "expected": [
+        {
+          "id": "inflation",
+          "score": 0.8125,
+          "sort_key": 350,
+          "contested": true
+        },
+        {
+          "id": "interest",
+          "score": 1,
+          "sort_key": 272,
+          "contested": false
+        }
+      ]
+    },
+    {
+      "name": "a search by lens and level",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*"
+            }
+          ],
+          [
+            "interest",
+            ["Claim"],
+            {
+              "topics": "interest rates, lending",
+              "likelihood": "likely",
+              "confidence": "high"
+            }
+          ],
+          [
+            "inflation",
+            ["Claim"],
+            {
+              "topic": "interest rate",
+              "likelihood": "very-likely",
+              "status": "contested"
+            }
+          ],
+          [
+            "fees",
+            ["Claim"],
+            {
+              "topics": "fees, lending",
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "branches",
+            ["Fact"],
+            {
+              "topic": "branches"
+            }
+          ],
+          ["plain", ["Fact"], {}]
+        ],
+        "edges": [
+          [
+            "interest",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "fees",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ],
+          [
+            "interest",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "what borrowing costs"
+            }
+          ]
+        ]
+      },
+      "query": {
+        "lens": "overview",
+        "level": 2
+      },
+      "expected": [
+        {
+          "id": "interest",
+          "score": 1,
+          "sort_key": 272,
+          "contested": false
+        }
+      ]
+    },
+    {
+      "name": "a search by profile",
+      "graph": {
+        "nodes": [
+          [
+            "board",
+            ["Profile"],
+            {
+              "name": "board"
+            }
+          ],
+          [
+            "overview",
+            ["Lens"],
+            {
+              "name": "Overview",
+              "query": "*"
+            }
+          ],
+          [
+            "interest",
+            ["Claim"],
+            {
+              "topics": "interest rates, lending",
+              "likelihood": "likely",
+              "confidence": "high"
+            }
+          ],
+          [
+            "inflation",
+            ["Claim"],
+            {
+              "topic": "interest rate",
+              "likelihood": "very-likely",
+              "status": "contested"
+            }
+          ],
+          [
+            "fees",
+            ["Claim"],
+            {
+              "topics": "fees, lending",
+              "likelihood": "unlikely"
+            }
+          ],
+          [
+            "branches",
+            ["Fact"],
+            {
+              "topic": "branches"
+            }
+          ],
+          ["plain", ["Fact"], {}]
+        ],
+        "edges": [
+          [
+            "interest",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 2
+            }
+          ],
+          [
+            "fees",
+            "AT_ALTITUDE",
+            "overview",
+            {
+              "level": 1
+            }
+          ],
+          [
+            "interest",
+            "PROJECTED_FOR",
+            "board",
+            {
+              "text": "what borrowing costs"
+            }
+          ]
+        ]
+      },
+      "query": {
+        "profile": "board"
+      },
+      "expected": [
+        {
+          "id": "interest",
+          "score": 1,
+          "sort_key": 272,
+          "contested": false
+        }
+      ]
+    }
+  ]
+}
