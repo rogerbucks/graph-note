@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/large-drawing.test.js",
+  "test": "a large graph drawn straight first > of 300 things or fewer, or routed as a person chose, is drawn as before, at once",
+  "seen_failing_first": false,
+  "evidence": "It guards what must not change: before straightFirst existed, every drawing was drawn this way, so it passes on the old code by design."
+}
