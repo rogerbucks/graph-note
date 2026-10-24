@@ -6,7 +6,6 @@
 import { AI_SOURCE_WORDS } from './ai-source-words.ts';
 import { APP_SOURCE_WORDS } from './app-source-words.ts';
 import { BLOCKS_SOURCE_WORDS } from './blocks-source-words.ts';
-import { BOARD_SOURCE_WORDS } from './board-source-words.ts';
 import { CC_SOURCE_WORDS } from './cc-source-words.ts';
 import { CHECK_SOURCE_WORDS } from './check-source-words.ts';
 import { DB_SOURCE_WORDS } from './db-source-words.ts';
@@ -369,7 +368,6 @@ export const SOURCE_WORDS = {
   // the core's problems found while reading a note or checking its style (reading-, style-source-words.ts)
   ...READING_SOURCE_WORDS,
   ...STYLE_SOURCE_WORDS,
-  ...BOARD_SOURCE_WORDS,
   // the graph spec reader's own problems, a message and a fix for each code (reader-source-words.ts)
   ...READER_SOURCE_WORDS,
   // the graph spec's change-set check: each line it says of a proposal (check-source-words.ts)

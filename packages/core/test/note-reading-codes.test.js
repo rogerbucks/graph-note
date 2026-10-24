@@ -39,11 +39,11 @@ const SOURCES = walk(SRC).map((file) => {
 const problemsOf = (c) => (c.style ? readStyle(c.blocks, c.style, readNote(c.blocks)) : readNote(c.blocks)).problems;
 
 describe('editor spec §42, problem_codes: the drawing reader’s table', () => {
-  test('every code is GN7 or GN8 and two digits, given once, apart from the reader’s, with its words and readers', () => {
+  test('every code is GN7, GN8 or GN9 and two digits, given once, apart from the reader’s, with its words and readers', () => {
     assert.match(TABLE.about, /never reused/);
     assert.equal(BY_CODE.size, TABLE.codes.length, 'no code given twice');
     for (const c of TABLE.codes) {
-      assert.match(c.code, /^GN[78]\d\d$/);
+      assert.match(c.code, /^GN[789]\d\d$/);
       assert.ok(!READER_CODES.has(c.code), `${c.code} is the reader's too`);
       assert.ok(c.section === null || /^\d+$/.test(c.section), c.code);
       assert.ok(c.libraries.length && c.libraries.every((l) => l === 'core' || l === 'py'), c.code);
