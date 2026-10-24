@@ -92,7 +92,7 @@ export function directions(drawing: GraphDrawing): Direction[] {
   const keys = drawing.boxes.map((b) => b.key);
   const quick = drawing.boxes.length > QUICK_LAYOUT;
   // straight first only where the links would be curved: a routing a person chose is drawn as chosen at once
-  const straight = quick && !!drawing.straightFirst && !drawing.routing;
+  const straight = quick && !!drawing.straightFirst && (!drawing.routing || drawing.routing === 'curved');
   const ways = only ? [only] : quick ? STYLE.directions.slice(0, 1) : STYLE.directions;
   return ways.map((rankdir) => {
     const src = layoutSource(drawing, rankdir as 'LR' | 'TB');
@@ -162,12 +162,13 @@ export function draw(drawing: GraphDrawing, engine: Engine): Drawn {
 }
 
 /**
- * The SVG Graphviz draws from `dot`. With direct links (§25, untangle_direct) it is drawn from Graphviz's layout as
- * marks, its links made direct and its boxes moved aside (direct-links.ts). It is Graphviz's own where the marks
- * cannot give the drawing back exactly, or the engine gives no marks.
+ * The SVG Graphviz draws from `dot`. Direct links are the default. With them (§25, untangle_direct) it is drawn from
+ * Graphviz's layout as marks, its links made direct and its boxes moved aside (direct-links.ts). It is Graphviz's own
+ * where the marks cannot give the drawing back exactly, or the engine gives no marks.
  */
 export function svgOf(engine: Engine, dot: string, routing?: string): string {
-  if (routing !== 'direct' || !engine.marks) return engine.render(dot);
+  // direct is the default: a routing chosen as anything else is Graphviz's own (Roger, 24 Oct 2026)
+  if ((routing !== undefined && routing !== 'direct') || !engine.marks) return engine.render(dot);
   const laid = engine.marks(dot);
   return laid.layout?.lost ? engine.render(dot) : layoutSvg(directLinks(laid));
 }

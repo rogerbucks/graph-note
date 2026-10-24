@@ -93,10 +93,10 @@ export interface GraphDrawing {
   /** The links its style graph moves (spec §7, link-flow.ts), each with how and what it means; none, every link still. */
   flow?: FlowLink[];
   /**
-   * How its style graph routes its links (spec §25): straight, right-angled, or direct (direct-links.ts); none, curved,
-   * as Graphviz draws them.
+   * How its style graph routes its links (spec §25): curved as Graphviz draws them, straight, right-angled, or direct
+   * (direct-links.ts). None, direct: the default (Roger, 24 Oct 2026).
    */
-  routing?: 'straight' | 'right-angled' | 'direct';
+  routing?: 'curved' | 'straight' | 'right-angled' | 'direct';
   /**
    * Laid out quickly with straight links first, past 300 things, for its curves to follow (§11, curves_after_drawing);
    * none, curved at once.

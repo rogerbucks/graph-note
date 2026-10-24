@@ -1221,7 +1221,7 @@
           "links: Array<Link>",
           "nudges?: Array<Nudge> | undefined",
           "pictures?: Array<PictureBox> | undefined",
-          "routing?: 'straight' | 'right-angled' | 'direct' | undefined",
+          "routing?: 'curved' | 'straight' | 'right-angled' | 'direct' | undefined",
           "straightFirst?: boolean | undefined"
         ],
         "GraphNames": [
@@ -1794,7 +1794,7 @@
           "interface",
           "at: StyleAt",
           "merge?: 'off' | 'on' | undefined",
-          "routing?: 'straight' | 'right-angled' | 'direct' | 'curved' | undefined",
+          "routing?: 'curved' | 'straight' | 'right-angled' | 'direct' | undefined",
           "view?: string | undefined"
         ],
         "linksHeld": [
@@ -3130,7 +3130,7 @@
           "items: () => Promise<ReviewItem[]>"
         ],
         "Routing": [
-          "type = 'straight' | 'right-angled' | 'direct' | 'curved'"
+          "type = 'curved' | 'straight' | 'right-angled' | 'direct'"
         ],
         "RuleReport": [
           "interface",
