@@ -110,8 +110,8 @@ export class MeshIndex {
       note,
       groups.map((g) => g.id),
     );
-    // a thing's props are kept as canonical JSON, so a thing that has the property says `"name":value` in it: most are
-    // ruled out by that, and only the rest are read
+    // a thing's props are kept as canonical JSON, so a thing with the property says `"name":value` in it. That rules
+    // most out, and only the rest are read
     const said = query.property === undefined ? '' : `${json(query.property)}:${json(query.value)}`;
     const hits = rows.filter((t) => {
       if (query.name !== undefined) return t.text === query.name || t.key === query.name;
