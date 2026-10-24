@@ -3,8 +3,9 @@
 // the order of the work lives. From it the mirror derives two fields for each requirement:
 // - Wave: the project's iteration field, one iteration for each wave, with its dates;
 // - Order: a number, from the wave's position, then the workstream's, then the requirement's.
-// Each wave also names its milestone, one of those the file lists: an outcome one step above the waves. The mirror
-// files each requirement's issue under its wave's milestone (github-project-milestones.mjs).
+// Each wave is also a milestone, where the file says `"milestones": "each wave"`. Or the file lists milestones, and each
+// wave names one of them. The mirror files each requirement's issue under its wave's milestone
+// (github-project-milestones.mjs).
 // Pure: text and values in, values out. The fields are set by github-project-gh.mjs.
 
 /** The plan, beside the workstreams file. */
@@ -45,11 +46,30 @@ function readEarlierPlan(wave) {
   return { start: earlier.start, end: earlier.end, replaced: earlier.replaced, why: earlier.why };
 }
 
+/** The value of `milestones` that makes each wave of work its own milestone (Roger, 24 Oct 2026). */
+export const EACH_WAVE = 'each wave';
+
+/**
+ * Each wave of work as its own milestone: titled as the wave, about its workstreams. The wave names it. A wave that
+ * names another is refused, and a placeholder wave of no work has none.
+ */
+function eachWave(waves, workstreams) {
+  const named = waves.find((w) => w.milestone !== null);
+  if (named) throw new Error(`wave "${named.title}" names a milestone, but each wave is its own`);
+  const milestones = [];
+  for (const w of waves.filter((x) => x.workstreams.length)) {
+    w.milestone = w.title;
+    const titles = w.workstreams.map((id) => `${id} ${workstreams[id].title}`);
+    milestones.push({ title: w.title, about: `Workstreams: ${titles.join('; ')}.` });
+  }
+  return milestones;
+}
+
 /** The milestones the file lists, [{title, about}], or null where it lists none. */
 function readMilestones(file) {
   if (file.milestones === undefined) return null;
   if (!Array.isArray(file.milestones) || !file.milestones.length)
-    throw new Error('milestones must be a list of {title, about}, with at least one');
+    throw new Error(`milestones must be a list of {title, about}, with at least one, or "${EACH_WAVE}"`);
   const titles = new Set();
   return file.milestones.map((m) => {
     if (m === null || typeof m !== 'object' || typeof m.title !== 'string' || !m.title.trim())
@@ -122,7 +142,8 @@ function readWave(wave, workstreams, seen) {
 
 /**
  * Reads the waves file against the workstreams (as readWorkstreams gives them): {waves: [{title, start, end, estimate,
- * earlierPlan, milestone, workstreams}]}, in order, and {milestones: [{title, about}]} where the file lists them.
+ * earlierPlan, milestone, workstreams}]}, in order, and {milestones: [{title, about}]} where the file lists them or
+ * makes each wave one (EACH_WAVE).
  * Throws, naming what is wrong, for anything else:
  * - no waves;
  * - a wave with no title, or a title two waves share;
@@ -147,7 +168,7 @@ export function readWaves(text, workstreams) {
   for (let i = 1; i < waves.length; i += 1)
     if (waves[i].from <= waves[i - 1].to)
       throw new Error(`wave "${waves[i].title}" starts before "${waves[i - 1].title}" ends`);
-  const milestones = readMilestones(file);
+  const milestones = file.milestones === EACH_WAVE ? eachWave(waves, workstreams) : readMilestones(file);
   checkMilestones(waves, milestones);
   return { waves: waves.map(({ from: _from, to: _to, ...wave }) => wave), ...(milestones ? { milestones } : {}) };
 }

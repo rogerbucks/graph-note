@@ -4,7 +4,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readNote } from '../src/drawing.ts';
-import { draw, details, directions, chosen } from '../src/render.ts';
+import { draw, details, directions, chosen, svgOf } from '../src/render.ts';
 import { PALETTES } from '../src/palette.ts';
 import { loadEngine } from '../src/engine.ts';
 import { layoutSource } from '../src/layout.ts';
@@ -24,8 +24,9 @@ describe('drawing', () => {
     for (const g of [WIDE, CHAIN]) {
       const drawing = readNote([g]).graphs.get('g');
       const laid = ['LR', 'TB'].map((rankdir) => {
+        // drawn with direct links, the default (Roger, 24 Oct 2026)
         const src = layoutSource(drawing, rankdir),
-          svg = engine.render(src.source);
+          svg = svgOf(engine, src.source);
         return { rankdir, ...sizeOf(svg), svg, src };
       });
       const best = choose(laid);

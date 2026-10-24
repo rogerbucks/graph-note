@@ -9,14 +9,14 @@
       <text x="160.31" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> PLACE
       <text x="152.2" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> The park
     <g id="p4">
-      <path d="M72.36,-28.2C88.05,-28.2 106.8,-28.2 124.01,-28.2" paint="stroke:rgb(223, 221, 139)">
-      <polygon points="123.81,-30.65 130.81,-28.2 123.81,-25.75 123.81,-30.65" paint="fill:rgb(223, 221, 139);stroke:rgb(223, 221, 139)">
-      <text x="102.41" y="-31.35" text-anchor="middle" paint="fill:rgb(221, 220, 166)"> near
+      <path d="M71.9,-22.45C94.91,-18.77 112.94,-17.97 126.01,-20.06" paint="stroke:rgb(223, 221, 139)">
+      <polygon points="126.39,-17.64 132.92,-21.17 125.62,-22.48 126.39,-17.64" paint="fill:rgb(223, 221, 139);stroke:rgb(223, 221, 139)">
+      <text x="104.41" y="-25.14" text-anchor="middle" paint="fill:rgb(221, 220, 166)"> near
     <g id="p5">
       <path d="M334.79,-56.4C334.79,-56.4 293.82,-56.4 293.82,-56.4 287.82,-56.4 281.82,-50.4 281.82,-44.4 281.82,-44.4 281.82,-12 281.82,-12 281.82,-6 287.82,0 293.82,0 293.82,0 334.79,0 334.79,0 340.79,0 346.79,-6 346.79,-12 346.79,-12 346.79,-44.4 346.79,-44.4 346.79,-50.4 340.79,-56.4 334.79,-56.4" paint="fill:rgba(2, 122, 255, 0.16);stroke:rgb(56, 146, 246)">
       <text x="300.86" y="-35.6" text-anchor="start" paint="fill:rgb(179, 179, 179)"> CAFE
       <text x="301.1" y="-15.3" text-anchor="start" paint="fill:rgb(218, 218, 218)"> Cafe
     <g id="p6">
-      <path d="M221.09,-28.2C237.84,-28.2 256.89,-28.2 273.31,-28.2" paint="stroke:rgb(223, 221, 139)">
-      <polygon points="273.12,-30.65 280.12,-28.2 273.12,-25.75 273.12,-30.65" paint="fill:rgb(223, 221, 139);stroke:rgb(223, 221, 139)">
-      <text x="251.32" y="-31.35" text-anchor="middle" paint="fill:rgb(221, 220, 166)"> near
+      <path d="M220.81,-35.23C237.33,-37.87 255.36,-37.63 274.91,-34.5" paint="stroke:rgb(223, 221, 139)">
+      <polygon points="274.52,-32.08 281.82,-33.4 275.29,-36.92 274.52,-32.08" paint="fill:rgb(223, 221, 139);stroke:rgb(223, 221, 139)">
+      <text x="248.45" y="-42.53" text-anchor="middle" paint="fill:rgb(221, 220, 166)"> near

@@ -108,6 +108,7 @@ export const DISPLAY_SOURCE_WORDS = {
   'space.help-finger': 'One finger: turn',
   'space.help-fingers': 'Two fingers: move, and pinch to zoom',
   'space.help-tap': 'Tap: name it. Double-tap: fly to it',
+  'space.spread': 'Layout: in space',
   'space.height-groups': 'Height: groups',
   'space.height-links': 'Height: links',
   // a graph too large to draw, as its overview (§53, massive-view.ts)

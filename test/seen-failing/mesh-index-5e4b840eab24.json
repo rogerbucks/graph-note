@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/mesh-index.test.js",
+  "test": "the reads a huge graph is drawn in parts from (scale_in_parts) > find by a value ignores the same words inside another value, and finds text with quotes and whole numbers",
+  "seen_failing_first": false,
+  "evidence": "guards the faster find: the old find gave the same answers, so this passes on the old code too"
+}

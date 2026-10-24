@@ -37,9 +37,13 @@ export const CORE_KEPT = {
   // the WCAG constraints as graph text: a note's bytes, never said to a person (editor spec §36)
   'packages/core/src/accessibility-lens.ts': '*',
   // what an SVG holds beyond a picture, named for a developer's test (editor spec §36, drawing_holds_no_state)
-  'packages/core/src/drawing-commands.ts': ['form field'],
+  'packages/core/src/drawing-commands.ts': ['form field', 'foreign object', 'event handler', 'script link'],
+  // why a test run of a process is refused: a fault of the caller's code, for its developer (editor spec §35)
+  'packages/core/src/test-runs.ts': '*',
   // why a theme chain is refused: a fault of the theme graph, for its author's developer (editor spec §36)
   'packages/core/src/theme-graph.ts': '*',
+  // why a profile is refused to anyone but its owner: a fault of the caller's code, for its developer (editor spec §39)
+  'packages/core/src/profiles.ts': ['refused: a profile is read only by its owner'],
   // why a translation is not added, told to its translator, never to a person using the app
   'packages/core/src/words.ts': '*',
   // why a plug-in is not installed, told to its developer as the registry refuses it

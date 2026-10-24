@@ -5,7 +5,7 @@
 // Nothing is kept past the drawing but the legend's choices. A host writes those into the style graph when the user
 // saves a view as shown (untangle-saved.ts).
 import { adjacency, edgesOf, within } from './focus.ts';
-import type { FocusDepth, FocusEdge, Kept } from './focus.ts';
+import type { FocusEdge, Kept } from './focus.ts';
 import { propertiesOf } from './inspector.ts';
 import type { GraphDrawing, NoteReading } from './note-reading.ts';
 import type { LegendChoice } from './untangle-saved.ts';
@@ -13,8 +13,11 @@ import { word } from './words.ts';
 
 const SEPARATOR = ' · ';
 
+/** The most steps out a thing shown with its neighbours reaches: its details offer one more or one fewer, up to it. */
+export const MOST_STEPS = 3;
+
 /** The things within `steps` links of a thing and the links among them, either way along each: the drawing filtered to them. */
-export function neighbourhood(edges: readonly FocusEdge[], key: string, steps: FocusDepth): Kept {
+export function neighbourhood(edges: readonly FocusEdge[], key: string, steps: number): Kept {
   const things = new Set(within(edges, key, steps).keys()),
     shown = new Set<number>();
   edges.forEach((e, i) => {
@@ -292,7 +295,7 @@ export class Untangle {
   /** The legend's choices. */
   readonly legend = new LegendFilter();
   /** The thing the drawing is filtered to and how many steps out, if it is. */
-  only: { key: string; steps: FocusDepth } | null = null;
+  only: { key: string; steps: number } | null = null;
   /** The two things a path was asked for between, and what was found: null for none. */
   routed: { from: string; to: string; found: PathFound | null } | null = null;
   /** The links of the drawing, as `edgesOf` gives them. */
@@ -307,8 +310,8 @@ export class Untangle {
   }
 
   /** Filters the drawing to a thing and what lies within `steps` of it. */
-  showOnly(key: string, steps: FocusDepth): void {
-    this.only = { key, steps };
+  showOnly(key: string, steps: number): void {
+    this.only = { key, steps: Math.max(1, Math.min(MOST_STEPS, Math.round(steps))) };
   }
 
   /** Shows the whole graph again. */

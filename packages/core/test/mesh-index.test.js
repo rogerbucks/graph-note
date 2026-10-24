@@ -126,6 +126,23 @@ describe('the reads a huge graph is drawn in parts from (scale_in_parts)', () =>
     );
   });
 
+  test('find by a value ignores the same words inside another value, and finds text with quotes and whole numbers', () => {
+    const ix = new MeshIndex(memoryBackend());
+    const note = `\`\`\`gql
+// graph: odd
+(a:Thing {label: 'say "hi"', size: 2}),
+(b:Thing {size: 20, note: 'size: 2'}),
+(c:Thing {nested: 'x', size: 2.5})
+\`\`\`
+`;
+    ix.update('odd.md', note);
+    const keys = (q) => ix.find('odd.md', q).map((f) => f.key);
+    assert.deepEqual(keys({ property: 'size', value: 2 }), ['a']);
+    assert.deepEqual(keys({ property: 'label', value: 'say "hi"' }), ['a']);
+    assert.deepEqual(keys({ property: 'note', value: 'size: 2' }), ['b']);
+    assert.deepEqual(keys({ property: 'size', value: 3 }), []);
+  });
+
   test('a note the index has not read has no version, so a reader can tell its rows are stale', async () => {
     const { memory } = await both();
     assert.equal(memory.version('missing.md'), null);

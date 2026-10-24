@@ -17,7 +17,8 @@ The detail behind [AGENTS.md](../../AGENTS.md). Read the part you need when you 
 
 ## What CI runs
 
-A pull request, draft or ready, runs only the tests its change reaches (`scripts/ci-plan.mjs`). The safety checks
+A pull request, draft or ready, runs only the tests its change reaches (`scripts/ci-plan.mjs`). It also runs `GUARDS`,
+the few tests that read the whole repository, such as the areas of `requirements/architecture.gql`. The safety checks
 always run: lint, types, the build, tests-first, the code scan and the PR checks. Main, the nightly and a release run
 everything. Add the label `ci:full` to a pull request to run everything from its next push.
 

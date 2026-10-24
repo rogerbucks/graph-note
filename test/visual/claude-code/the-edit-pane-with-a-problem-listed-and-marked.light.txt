@@ -9,14 +9,14 @@
       <text x="40.51" y="-144.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> OPTION
       <text x="24.14" y="-124.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Large reader
     <g id="p4">
-      <path d="M59.92,-108.64C59.92,-95.29 59.92,-79.09 59.92,-64.81" paint="stroke:rgb(9, 152, 150)">
-      <polygon points="62.37,-65.18 59.92,-58.18 57.47,-65.18 62.37,-65.18" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150)">
-      <text x="79.47" y="-79.55" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers
+      <path d="M55.41,-109C52.61,-91.47 52.24,-76.24 54.31,-63.31" paint="stroke:rgb(9, 152, 150)">
+      <polygon points="51.89,-62.93 55.41,-56.4 56.73,-63.7 51.89,-62.93" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150)">
+      <text x="47.53" y="-82.7" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers
     <g id="p5">
       <path d="M85.21,-274.4C85.21,-274.4 34.64,-274.4 34.64,-274.4 28.64,-274.4 22.64,-268.4 22.64,-262.4 22.64,-262.4 22.64,-230 22.64,-230 22.64,-224 28.64,-218 34.64,-218 34.64,-218 85.21,-218 85.21,-218 91.21,-218 97.21,-224 97.21,-230 97.21,-230 97.21,-262.4 97.21,-262.4 97.21,-268.4 91.21,-274.4 85.21,-274.4" paint="fill:rgba(8, 109, 221, 0.16);stroke:rgb(15, 90, 174)">
       <text x="38.76" y="-253.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> REASON
       <text x="55.75" y="-233.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> E
     <g id="p6">
-      <path d="M59.92,-217.64C59.92,-204.29 59.92,-188.09 59.92,-173.81" paint="stroke:rgb(92, 92, 92)">
-      <polygon points="62.37,-174.18 59.92,-167.18 57.47,-174.18 62.37,-174.18" paint="fill:rgb(92, 92, 92);stroke:rgb(92, 92, 92)">
-      <text x="110.69" y="-188.55" text-anchor="middle" paint="fill:rgb(92, 92, 92)"> ⚠ favours (estimated)
+      <path d="M55.41,-218C52.61,-200.47 52.24,-185.24 54.31,-172.31" paint="stroke:rgb(92, 92, 92)">
+      <polygon points="51.89,-171.93 55.41,-165.4 56.73,-172.7 51.89,-171.93" paint="fill:rgb(92, 92, 92);stroke:rgb(92, 92, 92)">
+      <text x="59.08" y="-191.7" text-anchor="middle" paint="fill:rgb(92, 92, 92)"> ⚠ favours (estimated)

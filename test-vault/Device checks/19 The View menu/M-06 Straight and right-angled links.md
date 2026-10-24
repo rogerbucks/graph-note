@@ -1,6 +1,6 @@
 # M-06 Straight and right-angled links
 
-**You should see:** the first graph's links drawn as straight lines from box to box, its style block saying routing: 'straight'; the second graph's links drawn with right angles only, each label set beside its line, its style block saying routing: 'right-angled'. The third graph's style block misspells the routing: its problems say "stright is not a routing: links are curved, straight or right-angled", with the fix to change it to straight, and it is drawn curved, as with no routing.
+**You should see:** the first graph's links drawn as straight lines from box to box, its style block saying routing: 'straight'; the second graph's links drawn with right angles only, each label set beside its line, its style block saying routing: 'right-angled'. The third graph's style block misspells the routing: its problems say "stright is not a routing: links are curved, straight, right-angled or direct", with the fix to change it to straight, and it is drawn curved, as with no routing.
 
 **Test diagram:**
 
@@ -37,7 +37,7 @@
 (r1:Links {routing: 'stright'})
 ```
 
-<!-- expect: problem "stright is not a routing: links are curved, straight or right-angled" -->
+<!-- expect: problem "stright is not a routing: links are curved, straight, right-angled or direct" -->
 
 **Do this:**
 

@@ -117,6 +117,7 @@ export class Selection {
     return {
       showOnly: (k) => this.untangle.showOnly(k),
       shownOnly: () => this.untangle.shownOnly(),
+      reach: () => this.untangle.reach(),
       routeFrom: (k) => this.untangle.routeFrom(k),
       choose: (step) => this.bring(step),
       sheetMoved: () => this.inSight(),

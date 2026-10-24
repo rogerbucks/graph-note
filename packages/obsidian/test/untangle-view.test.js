@@ -110,11 +110,11 @@ describe('show only a thing and its neighbours', () => {
   test('two steps reach further, chosen from the banner, and are laid out together too', async () => {
     withText(details(), 'button', 'Show only this and its neighbours').click();
     await until(() => !thing(el, 'tablet'));
-    withText(banner(el), 'button', 'Widen to two steps').click();
+    withText(banner(el), 'button', 'Widen to 2 steps').click();
     assert.match(said(el), /within 2 steps of it/);
     await until(() => !!thing(el, 'tablet'));
     assert.deepEqual(drawnKeys(), ['eyes', 'large', 'q', 'tablet']);
-    withText(banner(el), 'button', 'Narrow to one step').click();
+    withText(banner(el), 'button', 'Narrow to 1 step').click();
     await until(() => !thing(el, 'tablet'));
     withText(banner(el), 'button', 'Show the whole graph').click();
     await until(() => !!thing(el, 'island'));

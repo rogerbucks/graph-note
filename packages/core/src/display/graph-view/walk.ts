@@ -3,18 +3,20 @@
 // step is said to screen readers (path-play.ts, path_autoplay). A path with no steps is said to have none, never played
 // as an empty story. While the card is edited, Record takes the boxes tapped in order and writes the path. Each box is
 // numbered on the drawing as it is tapped. The strip's controls are built once for each thing it is doing. Only their
-// words change as it goes, so the focus stays where it is; one live region says each step.
+// words change as it goes, so the focus stays where it is; one live region says each step. For each process the graph
+// holds, Debug steps a test run of it (process-debug.ts, process_debugger).
 import { PathPlayer, PathRecorder, indentText, pathBlock, pathsOf, word } from '@thoughtknot/core';
 import type { WalkedPath } from '@thoughtknot/core';
 import { cornerOf } from './parked';
 import { PathPlay } from './path-play';
+import { ProcessDebug, debuggableProcesses } from './process-debug';
 import { button } from '../button';
 import type { ViewOptions } from './view-options';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
-/** What the strip is doing: offering Play and Record, recording, or playing. */
-type Doing = 'offering' | 'recording' | 'playing';
+/** What the strip is doing: offering Play, Record and Debug, recording, playing, or debugging a process. */
+type Doing = 'offering' | 'recording' | 'playing' | 'debugging';
 
 /** The walk strip of one drawing: Play, Record, and what is playing or being recorded. */
 export class Walk {
@@ -25,6 +27,9 @@ export class Walk {
   /** The path chosen to play, and its playing once the strip is built for it. */
   private path: WalkedPath | null = null;
   private player: PathPlay | null = null;
+  /** The process chosen to debug, and its test run once the strip is built for it. */
+  private process: string | null = null;
+  private debugger: ProcessDebug | null = null;
   private doing: Doing | null = null;
   /** The controls whose state changes as the strip goes: kept, so they are updated in place. */
   private kept: { alert?: HTMLElement } = {};
@@ -64,7 +69,7 @@ export class Walk {
       this.numberSteps();
       this.said.setText(word('walk.ended'));
     }
-    const doing: Doing = this.recorder ? 'recording' : this.path ? 'playing' : 'offering';
+    const doing: Doing = this.recorder ? 'recording' : this.path ? 'playing' : this.process ? 'debugging' : 'offering';
     if (doing !== this.doing || doing === 'offering') this.build(doing, editing);
     this.update();
   }
@@ -88,6 +93,8 @@ export class Walk {
       this.kept.alert = el.createDiv({ attr: { role: 'alert' } });
     } else if (doing === 'playing' && this.path) {
       this.player = new PathPlay(el, this.said, this.path, this.o, this.drawing, this.parent, () => this.stop());
+    } else if (doing === 'debugging' && this.process) {
+      this.debugger = new ProcessDebug(el, this.said, this.process, this.o, this.drawing, () => this.stopDebugging());
     } else {
       for (const p of pathsOf(this.o.reading, this.o.graph)) {
         const why = PathPlayer.refusal(p);
@@ -101,6 +108,10 @@ export class Walk {
             word('walk.play', { title: p.title }),
           );
       }
+      for (const p of debuggableProcesses(this.o)) {
+        const label = word('debug.start', { process: p.name });
+        button(el, label, 'bug', () => this.debug(p.id), label);
+      }
       if (editing) button(el, word('walk.record'), 'circle-dot', () => this.record(), word('walk.record'));
     }
   }
@@ -110,6 +121,7 @@ export class Walk {
     const player = this.player,
       rec = this.recorder;
     if (player) player.update();
+    else if (this.debugger) this.debugger.update();
     else if (rec) {
       const n = rec.steps.length,
         last = rec.steps.at(-1);
@@ -126,12 +138,31 @@ export class Walk {
     this.show();
   }
 
-  /** Stops a path playing, if one is: nothing waits on the clock and nothing stays marked; Play is offered again. */
+  /**
+   * Stops a path playing or a process being debugged, if one is: nothing waits on the clock and nothing stays marked;
+   * Play and Debug are offered again.
+   */
   stop(): void {
+    this.stopDebugging();
     if (!this.player && !this.path) return;
     this.player?.stop();
     this.player = null;
     this.path = null;
+    this.said.setText('');
+    this.show();
+  }
+
+  private debug(process: string): void {
+    this.process = process;
+    this.show();
+  }
+
+  /** Stops debugging, if it is: the test run is thrown away and nothing stays marked; Debug is offered again. */
+  stopDebugging(): void {
+    if (!this.debugger && !this.process) return;
+    this.debugger?.stop();
+    this.debugger = null;
+    this.process = null;
     this.said.setText('');
     this.show();
   }

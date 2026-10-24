@@ -4,6 +4,9 @@
 // again.
 import type { FocusTarget, Kept } from '@thoughtknot/core';
 
+/** The event the drawing's SVG sends once every box and link is marked again. */
+export const MARKED = 'thoughtknot-marked';
+
 /** What the drawing is to show: what stays at full strength (null: all of it), what is hidden, and what is highlighted. */
 export interface Marks {
   kept: Kept | null;
@@ -44,12 +47,14 @@ export function sameTarget(a: FocusTarget | null, b: FocusTarget | null): boolea
  * it was when the highlight goes. A change of highlight marks only the things it touched.
  */
 export class DrawingMarks {
+  private readonly svg: Element;
   private readonly nodes = new Map<string, Element>();
   /** Each link's lines: one, or two for a link merged into a trunk. */
   private readonly edges = new Map<number, Element[]>();
 
   /** For a drawing's SVG, whose boxes and links are looked up once. */
   constructor(svg: Element) {
+    this.svg = svg;
     // a fold's stub, box or trunk (§25) is no thing or link of the graph, so focus never marks it
     for (const g of Array.from(svg.querySelectorAll('g.node[data-key]')))
       this.nodes.set(g.getAttribute('data-key') ?? '', g);
@@ -65,6 +70,8 @@ export class DrawingMarks {
       this.mark(g, m, m.hidden.things.has(key), !!m.kept?.things.has(key), !!m.hot?.things.has(key));
     for (const [n, gs] of this.edges)
       for (const g of gs) this.mark(g, m, m.hidden.edges.has(n), !!m.kept?.edges.has(n), !!m.hot?.edges.has(n));
+    // the 3D view of the drawing, if open, shows what it hides and brings forward too (space-view-panel.ts)
+    this.svg.dispatchEvent(new Event(MARKED));
   }
 
   /** Marks only these boxes (by key) and links (by place), as `m` says: the ones a change of highlight touched. */

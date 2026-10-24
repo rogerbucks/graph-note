@@ -38,7 +38,8 @@ const DATA = [
  * `links.create`, which makes one. A diagram type looked at is drawn, never written (§15, type_try_reading).
  * So is a timeline's order or what it shows (timeline_choice_card), and a radial drawing's centre (radial_centre_pick).
  * So looking and going back are open; keeping it, and choosing, are not. Where a card was as its type changed is held in memory
- * alone, so keeping and taking it up are open too.
+ * alone, so keeping and taking it up are open too. The viewer's profile (§39) is kept with the plugin, never in the note.
+ * Its show-as-shared and pace last the session alone, so it is open whole.
  */
 export const READS = [
   'lineOf',
@@ -58,8 +59,11 @@ export const READS = [
   'diagram.back',
   'diagram.centreLook',
   'diagram.putCentre',
+  'diagram.canCentre',
+  'diagram.textOf',
   'diagram.leave',
   'diagram.kept',
+  'profile',
 ] as const;
 
 const OPEN: ReadonlySet<string> = new Set<string>([...DATA, ...READS]);
