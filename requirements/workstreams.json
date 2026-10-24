@@ -1149,5 +1149,19 @@
       "connector_refresh_rejoins",
       "connector_devices_agree"
     ]
+  },
+  "GS8": {
+    "title": "The graph spec's axioms, stated and checked",
+    "size": "M",
+    "requirements": [
+      "axioms_listed",
+      "axioms_cited",
+      "axioms_on_generated_graphs",
+      "axioms_readers_agree",
+      "axioms_checker",
+      "axioms_safeguards",
+      "axioms_before_sync",
+      "axioms_consistent"
+    ]
   }
 }
