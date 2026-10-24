@@ -427,14 +427,15 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     async () => {
       // in its chain of 20, t1234 links to t1233 and t1235 only
       assert.equal(await run("grow('Show neighbours')"), 'Needle in the stack and the 2 things near it');
-      const parts = await run('parts');
+      // groups near it on screen may be opened after it, so the last part with the thing in is the grown picture
+      const grownPart = async () => (await run('parts')).filter((p) => p.includes('t1234')).at(-1);
       assert.deepEqual(
-        [...parts.at(-1)].sort(),
+        [...(await grownPart())].sort(),
         ['t1233', 't1234', 't1235'],
         'only it and its neighbours are laid out',
       );
       assert.equal(await run("grow('Show neighbours')"), 'Needle in the stack and the 4 things near it');
-      assert.deepEqual([...(await run('parts')).at(-1)].sort(), ['t1232', 't1233', 't1234', 't1235', 't1236']);
+      assert.deepEqual([...(await grownPart())].sort(), ['t1232', 't1233', 't1234', 't1235', 't1236']);
       assert.equal(await run("grow('One step back')"), 'Needle in the stack and the 2 things near it');
       assert.ok((await run('wordsInMiddle()')) > 50, 'the grown picture is painted where the view looks');
     },
