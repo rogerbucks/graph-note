@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "src"))
 import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_svg  # noqa: E402
+import fake_dot  # noqa: E402
 from graphspec.style.picture import PICTURE_MARK, PICTURE_SIZE, picture_source  # noqa: E402
 
 with open(os.path.join(HERE, "picture_cases.json"), encoding="utf-8") as f:
@@ -90,7 +91,7 @@ def rendered(args):
 
     def run(_args, input, **_kw):
         given.append(input)
-        return mock.Mock(returncode=0, stdout='<svg width="300pt" height="100pt"></svg>')
+        return mock.Mock(returncode=0, stdout=fake_dot.answer(_args))
 
     with (
         mock.patch.object(graph_svg, "DOT", "dot"),

@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "src"))
 import gql_profile as gp  # noqa: E402
 import graph_rules as gr  # noqa: E402
 import graph_svg  # noqa: E402
+import fake_dot  # noqa: E402
 from graphspec.style.arrows import arrowless  # noqa: E402
 from graphspec.style.diagram_types import (  # noqa: E402
     diagram_for,
@@ -192,7 +193,7 @@ class Types(unittest.TestCase):
 
         def run(_args, input, **_kw):
             given.append(input)
-            return mock.Mock(returncode=0, stdout='<svg width="300pt" height="100pt"></svg>')
+            return mock.Mock(returncode=0, stdout=fake_dot.answer(_args))
 
         with (
             mock.patch.object(graph_svg, "DOT", "dot"),

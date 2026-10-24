@@ -121,7 +121,8 @@ def render_args(
             {**starting_switches(style, view), **switches, "opened": opened or {}},
         )
     )
-    routing = links_of(style, view)["routing"]
+    # the links as its Links says (§25); said nowhere, they are direct, the default (None)
+    routed = any("routing" in x and x.get("view") in (None, view) for x in style["links"])
     return {
         "nodes": parts["nodes"],
         "edges": parts["edges"],
@@ -133,6 +134,6 @@ def render_args(
         "diagram": choice.get("plan"),
         "flow": flow_links([t for t, _ in parts["links"]], style["flows"], view),
         "folding": folding,
-        "routing": None if routing == "curved" else routing,
+        "routing": links_of(style, view)["routing"] if routed else None,
         "pictures": pictures_for(parts["boxes"], style["pictures"], view),
     }

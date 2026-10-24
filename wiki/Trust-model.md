@@ -105,7 +105,8 @@ Wave 6.
 - **Controls:** Labels are escaped and no links are drawn. Markdown escapes raw HTML and allows only web and mail links.
   Images load only from inside the vault. The pane's SVG is limited in size.
 - **Code:** `python/graph_spec/src/graph_svg.py`, with `packages/graph-spec/src/graph-layout.js` and
-  `packages/core/src/display/graph-view/drawing-svg.ts`.
+  `packages/core/src/display/graph-view/drawing-svg.ts`. The Python library runs Graphviz in
+  `python/graph_spec/src/graphspec/style/drawn_svg.py`, and writes the SVG with its labels escaped in `marks_svg.py`.
 - **Gaps:**
   - Nothing cleans the SVG before it enters the live page, so one escaping bug would run script (TRUST-7).
 
