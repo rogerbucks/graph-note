@@ -140,6 +140,7 @@ export function spreadSpace(marks: readonly DrawMark[], previous?: Spots<3>): { 
     const points = Array.from({ length: steps + 1 }, (_, i) => curve(t0 + ((tEnd - t0) * i) / steps));
     const line: SpaceLine = { id: m.id, style: m.style, points, from: m.from, to: m.to };
     if (m.name) line.words = m.name;
+    if (m.of !== undefined) line.of = m.of;
     lines.push(line);
     arrows.push({ id: `${m.id}\narrow`, style: m.style, tip: curve(tTip), back: curve(tEnd), size: head });
     if (m.name)

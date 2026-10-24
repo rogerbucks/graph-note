@@ -1,7 +1,8 @@
 // Picking in the 3D view (editor spec §53, scale_space_view). It finds what is under a pixel of the screen, so a click
-// or tap can pick it. A box is picked by its top or a side; a ball by the circle it makes on the screen. Host-free and pure.
+// or tap can pick it. A box is picked by its top or a side; a ball by the circle it makes on the screen. A link is picked
+// within a fingertip of where it is painted (Roger, 24 Oct 2026: "Connectors aren't clickable at all"). Host-free and pure.
 import { FIELD, projectPoint } from './space-view.ts';
-import type { Block, SpaceMarks } from './space-view.ts';
+import type { Block, SpaceLine, SpaceMarks, Vec3 } from './space-view.ts';
 
 /** A block's faces as rings of four corners: its top, then its four sides. Its floor is never seen from above. */
 const FACES = [
@@ -74,4 +75,38 @@ function inside(quad: readonly { x: number; y: number }[], x: number, y: number)
     else if (side !== sign) return false;
   }
   return true;
+}
+
+/** How far from a link, in screen pixels, a click or tap still picks it: about a fingertip. */
+export const LINE_REACH = 10;
+
+/** The link painted nearest screen pixel (`x`, `y`), within `reach` pixels, and the point of it nearest, or null. */
+export function lineAt(
+  space: SpaceMarks,
+  matrix: Float32Array,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+  reach = LINE_REACH,
+): { line: SpaceLine; at: Vec3 } | null {
+  let best: { line: SpaceLine; at: Vec3 } | null = null,
+    bestGap = reach;
+  for (const line of space.lines)
+    for (let i = 1; i < line.points.length; i++) {
+      const p = line.points[i - 1] as Vec3,
+        q = line.points[i] as Vec3;
+      const a = projectPoint(matrix, p, width, height),
+        b = projectPoint(matrix, q, width, height);
+      if (!a || !b) continue;
+      const dx = b.x - a.x,
+        dy = b.y - a.y,
+        long = dx * dx + dy * dy;
+      const t = long > 0 ? Math.min(1, Math.max(0, ((x - a.x) * dx + (y - a.y) * dy) / long)) : 0;
+      const gap = Math.hypot(a.x + dx * t - x, a.y + dy * t - y);
+      if (gap > bestGap) continue;
+      bestGap = gap;
+      best = { line, at: [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t] };
+    }
+  return best;
 }

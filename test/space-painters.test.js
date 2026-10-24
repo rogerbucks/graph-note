@@ -38,6 +38,11 @@ import { canvasSpacePainter } from './packages/core/src/display/graph-view/space
 import { webgpuSpacePainter } from './packages/core/src/display/graph-view/space-gpu-painter.ts';
 import { marksOfSvg } from './packages/core/src/display/graph-view/svg-marks.ts';
 import { spreadSpace } from './packages/core/src/space-spread.ts';
+import { installDomHelpers } from './packages/core/src/display/dom-helpers.ts';
+import { installHost } from './packages/core/src/display/host.ts';
+import { SPACE_OPEN, openSpaceView } from './packages/core/src/display/graph-view/space-view-panel.ts';
+installDomHelpers(window);
+installHost({ icon() {}, isPhone: () => false, notice() {}, menu() {} });
 import { PALETTES } from './packages/core/src/palette.ts';
 const made = { devices: [], shaders: [] };
 if (window.GPUAdapter) {
@@ -113,6 +118,41 @@ window.readSvg = () => {
   holder.remove();
   return marks.map((m) => ({ ...m, paint: paints(m.style) }));
 };
+// the 3D view of a drawing as the plugin draws it: a click on a ball, then on a link, tells the card to open it
+window.pickInSpace = async () => {
+  const root = document.body.appendChild(document.createElement('div'));
+  root.style.cssText = 'position:relative;width:480px;height:360px';
+  const holder = root.appendChild(document.createElement('div'));
+  holder.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><g class="graph">
+    <g class="node" data-key="ada"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="20,20 120,20 120,60 20,60"/><text x="70" y="45" font-size="14">Ada</text></g>
+    <g class="node" data-key="bob"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="200,140 280,140 280,180 200,180"/><text x="240" y="165" font-size="14">Bob</text></g>
+    <g class="edge" data-link="0"><path fill="none" stroke="rgb(90, 90, 90)" d="M120,60 C150,90 180,120 200,140"/><polygon points="195,134 205,142 196,145"/><text x="160" y="100" font-size="10">KNOWS</text></g>
+  </g></svg>\`;
+  const told = [];
+  root.addEventListener(SPACE_OPEN, (e) => told.push(e.detail));
+  const close = await openSpaceView(root, holder.querySelector('svg'), 'Team', () => {});
+  const view = root.querySelector('.thoughtknot-space-view');
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const at = view.getBoundingClientRect();
+  const click = (x, y) => {
+    for (const type of ['pointerdown', 'pointerup'])
+      view.dispatchEvent(new PointerEvent(type, { clientX: at.left + x, clientY: at.top + y, pointerId: 1, bubbles: true }));
+  };
+  // find where Ada's ball and the link fall on the screen by trying a grid of points: the view's sums are its own
+  const found = { ball: null, link: null };
+  for (let y = 4; y < at.height && !(found.ball && found.link); y += 4)
+    for (let x = 4; x < at.width; x += 4) {
+      click(x, y);
+      const last = told.at(-1);
+      if (last && 'key' in last && !found.ball) found.ball = last;
+      if (last && 'link' in last && !found.link) found.link = last;
+      if (found.ball && found.link) break;
+    }
+  const said = view.querySelector('.thoughtknot-space-said')?.textContent;
+  close?.();
+  root.remove();
+  return { ...found, said };
+};
 window.checkWebgpu = async () => {
   const canvas = document.body.appendChild(document.createElement('canvas'));
   const painter = await webgpuSpacePainter(canvas);
@@ -170,7 +210,8 @@ describe("the 3D view's painters, in a real browser", () => {
     writeFileSync(join(folder, 'page.js'), bundle.outputFiles[0].text);
     writeFileSync(
       join(folder, 'page.html'),
-      '<!doctype html><title>3D painters</title><script src="page.js"></script>',
+      // UTF-8, as the display's words hold letters past ASCII
+      '<!doctype html><meta charset="utf-8"><title>3D painters</title><script src="page.js"></script>',
     );
     await browser.send('Page.navigate', { url: pathToFileURL(join(folder, 'page.html')).href });
     for (let i = 0; i < 50 && (await browser.run('document.readyState')) !== 'complete'; i++)
@@ -182,8 +223,8 @@ describe("the 3D view's painters, in a real browser", () => {
   });
 
   test('WebGL 2 paints the city with no error, where the 2D canvas paints it', options, async () => {
-    // a city of 20 and of 300 groups, and 40 and 400 things laid out in space as balls
-    for (const count of [20, 300, -40, -400]) {
+    // a city of 20 and of 300 groups, and 60 and 400 things laid out in space as balls
+    for (const count of [20, 300, -60, -400]) {
       const { canvas, webgl2 } = JSON.parse(await browser.run(`paintCity(${count}).then(JSON.stringify)`));
       assert.equal(webgl2?.kind, 'webgl2');
       assert.equal(webgl2.error, 0, 'no WebGL error');
@@ -192,6 +233,13 @@ describe("the 3D view's painters, in a real browser", () => {
       const painted = a.filter(Boolean).length;
       // balls leave space between them, so they cover less of the picture than a city does
       assert.ok(painted > (count > 0 ? 40 : 4), `the canvas painted ${count}: ${painted} parts`);
+      if (count < 0) {
+        // a ball's edge falls across parts of the picture, so the painters are compared by how much each paints
+        const filled = ({ pixels }) => pixels.filter((v, i) => i % 4 === 3 && v > 0).length;
+        const ratio = filled(webgl2) / Math.max(1, filled(canvas));
+        assert.ok(ratio > 0.8 && ratio < 1.25, `${-count} balls: WebGL 2 paints ${ratio.toFixed(2)} times the canvas`);
+        continue;
+      }
       const differ = a.filter((v, i) => v !== b[i]).length;
       assert.ok(differ <= a.length * 0.05, `${count} groups: ${differ} of ${a.length} parts differ`);
     }
@@ -229,6 +277,13 @@ describe("the 3D view's painters, in a real browser", () => {
       ['bob', 'cy'],
       'a link with no title is joined to the things at its ends',
     );
+  });
+
+  // proves: space_pick_opens
+  test('a click on a ball, and on a link, in the 3D view tells the card to open it', options, async () => {
+    const { ball, link } = JSON.parse(await browser.run('pickInSpace().then(JSON.stringify)'));
+    assert.ok(ball && ['ada', 'bob'].includes(ball.key), `a ball opens its thing: ${JSON.stringify(ball)}`);
+    assert.deepEqual(link, { link: 0 }, 'a link opens by its number, as a tap reads it');
   });
 
   test('WebGPU builds its shaders and paints the city with no error', options, async (t) => {

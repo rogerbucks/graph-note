@@ -2,8 +2,8 @@
 // fingers move and pinch. Moving across the floor keeps the camera's turn, tilt and distance.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KEY_STEP, ZOOM_STEP, keyMove, panBy, twoFingers } from '../src/space-controls.ts';
-import { projectPoint, spaceMatrix } from '../src/space-view.ts';
+import { KEY_STEP, ZOOM_STEP, keyMove, orbitAround, panBy, twoFingers } from '../src/space-controls.ts';
+import { eyeOf, projectPoint, spaceMatrix, zoomBy } from '../src/space-view.ts';
 
 const ORBIT = { target: [0, 0, 0], distance: 1000, turn: -Math.PI / 2, tilt: 0.9 };
 
@@ -58,4 +58,26 @@ test('two fingers moving together move the view; spreading apart zooms in', () =
     ]).zoom,
     2,
   );
+});
+
+test('a picked point becomes what the view turns round and zooms to, the camera staying where it is', () => {
+  const point = [300, -200, 50];
+  const around = orbitAround(ORBIT, point);
+  assert.deepEqual(around.target, point);
+  const was = eyeOf(ORBIT),
+    now = eyeOf(around);
+  assert.ok(Math.hypot(now[0] - was[0], now[1] - was[1], now[2] - was[2]) < 1e-6, 'the camera has not moved');
+  // the point is now in the middle of the screen
+  const at = projectPoint(spaceMatrix(around, 1, 4000), point, 600, 600);
+  assert.ok(Math.abs(at.x - 300) < 1 && Math.abs(at.y - 300) < 1, `${at.x} ${at.y}`);
+  // zooming goes toward it from where the camera is: it stays in the middle, nearer
+  const nearer = zoomBy(around, 2);
+  const seen = projectPoint(spaceMatrix(nearer, 1, 4000), point, 600, 600);
+  assert.ok(Math.abs(seen.x - 300) < 1 && Math.abs(seen.y - 300) < 1);
+  assert.ok(Math.abs(nearer.distance - around.distance / 2) < 1e-6);
+  // part of the way, for a glide: the camera still stays put
+  const half = orbitAround(ORBIT, point, 0.5),
+    eye = eyeOf(half);
+  assert.ok(Math.hypot(eye[0] - was[0], eye[1] - was[1], eye[2] - was[2]) < 1e-6);
+  assert.deepEqual(half.target, [150, -100, 25]);
 });

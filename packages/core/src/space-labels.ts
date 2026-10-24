@@ -53,7 +53,7 @@ export function labelsOnScreen(
   matrix: Float32Array,
   width: number,
   height: number,
-  { most = LABELS_MOST, picked }: { most?: number; picked?: string } = {},
+  { most = LABELS_MOST, picked, pickedLink }: { most?: number; picked?: string; pickedLink?: string } = {},
 ): ScreenLabel[] {
   const focal = height / 2 / Math.tan(FIELD / 2),
     across = Math.hypot(width, height) / 2;
@@ -61,7 +61,7 @@ export function labelsOnScreen(
   for (const l of space.labels) {
     const at = projectPoint(matrix, l.at, width, height);
     if (!at || at.x < 0 || at.y < 0 || at.x > width || at.y > height) continue;
-    const mine = picked !== undefined && l.of === picked;
+    const mine = (picked !== undefined && l.of === picked) || (pickedLink !== undefined && l.link === pickedLink);
     const natural = (l.size * focal) / at.far;
     const size = Math.max(mine ? PICKED_LEAST : READABLE_LEAST, Math.min(READABLE_MOST, natural));
     // nearer the middle of the screen and nearer the camera ranks first; the picked name ranks before all

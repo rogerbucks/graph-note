@@ -178,8 +178,10 @@ function paintBalls(
       paint: () => {
         ctx.beginPath();
         ctx.arc(c.x, c.y, seen, 0, Math.PI * 2);
-        if (paint.fill) {
-          ctx.fillStyle = paint.fill;
+        // filled as the graphics chip fills it: in its outline colour where its style gives no fill
+        const fill = paint.fill ?? paint.line;
+        if (fill) {
+          ctx.fillStyle = fill;
           ctx.fill();
           const light = ctx.createRadialGradient(c.x - seen / 3, c.y - seen / 3, seen / 10, c.x, c.y, seen);
           light.addColorStop(0, 'rgba(255, 255, 255, 0.45)');

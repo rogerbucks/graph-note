@@ -6,9 +6,11 @@
 // - move across: Shift-drag or right-drag, two fingers, Shift and the arrow keys;
 // - zoom: scroll, pinch, + and -, or the zoom buttons;
 // - show it all again: Home, 0, or Reset view.
+// A click on a thing or a link makes it the point the view turns round and zooms to (Roger, 24 Oct 2026). The camera
+// stays where it is and turns to face it, so nothing jumps.
 // The sums live here, so they are tested without a screen. Host-free and pure.
-import { FIELD } from './space-view.ts';
-import type { Orbit } from './space-view.ts';
+import { FIELD, eyeOf } from './space-view.ts';
+import type { Orbit, Vec3 } from './space-view.ts';
 
 /** How far a key press turns, tilts or moves the camera, as a drag of this many pixels would. */
 export const KEY_STEP = 24;
@@ -83,4 +85,26 @@ export function twoFingers(
     [x1, y1] = middle(now);
   const before = apart(was);
   return { dx: x1 - x0, dy: y1 - y0, zoom: before > 0 ? apart(now) / before : 1 };
+}
+
+/** The lowest and highest tilt the camera may have, as space-view.ts keeps it: never under the floor, never straight down. */
+const TILT_LEAST = 0.08,
+  TILT_MOST = Math.PI / 2 - 0.02;
+
+/**
+ * `orbit` turned to look at `point`, which it then turns round and zooms to. The camera stays where it is, so what it
+ * sees turns to face the point rather than leaping to it. Called with `share` under 1, it looks only that share of the
+ * way from what it looked at, so the turn can glide.
+ */
+export function orbitAround(orbit: Orbit, point: Vec3, share = 1): Orbit {
+  const eye = eyeOf(orbit);
+  const t = Math.min(1, Math.max(0, share));
+  const target: Vec3 = [0, 1, 2].map(
+    (k) => (orbit.target[k] ?? 0) + ((point[k] ?? 0) - (orbit.target[k] ?? 0)) * t,
+  ) as Vec3;
+  const v: Vec3 = [eye[0] - target[0], eye[1] - target[1], eye[2] - target[2]];
+  const distance = Math.max(1, Math.hypot(...v));
+  const tilt = Math.min(TILT_MOST, Math.max(TILT_LEAST, Math.asin(Math.max(-1, Math.min(1, v[2] / distance)))));
+  const turn = Math.hypot(v[0], v[1]) > 1e-9 ? Math.atan2(v[1], v[0]) : orbit.turn;
+  return { target, distance, turn, tilt };
 }

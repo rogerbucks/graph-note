@@ -12,16 +12,20 @@
 // - links: the drawing lifted, each thing as tall as its count of links, so the busiest things stand out.
 // How to move it is on screen (space-controls.ts says each way): a help line at the foot, and buttons to zoom, turn
 // and reset. Drag turns, Shift-drag or right-drag moves, scroll zooms; on touch, one finger turns and two move and
-// pinch. A click or tap picks a thing and names it; a double one flies to it. The keyboard does the same. What is
-// picked is said aloud, and its name always shows (space-labels.ts).
+// pinch. A click or tap picks a thing or a link and names it; a double one flies to a thing. The keyboard does the same.
+// What is picked is said aloud, and its name always shows (space-labels.ts).
+//
+// 2D and 3D are two views of the same graph (Roger, 24 Oct 2026). So a pick here opens the card's details for it, just
+// as a tap in 2D does: the card hears SPACE_OPEN (viewport-events.ts). What is picked becomes the point the view turns
+// round and zooms to. The camera stays where it is and turns to face it (space-controls.ts, orbitAround).
 import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import { focusOn, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
-import type { Block, DepthBy, Orbit, SpaceMarks } from '../../space-view.ts';
-import { blockAt } from '../../space-pick.ts';
+import type { Block, DepthBy, Orbit, SpaceLine, SpaceMarks, Vec3 } from '../../space-view.ts';
+import { blockAt, lineAt } from '../../space-pick.ts';
 import { arrowsOnScreen, labelsOnScreen } from '../../space-labels.ts';
 import { spreadSpace } from '../../space-spread.ts';
-import { KEY_STEP, ZOOM_STEP, keyMove, panBy, twoFingers } from '../../space-controls.ts';
+import { KEY_STEP, ZOOM_STEP, keyMove, orbitAround, panBy, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
 import type { Paints } from './mark-painter.ts';
@@ -31,6 +35,14 @@ import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
 import { button } from '../button';
 import { marksOfSvg } from './svg-marks.ts';
+import { reducedMotion } from './details-nav';
+import type { Target } from './taps';
+
+/** The event a pick in the 3D view sends its card, with the thing or link picked: the card opens its details. */
+export const SPACE_OPEN = 'thoughtknot-space-open';
+
+/** How long the view takes to turn to face what was picked, in milliseconds. */
+const TURN_TIME = 280;
 
 /** The close of the 3D view open on each card, so a second press of 3D view closes it rather than stacking one more. */
 const opened = new WeakMap<HTMLElement, () => void>();
@@ -95,8 +107,10 @@ export async function openSpaceView(
   let orbit: Orbit = orbitFit(space, 1);
   let asked = false;
   let open = true;
-  // the picked thing, by its key: its name always shows, and Enter flies to it
+  // the picked thing, by its key: its name always shows, and Enter flies to it; or the picked link, its words shown
   let picked: Block | null = null;
+  let pickedLine: SpaceLine | null = null;
+  let turning = 0;
 
   const reachOf = () => Math.hypot(space.most[0] - space.least[0], space.most[1] - space.least[1], space.most[2]);
   const matrixNow = () => spaceMatrix(orbit, width / height, reachOf());
@@ -105,7 +119,11 @@ export async function openSpaceView(
     if (!open) return;
     const matrix = matrixNow();
     painter.paint(space, matrix, paints);
-    const named = labelsOnScreen(space, matrix, width, height, picked?.of === undefined ? {} : { picked: picked.of });
+    const chosen = {
+      ...(picked?.of === undefined ? {} : { picked: picked.of }),
+      ...(pickedLine ? { pickedLink: pickedLine.id } : {}),
+    };
+    const named = labelsOnScreen(space, matrix, width, height, chosen);
     const arrows = arrowsOnScreen(space, matrix, width, height);
     paintSpaceLabels(ctx, named, paints, win.devicePixelRatio || 1, halo, arrows);
   };
@@ -151,9 +169,38 @@ export async function openSpaceView(
   /** Picks `block`, or none: its name shows and is said aloud. */
   const pick = (block: Block | null) => {
     picked = block;
+    pickedLine = null;
     said.setText(block ? (block.name ?? block.of ?? '') : '');
     again();
   };
+  /** Picks the link `line`: its words show and are said aloud. */
+  const pickLine = (line: SpaceLine) => {
+    picked = null;
+    pickedLine = line;
+    said.setText(line.words ?? '');
+    again();
+  };
+  /** Tells the card what was picked, so it opens its details as a tap in 2D does. */
+  const tell = (t: Target) => root.dispatchEvent(new CustomEvent<Target>(SPACE_OPEN, { detail: t }));
+  /** Turns the view to face `point`, which it then turns round and zooms to; gliding, unless motion is to be still. */
+  const turnTo = (point: Vec3) => {
+    const from = orbit,
+      run = ++turning;
+    if (reducedMotion(win)) {
+      orbit = orbitAround(from, point);
+      return again();
+    }
+    const start = win.performance.now();
+    const step = (now: number) => {
+      if (run !== turning || !open) return;
+      const t = Math.min(1, (now - start) / TURN_TIME);
+      orbit = orbitAround(from, point, 1 - (1 - t) * (1 - t));
+      paint();
+      if (t < 1) win.requestAnimationFrame(step);
+    };
+    win.requestAnimationFrame(step);
+  };
+  const middleOf = (b: Block): Vec3 => [b.x + b.width / 2, b.y + b.depth / 2, b.floor + b.tall / 2];
   /** Flies to `block`: the camera looks at its top from near. */
   const flyTo = (block: Block) => {
     // a ball is looked at from its middle, a block from its top
@@ -224,6 +271,7 @@ export async function openSpaceView(
   el.addEventListener('pointermove', (e) => {
     const was = down.get(e.pointerId);
     if (!was) return;
+    turning++;
     const now = { x: e.clientX, y: e.clientY };
     if (down.size >= 2) {
       const before = pinch();
@@ -245,14 +293,25 @@ export async function openSpaceView(
     if (e.type !== 'pointerup' || down.size > 0 || travel > TAP_SLOP) return;
     // a click or tap: picks the thing under it; a second one soon after, in the same place, flies to it
     const at = el.getBoundingClientRect();
-    const hit = blockAt(space, matrixNow(), width, height, e.clientX - at.left, e.clientY - at.top);
+    const x = e.clientX - at.left,
+      y = e.clientY - at.top;
+    const hit = blockAt(space, matrixNow(), width, height, x, y);
+    const link = hit ? null : lineAt(space, matrixNow(), width, height, x, y);
     const twice =
       lastTap &&
       e.timeStamp - lastTap.at < DOUBLE_TAP &&
       Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < TAP_SLOP * 4;
     lastTap = twice ? null : { at: e.timeStamp, x: e.clientX, y: e.clientY };
     if (twice && hit) flyTo(hit);
-    else pick(hit);
+    else if (hit) {
+      pick(hit);
+      turnTo(middleOf(hit));
+      if (hit.of !== undefined) tell({ key: hit.of });
+    } else if (link) {
+      pickLine(link.line);
+      turnTo(link.at);
+      if (link.line.of !== undefined && link.line.of !== '') tell({ link: Number(link.line.of) });
+    } else pick(null);
   };
   el.addEventListener('pointerup', letGo);
   el.addEventListener('pointercancel', letGo);
