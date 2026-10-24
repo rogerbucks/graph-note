@@ -2,7 +2,7 @@
 // learned changes a profile on its own: it arrives as a suggestion, and applies only once the owner approves it. A
 // private review lens shows everything learned and applied. Each item rolls back in one tap, and clear-all takes them
 // all away.
-import { composeProfiles, type ProfileSettings } from './profiles.ts';
+import { composeProfiles, profileOf, type ProfileSettings } from './profiles.ts';
 
 /** A setting learned: which, the value, and why it was suggested, in the person's terms. */
 export interface LearnedSuggestion {
@@ -81,6 +81,7 @@ export class ProfileLearning {
 
   /** The profile with what was learned and approved applied over it. */
   applyTo(profile: ProfileSettings): ProfileSettings {
-    return composeProfiles(profile, ...this.#applied.map((s) => ({ [s.setting]: s.value })));
+    // read as a profile is, so a kept item out of range, from data edited by hand, sets nothing
+    return composeProfiles(profile, ...this.#applied.map((s) => profileOf({ [s.setting]: s.value })));
   }
 }
