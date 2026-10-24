@@ -18,7 +18,9 @@ Each nightly also carries the desktop app's installers: a `.dmg`, an NSIS `.exe`
 keys are set and unsigned where not, so a system may warn before it opens one. A night they fail still publishes the
 plugin. For now every release is a private nightly (Roger, 23 Oct 2026).
 
-Each nightly also carries the VS Code extension as one file to install, `thoughtknot-vscode-<version>.vsix`, made by
+### What a nightly carries
+
+Each nightly carries the VS Code extension as one file to install, `thoughtknot-vscode-<version>.vsix`, made by
 `scripts/vscode-release.mjs`. In VS Code, run **Extensions: Install from VSIX...** and pick it. It is never sent to the
 Marketplace.
 
