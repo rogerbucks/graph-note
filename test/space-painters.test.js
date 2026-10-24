@@ -118,7 +118,7 @@ window.readSvg = () => {
   holder.remove();
   return marks.map((m) => ({ ...m, paint: paints(m.style) }));
 };
-// the 3D view of a drawing as the plugin draws it: a click on a ball, then on a link, tells the card to open it
+// the 3D view of a drawing as the plugin draws it. A click on a ball, then on a link, tells the card to open it
 window.pickInSpace = async () => {
   const root = document.body.appendChild(document.createElement('div'));
   root.style.cssText = 'position:relative;width:480px;height:360px';
