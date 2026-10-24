@@ -533,6 +533,9 @@ These test behaviour across modules, or the repository itself, so they are named
   `npm run test:changed` picks them (editor spec §13, affected_tests_by_imports).
 - `test/layers.test.js` — each layer imports only the layers below it, as `requirements/architecture.gql` says. It
   reads every import of the shipped code (editor spec §43, layers_checked; `node scripts/layers.mjs`).
+- `test/code-structure.test.js` — every shipped file of a part with areas is in exactly one area of
+  `requirements/architecture.gql`, no area is over its ceiling, and the Architecture page draws the areas (editor spec §43,
+  structure_checked).
 - `test/cheap-checks.test.js` — the quiet test run, running only a change's tests, the AI guide and the search ignore file.
 - `test/build-status.test.js` — the build status's pure part. It covers the requirements a pull request moves, found
   from the tests it newly marks written. It also covers the stage an event gives, which value may replace which, and the
