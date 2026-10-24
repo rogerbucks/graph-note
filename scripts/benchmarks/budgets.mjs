@@ -16,8 +16,8 @@ export const SPEED_BUDGETS = {
     why: 'the highest of its two cases over four counts, 6.35 billion, on the release runner (Linux x86-64, Node 24.20.0, each benchmark bundled on its own, 18 Oct 2026), and a fifth more',
   },
   mesh_query: {
-    most: 150_000_000,
-    why: 'the larger of its two queries, 123.3 million, the same in all four counts on the release runner (Linux x86-64, Node 24.20.0, each benchmark bundled on its own, 18 Oct 2026), and a fifth more',
+    most: 25_000_000,
+    why: 'the larger of its two queries, 20.3 million, on the release runner (Linux x86-64, Node 24.20.0, 24 Oct 2026), over the mesh’s own index, and a fifth more (24.4 million), rounded up',
   },
   cold_start_obsidian: {
     most: 2_400_000_000,
