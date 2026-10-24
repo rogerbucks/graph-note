@@ -394,6 +394,13 @@ These test behaviour across modules, or the repository itself, so they are named
 - `packages/obsidian/test/views-over-one-graph.test.js` — two views of one graph, stacked, each drawn as its own type.
   An edit to the graph shows in both. A type chosen in one is saved for it alone (editor spec §36, views_over_one_graph).
 
+### The Obsidian plugin: personal profiles
+
+- `packages/obsidian/test/pacing.test.js` — a path's pace worked out from the session, shown with its reason and kept
+  as usual in one tap. The profile itself changes only on approval (editor spec §39, pacing_automatic).
+- `packages/obsidian/test/adapted-view.test.js` — a shared view adapted for its viewer alone, its label, and show as
+  shared for the session (editor spec §39, adapted_for_viewer).
+
 ### The graph format library
 
 - `packages/graph-spec/test/characterisation.test.mjs` — the library gives the answers recorded before it moved here.

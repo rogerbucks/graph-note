@@ -208,6 +208,20 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
     black and white. A look is a style token, never a colour.
   - `readNote` sets `Box.certainty`. The host draws the look on the finished drawing, as it does for a parked thing.
 
+#### Personal profiles (editor spec §39)
+
+- `profiles.ts` — a profile sets density, things at a time, visual cues, reminders and pacing (`ProfileSettings`).
+  `profileOf` reads one Profile thing, and `composeProfiles` lays later ones over earlier ones. `PersonalLayer` reads a
+  person's profiles for them alone. `corporateView` takes every personal thing out of a world (profiles_private).
+- `learning.ts` — `ProfileLearning`: what is learned waits as a suggestion and applies only once approved. `review`,
+  `rollback` and `clearAll` are the private review lens (profiles_at_display, learning_review_lens).
+- `pacing.ts` — `PacingDetector`: the pace of one session, from its own signals. A change has a reason and applies at
+  once. `override` puts the usual pace back and makes that signal count for less (pacing_automatic).
+- `reminders.ts` — `remindersFor` offers the things due as data, styled by the profile. It never sends: an outside
+  tool does (reminders_sent_elsewhere).
+- `display/graph-view/profile-shown.ts` — the card's label, show as shared for the session, the things due, and the
+  pace indicator (profile_settings, adapted_for_viewer).
+
 ### Drawing
 
 #### Layout and the engine

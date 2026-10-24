@@ -8,7 +8,7 @@
 import { word } from '@thoughtknot/core';
 import { Notice } from 'obsidian';
 import type ThoughtKnotPlugin from './main';
-import type { Drafts } from './main';
+import type { Drafts } from './saved';
 import { freePath } from './export/vault-write';
 import { vaultNotes } from './storage/plugin-notes';
 
