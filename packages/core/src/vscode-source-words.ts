@@ -7,6 +7,8 @@ export const VSCODE_SOURCE_WORDS = {
   'vscode.open-a-note': 'Open a Markdown note first, then choose Open in ThoughtKnot.',
   'vscode.hidden-note': 'This note is in a hidden folder, such as .git. ThoughtKnot never opens notes there.',
   'vscode.tab': '{note} in ThoughtKnot',
+  'vscode.command.open-graph': 'Open in ThoughtKnot',
+  'vscode.command.ask-ai': 'Ask AI about this note',
   'vscode.ai.off': 'AI is off. Turn on ThoughtKnot: AI Use in the settings before anything is sent.',
   'vscode.ai.settings': 'Open the settings',
   'vscode.ai.no-models':

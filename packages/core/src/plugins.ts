@@ -5,19 +5,18 @@
 // first extension point is the data exports, and the second the theme tokens (§44, plugin_theme_tokens). A plug-in
 // inherits the core's design tokens and may add colours of its own, each meeting the locked contrast (theme-tokens.ts).
 // The third is note storage (§41, storage_contract), and the fourth the commands a person runs. A call over the time
-// limit is named and its answer dropped. Its plug-in is stopped, so it never holds a drawing up again. Then come panels,
-// and graph sources and steps, whose graphs are held as joined graphs (plugin-sources.ts, trust_source_joined).
-// Then AI providers, and diagram types, which give back marks as data that the core draws (plugin-diagrams.ts). Each
-// comes with its own contract suite (plugins-contract.ts).
+// limit is named and its answer dropped; its plug-in is stopped. Then come panels, and graph sources and steps, whose
+// graphs are held as joined graphs (plugin-sources.ts, trust_source_joined). Then AI providers, and diagram types, which
+// give back marks as data that the core draws (plugin-diagrams.ts). Each has its own contract suite (plugins-contract.ts).
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { NoteStorage } from './note-storage.ts';
 import { backendProblem, commandProblem, exporterProblem, panelProblem } from './plugin-points.ts';
 import { HOST_ABILITIES, sourceProblem, stepProblem } from './plugin-points.ts';
 import type { DataExporter, PluginSource, PluginStep, HostAbilities, HostAbility } from './plugin-points.ts';
 import type { PanelRoot, PluginCommand, PluginPanel, StorageBackend } from './plugin-points.ts';
-import { heldGraph, stepInputs } from './plugin-sources.ts';
-import type { JoinedGraph } from './plugin-sources.ts';
-import { pluginCalls } from './plugin-calls.ts';
+import { fetchCalls, heldGraph, stepInputs } from './plugin-sources.ts';
+import type { JoinedGraph, SourceFetching } from './plugin-sources.ts';
+import { commandCalls, pluginCalls } from './plugin-calls.ts';
 import { guardedProvider, providerProblem } from './plugin-ai.ts';
 import type { AiProvider } from './plugin-ai.ts';
 import { diagramDrawing, diagramProblem } from './plugin-diagrams.ts';
@@ -122,6 +121,7 @@ export interface RegistryOptions {
   now?: () => number;
   /** The version of each extension point this host has; `POINT_VERSIONS` unless set. */
   pointVersions?: Partial<Record<ExtensionPoint, string>>;
+  builtIn?: boolean;
 }
 
 /** A plug-in that was stopped, and why. */
@@ -131,7 +131,7 @@ export interface StoppedPlugin {
 }
 
 /** The plug-ins installed and what each added; one for each host, made by `pluginRegistry`. */
-export interface PluginRegistry {
+export interface PluginRegistry extends SourceFetching {
   /** Installs `plugin`; throws, saying why, when its manifest or what it adds is refused, and then installs none of it. */
   register: (plugin: ThoughtKnotPlugin) => void;
   /** The ids of the plug-ins installed, in the order they were. */
@@ -150,8 +150,10 @@ export interface PluginRegistry {
   openStorage: (name: string) => PluginResult<NoteStorage>;
   /** Every command added, in the order added. */
   commands: () => PluginCommand[];
-  /** Runs the command `id`, or says what went wrong and whose plug-in it was. */
-  runCommand: (id: string) => PluginResult<undefined>;
+  commandOffered: (id: string) => boolean;
+  /** Runs the command `id` on what the host chose it on, if anything; the async one waits for a command that takes time. */
+  runCommand: (id: string, given?: unknown) => PluginResult<undefined>;
+  runCommandAsync: (id: string, given?: unknown) => Promise<PluginResult<undefined>>;
   /** Every panel added, in the order added. */
   panels: () => PluginPanel[];
   /** Draws the panel `id` into `el`, or says what went wrong and whose plug-in it was. */
@@ -212,7 +214,8 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
   const steps = shelf<PluginStep>('id');
   const providers = shelf<AiProvider>('name');
   const diagrams = shelf<PluginDiagram>('type');
-  const { guarded, awaited, stopped } = pluginCalls(now, timeLimit);
+  const calls = pluginCalls(now, timeLimit);
+  const { guarded, awaited, stopped } = calls;
   const core = Object.freeze(Object.keys(THEME_TOKENS));
   /** The abilities `named` from the host's offer, frozen, or why one cannot be given. */
   const granted = (named: HostAbility[], pluginId: string): Partial<HostAbilities> | string => {
@@ -295,7 +298,8 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       if (uses('commands')) points.commands = onShelf(addedCommands, commands, commandProblem);
       if (uses('panels'))
         points.panels = onShelf(addedPanels, panels, panelProblem, (c) => ({ ...c, render: c.render.bind(c) }));
-      if (uses('sources')) points.sources = onShelf(addedSources, sources, (c, _, t) => sourceProblem(c, t));
+      if (uses('sources'))
+        points.sources = onShelf(addedSources, sources, (c, _, t) => sourceProblem(c, t, options.builtIn));
       if (uses('steps')) points.steps = onShelf(addedSteps, steps, stepProblem);
       if (uses('ai')) points.ai = onShelf(addedProviders, providers, (c, _, t) => providerProblem(c, t));
       if (uses('diagrams')) points.diagrams = onShelf(addedDiagrams, diagrams, diagramProblem);
@@ -343,12 +347,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       return guarded(backends.owner.get(name) ?? '', word('plugins.what.storage', { title: b.title }), () => b.open());
     },
     commands: () => commands.items.map((c) => ({ ...c })),
-    runCommand(id) {
-      const c = commands.items.find((x) => x.id === id);
-      if (!c) return { ok: false, plugin: '', message: word('plugins.none.command', { name: id }) };
-      const what = word('plugins.what.command', { title: c.title });
-      return guarded(commands.owner.get(id) ?? '', what, () => void c.run());
-    },
+    ...commandCalls(calls, commands.items, commands.owner),
     panels: () => panels.items.map((c) => ({ ...c })),
     showPanel(id, el) {
       const c = panels.items.find((x) => x.id === id);
@@ -357,6 +356,7 @@ export function pluginRegistry(options: RegistryOptions = {}): PluginRegistry {
       return guarded(panels.owner.get(id) ?? '', what, () => void c.render(el));
     },
     graphSources: () => sources.items.map((c) => ({ ...c })),
+    ...fetchCalls(calls, sources.items, sources.owner),
     async readGraph(scheme, target, levels) {
       const c = sources.items.find((x) => x.scheme === scheme);
       if (!c) return { ok: false, plugin: '', message: word('plugins.none.source', { name: scheme }) };

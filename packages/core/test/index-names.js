@@ -457,7 +457,7 @@ export const VALUES = [
   'pointerTo',
   'prepareSend',
   ...VALUES_LATE,
-];
+].sort();
 
 /** The types src/index.ts exports, sorted. */
 export const TYPES = [

@@ -3,6 +3,7 @@
 // (plugin_manifest_limits). A plug-in is given those it names and no other.
 import type { DataInfo, ExportedData } from './export-data-model.ts';
 import type { NoteStorage } from './note-storage.ts';
+import type { Fetched } from './sources.ts';
 
 const WORD = /^[a-z][a-z0-9-]*$/;
 
@@ -36,8 +37,13 @@ export interface PluginCommand {
   id: string;
   /** What it is called where it is offered, in the host's language. */
   title: string;
-  /** Does what the command does. */
-  run: () => void;
+  /**
+   * Does what the command does, given what the host chose it on, if anything: a file in a menu, say. It may take time,
+   * and a host that waits for it runs it with `runCommandAsync`.
+   */
+  run: (given?: unknown) => void | Promise<void>;
+  /** Whether it is offered now, such as while a drawing is open; a host offers it only when this says so. Always, when not given. */
+  available?: () => boolean;
 }
 
 /**
@@ -72,6 +78,11 @@ export interface PluginSource {
   title: string;
   /** The graph at `target`. */
   read: (target: string) => GivenGraph | Promise<GivenGraph>;
+  /**
+   * Only a built-in source of a host has it: what is found at `target` for the note at `from`. It reads the person's
+   * own notes and files. It says a missing or moved place, so a block can name it. Its graph is the person's own.
+   */
+  fetch?: (target: string, from: string) => Fetched | Promise<Fetched>;
 }
 
 /** A step a plug-in adds that makes a graph from others, such as a merge; what it gives back is a joined graph. */
@@ -131,6 +142,8 @@ export function commandProblem(c: PluginCommand, pluginId: string, taken: Map<st
   if (taken.has(c.id)) return `the command "${c.id}" is added already`;
   if (!c.title.trim()) return `the command "${c.id}" has no title`;
   if (typeof c.run !== 'function') return `the command "${c.id}" does nothing`;
+  if (c.available !== undefined && typeof c.available !== 'function')
+    return `the command "${c.id}" has an available that is not a function`;
   return null;
 }
 
@@ -145,11 +158,14 @@ export function panelProblem(c: PluginPanel, pluginId: string, taken: Map<string
 }
 
 /** Why a graph source a plug-in adds is refused, or null when it is accepted. */
-export function sourceProblem(s: PluginSource, taken: Map<string, string>): string | null {
+export function sourceProblem(s: PluginSource, taken: Map<string, string>, builtIn = false): string | null {
   if (!WORD.test(s.scheme)) return `the source "${s.scheme}" is not named by a lower-case word`;
   if (taken.has(s.scheme)) return `the source "${s.scheme}" is already added by ${taken.get(s.scheme)}`;
   if (!s.title.trim()) return `the source "${s.scheme}" has no title`;
   if (typeof s.read !== 'function') return `the source "${s.scheme}" reads nothing`;
+  if (s.fetch !== undefined && !builtIn)
+    return `the source "${s.scheme}" reads as the person's own, which only a built-in may`;
+  if (s.fetch !== undefined && typeof s.fetch !== 'function') return `the source "${s.scheme}" fetches nothing`;
   return null;
 }
 

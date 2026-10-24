@@ -143,6 +143,8 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   problems at their lines there. Or it says why it cannot be drawn, with the block as text, never blank. A source too
   large to read is shown under the banner a note's blocks get. `sourcedView` is the same reading for a view of the
   graph.
+- `host-sources.ts` — a file and a note are the two sources of the built-in plug-in `thoughtknot.obsidian-sources`.
+  `source-read.ts` reads a block's source through its registry.
 - `source-read.ts` — the source found as Obsidian finds a link from the note (else by its path), read through the vault,
   never copied.
   - A .gql file larger than `READ_LIMITS.bytes`, by the size the vault keeps, is never read.
@@ -303,6 +305,12 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   - A query of more than 10,000 rows fails, saying how to narrow it.
   - The plugin's `queryDatabase` calls it, so a test can stand in its own.
 - `sql-js.d.ts` — the types of the parts of sql.js the import uses.
+- `../host-commands.ts` — every command of the plugin is a command of the built-in plug-in `thoughtknot.obsidian`.
+  `addCommands` adds them to the registry, and `offerCommands` gives each to Obsidian under the id it always had, so
+  hotkeys last. A command with a check (`available`) is offered only while it holds.
+- `../host-panels.ts` — the edit pane and the details pane are the two panels of the built-in plug-in
+  `thoughtknot.obsidian-panels`. Obsidian still owns each view and its state. `showPane` draws what a view gave into its
+  element through the registry's panel.
 - `../commands.ts` — `addAskCommands` adds the commands that reach outside the vault: Ask an AI model, Clear the record
   of sends, and Import from a database. `addCommands` adds them and the keyboard shortcuts' commands.
 - `../shortcuts.ts` — `addShortcutCommands` adds Show the keyboard shortcuts, and the drawing's own commands: Zoom in,

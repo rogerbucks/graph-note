@@ -9,10 +9,12 @@ import { pluginRegistry } from '../src/plugins.ts';
 import { CORE_EXPORTS } from '../src/export-data.ts';
 import { memoryStorage } from '../src/note-storage.ts';
 import { CORE_STORAGE } from '../src/core-storage.ts';
+import { CORE_AI, CORE_AI_PROVIDER } from '../src/core-ai.ts';
 
 const registry = pluginRegistry();
 registry.register(CORE_EXPORTS);
 registry.register(CORE_STORAGE);
+registry.register(CORE_AI);
 
 /** The names of the checks `e` fails, with their messages. */
 const failures = (e) =>
@@ -154,6 +156,18 @@ describe('the AI provider contract', () => {
     assert.deepEqual(names(echo), []);
   });
 
+  for (const p of registry.aiProviders())
+    test(`the built-in ${p.title} provider passes every check`, () => {
+      assert.deepEqual(names(p), []);
+    });
+
+  test('the core’s own wire format is a provider of the registry, which a model with no provider named is sent through', () => {
+    assert.deepEqual(
+      registry.aiProviders().map((p) => p.name),
+      [CORE_AI_PROVIDER],
+    );
+  });
+
   test('one that drops the asked text, or throws on a reply, fails the check that holds it', () => {
     assert.deepEqual(names({ ...echo, shape: () => '{}' }), [
       'it shapes a request as text, the same each time, holding what it was asked',
@@ -161,5 +175,74 @@ describe('the AI provider contract', () => {
     assert.deepEqual(names({ ...echo, read: ({ text }) => ({ content: JSON.parse(text).output }) }), [
       'it reads an answer, a refusal or nothing from any reply, and never throws',
     ]);
+  });
+});
+
+describe('a built-in source that reads the person’s own notes', () => {
+  const found = { found: 'trip.gql', text: '// graph: trip' };
+  const own = (fetch) => ({
+    id: 'acme.vault',
+    version: '1.0.0',
+    api: 1,
+    uses: ['sources'],
+    register: (points) =>
+      points.sources.add({ scheme: 'vault', title: 'Vault', read: () => SAMPLE_GRAPH, ...(fetch && { fetch }) }),
+  });
+
+  test('only a built-in registry accepts one, and a plug-in’s other source is refused its fetch', () => {
+    const plugin = own(() => found);
+    assert.throws(() => pluginRegistry().register(plugin), /only a built-in may|reads as the person/);
+    const built = pluginRegistry({ builtIn: true });
+    built.register(plugin);
+    assert.deepEqual(
+      built.graphSources().map((s) => s.scheme),
+      ['vault'],
+    );
+  });
+
+  test('the registry says what it found, or that the source has no fetch, or names a fetch that throws', async () => {
+    const built = pluginRegistry({ builtIn: true });
+    built.register(own(() => found));
+    assert.deepEqual(await built.fetchSource('vault', 'trip', 'a.md'), { ok: true, value: found });
+    assert.equal((await built.fetchSource('nowhere', 'trip', 'a.md')).ok, false);
+    const broken = pluginRegistry({ builtIn: true });
+    broken.register(
+      own(() => {
+        throw new Error('disk gone');
+      }),
+    );
+    const r = await broken.fetchSource('vault', 'trip', 'a.md');
+    assert.match(r.message, /disk gone/);
+  });
+
+  test('its fetch is checked: what is found or missing passes, anything else fails the check that holds it', async () => {
+    const source = (fetch) => ({ scheme: 'vault', title: 'Vault', read: () => SAMPLE_GRAPH, fetch });
+    assert.deepEqual(
+      await failing(
+        sourceContract(
+          source(() => found),
+          'trip',
+        ),
+      ),
+      [],
+    );
+    assert.deepEqual(
+      await failing(
+        sourceContract(
+          source(() => ({ missing: true })),
+          'trip',
+        ),
+      ),
+      [],
+    );
+    assert.deepEqual(
+      await failing(
+        sourceContract(
+          source(() => 'text'),
+          'trip',
+        ),
+      ),
+      ['it says what it found at a place, or that it is missing, as the person’s own'],
+    );
   });
 });
