@@ -90,6 +90,12 @@ and no module requires one that requires it back.
     worked out again only when their members change. One still moving is flagged unsettled (`test/centroid-cases.json`).
   - `cycles.js` — clusters inside each other in a cycle. A cycle is flagged, never refused, and a view hides or
     highlights it (`test/cycle-cases.json`).
+  - `cohesion.js` — how tightly each cluster holds together: links between its members and how many are contested. A
+    loose, disputed cluster states less certainty than a tight one. A cluster may opt in to a floor, so it is never
+    more certain than its least certain member (`test/cohesion-cases.json`).
+
+### Altitude
+
 - **`src/altitude/`** — the altitude and topic index (editor spec §32). Python's twin gives the same answers.
   - `altitude-index.js` — each thing's topic tags and altitudes. A search finds a tag exactly or by likeness and ranks
     by the certainty sort key, marking contested things (`test/altitude-index-cases.json`).

@@ -150,6 +150,9 @@ archive's layout on every pull request, so it always works with the library as s
   - `centroids_of` gives each cluster's centroid (`centroids.js`, `centroid-cases.json`).
   - `cluster_cycles` and `cycle_view` flag the clusters in a cycle, and hide or highlight them (`cycles.js`,
     `cycle-cases.json`).
+  - `cluster_certainty` gives each cluster's cohesion and the certainty its centroid states, with any floor
+    (`cohesion.js`, `cohesion-cases.json`).
+
 ### The graph mesh
 
 - `src/graphspec/engine/altitude/` — editor spec §32. `altitude_index.altitude_index` and `search_index` are the twins

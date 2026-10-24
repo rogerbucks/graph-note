@@ -109,6 +109,8 @@ const NAMES = [
   'typeOf',
   'instancesOf',
   'inherited',
+  // each cluster's cohesion and the certainty its centroid states (editor spec §31)
+  'clusterCertainty',
   // the process core and its runs (editor spec §34)
   'coreOfEight',
   'transitionsOf',
