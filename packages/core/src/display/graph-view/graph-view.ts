@@ -3,8 +3,7 @@
 // tapped or opened by keyboard. This ties together its folder's parts: bar, drawing, taps, details, where it is placed.
 import { Lifecycle } from '../lifecycle';
 import { inHost, isPhone, readInHostDirection, setIcon } from '../host';
-import { AcrossZoom, Zoom, scrollsOneWay, word } from '@thoughtknot/core';
-import type { Drawn, View } from '@thoughtknot/core';
+import { AcrossZoom, Zoom, scrollsOneWay, word, type Drawn, type View } from '@thoughtknot/core';
 import { SourceToggle } from './source-toggle';
 import { readOnlyHere, whenPlaced } from './placement';
 import { gateWrites } from './read-only';
@@ -23,14 +22,14 @@ import { openSpaceView } from './space-view-panel';
 import { describeDrawing, insertSvg, swapSvg } from './drawing-svg';
 import { ViewSwitching } from './view-switches';
 import { markFlow, renderFlowLegend } from './flow-marks';
-import { Taps, boxIn } from './taps';
-import type { Target } from './taps';
+import { Taps, boxIn, type Target } from './taps';
 import { DetailsPanel } from './details-panel';
 import { Selection } from './selection';
 import { drawnApart, renderTypeStrip, TypePlace, typeLeftAt } from './type-strip';
 import { bindViewportEvents } from './viewport-events';
 import { FullScreen } from './full-screen';
 import { Aids } from './viewer-aids';
+import { showProfile } from './profile-shown';
 import { Measuring, viewportSize, zoomSize } from './viewport-size';
 import type { ViewOptions } from './view-options';
 
@@ -161,6 +160,7 @@ export class GraphView extends Lifecycle {
       );
     list = renderProblems(root, problems, true, this.o.completeness);
     if (this.o.parked) listParked(list, this.o.parked, (k) => this.boxes().find((b) => b.key === k)?.text ?? k);
+    showProfile(root, this.o); // the viewer's profile: the label, show-as-shared and the things due (§39)
     const tools = root.createDiv({ cls: 'thoughtknot-card-tools' }); // the card's tools, in one row under the bar
     this.walk = new Walk(root, this.o, () => this.svg ?? undefined, tools); // walked paths: Play, and Record while edited (§7)
     if (this.o.writeView) this.maker = new ViewMaker(tools, this.o); // a view made by tapping, while edited (§7)
@@ -270,6 +270,7 @@ export class GraphView extends Lifecycle {
       },
       () => !gone,
     );
+    this.switching?.curveLater(this.drawn); // a drawing shown with straight links first gets its curves next (§11)
   }
 
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */

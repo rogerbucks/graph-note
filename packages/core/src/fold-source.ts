@@ -151,11 +151,12 @@ const TYPE_CURVES = /^( {2}graph \[.*), splines=true\];$/;
  * The source `dot` with its links routed (untangle_routing). They are straight lines, or right angles. Their readings
  * are set beside them (`xlabel`), as Graphviz places a right-angled link's label. The curves a radial drawing asks for
  * (graph-layout.js, typedSource) give way to them. Curved, or none, is how Graphviz draws them: `dot` unchanged.
+ * Direct links are laid out straight, the quickest, and drawn again as curves after (render.ts, direct-links.ts).
  */
 export function routedSource(dot: string, routing: string | undefined): string {
-  if (routing !== 'straight' && routing !== 'right-angled') return dot;
+  if (routing !== 'straight' && routing !== 'right-angled' && routing !== 'direct') return dot;
   const lines = dot.split('\n').map((l) => l.replace(TYPE_CURVES, '$1];'));
-  const routed = routing === 'straight' ? lines : lines.map((l) => l.replace(LINK_LABEL, '$1xlabel='));
-  routed.splice(1, 0, `  graph [splines=${routing === 'straight' ? 'line' : 'ortho'}];`);
+  const routed = routing === 'right-angled' ? lines.map((l) => l.replace(LINK_LABEL, '$1xlabel=')) : lines;
+  routed.splice(1, 0, `  graph [splines=${routing === 'right-angled' ? 'ortho' : 'line'}];`);
   return routed.join('\n');
 }

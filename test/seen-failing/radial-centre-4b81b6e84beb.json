@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/radial-centre.test.js",
+  "test": "where the note is edited > a right-click on the centre, or where radial does not fit, opens no menu",
+  "seen_failing_first": false,
+  "evidence": "a guard: before this change no menu ever opened, so it could only pass"
+}

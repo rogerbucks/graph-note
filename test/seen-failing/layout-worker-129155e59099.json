@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/layout-worker.test.js",
+  "test": "a normal graph > asked for in a fixed theme, it is themed in that palette, in a thread and on the page alike, with no theme variable",
+  "seen_failing_first": false,
+  "evidence": "a test-only fix: the code it follows (direct links as the default) came in an earlier commit, 6120ca6, which this test's old expectation failed against"
+}

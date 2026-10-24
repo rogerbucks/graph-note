@@ -117,7 +117,7 @@ Signed-off-by: Your Name <you@example.com>
 
 `git commit -s` adds it.
 
-- **A commit any AI agent writes carries Roger's sign-off, not the agent's.** Claude, Antigravity and graph-note are
+- **A commit any AI agent writes carries Roger's sign-off, not the agent's.** Claude and Antigravity are
   such agents. An AI cannot certify where code came from. Roger directs that work, so he certifies it (Roger, 19 Oct
   2026; widened to every agent 20 Oct 2026). Such a commit ends with this line, in place of `-s`:
   `Signed-off-by: Roger Bucks <264575592+rogerbucks@users.noreply.github.com>`. Add it with `git commit --trailer`.
@@ -206,6 +206,15 @@ of Obsidian's rules, sentence case in the interface among them. These are the gu
 ## Tests that span modules
 
 These test behaviour across modules, or the repository itself, so they are named after their subject.
+
+### The core: test runs
+
+- `packages/core/test/test-run-source.test.js` — what a test run reads: live, a snapshot or a copy (editor spec §35).
+- `packages/core/test/test-run-certainty.test.js` — a test run leaves certainty as it is, unless it opted in (§35).
+- `packages/core/test/side-effects-stubbed.test.js` — a test run stubs each side effect and reaches nothing outside
+  (§35).
+- `packages/core/test/saved-scenarios.test.js` — a scenario saved from a test run is never rerun, faded or enforced
+  (editor spec §35). It spans `scenarios.ts`, `test-runs.ts` and `process-core.ts`.
 
 ### The core
 
@@ -393,6 +402,20 @@ These test behaviour across modules, or the repository itself, so they are named
   and opens it (editor spec §7, many_views_one_data, view_of_another_note).
 - `packages/obsidian/test/views-over-one-graph.test.js` — two views of one graph, stacked, each drawn as its own type.
   An edit to the graph shows in both. A type chosen in one is saved for it alone (editor spec §36, views_over_one_graph).
+
+### The Obsidian plugin: the process debugger
+
+- `packages/obsidian/test/process-debugger.test.js` — the process debugger in a drawing's walk strip (editor spec
+  §35). It spans `process-debug.ts` and the core's `test-runs.ts`.
+- `packages/obsidian/test/playback-controller.test.js` — the player under the debugger, autoplay or by hand (§35). It
+  spans `process-debug.ts` and the core's `playback.ts`.
+
+### The Obsidian plugin: personal profiles
+
+- `packages/obsidian/test/pacing.test.js` — a path's pace worked out from the session, shown with its reason and kept
+  as usual in one tap. The profile itself changes only on approval (editor spec §39, pacing_automatic).
+- `packages/obsidian/test/adapted-view.test.js` — a shared view adapted for its viewer alone, its label, and show as
+  shared for the session (editor spec §39, adapted_for_viewer).
 
 ### The graph format library
 
@@ -641,7 +664,7 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/apple-terms.test.js` — the rules we keep for Apple's developer terms (spec §41, apple_terms;
   `docs/apple-terms.md`). Nothing people read says Apple checked or endorses ThoughtKnot. `TRADEMARKS.md` names Apple's
   marks as Apple's. The app id stays under thoughtknot.app, and no workflow holds an App Store key.
-- `test/working-group.test.js` — `docs/agents/ROLES.md` gives Roger, Claude, Antigravity and graph-note their work,
+- `test/working-group.test.js` — `docs/agents/ROLES.md` gives Roger, Claude, Antigravity and Grok their work,
   labels and branches, and repeats the rules each keeps. `AGENTS.md` points to it.
 - `test/desktop-build.test.js` — the desktop installers are signed only where every key is set. A pull request build
   never gets a key (editor spec §41, app_signed).
@@ -820,6 +843,8 @@ These test behaviour across modules, or the repository itself, so they are named
   risk, an overdue one or a stale one. RISKS.md is what the script writes from the register.
 - `test/risk-panel-workflow.test.js` — the risk panel workflow runs by hand and spends a Claude session only when
   something moved. It keeps its token to one step, and its one writing job keeps an issue up to date with gh alone.
+- `test/second-opinion.test.js` — the second opinion hands a pull request's diff, or the latest panel issue, to the
+  owner's own Gemini and Grok tools. It skips one not installed and heads each comment with its model.
 - `test/security-alerts.test.js` — the security alerts each release reads, through a fake GitHub and OSV. A stable
   release stops on any open alert, a nightly on high and critical ones, and a list not read is never taken as empty.
 - `test/security-workflow.test.js` — the release, its dry run and the nightly read the security alerts in a job that

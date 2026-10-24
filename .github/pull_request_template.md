@@ -10,7 +10,7 @@ After:
 
 ## Checks
 
-- [ ] The label for your agent is set: `agent:claude`, `agent:antigravity` or `agent:graph-note`.
+- [ ] The label for your agent is set: `agent:claude` or `agent:antigravity`.
 - [ ] No private session link, here or in a commit (`Claude-Session:` and its link).
 - [ ] The requirement is in `requirements/editor-requirements.md` first, and its test was seen failing first: the test
       and its code in one commit, then `node scripts/tests-first.mjs --update`. If no test can fail first, add a line

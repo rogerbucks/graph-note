@@ -26,3 +26,12 @@ export function rgbaOf(written: string): Rgba {
   if (srgb) return [Number(srgb[1]), Number(srgb[2]), Number(srgb[3]), Number(srgb[4] ?? 1)].map(clamp) as Rgba;
   return [0, 0, 0, 0];
 }
+
+/** How opaque the 3D view paints a thing the focus fades (focus_space): a third, so what is brought forward stands out. */
+export const FADED = 0.3;
+
+/** A colour, as a browser computes it, painted at `alpha` of how opaque it was, as `rgb(r g b / a)`. */
+export function seeThrough(written: string, alpha: number): string {
+  const [r, g, b, a] = rgbaOf(written).map((n, i) => (i < 3 ? Math.round(n * 255) : n));
+  return `rgb(${r} ${g} ${b} / ${+((a ?? 0) * alpha).toFixed(3)})`;
+}

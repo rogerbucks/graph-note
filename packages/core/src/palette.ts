@@ -147,6 +147,12 @@ export function systemPalette(light: Palette, dark: Palette): Palette {
   };
 }
 
+/**
+ * The light and shade over a ball in the 3D view (space-canvas-painter.ts), the same in every theme. It is white on the
+ * side the light comes from, and a little black on the far side. The graphics chip lights a ball so, in its shader.
+ */
+export const BALL_LIGHT = { shine: 'rgba(255, 255, 255, 0.45)', shade: 'rgba(0, 0, 0, 0.18)' } as const;
+
 /** The one table: each host's way of writing the colours, by name. */
 export const PALETTES: { obsidian: Palette; light: Palette; dark: Palette; system: Palette } = {
   obsidian: {

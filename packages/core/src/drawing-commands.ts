@@ -38,17 +38,27 @@ export function routeEvent(event: DrawingEvent, engine: CommandSink): GraphComma
   return command;
 }
 
-// What an SVG may carry: the drawing's own marks and the key that names each box. Anything more would be data.
+// What an SVG may carry: the drawing's own marks and the key that names each box. Anything more would be data, or code
+// that decides. Comments and CDATA are read past, so a word inside one is not taken for markup.
 const DATA_ATTRIBUTE = /\sdata-(?!key=|kind=)[\w-]+=/g;
 const HOLDS = [
   ['metadata', /<metadata[\s/>]/i],
   ['script', /<script[\s/>]/i],
   ['form field', /<(input|textarea|select)[\s/>]/i],
+  ['foreign object', /<foreignObject[\s/>]/i],
+  ['event handler', /\son[a-z]+\s*=/i],
+  ['script link', /href\s*=\s*["']\s*javascript:/i],
 ] as const;
+const ASIDE = /<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>/g;
 
-/** What an SVG holds beyond a picture: data attributes, metadata, scripts or form fields. None for a plain drawing. */
+/**
+ * What an SVG holds beyond a picture: data attributes, metadata, scripts, form fields, foreign objects, event handlers
+ * or script links. None for a plain drawing.
+ */
 export function stateInSvg(svg: string): string[] {
-  const out: string[] = HOLDS.filter(([, re]) => re.test(svg)).map(([what]) => what);
-  for (const m of svg.matchAll(DATA_ATTRIBUTE)) out.push(`attribute ${m[0].trim().slice(0, -1)}`);
+  // only what lies between the asides is read; nothing here sanitises, it reports
+  const markup = svg.split(ASIDE).join(' ');
+  const out: string[] = HOLDS.filter(([, re]) => re.test(markup)).map(([what]) => what);
+  for (const m of markup.matchAll(DATA_ATTRIBUTE)) out.push(`attribute ${m[0].trim().slice(0, -1)}`);
   return out;
 }

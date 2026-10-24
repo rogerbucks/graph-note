@@ -75,9 +75,10 @@ export type FlowMotion = (typeof FLOW_MOTIONS)[number];
 
 /**
  * How links are drawn (§25, untangle_routing). Curved, as Graphviz draws them unless told otherwise; straight; or with
- * right angles. So a dense graph can trade curves for fewer crossings.
+ * right angles. So a dense graph can trade curves for fewer crossings. Or direct (untangle_direct): one gentle curve
+ * from box to box, the boxes moved aside to make room (direct-links.ts).
  */
-export const ROUTINGS = ['curved', 'straight', 'right-angled'] as const;
+export const ROUTINGS = ['curved', 'straight', 'right-angled', 'direct'] as const;
 /** One of the routings. */
 export type Routing = (typeof ROUTINGS)[number];
 

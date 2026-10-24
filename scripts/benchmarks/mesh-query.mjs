@@ -1,12 +1,9 @@
-// The instruction-count benchmark of a query over a 10 000-thing mesh (editor spec §41, speed_budgets). It is a search,
-// as the details panel's find runs it (untangle.ts, untangle_find), over every graph of the mesh. It searches by a
-// thing's name and by a property's value. The mesh itself is slice 6. Until it is built, 100 notes of 100 things each
-// stand in. Each note is read on its own as a host reads it, under the per-note reading limit. One 10 000-thing note
-// would be over that limit. The
-// notes are read in the setup, counted alone and taken off, so the count is the query's. Run by
-// scripts/instruction-counts.mjs.
-import { readNote } from '../../packages/core/src/drawing.ts';
-import { find } from '../../packages/core/src/untangle.ts';
+// The instruction-count benchmark of a query over a 10 000-thing mesh (editor spec §41, speed_budgets). It is the mesh's
+// own find (mesh-index.ts, mesh_index_rebuilds), over every note of the mesh, as a host asks it. It searches by a
+// thing's name and by a property's value. The mesh is 100 notes of 100 things each, held in the index's memory
+// backend. One 10 000-thing note would be over the per-note reading limit. The notes are read into the index in the
+// setup, counted alone and taken off, so the count is the query's. Run by scripts/instruction-counts.mjs.
+import { MeshIndex, memoryBackend } from '../../packages/core/src/mesh-index.ts';
 import { withinBudget } from './budgets.mjs';
 
 /** How many notes the stand-in mesh has, and how many things each holds. */
@@ -27,9 +24,9 @@ function meshNote(k) {
 }
 
 /** The query over every note of the mesh, its finds in the notes' order; a query that finds nothing is no count. */
-function query(notes, text) {
-  const found = notes.flatMap((r, k) => find(r, `note${k}`, text));
-  if (!found.length) throw new Error(`the query for ${text} found nothing in the mesh`);
+function query(mesh, what) {
+  const found = Array.from({ length: MESH.notes }, (_, k) => mesh.find(`note${k}.md`, what)).flat();
+  if (!found.length) throw new Error(`the query for ${JSON.stringify(what)} found nothing in the mesh`);
   return found;
 }
 
@@ -39,14 +36,14 @@ export const BENCHMARK = {
   spec: '§41, speed_budgets',
   proves: 'a query over a 10 000-thing mesh, by name and by a property’s value, stays within its budget',
   setup() {
-    const notes = Array.from({ length: MESH.notes }, (_, k) => readNote([meshNote(k)]));
-    if (notes.some((r) => r.tooLarge)) throw new Error('a note of the mesh is over the reading limit');
-    query(notes, 'thing 1'); // warm: a person has searched before
-    return { notes };
+    const mesh = new MeshIndex(memoryBackend());
+    for (let k = 0; k < MESH.notes; k++) mesh.update(`note${k}.md`, `\`\`\`gql\n${meshNote(k)}\n\`\`\`\n`);
+    query(mesh, { name: 'Thing 1' }); // warm: a person has searched before
+    return { mesh };
   },
   cases: {
-    'by-name': ({ notes }) => query(notes, 'thing 9999'),
-    'by-property': ({ notes }) => query(notes, 't96'),
+    'by-name': ({ mesh }) => query(mesh, { name: 'Thing 9999' }),
+    'by-property': ({ mesh }) => query(mesh, { property: 'tag', value: 't96' }),
   },
   counted: ['by-name', 'by-property'],
   claims: [

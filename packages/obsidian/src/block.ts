@@ -26,8 +26,7 @@ import {
   word,
 } from '@thoughtknot/core';
 import type { Block, Drawn, NudgeWrite, Problem, Refusal } from '@thoughtknot/core';
-import type ThoughtKnotPlugin from './main';
-import type { EditTarget } from './main';
+import type { default as ThoughtKnotPlugin, EditTarget } from './main';
 import { renderCode } from '@thoughtknot/core/display/code';
 import { waitShown } from '@thoughtknot/core/display/progress';
 import { renderStyleBlock } from './style-block';
@@ -50,7 +49,6 @@ import { overviewInParts } from './note-store';
 import type { ShownProblem } from '@thoughtknot/core/display/graph-view/problems-list';
 import { linkHost, vaultNames } from './links/link-host';
 import { changeVaultNote } from './storage/plugin-notes';
-
 /**
  * A graph shown as its text with a banner saying why it is not drawn (spec §9): too large, or its layout stopped. An
  * editor open in place keeps its place in the card, so the text can still be made small enough to draw.
@@ -275,9 +273,10 @@ export async function renderBlock(
   }
 
   // the View menu (§25). One state for every card of this graph in this note, folding it as its switches say. A graph
-  // drawn as a table has none
+  // drawn as a table has none. Laid out with straight links first past 300 things, then curved (§11)
   const state = diagram?.table || diagram?.picture ? undefined : plugin.switchesFor(target.path, graph, styling.style);
-  const laidOut = (by?: object) => plugin.layout(state ? state.folded(drawing, by) : drawing, by);
+  const folded = (by?: object) => (state ? state.folded(drawing, by) : drawing);
+  const laidOut = (by?: object, curved = false) => plugin.layout({ ...folded(by), straightFirst: !curved }, by);
   let drawn: Drawn | Refusal | null;
   try {
     // a graph drawn as a table is the plugin's own table, never laid out (§15)
@@ -327,7 +326,7 @@ export async function renderBlock(
       problems,
       mode: 'note',
       ...(diagram ? { diagram } : {}),
-      ...(state ? { switches: { state, relayout: (by: object) => laidOut(by) } } : {}),
+      ...(state ? { switches: { state, relayout: laidOut, curved: (by: object) => laidOut(by, true) } } : {}),
       // a box dragged is moved, its place written in the style graph as a nudge (§6, drag_moves_box)
       ...(diagram?.table || diagram?.picture
         ? {}
@@ -355,6 +354,7 @@ export async function renderBlock(
       indent: plugin.settings.indent,
       focusDepth: depthOf(plugin.settings.focusDepth),
       callouts: plugin.settings.noteCallouts === 'on',
+      profile: plugin.profiles.shown(), // the person's own profile, for this card alone (§39)
       aids: aidsOf(plugin.settings),
       lineOf: (at) => (blocks[at.block]?.line ?? 0) + at.line,
       onEdit: () => {
