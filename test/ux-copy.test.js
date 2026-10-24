@@ -133,6 +133,9 @@ describe('the browser editor’s page: every state’s messages in plain English
 
   for (const [name, state] of Object.entries(STATES))
     test(`${name}: every message reads plainly`, async () => {
+      // each state can open more than one page; stopped here, not at the end, so their windows and threads are freed
+      const first = opened.length;
+      after(() => Promise.all(opened.splice(first).map((o) => o.stop())));
       const page = await state();
       try {
         const messages = messagesOf(page.window.document.body);
