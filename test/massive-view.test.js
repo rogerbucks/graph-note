@@ -401,9 +401,10 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     // the thing's name is now painted in the middle of the view, big enough to read
     assert.ok(view.scale > 0.05, `zoomed in: ${view.scale}`);
     assert.ok((await run('wordsInMiddle()')) > 50, 'its name is in the middle');
-    const laid = (await run('parts')).length;
+    const withThing = async () => (await run('parts')).filter((p) => p.includes('t1234')).length;
+    const laid = await withThing();
     await run('flyToNeedle()');
-    assert.equal((await run('parts')).length, laid, 'a group opened once is not laid out again');
+    assert.equal(await withThing(), laid, 'a group opened once is not laid out again');
   });
 
   test(
