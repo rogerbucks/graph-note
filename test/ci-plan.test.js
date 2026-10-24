@@ -1,7 +1,7 @@
-// What CI runs for a change: scripts/ci-plan.mjs. A draft runs only what its change reaches; anything else, everything.
+// What CI runs for a change: scripts/ci-plan.mjs. A pull request runs only what its change reaches; main, everything.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { SHARDS, ciPlan, docReaders, summary } from '../scripts/ci-plan.mjs';
+import { SHARDS, ciPlan, docReaders, labelsFrom, summary } from '../scripts/ci-plan.mjs';
 import { read } from './repository/repo.js';
 
 const tracked = [
@@ -18,10 +18,9 @@ const tracked = [
   'package.json',
 ];
 const texts = { 'packages/core/test/links.test.js': "read('wiki/Home.md')" };
-const draft = (changed, more = {}) =>
+const pr = (changed, more = {}) =>
   ciPlan({
     event: 'pull_request',
-    draft: true,
     changed,
     tracked,
     reach: () => [],
@@ -30,35 +29,42 @@ const draft = (changed, more = {}) =>
   });
 
 describe('ci-plan', () => {
-  test('a push, a release and a pull request ready for review run everything', () => {
-    for (const [event, isDraft] of [
-      ['push', false],
-      ['release', false],
-      ['pull_request', false],
-      ['pull_request', undefined],
+  test('a push, a release and a pull request labelled ci:full run everything', () => {
+    for (const [event, labels] of [
+      ['push', []],
+      ['release', []],
+      ['pull_request', ['agent:claude', 'ci:full']],
     ]) {
-      const plan = draft(['packages/core/src/zoom.ts'], { event, draft: isDraft });
-      assert.equal(plan.tier, 'full', `${event} draft=${isDraft}`);
+      const plan = pr(['packages/core/src/zoom.ts'], { event, labels });
+      assert.equal(plan.tier, 'full', `${event} ${labels}`);
       assert.equal(plan.shards, SHARDS);
       assert.equal(plan.python, true);
     }
   });
 
-  test('a draft runs only the tests its change reaches, on as few machines as they need', () => {
-    const plan = draft(['packages/core/src/zoom.ts']);
+  test('a pull request ready for review runs only what its change reaches too', () => {
+    for (const isDraft of [false, undefined]) {
+      const plan = pr(['packages/core/src/zoom.ts'], { draft: isDraft, labels: ['agent:claude'] });
+      assert.equal(plan.tier, 'subset', `draft=${isDraft}`);
+      assert.deepEqual(plan.files, ['packages/core/test/zoom.test.js']);
+    }
+  });
+
+  test('a pull request runs only the tests its change reaches, on as few machines as they need', () => {
+    const plan = pr(['packages/core/src/zoom.ts']);
     assert.equal(plan.tier, 'subset');
     assert.deepEqual(plan.files, ['packages/core/test/zoom.test.js']);
     assert.equal(plan.shards, 1);
   });
 
-  test('a draft that changes something shared runs everything, and says which file made it so', () => {
-    const plan = draft(['packages/core/src/zoom.ts', 'package.json']);
+  test('a pull request that changes something shared runs everything, and says which file made it so', () => {
+    const plan = pr(['packages/core/src/zoom.ts', 'package.json']);
     assert.equal(plan.tier, 'full');
     assert.match(plan.reason, /package\.json is shared/);
   });
 
   test('a doc runs the repository tests and every test that names it or its folder, not the whole suite', () => {
-    const plan = draft(['wiki/Home.md']);
+    const plan = pr(['wiki/Home.md']);
     assert.equal(plan.tier, 'subset');
     assert.deepEqual(plan.files, [
       'packages/core/test/links.test.js',
@@ -68,19 +74,19 @@ describe('ci-plan', () => {
     assert.equal(plan.python, false, 'nothing the Python tests read changed');
   });
 
-  test('a doc that is gone, or a draft with no change found, runs everything', () => {
-    assert.equal(draft(['docs/Gone.md']).tier, 'full');
-    assert.equal(draft([]).tier, 'full');
+  test('a doc that is gone, or a pull request with no change found, runs everything', () => {
+    assert.equal(pr(['docs/Gone.md']).tier, 'full');
+    assert.equal(pr([]).tier, 'full');
   });
 
   test('the Python jobs run for a change to the Python library, the packages or the scripts', () => {
-    assert.equal(draft(['python/graph_spec/src/graph_spec/zoom.py']).python, true);
-    assert.equal(draft(['packages/core/src/zoom.ts']).python, true);
-    assert.equal(draft(['scripts/plain-docs.mjs']).python, true);
+    assert.equal(pr(['python/graph_spec/src/graph_spec/zoom.py']).python, true);
+    assert.equal(pr(['packages/core/src/zoom.ts']).python, true);
+    assert.equal(pr(['scripts/plain-docs.mjs']).python, true);
   });
 
   test('a subset with only Python tests needs none of the suite machines', () => {
-    const plan = draft(['python/graph_spec/src/graph_spec/zoom.py']);
+    const plan = pr(['python/graph_spec/src/graph_spec/zoom.py']);
     assert.equal(plan.tier, 'subset');
     assert.deepEqual(plan.files, []);
     assert.equal(plan.shards, 0);
@@ -90,7 +96,6 @@ describe('ci-plan', () => {
     const many = Array.from({ length: 400 }, (_, i) => `packages/core/test/t${i}.test.js`);
     const plan = ciPlan({
       event: 'pull_request',
-      draft: true,
       changed: many,
       tracked: many,
       reach: () => [],
@@ -105,7 +110,6 @@ describe('ci-plan', () => {
     for (const f of odd) {
       const plan = ciPlan({
         event: 'pull_request',
-        draft: true,
         changed: [f],
         tracked: [f],
         reach: () => [],
@@ -113,6 +117,11 @@ describe('ci-plan', () => {
       });
       assert.equal(plan.tier, 'full', f);
     }
+  });
+
+  test('the labels come from a JSON list, and anything else is no label', () => {
+    assert.deepEqual(labelsFrom('["agent:claude","ci:full"]'), ['agent:claude', 'ci:full']);
+    for (const text of [undefined, '', 'null', '{}', 'ci:full']) assert.deepEqual(labelsFrom(text), [], String(text));
   });
 
   test('docReaders finds the tests by name, and every repository test', () => {
@@ -123,8 +132,8 @@ describe('ci-plan', () => {
   });
 
   test('the summary says when a run is partial, and how to get the full one', () => {
-    assert.match(summary(draft(['wiki/Home.md'])), /partial run[\s\S]*ready for review runs everything/);
-    assert.match(summary(draft([])), /everything runs/);
+    assert.match(summary(pr(['wiki/Home.md'])), /partial run[\s\S]*ci:full[\s\S]*main runs everything/);
+    assert.match(summary(pr([])), /everything runs/);
   });
 
   test('CI runs the plan first, and every job that can skip runs when the plan fails', () => {

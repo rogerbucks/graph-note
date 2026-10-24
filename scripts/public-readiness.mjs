@@ -98,7 +98,7 @@ export function machineSpecific(text) {
 /** The documents a newcomer sets up from: the README, the contributing guide, the AI guide and every package guide. */
 export function setupDocs(root = ROOT) {
   const guides = git(root, ['ls-files', '-z', '*GUIDE.md', '*/guide/*.md']).toString().split('\0').filter(Boolean);
-  return ['README.md', 'CONTRIBUTING.md', 'AGENTS.md', ...guides];
+  return ['README.md', 'CONTRIBUTING.md', 'AGENTS.md', 'docs/agents/HANDBOOK.md', ...guides];
 }
 
 /** The problems in the setup documents: each line that needs one particular machine. */
