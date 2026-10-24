@@ -121,14 +121,16 @@ describe('the demo in a browser', () => {
   let out, server, browser, origin;
   const outside = [];
   const run = async (js) => JSON.parse(await browser.run(`Promise.resolve(${js}).then(JSON.stringify)`));
+  // waits on the state the test reads, giving up after a minute
   const until = async (js, what) => {
-    for (let i = 0; i < 600; i++) {
-      if (await run(js)) return;
+    const start = Date.now();
+    while (!(await run(js))) {
+      if (Date.now() - start > 60_000)
+        throw new Error(
+          `the demo never ${what}: ${await run('document.getElementById("note")?.textContent.slice(0, 300)')}`,
+        );
       await new Promise((r) => setTimeout(r, 100));
     }
-    throw new Error(
-      `the demo never ${what}: ${await run('document.getElementById("note")?.textContent.slice(0, 300)')}`,
-    );
   };
 
   before(async () => {
