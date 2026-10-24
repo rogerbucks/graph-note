@@ -174,6 +174,8 @@ archive's layout on every pull request, so it always works with the library as s
   `propose_same_as`, `same_as_across`, `world_in` and `search_contexts`: where links may join. The twin of
   `contexts.js`, held to the same worlds by `tests/test_contexts.py`.
 - `src/graphspec/engine/process/` — §7, §16: the process engine (`machine`) and its SCXML export (`scxml`).
+  - `core` and `runs` are the process core of editor spec §34. They hold eight kinds, transitions, guards as data,
+    the run log and nested machines (`core.js`, `runs.js`, `process-core-cases.json`).
   - `to_scxml` is given the block the process is written in. It keeps each `///` note on a State or a transition as an
     XML comment directly before its element (editor spec §24, note_standard).
   - A transition's note is found by the order the block writes it in, never the order a source gives its rows in.

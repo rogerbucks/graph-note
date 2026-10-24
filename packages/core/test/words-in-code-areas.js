@@ -212,6 +212,8 @@ export const KEPT = {
     'a password or secret',
     'a card number',
   ],
+  // the graph spec library's name for a password, compared with to refuse its write, never shown
+  'packages/core/src/secrets.ts': ['a password or secret'],
   // the purposes as the spec names them: what a person types for a model, and what the send dialog compares it with
   'packages/core/src/ai-choice.ts': ['Research questions', 'Proposing changes', 'Restricted processing'],
   // what an edit writes into the note, which is its bytes, never translated: comments, and GQL as Lock writes it

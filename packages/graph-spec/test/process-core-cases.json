@@ -1,0 +1,1342 @@
+{
+  "about": "Shared cases for the process core and its runs (editor spec §34). Each case calls one function of packages/graph-spec/src/process/ on its graph with its args, and the Python twin in graphspec/engine/process/ must give the same answer. A graph in an answer is written as its nodes and edges. Made once by the JavaScript library.",
+  "cases": [
+    {
+      "requirement": "core_of_eight",
+      "name": "the core declares eight kinds, flags a ninth and keeps view details apart",
+      "graph": {
+        "nodes": [
+          [
+            "ship",
+            ["Step"],
+            {
+              "duration": "2d",
+              "x": 10,
+              "y": 20,
+              "owner": "ops"
+            }
+          ],
+          ["stock", ["Resource"], {}],
+          ["clerk", ["Actor"], {}],
+          ["sam", ["Person"], {}],
+          ["pat", ["Actor", "Person"], {}],
+          ["kpi", ["Metric"], {}],
+          ["when", ["Time"], {}]
+        ],
+        "edges": [
+          ["sam", "PLAYS", "clerk"],
+          ["clerk", "OWNS", "ship"],
+          ["ship", "USES", "stock"]
+        ]
+      },
+      "call": "coreOfEight",
+      "args": [],
+      "expected": {
+        "kinds": ["Step", "Dependency", "Condition", "Decision", "Event", "Actor", "Artefact", "Resource"],
+        "kind": {
+          "ship": "Step",
+          "stock": "Resource",
+          "clerk": "Actor",
+          "pat": "Actor"
+        },
+        "flags": [
+          ["ninth-kind", "kpi", "Metric"],
+          ["ninth-kind", "when", "Time"],
+          ["owner-as-property", "ship", "ops"],
+          ["person-as-role", "pat", ""]
+        ],
+        "view": {
+          "ship": {
+            "x": 10,
+            "y": 20
+          }
+        },
+        "core": {
+          "ship": {
+            "duration": "2d",
+            "id": "ship",
+            "owner": "ops"
+          },
+          "stock": {
+            "id": "stock"
+          },
+          "clerk": {
+            "id": "clerk"
+          },
+          "sam": {
+            "id": "sam"
+          },
+          "pat": {
+            "id": "pat"
+          },
+          "kpi": {
+            "id": "kpi"
+          },
+          "when": {
+            "id": "when"
+          }
+        }
+      }
+    },
+    {
+      "requirement": "hybrid_transitions",
+      "name": "transitions are links or promoted things",
+      "graph": {
+        "nodes": [
+          ["refund", ["Concept"], {}],
+          ["open", ["State"], {}],
+          ["closed", ["State"], {}],
+          ["review", ["State"], {}],
+          ["box", ["DiagramElement"], {}],
+          [
+            "t2",
+            ["Transition"],
+            {
+              "event": "escalate",
+              "review": "manager"
+            }
+          ],
+          [
+            "g1",
+            ["Guard"],
+            {
+              "expression": "amount > 10"
+            }
+          ],
+          [
+            "g2",
+            ["Guard"],
+            {
+              "function": "credit_check",
+              "version": 2
+            }
+          ]
+        ],
+        "edges": [
+          ["refund", "ABOUT", "open"],
+          [
+            "open",
+            "TRANSITION",
+            "closed",
+            {
+              "event": "close",
+              "comment": "needs a note"
+            }
+          ],
+          ["closed", "DRAWN_AS", "box"],
+          ["t2", "FROM", "open"],
+          ["t2", "TO", "review"],
+          ["t2", "GUARDED_BY", "g1"],
+          [
+            "open",
+            "TRANSITION",
+            "review",
+            {
+              "event": "quick"
+            }
+          ]
+        ]
+      },
+      "call": "transitionsOf",
+      "args": [],
+      "expected": [
+        {
+          "id": "t2",
+          "from": "open",
+          "to": "review",
+          "promoted": true,
+          "event": "escalate",
+          "carries": ["review"]
+        },
+        {
+          "id": "transition:open->closed",
+          "from": "open",
+          "to": "closed",
+          "promoted": false,
+          "event": "close",
+          "carries": ["comment"]
+        },
+        {
+          "id": "transition:open->review",
+          "from": "open",
+          "to": "review",
+          "promoted": false,
+          "event": "quick",
+          "carries": []
+        }
+      ]
+    },
+    {
+      "requirement": "hybrid_transitions",
+      "name": "a promoted transition is graph text with from and to links",
+      "graph": {
+        "nodes": [
+          ["refund", ["Concept"], {}],
+          ["open", ["State"], {}],
+          ["closed", ["State"], {}],
+          ["review", ["State"], {}],
+          ["box", ["DiagramElement"], {}],
+          [
+            "t2",
+            ["Transition"],
+            {
+              "event": "escalate",
+              "review": "manager"
+            }
+          ],
+          [
+            "g1",
+            ["Guard"],
+            {
+              "expression": "amount > 10"
+            }
+          ],
+          [
+            "g2",
+            ["Guard"],
+            {
+              "function": "credit_check",
+              "version": 2
+            }
+          ]
+        ],
+        "edges": [
+          ["refund", "ABOUT", "open"],
+          [
+            "open",
+            "TRANSITION",
+            "closed",
+            {
+              "event": "close",
+              "comment": "needs a note"
+            }
+          ],
+          ["closed", "DRAWN_AS", "box"],
+          ["t2", "FROM", "open"],
+          ["t2", "TO", "review"],
+          ["t2", "GUARDED_BY", "g1"],
+          [
+            "open",
+            "TRANSITION",
+            "review",
+            {
+              "event": "quick"
+            }
+          ]
+        ]
+      },
+      "call": "promoteTransition",
+      "args": ["open", "closed", "t1"],
+      "expected": {
+        "remove": ["open", "TRANSITION", "closed"],
+        "lines": [
+          "(t1:Transition {id: 't1', comment: 'needs a note', event: 'close'})",
+          "(t1)-[:FROM]->(open)",
+          "(t1)-[:TO]->(closed)"
+        ]
+      }
+    },
+    {
+      "requirement": "transitions_walkable",
+      "name": "one path goes from a concept through a transition to a diagram part",
+      "graph": {
+        "nodes": [
+          ["refund", ["Concept"], {}],
+          ["open", ["State"], {}],
+          ["closed", ["State"], {}],
+          ["review", ["State"], {}],
+          ["box", ["DiagramElement"], {}],
+          [
+            "t2",
+            ["Transition"],
+            {
+              "event": "escalate",
+              "review": "manager"
+            }
+          ],
+          [
+            "g1",
+            ["Guard"],
+            {
+              "expression": "amount > 10"
+            }
+          ],
+          [
+            "g2",
+            ["Guard"],
+            {
+              "function": "credit_check",
+              "version": 2
+            }
+          ]
+        ],
+        "edges": [
+          ["refund", "ABOUT", "open"],
+          [
+            "open",
+            "TRANSITION",
+            "closed",
+            {
+              "event": "close",
+              "comment": "needs a note"
+            }
+          ],
+          ["closed", "DRAWN_AS", "box"],
+          ["t2", "FROM", "open"],
+          ["t2", "TO", "review"],
+          ["t2", "GUARDED_BY", "g1"],
+          [
+            "open",
+            "TRANSITION",
+            "review",
+            {
+              "event": "quick"
+            }
+          ]
+        ]
+      },
+      "call": "processPath",
+      "args": ["refund", "box"],
+      "expected": ["refund", "open", "transition:open->closed", "closed", "box"]
+    },
+    {
+      "requirement": "transitions_walkable",
+      "name": "no path is null",
+      "graph": {
+        "nodes": [
+          ["a", ["State"], {}],
+          ["b", ["State"], {}]
+        ],
+        "edges": []
+      },
+      "call": "processPath",
+      "args": ["a", "b"],
+      "expected": null
+    },
+    {
+      "requirement": "guards_are_data",
+      "name": "a guard holding an expression shows it",
+      "graph": {
+        "nodes": [
+          ["refund", ["Concept"], {}],
+          ["open", ["State"], {}],
+          ["closed", ["State"], {}],
+          ["review", ["State"], {}],
+          ["box", ["DiagramElement"], {}],
+          [
+            "t2",
+            ["Transition"],
+            {
+              "event": "escalate",
+              "review": "manager"
+            }
+          ],
+          [
+            "g1",
+            ["Guard"],
+            {
+              "expression": "amount > 10"
+            }
+          ],
+          [
+            "g2",
+            ["Guard"],
+            {
+              "function": "credit_check",
+              "version": 2
+            }
+          ]
+        ],
+        "edges": [
+          ["refund", "ABOUT", "open"],
+          [
+            "open",
+            "TRANSITION",
+            "closed",
+            {
+              "event": "close",
+              "comment": "needs a note"
+            }
+          ],
+          ["closed", "DRAWN_AS", "box"],
+          ["t2", "FROM", "open"],
+          ["t2", "TO", "review"],
+          ["t2", "GUARDED_BY", "g1"],
+          [
+            "open",
+            "TRANSITION",
+            "review",
+            {
+              "event": "quick"
+            }
+          ]
+        ]
+      },
+      "call": "guardOf",
+      "args": ["t2"],
+      "expected": {
+        "id": "g1",
+        "expression": "amount > 10",
+        "shown": "amount > 10"
+      }
+    },
+    {
+      "requirement": "guards_are_data",
+      "name": "a guard naming a function shows its name and version",
+      "graph": {
+        "nodes": [
+          ["refund", ["Concept"], {}],
+          ["open", ["State"], {}],
+          ["closed", ["State"], {}],
+          ["review", ["State"], {}],
+          ["box", ["DiagramElement"], {}],
+          [
+            "t2",
+            ["Transition"],
+            {
+              "event": "escalate",
+              "review": "manager"
+            }
+          ],
+          [
+            "g1",
+            ["Guard"],
+            {
+              "expression": "amount > 10"
+            }
+          ],
+          [
+            "g2",
+            ["Guard"],
+            {
+              "function": "credit_check",
+              "version": 2
+            }
+          ],
+          [
+            "t3",
+            ["Transition"],
+            {
+              "event": "approve"
+            }
+          ]
+        ],
+        "edges": [
+          ["refund", "ABOUT", "open"],
+          [
+            "open",
+            "TRANSITION",
+            "closed",
+            {
+              "event": "close",
+              "comment": "needs a note"
+            }
+          ],
+          ["closed", "DRAWN_AS", "box"],
+          ["t2", "FROM", "open"],
+          ["t2", "TO", "review"],
+          ["t2", "GUARDED_BY", "g1"],
+          [
+            "open",
+            "TRANSITION",
+            "review",
+            {
+              "event": "quick"
+            }
+          ],
+          ["t3", "FROM", "review"],
+          ["t3", "TO", "closed"],
+          ["t3", "GUARDED_BY", "g2"]
+        ]
+      },
+      "call": "guardOf",
+      "args": ["t3"],
+      "expected": {
+        "id": "g2",
+        "function": "credit_check",
+        "version": "2",
+        "shown": "credit_check v2"
+      }
+    },
+    {
+      "requirement": "running_rule_override",
+      "name": "a run with no override follows its process default",
+      "graph": {
+        "nodes": [
+          [
+            "p",
+            ["Process"],
+            {
+              "running_rule": "first-match"
+            }
+          ],
+          [
+            "r",
+            ["Run"],
+            {
+              "process": "p"
+            }
+          ],
+          [
+            "order",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "payment",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "card",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          ["card-ok", ["State"], {}],
+          ["shipped", ["State"], {}]
+        ],
+        "edges": [
+          ["order", "CONTAINS", "payment"],
+          ["payment", "CONTAINS", "card"],
+          ["payment", "CONTAINS", "card-ok"],
+          [
+            "card",
+            "TRANSITION",
+            "card-ok",
+            {
+              "event": "approve"
+            }
+          ],
+          [
+            "order",
+            "TRANSITION",
+            "shipped",
+            {
+              "event": "ship"
+            }
+          ]
+        ]
+      },
+      "call": "runningRuleOf",
+      "args": ["r"],
+      "expected": {
+        "rule": "first-match",
+        "from": "process",
+        "process_default": "first-match"
+      }
+    },
+    {
+      "requirement": "running_rule_override",
+      "name": "an override is recorded on the run and the process default is unchanged",
+      "graph": {
+        "nodes": [
+          [
+            "p",
+            ["Process"],
+            {
+              "running_rule": "first-match"
+            }
+          ],
+          [
+            "r",
+            ["Run"],
+            {
+              "process": "p"
+            }
+          ],
+          [
+            "order",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "payment",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "card",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          ["card-ok", ["State"], {}],
+          ["shipped", ["State"], {}]
+        ],
+        "edges": [
+          ["order", "CONTAINS", "payment"],
+          ["payment", "CONTAINS", "card"],
+          ["payment", "CONTAINS", "card-ok"],
+          [
+            "card",
+            "TRANSITION",
+            "card-ok",
+            {
+              "event": "approve"
+            }
+          ],
+          [
+            "order",
+            "TRANSITION",
+            "shipped",
+            {
+              "event": "ship"
+            }
+          ]
+        ]
+      },
+      "call": "overrideRunningRule",
+      "args": ["r", "all-enabled"],
+      "expected": {
+        "nodes": [
+          [
+            "p",
+            ["Process"],
+            {
+              "id": "p",
+              "running_rule": "first-match"
+            }
+          ],
+          [
+            "r",
+            ["Run"],
+            {
+              "id": "r",
+              "process": "p",
+              "running_rule": "all-enabled"
+            }
+          ],
+          [
+            "order",
+            ["State"],
+            {
+              "id": "order",
+              "initial": true
+            }
+          ],
+          [
+            "payment",
+            ["State"],
+            {
+              "id": "payment",
+              "initial": true
+            }
+          ],
+          [
+            "card",
+            ["State"],
+            {
+              "id": "card",
+              "initial": true
+            }
+          ],
+          [
+            "card-ok",
+            ["State"],
+            {
+              "id": "card-ok"
+            }
+          ],
+          [
+            "shipped",
+            ["State"],
+            {
+              "id": "shipped"
+            }
+          ]
+        ],
+        "edges": [
+          ["order", "CONTAINS", "payment", {}],
+          ["payment", "CONTAINS", "card", {}],
+          ["payment", "CONTAINS", "card-ok", {}],
+          [
+            "card",
+            "TRANSITION",
+            "card-ok",
+            {
+              "event": "approve"
+            }
+          ],
+          [
+            "order",
+            "TRANSITION",
+            "shipped",
+            {
+              "event": "ship"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "requirement": "run_log_is_truth",
+      "name": "the current states come from the log",
+      "graph": {
+        "nodes": [
+          [
+            "p",
+            ["Process"],
+            {
+              "running_rule": "first-match"
+            }
+          ],
+          [
+            "r",
+            ["Run"],
+            {
+              "process": "p"
+            }
+          ],
+          [
+            "order",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "payment",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "card",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          ["card-ok", ["State"], {}],
+          ["shipped", ["State"], {}],
+          [
+            "r:1",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 1,
+              "did": "entered",
+              "state": "order"
+            }
+          ],
+          [
+            "r:2",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 2,
+              "did": "entered",
+              "state": "payment",
+              "under": "order"
+            }
+          ],
+          [
+            "r:3",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 3,
+              "did": "entered",
+              "state": "card",
+              "under": "payment"
+            }
+          ]
+        ],
+        "edges": [
+          ["order", "CONTAINS", "payment"],
+          ["payment", "CONTAINS", "card"],
+          ["payment", "CONTAINS", "card-ok"],
+          [
+            "card",
+            "TRANSITION",
+            "card-ok",
+            {
+              "event": "approve"
+            }
+          ],
+          [
+            "order",
+            "TRANSITION",
+            "shipped",
+            {
+              "event": "ship"
+            }
+          ],
+          ["r", "CURRENT", "order"],
+          ["r", "CURRENT", "payment"],
+          ["r", "CURRENT", "card"]
+        ]
+      },
+      "call": "currentOf",
+      "args": ["r"],
+      "expected": ["order", "payment", "card"]
+    },
+    {
+      "requirement": "run_log_is_truth",
+      "name": "a lost current link is made again from the log",
+      "graph": {
+        "nodes": [
+          [
+            "p",
+            ["Process"],
+            {
+              "running_rule": "first-match"
+            }
+          ],
+          [
+            "r",
+            ["Run"],
+            {
+              "process": "p"
+            }
+          ],
+          [
+            "order",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "payment",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "card",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          ["card-ok", ["State"], {}],
+          ["shipped", ["State"], {}],
+          [
+            "r:1",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 1,
+              "did": "entered",
+              "state": "order"
+            }
+          ],
+          [
+            "r:2",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 2,
+              "did": "entered",
+              "state": "payment",
+              "under": "order"
+            }
+          ],
+          [
+            "r:3",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 3,
+              "did": "entered",
+              "state": "card",
+              "under": "payment"
+            }
+          ]
+        ],
+        "edges": [
+          ["order", "CONTAINS", "payment"],
+          ["payment", "CONTAINS", "card"],
+          ["payment", "CONTAINS", "card-ok"],
+          [
+            "card",
+            "TRANSITION",
+            "card-ok",
+            {
+              "event": "approve"
+            }
+          ],
+          [
+            "order",
+            "TRANSITION",
+            "shipped",
+            {
+              "event": "ship"
+            }
+          ],
+          ["r", "CURRENT", "order"],
+          ["r", "CURRENT", "card"]
+        ]
+      },
+      "call": "refreshCurrent",
+      "args": ["r"],
+      "expected": {
+        "nodes": [
+          [
+            "p",
+            ["Process"],
+            {
+              "id": "p",
+              "running_rule": "first-match"
+            }
+          ],
+          [
+            "r",
+            ["Run"],
+            {
+              "id": "r",
+              "process": "p"
+            }
+          ],
+          [
+            "order",
+            ["State"],
+            {
+              "id": "order",
+              "initial": true
+            }
+          ],
+          [
+            "payment",
+            ["State"],
+            {
+              "id": "payment",
+              "initial": true
+            }
+          ],
+          [
+            "card",
+            ["State"],
+            {
+              "id": "card",
+              "initial": true
+            }
+          ],
+          [
+            "card-ok",
+            ["State"],
+            {
+              "id": "card-ok"
+            }
+          ],
+          [
+            "shipped",
+            ["State"],
+            {
+              "id": "shipped"
+            }
+          ],
+          [
+            "r:1",
+            ["Entry"],
+            {
+              "id": "r:1",
+              "run": "r",
+              "seq": 1,
+              "did": "entered",
+              "state": "order"
+            }
+          ],
+          [
+            "r:2",
+            ["Entry"],
+            {
+              "id": "r:2",
+              "run": "r",
+              "seq": 2,
+              "did": "entered",
+              "state": "payment",
+              "under": "order"
+            }
+          ],
+          [
+            "r:3",
+            ["Entry"],
+            {
+              "id": "r:3",
+              "run": "r",
+              "seq": 3,
+              "did": "entered",
+              "state": "card",
+              "under": "payment"
+            }
+          ]
+        ],
+        "edges": [
+          ["order", "CONTAINS", "payment", {}],
+          ["payment", "CONTAINS", "card", {}],
+          ["payment", "CONTAINS", "card-ok", {}],
+          [
+            "card",
+            "TRANSITION",
+            "card-ok",
+            {
+              "event": "approve"
+            }
+          ],
+          [
+            "order",
+            "TRANSITION",
+            "shipped",
+            {
+              "event": "ship"
+            }
+          ],
+          ["r", "CURRENT", "order", {}],
+          ["r", "CURRENT", "payment", {}],
+          ["r", "CURRENT", "card", {}]
+        ]
+      }
+    },
+    {
+      "requirement": "machines_inside_states",
+      "name": "entering a state enters each inner machine, logged under its parent",
+      "graph": {
+        "nodes": [
+          [
+            "p",
+            ["Process"],
+            {
+              "running_rule": "first-match"
+            }
+          ],
+          [
+            "r",
+            ["Run"],
+            {
+              "process": "p"
+            }
+          ],
+          [
+            "order",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "payment",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "card",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          ["card-ok", ["State"], {}],
+          ["shipped", ["State"], {}]
+        ],
+        "edges": [
+          ["order", "CONTAINS", "payment"],
+          ["payment", "CONTAINS", "card"],
+          ["payment", "CONTAINS", "card-ok"],
+          [
+            "card",
+            "TRANSITION",
+            "card-ok",
+            {
+              "event": "approve"
+            }
+          ],
+          [
+            "order",
+            "TRANSITION",
+            "shipped",
+            {
+              "event": "ship"
+            }
+          ]
+        ]
+      },
+      "call": "enterState",
+      "args": ["r", "order", "2026-10-23"],
+      "expected": [
+        {
+          "seq": 1,
+          "did": "entered",
+          "state": "order",
+          "under": null,
+          "at": "2026-10-23"
+        },
+        {
+          "seq": 2,
+          "did": "entered",
+          "state": "payment",
+          "under": "order",
+          "at": "2026-10-23"
+        },
+        {
+          "seq": 3,
+          "did": "entered",
+          "state": "card",
+          "under": "payment",
+          "at": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "requirement": "machines_inside_states",
+      "name": "an inner move is logged under its parent state",
+      "graph": {
+        "nodes": [
+          [
+            "p",
+            ["Process"],
+            {
+              "running_rule": "first-match"
+            }
+          ],
+          [
+            "r",
+            ["Run"],
+            {
+              "process": "p"
+            }
+          ],
+          [
+            "order",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "payment",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "card",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          ["card-ok", ["State"], {}],
+          ["shipped", ["State"], {}],
+          [
+            "r:1",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 1,
+              "did": "entered",
+              "state": "order"
+            }
+          ],
+          [
+            "r:2",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 2,
+              "did": "entered",
+              "state": "payment",
+              "under": "order"
+            }
+          ],
+          [
+            "r:3",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 3,
+              "did": "entered",
+              "state": "card",
+              "under": "payment"
+            }
+          ]
+        ],
+        "edges": [
+          ["order", "CONTAINS", "payment"],
+          ["payment", "CONTAINS", "card"],
+          ["payment", "CONTAINS", "card-ok"],
+          [
+            "card",
+            "TRANSITION",
+            "card-ok",
+            {
+              "event": "approve"
+            }
+          ],
+          [
+            "order",
+            "TRANSITION",
+            "shipped",
+            {
+              "event": "ship"
+            }
+          ],
+          ["r", "CURRENT", "order"],
+          ["r", "CURRENT", "payment"],
+          ["r", "CURRENT", "card"]
+        ]
+      },
+      "call": "moveRun",
+      "args": ["r", "card", "card-ok", "2026-10-24"],
+      "expected": [
+        {
+          "seq": 4,
+          "did": "left",
+          "state": "card",
+          "under": "payment",
+          "at": "2026-10-24"
+        },
+        {
+          "seq": 5,
+          "did": "entered",
+          "state": "card-ok",
+          "under": "payment",
+          "at": "2026-10-24"
+        }
+      ]
+    },
+    {
+      "requirement": "machines_inside_states",
+      "name": "leaving a state leaves everything inside it first",
+      "graph": {
+        "nodes": [
+          [
+            "p",
+            ["Process"],
+            {
+              "running_rule": "first-match"
+            }
+          ],
+          [
+            "r",
+            ["Run"],
+            {
+              "process": "p"
+            }
+          ],
+          [
+            "order",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "payment",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          [
+            "card",
+            ["State"],
+            {
+              "initial": true
+            }
+          ],
+          ["card-ok", ["State"], {}],
+          ["shipped", ["State"], {}],
+          [
+            "r:1",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 1,
+              "did": "entered",
+              "state": "order"
+            }
+          ],
+          [
+            "r:2",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 2,
+              "did": "entered",
+              "state": "payment",
+              "under": "order"
+            }
+          ],
+          [
+            "r:3",
+            ["Entry"],
+            {
+              "run": "r",
+              "seq": 3,
+              "did": "entered",
+              "state": "card",
+              "under": "payment"
+            }
+          ]
+        ],
+        "edges": [
+          ["order", "CONTAINS", "payment"],
+          ["payment", "CONTAINS", "card"],
+          ["payment", "CONTAINS", "card-ok"],
+          [
+            "card",
+            "TRANSITION",
+            "card-ok",
+            {
+              "event": "approve"
+            }
+          ],
+          [
+            "order",
+            "TRANSITION",
+            "shipped",
+            {
+              "event": "ship"
+            }
+          ],
+          ["r", "CURRENT", "order"],
+          ["r", "CURRENT", "payment"],
+          ["r", "CURRENT", "card"]
+        ]
+      },
+      "call": "leaveState",
+      "args": ["r", "order", null],
+      "expected": [
+        {
+          "seq": 4,
+          "did": "left",
+          "state": "card",
+          "under": "payment",
+          "at": null
+        },
+        {
+          "seq": 5,
+          "did": "left",
+          "state": "payment",
+          "under": "order",
+          "at": null
+        },
+        {
+          "seq": 6,
+          "did": "left",
+          "state": "order",
+          "under": null,
+          "at": null
+        }
+      ]
+    }
+  ]
+}
