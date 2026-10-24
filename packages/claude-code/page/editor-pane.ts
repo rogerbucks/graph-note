@@ -9,6 +9,7 @@
 // The drawing is laid out in that worker, in the host's own colours. The page's theme names them (theme-css.ts). So the
 // drawing follows the system's scheme with no redraw. A graph too large to lay out is its overview, in the same colours.
 // A filter chosen on it is saved in the note's style block, as the pane is where the note is edited (scale_filter_live).
+// A block too large to read at once reads its saved filter from the note's whole text.
 import { PALETTES, shownAsRead, styleEdit } from '@thoughtknot/core';
 import type { Settings } from '@thoughtknot/core';
 import { notice } from '@thoughtknot/core/display/host';
@@ -29,6 +30,7 @@ export function paneHost(settings: Settings, layouts: LayoutRunner, note?: PageN
     layout: (drawing, owner) => layouts.draw(directed(drawing, settings.direction), owner).then(shownAsRead),
     palette: PALETTES.system,
     ...(note && {
+      noteText: () => note.text,
       saveFilter: (graph, keep) => {
         const r = styleEdit(note.text, graph, { filter: { keep } });
         if ('refused' in r) return notice(r.refused);

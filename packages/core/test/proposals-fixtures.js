@@ -5,6 +5,7 @@ import { readNote } from '../src/drawing.ts';
 import { basisOf } from '../src/proposals-basis.ts';
 import { makeProposal } from '../src/proposals.ts';
 import { changeSetText } from '../src/proposals-text.ts';
+import { pieces } from './text-find.js';
 
 export const GRAPH = `// graph: reader
 (question:Question {name: 'Which device?'}),
@@ -64,7 +65,7 @@ export function noteWithChangeSet(proposal = proposalOf(), note = NOTE) {
 }
 
 /** The gql blocks of a note, as texts. */
-export const blocksOf = (note) => [...note.matchAll(/```gql\n([\s\S]*?)\n```/g)].map((m) => m[1]);
+export const blocksOf = (note) => pieces(note, '```gql\n', '\n```').map((b) => b.slice(7, -4));
 
 /** The decisions a note's judgement graph records, by change id: read from the note's own text, as any tool reads it. */
 export function decisionsIn(note) {

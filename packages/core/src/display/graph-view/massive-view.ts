@@ -6,7 +6,7 @@
 // group's box (core search-fly.ts) and flies the view there. Under reduced motion the view is there at once.
 // Filtering keeps the groups' order: they glide to their new places (core filter-live.ts), at once under reduced motion.
 // Each search, grown thing and filter is a step on a trail (core explore-trail.ts). Back and Forward draw any earlier
-// picture again, exactly as it was. Moving about is massive-moves.ts.
+// picture again, exactly as it was. Moving about is massive-moves.ts. 3D view lifts the groups into blocks.
 // Nothing is edited here. A filter chosen goes to the host, which saves it where the note is edited (filter-saved.ts).
 // A filter the host gives is the one the overview starts with.
 import { formatCount, word } from '@thoughtknot/core';
@@ -21,8 +21,7 @@ import { GLIDE_MS, LiveFilter, glide } from '../../filter-live.ts';
 import { MarkIndex, visibleOf } from '../../mark-index.ts';
 import { overviewOf } from '../../overview.ts';
 import type { Palette } from '../../palette.ts';
-import { groupsOf } from '../../scale-groups.ts';
-import type { Grouping } from '../../scale-groups.ts';
+import { groupsOf, type Grouping } from '../../scale-groups.ts';
 import { Trail } from '../../explore-trail.ts';
 import { FLY_MS, ThingSearch, flyPath, openGroup, placeOf, viewOnto } from '../../search-fly.ts';
 import type { FlyView, Match, Rect } from '../../search-fly.ts';
@@ -36,7 +35,7 @@ import { filterPanel } from './massive-filter.ts';
 import { growBar } from './massive-grow.ts';
 import type { GrowState } from './massive-grow.ts';
 import { moveControls } from './massive-moves.ts';
-import { plainPaints } from './massive-paints.ts';
+import { plainPaints, spaceButton } from './massive-paints.ts';
 import { LISTED, searchBox } from './massive-search.ts';
 import { button } from '../button';
 import { marksOfSvg } from './svg-marks.ts';
@@ -279,6 +278,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   const tools = el.createDiv({ cls: 'thoughtknot-massive-tools' });
   el.insertBefore(tools, stage);
   const filters = filterPanel(tools, live.index, regroup);
+  spaceButton(tools, el, o.graph, () => ({ marks: laid.marks, paints }), stage);
 
   // the trail: each search, grown thing and filter is a step, and back and forward draw that step's picture again
   const trail = new Trail<Picture>();

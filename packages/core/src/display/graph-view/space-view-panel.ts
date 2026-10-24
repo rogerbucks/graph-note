@@ -21,6 +21,7 @@ import { labelsOnScreen } from '../../space-labels.ts';
 import { KEY_STEP, ZOOM_STEP, keyMove, panBy, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
+import type { Paints } from './mark-painter.ts';
 import { webgl2SpacePainter } from './space-painter.ts';
 import { canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
@@ -46,12 +47,13 @@ function linkCounts(marks: readonly DrawMark[]): Map<string, number> {
 }
 
 /**
- * Opens the 3D view of `svg` over `root`, the card. It gives back how to close it, or null where the device can paint
- * no 3D at all. `closed` is called once it closes, by its button, by Escape, or by the card.
+ * Opens the 3D view over `root`, the card. It is of `from`: the drawing's SVG, or marks already read, such as an
+ * overview's, with their paints. It gives back how to close it, or null where the device can paint no 3D at all.
+ * `closed` is called once it closes, by its button, by Escape, or by the card.
  */
 export async function openSpaceView(
   root: HTMLElement,
-  svg: SVGSVGElement,
+  from: SVGSVGElement | { marks: DrawMark[]; paints: Paints },
   graph: string,
   closed: () => void,
 ): Promise<(() => void) | null> {
@@ -60,7 +62,7 @@ export async function openSpaceView(
     already();
     return null;
   }
-  const { marks, paints } = marksOfSvg(svg);
+  const { marks, paints } = 'marks' in from ? from : marksOfSvg(from);
   const el = root.createDiv({
     cls: 'thoughtknot-space-view',
     attr: { tabindex: '0', role: 'img', 'aria-label': word('space.name', { graph }) },
