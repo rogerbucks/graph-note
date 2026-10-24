@@ -4,7 +4,10 @@ placed already and no other line. It is the core's direct-words.ts, step for ste
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from typing import Any
+
+from graphspec.style.direct_curve import Curve, Placed
 
 # How far a link's words sit off its middle, as a share of their size, so they keep off the line.
 WORDS_OFF = 0.55
@@ -15,7 +18,11 @@ def _js_length(text: str) -> int:
     return len(text.encode("utf-16-le")) // 2
 
 
-def word_spots(marks, boxes, curves) -> dict[str, tuple[float, float]]:
+def word_spots(
+    marks: Sequence[Mapping[str, Any]],
+    boxes: Mapping[str, Placed],
+    curves: Mapping[str, Curve],
+) -> dict[str, tuple[float, float]]:
     """Where each link's words go, by the id of each of its labels. A link's labels move as one
     block, its rows kept as Graphviz set them. The block sits at the middle of the curve if it
     covers no box, no earlier words and no other line; else at the first clear spot along it,
