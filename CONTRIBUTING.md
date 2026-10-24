@@ -843,6 +843,8 @@ These test behaviour across modules, or the repository itself, so they are named
   risk, an overdue one or a stale one. RISKS.md is what the script writes from the register.
 - `test/risk-panel-workflow.test.js` — the risk panel workflow runs by hand and spends a Claude session only when
   something moved. It keeps its token to one step, and its one writing job keeps an issue up to date with gh alone.
+- `test/second-opinion.test.js` — the second opinion hands a pull request's diff, or the latest panel issue, to the
+  owner's own Gemini and Grok tools. It skips one not installed and heads each comment with its model.
 - `test/security-alerts.test.js` — the security alerts each release reads, through a fake GitHub and OSV. A stable
   release stops on any open alert, a nightly on high and critical ones, and a list not read is never taken as empty.
 - `test/security-workflow.test.js` — the release, its dry run and the nightly read the security alerts in a job that

@@ -3,7 +3,15 @@
 // its outline colour. Blocks and lines are sent to the graphics chip once; a turn of the camera sends 16 numbers.
 import type { SpaceMarks } from '../../space-view.ts';
 import type { Paints } from './mark-painter.ts';
-import { BLOCK_NUMBERS, LIGHT, SPACE_POINT_NUMBERS, cubePoints, spaceNumbers } from './space-painter.ts';
+import {
+  BLOCK_NUMBERS,
+  LIGHT,
+  SHAPE_POINT_NUMBERS,
+  SPACE_POINT_NUMBERS,
+  ballPoints,
+  cubePoints,
+  spaceNumbers,
+} from './space-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 
 /** The shaders. The camera's matrix gives depth from -1 to 1, as WebGL reads it; WebGPU reads 0 to 1, so it is moved. */
@@ -41,9 +49,12 @@ struct BlockOut {
   let least = min(near.x, min(near.y, near.z));
   let most = max(near.x, max(near.y, near.z));
   let edge = near.x + near.y + near.z - least - most;
-  let shade = 0.62 + 0.38 * max(dot(i.facing, view.light.xyz), 0.0);
-  var c = i.fill.rgb * shade;
+  let facing = normalize(i.facing);
+  let lit = max(dot(facing, view.light.xyz), 0.0);
+  var c = i.fill.rgb * (0.62 + 0.38 * lit);
   if (edge < 1.0) { c = i.line.rgb; }
+  // a ball (light.w is 1) has no edges: it is lit smoothly, with a shine where the light meets it
+  if (view.light.w > 0.5) { c = i.fill.rgb * (0.55 + 0.45 * lit) + vec3f(0.25) * pow(lit, 24.0); }
   return vec4f(c, 1.0);
 }
 
@@ -140,7 +151,9 @@ export async function webgpuSpacePainter(canvas: HTMLCanvasElement): Promise<Spa
     if (data.byteLength) device.queue.writeBuffer(buffer, 0, data);
     return buffer;
   };
-  const cube = filled(cubePoints());
+  const cube = filled(cubePoints()),
+    ball = filled(ballPoints());
+  const ballCorners = ballPoints().length / SHAPE_POINT_NUMBERS;
   let sent: { space: SpaceMarks; paints: Paints; blocks: GPUBuffer; lines: GPUBuffer; points: number } | null = null;
   let depth: GPUTexture | null = null;
   // held until destroyed: Chrome lost the device once nothing held its adapter
@@ -174,7 +187,7 @@ export async function webgpuSpacePainter(canvas: HTMLCanvasElement): Promise<Spa
       });
       const numbers = new Float32Array(20);
       numbers.set(matrix);
-      numbers.set(LIGHT, 16);
+      numbers.set([...LIGHT, space.round ? 1 : 0], 16);
       device.queue.writeBuffer(viewBuffer, 0, numbers);
       const encoder = device.createCommandEncoder();
       const pass = encoder.beginRenderPass({
@@ -196,9 +209,9 @@ export async function webgpuSpacePainter(canvas: HTMLCanvasElement): Promise<Spa
       pass.setBindGroup(0, bindGroup);
       if (space.blocks.length) {
         pass.setPipeline(blockPipeline);
-        pass.setVertexBuffer(0, cube);
+        pass.setVertexBuffer(0, space.round ? ball : cube);
         pass.setVertexBuffer(1, sent.blocks);
-        pass.draw(36, space.blocks.length);
+        pass.draw(space.round ? ballCorners : 36, space.blocks.length);
       }
       if (sent.points) {
         pass.setPipeline(linePipeline);
@@ -214,6 +227,7 @@ export async function webgpuSpacePainter(canvas: HTMLCanvasElement): Promise<Spa
       sent?.blocks.destroy();
       sent?.lines.destroy();
       cube.destroy();
+      ball.destroy();
       depth?.destroy();
       viewBuffer.destroy();
       context.unconfigure();
