@@ -10,8 +10,8 @@ export const OBSIDIAN_SOURCES_ID = 'thoughtknot.obsidian-sources';
 /** What the vault holds at a place named by a block: the file or note `source` names, for the note at `from`. */
 export type VaultFetch = (source: Pick<GraphSource, 'kind' | 'target'>, from: string) => Promise<SourceFetched>;
 
-/** The built-in plug-in whose sources read a file and a note through `fetch`. */
-export function vaultSources(fetch: VaultFetch): CorePlugin {
+/** The built-in plug-in whose sources read a file and a note through `vault`. */
+export function vaultSources(vault: VaultFetch): CorePlugin {
   return {
     id: OBSIDIAN_SOURCES_ID,
     version: '1.0.0',
@@ -19,7 +19,7 @@ export function vaultSources(fetch: VaultFetch): CorePlugin {
     uses: ['sources'],
     register: (points) => {
       for (const kind of ['file', 'note'] as const) {
-        const here = (target: string, from: string) => fetch({ kind, target }, from);
+        const here = (target: string, from: string) => vault({ kind, target }, from);
         points.sources?.add({
           scheme: kind,
           title: word(`plugins.source.${kind}`),
@@ -35,9 +35,9 @@ export function vaultSources(fetch: VaultFetch): CorePlugin {
   };
 }
 
-/** A registry of the vault's sources, reading through `fetch`. */
-export function vaultSourceRegistry(fetch: VaultFetch): PluginRegistry {
+/** A registry of the vault's sources, reading through `vault`. */
+export function vaultSourceRegistry(vault: VaultFetch): PluginRegistry {
   const registry = pluginRegistry({ timeLimit: Infinity, builtIn: true });
-  registry.register(vaultSources(fetch));
+  registry.register(vaultSources(vault));
   return registry;
 }
