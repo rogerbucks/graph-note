@@ -78,7 +78,7 @@ and no module requires one that requires it back.
   (req:21.trust-counted, req:21.prefix-owner).
 - **`src/views/`** — `mermaid.js` (relationships, legend and paths as Mermaid text) and `views.js` (every view of a
   graph at once).
-### Clusters and the mesh
+### Clusters
 
 - **`src/clusters/`** — clusters (editor spec §31) and the groups a massive graph opens as (editor spec §53). Python's
   twins give the same answers. Its files:
@@ -89,10 +89,14 @@ and no module requires one that requires it back.
     worked out again only when their members change. One still moving is flagged unsettled (`test/centroid-cases.json`).
   - `cycles.js` — clusters inside each other in a cycle. A cycle is flagged, never refused, and a view hides or
     highlights it (`test/cycle-cases.json`).
+### Altitude
+
 - **`src/altitude/`** — altitude and audience profiles (editor spec §32). Python's twin gives the same answers.
   - `altitude.js` — altitude as a query parameter: parts over the level open, those at or under it show as one thing,
     and links are bundled. It also has audience profiles by three criteria and projections per domain. A thing's level
     in each lens is a link, and the two axes filter apart or together (`test/altitude-cases.json`).
+### The mesh
+
 - **`src/mesh/`** — the graph mesh (editor spec §27 to §30). Python's twins give the same answers.
   - `mesh-join.js` — graphs from many notes joined, built on `src/joins/`, with what the join found. Each clash keeps
     both sides, and the gaps are listed. Each claim has its certainty in words, ranked by a key made from them, never
