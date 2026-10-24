@@ -730,7 +730,8 @@
           "interface",
           "dot: string",
           "rankdir: string",
-          "src: LayoutSource"
+          "src: LayoutSource",
+          "straight?: boolean | undefined"
         ],
         "directionOf": [
           "value: (tag: string) => 'ltr' | 'rtl'"
@@ -800,6 +801,7 @@
         ],
         "Drawn": [
           "interface",
+          "curvesToCome?: boolean | undefined",
           "height: number",
           "mirrored?: boolean | undefined",
           "rankdir: string",
@@ -1218,7 +1220,8 @@
           "links: Array<Link>",
           "nudges?: Array<Nudge> | undefined",
           "pictures?: Array<PictureBox> | undefined",
-          "routing?: 'straight' | 'right-angled' | 'direct' | undefined"
+          "routing?: 'straight' | 'right-angled' | undefined",
+          "straightFirst?: boolean | undefined"
         ],
         "GraphNames": [
           "type = Iterable<string> | ReadonlyMap<string, string>"
@@ -1790,7 +1793,7 @@
           "interface",
           "at: StyleAt",
           "merge?: 'off' | 'on' | undefined",
-          "routing?: 'straight' | 'right-angled' | 'direct' | 'curved' | undefined",
+          "routing?: 'straight' | 'right-angled' | 'curved' | undefined",
           "view?: string | undefined"
         ],
         "linksHeld": [
@@ -3123,7 +3126,7 @@
           "items: () => Promise<ReviewItem[]>"
         ],
         "Routing": [
-          "type = 'straight' | 'right-angled' | 'direct' | 'curved'"
+          "type = 'straight' | 'right-angled' | 'curved'"
         ],
         "RuleReport": [
           "interface",

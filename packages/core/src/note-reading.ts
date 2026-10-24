@@ -97,6 +97,11 @@ export interface GraphDrawing {
    * as Graphviz draws them.
    */
   routing?: 'straight' | 'right-angled' | 'direct';
+  /**
+   * Laid out quickly with straight links first, past 300 things, for its curves to follow (§11, curves_after_drawing);
+   * none, curved at once.
+   */
+  straightFirst?: boolean;
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
   /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */
