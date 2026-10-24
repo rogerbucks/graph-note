@@ -1,0 +1,6 @@
+{
+  "file": "test/security-response.test.js",
+  "test": "security response protocol (spec §66) > soc_response_steps: the hard rule on the release gate matches the gate in scripts/security-alerts.mjs",
+  "seen_failing_first": false,
+  "evidence": "Pins behaviour that already exists in scripts/security-alerts.mjs, so it passes first; a review asked for the pin."
+}

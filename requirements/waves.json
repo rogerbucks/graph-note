@@ -228,7 +228,8 @@
       "estimate": true,
       "workstreams": [
         "W33",
-        "W32"
+        "W32",
+        "SR1"
       ],
       "earlier_plan": {
         "start": "2027-03-15",

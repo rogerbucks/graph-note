@@ -51,6 +51,10 @@ Out of scope:
 Test only on your own notes and your own machine. Do not touch other people's data. If you keep to this policy, we
 will not take action against you.
 
+## How the project deals with a problem
+
+The steps, the ranks and the response times we aim for are on the [Security response](https://github.com/rogerbucks/thoughtknot/wiki/Security-response) page.
+
 ## How the project keeps itself safe
 
 - Dependabot raises a security fix as soon as one is published.
