@@ -10,7 +10,9 @@ import { readNote } from './drawing.ts';
 import { textTooLarge } from './layout-limits.ts';
 import type { NoteReading } from './note-reading.ts';
 import type { PluginResult } from './plugin-calls.ts';
-import type { GivenGraph } from './plugin-points.ts';
+import type { GivenGraph, PluginSource } from './plugin-points.ts';
+import type { PluginCalls } from './plugin-calls.ts';
+import type { Fetched } from './sources.ts';
 import { word } from './words.ts';
 
 /** How far a graph is trusted, lowest first: `own` is the person's own notes; `trusted` a source they named trusted. */
@@ -94,3 +96,23 @@ export function heldGraph(
 /** The graphs a step is given: each one's text and class, and nothing of where it came from. */
 export const stepInputs = (inputs: readonly JoinedGraph[]): readonly GivenGraph[] =>
   Object.freeze(inputs.map((g) => Object.freeze({ text: g.text, classification: g.level })));
+
+/** What a registry gives of a built-in source's `fetch`. */
+export interface SourceFetching {
+  /** What the built-in source `scheme` finds at `target` for the note at `from`, as the person's own, or why not. */
+  fetchSource: (scheme: string, target: string, from: string) => Promise<PluginResult<Fetched>>;
+}
+
+/** The call a registry makes into a built-in source's `fetch`: what is found, as the host's own, or what went wrong. */
+export function fetchCalls(calls: PluginCalls, items: PluginSource[], owner: Map<string, string>): SourceFetching {
+  return {
+    async fetchSource(scheme: string, target: string, from: string): Promise<PluginResult<Fetched>> {
+      const c = items.find((x) => x.scheme === scheme && x.fetch);
+      if (!c?.fetch) return { ok: false, plugin: '', message: word('plugins.none.source', { name: scheme }) };
+      const read = c.fetch;
+      return calls.awaited(owner.get(scheme) ?? '', word('plugins.what.source', { title: c.title }), () =>
+        read(target, from),
+      );
+    },
+  };
+}

@@ -47,4 +47,8 @@ export const PLUGINS_SOURCE_WORDS = {
   'plugins.storage.memory': 'In memory',
   // the core's own AI provider, by its title (core-ai.ts)
   'plugins.ai.chat-completions': 'Chat completions',
+  // the host's own graph sources, by their titles (host-sources.ts)
+  'plugins.source.file': 'Graph file',
+  'plugins.source.note': 'Note',
+  'plugins.source.unread': 'Nothing could be read at "{target}".',
 } as const;

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { block, jobs, permissionValues, read, stripComment, workflowFiles } from './repository/repo.js';
 
 describe('GitHub Actions writers', () => {
-  test('only sixteen jobs may write: the release, the nightly, its draft check and its wave-end call, the lock, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
+  test('only seventeen jobs may write: the release, the nightly, its draft check and its wave-end call, the lock, the stuck pull request flag, the build status comment, the mirror’s issues, the review, Sara’s two working group replies, the wiki, its review issue, the risk panel’s issue, the home page, the security issue and the security fixes', () => {
     for (const f of workflowFiles()) {
       for (const [name, lines] of Object.entries(jobs(read(f)))) {
         const perms = block(lines, 'permissions', 4);
@@ -18,6 +18,8 @@ describe('GitHub Actions writers', () => {
           .filter(Boolean);
         const release = f.endsWith('release.yml') && name === 'release';
         const lock = f.endsWith('lock-conversations.yml') && name === 'lock' && given.join() === 'pull-requests: write';
+        // the flag on an auto-merge pull request that conflicts with main (test/stuck-prs-workflow.test.js)
+        const stuck = f.endsWith('/stuck-prs.yml') && name === 'flag' && given.join() === 'pull-requests: write';
         const comment =
           f.endsWith('/build-status.yml') &&
           name === 'update' &&
@@ -41,7 +43,10 @@ describe('GitHub Actions writers', () => {
         const panel = only('/risk-panel.yml', 'report', 'issues: write');
         const pages = only('/pages.yml', 'publish', 'id-token: write,pages: write');
         const security = f.endsWith('/security.yml') && ['report', 'fix'].includes(name);
-        assert.ok(release || lock || comment || mirror || review || wiki || nightly || panel || pages || security, f);
+        assert.ok(
+          release || lock || stuck || comment || mirror || review || wiki || nightly || panel || pages || security,
+          f,
+        );
       }
       assert.doesNotMatch(read(f), /write-all/, f);
     }

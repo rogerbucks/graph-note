@@ -177,3 +177,72 @@ describe('the AI provider contract', () => {
     ]);
   });
 });
+
+describe('a built-in source that reads the person’s own notes', () => {
+  const found = { found: 'trip.gql', text: '// graph: trip' };
+  const own = (fetch) => ({
+    id: 'acme.vault',
+    version: '1.0.0',
+    api: 1,
+    uses: ['sources'],
+    register: (points) =>
+      points.sources.add({ scheme: 'vault', title: 'Vault', read: () => SAMPLE_GRAPH, ...(fetch && { fetch }) }),
+  });
+
+  test('only a built-in registry accepts one, and a plug-in’s other source is refused its fetch', () => {
+    const plugin = own(() => found);
+    assert.throws(() => pluginRegistry().register(plugin), /only a built-in may|reads as the person/);
+    const built = pluginRegistry({ builtIn: true });
+    built.register(plugin);
+    assert.deepEqual(
+      built.graphSources().map((s) => s.scheme),
+      ['vault'],
+    );
+  });
+
+  test('the registry says what it found, or that the source has no fetch, or names a fetch that throws', async () => {
+    const built = pluginRegistry({ builtIn: true });
+    built.register(own(() => found));
+    assert.deepEqual(await built.fetchSource('vault', 'trip', 'a.md'), { ok: true, value: found });
+    assert.equal((await built.fetchSource('nowhere', 'trip', 'a.md')).ok, false);
+    const broken = pluginRegistry({ builtIn: true });
+    broken.register(
+      own(() => {
+        throw new Error('disk gone');
+      }),
+    );
+    const r = await broken.fetchSource('vault', 'trip', 'a.md');
+    assert.match(r.message, /disk gone/);
+  });
+
+  test('its fetch is checked: what is found or missing passes, anything else fails the check that holds it', async () => {
+    const source = (fetch) => ({ scheme: 'vault', title: 'Vault', read: () => SAMPLE_GRAPH, fetch });
+    assert.deepEqual(
+      await failing(
+        sourceContract(
+          source(() => found),
+          'trip',
+        ),
+      ),
+      [],
+    );
+    assert.deepEqual(
+      await failing(
+        sourceContract(
+          source(() => ({ missing: true })),
+          'trip',
+        ),
+      ),
+      [],
+    );
+    assert.deepEqual(
+      await failing(
+        sourceContract(
+          source(() => 'text'),
+          'trip',
+        ),
+      ),
+      ['it says what it found at a place, or that it is missing, as the person’s own'],
+    );
+  });
+});

@@ -1,0 +1,46 @@
+name: Stuck pull requests
+
+# A pull request with auto-merge on waits for ever once main moves on and it no longer merges cleanly, and nothing
+# tells its owner: on 24 Oct 2026 seven sat that way for hours. After each push to main, and each half hour, this
+# labels such a pull request merge-conflict and comments once, which wakes the session watching it. When the conflict is
+# gone, the label comes off. It checks nothing out and runs no code from a pull request.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '*/30 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stuck-prs
+  cancel-in-progress: true
+
+jobs:
+  flag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Label and comment on each auto-merge pull request that conflicts with main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          # GitHub works out mergeability after a push, so give it a moment, then ask twice
+          sleep 30
+          for n in $(gh api "repos/$REPO/pulls?state=open&per_page=100" --paginate --jq '.[] | select(.auto_merge != null and (.draft | not)) | .number'); do
+            state=$(gh api "repos/$REPO/pulls/$n" --jq '.mergeable_state')
+            if [ "$state" = unknown ]; then sleep 10; state=$(gh api "repos/$REPO/pulls/$n" --jq '.mergeable_state'); fi
+            labelled=$(gh api "repos/$REPO/issues/$n/labels" --jq 'any(.[]; .name == "merge-conflict")')
+            if [ "$state" = dirty ] && [ "$labelled" = false ]; then
+              gh api -X POST "repos/$REPO/issues/$n/labels" -f 'labels[]=merge-conflict' --silent
+              gh api -X POST "repos/$REPO/issues/$n/comments" --silent -f body="This pull request has auto-merge on, but it conflicts with main, so it cannot merge. Owner: merge main into the branch, resolve the conflict and push."
+              echo "flagged #$n"
+            elif [ "$state" != dirty ] && [ "$state" != unknown ] && [ "$labelled" = true ]; then
+              gh api -X DELETE "repos/$REPO/issues/$n/labels/merge-conflict" --silent
+              echo "cleared #$n"
+            fi
+          done

@@ -1,6 +1,6 @@
 # Security response
 
-How ThoughtKnot spots a security problem and deals with it straight away. This is spec section 65, workstream SR1,
+How ThoughtKnot spots a security problem and deals with it straight away. This is spec section 66, workstream SR1,
 planned before the Obsidian community release (R2). It builds on the daily scan, the release gate and the
 [trust model](Trust-model).
 

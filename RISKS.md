@@ -5,7 +5,7 @@ Made by `node scripts/risk-register.mjs --write-report` from `quality/risks.json
 
 Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low.
 
-## Open (89)
+## Open (90)
 
 | Id | Risk | Likely | Impact | Decision | Effort |
 | --- | --- | --- | --- | --- | --- |
@@ -98,6 +98,7 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 | TRUST-13 | Shared schemas sent to an AI skip their own class | ●○○ | ●○○ | fix-later (Wave 11 · Slice 8 permissions, AI and export) | hours |
 | LEGAL-3 | The iPhone app's encryption has no export answer yet | ●●○ | ●●● | fix-later (Wave 14 · Slice 9 web, corporate and iOS) | days |
 | SEC-17 | The desktop app's signing keys sit in the build step on main | ●○○ | ●●● | fix-later (Wave 7 · Language, theming, the standalone app and massive graphs) | hours |
+| SEC-19 | Time-related attacks on history, sync and shared links are not yet reviewed | ●●○ | ●●● | fix-later (Wave 13 · Slice 9 store, sync and network) | days |
 
 ## Each open risk
 
@@ -990,6 +991,16 @@ Dots show likelihood and impact: ●●● high, ●●○ medium, ●○○ low
 **Fix:** Sign the Linux .deb in a job of its own, which downloads the built file and runs no repository build. Give the macOS keys to the bundling step alone, after the Rust build ends in a step without them.
 
 **Check:** test/desktop-build.test.js: keys reach the build only off pull requests. Each is under its own name, and nowhere else in the job.
+
+### SEC-19 Time-related attacks on history, sync and shared links are not yet reviewed
+
+**Who found it:** Senior security engineer. **Where:** `packages/graph-spec/src/mesh/as-at.js`, `packages/core/src/index-mesh.ts`.
+
+**Risk:** Nobody has reviewed how time can undo our safeguards. History views (as-at, change log) could show erased data. A wrong device clock could win a merge. An old signed edit could be sent again. A permission could be checked once and used later. Links and caches may not expire. Sync in Wave 13 makes each of these reachable.
+
+**Fix:** Review the five areas and write what each must do as the tests of section 65 (workstream TS1). Do this before the CRDT transport (W30) and the peer network (W31) ship.
+
+**Check:** The tests of section 65 in packages/core/test/temporal-security.test.js, and the wave gate for Wave 13.
 
 ## Done or accepted (41)
 

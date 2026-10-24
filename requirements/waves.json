@@ -208,6 +208,7 @@
       "estimate": true,
       "workstreams": [
         "GS8",
+        "TS1",
         "W30",
         "W31",
         "CN1",

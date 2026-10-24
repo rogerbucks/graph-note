@@ -9,17 +9,19 @@ import { MarkdownRenderChild, TFile } from 'obsidian';
 import type { MarkdownPostProcessorContext, TAbstractFile } from 'obsidian';
 import { namesSharedSchema, READ_LIMITS, readSource } from '@thoughtknot/core';
 import type { GraphSource, SourceFetched, SourceRead, SourceRefusal } from '@thoughtknot/core';
+import type { PluginRegistry } from '@thoughtknot/core';
 import type ThoughtKnotPlugin from '../main';
+import { vaultSourceRegistry } from './host-sources';
 import { noteText } from '../storage/plugin-notes';
 
 /** The last part of a place: the file's name, a note's with `.md` when its link leaves it off. */
-function nameOf(source: GraphSource): string {
+function nameOf(source: Pick<GraphSource, 'kind' | 'target'>): string {
   const last = source.target.split('/').at(-1) ?? '';
   return source.kind === 'note' && !/\.md$/i.test(last) ? `${last}.md` : last;
 }
 
 /** The file a source names, found as a link from the note at `from` is found, else by its path from the vault's root. */
-function fileOf(plugin: ThoughtKnotPlugin, source: GraphSource, from: string): TFile | null {
+function fileOf(plugin: ThoughtKnotPlugin, source: Pick<GraphSource, 'kind' | 'target'>, from: string): TFile | null {
   const { vault, metadataCache } = plugin.app;
   const linked = metadataCache.getFirstLinkpathDest(source.target, from);
   if (linked instanceof TFile) return linked;
@@ -30,11 +32,26 @@ function fileOf(plugin: ThoughtKnotPlugin, source: GraphSource, from: string): T
   return null;
 }
 
+/** The vault's sources, each plug-in's own registry of them: a file and a note are read as any source is. */
+const registries = new WeakMap<ThoughtKnotPlugin, PluginRegistry>();
+
 /** What the vault holds at a source's place: its text, why it cannot be read, or that it is missing and where its name is. */
 async function lookUp(plugin: ThoughtKnotPlugin, source: GraphSource, from: string): Promise<SourceFetched> {
   // a plug-in's source is asked of the plug-in that adds it, never looked for in the vault (plugin_source_from)
   if (source.kind === 'plugin')
     return plugin.outside.readGraph(source.scheme ?? '', source.target, plugin.settings.classifications);
+  let registry = registries.get(plugin);
+  if (!registry) registries.set(plugin, (registry = vaultSourceRegistry((s, f) => fromVault(plugin, s, f))));
+  const r = await registry.fetchSource(source.kind, source.target, from);
+  return r.ok ? r.value : { found: source.target, unreadable: r.message };
+}
+
+/** What the vault holds at the place `source` names, for the note at `from`. The vault's own sources read it so. */
+async function fromVault(
+  plugin: ThoughtKnotPlugin,
+  source: Pick<GraphSource, 'kind' | 'target'>,
+  from: string,
+): Promise<SourceFetched> {
   const file = fileOf(plugin, source, from);
   if (!file) {
     const name = nameOf(source);

@@ -1,4 +1,4 @@
-// The security response protocol (spec §65): how a problem is spotted and dealt with. The page is
+// The security response protocol (spec §66): how a problem is spotted and dealt with. The page is
 // wiki/Security-response.md. It names each source of problems and the file that runs it. It ranks problems with
 // response times, gives every step an owner and keeps a log of practice runs. Pure: the real files are read.
 import { test, describe } from 'node:test';
@@ -14,7 +14,7 @@ const section = (title) => {
   return m ? m[1] : '';
 };
 
-describe('security response protocol (spec §65)', () => {
+describe('security response protocol (spec §66)', () => {
   test('soc_detection_sources: every source names a file that exists', () => {
     const files = [...section('1\\. Where problems come from').matchAll(/`([^`]+\.(?:yml|json))`/g)].map((m) => m[1]);
     assert.ok(files.length >= 5, 'the page names the workflow of each source');

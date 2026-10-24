@@ -85,6 +85,7 @@ describe('the workstreams file', () => {
       'CN2',
       'CN3',
       'GS8',
+      'TS1',
     ]);
     assert.deepEqual(
       Object.values(workstreams).map((w) => w.title),
@@ -185,6 +186,7 @@ describe('the workstreams file', () => {
         'Connectors for text, CSV, Excel and SQLite files',
         'Updates across connectors through the CRDT',
         "The graph spec's axioms, stated and checked",
+        'Temporal security: history, clocks, replay and expiry',
       ],
     );
   });
