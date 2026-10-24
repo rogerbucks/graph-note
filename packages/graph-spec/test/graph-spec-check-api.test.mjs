@@ -104,6 +104,12 @@ const NAMES = [
   'lensAsAt',
   // a text merge checked by the meaning-level join (editor spec §30)
   'afterTextMerge',
+  // altitude and audience profiles (editor spec §32)
+  'atAltitude',
+  'profilesOf',
+  'audienceProjection',
+  'altitudesIn',
+  'byAxes',
 ];
 
 test('the entry point exports exactly the names the one file did, in its order', () => {

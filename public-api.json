@@ -3837,7 +3837,11 @@
       ".": {
         "export =": [
           "afterTextMerge: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }",
+          "altitudesIn: (graph: GraphSpecCheck.Graph, lens: string) => { lens: string; levels: Record<string, number>; flags: [string, string, string][]; }",
           "asAt: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph",
+          "atAltitude: (graph: GraphSpecCheck.Graph, level: number) => { level: number; things: string[]; links: [string, string, string, number][]; shown_as: Record<string, string>; }",
+          "audienceProjection: (graph: GraphSpecCheck.Graph, profiles: string[]) => Record<string, Record<string, { profile: string; text: GraphSpecCheck.Value | null; }>>",
+          "byAxes: (graph: GraphSpecCheck.Graph, query?: { composition?: GraphSpecCheck.Value; audience?: string; }) => string[]",
           "byCertainty: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]",
           "canon: (g: GraphSpecCheck.Graph) => string",
           "centroidId: (cluster: string) => string",
@@ -3871,6 +3875,7 @@
           "notes: (block: string) => { notes: GraphSpecCheck.ElementNote[]; shared: { line: number; lines: number[]; }[]; }",
           "ownedComments: (block: string) => { owned: GraphSpecCheck.OwnedComment[]; unowned: number[]; malformed: number[]; }",
           "ProfileError: typeof GraphSpecCheck.ProfileError",
+          "profilesOf: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.AudienceProfile[]",
           "proposerWarnings: (world: GraphSpecCheck.World, judgementGraph: string) => string[]",
           "quote: (s: string) => string",
           "readChange: (text: string) => GraphSpecCheck.ReadChange",
@@ -3892,11 +3897,31 @@
         "afterTextMerge": [
           "value: (q: { base: string; ours: string; theirs: string; merged: string; config?: object; }) => { contested: string[]; picked: GraphSpecCheck.MergePick[]; settled: boolean; }"
         ],
+        "altitudesIn": [
+          "value: (graph: GraphSpecCheck.Graph, lens: string) => { lens: string; levels: Record<string, number>; flags: [string, string, string][]; }"
+        ],
         "asAt": [
           "value: (graph: GraphSpecCheck.Graph, axis: 'recorded' | 'real', date: string) => GraphSpecCheck.Graph"
         ],
+        "atAltitude": [
+          "value: (graph: GraphSpecCheck.Graph, level: number) => { level: number; things: string[]; links: [string, string, string, number][]; shown_as: Record<string, string>; }"
+        ],
+        "AudienceProfile": [
+          "interface",
+          "criteria: Record<string, GraphSpecCheck.Value>",
+          "domain: string | null",
+          "id: string",
+          "missing: Array<string>",
+          "name: string"
+        ],
+        "audienceProjection": [
+          "value: (graph: GraphSpecCheck.Graph, profiles: string[]) => Record<string, Record<string, { profile: string; text: GraphSpecCheck.Value | null; }>>"
+        ],
         "BlockKind": [
           "type = 'data' | 'schema' | 'query' | 'excerpt' | 'changeset'"
+        ],
+        "byAxes": [
+          "value: (graph: GraphSpecCheck.Graph, query?: { composition?: GraphSpecCheck.Value; audience?: string; }) => string[]"
         ],
         "byCertainty": [
           "value: (claims: readonly GraphSpecCheck.MeshClaim[], options?: { shaky?: boolean; atLeast?: string; }) => GraphSpecCheck.RankedClaim[]"
@@ -4114,6 +4139,9 @@
           "msg: string",
           "name: string",
           "stack?: string | undefined"
+        ],
+        "profilesOf": [
+          "value: (graph: GraphSpecCheck.Graph) => GraphSpecCheck.AudienceProfile[]"
         ],
         "proposerWarnings": [
           "value: (world: GraphSpecCheck.World, judgementGraph: string) => string[]"
