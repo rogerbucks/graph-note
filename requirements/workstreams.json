@@ -1097,5 +1097,22 @@
       "context_same_as_confirmed",
       "context_no_leak"
     ]
+  },
+  "RP1": {
+    "title": "A picture for readers without ThoughtKnot",
+    "size": "M",
+    "requirements": [
+      "picture_for_readers",
+      "picture_opt_in",
+      "picture_hidden_when_drawn",
+      "picture_kept_in_step",
+      "picture_same_everywhere",
+      "picture_never_read",
+      "picture_self_explaining",
+      "picture_where",
+      "picture_big_graph",
+      "picture_classified",
+      "picture_outside_tools"
+    ]
   }
 }
