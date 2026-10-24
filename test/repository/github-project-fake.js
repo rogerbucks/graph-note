@@ -214,6 +214,10 @@ export function fakeGithub({
     }
     if (/repositoryOwner\(login: \$owner\) \{ id \}/.test(query))
       return json({ data: { repositoryOwner: variables.owner === owner ? { id: `OWNER_${owner}` } : null } });
+    if (/issues \{ totalCount \}/.test(query)) {
+      const there = variables.owner === owner && variables.name === name;
+      return json({ data: { repository: there ? { issues: { totalCount: hub.issues.length } } : null } });
+    }
     if (/issue\(number: \$number\)/.test(query)) {
       const there = variables.owner === owner && issue(variables.number);
       return json({ data: { repository: { issue: there ? { id: `ISSUE_${variables.number}` } : null } } });

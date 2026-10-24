@@ -11,7 +11,7 @@
 // workflow also makes at most MAX_CREATES issues on a board that has its issues. The next run makes the next ones.
 // Through a runner handed in, as github-project-gh.mjs.
 import { BOT_LOGIN, adoptedId } from './github-project-desired.mjs';
-import { whole } from './github-project-read.mjs';
+import { graphql, whole } from './github-project-read.mjs';
 
 /** The most issues a list is asked for; a list that comes back this long may be cut short. */
 export const ISSUE_CAP = 5000;
@@ -81,18 +81,23 @@ export function readNewest(run, repo) {
     .map(issueOf);
 }
 
-/** The most numbers from #1 to the newest that a whole read may lack: issues deleted or moved leave a few gaps. */
-export const GAPS_ALLOWED = 20;
+const ISSUE_COUNT = `query($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) { issues { totalCount } }
+}`;
+
+/** How many issues the repository holds, open and closed. GitHub counts no pull request, deleted or moved issue here. */
+export function issueCount(run, repo) {
+  const [owner, name] = repo.split('/');
+  return graphql(run, ISSUE_COUNT, { owner, name }).repository.issues.totalCount;
+}
 
 /**
- * Whether a read of the issues list came back whole. It must hold every number from #1 to the newest (issues and pull
- * requests alike), but for at most GAPS_ALLOWED. On 22 Oct 2026 a read came back short, the old issues missing. The
- * mirror took their requirements for new and made 40 issues again (#961 to #1016).
+ * Whether a read of the issues list came back whole: it gave at least as many issues as GitHub counts. On 22 Oct 2026
+ * a read came back short, the old issues missing. The mirror took their requirements for new and made 40 issues again
+ * (#961 to #1016). The numbers alone cannot tell. The workflow's token is given no pull request in the list. So every
+ * pull request's number looks like a gap: 621 issues of #1 to #1026 on 24 Oct 2026.
  */
-export function readsWhole(numbers) {
-  if (!numbers.length) return true;
-  return Math.max(...numbers) - new Set(numbers).size <= GAPS_ALLOWED;
-}
+export const readsWhole = (listed, total) => listed >= total;
 
 /** The logins whose issues the mirror adopts: the repository's owner, and the workflows' bot, which runs it on main. */
 export const adoptersOf = (repo) => [repo.split('/')[0], BOT_LOGIN];
@@ -126,9 +131,9 @@ const unlisted = (creator) =>
 
 /**
  * The guard of an apply's creating, for `plan` (buildPlan's, with its `creator` and `adopters`).
- * - `before()` runs before the first issue is made. It stops (CreatesUnlisted) when the issues list comes back short
- *   (readsWhole). It also stops on one of the newest issues that the lists by creator did not give back. That is one of
- *   the mirror's own, for a requirement it is about to make.
+ * - `before()` runs before the first issue is made. It stops (CreatesUnlisted) when the issues list gives fewer issues
+ *   than GitHub counts (readsWhole). It also stops on one of the newest issues that the lists by creator did not give
+ *   back. That is one of the mirror's own, for a requirement it is about to make.
  * - `after(number)` runs once the first issue is made. It stops when the list by `creator` does not give that issue
  *   back.
  *
@@ -139,15 +144,17 @@ export function createGuard(read, repo, plan, { sleep = () => {}, delays = [] } 
   const stop = () => new CreatesUnlisted(`${unlisted(creator)}; creating stopped to avoid duplicates`);
   return {
     before() {
-      const listed = listNewest(read, repo);
-      const numbers = listed.map((i) => i.number);
+      // counted first, so an issue made between the two reads only makes the list longer
+      const total = issueCount(read, repo);
+      const newest = listNewest(read, repo)
+        .filter((i) => !i.pull_request)
+        .map(issueOf);
       // a short read hides old issues, whose requirements would then be made again
-      if (!readsWhole(numbers))
+      if (!readsWhole(newest.length, total))
         throw new CreatesUnlisted(
-          `the issues list came back short (${new Set(numbers).size} of #1 to #${Math.max(...numbers)}); creating stopped to avoid duplicates`,
+          `the issues list came back short (${newest.length} of ${total} issues); creating stopped to avoid duplicates`,
         );
       const making = new Set(plan.issues.create.map((d) => d.id));
-      const newest = listed.filter((i) => !i.pull_request).map(issueOf);
       if (newest.some((i) => making.has(adoptedId(i, plan.adopters)))) throw stop();
     },
     after(number) {
