@@ -47,6 +47,8 @@ describe('the nightly workflow', () => {
     const on = block(lines, 'on', 0).join('\n');
     assert.match(on, /schedule:\s*\n\s*- cron: '0 16 \* \* \*'/);
     assert.match(on, /workflow_dispatch:/);
+    // wave-nightly.yml calls it when a wave ends (test/wave-nightly-workflow.test.js)
+    assert.match(on, /workflow_call:/);
     assert.doesNotMatch(on, /pull_request|push:|workflow_run/);
   });
 

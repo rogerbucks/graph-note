@@ -59,7 +59,7 @@ async function nameField(page) {
     (f) => f.getAttribute('aria-label') === 'Value of name',
   );
   assert.equal(name.value, 'Item 7000');
-  return { env, note, name };
+  return { env, note, name, el };
 }
 
 test('a thing found in the overview shows its properties, and a change is written to its line of the note', async () => {
@@ -81,14 +81,15 @@ test('a thing found in the overview shows its properties, and a change is writte
 });
 
 test('a note changed since the store read it is left alone, and says why', async () => {
-  const { env, note, name } = await nameField('markdown-source-view');
+  const { env, note, name, el } = await nameField('markdown-source-view');
   try {
     const changed = note.replace('# Big', '# Bigger');
     env.state.files.set(PATH, changed);
     name.value = 'Renamed';
     name.dispatch('change');
-    await until(() => env.state.notices.length > 0);
-    assert.match(env.state.notices.at(-1), /changed since it was last read/);
+    const said = () => el.querySelector('.thoughtknot-stored-thing [role="status"]').textContent;
+    await until(() => said() !== '');
+    assert.match(said(), /changed since it was last read/);
     assert.equal(env.state.files.get(PATH), changed, 'never written over');
   } finally {
     env.plugin.onunload();
@@ -127,6 +128,23 @@ test('a huge note starts with the filter saved in its style block, and a filter 
     person.dispatch('change');
     await until(() => env.state.files.get(PATH) !== note);
     assert.match(env.state.files.get(PATH), /\(filter_1:Filter \{keep: 'Kind: Place, Person'\}\)/);
+  } finally {
+    env.plugin.onunload();
+    env.uninstall();
+  }
+});
+
+test('a problem in a huge note’s style block is shown under its overview', async () => {
+  const source = huge();
+  const style = ['```gql', '// graph: big_style · STYLE big', "(filter_1:Filter {keep: 'Kind: Plaec'})", '```', ''];
+  const note = ['# Big', '', '```gql', source, '```', '', ...style].join('\n');
+  const env = await load({ files: { [PATH]: note } });
+  try {
+    const el = env.doc.body.createDiv({ cls: 'markdown-source-view' }).createDiv({ cls: 'block-language-gql' });
+    await env.state.processors.get('gql')(source, el, fakeContext(note, 2));
+    await until(() => !!el.querySelector('.thoughtknot-massive-facet'));
+    const said = [...el.querySelectorAll('.thoughtknot-style-problem')].map((p) => p.textContent);
+    assert.deepEqual(said, ['In the style graph: Plaec is not a kind in graph big']);
   } finally {
     env.plugin.onunload();
     env.uninstall();

@@ -14,6 +14,7 @@ export const VALUES_LATE = [
   'serveLayouts',
   'servePlugin',
   'setDirection',
+  'setInParts',
   'setLanguage',
   'setLocale',
   'setNote',
