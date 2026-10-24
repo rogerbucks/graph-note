@@ -4,9 +4,10 @@
 //
 // It starts with the filter saved in the style graph (scale_filter_live). A filter chosen in edit mode is saved there;
 // in reading view it is only tried. Saving draws the card again, so the overview starts again with that filter.
-import { PALETTES, word } from '@thoughtknot/core';
+import { PALETTES, storedStyle, word } from '@thoughtknot/core';
 import type { GraphDrawing, NoteReading, StoredGraph, StyleGraph } from '@thoughtknot/core';
 import { massiveView } from '@thoughtknot/core/display/graph-view/massive-view';
+import type { MassiveOptions } from '@thoughtknot/core/display/graph-view/massive-view';
 import type ThoughtKnotPlugin from './main';
 import { showStoredThing } from './stored-edit';
 import type { StoredThing } from './stored-edit';
@@ -38,9 +39,10 @@ export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawin
 }
 
 /**
- * Shows a graph from a note too big to read at once as its overview, from the local store (§53, scale_in_parts). Its
- * style graph is not read with it, so it starts with nothing filtered, and a filter chosen is only tried. A thing
- * chosen shows its properties under it, to change in the note's text (stored-edit.ts). Without `at`, they are not shown.
+ * Shows a graph from a note too big to read at once as its overview, from the local store (§53, scale_in_parts). It
+ * starts with the filter saved in its style block, read against the store (storedStyle). A thing chosen shows its
+ * properties under it, to change in the note's text (stored-edit.ts). In edit mode a filter chosen is saved, as for
+ * any overview. Without `at`, nothing is read from the note or written to it.
  */
 export function showStoredMassive(
   plugin: ThoughtKnotPlugin,
@@ -48,11 +50,23 @@ export function showStoredMassive(
   stored: StoredGraph,
   at: StoredThing | null,
 ): void {
+  const graph = stored.drawing.graph;
+  // the Filter for the whole graph: a view's own is for when views are drawn as overviews
+  const saved = at && storedStyle(at.note, stored).style.filters.find((f) => f.view === undefined)?.keep;
   massiveView(root, stored.drawing, {
-    graph: stored.drawing.graph,
+    graph,
     palette: PALETTES.obsidian,
     layout: (part, by) => plugin.layout(part, by),
     props: stored.props,
-    ...(at ? { picked: (key: string) => showStoredThing(plugin, root, at, key, stored.props(key)) } : {}),
+    ...(saved ? { chosen: saved } : {}),
+    ...(at
+      ? {
+          picked: (key: string) => showStoredThing(plugin, root, at, key, stored.props(key)),
+          chose: (keep: Parameters<NonNullable<MassiveOptions['chose']>>[0]) => {
+            if (!at.readOnly)
+              void writeStyle(plugin, at.path, graph, { filter: { keep } }, word('massive.filter-saved'));
+          },
+        }
+      : {}),
   });
 }
