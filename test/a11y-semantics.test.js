@@ -112,6 +112,9 @@ describe('the browser editor’s page: every state', () => {
 
   for (const [name, state] of Object.entries(STATES))
     test(`${name}: every control named, read as a control and saying its state; the text version matches`, async () => {
+      // each state can open more than one page; stopped here, not at the end, so their windows and threads are freed
+      const first = opened.length;
+      after(() => Promise.all(opened.splice(first).map((o) => o.stop())));
       const page = await state();
       try {
         styleFor(dir, page.window, 'light');
