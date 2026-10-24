@@ -107,4 +107,14 @@ describe('the structure graph', () => {
   test('the repository as committed has every shipped file of the core and the display layer in one area', () => {
     assert.deepEqual(structureProblems(readStructure(ARCHITECTURE), repoFiles()), []);
   });
+
+  test('the display shell imports no other area of the display layer: the panels build on it, never the other way', () => {
+    const files = repoFiles();
+    const facts = structureFacts(readStructure(ARCHITECTURE), files, read);
+    const display = facts.find((f) => f.part === 'display_part');
+    assert.deepEqual(
+      display.edges.filter((e) => e.from === 'display_shell').map((e) => e.to),
+      [],
+    );
+  });
 });

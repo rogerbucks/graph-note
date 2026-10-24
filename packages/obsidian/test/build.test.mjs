@@ -30,6 +30,13 @@ test('in watch mode the build writes main.js and keeps watching', async (t) => {
   assert.equal(child.exitCode, null, 'the build is still watching');
 });
 
+test('the plugin is built with whitespace and syntax minified, and every name kept for stack traces', async () => {
+  const { options } = await import('../esbuild.config.mjs');
+  assert.equal(options.minifyWhitespace, true);
+  assert.equal(options.minifySyntax, true);
+  assert.ok(!options.minify && !options.minifyIdentifiers, 'names are kept');
+});
+
 test('the files the plugin is installed from are at the repository root', () => {
   for (const f of ['manifest.json', 'styles.css']) assert.ok(existsSync(`${root}${f}`), f);
   assert.equal(pkg('manifest.json').id, 'thoughtknot', 'installed as .obsidian/plugins/thoughtknot');
@@ -52,7 +59,7 @@ test('a build swaps main.js in whole, so nothing ever reads half of it', () => {
   const r = spawnSync(process.execPath, ['esbuild.config.mjs'], { cwd: `${root}packages/obsidian`, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   assert.ok(replaced(before, identity(main)), 'main.js is a new file, renamed into place');
-  assert.match(readFileSync(main, 'utf8'), /\nmodule\.exports = /, 'the whole build is there');
+  assert.match(readFileSync(main, 'utf8'), /module\.exports ?= ?/, 'the whole build is there');
 });
 
 test('in watch mode too, each build swaps main.js in whole', async (t) => {

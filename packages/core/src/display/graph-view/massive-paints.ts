@@ -3,7 +3,7 @@ import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 import { openSpaceView } from './space-view-panel';
-import { button } from './view-bar';
+import { button } from '../button';
 
 /**
  * The paint of each style, as plain colours a canvas takes. A host's colours may name its theme's variables, which a

@@ -26,7 +26,7 @@ import { webgl2SpacePainter } from './space-painter.ts';
 import { canvasSpacePainter, paintSpaceLabels } from './space-canvas-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 import { webgpuSpacePainter } from './space-gpu-painter.ts';
-import { button } from './view-bar';
+import { button } from '../button';
 import { marksOfSvg } from './svg-marks.ts';
 
 /** The close of the 3D view open on each card, so a second press of 3D view closes it rather than stacking one more. */
