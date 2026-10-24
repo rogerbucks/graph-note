@@ -4,6 +4,7 @@
 import type { Block, SpaceMarks, Vec3 } from '../../space-view.ts';
 import type { ScreenArrow, ScreenLabel } from '../../space-labels.ts';
 import { FIELD, projectPoint } from '../../space-view.ts';
+import { BALL_LIGHT } from '../../palette.ts';
 import type { Paints } from './mark-painter.ts';
 import type { SpacePainter } from './space-painter.ts';
 
@@ -178,12 +179,14 @@ function paintBalls(
       paint: () => {
         ctx.beginPath();
         ctx.arc(c.x, c.y, seen, 0, Math.PI * 2);
-        if (paint.fill) {
-          ctx.fillStyle = paint.fill;
+        // filled as the graphics chip fills it: in its outline colour where its style gives no fill
+        const fill = paint.fill ?? paint.line;
+        if (fill) {
+          ctx.fillStyle = fill;
           ctx.fill();
           const light = ctx.createRadialGradient(c.x - seen / 3, c.y - seen / 3, seen / 10, c.x, c.y, seen);
-          light.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-          light.addColorStop(1, 'rgba(0, 0, 0, 0.18)');
+          light.addColorStop(0, BALL_LIGHT.shine);
+          light.addColorStop(1, BALL_LIGHT.shade);
           ctx.fillStyle = light;
           ctx.fill();
         }

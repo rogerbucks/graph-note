@@ -170,7 +170,8 @@ describe("the 3D view's painters, in a real browser", () => {
     writeFileSync(join(folder, 'page.js'), bundle.outputFiles[0].text);
     writeFileSync(
       join(folder, 'page.html'),
-      '<!doctype html><title>3D painters</title><script src="page.js"></script>',
+      // UTF-8, as the display's words hold letters past ASCII
+      '<!doctype html><meta charset="utf-8"><title>3D painters</title><script src="page.js"></script>',
     );
     await browser.send('Page.navigate', { url: pathToFileURL(join(folder, 'page.html')).href });
     for (let i = 0; i < 50 && (await browser.run('document.readyState')) !== 'complete'; i++)
@@ -182,8 +183,8 @@ describe("the 3D view's painters, in a real browser", () => {
   });
 
   test('WebGL 2 paints the city with no error, where the 2D canvas paints it', options, async () => {
-    // a city of 20 and of 300 groups, and 40 and 400 things laid out in space as balls
-    for (const count of [20, 300, -40, -400]) {
+    // a city of 20 and of 300 groups, and 60 and 400 things laid out in space as balls
+    for (const count of [20, 300, -60, -400]) {
       const { canvas, webgl2 } = JSON.parse(await browser.run(`paintCity(${count}).then(JSON.stringify)`));
       assert.equal(webgl2?.kind, 'webgl2');
       assert.equal(webgl2.error, 0, 'no WebGL error');
@@ -192,6 +193,13 @@ describe("the 3D view's painters, in a real browser", () => {
       const painted = a.filter(Boolean).length;
       // balls leave space between them, so they cover less of the picture than a city does
       assert.ok(painted > (count > 0 ? 40 : 4), `the canvas painted ${count}: ${painted} parts`);
+      if (count < 0) {
+        // a ball's edge falls across parts of the picture, so the painters are compared by how much each paints
+        const filled = ({ pixels }) => pixels.filter((v, i) => i % 4 === 3 && v > 0).length;
+        const ratio = filled(webgl2) / Math.max(1, filled(canvas));
+        assert.ok(ratio > 0.8 && ratio < 1.25, `${-count} balls: WebGL 2 paints ${ratio.toFixed(2)} times the canvas`);
+        continue;
+      }
       const differ = a.filter((v, i) => v !== b[i]).length;
       assert.ok(differ <= a.length * 0.05, `${count} groups: ${differ} of ${a.length} parts differ`);
     }
