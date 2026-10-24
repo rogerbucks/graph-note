@@ -629,6 +629,17 @@ in a style block beside it: `// graph: trip_style · STYLE trip`.
 draws it, and the data reads the same with or without it. A graph line that says STYLE but names no graph is a problem,
 never data.
 
+#### Reading and writing a board
+
+- `board.ts` — the whiteboard kept as a board graph (editor spec §45): its own block, `// graph: ideas · BOARD ON trip`.
+  - `boardOf` (in `blocks.ts`) knows a board by its graph line. `dataKind` leaves a board out of the drawing.
+  - `readBoard` reads it with the data's own reader. Each item is a thing of one of `BOARD_KINDS`, with its place as
+    whole numbers. Each connector is a CONNECTS link.
+  - Each fault is a problem with its fix, GN901 to GN904. They are a kind it does not know, or a place that is not
+    whole numbers. They are also a link to a thing that is gone, or a link that is not CONNECTS. Whatever can be read stays on the board.
+  - `writeBoard` writes a board in one fixed form, so the same board is always the same bytes.
+  - `moveItem` changes only the moved item's own text, so notes and comments in the block stay as they were.
+
 #### Reading and checking a style
 
 - `style-graph.ts` — what a style graph holds once read, and the words it allows.

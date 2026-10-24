@@ -1,7 +1,7 @@
 // The words of the core's problems found while reading a note, in UK English (editor spec §42, words_catalogue). They
 // say what could not be read, what was read as meant, and how to fix it. They also say why a graph source, an image or
-// a conversion to standard GQL is refused. GQL a person types stays inside the sentence as written. source-words.ts
-// keeps these with every other word.
+// a conversion to standard GQL is refused, and what a board graph holds wrongly. GQL a person types stays inside the
+// sentence as written. source-words.ts keeps these with every other word.
 
 /** The words of reading a note's problems, by key, in UK English. */
 export const READING_SOURCE_WORDS = {
@@ -152,4 +152,16 @@ export const READING_SOURCE_WORDS = {
     '{written} is not a place inside the vault: write its path from the vault’s root, or link it as [[name]]',
   // a schema drawn as a picture (schema-picture.ts)
   'reading.schema.unused-type': '{reading} (not used yet)',
+  // a board graph's problems (editor spec §45, board_checked): an item whose kind is not one a board holds (board.ts)
+  'board.kind-unknown': 'a board holds no item of the kind {kind}, so {id} is left off the board',
+  'board.kind-unknown.fix': 'change its kind to one of {kinds}',
+  // an item with no place, or a place that is not whole numbers
+  'board.place': '{id} needs its place as whole numbers, x and y',
+  'board.place.fix': 'write x and y as whole numbers, such as {x: 10, y: 20}',
+  // an item linked to a thing its graph does not hold
+  'board.link-gone': '{id} is linked to {thing}, which the graph {graph} does not hold',
+  'board.link-gone.fix': "link it to a thing of {graph}, or remove graph: '{thing}'",
+  // a link that is not a connector
+  'board.link-kind': 'a board joins its items with CONNECTS only, not {type}, so this link is left off the board',
+  'board.link-kind.fix': 'write it as -[:CONNECTS]->, or remove it',
 } as const;

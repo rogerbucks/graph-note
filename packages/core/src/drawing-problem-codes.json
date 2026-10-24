@@ -1,5 +1,5 @@
 {
-  "about": "Editor spec §42, problem_codes: the stable code of every problem the drawing reader finds in a note, beyond what the graph spec's reader refuses (packages/graph-spec/src/reader/problem-codes.json, GN1xx to GN6xx). It is given as the Language Server Protocol diagnostic's code, so a problem can be looked up and its words translated. The numbering goes on from that table: 7xx is what the drawing reader finds in a note, 8xx what it finds in a style graph. A code is never reused and never renumbered: a problem that goes keeps its code retired, and a new one takes the next free number. words are the catalogue keys its message is said with, kept in packages/core/src/*-source-words.ts. A code that covers a family of faults, such as a style property written wrongly, names its main ones. section is the spec § the rule comes from, or null. libraries says which reader raises it: core is the editor's core (packages/core), py the Python library's drawing reader. Where both raise it, both give the same code: drawing-problem-cases.json holds notes each must read to the same codes. Every raise site passes its code as a literal; packages/core/test/note-reading-codes.test.js and python/graph_spec/tests/test_drawing_problem_codes.py hold each reader to this table.",
+  "about": "Editor spec §42, problem_codes: the stable code of every problem the drawing reader finds in a note, beyond what the graph spec's reader refuses (packages/graph-spec/src/reader/problem-codes.json, GN1xx to GN6xx). It is given as the Language Server Protocol diagnostic's code, so a problem can be looked up and its words translated. The numbering goes on from that table: 7xx is what the drawing reader finds in a note, 8xx what it finds in a style graph, 9xx what it finds in a board graph. A code is never reused and never renumbered: a problem that goes keeps its code retired, and a new one takes the next free number. words are the catalogue keys its message is said with, kept in packages/core/src/*-source-words.ts. A code that covers a family of faults, such as a style property written wrongly, names its main ones. section is the spec § the rule comes from, or null. libraries says which reader raises it: core is the editor's core (packages/core), py the Python library's drawing reader. Where both raise it, both give the same code: drawing-problem-cases.json holds notes each must read to the same codes. Every raise site passes its code as a literal; packages/core/test/note-reading-codes.test.js and python/graph_spec/tests/test_drawing_problem_codes.py hold each reader to this table.",
   "codes": [
     {
       "code": "GN701",
@@ -185,6 +185,30 @@
         "styling.conflict.shown-twice"
       ],
       "libraries": ["core", "py"]
+    },
+    {
+      "code": "GN901",
+      "section": "45",
+      "words": ["board.kind-unknown"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN902",
+      "section": "45",
+      "words": ["board.place"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN903",
+      "section": "45",
+      "words": ["board.link-gone"],
+      "libraries": ["core"]
+    },
+    {
+      "code": "GN904",
+      "section": "45",
+      "words": ["board.link-kind"],
+      "libraries": ["core"]
     }
   ]
 }
