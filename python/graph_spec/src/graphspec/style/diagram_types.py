@@ -162,6 +162,9 @@ def _tree_fit(shape, relationship, text):
 
 
 def _radial_fit(shape, text, chosen=None):
+    # around a thing picked it always fits, given two things or more (radial_centre_anywhere)
+    if len(shape["things"]) >= 2 and any(t["key"] == chosen for t in shape["things"]):
+        return _yes("radial")
     if len(shape["things"]) < 3:
         return _no("radial", "a radial drawing needs three things or more")
     if shape.get("groups"):

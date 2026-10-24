@@ -305,7 +305,7 @@ export function renderTypeStrip(
       attr: { type: 'button', 'aria-pressed': String(f.type === choice.drawn) },
     });
     b.disabled = !f.fits;
-    if (f.type === 'radial') around.tile(b);
+    if (f.type === 'radial') around.tile(b, f.fits);
     b.addEventListener('click', () => {
       if (!(f.type === 'radial' && around.put())) pick(f.type);
     });

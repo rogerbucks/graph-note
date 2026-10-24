@@ -133,11 +133,14 @@ function radialCentre(shape: GraphShape, chosen?: string): string {
 }
 
 /**
- * Whether a radial drawing fits. It needs three things or more, every one joined to the centre, whichever way its links
- * run. The centre is the thing chosen, if any. No group may be written, as Graphviz's radial layout cannot draw a
- * group's box.
+ * Whether a radial drawing fits. Around a thing picked as its centre, it always fits when there are two things or more
+ * (radial_centre_anywhere). Things not joined to it are drawn beside it, and groups are drawn without their boxes. With
+ * no centre picked, it needs three things or more, each joined to the centre, whichever way its links run. No group
+ * may be written then, as Graphviz's radial layout cannot draw a group's box.
  */
 function radialFit(shape: GraphShape, text: (k: string) => string, chosen?: string): TypeFit {
+  if (shape.things.length >= 2 && chosen !== undefined && shape.things.some((t) => t.key === chosen))
+    return yes('radial');
   if (shape.things.length < 3) return no('radial', word('diagram.radial.three'));
   const group = shape.groups?.[0];
   if (group) return no('radial', word('diagram.radial.group', { group: group[0] }));

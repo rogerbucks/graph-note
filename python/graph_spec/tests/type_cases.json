@@ -79,7 +79,10 @@
           "(mars)-[:CIRCLES]->(sun),",
           "(moon)-[:CIRCLES]->(earth)"
         ],
-        ["// graph: sky_style · STYLE sky", "(d1:Diagram {type: 'radial', centre: 'moon'})"]
+        [
+          "// graph: sky_style · STYLE sky",
+          "(d1:Diagram {type: 'radial', centre: 'moon'})"
+        ]
       ]
     },
     {
@@ -93,7 +96,11 @@
           "(earth)-[:CIRCLES]->(sun),",
           "(mars)-[:CIRCLES]->(sun)"
         ],
-        ["// graph: sky_style · STYLE sky", "(d1:Diagram {type: 'flow', centre: 'sun'}),", "(d2:Diagram {type: 'radial', view: 'round', centre: 'mars'})"]
+        [
+          "// graph: sky_style · STYLE sky",
+          "(d1:Diagram {type: 'flow', centre: 'sun'}),",
+          "(d2:Diagram {type: 'radial', view: 'round', centre: 'mars'})"
+        ]
       ]
     },
     {
@@ -345,6 +352,25 @@
           "(d2:Diagram {type: 'radial', view: 'round'}),",
           "(n1:Nudge {word: 'group', thing: 'ann', group: 'Desk'}),",
           "(n2:Nudge {word: 'group', thing: 'ops', group: 'Desk'})"
+        ]
+      ]
+    },
+    {
+      "name": "a radial drawing around a thing picked, where none would fit with no centre picked: a thing joined to nothing beside it, and a group drawn without its box",
+      "blocks": [
+        [
+          "// graph: sky",
+          "(sun:Star {name: 'Sun'}),",
+          "(earth:Planet {name: 'Earth'}),",
+          "(mars:Planet {name: 'Mars'}),",
+          "(pluto:Planet {name: 'Pluto'}),",
+          "(earth)-[:CIRCLES]->(sun),",
+          "(mars)-[:CIRCLES]->(sun)"
+        ],
+        [
+          "// graph: sky_style · STYLE sky",
+          "(d1:Diagram {type: 'radial', centre: 'earth'}),",
+          "(n1:Nudge {word: 'group', thing: 'mars', group: 'Red'})"
         ]
       ]
     },

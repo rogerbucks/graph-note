@@ -164,6 +164,19 @@ describe('a radial drawing', () => {
           `link ${l + 1} is drawn through box ${b + 1}`,
         );
   });
+
+  // proves: radial_centre_anywhere
+  test('around a thing picked, it is drawn even with a thing joined to nothing, two things, or a group', async () => {
+    const around = async (data, centre, ...more) => {
+      const { plain, style, g } = shown(data, `(d1:Diagram {type: 'radial', centre: '${centre}'})`, ...more);
+      const drawing = styledDrawing(plain, style, g);
+      const { boxes } = boxesAndLines(draw(drawing, await loadEngine()).svg);
+      assert.deepEqual([drawing.diagram?.type, boxes.length], ['radial', drawing.boxes.length], centre);
+    };
+    await around(LONE, 'c');
+    await around(`// graph: pair\n(a:Thing {name: 'A'}),\n(b:Thing {name: 'B'})`, 'b');
+    await around(ORG, 'bea', "(n1:Nudge {word: 'group', thing: 'ada', group: 'L'})");
+  });
 });
 
 describe('a type is offered only when the data fits it, and says why when it does not', () => {
