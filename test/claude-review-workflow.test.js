@@ -18,9 +18,15 @@ describe('the workflow that leaves Claude’s review on a pull request', () => {
 
   test('is woken by a pull request alone, never pull_request_target', () => {
     const on = block(lines, 'on', 0)?.join('\n') ?? '';
-    assert.match(on, /pull_request:\s*\n\s*types: \[opened, synchronize, reopened, ready_for_review\]/);
+    assert.match(on, /pull_request:\s*\n\s*types: \[opened, ready_for_review\]/);
     assert.doesNotMatch(on, /push:|workflow_run|workflow_dispatch|schedule|release|issue_comment/);
     assert.doesNotMatch(text, /pull_request_target/);
+  });
+
+  test('reviews once, on Sonnet with a cap on its turns, as each review costs the owner’s Claude use', () => {
+    const on = block(lines, 'on', 0)?.join('\n') ?? '';
+    assert.doesNotMatch(on, /synchronize|reopened/);
+    assert.match(text, /--model claude-sonnet-\S+ --max-turns \d+/);
   });
 
   test('skips forks, drafts and Dependabot, whose runs are given no secrets', () => {

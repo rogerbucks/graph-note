@@ -128,6 +128,9 @@ export const STEPS_SOURCE_WORDS = {
     one: 'Showing only {thing} and the things within {count} step of it.',
     other: 'Showing only {thing} and the things within {count} steps of it.',
   },
+  'untangle.widen': { one: 'Widen to {count} step', other: 'Widen to {count} steps' },
+  'untangle.narrow': { one: 'Narrow to {count} step', other: 'Narrow to {count} steps' },
+  'details.reach': { one: '{count} step out', other: '{count} steps out' },
   'untangle.no-path': 'There is no path between {from} and {to}.',
   'untangle.shortest-path': {
     one: 'The shortest path from {from} to {to} is {count} step: {things}.',

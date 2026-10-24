@@ -3,195 +3,195 @@
   "accepted": [
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open-with-the-keyboard-on-its-second-row.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/a-menu-open.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/a-notice-shown.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/reduced-motion-asked-for.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.dark.txt",
-      "sha256": "0d198fd36078d682a78e9fda82ffcd8b52d0d7692e4b0e3bcada00bab84f97d3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5e743cb4d123c6f0576e7217d39e702a72b55b0f021cd1f478571f12ead6fcc6",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-a-thing-opened-beside-the-text.light.txt",
-      "sha256": "cfc9cafc678f9fc15bca5562e592789a7bd9ffb9584def1328bb40408454797c",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "39ad3f6cfb482c7493946f49a014091d954aea61b47d555218a06ef45d3d93a3",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.dark.txt",
-      "sha256": "953f1f1a87dbd4a52458579289c2943707fccf6541475883bd02f77a19f99c28",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "8d2497fc2e029f80a2cec8bda342d3faa5421329abf71c4ecacce6e7b493ff40",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-details-of-an-estimated-link-with-its-quick-fix.light.txt",
-      "sha256": "70c76da9d4dec1a31079603376c6578ef0eabf6dd8245bc1665a4e2f217fe02e",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "8e06c13a27e5b07b0cf73f3ed9545fecce14b91bc9711e6efcb62c1ef2f7eee6",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-kept-draft-offered-back.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.dark.txt",
-      "sha256": "bfa135b884701531fdb6d9dc126978fd6f1ec2a734e9f45755e28f37b0ba734b",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "9de074fb54d8a4d286fa0ed27e2c0a559ab87c8b91f0ef813f09193da4bf20d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-a-problem-listed-and-marked.light.txt",
-      "sha256": "bc986b26d987bd62a1f3da04d1960bf91ed81198333adfd8deffdc83e74e4acf",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "9559475e2cd3c6a2fb07f2004a9b5876d409e2bacd1561684d8a558eccf2796c",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-edit-pane-with-the-picker-of-two-graph-blocks.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-export-form-open.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-note-words-a-code-block-a-link-and-the-graph-drawn-with-its-words.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-skip-link-focused.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.dark.txt",
-      "sha256": "7d12d0be8982cf1963225bd58c89d8bbe0164ea49af63fd57dfee20eabaed7c3",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "5a0ab002b7c48c41bbe02b1d93fc4865c1caa51c6225a2cea67bc83e931fc7fa",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/claude-code/the-text-version-shown.light.txt",
-      "sha256": "5a2a2983a68f4b2ef255a09d3ffa7dfeb9e42da795b1d7d3ee71e5277d8969d9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "873847e8e44eebadfa09faf1a69063bce761ad840aa4b6cdb6954857db3169d8",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.dark.txt",
-      "sha256": "bf23acd7aa5f6ee8a9be085649709669d8d74a12fbcd7810ba869a25f234b904",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "437c316bfb26f74a927748906a62218a7944d8d3e8d32b29ffd126c56157f8d0",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-card-being-edited-in-place.light.txt",
-      "sha256": "216a71df397344a5d32950d2bfffa404698e097e7eb3fd3f7b16e307cf0a9d4e",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "657ebeb5fd929e190a54d87822c76e7fa68dab655c944a5a16be694d6931ed50",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.dark.txt",
-      "sha256": "04c3a1953389eb0eea6148f9a77e21d1cbe5922ee323994ff3027a0dc203ffd1",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "83748fb44544ebcf0ea5d0b0c9707f2a8ff6899571ffe724a43b01e050305850",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-card-in-full-screen.light.txt",
-      "sha256": "852e58bde203d3778b2fd94dfc31b051a3b367e94c55ddbfb4116f1beb6effcf",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "7882e231992b17a07f0ae25860ea64c1cdc1322963161e19009e191e692c36d4",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.dark.txt",
-      "sha256": "d9ce8048652697df5e5da4a291da35098dcaf52f57de17a438f584cb30ad6e10",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "8194950f14fe17477db599b539fc4224359a60268a1f32bbee389f258829b559",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-card-reading-view.light.txt",
-      "sha256": "2d73a823b9cfb590a34f8826965a6478dea695ab21353fb9614f481fc8dc2eec",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "f5fcbd08b8141055e7dce50e52b8312787dd0ab5563ddd53859482b4a706de2b",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-card-with-its-problems-listed.dark.txt",
@@ -207,171 +207,171 @@
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.dark.txt",
-      "sha256": "e584e752f6ac636ea6b6e14ca7d8b001bd9f8ac7750830b1ba99aac2d61997c0",
-      "reason": "showing only a thing and its neighbours now lays them out again together (untangle_regroup)",
-      "day": "2026-10-22"
+      "sha256": "08e775978e86de2c2acbe2684ddc1f082e4c6d47c7659af3d8e549569ca9eb93",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-drawing-untangled-to-a-thing-and-its-neighbours-behind-its-banner.light.txt",
-      "sha256": "1389181f41f82f6c892419db1639c795f4048bc72b54bf8c54b26679b9ced73f",
-      "reason": "showing only a thing and its neighbours now lays them out again together (untangle_regroup)",
-      "day": "2026-10-22"
+      "sha256": "6bd377fddb7a08ce10f50c6f471b158ddb1aa77b30392332f4e1246cb4ffd984",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.dark.txt",
-      "sha256": "cc7176b99725a247270c06a750ca97c701e338c6c547d324dad93ff248805510",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "982a5c5b683de526bc6abffa01dfd4d31266cbb510bd76343fccce480e5724c6",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-path-playing-its-step-said.light.txt",
-      "sha256": "ccf80e6d3722f98648fd365abd27e2d67d45003c6cadaccead75f344e1b84598",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "a8779a8e024cba2177ae50707e018e5a046cc0c7356a678d4a4ad9fde564c037",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.dark.txt",
-      "sha256": "743d766c3798d232cff67197491f864c5e460d9684a96c1539de70deb8e6b577",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "00f86a257d5c3c84014badc6c46769922ade3972e2ec296190d5b83529c13ec7",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-proposal-drawn-over-its-graph-its-changes-listed.light.txt",
-      "sha256": "ccfc502f7432a90606314358999a0ecf5ee44be2c26e5cd6e115230f7fed548a",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "46945618d738df3f51ad2d2894732815c05a6589524d56f64a107574e3ebdf80",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.dark.txt",
-      "sha256": "32d7228991cc7e8c6852a86cd5e96829be86f013e7a3c30b821848765a389b11",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "1795ab02e4df8ae263b2dabb766372344a105db75293a4556df1eeb4081af381",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/a-view-read-in-plain-english-with-what-is-outside-it-faded.light.txt",
-      "sha256": "fc0b6114558c1585fa57c0d5bcc9fd2732497841e2484cafffef0d2ab0a33717",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "4ec006f73b8ce47636517f32c0192a1e58f890e3bf6db8c0c7470b34ead3c472",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "bf23acd7aa5f6ee8a9be085649709669d8d74a12fbcd7810ba869a25f234b904",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "437c316bfb26f74a927748906a62218a7944d8d3e8d32b29ffd126c56157f8d0",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/adding-a-thing-while-editing-in-place.light.txt",
-      "sha256": "216a71df397344a5d32950d2bfffa404698e097e7eb3fd3f7b16e307cf0a9d4e",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "657ebeb5fd929e190a54d87822c76e7fa68dab655c944a5a16be694d6931ed50",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.dark.txt",
-      "sha256": "2be762cf436221e75f514fa1a98ab0d683874fa92755cb9128be897ecd61cd69",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "b158c716e50a8423d6ab681e88fb69ec16635eb9008c418a0024344716e13643",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-details-after-a-choice-with-the-trail.light.txt",
-      "sha256": "7945b1a574237add339fd475f8c8278ef863332b56cbf2266f912748eca69c25",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "79d85f5318931b37d4a45c0ff83a1861f1652769c150a6b3387b35c94d73728d",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.dark.txt",
-      "sha256": "45fd09b3152b5d8cd436bcc7aea6615ff53ba985b0d928fb56b82e2e0e92c2a8",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "d7a007b79bb14014831bfefe76c9162b12fa2c59f49d44bdc19e2a64ad95e157",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-details-of-a-thing-as-a-sheet.light.txt",
-      "sha256": "e1c3c3f4a45593363813eb7018de374d2011df0e5a72603868e1482d9c10a59f",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "069606df5f716f17cb731ddd30b33990ed29ce445245b0a666af092594f27092",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.dark.txt",
-      "sha256": "100bad4e24d770a7deaf6756f58990773a5480d747d1d487ba5d706eb4f53688",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "76d3081b69a8bc793729ad05de93296fd89fc7696e3ce943ca6700db24e889c1",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-diagram-types-listed.light.txt",
-      "sha256": "2cdef738e46e68b16ddb90178663d1bda697051da11a14a7cd02092879338232",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "9e5562bfd2c4f7b73ab3a50c19a5ee8689813fdc28cd291e2df99395c4511f06",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.dark.txt",
-      "sha256": "cd7c38080e93d2bffef9ab653fd25cbb75e1830c1cfc3bb8ab30b85153bdf0c1",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "4ceece91526b1921e7aca11f535349501b842657716cc99f2d001eb6da94094f",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-edit-pane.light.txt",
-      "sha256": "14933f0f9ec39fc4655ce9b1a53ba9d16e6b0785ab76c2a1dd9df4bfb85a4917",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "d164c8050e8aa3703335c0405d32b76b7efa361577fdd8977976b414df09084b",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.dark.txt",
-      "sha256": "32d7228991cc7e8c6852a86cd5e96829be86f013e7a3c30b821848765a389b11",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "1795ab02e4df8ae263b2dabb766372344a105db75293a4556df1eeb4081af381",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-asking-first-for-a-note-above-its-classification.light.txt",
-      "sha256": "fc0b6114558c1585fa57c0d5bcc9fd2732497841e2484cafffef0d2ab0a33717",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "4ec006f73b8ce47636517f32c0192a1e58f890e3bf6db8c0c7470b34ead3c472",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.dark.txt",
-      "sha256": "32d7228991cc7e8c6852a86cd5e96829be86f013e7a3c30b821848765a389b11",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "1795ab02e4df8ae263b2dabb766372344a105db75293a4556df1eeb4081af381",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-export-form-open-on-a-card.light.txt",
-      "sha256": "fc0b6114558c1585fa57c0d5bcc9fd2732497841e2484cafffef0d2ab0a33717",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "4ec006f73b8ce47636517f32c0192a1e58f890e3bf6db8c0c7470b34ead3c472",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.dark.txt",
-      "sha256": "d9ce8048652697df5e5da4a291da35098dcaf52f57de17a438f584cb30ad6e10",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "8194950f14fe17477db599b539fc4224359a60268a1f32bbee389f258829b559",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-live-preview-card.light.txt",
-      "sha256": "2d73a823b9cfb590a34f8826965a6478dea695ab21353fb9614f481fc8dc2eec",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "f5fcbd08b8141055e7dce50e52b8312787dd0ab5563ddd53859482b4a706de2b",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.dark.txt",
-      "sha256": "4170aad1d18ea83947c3c45379e7fc70239ae830fb97b8de5723857206341416",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "832aac542422003bc69de6bc319124ac54db25fdef0f5d5fc2384b2a2125dc3d",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-mini-map-once-zoomed-in-past-the-fit.light.txt",
-      "sha256": "ff7fa2995d5394e0057f8a1e38f07de7226fc638619af0a0bbc7dafcf881b9b9",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "685826f16e04b2cd7c91d808ce09ca4f80332f661d166971b3b10a384d6b0d07",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.dark.txt",
-      "sha256": "ea5751785d362dc2dabf35cd22069ab4ed8c3f516bf44a7e9e361b5be21e3a5f",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "eb9f476547fa09d82048b9dcfc7bf33414e64dccf340b91da5bb00a93ef4ffec",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     },
     {
       "picture": "test/visual/obsidian/the-properties-form-of-a-thing-while-editing-in-place.light.txt",
-      "sha256": "5b85dd846579554b9224e7cf6be2760b8adaf20f1b2de6eec0fb2082c4ecd1dc",
-      "reason": "The first reference: each drawing as main draws it on 18 Oct 2026.",
-      "day": "2026-10-18"
+      "sha256": "7d4e722f91192214e3db242ec7dfba307de1dbb9faa5ff9841cf188c7cf9de3d",
+      "reason": "Direct links are the default (Roger, 24 Oct 2026): each link one gentle curve, boxes moved off links",
+      "day": "2026-10-24"
     }
   ]
 }

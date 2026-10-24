@@ -4,6 +4,7 @@
 // A group holds the things inside its box. A link names its two ends by its title, as Graphviz writes `a->b`. The
 // plugin's own drawing has no titles: a thing is named by its data-key, and a link is joined to the things it touches.
 import type { DrawMark } from '../../drawing-marks.ts';
+import { FADED, seeThrough } from '../../colour-numbers.ts';
 import type { Paint, Paints } from './mark-painter.ts';
 
 /** How many points a link's curve is read at. */
@@ -13,7 +14,8 @@ const LINK_STEPS = 16;
 export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Paints } {
   const tokens = new Map<string, string>(),
     table = new Map<string, Paint>();
-  const styled = (shape: Element | null, text: Element | null): string => {
+  // a thing or link the focus fades is painted see-through, as the card fades it (focus_space)
+  const styled = (shape: Element | null, text: Element | null, faded = false): string => {
     const view = svg.ownerDocument.defaultView;
     const look = shape && view ? view.getComputedStyle(shape) : null,
       words = text && view ? view.getComputedStyle(text) : null;
@@ -21,6 +23,9 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     if (look && look.fill !== 'none') paint.fill = look.fill;
     if (look && look.stroke !== 'none') paint.line = look.stroke;
     if (words && words.fill !== 'none') paint.text = words.fill;
+    if (faded)
+      for (const part of ['fill', 'line', 'text'] as const)
+        if (paint[part]) paint[part] = seeThrough(paint[part], FADED);
     const key = `${paint.fill ?? ''}|${paint.line ?? ''}|${paint.text ?? ''}`;
     let token = tokens.get(key);
     if (!token) {
@@ -57,7 +62,11 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
   }
   const keys = new Set<string>();
   const boxes: Placed[] = [];
+  // what the card hides (thoughtknot-hidden) is not drawn in 3D either; what it fades is faded (focus-marks.ts)
+  const hidden = (g: Element) => g.classList.contains('thoughtknot-hidden'),
+    dim = (g: Element) => g.classList.contains('thoughtknot-dim');
   for (const g of Array.from(svg.querySelectorAll('g.node'))) {
+    if (hidden(g)) continue;
     const shape = g.querySelector(
       ':scope > polygon, :scope > ellipse, :scope > path, :scope > a polygon, :scope > a path',
     );
@@ -68,7 +77,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     const { x, y, width, height } = boxOf(shape);
     const text = nameOf(g);
     const group = holding(x, y, width, height);
-    const style = styled(shape, text);
+    const style = styled(shape, text, dim(g));
     keys.add(key);
     boxes.push({ key, x, y, width, height });
     marks.push({
@@ -99,6 +108,7 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     }
   }
   for (const g of Array.from(svg.querySelectorAll('g.edge'))) {
+    if (hidden(g)) continue;
     const path = g.querySelector<SVGPathElement>('path');
     if (!path || typeof path.getTotalLength !== 'function') continue;
     const length = path.getTotalLength();
@@ -108,10 +118,40 @@ export function marksOfSvg(svg: SVGSVGElement): { marks: DrawMark[]; paints: Pai
     });
     const title = endsOf(titleOf(g), keys);
     // a link with no title is joined to the things its two ends touch
-    const ends = title.from !== undefined ? title : touching(points, boxes);
-    marks.push({ id: `e:${g.id || marks.length}`, kind: 'link', style: styled(path, null), points, ...ends });
+    let ends = title.from !== undefined ? title : touching(points, boxes);
+    // the arrowhead shows which way it points: a link drawn backwards (dir=back) has it at its first point
+    if (ends.from !== undefined && ends.to !== undefined && headFirst(g, points)) {
+      ends = { from: ends.to, to: ends.from };
+      points.reverse();
+    }
+    const words = Array.from(g.querySelectorAll(':scope > text, :scope > a text, :scope > g text'))
+      .map((t) => t.textContent?.trim() ?? '')
+      .filter((t) => t)
+      .join(' ');
+    marks.push({
+      id: `e:${g.id || marks.length}`,
+      kind: 'link',
+      style: styled(path, null, dim(g)),
+      points,
+      ...ends,
+      ...(words ? { name: words } : {}),
+      // the plugin's own drawing numbers each link, as a tap reads it (taps.ts), so a pick can open its details
+      ...(g.getAttribute('data-link') !== null ? { of: g.getAttribute('data-link') ?? '' } : {}),
+    });
   }
   return { marks, paints: (style) => table.get(style) ?? {} };
+}
+
+/** Whether the arrowhead of the link drawn in `g` sits nearer its first point than its last. */
+function headFirst(g: Element, points: readonly (readonly [number, number])[]): boolean {
+  const head = g.querySelector(':scope > polygon, :scope > a polygon');
+  const first = points[0],
+    last = points[points.length - 1];
+  if (!head || !first || !last || typeof (head as SVGGraphicsElement).getBBox !== 'function') return false;
+  const box = (head as SVGGraphicsElement).getBBox();
+  const x = box.x + box.width / 2,
+    y = box.y + box.height / 2;
+  return Math.hypot(x - first[0], y - first[1]) < Math.hypot(x - last[0], y - last[1]);
 }
 
 /** A thing's box on the page, by its key. */

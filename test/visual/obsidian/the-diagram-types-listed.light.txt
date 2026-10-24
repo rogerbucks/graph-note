@@ -9,14 +9,14 @@
       <text x="172.34" y="-81.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> PROJECT
       <text x="181.97" y="-61.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Atlas
     <g id="p4">
-      <path d="M75,-109.42C96.83,-103 124.74,-94.8 148.13,-87.93" paint="stroke:rgb(168, 51, 108)">
-      <polygon points="148.72,-90.31 154.75,-85.99 147.34,-85.61 148.72,-90.31" paint="fill:rgb(168, 51, 108);stroke:rgb(168, 51, 108)">
-      <text x="115.58" y="-105.82" text-anchor="middle" paint="fill:rgb(124, 46, 83)"> works on
+      <path d="M74.57,-102.6C100.12,-90.54 125.14,-82.99 149.63,-79.95" paint="stroke:rgb(168, 51, 108)">
+      <polygon points="149.33,-77.51 156.58,-79.08 149.93,-82.38 149.33,-77.51" paint="fill:rgb(168, 51, 108);stroke:rgb(168, 51, 108)">
+      <text x="115.84" y="-93.22" text-anchor="middle" paint="fill:rgb(124, 46, 83)"> works on
     <g id="p5">
       <path d="M62.57,-56.4C62.57,-56.4 12,-56.4 12,-56.4 6,-56.4 0,-50.4 0,-44.4 0,-44.4 0,-12 0,-12 0,-6 6,0 12,0 12,0 62.57,0 62.57,0 68.57,0 74.57,-6 74.57,-12 74.57,-12 74.57,-44.4 74.57,-44.4 74.57,-50.4 68.57,-56.4 62.57,-56.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108)">
       <text x="16.12" y="-35.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> PERSON
       <text x="26.16" y="-15.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Bob
     <g id="p6">
-      <path d="M75,-38.98C96.83,-45.4 124.74,-53.6 148.13,-60.47" paint="stroke:rgb(168, 51, 108)">
-      <polygon points="147.34,-62.79 154.75,-62.41 148.72,-58.09 147.34,-62.79" paint="fill:rgb(168, 51, 108);stroke:rgb(168, 51, 108)">
-      <text x="115.58" y="-59.82" text-anchor="middle" paint="fill:rgb(124, 46, 83)"> works on
+      <path d="M74.57,-45.8C100.12,-57.86 125.14,-65.41 149.63,-68.45" paint="stroke:rgb(168, 51, 108)">
+      <polygon points="149.93,-66.02 156.58,-69.32 149.33,-70.89 149.93,-66.02" paint="fill:rgb(168, 51, 108);stroke:rgb(168, 51, 108)">
+      <text x="112.63" y="-66.27" text-anchor="middle" paint="fill:rgb(124, 46, 83)"> works on

@@ -98,6 +98,13 @@
       "to": 754639279,
       "reason": "way E step 6 (#1061) raised the read limit to 1 MB and 20,000 lines, so the benchmark reads inputs twice as big; every claim still holds. Accepted by Roger, 23 Oct 2026",
       "date": "2026-10-23"
+    },
+    {
+      "metric": "instructions_draw_five_hundred",
+      "from": 3328961961,
+      "to": 5064762507,
+      "reason": "curved links past 300 things (#1043), as Roger asked: Graphviz's curves cost about half as much again as straight lines, and its cheaper curve modes were slower or the same. Still within the draw_five_hundred budget of 7.7 billion. Accepted by Roger, 24 Oct 2026",
+      "date": "2026-10-24"
     }
   ]
 }

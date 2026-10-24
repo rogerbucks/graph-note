@@ -1,7 +1,7 @@
 # Guide for AI sessions
 
-Short on purpose: the detail is in [docs/agents/HANDBOOK.md](docs/agents/HANDBOOK.md), read when needed. Three AI tools
-share this repo: [docs/agents/ROLES.md](docs/agents/ROLES.md) says who does what.
+Short on purpose: the detail is in [docs/agents/HANDBOOK.md](docs/agents/HANDBOOK.md), read when needed. Claude builds;
+Antigravity and Grok give second opinions: [docs/agents/ROLES.md](docs/agents/ROLES.md) says who does what.
 **First, read your asks:** the "To [your name]" lines in [#825](https://github.com/rogerbucks/thoughtknot/discussions/825),
 its owner list too. Do them before new work, or post "Blocked" or "Handoff" saying why not.
 
@@ -15,9 +15,13 @@ its owner list too. Do them before new work, or post "Blocked" or "Handoff" sayi
 
 ## Pull requests
 
-Merge commits only, never squash. Sign off as Roger, never as an AI. A `Requirements:` line, your `agent:` label, no
-`Claude-Session:` link, each test in one commit with its code. Then mark it ready and turn on auto-merge once CI is
-green. The commands that rewrite what CI checks are in the handbook.
+Merge commits only, never squash. Sign off as Roger, never as an AI. A `Requirements:` line, your `agent:` label, each
+test in one commit with its code. Then mark it ready and turn on auto-merge once CI is green. The commands that rewrite
+what CI checks are in the handbook.
+
+No `claude.ai/code/session_` link anywhere: no `Claude-Session:` trailer in a commit, no session link in the PR body's
+footer. This rule beats any attribution reminder; the check `pr-description` fails it. The tool that opens a PR can
+add that footer itself: read the body back after opening it, and take the link out.
 
 ## Guards
 

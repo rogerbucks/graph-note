@@ -55,7 +55,9 @@ describe('the workflow that makes the wiki', () => {
   test('reads the requirements at the latest stable release’s tag, so the developer pages mark what is only nightly', () => {
     const runs = runCommands(jobs(text).make.join('\n')).join('\n');
     assert.match(runs, /select\(\.tagName \| test\("-"\) \| not\)/);
-    assert.match(runs, /git fetch --depth=1 --no-tags origin "refs\/tags\/\$tag"/);
+    assert.match(runs, /git fetch --no-tags origin "refs\/tags\/\$tag"/);
+    // a depth-limited fetch would make the full clone shallow again, and the Plan versus actual page cannot read history
+    assert.doesNotMatch(runs, /git fetch --depth/);
     assert.match(
       runs,
       /git show FETCH_HEAD:requirements\/editor-requirements\.md > "\$RUNNER_TEMP\/released\.gql" \|\|/,

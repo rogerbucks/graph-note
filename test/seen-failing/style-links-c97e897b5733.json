@@ -1,0 +1,6 @@
+{
+  "file": "packages/core/test/style-links.test.js",
+  "test": "a Links in the style graph > a routing that is not one of the four is a problem, fixed to the nearest, and is left out",
+  "seen_failing_first": false,
+  "evidence": "It tests code an earlier commit of the same pull request added, which adds direct to ROUTINGS, so it passes on its parent. Review asked for the test after that commit."
+}

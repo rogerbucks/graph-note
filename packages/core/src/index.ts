@@ -313,6 +313,7 @@ export type { FocusDepth, FocusEdge, FocusTarget, Kept } from './focus.ts';
 export {
   FIND_LIMIT,
   LegendFilter,
+  MOST_STEPS,
   Untangle,
   emphasis,
   find,
@@ -379,3 +380,4 @@ export { AltitudeTrail, FADE_AFTER, type AltitudeMove, type Consequence, type Ke
 export { transitionAltitude, walkTransition } from './phase-altitude.ts';
 export type { PhaseAltitudePart, PhaseView, WalkedTransition } from './phase-altitude.ts';
 export * from './index-process.ts';
+export * from './index-profiles.ts';

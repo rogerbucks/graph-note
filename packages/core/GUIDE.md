@@ -173,6 +173,27 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `edits-from-views.ts` — an edit made in any view, planned and then saved into the core (editor spec §34,
   edits_from_any_view). The plan lists the views it changes, its gaps, what the view hides and the dangling links.
 
+#### Runs, tests and the process debugger (editor spec §35)
+
+- `test-runs.ts` — `TestRun`: a process stepped one transition at a time as a test, never as the real thing.
+  - It is its own Run thing, flagged `test`, with its own log. `historyOf` leaves test runs out of real history unless
+    the lens asks for them (test_runs_flagged).
+  - It reads the live graph, or a snapshot or editable copy chosen as it starts (test_run_source).
+  - It changes no certainty unless it opted in, and then `record` lists each change (test_runs_leave_certainty).
+  - A transition's `do` runs a stub, never the effect (side_effects_stubbed).
+  - Each step stops with a `RunPause`: the states, each guard tried and why, the artefacts, resources and certainty
+    changes. `breakpointsOf` reads the Breakpoint things, so breakpoints are saved and queried like any other.
+- `intent-checks.ts` — Intent things with a test in the guard language, read against `processFacts`. `IntentWatch`
+  checks them each time the process changes, and `ProcessViews` holds one, so no step by the user is needed
+  (intent_checks).
+- `scenarios.ts` — a test run kept as a Scenario thing (`scenarioText`, `scenariosOf`). Nothing reruns, fades or
+  enforces it; `replayScenario` runs it only when asked and says where it differs (saved_scenarios).
+- `playback.ts` — `PlaybackController`: autoplay at each transition's natural pace (`naturalPace`), or by hand forward
+  and back, one mode at a time. Its visits are an ephemeral log; `lasting` keeps only consequence-bearing ones as
+  VISITED links (playback_controller).
+- `process-source-words.ts` — the debugger's words. The strip itself is `display/graph-view/process-debug.ts`, offered
+  from the walk strip.
+
 #### Deferred things
 
 - `deferred.ts` — deferred things (§5, §8).
@@ -207,6 +228,20 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
   - `CERTAINTY_LOOKS` gives each level its line weight, its dash and its mark in words. No two levels look alike in
     black and white. A look is a style token, never a colour.
   - `readNote` sets `Box.certainty`. The host draws the look on the finished drawing, as it does for a parked thing.
+
+#### Personal profiles (editor spec §39)
+
+- `profiles.ts` — a profile sets density, things at a time, visual cues, reminders and pacing (`ProfileSettings`).
+  `profileOf` reads one Profile thing, and `composeProfiles` lays later ones over earlier ones. `PersonalLayer` reads a
+  person's profiles for them alone. `corporateView` takes every personal thing out of a world (profiles_private).
+- `learning.ts` — `ProfileLearning`: what is learned waits as a suggestion and applies only once approved. `review`,
+  `rollback` and `clearAll` are the private review lens (profiles_at_display, learning_review_lens).
+- `pacing.ts` — `PacingDetector`: the pace of one session, from its own signals. A change has a reason and applies at
+  once. `override` puts the usual pace back and makes that signal count for less (pacing_automatic).
+- `reminders.ts` — `remindersFor` offers the things due as data, styled by the profile. It never sends: an outside
+  tool does (reminders_sent_elsewhere).
+- `display/graph-view/profile-shown.ts` — the card's label, show as shared for the session, the things due, and the
+  pace indicator (profile_settings, adapted_for_viewer).
 
 ### Drawing
 
@@ -870,6 +905,16 @@ built-in types give it too: Graphviz lays them out, and the engine reads that la
 - The registry's `diagramMarks` gives a type's marks, checked, for a host that draws marks. Its `drawDiagram` still
   gives SVG: drawing marks are written by `layoutSvg` and coloured by the theme.
 - The view still shows Graphviz's own SVG. These marks are what the renderer will draw.
+
+### Layouts, `src/layouts/` (editor spec §53)
+
+One contract for every way of placing a graph's things. A layout takes the shape and last time's spots, and gives each
+thing a spot in two or three dimensions, in its own units. The same shape gives the same spots; a warm start moves
+little. A view fits the spots into its space and draws marks there. A new layout is one file and one line in `LAYOUTS`.
+
+- `layouts.ts` — the contract, `Layout`, the list, `LAYOUTS`, and `layoutById` and `layoutsOf` to find one.
+- `force-3d.ts` — the force layout in space: depth keeps apart the links a page would cross. A new thing on a warm
+  start begins beside the things it links to.
 
 ### View types drawn as marks, `src/view-types/` (editor spec §36)
 
