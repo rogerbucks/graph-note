@@ -2,11 +2,13 @@
 // There is a budget for drawing 50 things and 500, a query over a 10 000-thing mesh, and a cold start. Each budget is a
 // benchmark's claim in the quality ratchet (scripts/benchmarks/). It is counted by Cachegrind in the release's quality
 // job. There a claim that does not hold fails whatever the baseline says. Here: every budget has its benchmark and its
-// claim, each case does its work, and a count over its budget breaks the claim. Until slice 6 builds the mesh, 100
-// notes of 100 things stand in.
+// claim, each case does its work, and a count over its budget breaks the claim. The mesh query runs on the mesh's own
+// index (core mesh-index.ts) over 100 notes of 100 things. The desktop app and the VS Code tab draw the Claude Code
+// host's page unchanged, so its cold start is theirs too.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { BENCHMARKS } from '../scripts/benchmarks/index.mjs';
+import { MeshIndex } from '../packages/core/src/mesh-index.ts';
 import { SPEED_BUDGETS } from '../scripts/benchmarks/budgets.mjs';
 import { BENCHMARK_NAMES } from '../scripts/quality-spec.mjs';
 
@@ -99,15 +101,17 @@ describe('the work counted', () => {
   test('the query finds the one thing asked for among 10 000, across the notes of the mesh', async () => {
     const b = byName('mesh_query');
     const inputs = await b.setup();
-    assert.equal(inputs.notes.length, 100);
-    assert.equal(
-      inputs.notes.reduce((n, r, k) => n + r.graphs.get(`note${k}`).boxes.length, 0),
-      10_000,
-    );
+    assert.ok(inputs.mesh instanceof MeshIndex, 'the mesh’s own index');
+    const things = inputs.mesh.backend.notes().reduce((n, note) => {
+      const ids = inputs.mesh.groups(note).groups.map((g) => g.id);
+      return n + inputs.mesh.backend.things(note, ids).length;
+    }, 0);
+    assert.equal(inputs.mesh.backend.notes().length, 100);
+    assert.equal(things, 10_000);
     const found = b.cases['by-name'](inputs);
     assert.deepEqual(
-      found.map((f) => f.text),
-      ['Thing 9999'],
+      found.map((f) => f.key),
+      ['n99'],
     );
   });
 
