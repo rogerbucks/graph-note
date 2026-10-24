@@ -207,6 +207,7 @@
       "end": "2026-11-25",
       "estimate": true,
       "workstreams": [
+        "GS8",
         "W30",
         "W31"
       ],
