@@ -2276,7 +2276,7 @@ This is the one source of what ThoughtKnot's editor must do. It is a graph note:
 (radial_centre_pick)-[:PROVED_BY]->(test_radial_centre_pick),
 (radial_centre_anywhere)-[:PART_OF]->(section_15),
 (radial_centre_anywhere)-[:PROVED_BY]->(test_radial_centre_pick),
-(radial_centre_anywhere)-[:PROVED_BY]->(test_diagram_types),
+(radial_centre_anywhere)-[:PROVED_BY]->(test_radial_centre_chosen),
 (radial_centre_menu)-[:PART_OF]->(section_15),
 (radial_centre_menu)-[:PROVED_BY]->(test_radial_centre_pick),
 (radial_centre_hint)-[:PART_OF]->(section_15),

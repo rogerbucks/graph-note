@@ -32,10 +32,11 @@ const VIEW = "// graph: reader · QUERY view answers\nMATCH (n {id: 'q'})-[]-{1,
 const VIEW_NOTE = ['# Reader', '', fence(RICH), '', fence(VIEW), ''].join('\n');
 
 /**
- * What a thing's details offer beside closing, where the note is only read (§25). They show the drawing filtered to it,
- * and the shortest path to another thing. Both change the picture and nothing else, so reading view has them.
+ * What a thing's details offer beside closing, where the note is only read (§25). They draw the card radial around it
+ * (radial_centre_anywhere), show the drawing filtered to it, and the shortest path to another thing. Each changes the
+ * picture and nothing else, so reading view has them.
  */
-const UNTANGLING = ['Show only this and its neighbours', 'Shortest path to another thing'];
+const UNTANGLING = ['Centre here', 'Show only this and its neighbours', 'Shortest path to another thing'];
 const KEPT = ['Close details', ...UNTANGLING];
 
 /**
