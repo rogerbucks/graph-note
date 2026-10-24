@@ -81,6 +81,17 @@ window.saved = () => {
   again.remove();
   return { label, ticked: ticked.map((b) => b.nextSibling.textContent) };
 };
+// the graph drawn again with one thing renamed, as after an edit, and the view flown to the needle. It gives how many
+// groups have been laid out since the page began
+window.redrawFly = async (edit) => {
+  const edited = { ...drawing, boxes: boxes.map((b) => (b.key === edit ? { ...b, text: b.text + ' renamed' } : b)) };
+  const again = document.body.appendChild(document.createElement('div'));
+  again.style.width = '600px';
+  const next = massiveView(again, edited, { graph: 'Big', palette: PALETTES.light, layout, props });
+  await next.flyTo(next.find('needle')[0]);
+  next.close();
+  return window.parts.length;
+};
 window.stage = () => {
   const stage = card.querySelector('.thoughtknot-massive-stage');
   return { label: stage.getAttribute('aria-label'), width: stage.clientWidth, height: stage.clientHeight };
@@ -378,16 +389,21 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
   test('choosing a match lays out only its group, and flies the view to the thing', options, async () => {
     const { match, view, said } = await run('flyToNeedle()');
     const parts = await run('parts');
-    assert.equal(parts.length, 1, 'one group is laid out');
-    assert.ok(parts[0].includes('t1234'), 'the one the thing is in');
-    assert.ok(parts[0].length < 3000, 'never the whole graph');
+    // the groups near it on screen may be opened a moment later, so the first one laid out is the thing's
+    assert.ok(parts.length >= 1 && parts.length < 150, 'only groups near it are laid out');
+    assert.ok(parts[0].includes('t1234'), 'the first is the one the thing is in');
+    assert.ok(
+      parts.every((p) => p.length < 3000),
+      'never the whole graph',
+    );
     assert.match(said, /^Needle in the stack, in .+/, 'where it went is said aloud');
     assert.equal(match.key, 't1234');
     // the thing's name is now painted in the middle of the view, big enough to read
     assert.ok(view.scale > 0.05, `zoomed in: ${view.scale}`);
     assert.ok((await run('wordsInMiddle()')) > 50, 'its name is in the middle');
+    const laid = (await run('parts')).length;
     await run('flyToNeedle()');
-    assert.equal((await run('parts')).length, 1, 'a group opened once is not laid out again');
+    assert.equal((await run('parts')).length, laid, 'a group opened once is not laid out again');
   });
 
   test(
@@ -411,14 +427,15 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     async () => {
       // in its chain of 20, t1234 links to t1233 and t1235 only
       assert.equal(await run("grow('Show neighbours')"), 'Needle in the stack and the 2 things near it');
-      const parts = await run('parts');
+      // groups near it on screen may be opened after it, so the last part with the thing in is the grown picture
+      const grownPart = async () => (await run('parts')).filter((p) => p.includes('t1234')).at(-1);
       assert.deepEqual(
-        [...parts.at(-1)].sort(),
+        [...(await grownPart())].sort(),
         ['t1233', 't1234', 't1235'],
         'only it and its neighbours are laid out',
       );
       assert.equal(await run("grow('Show neighbours')"), 'Needle in the stack and the 4 things near it');
-      assert.deepEqual([...(await run('parts')).at(-1)].sort(), ['t1232', 't1233', 't1234', 't1235', 't1236']);
+      assert.deepEqual([...(await grownPart())].sort(), ['t1232', 't1233', 't1234', 't1235', 't1236']);
       assert.equal(await run("grow('One step back')"), 'Needle in the stack and the 2 things near it');
       assert.ok((await run('wordsInMiddle()')) > 50, 'the grown picture is painted where the view looks');
     },
@@ -529,5 +546,42 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     const { label, ticked } = await run('saved()');
     assert.match(label, /^Overview of Big: 1,000 things in \d+ groups\./);
     assert.deepEqual(ticked, ['done']);
+  });
+  test(
+    'once the view is still, the groups on screen worth reading are filled in, and zoomed out none is',
+    options,
+    async () => {
+      const still = () => new Promise((r) => setTimeout(r, 700));
+      await run("press('Home', 1)");
+      const laid = (await run('parts')).length;
+      await still();
+      assert.equal((await run('parts')).length, laid, 'far out, every group stays one box');
+      await run("press('+', 24)");
+      await still();
+      const parts = await run('parts');
+      assert.ok(parts.length > laid, 'zoomed in, a group on screen was laid out with nobody asking');
+      assert.ok(
+        parts.slice(laid).every((p) => p.length <= 500),
+        'one group at a time, never the whole graph',
+      );
+      await still();
+      const again = (await run('parts')).length;
+      await still();
+      assert.equal((await run('parts')).length, again, 'a group opened is not laid out again');
+    },
+  );
+  test('drawn again after an edit, only the group the edit touched is laid out again', options, async () => {
+    await run('flyToNeedle()');
+    const before = (await run('parts')).length;
+    assert.equal(
+      await run("redrawFly('t5')"),
+      before,
+      'a thing renamed in another group: the needle’s group is found saved',
+    );
+    assert.equal(
+      await run("redrawFly('t1234')"),
+      before + 1,
+      'a thing renamed in the needle’s own group: that group only',
+    );
   });
 });

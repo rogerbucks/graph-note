@@ -216,6 +216,10 @@ These test behaviour across modules, or the repository itself, so they are named
   (§35).
 - `packages/core/test/saved-scenarios.test.js` — a scenario saved from a test run is never rerun, faded or enforced
   (editor spec §35). It spans `scenarios.ts`, `test-runs.ts` and `process-core.ts`.
+- `packages/core/test/progressive-draw.test.js` — a massive graph is drawn in steps. The overview comes first. Then
+  come the chosen group and those nearest the middle, each added to the picture (editor spec §53, scale_progressive).
+- `packages/core/test/level-of-detail.test.js` — a massive graph opens as one box for each group. A group shows its
+  things only when zoomed in on. The screen is never given more than it holds (scale_level_of_detail).
 - `packages/core/test/mesh-work-in-engine.test.js` — pathfinding, centroids, altitude and transitions are the engine's.
 - `packages/core/test/mesh-surfaces.test.js` — Obsidian, VS Code and the web view read the same notes, so an edit shows in all three.
   No host computes them itself (editor spec §27, mesh_work_in_engine).
