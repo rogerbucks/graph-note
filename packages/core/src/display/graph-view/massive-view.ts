@@ -11,7 +11,6 @@
 // A filter the host gives is the one the overview starts with.
 import { formatCount, word } from '@thoughtknot/core';
 import type { Drawn, GraphDrawing, Refusal } from '@thoughtknot/core';
-import type { DrawMark } from '../../drawing-marks.ts';
 import type { LaidMarks } from '../../graphviz-marks.ts';
 import { partOf } from '../../expand-on-demand.ts';
 import { FacetIndex, facetsOf } from '../../facet-counts.ts';
@@ -23,22 +22,23 @@ import { overviewOf } from '../../overview.ts';
 import type { Palette } from '../../palette.ts';
 import { groupsOf, type Grouping } from '../../scale-groups.ts';
 import { Trail } from '../../explore-trail.ts';
-import { FLY_MS, ThingSearch, flyPath, openGroup, placeOf, viewOnto } from '../../search-fly.ts';
+import { FLY_MS, ThingSearch, flyPath, placeOf, viewOnto } from '../../search-fly.ts';
 import type { FlyView, Match, Rect } from '../../search-fly.ts';
 import { reducedMotion } from './details-nav';
-import { parsedSvg } from './drawing-svg';
 import { webgl2Painter } from './gl-painter.ts';
 import { webgpuPainter } from './gpu-painter.ts';
 import { canvasPainter, paintsOf, pickPainter } from './mark-painter.ts';
 import type { MarkPainter, Paint, PainterKind, Paints } from './mark-painter.ts';
 import { filterPanel } from './massive-filter.ts';
+import { detailFiller, thingAt } from './massive-detail.ts';
+import { laidInside } from './massive-lay.ts';
 import { growBar } from './massive-grow.ts';
 import type { GrowState } from './massive-grow.ts';
 import { moveControls } from './massive-moves.ts';
 import { plainPaints, spaceButton } from './massive-paints.ts';
+import { placesKept } from './massive-places.ts';
 import { LISTED, searchBox } from './massive-search.ts';
-import { button } from './view-bar';
-import { marksOfSvg } from './svg-marks.ts';
+import { button } from '../button';
 
 /** What the overview needs from its host. */
 export interface MassiveOptions {
@@ -97,7 +97,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   let names = new Map(grouping.groups.map((g) => [g.id, g.label]));
   let keysOf = new Map(grouping.groups.map((g) => [g.id, g.keys]));
   const owner = {};
-  let laid: LaidMarks = overviewOf(grouping, live.order);
+  let laid: LaidMarks = placesKept(o.graph, overviewOf(grouping, live.order));
   /** The marks while groups glide after a filter, painted without an index; null when still. */
   let gliding: LaidMarks | null = null;
   let index = new MarkIndex(laid);
@@ -144,6 +144,7 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
     const marks = gliding ? visibleOf(gliding.marks, view, camera.scale) : index.visible(view, camera.scale);
     painter?.paint(marks, camera, paints);
     text?.paint(marks, camera, paints);
+    settle();
   };
   const again = () => {
     if (asked) return;
@@ -195,28 +196,24 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
    * that box is made, over the overview, as for a picture grown from a thing. False when it cannot be drawn.
    */
   const layIn = async (id: string, part: GraphDrawing, box?: Rect): Promise<boolean> => {
-    const drawn = await o.layout(part, owner);
-    if (!open || !drawn || 'reason' in drawn) return false;
-    // the SVG is read in the card, so each shape takes the theme's colours, then taken away
-    const holder = el.createDiv({ cls: 'thoughtknot-massive-read' });
-    const svg = holder.appendChild(parsedSvg(drawn));
-    const read = marksOfSvg(svg);
-    holder.remove();
-    const marks: DrawMark[] = read.marks.map((m) => ({ ...m, style: `${id}|${m.style}` }));
-    for (const m of read.marks) insidePaints.set(`${id}|${m.style}`, read.paints(m.style));
-    const base = box
-      ? {
-          space: laid.space,
-          marks: [
-            ...laid.marks.filter((m) => m.id !== id),
-            { id, kind: 'group', style: 'overview.grown', z: 2.9, ...box } as const,
-          ],
-        }
-      : laid;
-    laid = openGroup(base, id, { space: { width: drawn.width, height: drawn.height }, marks });
+    const next = await laidInside({ layout: o.layout, owner, el, insidePaints }, laid, id, part, box);
+    if (!open || !next) return false;
+    laid = next;
     index = new MarkIndex(laid);
     return true;
   };
+
+  // the detail fills in once the view is still: the groups on screen worth reading, nearest the middle first
+  const settle = detailFiller(
+    win,
+    () => ({ open, moving: !!gliding, overview: laid, camera, screen: { width, height }, opened, grouping }),
+    async (id) => {
+      const drawn = await layIn(id, partOf(drawing, keysOf.get(id) ?? []));
+      if (drawn) opened.add(id);
+      again();
+      return drawn;
+    },
+  );
 
   /** Flies the view to `place`, or puts it there at once under reduced motion. */
   const flyOnto = async (place: Rect) => {
@@ -365,9 +362,12 @@ export function massiveView(parent: HTMLElement, drawing: GraphDrawing, o: Massi
   };
   // the thing under a click, the one drawn on top
   const pick = (sx: number, sy: number) => {
-    const at = { x: camera.x + sx / camera.scale, y: camera.y + sy / camera.scale, width: 0, height: 0 };
-    const hit = index.inView(at).map((i) => index.marks[i]);
-    const key = hit.filter((m) => m?.kind === 'box' && m.of).pop()?.of;
+    const key = thingAt(
+      (x, y) => index.inView({ x, y, width: 0, height: 0 }).flatMap((i) => index.marks[i] ?? []),
+      camera,
+      sx,
+      sy,
+    );
     if (key) o.picked?.(key);
   };
   const [back, forward] = [() => go(trail.back()), () => go(trail.forward())];

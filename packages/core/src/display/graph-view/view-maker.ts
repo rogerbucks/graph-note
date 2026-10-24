@@ -5,7 +5,7 @@
 import { makeView, pathsOf, readingOf, word } from '@thoughtknot/core';
 import type { WordKey } from '@thoughtknot/core';
 import type { ViewKind, ViewSpec } from '@thoughtknot/core';
-import { button } from './view-bar';
+import { button } from '../button';
 import type { ViewOptions } from './view-options';
 
 const KINDS: [ViewKind, WordKey][] = [

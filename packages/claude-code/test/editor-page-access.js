@@ -208,7 +208,7 @@ export function accessCases({ at, ROOT, LAYER }) {
           absWorkingDir: ROOT,
           stdin: {
             contents:
-              `export { toggleExportForm } from './${LAYER}/export/export-form.ts'; export { button } from './${LAYER}/graph-view/view-bar.ts';` +
+              `export { toggleExportForm } from './${LAYER}/export/export-form.ts'; export { button } from './${LAYER}/button.ts';` +
               ` export { installHost } from './${LAYER}/host.ts';`,
             resolveDir: ROOT,
             loader: 'ts',

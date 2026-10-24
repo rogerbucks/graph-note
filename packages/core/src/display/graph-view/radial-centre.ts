@@ -6,7 +6,7 @@
 import { word } from '@thoughtknot/core';
 import { boxPlaces } from './regroup';
 import type { DiagramShown, TypeLeftAt } from './type-strip';
-import { button } from './view-bar';
+import { button } from '../button';
 
 /**
  * Gives `d` its way to put a thing in the centre, as `putCentre`, and says a centre picked under the strip in `root`.

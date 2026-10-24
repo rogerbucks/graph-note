@@ -11,6 +11,8 @@ import { REREAD_BUDGET } from '../src/partial-read.ts';
 import { DIFF_LIMIT, lineDiff } from '../src/line-diff.ts';
 import { PathPlayer, pathsOf } from '../src/paths.ts';
 import { readNote } from '../src/drawing.ts';
+import { typeSuggestions } from '../src/type-suggestion.ts';
+import gs from '@thoughtknot/graph-spec';
 
 const REQUIREMENTS = readFileSync(new URL('../../../requirements/editor-requirements.md', import.meta.url), 'utf8');
 
@@ -83,5 +85,59 @@ describe('the open numbers', () => {
       const inside = pace >= THRESHOLDS.path_pace.least && pace <= THRESHOLDS.path_pace.most;
       assert.equal(timer.waits[0], inside ? pace : DEFAULT_PACE, `${pace}`);
     }
+  });
+  // proves: thresholds_named
+  test('a type suggestion at the edges: the least share and the fewest instances are kept, and one under either is not', () => {
+    const { instance_share: share, instance_fewest: fewest } = THRESHOLDS;
+    /** `n` instances of one type, `agree` of them setting the same weight. */
+    const desks = (n, agree) =>
+      `# Desks\n\n\`\`\`gql\n// graph: desks\n(k:Kind {name: 'K'}),\n${Array.from({ length: n }, (_, i) => `(i${i}:Item {serial: 'S${i}'${i < agree ? ', weight: 180' : ''}}),\n(i${i})-[:INSTANCE_OF]->(k)`).join(',\n')}\n\`\`\`\n`;
+    // the share: exactly the least is enough, one fewer is not
+    for (const least of [share.least, 0.75, share.most]) {
+      const n = 8;
+      const enough = Math.ceil(n * least);
+      assert.equal(typeSuggestions(desks(n, enough), 'desks', { least }).length, 1, `${least} enough`);
+      if (enough > 1)
+        assert.equal(typeSuggestions(desks(n, enough - 1), 'desks', { least }).length, 0, `${least} short`);
+    }
+    // the fewest: exactly that many instances is enough, one fewer is not
+    for (const f of [fewest.least, fewest.value, 10]) {
+      assert.equal(typeSuggestions(desks(f, f), 'desks', { fewest: f }).length, 1, `${f} enough`);
+      assert.equal(typeSuggestions(desks(f - 1, f - 1), 'desks', { fewest: f }).length, 0, `${f} short`);
+    }
+    // a value outside either range gives the default, as the table says
+    assert.equal(typeSuggestions(desks(3, 3), 'desks', { fewest: 1 }).length, 1);
+    assert.equal(typeSuggestions(desks(2, 2), 'desks', { fewest: 1 }).length, 0);
+    assert.equal(typeSuggestions(desks(4, 2), 'desks', { least: 0.1 }).length, 0);
+  });
+
+  // proves: thresholds_named
+  test('the cycle guard at the edges: the graph spec’s defaults are the named ones, and the least and most passes are kept', () => {
+    const { cycle_passes: passes, cycle_threshold: threshold } = THRESHOLDS;
+    // two clusters that swap never settle, so a run goes as far as its passes allow
+    const cases = JSON.parse(
+      readFileSync(new URL('../../graph-spec/test/centroid-cases.json', import.meta.url), 'utf8'),
+    ).cases;
+    const c = cases.find((x) => x.name === 'two centroids that swap stop at the most passes, unsettled');
+    const graphOf = (st) =>
+      new gs.Graph(
+        new Map(st.nodes.map(([id, labels, props]) => [id, [new Set(labels), { id, ...props }]])),
+        st.edges.map(([a, t, b]) => [a, t, b, {}]),
+      );
+    const run = (options) => {
+      let previous;
+      return c.steps.map((st) => (previous = gs.centroidsOf(graphOf(st), { ...options, previous }))).at(-1);
+    };
+    assert.equal(run({}).passes, passes.value);
+    for (const edge of [passes.least, passes.most, 0, passes.most + 1]) {
+      const taken = thresholdValue('cycle_passes', edge);
+      const inside = edge >= passes.least && edge <= passes.most;
+      assert.equal(taken, inside ? edge : passes.value, `${edge}`);
+      assert.equal(run({ passes: taken }).passes, taken, `${edge}`);
+      assert.equal(run({ passes: taken }).settled, false, `${edge}`);
+    }
+    assert.ok(threshold.least < threshold.value && threshold.value < threshold.most);
+    assert.equal(thresholdValue('cycle_threshold', threshold.most), threshold.most);
+    assert.equal(thresholdValue('cycle_threshold', 0), threshold.value);
   });
 });
