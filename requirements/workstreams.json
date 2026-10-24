@@ -1163,5 +1163,15 @@
       "axioms_before_sync",
       "axioms_consistent"
     ]
+  },
+  "TS1": {
+    "title": "Temporal security: history, clocks, replay and expiry",
+    "size": "M",
+    "requirements": [
+      "temporal_erased_stays_erased",
+      "temporal_clock_not_trusted",
+      "temporal_replay_refused",
+      "temporal_checked_at_use"
+    ]
   }
 }

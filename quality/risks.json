@@ -4266,6 +4266,36 @@
         "test/code-scan.test.js",
         "scripts/code-scan.mjs"
       ]
+    },
+    {
+      "id": "SEC-19",
+      "role": "Senior security engineer",
+      "area": "security",
+      "title": "Time-related attacks on history, sync and shared links are not yet reviewed",
+      "risk": "The history views (as-at, change log), clock use in sync and peer-to-peer, replayed edits, keys and permissions that change over time, and expiry of links and caches have had no review of their own. An erased thing could still show at an earlier moment, a wrong device clock could win a merge, an old signed edit could be sent again, and a permission could be checked once and used later. Sync (Wave 13) would make each of these reachable.",
+      "evidence": [
+        "packages/graph-spec/src/mesh/as-at.js",
+        "packages/core/test/mesh-history.test.js",
+        "packages/core/test/mesh-history-log.test.js",
+        "unverified: no review has looked at these together; requirements §65 plan the checks"
+      ],
+      "likelihood": "medium",
+      "impact": "high",
+      "decision": "fix-later",
+      "fix": "Review the five areas and write what each must do as the tests of section 65 (workstream TS1), before the CRDT transport (W30) and the peer network (W31) ship.",
+      "check": "The tests of section 65 in packages/core/test/temporal-security.test.js, and the wave gate for Wave 13.",
+      "paths": [
+        "packages/graph-spec/src/mesh/as-at.js",
+        "packages/core/src/index-mesh.ts"
+      ],
+      "effort": "days",
+      "raised": "2026-10-24",
+      "reviewed": {
+        "date": "2026-10-24",
+        "commit": "bb0e524729d761a56f141608ff7e51cff40bf43f"
+      },
+      "status": "open",
+      "wave": "Wave 13 · Slice 9 store, sync and network"
     }
   ]
 }
