@@ -161,6 +161,7 @@
   .thoughtknot-proposal.is-sheet,
   .thoughtknot-details.is-sheet,
   .thoughtknot-viewport > .thoughtknot-pointer,
+  .thoughtknot-view:has(> .thoughtknot-space-view) > .thoughtknot-details:not([hidden], .thoughtknot-sheet),
   .thoughtknot-sheet {
     border: 1px solid CanvasText;
   }
@@ -2508,6 +2509,26 @@ pre.thoughtknot-code {
   background: var(--gn-bg);
   border-radius: var(--gn-radius-s);
   border: 1px solid var(--gn-border-focus);
+}
+/* a thing or link picked in the 3D view opens its details down the right, over the view, as in 2D (Roger, 24 Oct
+   2026). In view mode the details are a sheet at the foot, which already sits over the card. The view's buttons and
+   the picked name move left to stay clear of it. */
+.thoughtknot-view:has(> .thoughtknot-space-view) > .thoughtknot-details:not([hidden], .thoughtknot-sheet) {
+  position: absolute;
+  z-index: 4;
+  inset-block: var(--gn-space-2);
+  inset-inline-end: var(--gn-space-2);
+  /* as wide as its words need, up to its share of the view, so a longer language wraps */
+  max-width: var(--thoughtknot-space-details, min(340px, 45%));
+  box-sizing: border-box;
+  margin: 0;
+  overflow: auto;
+  background: var(--gn-bg);
+  box-shadow: var(--gn-shadow-s);
+}
+.thoughtknot-view:has(> .thoughtknot-details:not([hidden], .thoughtknot-sheet))
+  :is(.thoughtknot-space-pad, .thoughtknot-space-said) {
+  inset-inline-end: calc(var(--thoughtknot-space-details, min(340px, 45%)) + 2 * var(--gn-space-2));
 }
 /* how to move it, in short steps at the foot, kept clear of the buttons */
 .thoughtknot-space-help {
