@@ -39,10 +39,10 @@ describe('a Links in the style graph', () => {
     );
   });
 
-  test('a routing that is not one of the three is a problem, fixed to the nearest, and is left out', () => {
+  test('a routing that is not one of the four is a problem, fixed to the nearest, and is left out', () => {
     const { style, problems } = styled("(r1:Links {routing: 'stright'})");
     assert.deepEqual(said(problems), [
-      [2, 'stright is not a routing: links are curved, straight or right-angled', 'change stright to straight'],
+      [2, 'stright is not a routing: links are curved, straight, right-angled or direct', 'change stright to straight'],
     ]);
     assert.deepEqual(problems[0].replace, { written: 'stright', with: ['straight'] });
     assert.deepEqual(style.links, []);
@@ -52,7 +52,11 @@ describe('a Links in the style graph', () => {
     const { style, problems } = styled("(r1:Links {merge: 'yes'}),", "(r2:Links {view: 'near'})");
     assert.deepEqual(said(problems), [
       [2, 'merge must be on or off', 'change yes to on or off'],
-      [3, 'a Links sets routing or merge', "add routing: 'curved', 'straight' or 'right-angled', or merge: 'on'"],
+      [
+        3,
+        'a Links sets routing or merge',
+        "add routing: 'curved', 'straight', 'right-angled' or 'direct', or merge: 'on'",
+      ],
     ]);
     assert.deepEqual(style.links, []);
   });
@@ -85,6 +89,12 @@ describe('a Links in the style graph', () => {
 describe('the links of a graph or a view', () => {
   test('are curved and unmerged unless the style graph says otherwise', () => {
     assert.deepEqual(linksOf(styled().style), { routing: 'curved', merge: false });
+  });
+
+  test('direct is a routing a Links may choose, with no problem', () => {
+    const { style, problems } = styled("(r1:Links {routing: 'direct'})");
+    assert.deepEqual(problems, []);
+    assert.deepEqual(linksOf(style), { routing: 'direct', merge: false });
   });
 
   test('a view takes its own routing and merging over the whole graph’s, each apart', () => {
