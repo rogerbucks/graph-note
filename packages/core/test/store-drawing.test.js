@@ -7,6 +7,7 @@ import { readNote } from '../src/drawing.ts';
 import { MeshIndex, memoryBackend, sqliteBackend } from '../src/mesh-index.ts';
 import { storedGraphs, storedStyle } from '../src/store-drawing.ts';
 import { savedFilterFor } from '../src/filter-saved.ts';
+import { emptyStyle } from '../src/style-graph.ts';
 import { sqlEngine } from './mesh-test-sql.js';
 
 const now = () => Promise.resolve();
@@ -95,4 +96,13 @@ test('a huge note’s saved filter is read from its style block, checked against
     ['Prt is not a kind in graph shop'],
     'a kind the graph lacks, found from the store',
   );
+});
+
+test('a huge note with no style block for its graph never builds the graph for the style checks', async () => {
+  const shop = (await storedGraphs(new MeshIndex(memoryBackend()), 'shop.md', SHOP, now)).get('shop');
+  const read = storedStyle(SHOP, {
+    ...shop,
+    world: () => assert.fail('the graph was built, with no style to check'),
+  });
+  assert.deepEqual(read, { style: emptyStyle(), problems: [] });
 });
