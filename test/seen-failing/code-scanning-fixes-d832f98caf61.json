@@ -1,0 +1,6 @@
+{
+  "file": "test/code-scanning-fixes.test.js",
+  "test": "a pattern that ran slow on text made for it now runs in time with its length (js/polynomial-redos) > a type suggestion written after a note with a long run of newlines",
+  "seen_failing_first": false,
+  "evidence": "CodeQL flags the old trailing-newline pattern as polynomial, but this Node runs it in time at this size; the test keeps the count-based cut and its output"
+}

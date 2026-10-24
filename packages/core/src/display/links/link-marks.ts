@@ -5,7 +5,7 @@
 import { attachmentsOf, linksIn } from '@thoughtknot/core';
 import type { NoteReading } from '@thoughtknot/core';
 import { cornerOf } from '../graph-view/parked';
-import type { LinkHost } from './link-types';
+import type { LinkHost } from '../link-host';
 
 const SVG = 'http://www.w3.org/2000/svg';
 

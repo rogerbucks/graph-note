@@ -2,7 +2,7 @@
 // or link, View (§25), 3D view (§53) and Full screen. Where the note is edited, it holds Edit here and Edit in pane. In reading
 // view, it holds Source.
 // Each control says what it is in words as well as by its icon.
-import { setIcon } from '../host';
+import { button } from '../button';
 import { parkedCount, word } from '@thoughtknot/core';
 import type { ViewOptions } from './view-options';
 
@@ -17,21 +17,6 @@ const parkedWords = (count: { parked: number; overdue: number } | undefined): st
         ...(count.overdue ? [word('bar.overdue', { count: count.overdue })] : []),
       ]
     : [];
-
-/** An icon button named for screen readers, with words beside the icon when given. */
-export function button(
-  parent: HTMLElement,
-  label: string,
-  icon: string,
-  onClick: () => void,
-  text?: string,
-): HTMLButtonElement {
-  const b = parent.createEl('button', { cls: 'clickable-icon', attr: { 'aria-label': label, type: 'button' } });
-  setIcon(b, icon);
-  if (text) b.createSpan({ cls: 'thoughtknot-badge-text', text });
-  b.addEventListener('click', onClick);
-  return b;
-}
 
 /** What the bar's buttons do. */
 export interface BarActions {

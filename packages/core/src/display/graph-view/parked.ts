@@ -8,7 +8,7 @@ import type { Box, Indent, NoteReading, Parked } from '@thoughtknot/core';
 /** A graph as the whole note reads it. */
 type Graph = NoteReading['whole'][string];
 import type { DeclaredDeferred } from './view-options';
-import { button } from './view-bar';
+import { button } from '../button';
 
 const SVG = 'http://www.w3.org/2000/svg';
 /** The button that writes Deferred and DEFERS into the schema when Park it was refused for lacking them. */

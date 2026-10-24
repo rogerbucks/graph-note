@@ -204,6 +204,10 @@ export const KEPT = {
     'the whole graph {}',
     '{} thing{} chosen from graph {}: {}',
   ],
+  // the one tool's description, read by the AI model it is offered to, never by a person: it stays in UK English
+  'packages/core/src/ai-query.ts': [
+    'Reads things from a graph the user shares. It only reads. Give a label to match, conditions on properties, and how many to return.',
+  ],
   // the graph spec library's names for the kinds of secret, looked up to say each from the catalogue
   'packages/core/src/ai-ceiling.ts': [
     'a private key',
@@ -212,6 +216,8 @@ export const KEPT = {
     'a password or secret',
     'a card number',
   ],
+  // the graph spec library's name for a password, compared with to refuse its write, never shown
+  'packages/core/src/secrets.ts': ['a password or secret'],
   // the purposes as the spec names them: what a person types for a model, and what the send dialog compares it with
   'packages/core/src/ai-choice.ts': ['Research questions', 'Proposing changes', 'Restricted processing'],
   // what an edit writes into the note, which is its bytes, never translated: comments, and GQL as Lock writes it

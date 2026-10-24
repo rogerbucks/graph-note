@@ -297,6 +297,7 @@ describe('the setup', () => {
       'README.md',
       'CONTRIBUTING.md',
       'AGENTS.md',
+      'docs/agents/HANDBOOK.md',
       'packages/core/GUIDE.md',
       'python/graph_spec/GUIDE.md',
     ])
