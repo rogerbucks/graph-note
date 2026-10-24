@@ -161,6 +161,7 @@
   .thoughtknot-proposal.is-sheet,
   .thoughtknot-details.is-sheet,
   .thoughtknot-viewport > .thoughtknot-pointer,
+  .thoughtknot-view:has(> .thoughtknot-space-view) > .thoughtknot-details:not([hidden], .thoughtknot-sheet),
   .thoughtknot-sheet {
     border: 1px solid CanvasText;
   }
@@ -2471,7 +2472,8 @@ pre.thoughtknot-code {
   z-index: 4;
   inset-block: var(--gn-space-2);
   inset-inline-end: var(--gn-space-2);
-  width: var(--thoughtknot-space-details, min(340px, 45%));
+  /* as wide as its words need, up to its share of the view, so a longer language wraps */
+  max-width: var(--thoughtknot-space-details, min(340px, 45%));
   box-sizing: border-box;
   margin: 0;
   overflow: auto;
