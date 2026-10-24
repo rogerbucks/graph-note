@@ -173,6 +173,27 @@ Every module is flat in `src/`, one purpose each, named for it. Each opens with 
 - `edits-from-views.ts` — an edit made in any view, planned and then saved into the core (editor spec §34,
   edits_from_any_view). The plan lists the views it changes, its gaps, what the view hides and the dangling links.
 
+#### Runs, tests and the process debugger (editor spec §35)
+
+- `test-runs.ts` — `TestRun`: a process stepped one transition at a time as a test, never as the real thing.
+  - It is its own Run thing, flagged `test`, with its own log. `historyOf` leaves test runs out of real history unless
+    the lens asks for them (test_runs_flagged).
+  - It reads the live graph, or a snapshot or editable copy chosen as it starts (test_run_source).
+  - It changes no certainty unless it opted in, and then `record` lists each change (test_runs_leave_certainty).
+  - A transition's `do` runs a stub, never the effect (side_effects_stubbed).
+  - Each step stops with a `RunPause`: the states, each guard tried and why, the artefacts, resources and certainty
+    changes. `breakpointsOf` reads the Breakpoint things, so breakpoints are saved and queried like any other.
+- `intent-checks.ts` — Intent things with a test in the guard language, read against `processFacts`. `IntentWatch`
+  checks them each time the process changes, and `ProcessViews` holds one, so no step by the user is needed
+  (intent_checks).
+- `scenarios.ts` — a test run kept as a Scenario thing (`scenarioText`, `scenariosOf`). Nothing reruns, fades or
+  enforces it; `replayScenario` runs it only when asked and says where it differs (saved_scenarios).
+- `playback.ts` — `PlaybackController`: autoplay at each transition's natural pace (`naturalPace`), or by hand forward
+  and back, one mode at a time. Its visits are an ephemeral log; `lasting` keeps only consequence-bearing ones as
+  VISITED links (playback_controller).
+- `process-source-words.ts` — the debugger's words. The strip itself is `display/graph-view/process-debug.ts`, offered
+  from the walk strip.
+
 #### Deferred things
 
 - `deferred.ts` — deferred things (§5, §8).

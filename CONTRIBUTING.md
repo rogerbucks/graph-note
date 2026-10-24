@@ -210,6 +210,12 @@ These test behaviour across modules, or the repository itself, so they are named
 ### The core
 
 - `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
+- `packages/core/test/test-run-source.test.js` — what a test run reads: live, a snapshot or a copy (editor spec §35).
+- `packages/core/test/test-run-certainty.test.js` — a test run leaves certainty as it is, unless it opted in (§35).
+- `packages/core/test/side-effects-stubbed.test.js` — a test run stubs each side effect and reaches nothing outside
+  (§35).
+- `packages/core/test/saved-scenarios.test.js` — a scenario saved from a test run is never rerun, faded or enforced
+  (editor spec §35). It spans `scenarios.ts`, `test-runs.ts` and `process-core.ts`.
 - `packages/core/test/mesh-work-in-engine.test.js` — pathfinding, centroids, altitude and transitions are the engine's.
 - `packages/core/test/mesh-surfaces.test.js` — Obsidian, VS Code and the web view read the same notes, so an edit shows in all three.
   No host computes them itself (editor spec §27, mesh_work_in_engine).
@@ -389,6 +395,13 @@ These test behaviour across modules, or the repository itself, so they are named
   and opens it (editor spec §7, many_views_one_data, view_of_another_note).
 - `packages/obsidian/test/views-over-one-graph.test.js` — two views of one graph, stacked, each drawn as its own type.
   An edit to the graph shows in both. A type chosen in one is saved for it alone (editor spec §36, views_over_one_graph).
+
+### The Obsidian plugin: the process debugger
+
+- `packages/obsidian/test/process-debugger.test.js` — the process debugger in a drawing's walk strip (editor spec
+  §35). It spans `process-debug.ts` and the core's `test-runs.ts`.
+- `packages/obsidian/test/playback-controller.test.js` — the player under the debugger, autoplay or by hand (§35). It
+  spans `process-debug.ts` and the core's `playback.ts`.
 
 ### The graph format library
 
