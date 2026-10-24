@@ -728,6 +728,7 @@
         ],
         "Direction": [
           "interface",
+          "curved?: string | undefined",
           "dot: string",
           "rankdir: string",
           "src: LayoutSource",
