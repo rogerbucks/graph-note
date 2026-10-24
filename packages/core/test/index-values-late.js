@@ -1,9 +1,34 @@
-// The last part of the values src/index.ts exports, from schemaMove on, sorted: test support only, nothing here ships.
+// The last part of the values src/index.ts exports, from readyLenses on, sorted: test support only, nothing here ships.
 // It is kept apart from index-names.js, which joins it to the values before it, so neither file passes the test file
 // size.
 // TIMELINE_ORDERS, TIMELINE_SHOWS and chosenDiagram, listed in index-names.js, came on 22 Oct 2026 (timeline_order,
 // timeline_show, timeline_choice_card).
 export const VALUES_LATE = [
+  'readyLenses',
+  'recentLenses',
+  'reducedWords',
+  'refusal',
+  'refusedWords',
+  'remoteImagesIn',
+  'removeFromList',
+  'renameAcross',
+  'renameProperty',
+  'renamedLinks',
+  'replaceBlock',
+  'replayScenario',
+  'reverseGuess',
+  'reversedLinks',
+  'reviewLevels',
+  'runPluginStep',
+  'runStep',
+  'safeMarkdown',
+  'saidDate',
+  'sampleExports',
+  'saveEdit',
+  'sayWords',
+  'scaledMarks',
+  'scenarioText',
+  'scenariosOf',
   'schemaMove',
   'schemaPicture',
   'schemaVersions',
