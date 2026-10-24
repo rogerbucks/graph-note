@@ -52,7 +52,16 @@ describe('the nightly workflow', () => {
 
   test('reads only, but for the publish job and the draft check, which may write contents alone', () => {
     assert.deepEqual(permissionValues(block(lines, 'permissions', 0)), ['read']);
-    assert.deepEqual(Object.keys(jobs(text)), ['check', 'security', 'build', 'desktop', 'publish', 'drafts']);
+    assert.deepEqual(Object.keys(jobs(text)), [
+      'check',
+      'security',
+      'public-readiness',
+      'build',
+      'desktop',
+      'publish',
+      'drafts',
+    ]);
+    assert.equal(block(jobs(text)['public-readiness'], 'permissions', 4), null);
     assert.equal(block(jobs(text).check, 'permissions', 4), null);
     assert.equal(block(jobs(text).build, 'permissions', 4), null);
     assert.deepEqual(given('publish'), ['contents: write']);
