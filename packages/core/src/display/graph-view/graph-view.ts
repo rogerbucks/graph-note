@@ -3,8 +3,7 @@
 // tapped or opened by keyboard. This ties together its folder's parts: bar, drawing, taps, details, where it is placed.
 import { Lifecycle } from '../lifecycle';
 import { inHost, isPhone, readInHostDirection, setIcon } from '../host';
-import { AcrossZoom, Zoom, scrollsOneWay, word } from '@thoughtknot/core';
-import type { Drawn, View } from '@thoughtknot/core';
+import { AcrossZoom, Zoom, scrollsOneWay, word, type Drawn, type View } from '@thoughtknot/core';
 import { SourceToggle } from './source-toggle';
 import { readOnlyHere, whenPlaced } from './placement';
 import { gateWrites } from './read-only';
@@ -271,6 +270,7 @@ export class GraphView extends Lifecycle {
       },
       () => !gone,
     );
+    this.switching?.curveLater(this.drawn); // a drawing shown with straight links first gets its curves next (§11)
   }
 
   /** The edit button as the card stands: a pencil to edit here, or, while edited, a view icon to finish (spec §4). */
