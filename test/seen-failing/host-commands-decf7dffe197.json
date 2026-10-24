@@ -1,0 +1,6 @@
+{
+  "file": "packages/vscode/test/host-commands.test.js",
+  "test": "VS Code is given the two commands under the ids its menus and keys name",
+  "seen_failing_first": false,
+  "evidence": "It pins the ids menus and keys name, which must not change when the commands move, so it passes before."
+}
