@@ -38,6 +38,20 @@ export interface SpaceLine {
   id: string;
   style: string;
   points: Vec3[];
+  /** The keys of the things it runs from and to, when it joins two. */
+  from?: string;
+  to?: string;
+  /** What the link says, such as its relationship. */
+  words?: string;
+}
+
+/** An arrowhead: its tip, a point back along its link where it is widest, and its length, in pixels of the space. */
+export interface SpaceArrow {
+  id: string;
+  style: string;
+  tip: Vec3;
+  back: Vec3;
+  size: number;
 }
 
 /** Words floating at a point, `size` pixels high when one pixel of the space is one pixel of the screen. */
@@ -49,6 +63,8 @@ export interface SpaceLabel {
   size: number;
   /** The key of the thing it names, when it names one. */
   of?: string;
+  /** The id of the link whose words these are, when they are a link's. */
+  link?: string;
 }
 
 /** A drawing lifted into the space, and the box around it all. */
@@ -56,6 +72,9 @@ export interface SpaceMarks {
   blocks: Block[];
   lines: SpaceLine[];
   labels: SpaceLabel[];
+  arrows: SpaceArrow[];
+  /** Whether each block is painted as the ball inside it, rather than as a box (space-spread.ts). */
+  round?: boolean;
   least: Vec3;
   most: Vec3;
 }
@@ -75,6 +94,9 @@ const SHORTEST = 4;
 const ARC = 0.18;
 /** How many straight pieces a link's arc is painted with. */
 const ARC_STEPS = 12;
+/** How long an arrowhead is, and how large a link's words are, in pixels of the space. */
+const ARROW = 10,
+  WORDS = 11;
 
 /** The page's down is the space's back, so the drawing reads the same way up when seen from the front. */
 const along = (y: number) => -y;
@@ -134,11 +156,22 @@ export function spaceOf(marks: readonly DrawMark[], depth: DepthBy): SpaceMarks 
 
   const lines: SpaceLine[] = [];
   const labels: SpaceLabel[] = [];
+  const arrows: SpaceArrow[] = [];
   for (const m of marks) {
     if (m.kind === 'link') {
       const a = m.from === undefined ? undefined : byKey.get(m.from),
         b = m.to === undefined ? undefined : byKey.get(m.to);
-      lines.push({ id: m.id, style: m.style, points: arcOf(m.points, top(a), top(b)) });
+      const line: SpaceLine = { id: m.id, style: m.style, points: arcOf(m.points, top(a), top(b)) };
+      if (m.from !== undefined && m.to !== undefined) [line.from, line.to] = [m.from, m.to];
+      if (m.name) line.words = m.name;
+      lines.push(line);
+      // an arrowhead where the link comes down onto the thing it points to, and its words at the top of its arc
+      const tip = line.points[line.points.length - 1],
+        back = line.points[line.points.length - 2];
+      if (b && tip && back) arrows.push({ id: `${m.id}\narrow`, style: m.style, tip, back, size: ARROW });
+      const middle = line.points[Math.floor(line.points.length / 2)];
+      if (m.name && middle)
+        labels.push({ id: `${m.id}\nwords`, style: m.style, at: middle, text: m.name, size: WORDS, link: m.id });
     } else if (m.kind === 'label') {
       const on = (m.of === undefined ? undefined : byKey.get(m.of)) ?? (m.group ? byKey.get(m.group) : undefined);
       const label: SpaceLabel = {
@@ -152,7 +185,7 @@ export function spaceOf(marks: readonly DrawMark[], depth: DepthBy): SpaceMarks 
       labels.push(label);
     }
   }
-  return { blocks, lines, labels, ...boundsOf(blocks, lines, labels) };
+  return { blocks, lines, labels, arrows, ...boundsOf(blocks, lines, labels) };
 }
 
 /** A link's points in the space: from height `from` to height `to`, rising in an arc between. */
@@ -176,7 +209,7 @@ function arcOf(points: readonly MarkPoint[], from: number, to: number): Vec3[] {
 }
 
 /** The corners of the box around every block, line and label. */
-function boundsOf(
+export function boundsOf(
   blocks: readonly Block[],
   lines: readonly SpaceLine[],
   labels: readonly SpaceLabel[],
@@ -288,68 +321,6 @@ export function projectPoint(
     w = m(3) * p[0] + m(7) * p[1] + m(11) * p[2] + m(15);
   if (w <= 1e-6) return null;
   return { x: ((cx / w + 1) / 2) * width, y: ((1 - cy / w) / 2) * height, far: w };
-}
-
-/** A block's faces as rings of four corners: its top, then its four sides. Its floor is never seen from above. */
-const FACES = [
-  [4, 5, 6, 7],
-  [0, 1, 5, 4],
-  [1, 2, 6, 5],
-  [2, 3, 7, 6],
-  [3, 0, 4, 7],
-] as const;
-
-/**
- * The nearest block with a face, its top or a side, covering screen pixel (`x`, `y`), so a click can pick one. A
- * tall block is picked by its side as well as its top (Roger, 23 Oct 2026).
- */
-export function blockAt(
-  space: SpaceMarks,
-  matrix: Float32Array,
-  width: number,
-  height: number,
-  x: number,
-  y: number,
-): Block | null {
-  let best: Block | null = null,
-    bestFar = Infinity;
-  for (const b of space.blocks) {
-    const ring = [
-      [b.x, b.y],
-      [b.x + b.width, b.y],
-      [b.x + b.width, b.y + b.depth],
-      [b.x, b.y + b.depth],
-    ] as const;
-    const corners = [b.floor, b.floor + b.tall].flatMap((z) =>
-      ring.map(([cx, cy]) => projectPoint(matrix, [cx, cy, z], width, height)),
-    );
-    if (corners.some((c) => !c)) continue;
-    const at = corners as { x: number; y: number; far: number }[];
-    for (const face of FACES) {
-      const quad = face.map((k) => at[k] as { x: number; y: number; far: number });
-      if (!inside(quad, x, y)) continue;
-      const far = quad.reduce((n, c) => n + c.far, 0) / 4;
-      if (far < bestFar) {
-        best = b;
-        bestFar = far;
-      }
-    }
-  }
-  return best;
-}
-
-/** Whether (`x`, `y`) is inside the four-sided shape `quad`, whichever way round its corners go. */
-function inside(quad: readonly { x: number; y: number }[], x: number, y: number): boolean {
-  let sign = 0;
-  for (let i = 0; i < quad.length; i++) {
-    const a = quad[i] as { x: number; y: number },
-      b = quad[(i + 1) % quad.length] as { x: number; y: number };
-    const side = Math.sign((b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x));
-    if (side === 0) continue;
-    if (sign === 0) sign = side;
-    else if (side !== sign) return false;
-  }
-  return true;
 }
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];

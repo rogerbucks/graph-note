@@ -3,21 +3,24 @@
 // or Escape. It only looks: nothing is edited here, and nothing reaches the note.
 //
 // It reads the drawing already on screen: each box, group and link of the SVG, with the colours the theme gave them.
-// So it lays nothing out, and looks like the card in light and dark. The numbers live in core space-view.ts, and the
+// So it looks like the card in light and dark. The numbers live in core space-view.ts and space-spread.ts, and the
 // painters in space-painter.ts and space-gpu-painter.ts.
 //
-// Height means one of two things, switched by a button:
-// - groups: each group is a floor, and things stand on their group;
-// - links: each thing is as tall as its count of links, so the busiest things stand out.
+// A button switches how it is shown:
+// - in space, first: laid out again in space, each thing a ball sized by its links, each link an arrow (space-spread.ts);
+// - groups: the drawing lifted, each group a floor, and things stand on their group;
+// - links: the drawing lifted, each thing as tall as its count of links, so the busiest things stand out.
 // How to move it is on screen (space-controls.ts says each way): a help line at the foot, and buttons to zoom, turn
 // and reset. Drag turns, Shift-drag or right-drag moves, scroll zooms; on touch, one finger turns and two move and
 // pinch. A click or tap picks a thing and names it; a double one flies to it. The keyboard does the same. What is
 // picked is said aloud, and its name always shows (space-labels.ts).
 import { word } from '@thoughtknot/core';
 import type { DrawMark } from '../../drawing-marks.ts';
-import { blockAt, focusOn, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
+import { focusOn, orbitBy, orbitFit, spaceMatrix, spaceOf, zoomBy } from '../../space-view.ts';
 import type { Block, DepthBy, Orbit, SpaceMarks } from '../../space-view.ts';
-import { labelsOnScreen } from '../../space-labels.ts';
+import { blockAt } from '../../space-pick.ts';
+import { arrowsOnScreen, labelsOnScreen } from '../../space-labels.ts';
+import { spreadSpace } from '../../space-spread.ts';
 import { KEY_STEP, ZOOM_STEP, keyMove, panBy, twoFingers } from '../../space-controls.ts';
 import type { SpaceMove, Touch } from '../../space-controls.ts';
 import { pickPainter } from './mark-painter.ts';
@@ -81,9 +84,11 @@ export async function openSpaceView(
   // a card with no background of its own shows the page's: the label halo uses the system's page colour then
   const background = win.getComputedStyle(root).backgroundColor;
   const halo = !background || background === 'transparent' || /,\s*0\)$/.test(background) ? 'Canvas' : background;
-  const depths: DepthBy[] = [{ by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
-  let depth = marks.some((m) => m.kind === 'group') ? 0 : 1;
-  let space: SpaceMarks = spaceOf(marks, depths[depth] as DepthBy);
+  // the ways to show it: laid out in space as balls (the first, Roger, 24 Oct 2026), or the drawing lifted as it is
+  const depths: (DepthBy | null)[] = [null, { by: 'group' }, { by: 'size', sizes: linkCounts(marks) }];
+  const spaceBy = (by: DepthBy | null): SpaceMarks => (by ? spaceOf(marks, by) : spreadSpace(marks).space);
+  let depth = 0;
+  let space: SpaceMarks = spaceBy(depths[depth] ?? null);
   let width = 1,
     height = 1;
   let orbit: Orbit = orbitFit(space, 1);
@@ -100,7 +105,8 @@ export async function openSpaceView(
     const matrix = matrixNow();
     painter.paint(space, matrix, paints);
     const named = labelsOnScreen(space, matrix, width, height, picked?.of === undefined ? {} : { picked: picked.of });
-    paintSpaceLabels(ctx, named, paints, win.devicePixelRatio || 1, halo);
+    const arrows = arrowsOnScreen(space, matrix, width, height);
+    paintSpaceLabels(ctx, named, paints, win.devicePixelRatio || 1, halo, arrows);
   };
   const again = () => {
     if (asked) return;
@@ -149,13 +155,14 @@ export async function openSpaceView(
   };
   /** Flies to `block`: the camera looks at its top from near. */
   const flyTo = (block: Block) => {
-    const top = block.floor + block.tall;
+    // a ball is looked at from its middle, a block from its top
+    const top = block.floor + (space.round ? block.tall / 2 : block.tall);
     const near = Math.max(block.width, block.depth, block.tall) * 4;
     orbit = focusOn(orbit, [block.x + block.width / 2, block.y + block.depth / 2, top], near);
     pick(block);
   };
 
-  const depthWords = () => word(depth === 0 ? 'space.height-groups' : 'space.height-links');
+  const depthWords = () => word(DEPTH_WORDS[depth] ?? 'space.spread');
   button(bar, word('space.flatten'), 'square', close, word('space.flatten'));
   const depthButton = button(
     bar,
@@ -163,7 +170,7 @@ export async function openSpaceView(
     'bar-chart-3',
     () => {
       depth = (depth + 1) % depths.length;
-      space = spaceOf(marks, depths[depth] as DepthBy);
+      space = spaceBy(depths[depth] ?? null);
       picked = picked && (space.blocks.find((b) => b.id === picked?.id) ?? null);
       const label = depthWords();
       depthButton.setAttribute('aria-label', label);
@@ -280,6 +287,9 @@ export async function openSpaceView(
   el.focus();
   return close;
 }
+
+/** What the button that changes how it is shown says, for each way. */
+const DEPTH_WORDS = ['space.spread', 'space.height-groups', 'space.height-links'] as const;
 
 /** The help line's steps, with a mouse or trackpad. */
 const MOUSE_HELP = [

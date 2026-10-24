@@ -2,16 +2,8 @@
 // and heights. Links rise in arcs between the blocks they join. The camera shows the drawing the way up it reads.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  FLOOR_GAP,
-  blockAt,
-  orbitBy,
-  orbitFit,
-  projectPoint,
-  spaceMatrix,
-  spaceOf,
-  zoomBy,
-} from '../src/space-view.ts';
+import { FLOOR_GAP, orbitBy, orbitFit, projectPoint, spaceMatrix, spaceOf, zoomBy } from '../src/space-view.ts';
+import { blockAt } from '../src/space-pick.ts';
 import { overviewOf } from '../src/overview.ts';
 
 /** Two groups, one inside the other, with a thing in each and a link between the things. */

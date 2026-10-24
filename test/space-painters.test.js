@@ -3,7 +3,8 @@
 //   canvas painter's do: their shading differs, so only where they paint is compared.
 // - The drawing on screen is read as marks (svg-marks.ts): boxes, groups and links, with the theme's colours. A
 //   thing's label is its name, the largest words in its box, not the kind written small above it.
-// - WebGPU builds its shaders with no error, and a frame paints with no error. Its picture is not read back here, as
+// - Things laid out in space as balls (space-spread.ts) are painted the same way, by both painters.
+// - WebGPU builds its shaders with no error, and a frame paints with no error, of blocks and of balls. Its picture is not read back here, as
 //   in gpu-painters.test.js: in software, Chrome reads a WebGPU canvas back blank.
 //
 // Chrome paints in software here (SwiftShader). Chrome is the one THOUGHTKNOT_CHROME names, or the first on the PATH.
@@ -36,6 +37,7 @@ import { webgl2SpacePainter } from './packages/core/src/display/graph-view/space
 import { canvasSpacePainter } from './packages/core/src/display/graph-view/space-canvas-painter.ts';
 import { webgpuSpacePainter } from './packages/core/src/display/graph-view/space-gpu-painter.ts';
 import { marksOfSvg } from './packages/core/src/display/graph-view/svg-marks.ts';
+import { spreadSpace } from './packages/core/src/space-spread.ts';
 import { PALETTES } from './packages/core/src/palette.ts';
 const made = { devices: [], shaders: [] };
 if (window.GPUAdapter) {
@@ -52,7 +54,18 @@ if (window.GPUAdapter) {
     return device;
   };
 }
+// things laid out in space as balls (space-spread.ts): a ring, each thing linked to the next and to one across
+function balls(count) {
+  const marks = [];
+  for (let i = 0; i < count; i++) marks.push({ id: 't' + i, kind: 'box', style: 'kind.' + (i % 4), of: 'k' + i, x: 0, y: 0, width: 1, height: 1 });
+  for (let i = 0; i < count; i++) {
+    marks.push({ id: 'e' + i, kind: 'link', style: 'link', points: [[0, 0], [1, 1]], from: 'k' + i, to: 'k' + ((i + 1) % count) });
+    marks.push({ id: 'x' + i, kind: 'link', style: 'link', points: [[0, 0], [1, 1]], from: 'k' + i, to: 'k' + ((i * 7 + 3) % count) });
+  }
+  return spreadSpace(marks).space;
+}
 function city(count) {
+  if (count < 0) return balls(-count);
   const groups = Array.from({ length: count }, (_, i) => ({
     id: 'group:g' + i, label: 'Group ' + i, by: 'links',
     keys: Array.from({ length: 50 + ((i * 37) % 450) }, (_, k) => 'g' + i + '_' + k),
@@ -90,7 +103,8 @@ window.readSvg = () => {
     <g class="cluster" id="clust1"><title>cluster_team</title><polygon fill="rgb(220, 230, 250)" stroke="rgb(40, 60, 120)" points="10,10 150,10 150,120 10,120"/></g>
     <g class="node" id="node1"><title>ada</title><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="20,20 120,20 120,60 20,60"/><text x="70" y="45" font-size="14" fill="rgb(10, 10, 10)">Ada</text></g>
     <g class="node" id="node2"><title>bob</title><ellipse fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" cx="230" cy="150" rx="40" ry="20"/><text x="230" y="140" font-size="9" fill="rgb(10, 10, 10)">PERSON</text><text x="230" y="155" font-size="14" fill="rgb(10, 10, 10)">Bob</text></g>
-    <g class="edge" id="edge1"><title>ada&#45;&gt;bob</title><path fill="none" stroke="rgb(90, 90, 90)" d="M70,60 C100,100 160,140 190,150"/></g>
+    <g class="edge" id="edge1"><title>ada&#45;&gt;bob</title><path fill="none" stroke="rgb(90, 90, 90)" d="M70,60 C100,100 160,140 190,150"/><polygon points="186,144 196,151 185,154"/><text x="130" y="110" font-size="10">KNOWS</text></g>
+    <g class="edge" id="edge4"><title>cy&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M255,40 C200,40 150,40 120,40"/><polygon points="252,36 262,40 252,44"/></g>
     <g class="edge" id="edge2"><title>bob:w&#45;&gt;ada</title><path fill="none" stroke="rgb(90, 90, 90)" d="M190,150 C160,140 100,100 70,60"/></g>
     <g class="node" id="node3" data-key="cy" aria-label="Person: Cy"><polygon fill="rgb(200, 240, 200)" stroke="rgb(0, 100, 0)" points="250,20 290,20 290,50 250,50"/><text x="270" y="40" font-size="14" fill="rgb(10, 10, 10)">Cy</text></g>
     <g class="edge" id="edge3" data-link="2"><path fill="none" stroke="rgb(90, 90, 90)" d="M232,131 C240,100 260,80 268,52"/></g>
@@ -105,10 +119,12 @@ window.checkWebgpu = async () => {
   if (!painter) return null;
   const device = made.devices.at(-1);
   const messages = (await made.shaders.at(-1).getCompilationInfo()).messages.filter((m) => m.type === 'error');
-  const space = city(30), orbit = orbitFit(space, 2);
   device.pushErrorScope('validation');
   painter.resize(200, 100, 2);
-  painter.paint(space, spaceMatrix(orbit, 2, orbit.distance), paintsOf(PALETTES.light));
+  for (const space of [city(30), balls(30)]) {
+    const orbit = orbitFit(space, 2);
+    painter.paint(space, spaceMatrix(orbit, 2, orbit.distance), paintsOf(PALETTES.light));
+  }
   const error = await device.popErrorScope();
   painter.destroy();
   return { kind: painter.kind, shaderErrors: messages.map((m) => m.message), paintError: error?.message ?? null };
@@ -166,14 +182,16 @@ describe("the 3D view's painters, in a real browser", () => {
   });
 
   test('WebGL 2 paints the city with no error, where the 2D canvas paints it', options, async () => {
-    for (const count of [20, 300]) {
+    // a city of 20 and of 300 groups, and 40 and 400 things laid out in space as balls
+    for (const count of [20, 300, -40, -400]) {
       const { canvas, webgl2 } = JSON.parse(await browser.run(`paintCity(${count}).then(JSON.stringify)`));
       assert.equal(webgl2?.kind, 'webgl2');
       assert.equal(webgl2.error, 0, 'no WebGL error');
       const a = coverage(canvas),
         b = coverage(webgl2);
       const painted = a.filter(Boolean).length;
-      assert.ok(painted > 40, `the canvas painted the city: ${painted} parts`);
+      // balls leave space between them, so they cover less of the picture than a city does
+      assert.ok(painted > (count > 0 ? 40 : 4), `the canvas painted ${count}: ${painted} parts`);
       const differ = a.filter((v, i) => v !== b[i]).length;
       assert.ok(differ <= a.length * 0.05, `${count} groups: ${differ} of ${a.length} parts differ`);
     }
@@ -193,6 +211,11 @@ describe("the 3D view's painters, in a real browser", () => {
     const port = byId.get('e:edge2');
     assert.deepEqual([port.from, port.to], ['bob', 'ada'], 'a port after a colon is left off its end');
     assert.ok(link.points.length > 2);
+    assert.equal(link.name, 'KNOWS', "a link's words are read with it");
+    // a link drawn backwards (dir=back) has its arrowhead at its first point: it points from its last
+    const back = byId.get('e:edge4');
+    assert.deepEqual([back.from, back.to], ['ada', 'cy'], 'the arrowhead shows the way it points');
+    assert.deepEqual(back.points[0], [120, 40]);
     assert.deepEqual(ada.paint, { fill: 'rgb(200, 240, 200)', line: 'rgb(0, 100, 0)', text: 'rgb(10, 10, 10)' });
     assert.equal(byId.get('l:ada').text, 'Ada');
     // a thing drawn with its kind above its name, in smaller letters, is labelled by its name (Roger, 23 Oct 2026)

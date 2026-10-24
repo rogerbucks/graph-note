@@ -19,6 +19,8 @@ export interface ScreenLabel {
   y: number;
   size: number;
   picked?: boolean;
+  /** Set on a link's words, painted lighter than a name. */
+  link?: boolean;
 }
 
 /** The most labels painted at once: past this, words in 3D are a crowd. */
@@ -34,6 +36,8 @@ const LETTERS_MOST = 32;
 const LETTER_WIDTH = 0.56;
 /** The space kept around each name, in pixels, so neighbours do not touch. */
 const GAP = 3;
+/** How much later a link's words rank than a name as near. */
+const LINK_WORDS_LATER = 1.6;
 /** The size of each cell of the grid that finds names that would overlap, in pixels. */
 const CELL = 48;
 
@@ -62,7 +66,8 @@ export function labelsOnScreen(
     const size = Math.max(mine ? PICKED_LEAST : READABLE_LEAST, Math.min(READABLE_MOST, natural));
     // nearer the middle of the screen and nearer the camera ranks first; the picked name ranks before all
     const off = Math.hypot(at.x - width / 2, at.y - height / 2) / across;
-    const rank = mine ? -1 : at.far * (1 + 2 * off);
+    // a link's words come after the names near them: names say what is there, words only what joins it
+    const rank = mine ? -1 : at.far * (1 + 2 * off) * (l.link === undefined ? 1 : LINK_WORDS_LATER);
     const label: ScreenLabel & { rank: number } = {
       id: l.id,
       style: l.style,
@@ -73,6 +78,7 @@ export function labelsOnScreen(
       rank,
     };
     if (mine) label.picked = true;
+    if (l.link !== undefined) label.link = true;
     wanted.push(label);
   }
   wanted.sort((a, b) => a.rank - b.rank);
@@ -104,4 +110,53 @@ export function labelsOnScreen(
     shown.push(l);
   }
   return shown;
+}
+
+/** An arrowhead on the screen: its tip, and the two corners of its back, in pixels. */
+export interface ScreenArrow {
+  id: string;
+  style: string;
+  tip: { x: number; y: number };
+  left: { x: number; y: number };
+  right: { x: number; y: number };
+  far: number;
+}
+
+/** The smallest an arrowhead is painted, in screen pixels, so one far away still shows which way its link points. */
+export const ARROW_LEAST = 9;
+/** How wide an arrowhead is at its back, as a share of its length. */
+const ARROW_WIDE = 0.6;
+
+/**
+ * The arrowheads of `space` on the screen, far ones first, so near ones are painted over them. Each is a triangle
+ * flat to the screen, pointing along its link as the camera sees it, never smaller than ARROW_LEAST.
+ */
+export function arrowsOnScreen(space: SpaceMarks, matrix: Float32Array, width: number, height: number): ScreenArrow[] {
+  const out: ScreenArrow[] = [];
+  for (const a of space.arrows) {
+    const tip = projectPoint(matrix, a.tip, width, height),
+      back = projectPoint(matrix, a.back, width, height);
+    if (!tip || !back) continue;
+    if (tip.x < -50 || tip.y < -50 || tip.x > width + 50 || tip.y > height + 50) continue;
+    let dx = tip.x - back.x,
+      dy = tip.y - back.y;
+    const seen = Math.hypot(dx, dy);
+    // a link pointing straight at the camera has no way across the screen to point: its arrowhead is not painted
+    if (seen < 0.5) continue;
+    const long = Math.max(ARROW_LEAST, seen);
+    dx /= seen;
+    dy /= seen;
+    const bx = tip.x - dx * long,
+      by = tip.y - dy * long,
+      half = (long * ARROW_WIDE) / 2;
+    out.push({
+      id: a.id,
+      style: a.style,
+      tip: { x: tip.x, y: tip.y },
+      left: { x: bx - dy * half, y: by + dx * half },
+      right: { x: bx + dy * half, y: by - dx * half },
+      far: tip.far,
+    });
+  }
+  return out.sort((p, q) => q.far - p.far);
 }
