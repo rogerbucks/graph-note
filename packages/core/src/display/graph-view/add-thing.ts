@@ -4,7 +4,7 @@
 // into the text being edited, as one edit an undo takes back. A name of the user's own is kept as the text changes, and
 // held to the same rules.
 import { addThing, sortedForReader, suggestName, word } from '@thoughtknot/core';
-import { button } from './view-bar';
+import { button } from '../button';
 import type { ViewOptions } from './view-options';
 
 let forms = 0;

@@ -8,7 +8,7 @@
 // marks each failed guard. The drawing only shows the run: every press goes to the core's player, never to the SVG.
 import { PlaybackController, TestRun, word } from '@thoughtknot/core';
 import type { RunPause } from '@thoughtknot/core';
-import { button } from './view-bar';
+import { button } from '../button';
 import type { ViewOptions } from './view-options';
 
 /** What a process's properties hold that is not an input to its guards. */

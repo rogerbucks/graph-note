@@ -24,7 +24,7 @@ import {
   safeMarkdown,
   word,
 } from '@thoughtknot/core';
-import type { LeftAt, LinkHost } from '@thoughtknot/core/display/links/link-types';
+import type { LeftAt, LinkHost } from '@thoughtknot/core/display/link-host';
 import { FOLLOWED, followAnchor } from '@thoughtknot/core/display/links/links-list';
 import type ThoughtKnotPlugin from '../main';
 import { noteText, vaultNotes } from '../storage/plugin-notes';

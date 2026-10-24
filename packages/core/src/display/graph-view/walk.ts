@@ -10,7 +10,7 @@ import type { WalkedPath } from '@thoughtknot/core';
 import { cornerOf } from './parked';
 import { PathPlay } from './path-play';
 import { ProcessDebug, debuggableProcesses } from './process-debug';
-import { button } from './view-bar';
+import { button } from '../button';
 import type { ViewOptions } from './view-options';
 
 const SVG = 'http://www.w3.org/2000/svg';

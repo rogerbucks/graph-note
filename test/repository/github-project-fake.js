@@ -37,6 +37,7 @@ export function restIssueList(issues, query, { pulls = [], unlisted = [], slurp 
         user: { login: restLogin(i.author), type: String(restLogin(i.author)).endsWith('[bot]') ? 'Bot' : 'User' },
         html_url: i.url,
         closed_at: i.closedAt ?? null,
+        milestone: i.milestone ?? null,
       })),
     ...pulls.filter((p) => mine(p.user?.login)).map((p) => ({ ...p, pull_request: { url: 'u' } })),
   ];
@@ -67,6 +68,7 @@ export function fakeGithub({
     labels: [],
     issues: [],
     projects: [],
+    milestones: [],
     calls: [],
     mutations: [],
     ids: 0,
@@ -214,6 +216,10 @@ export function fakeGithub({
     }
     if (/repositoryOwner\(login: \$owner\) \{ id \}/.test(query))
       return json({ data: { repositoryOwner: variables.owner === owner ? { id: `OWNER_${owner}` } : null } });
+    if (/issues \{ totalCount \}/.test(query)) {
+      const there = variables.owner === owner && variables.name === name;
+      return json({ data: { repository: there ? { issues: { totalCount: hub.issues.length } } : null } });
+    }
     if (/issue\(number: \$number\)/.test(query)) {
       const there = variables.owner === owner && issue(variables.number);
       return json({ data: { repository: { issue: there ? { id: `ISSUE_${variables.number}` } : null } } });
@@ -258,13 +264,21 @@ export function fakeGithub({
   // Each issue's `blockedBy` holds the numbers of the issues blocking it; an issue's REST id is 1000 more than its number.
   // With `hub.dependenciesRefused` set, every call is refused, as where the feature is off.
   const restIdOf = (number) => 1000 + number;
-  const dependencies = (args) => {
+  const dependencies = (args, input) => {
     if (hub.dependenciesRefused) throw new Error('gh: Not Found (HTTP 404)');
     const method = args.includes('--method') ? flag(args, '--method') : 'GET';
     const path = args[1].split('?')[0].slice(`repos/${hub.repo}/issues/`.length).split('/');
     const target = issue(path[0]);
     if (!target) throw new Error(`gh: issue ${path[0]} Not Found (HTTP 404)`);
     if (path.length === 1 && method === 'GET') return json({ id: restIdOf(target.number), number: target.number });
+    if (path.length === 1 && method === 'PATCH') {
+      mutate(args);
+      const { milestone } = JSON.parse(input);
+      const found = hub.milestones.find((m) => m.number === milestone);
+      if (milestone !== null && !found) throw new Error('gh: Validation Failed (HTTP 422)');
+      target.milestone = found ? { number: found.number, title: found.title } : null;
+      return json({ number: target.number });
+    }
     if (path[1] === 'dependencies' && path[2] === 'blocking' && method === 'GET')
       return json(
         hub.issues
@@ -281,6 +295,30 @@ export function fakeGithub({
       mutate(args);
       target.blockedBy = (target.blockedBy ?? []).filter((n) => restIdOf(n) !== Number(path[3]));
       return json({ id: restIdOf(target.number) });
+    }
+    throw new Error(`fake gh does not know: ${args.join(' ')}`);
+  };
+
+  // GitHub's milestones, by REST: the list of them all, making one and changing one. A milestone's title is unique, as
+  // on GitHub. With `hub.milestonesRefused` set, every call is refused.
+  const milestones = (args, input) => {
+    if (hub.milestonesRefused) throw new Error('gh: Resource not accessible by integration (HTTP 403)');
+    const method = args.includes('--method') ? flag(args, '--method') : 'GET';
+    const [path] = args[1].slice(`repos/${hub.repo}/milestones`.length).split('?');
+    if (path === '' && method === 'GET') return json([hub.milestones]);
+    const body = JSON.parse(input ?? '{}');
+    if (path === '' && method === 'POST') {
+      mutate(args);
+      if (hub.milestones.some((m) => m.title === body.title)) throw new Error('gh: Validation Failed (HTTP 422)');
+      const made = { number: hub.milestones.length + 1, ...body };
+      hub.milestones.push(made);
+      return json(made);
+    }
+    const target = hub.milestones.find((m) => `/${m.number}` === path);
+    if (target && method === 'PATCH') {
+      mutate(args);
+      Object.assign(target, body);
+      return json(target);
     }
     throw new Error(`fake gh does not know: ${args.join(' ')}`);
   };
@@ -378,7 +416,8 @@ export function fakeGithub({
       return restIssueList(hub.issues, query, { pulls, unlisted, slurp: args.includes('--slurp') });
     }
     if (group === 'api' && verb === 'graphql') return graphql(args, input);
-    if (group === 'api' && verb.startsWith(`repos/${hub.repo}/issues/`)) return dependencies(args);
+    if (group === 'api' && verb.startsWith(`repos/${hub.repo}/issues/`)) return dependencies(args, input);
+    if (group === 'api' && verb.startsWith(`repos/${hub.repo}/milestones`)) return milestones(args, input);
     throw new Error(`fake gh does not know: ${args.join(' ')}`);
   };
 

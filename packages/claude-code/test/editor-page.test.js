@@ -233,7 +233,7 @@ describe('cc_core_only: the page takes everything from the core and the shared d
       const out = await build({
         absWorkingDir: ROOT,
         stdin: {
-          contents: `export { button } from './${LAYER}/graph-view/view-bar.ts'; export { installHost } from './${LAYER}/host.ts';`,
+          contents: `export { button } from './${LAYER}/button.ts'; export { installHost } from './${LAYER}/host.ts';`,
           resolveDir: ROOT,
           loader: 'ts',
         },

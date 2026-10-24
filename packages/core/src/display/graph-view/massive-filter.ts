@@ -4,7 +4,7 @@
 // overview is drawn again from them. The counts are core facet-counts.ts.
 import { formatCount, word } from '@thoughtknot/core';
 import type { Chosen, FacetIndex } from '../../facet-counts.ts';
-import { button } from './view-bar';
+import { button } from '../button';
 
 /**
  * The Filter button and its lists, at the end of `parent`. `changed` is given what is chosen, each time it changes.

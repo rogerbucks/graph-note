@@ -2,7 +2,7 @@
 // wait shows a bar and how long it has taken, said to a screen reader too. After ten seconds it offers Stop. Stopped,
 // the one waiting is told at once, and the work's result is not used: it does what it must to leave nothing half done.
 import { formatCount, word } from '@thoughtknot/core';
-import { button } from './graph-view/view-bar';
+import { button } from './button';
 
 /** How long a wait goes before its progress is shown, in milliseconds. */
 export const PROGRESS_AFTER_MS = 1000;

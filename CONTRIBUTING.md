@@ -758,6 +758,9 @@ These test behaviour across modules, or the repository itself, so they are named
 - `test/github-project-blocks.test.js` — that mirror's blocked-by links. Each open question's issue blocks the issues
   of the requirements it blocks, made once. A link the requirements dropped is removed, and a person's is kept. A
   refusal by GitHub is a warning, with the issues and project still mirrored.
+- `test/github-project-milestones.test.js` — that mirror's milestones, read from the waves file. Each wave names one,
+  and each requirement's issue is filed under its wave's. A milestone is due on its last wave's end, and closes once
+  its issues are all closed. A person's milestone is kept, and a refusal by GitHub is a warning.
 - `test/github-project-plan.test.js` — that mirror's plan: what differs between the desired state and what GitHub holds, for the issues, the labels and the project.
 
 ### Benchmarks, licences, network and policy
@@ -807,6 +810,7 @@ These test behaviour across modules, or the repository itself, so they are named
 
 - `test/fresh-clone.test.js` — when a pull request runs the fresh clone. It runs only for a change that can alter what
   the README's steps do. That is the steps, the npm scripts, the hook or the git settings (spec §13, Delivery).
+- `test/merge-queue.test.js` — the workflows behind the required checks also run in GitHub's merge queue.
 - `test/ci-plan.test.js` — what CI runs for a change. A pull request, draft or ready, runs only the tests its change
   reaches. The label `ci:full` runs everything from the next push. Main, the nightly and a release run everything, and a
   failed plan runs everything too (spec §13, touched_tests_only).
