@@ -12,6 +12,7 @@
 import type { DrawMark } from './drawing-marks.ts';
 import type { LaidMarks } from './graphviz-marks.ts';
 import type { MarkPoint } from './plugin-diagrams.ts';
+import { WORDS_OFF, wordSpots } from './direct-words.ts';
 
 /** How much room a link keeps from a box it passes, in pixels. */
 export const CLEARANCE = 10;
@@ -23,11 +24,11 @@ const ROUNDS = 6;
 const WORK_MOST = 4_000_000;
 /** How far two links between the same boxes bow apart at their middle, as a share of their length. */
 const BOW = 0.16;
-/** How far a link's words sit off its middle, as a share of their size, so they do not lie on the line. */
-const WORDS_OFF = 0.55;
+/** How far a lone link bows toward the middle of the drawing, as a share of its length: a gentle curve draws the eye in. */
+export const GENTLE = 0.08;
 
 /** A box being placed: its key, its middle and its half width and height. */
-interface Placed {
+export interface Placed {
   key: string;
   x: number;
   y: number;
@@ -73,6 +74,12 @@ export function directLinks(laid: LaidMarks): LaidMarks {
     const by = shiftOf.get(m.id) ?? (laid.layout ? undefined : m.of === undefined ? undefined : moved.get(m.of));
     if (by && m.kind !== 'link') shiftOf.set(m.id, by);
   }
+  // a self link's loop, its arrowheads and its words go with its box
+  for (const l of links) {
+    const by = l.from === l.to ? moved.get(l.from ?? '') : undefined;
+    if (by)
+      for (const m of laid.marks) if (m.id === l.id || (l.of !== undefined && m.of === l.of)) shiftOf.set(m.id, by);
+  }
 
   // links between the same two boxes, either way round: how many, and each one's place among them
   const pairOf = (a: string, b: string) => (a < b ? `${a}\n${b}` : `${b}\n${a}`);
@@ -82,6 +89,11 @@ export function directLinks(laid: LaidMarks): LaidMarks {
     if (l.from !== l.to)
       many.set(pairOf(l.from ?? '', l.to ?? ''), (many.get(pairOf(l.from ?? '', l.to ?? '')) ?? 0) + 1);
   const curves = new Map<string, Curve>();
+  const all = [...boxes.values()];
+  const middle: MarkPoint = [
+    all.reduce((n, b) => n + b.x, 0) / Math.max(1, all.length),
+    all.reduce((n, b) => n + b.y, 0) / Math.max(1, all.length),
+  ];
   for (const l of links) {
     const a = boxes.get(l.from ?? '') as Placed,
       b = boxes.get(l.to ?? '') as Placed;
@@ -90,7 +102,9 @@ export function directLinks(laid: LaidMarks): LaidMarks {
       i = nth.get(pair) ?? 0;
     nth.set(pair, i + 1);
     const side = a.key < b.key ? 1 : -1;
-    const bow = (i - ((many.get(pair) ?? 1) - 1) / 2) * BOW * side + aside(a, b, boxes.values());
+    const away = aside(a, b, all);
+    const base = away || ((many.get(pair) ?? 1) > 1 ? 0 : gentle(a, b, side, middle, all));
+    const bow = (i - ((many.get(pair) ?? 1) - 1) / 2) * BOW * side + base;
     curves.set(l.of ?? l.id, curveOf(a, b, bow));
   }
   const spots = wordSpots(laid.marks, boxes, curves);
@@ -99,9 +113,9 @@ export function directLinks(laid: LaidMarks): LaidMarks {
     const by = shiftOf.get(m.id);
     const c = m.of === undefined ? undefined : curves.get(m.of);
     if (m.kind === 'link' && c) {
-      // the line stops where its arrowhead begins, at the end it points to
-      const head = headOf(laid.marks, m.of);
-      const points = c.cubic(head?.atStart ? head.size : 0, head && !head.atStart ? head.size : 0);
+      // the line stops where an arrowhead begins, at either end that has one
+      const heads = headsOf(laid.marks, m);
+      const points = c.cubic(heads.start, heads.end);
       const { outline: _gone, ...rest } = m;
       return { ...rest, points, curve: true };
     }
@@ -192,7 +206,8 @@ function moveTo(b: Placed, x: number, y: number): void {
 }
 
 /** A direct link's curve: its points, where its tip is at either end, and where its words go. */
-interface Curve {
+export interface Curve {
+  at(t: number): MarkPoint;
   cubic(cutStart: number, cutEnd: number): MarkPoint[];
   tipAt(atStart: boolean): [MarkPoint, number];
   wordsAt(t: number, off: number): MarkPoint;
@@ -217,6 +232,7 @@ function curveOf(a: Placed, b: Placed, bow: number): Curve {
     return [p[0] + ((q[0] - p[0]) * by) / d, p[1] + ((q[1] - p[1]) * by) / d];
   };
   return {
+    at,
     ends: [p0, p3],
     cubic(cutStart, cutEnd) {
       // the quadratic curve written as Graphviz's cubic one, its ends drawn in where an arrowhead takes their place
@@ -271,36 +287,32 @@ function aside(a: Placed, b: Placed, boxes: Iterable<Placed>): number {
 }
 
 /**
- * Where each link's words go. They sit at the middle of the curve if they cover no box and no earlier words. Else they
- * take the first clear spot along it, either side. Words with no clear spot stay at the middle.
+ * The gentle bow of a lone link with nothing in its way: toward the middle of the drawing, so the links seem to gather
+ * in. If that side would run through a box, it bows the other way; if both would, it stays straight. Links between the
+ * same two boxes already bow apart, so they take none.
  */
-function wordSpots(
-  marks: readonly DrawMark[],
-  boxes: ReadonlyMap<string, Placed>,
-  curves: ReadonlyMap<string, Curve>,
-): Map<string, MarkPoint> {
-  const taken = [...boxes.values()].map((b) => ({ x0: b.x - b.hw, y0: b.y - b.hh, x1: b.x + b.hw, y1: b.y + b.hh }));
-  const spots = new Map<string, MarkPoint>();
-  for (const m of marks) {
-    if (m.kind !== 'label' || m.of === undefined || boxes.has(m.of)) continue;
-    const c = curves.get(m.of);
-    if (!c) continue;
-    const half = (m.maxWidth ?? m.text.length * m.size * 0.5) / 2 + 2,
-      tall = m.size * 0.6;
-    const boxAt = ([x, y]: MarkPoint) => ({ x0: x - half, y0: y - tall * 1.4, x1: x + half, y1: y + tall * 0.4 });
-    let best: MarkPoint | null = null;
-    for (const t of [0.5, 0.4, 0.6, 0.3, 0.7, 0.25, 0.75])
-      for (const side of [1, -1]) {
-        if (best) break;
-        const p = c.wordsAt(t, side * m.size * WORDS_OFF);
-        const r = boxAt(p);
-        if (!taken.some((o) => r.x0 < o.x1 && o.x0 < r.x1 && r.y0 < o.y1 && o.y0 < r.y1)) best = p;
-      }
-    const at = best ?? c.wordsAt(0.5, m.size * WORDS_OFF);
-    spots.set(m.id, at);
-    taken.push(boxAt(at));
+function gentle(a: Placed, b: Placed, side: number, middle: MarkPoint, boxes: readonly Placed[]): number {
+  const dx = b.x - a.x,
+    dy = b.y - a.y,
+    long = Math.hypot(dx, dy);
+  if (long < 1e-6) return 0;
+  // the side the middle of the drawing is on, seen from the link's middle; on the line itself, the same side either way
+  const across = (middle[0] - (a.x + b.x) / 2) * -dy + (middle[1] - (a.y + b.y) / 2) * dx;
+  const toward = Math.abs(across) < 1e-6 * long * long ? side : Math.sign(across);
+  for (const bow of [toward * GENTLE, -toward * GENTLE]) {
+    const c = curveOf(a, b, bow);
+    const hits = boxes.some(
+      (o) =>
+        o !== a &&
+        o !== b &&
+        [0.2, 0.35, 0.5, 0.65, 0.8].some((t) => {
+          const [x, y] = c.at(t);
+          return Math.abs(x - o.x) < o.hw && Math.abs(y - o.y) < o.hh;
+        }),
+    );
+    if (!hits) return bow;
   }
-  return spots;
+  return 0;
 }
 
 /** Where the line from box `b`'s middle toward `p` crosses its edge. */
@@ -315,15 +327,18 @@ function edgeOf(b: Placed, p: MarkPoint): MarkPoint {
 const nearer = (c: Curve, p: MarkPoint) =>
   Math.hypot(p[0] - c.ends[0][0], p[1] - c.ends[0][1]) < Math.hypot(p[0] - c.ends[1][0], p[1] - c.ends[1][1]);
 
-/** The arrowhead of link `of`: its length, and whether it is at the link's first end. */
-function headOf(marks: readonly DrawMark[], of: string | undefined): { size: number; atStart: boolean } | undefined {
-  const head = marks.find((m) => m.kind === 'arrowhead' && m.of === of);
-  if (!head || head.kind !== 'arrowhead') return undefined;
-  const link = marks.find((m) => m.kind === 'link' && m.of === of);
-  const first = link?.kind === 'link' ? link.points[0] : undefined,
-    last = link?.kind === 'link' ? link.points[link.points.length - 1] : undefined;
-  const gap = (p: MarkPoint | undefined) => (p ? Math.hypot(p[0] - head.x, p[1] - head.y) : Infinity);
-  return { size: head.size, atStart: head.id.startsWith('tail:') || gap(first) < gap(last) };
+/** How long the arrowheads at the first and last ends of `link` are: none at an end, 0. */
+function headsOf(marks: readonly DrawMark[], link: DrawMark & { kind: 'link' }): { start: number; end: number } {
+  const first = link.points[0],
+    last = link.points[link.points.length - 1];
+  const gap = (p: MarkPoint | undefined, x: number, y: number) => (p ? Math.hypot(p[0] - x, p[1] - y) : Infinity);
+  const out = { start: 0, end: 0 };
+  for (const h of marks)
+    if (h.kind === 'arrowhead' && h.of === link.of) {
+      const atStart = h.id.startsWith('tail:') || gap(first, h.x, h.y) < gap(last, h.x, h.y);
+      out[atStart ? 'start' : 'end'] = h.size;
+    }
+  return out;
 }
 
 /** `m` moved by (`dx`, `dy`), its outline too. */
@@ -357,7 +372,7 @@ function grown(laid: LaidMarks): LaidMarks {
   const marks = laid.marks.map((m) => {
     if (m.id !== 'background') return shifted(m, dx, dy);
     const { outline: _gone, ...rest } = m as DrawMark & { kind: 'box' };
-    return { ...rest, x: 0, y: 0, width: space.width, height: space.height } as DrawMark;
+    return { ...rest, x: 0, y: 0, width: space.width, height: space.height };
   });
   return { ...laid, space, marks };
 }
