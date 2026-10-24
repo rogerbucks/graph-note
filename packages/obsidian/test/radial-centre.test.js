@@ -170,6 +170,12 @@ describe('where the note is edited', () => {
       const right = box(el, 'sun').dispatch('contextmenu', { clientX: 40, clientY: 30 });
       assert.equal(menu(el), null, 'already the centre');
       assert.equal(right.defaultPrevented, false, 'the host’s own menu stays');
+      // two things: a radial drawing needs three, so there is nothing to offer
+      const pair = noteOf(`// graph: pair\n(a:Thing {name: 'A'}),\n(b:Thing {name: 'B'}),\n(a)-[:KNOWS]->(b)`);
+      const other = await show(env, pair, 0);
+      const none = box(other.el, 'a').dispatch('contextmenu', { clientX: 40, clientY: 30 });
+      assert.equal(menu(other.el), null, 'radial does not fit');
+      assert.equal(none.defaultPrevented, false, 'the host’s own menu stays there too');
     } finally {
       env.uninstall();
     }
