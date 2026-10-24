@@ -12,7 +12,7 @@
               "name": "Open decisions",
               "query": "Decision WHERE status == 'open'",
               "altitude": "board",
-              "schemas": ["decision@1"]
+              "schemas": "decision@1"
             }
           ],
           [
@@ -68,7 +68,7 @@
               "name": "Open decisions",
               "query": "Decision WHERE status == 'open'",
               "altitude": "board",
-              "schemas": ["decision@1"]
+              "schemas": "decision@1"
             }
           ],
           [
@@ -124,7 +124,7 @@
               "name": "Open decisions",
               "query": "Decision WHERE status == 'open'",
               "altitude": "board",
-              "schemas": ["decision@1"]
+              "schemas": "decision@1"
             }
           ],
           [
@@ -180,7 +180,7 @@
               "name": "Open decisions",
               "query": "Decision WHERE status == 'open'",
               "altitude": "board",
-              "schemas": ["decision@1"]
+              "schemas": "decision@1"
             }
           ],
           [
@@ -233,6 +233,40 @@
       }
     },
     {
+      "name": "a lens names its schemas as comma-separated text",
+      "graph": {
+        "nodes": [
+          [
+            "risks",
+            ["Lens"],
+            {
+              "name": "Risks",
+              "query": "Risk",
+              "schemas": "decision@1, risk@2"
+            }
+          ],
+          ["r1", ["Risk"], {}]
+        ],
+        "edges": []
+      },
+      "call": "runLens",
+      "args": [
+        "risks",
+        {
+          "schemas": {
+            "decision": "decision@1",
+            "risk": "risk@3"
+          }
+        }
+      ],
+      "expected": {
+        "lens": "risks",
+        "things": ["r1"],
+        "altitude": null,
+        "flags": [["schema-changed", "risk@2 -> risk@3"]]
+      }
+    },
+    {
       "name": "a lens holding data is flagged",
       "graph": {
         "nodes": [
@@ -277,7 +311,7 @@
               "name": "Open decisions",
               "query": "Decision WHERE status == 'open'",
               "altitude": "board",
-              "schemas": ["decision@1"]
+              "schemas": "decision@1"
             }
           ],
           [

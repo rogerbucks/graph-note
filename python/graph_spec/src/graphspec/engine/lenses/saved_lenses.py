@@ -70,7 +70,8 @@ def lenses_of(graph: Graph, schemas: dict | None = None) -> list:
             flags.append(["lens-holds-data", ", ".join(extra)])
         for e in graph.out(lid):
             flags.append(["lens-holds-data", f"{e[1]} {e[2]}"])
-        named = [_text(s) for s in p["schemas"]] if isinstance(p.get("schemas"), list) else []
+        text = p.get("schemas")
+        named = [s.strip() for s in text.split(",") if s.strip()] if isinstance(text, str) else []
         for s in named:
             if _base(s) in now and now[_base(s)] != s:
                 flags.append(["schema-changed", f"{s} -> {now[_base(s)]}"])

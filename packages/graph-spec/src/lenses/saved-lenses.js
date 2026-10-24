@@ -8,7 +8,8 @@
 // A query names a kind, or * for every thing, and may add WHERE and a guard-language test of each thing's
 // properties: `Decision WHERE status == 'open'`. A thing lacking a property the test names does not match.
 //
-// A lens may name the schemas it depends on, such as `schemas: ['decision@1']`. When the graph now names another
+// A lens may name the schemas it depends on, written as comma-separated text such as
+// `schemas: 'decision@1, risk@2'`. When the graph now names another
 // version of one, the lens is flagged, never changed.
 'use strict';
 
@@ -53,7 +54,13 @@ function lensesOf(graph, options = {}) {
         .sort();
       if (extra.length) flags.push(['lens-holds-data', extra.join(', ')]);
       for (const e of graph.out(id)) flags.push(['lens-holds-data', `${e[1]} ${e[2]}`]);
-      const schemas = Array.isArray(p.schemas) ? p.schemas.map(String) : [];
+      const schemas =
+        typeof p.schemas === 'string'
+          ? p.schemas
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [];
       for (const s of schemas)
         if (Object.hasOwn(now, base(s)) && now[base(s)] !== s)
           flags.push(['schema-changed', `${s} -> ${now[base(s)]}`]);
