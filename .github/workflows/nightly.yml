@@ -86,6 +86,30 @@ jobs:
           SECURITY_ALERTS_TOKEN: ${{ secrets.SECURITY_ALERTS_TOKEN }}
         run: node scripts/security-alerts.mjs --nightly
 
+  # A stranger's fresh clone sets up from the README's steps (spec §13). CI runs this only when a setup input changed;
+  # the nightly runs it whole each night main has moved, as the release does, so a broken step is found within a day.
+  public-readiness:
+    needs: check
+    if: needs.check.outputs.moved == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      THOUGHTKNOT_TEST_MEMORY_MB: 6144
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: 0.12.17
+          enable-cache: false
+      - run: node scripts/public-readiness.mjs --history --setup
+
   build:
     needs: [check, security]
     if: needs.check.outputs.moved == 'true'

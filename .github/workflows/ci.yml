@@ -309,11 +309,15 @@ jobs:
         with:
           version: 0.12.17
           enable-cache: false
-      # The fresh clone runs the same tests, lint and build as the jobs above, so a pull request runs it only when it
-      # changes a setup input (the README's steps, the npm scripts they run, the hook); main and the release always do.
+      # The fresh clone runs the same tests, lint and build as the jobs above, which took 14 minutes on every push to main
+      # (24 Oct 2026). So a pull request and a push to main run it only when a setup input changed (the README's steps, the
+      # npm scripts they run, the hook): a pull request since its base, main since the push before. The nightly and the
+      # release run it whole, so a break in the steps is found within a day.
       - if: github.event_name == 'pull_request'
         env:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: node scripts/public-readiness.mjs --history --setup-since "$BASE"
       - if: github.event_name != 'pull_request'
-        run: node scripts/public-readiness.mjs --history --setup
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: node scripts/public-readiness.mjs --history --setup-since "$BEFORE"

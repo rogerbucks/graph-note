@@ -417,14 +417,28 @@ describe('kept so, in CI and at every release', () => {
     assert.ok(job, 'a public-readiness job');
     assert.match(job.join('\n'), /fetch-depth: 0/);
     const text = job.join('\n');
-    // a pull request runs the fresh clone when it changes a setup input; a push to main always runs it
+    // a pull request runs the fresh clone when it changes a setup input since its base; a push to main, since the push
+    // before. Neither runs it whole: the nightly and the release do.
     assert.match(
       text,
       /- if: github\.event_name == 'pull_request'\n\s+env:\n\s+BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}\n\s+run: node scripts\/public-readiness\.mjs --history --setup-since "\$BASE"\n/,
     );
     assert.match(
       text,
-      /- if: github\.event_name != 'pull_request'\n\s+run: node scripts\/public-readiness\.mjs --history --setup$/m,
+      /- if: github\.event_name != 'pull_request'\n\s+env:\n\s+BEFORE: \$\{\{ github\.event\.before \}\}\n\s+run: node scripts\/public-readiness\.mjs --history --setup-since "\$BEFORE"$/m,
+    );
+    assert.doesNotMatch(text, COMMAND);
+  });
+
+  test('the nightly runs the fresh clone whole each night main has moved, from the whole history', () => {
+    const job = jobs(read('.github/workflows/nightly.yml'))['public-readiness'];
+    assert.ok(job, 'a public-readiness job');
+    const text = job.join('\n');
+    assert.match(text, /needs: check\n\s+if: needs\.check\.outputs\.moved == 'true'/);
+    assert.match(text, /ref: main\s*\n\s*persist-credentials: false\s*\n\s*fetch-depth: 0/);
+    assert.ok(
+      runCommands(text).some((r) => COMMAND.test(r)),
+      'the whole setup check',
     );
   });
 
