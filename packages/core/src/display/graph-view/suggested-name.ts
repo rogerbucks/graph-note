@@ -4,7 +4,7 @@
 // one undo takes back.
 import { spanOf, word } from '@thoughtknot/core';
 import type { Details, NoteReading } from '@thoughtknot/core';
-import { button } from './view-bar';
+import { button } from '../button';
 import type { Editing } from './view-options';
 
 /** The place just after the ( of a thing drawn under a suggested name, when `text` is the block it is written in. */

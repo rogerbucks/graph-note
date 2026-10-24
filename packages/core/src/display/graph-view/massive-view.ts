@@ -38,7 +38,7 @@ import type { GrowState } from './massive-grow.ts';
 import { moveControls } from './massive-moves.ts';
 import { plainPaints } from './massive-paints.ts';
 import { LISTED, searchBox } from './massive-search.ts';
-import { button } from './view-bar';
+import { button } from '../button';
 import { marksOfSvg } from './svg-marks.ts';
 
 /** What the overview needs from its host. */

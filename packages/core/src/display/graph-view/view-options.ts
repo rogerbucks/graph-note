@@ -29,7 +29,7 @@ import type { ProposalCard } from '../proposals/proposal-strip';
 import type { DiagramShown } from './type-strip';
 import type { BoxMoving } from './box-drag-view';
 import type { Exporting } from '../export/export-form';
-import type { LinkHost } from '../links/link-types';
+import type { LinkHost } from '../link-host';
 import type { CardImages } from './animated-images';
 import type { ViewerAids } from './viewer-aids';
 

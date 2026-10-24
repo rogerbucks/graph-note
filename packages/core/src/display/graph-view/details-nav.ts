@@ -7,7 +7,7 @@
 // The words, the walk and the easing are the core's; this puts them on the page and runs the move frame by frame.
 import { MOVE_MS, glideAt, word } from '@thoughtknot/core';
 import type { LinkGroup, NoteReading, Place, Trail, TrailStep, Zoom } from '@thoughtknot/core';
-import { button } from './view-bar';
+import { button } from '../button';
 
 /** What the details ask of their card when something is chosen from them. */
 export interface NavActions {
