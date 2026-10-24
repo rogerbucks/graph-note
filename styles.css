@@ -813,6 +813,17 @@ details.thoughtknot-style > summary {
 .thoughtknot-svg g.thoughtknot-step-current > :is(path, polygon) {
   stroke-width: 4;
 }
+/* A guard that failed in a test run (spec §35): a heavy dashed outline, never colour alone. */
+.thoughtknot-svg g.thoughtknot-guard-failed > :is(path, polygon) {
+  stroke-width: 3;
+  stroke-dasharray: 3 3;
+}
+.thoughtknot-debug {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  font-size: var(--gn-font-size-s);
+}
 .thoughtknot-svg .thoughtknot-step-number {
   font-size: 10pt;
   font-weight: var(--gn-font-weight-bold);

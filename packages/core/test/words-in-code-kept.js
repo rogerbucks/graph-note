@@ -38,6 +38,8 @@ export const CORE_KEPT = {
   'packages/core/src/accessibility-lens.ts': '*',
   // what an SVG holds beyond a picture, named for a developer's test (editor spec §36, drawing_holds_no_state)
   'packages/core/src/drawing-commands.ts': ['form field'],
+  // why a test run of a process is refused: a fault of the caller's code, for its developer (editor spec §35)
+  'packages/core/src/test-runs.ts': '*',
   // why a theme chain is refused: a fault of the theme graph, for its author's developer (editor spec §36)
   'packages/core/src/theme-graph.ts': '*',
   // why a profile is refused to anyone but its owner: a fault of the caller's code, for its developer (editor spec §39)

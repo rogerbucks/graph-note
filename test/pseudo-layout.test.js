@@ -4,7 +4,9 @@
 // drawn over other words in the same layer of the page. A menu or a sheet set over the page is a layer of its own.
 // The judging is tried first on measures made up here. Then it is tried on planted faults in a real page, so a pass
 // means it looked. The Obsidian host is its harness (packages/obsidian/harness), in the user guide's states
-// (scripts/wiki-screens.mjs). The Claude Code host is its page served by the real server over a vault on disk.
+// (scripts/wiki-screens.mjs). The Claude Code host is its page served by the real server over a vault on disk. The desktop
+// app's first page is its built page with a stand-in for Tauri. The app's editor and VS Code's tab are the Claude Code
+// host's page, unchanged.
 // test/pseudo-locales.test.js checks the same languages where no layout is needed.
 //
 // Chrome is the one THOUGHTKNOT_CHROME names, or the first of the usual names on the PATH. Where none is found the
@@ -125,5 +127,15 @@ describe('in a real browser, every view of every host, in each test language', (
     const { launcher } = launcherFor(where);
     await opens(launcher, where.plan);
     assert.deepEqual(await checkEditorPage(launcher.link, { chrome }), []);
+  });
+
+  test('the desktop app: no words cut off or drawn over others, on its first page', options, async () => {
+    const { checkAppStart } = await layout();
+    const { builtApp, cleanUpApp } = await import('../packages/app/test/app-window.js');
+    try {
+      assert.deepEqual(await checkAppStart(await builtApp(), { chrome }), []);
+    } finally {
+      cleanUpApp();
+    }
   });
 });
