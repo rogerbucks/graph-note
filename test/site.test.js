@@ -16,12 +16,14 @@ import { SITE_URL, fillPages, fillTemplate, latestVersion, pngSize, renderSite }
 
 const template = read('site/index.html');
 const privacy = read('site/privacy.html');
+const demo = read('site/demo.html');
 const catalogue = readJSON('site/words.json');
 const IMAGE = { file: 'card.png', alt: 'A graph drawn in a note, with its toolbar above it', width: 800, height: 500 };
 const made = (more = {}) =>
   renderSite({
     template,
     privacy,
+    demo,
     catalogue,
     version: '0.6.0',
     sha: 'abc1234',
@@ -151,7 +153,7 @@ describe('the version it names', () => {
 describe('everyone can use it', () => {
   const sheet = read('site/site.css');
 
-  for (const page of ['index.html', 'privacy.html'])
+  for (const page of ['index.html', 'privacy.html', 'demo.html'])
     for (const theme of THEMES)
       test(`${page} meets WCAG 2.2 AA in the ${theme} scheme`, async () => {
         const { style, variables } = pageStyleFor(sheet, theme);
@@ -228,6 +230,8 @@ describe('the command', () => {
           releases,
           '--images',
           images,
+          // the demo's bundle is built and checked in test/site-demo.test.js
+          '--no-demo',
         ],
         { encoding: 'utf8' },
       );
