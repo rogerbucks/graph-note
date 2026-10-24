@@ -1083,5 +1083,17 @@
       "discover_group_names",
       "discover_watch_rule"
     ]
+  },
+  "CX1": {
+    "title": "Contexts: where links may join",
+    "size": "S",
+    "requirements": [
+      "context_named",
+      "context_guess_default",
+      "context_guess_filter",
+      "context_names_apart",
+      "context_same_as_confirmed",
+      "context_no_leak"
+    ]
   }
 }
