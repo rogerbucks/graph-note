@@ -16,7 +16,8 @@ const GRAPH_OF = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)`),
   NAMES_SHARED = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*schema${S}+${N}+`),
   STYLES = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE${S}+([^${SPACE}·]+)`),
   STYLE_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*STYLE(?:${S}|·|$)`),
-  FROM_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*FROM(?:${S}|·|$)`);
+  FROM_WORD = new RegExp(`^${S}*//${S}*graph:[^\\n]*·${S}*FROM(?:${S}|·|$)`),
+  BOARDS = new RegExp(`^${S}*//${S}*graph:${S}*(${N}+)${S}*·${S}*BOARD(?:${S}+ON${S}+(${N}+))?${S}*$`);
 
 /**
  * Whether a block draws its graph from somewhere else (editor spec §20, sources.ts). Its graph line says FROM and a
@@ -56,13 +57,23 @@ export function firstLine(text: string): string {
 const isGraphLine = (text: string) => GRAPH_LINE.test(firstLine(text));
 
 /**
+ * The board a block is (editor spec §45, board_is_text). Its graph line says BOARD. It may say ON and the graph its
+ * items decompose into: `// graph: ideas · BOARD ON trip`. Null for any other block. A board is never data to draw
+ * (`dataKind`): board.ts reads it.
+ */
+export function boardOf(text: string): { name: string; on: string | null } | null {
+  const m = BOARDS.exec(firstLine(text));
+  return m ? { name: m[1] ?? '', on: m[2] ?? null } : null;
+}
+
+/**
  * The kind of a block, or null when it holds no data to draw. A query holds none (a view or a step among them), nor
- * does an excerpt or a change set. Nor does a style block (read only by style.ts) or a block drawn FROM elsewhere (read
- * only by sources.ts). Nor does a block with no graph line. A graph line that says STYLE but names no graph to style is
+ * does an excerpt or a change set. Nor does a style block, read only by style.ts, or a board, read only by board.ts.
+ * Nor does a block drawn FROM elsewhere, read only by sources.ts. Nor does a block with no graph line. A graph line that says STYLE but names no graph to style is
  * a problem, never data.
  */
 export function dataKind(text: string): 'data' | 'schema' | null | Problem {
-  if (styleOf(text) !== null || isSourceBlock(text)) return null;
+  if (styleOf(text) !== null || isSourceBlock(text) || boardOf(text)) return null;
   if (STYLE_WORD.test(firstLine(text))) {
     const own = graphOf(text) ?? '<name>';
     return {
