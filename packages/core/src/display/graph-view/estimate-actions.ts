@@ -8,7 +8,7 @@
 // Both write only through the card's options, which read-only.ts gates; where the card is read-only neither is offered.
 import { estimateFix, word } from '@thoughtknot/core';
 import { withFix } from '../fix-changes';
-import { button } from './view-bar';
+import { button } from '../button';
 import type { ViewOptions } from './view-options';
 
 /** Under an estimated link's sentence in its details: the quick fix that accepts it, and Edit the link. */

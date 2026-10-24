@@ -6,7 +6,7 @@
 // (attachments_at_a_glance).
 import { linkTo, refusedWords, word } from '@thoughtknot/core';
 import type { Attachment, BrokenLink, FoundLink, PlacedLink } from '@thoughtknot/core';
-import type { LeftAt, LinkHost } from './link-types';
+import type { LeftAt, LinkHost } from '../link-host';
 
 /** How long a finger rests on a link before Obsidian's preview of it is shown, as a long press. */
 const LONG_PRESS_MS = 500;
