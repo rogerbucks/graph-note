@@ -10,6 +10,7 @@ import type { Span } from './blocks.ts';
 import { readNote } from './drawing.ts';
 import { editRefusal, newNames } from './edit-check.ts';
 import type { NoteReading } from './note-reading.ts';
+import { writesPassword } from './secrets.ts';
 import { History, replaceSpan } from './store.ts';
 import type { BlockRef } from './store.ts';
 import { underStrictness } from './strictness.ts';
@@ -207,7 +208,7 @@ export class PaneSession {
     if (!span || span.text !== this.ref.text) return this.refusedWrite(span);
     // an Undo or Redo is never written into a block followed warily, which may be a copy (the third review of #465)
     if (step && this.wary) return this.refusedWary(step);
-    const refused = this.refusedEdit(note, owed);
+    const refused = this.refusedEdit(note, owed) ?? this.refusedSecretWrite(span);
     if (refused) return refused;
     const r = replaceSpan(note, span, this.text);
     if (!step) {
@@ -241,6 +242,16 @@ export class PaneSession {
     this.ref = { line: span.open, text: span.text };
     this.text = span.text;
     return { ok: false, reason: word('editing.block-changed'), draft };
+  }
+
+  /** A write refused as it puts a password into the block, which a graph never holds (secrets_named_only). */
+  private refusedSecretWrite(span: Span): PaneWrite | null {
+    if (!writesPassword(span.text, this.text)) return null;
+    const draft = this.text;
+    this.ref = { line: span.open, text: span.text };
+    this.text = span.text;
+    this.dirty = false;
+    return { ok: false, reason: word('editing.password-refused'), draft, edit: true };
   }
 
   /** The refusal of an edit's owed names by the note written into, with the block reloaded as it is there; or null. */
