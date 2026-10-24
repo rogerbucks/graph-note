@@ -6,7 +6,8 @@
 // layout_byte_identical).
 import type { GraphDrawing } from './note-reading.ts';
 import { PALETTES } from './palette.ts';
-import { chosen, directions } from './render.ts';
+import { chosen, directions, QUICK_LAYOUT } from './render.ts';
+import { CurvesSaved } from './curves-saved.ts';
 import type { Drawn, Engine } from './render.ts';
 import { counted, LAYOUT_LIMITS, measured, PAGE_LIMITS } from './layout-limits.ts';
 import type { LayoutLimits, Refusal } from './layout-limits.ts';
@@ -81,20 +82,22 @@ export const TIMEOUTS_BEFORE_STOPPING = 3;
  */
 export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): void {
   const engine = Promise.resolve().then(load);
+  const saved = new CurvesSaved();
   scope.onmessage = ({ data: { id, drawing, sourceBytes, theme } }) => {
     const answer = async (): Promise<LayoutReply> => {
-      const laid = directions(drawing);
-      const refusal = measured(laid, sourceBytes);
+      const asked = directions(drawing);
+      const refusal = measured(asked, sourceBytes);
       if (refusal) return { id, refusal };
       const e = await engine;
-      return {
-        id,
-        drawn: chosen(
-          laid,
-          laid.map((d) => e.render(d.dot)),
-          theme && PALETTES[theme],
-        ),
-      };
+      // a large graph's curves are kept, so one opened again is drawn curved at once (curves_saved)
+      const large = drawing.boxes.length > QUICK_LAYOUT;
+      const laid = asked.map((d) =>
+        d.curved !== undefined && saved.get(d.curved) !== undefined ? { ...d, dot: d.curved, straight: false } : d,
+      );
+      const svgs = laid.map((d) =>
+        !large || d.straight ? e.render(d.dot) : (saved.get(d.dot) ?? saved.keep(d.dot, e.render(d.dot))),
+      );
+      return { id, drawn: chosen(laid, svgs, theme && PALETTES[theme]) };
     };
     void answer().then(
       (reply) => scope.postMessage(reply),
