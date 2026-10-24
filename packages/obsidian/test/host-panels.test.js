@@ -1,5 +1,5 @@
 // Obsidian's two panes are drawn through the plug-in interface (editor spec §43, plugin_interface and
-// plugin_contract_suites): each is a panel of a built-in plug-in, and passes the panel contract of any plug-in's.
+// plugin_contract_suites). Each is a panel of a built-in plug-in. Each passes the panel contract of any plug-in's.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
