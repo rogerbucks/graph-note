@@ -906,6 +906,16 @@ built-in types give it too: Graphviz lays them out, and the engine reads that la
   gives SVG: drawing marks are written by `layoutSvg` and coloured by the theme.
 - The view still shows Graphviz's own SVG. These marks are what the renderer will draw.
 
+### Layouts, `src/layouts/` (editor spec §53)
+
+One contract for every way of placing a graph's things. A layout takes the shape and last time's spots, and gives each
+thing a spot in two or three dimensions, in its own units. The same shape gives the same spots; a warm start moves
+little. A view fits the spots into its space and draws marks there. A new layout is one file and one line in `LAYOUTS`.
+
+- `layouts.ts` — the contract, `Layout`, the list, `LAYOUTS`, and `layoutById` and `layoutsOf` to find one.
+- `force-3d.ts` — the force layout in space: depth keeps apart the links a page would cross. A new thing on a warm
+  start begins beside the things it links to.
+
 ### View types drawn as marks, `src/view-types/` (editor spec §36)
 
 These views are not laid out by Graphviz. Each is a pure function from a graph's shape and a space to drawing marks
