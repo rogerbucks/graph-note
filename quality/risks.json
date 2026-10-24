@@ -916,7 +916,7 @@
       "role": "Senior coder and QA / test engineer",
       "area": "test",
       "title": "77 fixed sleeps remain in 26 plugin test files",
-      "risk": "The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite is never skipped before a merge, so a release waits on a rerun.",
+      "risk": "The ratchet stops new sleeps but keeps the old ones, 10 in settings.test.js and 8 in graph-view-parked.test.js. On a slow CI runner one of these fails now and then. The full suite runs on main after every merge and before a release, so a release waits on a rerun.",
       "evidence": [
         "test/fixed-sleeps.json:2",
         "test/fixed-sleeps.json:25",
@@ -1349,7 +1349,8 @@
         "date": "2026-10-19",
         "commit": "4b81f3fcd597a7282b8c5d3149b1fe978fe71edd"
       },
-      "status": "open",
+      "status": "done",
+      "done_in": "#1084",
       "wave": "Wave 9 · Slice 6 the mesh"
     },
     {
@@ -3883,7 +3884,8 @@
         "packages/core/src/theme.ts:70",
         "packages/core/src/view-profile.ts:104",
         "packages/graph-spec/src/rules/lenses.js:11",
-        "packages/graph-spec/src/rules/lenses.js:18"
+        "packages/graph-spec/src/rules/lenses.js:18",
+        "packages/core/src/type-suggestion.ts:128"
       ],
       "likelihood": "low",
       "impact": "high",

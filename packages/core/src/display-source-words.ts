@@ -137,5 +137,6 @@ export const DISPLAY_SOURCE_WORDS = {
   'massive.filter-saved': 'Saved the filter in the style graph. The overview starts with it next time.',
   // a thing chosen in the overview of a note too big to read at once (§53, scale_in_parts)
   'massive.thing': 'Properties of {name}',
+  'massive.style-problem': 'In the style graph: {why}',
   'massive.read-only': 'Switch to edit mode to change these.',
 } as const;

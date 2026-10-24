@@ -42,7 +42,7 @@ export function showMassive(plugin: ThoughtKnotPlugin, root: HTMLElement, drawin
  * Shows a graph from a note too big to read at once as its overview, from the local store (§53, scale_in_parts). It
  * starts with the filter saved in its style block, read against the store (storedStyle). A thing chosen shows its
  * properties under it, to change in the note's text (stored-edit.ts). In edit mode a filter chosen is saved, as for
- * any overview. Without `at`, nothing is read from the note or written to it.
+ * any overview. A problem in the style block is said under it. Without `at`, nothing is read from the note or written to it.
  */
 export function showStoredMassive(
   plugin: ThoughtKnotPlugin,
@@ -52,7 +52,8 @@ export function showStoredMassive(
 ): void {
   const graph = stored.drawing.graph;
   // the Filter for the whole graph: a view's own is for when views are drawn as overviews
-  const saved = at && storedStyle(at.note, stored).style.filters.find((f) => f.view === undefined)?.keep;
+  const read = at && storedStyle(at.note, stored);
+  const saved = read?.style.filters.find((f) => f.view === undefined)?.keep;
   massiveView(root, stored.drawing, {
     graph,
     palette: PALETTES.obsidian,
@@ -69,4 +70,10 @@ export function showStoredMassive(
         }
       : {}),
   });
+  // a misspelt name in the style block, said here, as the card says it for a note read whole
+  for (const p of read?.problems ?? [])
+    root.createEl('p', {
+      cls: 'thoughtknot-hint thoughtknot-style-problem',
+      text: word('massive.style-problem', { why: p.message }),
+    });
 }

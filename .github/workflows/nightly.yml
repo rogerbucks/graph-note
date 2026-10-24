@@ -16,10 +16,20 @@ name: Nightly
 # release: the build status and the wiki are woken only by a stable one (types: [released]) and leave pre-releases out.
 # `drafts` runs every night, moved or not, and fails while a stable release has waited as a draft for over a day, so its
 # owner hears of it (risk OPS-3; RELEASING.md, "Cutting a release").
+#
+# A wave's end also builds one (Roger, 23 Oct 2026), through wave-nightly.yml, which calls this file. That run always
+# builds, as one by hand does. A second build on the same day takes the next letter, as the version script says.
 on:
   schedule:
     - cron: '0 16 * * *'
   workflow_dispatch:
+  # Called by wave-nightly.yml when a pull request labelled wave-done merges, so a wave can be tested the day it ends.
+  workflow_call:
+    inputs:
+      wave:
+        description: True when a wave's end made this run, which leaves the draft check to the night
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -97,9 +107,9 @@ jobs:
       - run: npm ci
       - run: npm audit signatures
       - run: node scripts/check-classification.mjs --all
-      # the whole suite at once peaked over the default 4 GB ceiling (22 Oct 2026); CI's runs get 6 GB, and so does this
+      # the whole suite at once peaked over the default 4 GB ceiling (22 Oct 2026); CI's runs get 8 GB, and so does this
       - env:
-          THOUGHTKNOT_TEST_MEMORY_MB: 6144
+          THOUGHTKNOT_TEST_MEMORY_MB: 8192
         run: npm test
       - run: npm run build
       - name: The nightly version, written into the manifest the build carries
@@ -207,6 +217,8 @@ jobs:
   # GitHub lists draft releases only to a token that may write contents, so this job has that and nothing else. Like
   # publish, it runs no code of the repository: no checkout, no install, no Node, only gh.
   drafts:
+    # the nightly's own check; a wave-end build leaves it to the night
+    if: ${{ !inputs.wave }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
