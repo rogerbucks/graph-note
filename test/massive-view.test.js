@@ -218,6 +218,28 @@ window.pane = async () => {
   el.remove();
   return { ...shown, saved };
 };
+// the edit pane's drawing of a block too large to read at once: the banner, then its overview, read in parts
+window.paneInParts = async () => {
+  const lines = ['// graph: huge'];
+  for (let i = 0; i < 12000; i++) lines.push('(n' + i + ":Thing {name: 'Item " + i + "'}),");
+  for (let i = 1; i < 12000; i++) lines.push('(n' + i + ')-[:NEXT]->(n' + (i - 1) + ')' + (i < 11999 ? ',' : ''));
+  const texts = [lines.join('\\n')];
+  const host = { settings: () => DEFAULT_SETTINGS, layout, palette: PALETTES.light };
+  const el = document.body.appendChild(document.createElement('div'));
+  el.style.width = '600px';
+  const on = { edit() {}, select() {}, replace: () => false };
+  const reading = readNote(texts);
+  new PaneDrawing(host).redraw(el, reading, { graph: 'huge', text: texts[0] }, () => false, on);
+  for (let i = 0; i < 1000 && !el.querySelector('.thoughtknot-massive-stage'); i++) await new Promise((r) => setTimeout(r, 20));
+  const stage = el.querySelector('.thoughtknot-massive-stage');
+  const shown = {
+    refused: reading.tooLarge?.limit,
+    banner: !!el.querySelector('.thoughtknot-banner'),
+    label: stage && stage.getAttribute('aria-label'),
+  };
+  el.remove();
+  return shown;
+};
 window.flyToNeedle = async () => {
   const [match] = view.find('needle');
   await view.flyTo(match);
@@ -400,6 +422,13 @@ describe('a graph too large to draw, as its overview, in a real browser', () => 
     },
   );
   // proves: scale_filter_live
+  test('a block too large to read at once is shown in the pane as its overview, read in parts', options, async () => {
+    const shown = await run('paneInParts()');
+    assert.equal(shown.refused, 'text-lines', 'too large to read whole');
+    assert.ok(shown.banner, 'why, still said');
+    assert.match(shown.label ?? '', /^Overview of huge: 12,000 things in \d+ groups/);
+  });
+
   test('a card drawn with a saved filter starts with it ticked, keeping only its things', options, async () => {
     const { label, ticked } = await run('saved()');
     assert.match(label, /^Overview of Big: 1,000 things in \d+ groups\./);

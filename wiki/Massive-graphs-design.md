@@ -195,6 +195,7 @@ Step 7 comes in four parts:
    the store, above the note's text and why it was not read whole. The note is read a part at a time, and Obsidian
    does its own work between parts, so it keeps answering. Drawn again, it is only read again once its text changes.
    - It starts with the filter saved in its style block. In edit mode, a filter chosen is saved there.
+   - The edit pane does the same for a block too large to read: in the desktop app, the editor page and Obsidian.
 3. **An edit is written to the note's text first** (`editInParts`, in `store-drawing.ts`). Only the lines that wrote
    the thing change, so the note is never read whole. Then the store reads that note again. A store read from other
    text refuses the edit, so it never lands on the wrong lines.
