@@ -9,26 +9,26 @@
       <text x="35.66" y="-144.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> OPTION
       <text x="19.28" y="-124.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Large reader
     <g id="p4">
-      <path d="M69.07,-108.47C74.44,-98.25 80.76,-86.67 86.97,-76.4 89.47,-72.27 92.17,-68 94.92,-63.8" paint="stroke:rgb(9, 152, 150);stroke-width:2">
-      <polygon points="96.88,-65.28 98.72,-58.09 92.8,-62.57 96.88,-65.28" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150);stroke-width:2">
-      <text x="106.52" y="-79.55" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers
+      <path d="M78.32,-109C89.97,-94.88 99.03,-79.52 105.51,-62.93" paint="stroke:rgb(9, 152, 150);stroke-width:2">
+      <polygon points="103.22,-62.04 108.05,-56.4 107.79,-63.82 103.22,-62.04" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150);stroke-width:2">
+      <text x="99.47" y="-88.18" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers
     <g id="p5">
       <path d="M207.72,-165.4C207.72,-165.4 158.42,-165.4 158.42,-165.4 152.42,-165.4 146.42,-159.4 146.42,-153.4 146.42,-153.4 146.42,-121 146.42,-121 146.42,-115 152.42,-109 158.42,-109 158.42,-109 207.72,-109 207.72,-109 213.72,-109 219.72,-115 219.72,-121 219.72,-121 219.72,-153.4 219.72,-153.4 219.72,-159.4 213.72,-165.4 207.72,-165.4" paint="fill:rgba(213, 57, 132, 0.16);stroke:rgb(168, 51, 108);stroke-width:2">
       <text x="163.66" y="-144.6" text-anchor="start" paint="fill:rgb(92, 92, 92)"> OPTION
       <text x="165.7" y="-124.3" text-anchor="start" paint="fill:rgb(34, 34, 34)"> Tablet
     <g id="p6">
-      <path d="M166.59,-108.64C158.37,-94.92 148.36,-78.18 139.65,-63.61" paint="stroke:rgb(9, 152, 150);stroke-width:2">
-      <polygon points="141.97,-62.71 136.27,-57.96 137.76,-65.23 141.97,-62.71" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150);stroke-width:2">
-      <text x="172.54" y="-79.55" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers
+      <path d="M159.81,-109C148.17,-94.88 139.11,-79.52 132.62,-62.92" paint="stroke:rgb(9, 152, 150);stroke-width:2">
+      <polygon points="130.34,-63.81 130.08,-56.4 134.91,-62.03 130.34,-63.81" paint="fill:rgb(9, 152, 150);stroke:rgb(9, 152, 150);stroke-width:2">
+      <text x="148.63" y="-82.34" text-anchor="middle" paint="fill:rgb(17, 113, 111)"> answers
     <g id="p7">
       <path d="M173.29,-274.4C173.29,-274.4 62.84,-274.4 62.84,-274.4 56.84,-274.4 50.84,-268.4 50.84,-262.4 50.84,-262.4 50.84,-230 50.84,-230 50.84,-224 56.84,-218 62.84,-218 62.84,-218 173.29,-218 173.29,-218 179.29,-218 185.29,-224 185.29,-230 185.29,-230 185.29,-262.4 185.29,-262.4 185.29,-268.4 179.29,-274.4 173.29,-274.4" paint="fill:rgba(8, 109, 221, 0.16);fill-opacity:0;stroke:rgb(15, 90, 174);stroke-width:1">
       <text x="96.9" y="-253.6" text-anchor="start" paint="fill:rgb(92, 92, 92);fill-opacity:0.95"> REASON
       <text x="70.12" y="-233.3" text-anchor="start" paint="fill:rgb(34, 34, 34);fill-opacity:0.95"> Easy on the eyes
     <g id="p8">
-      <path d="M101.45,-217.8C97.55,-211.32 93.43,-204.43 89.64,-198 84.92,-190.01 79.9,-181.4 75.19,-173.26" paint="stroke:rgb(15, 147, 67);stroke-width:1">
-      <polygon points="77.35,-172.1 71.73,-167.26 73.11,-174.55 77.35,-172.1" paint="fill:rgb(15, 147, 67);stroke:rgb(15, 147, 67);stroke-width:1">
-      <text x="106.85" y="-188.55" text-anchor="middle" paint="fill:rgb(21, 110, 56);fill-opacity:0.95"> favours
+      <path d="M107.28,-218C99.28,-197.11 91,-181.38 82.42,-170.83" paint="stroke:rgb(15, 147, 67);stroke-width:1">
+      <polygon points="80.52,-172.38 78,-165.4 84.32,-169.29 80.52,-172.38" paint="fill:rgb(15, 147, 67);stroke:rgb(15, 147, 67);stroke-width:1">
+      <text x="88.96" y="-192.07" text-anchor="middle" paint="fill:rgb(21, 110, 56);fill-opacity:0.95"> favours
     <g id="p9">
-      <path d="M134.81,-217.64C143.15,-203.92 153.31,-187.18 162.16,-172.61" paint="stroke:rgb(183, 45, 62);stroke-width:1">
-      <polygon points="164.06,-174.21 165.6,-166.96 159.87,-171.67 164.06,-174.21" paint="fill:rgb(183, 45, 62);stroke:rgb(183, 45, 62);stroke-width:1">
-      <text x="186.37" y="-188.55" text-anchor="middle" paint="fill:rgb(134, 42, 53);fill-opacity:0.95"> counts against
+      <path d="M129.3,-218C137.66,-197 146.23,-181.26 155,-170.77" paint="stroke:rgb(183, 45, 62);stroke-width:1">
+      <polygon points="153.12,-169.2 159.49,-165.4 156.88,-172.34 153.12,-169.2" paint="fill:rgb(183, 45, 62);stroke:rgb(183, 45, 62);stroke-width:1">
+      <text x="148.08" y="-192.06" text-anchor="middle" paint="fill:rgb(134, 42, 53);fill-opacity:0.95"> counts against

@@ -312,6 +312,7 @@ export type { FocusDepth, FocusEdge, FocusTarget, Kept } from './focus.ts';
 export {
   FIND_LIMIT,
   LegendFilter,
+  MOST_STEPS,
   Untangle,
   emphasis,
   find,

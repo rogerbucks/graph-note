@@ -67,7 +67,8 @@
 // (first_run_help). formatSeries and purposeWords (words_catalogue) came on 21 Oct 2026, as did runPluginStep (plugin_step_named).
 // The drawing marks, the built-in diagram types as a plug-in and layoutSvg (plugin_interface) came on 22 Oct 2026.
 // So did changeNote and its types (storage_contract), and VIEW_TYPES and ViewType (view_types_offered). The personal
-// profiles (`composeProfiles, ProfileLearning, PacingDetector, remindersFor` and their kin, §39) came on 24 Oct 2026.
+// profiles (`composeProfiles, ProfileLearning, PacingDetector, remindersFor` and their kin, §39) came on 24 Oct 2026, as
+// did MOST_STEPS (thing_controls).
 import { TYPES_LATE } from './index-types-late.js';
 import { VALUES_LATE } from './index-values-late.js';
 
@@ -134,6 +135,7 @@ export const VALUES = [
   'LayoutRunner',
   'LegendFilter',
   'MAX_SCALE',
+  'MOST_STEPS',
   'MOVE_MS',
   'MeshHistory',
   'MeshIndex',

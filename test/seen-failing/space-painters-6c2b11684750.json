@@ -1,0 +1,6 @@
+{
+  "file": "test/space-painters.test.js",
+  "test": "the 3D view's painters, in a real browser > a click on a ball, and on a link, in the 3D view tells the card to open it",
+  "seen_failing_first": false,
+  "evidence": "The replay ran with no Chrome, so this browser test was skipped and counted as passing. Against the code before it, its page cannot build: SPACE_OPEN and the space view's click to open did not exist."
+}

@@ -96,8 +96,8 @@ describe('a card in reading view shows its details and offers nothing that write
           'Move details',
           'Minimise details',
           'Close details',
-          ...LARGE_LINKS,
           ...UNTANGLING,
+          ...LARGE_LINKS,
         ]),
         KEPT,
       );
@@ -296,8 +296,8 @@ describe('a card in reading view shows its details and offers nothing that write
             'Move details',
             'Minimise details',
             'Close details',
-            ...LARGE_LINKS,
             ...UNTANGLING,
+            ...LARGE_LINKS,
           ]),
           KEPT,
           'and they hold nothing to change',
@@ -335,7 +335,7 @@ describe('a card in reading view shows its details and offers nothing that write
         assert.ok(!labelled(full, label), `no ${label}`);
       assert.deepEqual(
         // full screen shows the details in its own place, never as the sheet: no toggle
-        pressed(full, () => tapKey(full, 'large'), ['Close details', ...LARGE_LINKS, ...UNTANGLING]),
+        pressed(full, () => tapKey(full, 'large'), ['Close details', ...UNTANGLING, ...LARGE_LINKS]),
         KEPT,
       );
       assert.ok(propertiesShown(details(full)).includes('name: Large reader'), 'its properties are shown');

@@ -22,7 +22,7 @@ import type { Refusal } from './layout-limits.ts';
 import type { GraphDrawing } from './note-reading.ts';
 import { PALETTES } from './palette.ts';
 import type { Palette } from './palette.ts';
-import { chosen, directions } from './render.ts';
+import { chosen, directions, svgOf } from './render.ts';
 import type { Drawn, Engine } from './render.ts';
 import type { ExportTheme } from './settings.ts';
 import { lookTag, lookTags } from './look-tags.ts';
@@ -199,7 +199,7 @@ export function exportSvg(scope: ExportScope, engine: Engine, info: ExportInfo):
   const laid = directions(drawing);
   const drawn = chosen(
     laid,
-    laid.map((d) => engine.render(d.dot)),
+    laid.map((d) => svgOf(engine, d.dot, drawing.routing)),
     info.theme === 'dark' ? PALETTES.dark : PALETTES.light,
   );
   return framedImage(scope, drawing, drawn, info);

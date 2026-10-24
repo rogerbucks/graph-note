@@ -1,0 +1,6 @@
+{
+  "file": "packages/obsidian/test/radial-centre.test.js",
+  "test": "where the note is edited > C on a box puts it in the centre too; the centre itself offers nothing",
+  "seen_failing_first": false,
+  "evidence": "renamed from an older test: the network part moved to its own test, which failed first"
+}

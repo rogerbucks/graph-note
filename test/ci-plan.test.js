@@ -1,7 +1,7 @@
 // What CI runs for a change: scripts/ci-plan.mjs. A pull request runs only what its change reaches; main, everything.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { SHARDS, ciPlan, docReaders, labelsFrom, summary } from '../scripts/ci-plan.mjs';
+import { GUARDS, SHARDS, ciPlan, docReaders, labelsFrom, summary } from '../scripts/ci-plan.mjs';
 import { read } from './repository/repo.js';
 
 const tracked = [
@@ -46,15 +46,22 @@ describe('ci-plan', () => {
     for (const isDraft of [false, undefined]) {
       const plan = pr(['packages/core/src/zoom.ts'], { draft: isDraft, labels: ['agent:claude'] });
       assert.equal(plan.tier, 'subset', `draft=${isDraft}`);
-      assert.deepEqual(plan.files, ['packages/core/test/zoom.test.js']);
+      assert.deepEqual(plan.files, ['packages/core/test/zoom.test.js', 'test/plain-docs.test.js']);
     }
   });
 
   test('a pull request runs only the tests its change reaches, on as few machines as they need', () => {
     const plan = pr(['packages/core/src/zoom.ts']);
     assert.equal(plan.tier, 'subset');
-    assert.deepEqual(plan.files, ['packages/core/test/zoom.test.js']);
+    assert.deepEqual(plan.files, ['packages/core/test/zoom.test.js', 'test/plain-docs.test.js']);
     assert.equal(plan.shards, 1);
+  });
+
+  test('a partial run also runs the guards that read the whole repository, which no import reaches', () => {
+    const plan = pr(['packages/core/src/zoom.ts'], { tracked: [...tracked, ...GUARDS] });
+    assert.deepEqual(plan.files, [...GUARDS, 'packages/core/test/zoom.test.js'].sort());
+    assert.deepEqual(pr(['python/graph_spec/src/graph_spec/zoom.py'], { tracked: [...tracked, ...GUARDS] }).files, []);
+    for (const guard of GUARDS) assert.ok(read(guard), `${guard} is a test file here`);
   });
 
   test('a pull request that changes something shared runs everything, and says which file made it so', () => {
