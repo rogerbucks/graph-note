@@ -6,7 +6,7 @@
 // layout_byte_identical).
 import type { GraphDrawing } from './note-reading.ts';
 import { PALETTES } from './palette.ts';
-import { chosen, directions } from './render.ts';
+import { chosen, directions, svgOf } from './render.ts';
 import type { Drawn, Engine } from './render.ts';
 import { counted, LAYOUT_LIMITS, measured, PAGE_LIMITS } from './layout-limits.ts';
 import type { LayoutLimits, Refusal } from './layout-limits.ts';
@@ -91,7 +91,7 @@ export function serveLayouts(scope: LayoutScope, load: () => Promise<Engine>): v
         id,
         drawn: chosen(
           laid,
-          laid.map((d) => e.render(d.dot)),
+          laid.map((d) => svgOf(e, d.dot, drawing.routing)),
           theme && PALETTES[theme],
         ),
       };

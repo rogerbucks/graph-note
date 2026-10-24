@@ -53,7 +53,7 @@ def plugin_type_of(name: str) -> dict[str, str] | None:
 FLOW_MOTIONS = ("dashes", "dot", "still")
 # How links are drawn (§25, untangle_routing): curved, as Graphviz draws them, straight, or with
 # right angles.
-ROUTINGS = ("curved", "straight", "right-angled")
+ROUTINGS = ("curved", "straight", "right-angled", "direct")
 # A switch written in the style graph: links merged into trunks (§25), or a view's switches saved.
 ON_OFF = ("on", "off")
 # The View menu's switches a view saved as shown keeps (§25, view_switch_view_only).

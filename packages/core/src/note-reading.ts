@@ -92,8 +92,11 @@ export interface GraphDrawing {
   diagram?: DiagramPlan;
   /** The links its style graph moves (spec §7, link-flow.ts), each with how and what it means; none, every link still. */
   flow?: FlowLink[];
-  /** How its style graph routes its links (spec §25): straight or right-angled; none, curved, as Graphviz draws them. */
-  routing?: 'straight' | 'right-angled';
+  /**
+   * How its style graph routes its links (spec §25): straight, right-angled, or direct (direct-links.ts); none, curved,
+   * as Graphviz draws them.
+   */
+  routing?: 'straight' | 'right-angled' | 'direct';
   /** What its View menu folds and merges (spec §25, untangle-fold.ts); none, nothing. */
   folding?: Folding;
   /** The boxes its style graph draws a picture on (spec §18, picture.ts), room kept for each; none, no picture. */
