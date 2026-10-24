@@ -111,6 +111,13 @@ plugin supplies (`LinkHost`, `Exporting`, `ImageSource`) are in the layer. `link
   brackets. The host hands in the core's `word`, `formatCount` and `formatSize`, so they are said in the reader's
   language.
 
+### `src/profile/` — the person's own profile (editor spec §39)
+
+- `profiles.ts` — `Profiles`: what the person set, and what was learned, kept with the plugin's data and never in a
+  note. Show as shared and the session's pace live in memory alone, so the next session starts adapted again.
+- `profile-settings.ts` — the profile's rows on the settings page: density, things at a time, visual cues, reminders
+  and pacing. Below them, the private review of what was learned: approve or decline, roll back, or clear all.
+
 ### `src/outside/` — plug-ins from outside ThoughtKnot (spec §54, plugin_outside_file)
 
 - `outside-plugins.ts` — `OutsidePlugins`: the plug-in files in the vault folder `ThoughtKnot plug-ins`. Each stays off

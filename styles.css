@@ -986,6 +986,42 @@ details.thoughtknot-style > summary {
 .thoughtknot-walk select {
   min-height: 44px;
 }
+/* A personal profile (editor spec §39): the label that the card is adapted, the things due and the pace worked out.
+   Density sets the room around the drawing; cues keep words, icons or both on the boxes. None changes the graph. */
+.thoughtknot-adapted,
+.thoughtknot-pacing {
+  display: flex;
+  align-items: center;
+  gap: var(--gn-space-1);
+  color: var(--gn-text-muted);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-due {
+  padding: var(--gn-space-1) var(--gn-space-2);
+  border-inline-start: 2px solid var(--gn-border);
+  font-size: var(--gn-font-size-s);
+}
+.thoughtknot-due ul {
+  margin: 0;
+  padding-inline-start: var(--gn-space-3);
+}
+.thoughtknot-due-firm {
+  border-inline-start: 4px solid var(--gn-text-warning);
+  color: var(--gn-text-normal);
+  font-weight: var(--gn-font-weight-semibold);
+}
+.thoughtknot-density-compact .thoughtknot-viewport {
+  padding: 0;
+}
+.thoughtknot-density-roomy .thoughtknot-viewport {
+  padding: var(--gn-space-4);
+}
+.thoughtknot-cues-words .thoughtknot-picture {
+  display: none;
+}
+.thoughtknot-cues-icons g.node text {
+  font-size: var(--gn-font-size-xs);
+}
 .thoughtknot-park {
   display: flex;
   flex-wrap: wrap;
