@@ -176,6 +176,14 @@ describe('where the note is edited', () => {
       const none = box(other.el, 'a').dispatch('contextmenu', { clientX: 40, clientY: 30 });
       assert.equal(menu(other.el), null, 'radial does not fit');
       assert.equal(none.defaultPrevented, false, 'the host’s own menu stays there too');
+      // a finger held on a box opens its tooltip, never the menu: a touch press comes first, then the contextmenu
+      const { el: held } = await show(env, NETWORK, 0);
+      const mars = box(held, 'mars');
+      mars.dispatch('pointerdown', { pointerId: 7, pointerType: 'touch', button: 0, clientX: 40, clientY: 30 });
+      const touch = mars.dispatch('contextmenu', { clientX: 40, clientY: 30 });
+      assert.equal(menu(held), null, 'a long press opens no menu');
+      assert.equal(touch.defaultPrevented, false);
+      mars.dispatch('pointercancel', { pointerId: 7 }); // the finger lifts, so no held timer outlives the test
     } finally {
       env.uninstall();
     }
