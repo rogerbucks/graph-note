@@ -207,15 +207,18 @@ of Obsidian's rules, sentence case in the interface among them. These are the gu
 
 These test behaviour across modules, or the repository itself, so they are named after their subject.
 
-### The core
+### The core: test runs
 
-- `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
 - `packages/core/test/test-run-source.test.js` — what a test run reads: live, a snapshot or a copy (editor spec §35).
 - `packages/core/test/test-run-certainty.test.js` — a test run leaves certainty as it is, unless it opted in (§35).
 - `packages/core/test/side-effects-stubbed.test.js` — a test run stubs each side effect and reaches nothing outside
   (§35).
 - `packages/core/test/saved-scenarios.test.js` — a scenario saved from a test run is never rerun, faded or enforced
   (editor spec §35). It spans `scenarios.ts`, `test-runs.ts` and `process-core.ts`.
+
+### The core
+
+- `packages/core/test/abuse.test.js` — no sequence of edits or text crashes the viewer (spec §12).
 - `packages/core/test/progressive-draw.test.js` — a massive graph is drawn in steps. The overview comes first. Then
   come the chosen group and those nearest the middle, each added to the picture (editor spec §53, scale_progressive).
 - `packages/core/test/level-of-detail.test.js` — a massive graph opens as one box for each group. A group shows its
